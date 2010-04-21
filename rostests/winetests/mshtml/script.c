@@ -1050,12 +1050,22 @@ static HRESULT QueryInterface(REFIID riid, void **ppv)
 static IHTMLDocument2 *create_document(void)
 {
     IHTMLDocument2 *doc;
+    IHTMLDocument5 *doc5;
     HRESULT hres;
 
     hres = CoCreateInstance(&CLSID_HTMLDocument, NULL, CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER,
             &IID_IHTMLDocument2, (void**)&doc);
     ok(hres == S_OK, "CoCreateInstance failed: %08x\n", hres);
+    if (hres != S_OK) return NULL;
 
+    hres = IHTMLDocument2_QueryInterface(doc, &IID_IHTMLDocument5, (void**)&doc5);
+    if(FAILED(hres)) {
+        win_skip("Could not get IHTMLDocument5, probably too old IE\n");
+        IHTMLDocument2_Release(doc);
+        return NULL;
+    }
+
+    IHTMLDocument5_Release(doc5);
     return doc;
 }
 

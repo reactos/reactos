@@ -863,6 +863,33 @@ static void test_StrXXX_overflows(void)
     else
         win_skip("StrCatBuffA() is not available\n");
 
+if (0)
+{
+    /* crashes on XP */
+    StrCpyNW(wbuf, (LPCWSTR)0x1, 10);
+    StrCpyNW((LPWSTR)0x1, wstr1, 10);
+}
+
+    memset(wbuf, 0xbf, sizeof(wbuf));
+    expect_eq(StrCpyNW(wbuf, (LPCWSTR)0x1, 1), wbuf, PWCHAR, "%p");
+    expect_eq(wbuf[0], 0, WCHAR, "%x");
+    expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
+
+    memset(wbuf, 0xbf, sizeof(wbuf));
+    expect_eq(StrCpyNW(wbuf, 0, 10), wbuf, PWCHAR, "%p");
+    expect_eq(wbuf[0], 0, WCHAR, "%x");
+    expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
+
+    memset(wbuf, 0xbf, sizeof(wbuf));
+    expect_eq(StrCpyNW(wbuf, 0, 0), wbuf, PWCHAR, "%p");
+    expect_eq(wbuf[0], (WCHAR)0xbfbf, WCHAR, "%x");
+    expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
+
+    memset(wbuf, 0xbf, sizeof(wbuf));
+    expect_eq(StrCpyNW(wbuf, wstr1, 0), wbuf, PWCHAR, "%p");
+    expect_eq(wbuf[0], (WCHAR)0xbfbf, WCHAR, "%x");
+    expect_eq(wbuf[1], (WCHAR)0xbfbf, WCHAR, "%x");
+
     memset(wbuf, 0xbf, sizeof(wbuf));
     expect_eq(StrCpyNW(wbuf, wstr1, 10), wbuf, PWCHAR, "%p");
     expect_eq(wbuf[9], 0, WCHAR, "%x");

@@ -5,11 +5,13 @@
 	<include base="comdlg32_winetest">.</include>
     <define name="__ROS_LONG64__" />
 	<file>filedlg.c</file>
+	<file>fontdlg.c</file>
 	<file>printdlg.c</file>
 	<file>testlist.c</file>
 	<file>rsrc.rc</file>
 	<library>wine</library>
 	<library>comdlg32</library>
+	<library>winspool</library>
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>ntdll</library>

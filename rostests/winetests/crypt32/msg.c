@@ -2572,8 +2572,8 @@ static void test_decode_msg_get_param(void)
      sizeof(signedKeyIdEmptyContent), TRUE);
     if (!ret && GetLastError() == OSS_DATA_ERROR)
     {
-        /* Subsequent tests crashes on some Win9x, so bail out */
         CryptMsgClose(msg);
+        win_skip("Subsequent tests crash on some Win9x\n");
         return;
     }
     ok(ret, "CryptMsgUpdate failed: %08x\n", GetLastError());

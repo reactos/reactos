@@ -113,6 +113,7 @@ ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
+/* ok(m.input === "abcabc", "m.input = " + m.input); */
 
 m = "abcabc".match(/Ab/g);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -166,6 +167,32 @@ ok(m["0"] === "ab", "m[0] is not \"ab\"");
 
 m = "abcabc".match();
 ok(m === null, "m is not null");
+
+m = "abcabc".match(/(a)(b)cabc/);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 3, "m.length is not 3");
+ok(m[0] === "abcabc", "m[0] is not \"abc\"");
+ok(m[1] === "a", "m[1] is not \"a\"");
+ok(m[2] === "b", "m[2] is not \"b\"");
+
+re = /(a)bcabc/;
+re.lastIndex = -3;
+m = "abcabc".match(re);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 2, "m.length = " + m.length + "expected 3");
+ok(m[0] === "abcabc", "m[0] is not \"abc\"");
+ok(m[1] === "a", "m[1] is not \"a\"");
+ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
+
+re = /(a)bcabc/;
+re.lastIndex = 2;
+m = "abcabcxxx".match(re);
+ok(typeof(m) === "object", "typeof m is not object");
+ok(m.length === 2, "m.length = " + m.length + "expected 3");
+ok(m[0] === "abcabc", "m[0] is not \"abc\"");
+ok(m[1] === "a", "m[1] is not \"a\"");
+ok(m.input === "abcabcxxx", "m.input = " + m.input);
+ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
 
 r = "- [test] -".replace(re = /\[([^\[]+)\]/g, "success");
 ok(r === "- success -", "r = " + r + " expected '- success -'");
@@ -403,6 +430,19 @@ ok(re.lastIndex === -3, "re.lastIndex = " + re.lastIndex + " expected -3");
 m = re.exec(" a a ");
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
 ok(m === null, "m = " + m + " expected null");
+
+re.lastIndex = -1;
+ok(re.lastIndex === -1, "re.lastIndex = " + re.lastIndex + " expected -1");
+m = re.exec("  ");
+ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
+ok(m === null, "m = " + m + " expected null");
+
+re = /a/;
+re.lastIndex = -3;
+ok(re.lastIndex === -3, "re.lastIndex = " + re.lastIndex + " expected -3");
+m = re.exec(" a a ");
+ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 0");
+ok(m.index === 1, "m = " + m + " expected 1");
 
 re.lastIndex = -1;
 ok(re.lastIndex === -1, "re.lastIndex = " + re.lastIndex + " expected -1");

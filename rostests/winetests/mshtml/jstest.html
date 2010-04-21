@@ -5,11 +5,29 @@ function ok(b,m) {
     return external.ok(b, m);
 }
 
+function test_removeAttribute(e) {
+    ok(e.removeAttribute('nonexisting') === false, "removeAttribute('nonexisting') didn't return false");
+
+    e.title = "title";
+    ok(e.removeAttribute('title') === true, "removeAttribute('title') didn't return true");
+    ok(e.title === "", "e.title = " + e.title);
+    ok(("title" in e) === true, "title is not in e");
+
+    e["myattr"] = "test";
+    ok(e.removeAttribute('myattr') === true, "removeAttribute('myattr') didn't return true");
+    ok(e["myattr"] === undefined, "e['myattr'] = " + e['myattr']);
+    ok(("myattr" in e) === false, "myattr is in e");
+
+}
+
 function runTest() {
     obj = new Object();
     ok(obj === window.obj, "obj !== window.obj");
 
     ok(typeof(divid) === "object", "typeof(divid) = " + typeof(divid));
+
+    test_removeAttribute(document.getElementById("divid"));
+    test_removeAttribute(document.body);
 
     external.reportSuccess();
 }

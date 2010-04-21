@@ -3,6 +3,7 @@
  *
  * Copyright 2006 Jeff Latimer
  * Copyright 2006 Hans Leidekker
+ * Copyright 2010 CodeWeavers, Aric Stewart
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,24 +31,272 @@
 #include <windows.h>
 #include <usp10.h>
 
-static void test_ScriptShape(HDC hdc)
+static void test_ScriptItemize( void )
 {
     static const WCHAR test1[] = {'t', 'e', 's', 't',0};
-    BOOL ret;
+    static const WCHAR test2[] = {'1','2','3','-','5','2',0x064a,0x064f,0x0633,0x0627,0x0648,0x0650,0x064a,'7','1','.',0};
+    static const WCHAR test3[] =
+{0x0e04,0x0e27,0x0e32,0x0e21,0x0e1e,0x0e22,0x0e32,0x0e22,0x0e32, 0x0e21
+,0x0e2d,0x0e22,0x0e39,0x0e48,0x0e17,0x0e35,0x0e48,0x0e44,0x0e2b,0x0e19
+,0x0e04,0x0e27,0x0e32,0x0e21,0x0e2a, 0x0e33,0x0e40,0x0e23,0x0e47,0x0e08,
+ 0x0e2d,0x0e22,0x0e39,0x0e48,0x0e17,0x0e35,0x0e48,0x0e19,0x0e31,0x0e48,0x0e19,0};
+    static const WCHAR test4[]  = {'1','2','3','-','5','2',' ','i','s',' ','7','1','.',0};
+    static const WCHAR test5[]  =
+{0x0627,0x0644,0x0635,0x0651,0x0650,0x062d,0x0629,0x064f,' ',0x062a,0x064e,
+0x0627,0x062c,0x064c,' ',0x0639,0x064e,0x0644,0x0649,' ',
+0x0631,0x064f,0x0624,0x0648,0x0633,0x0650,' ',0x0627,0x0644
+,0x0623,0x0635,0x0650,0x062d,0x0651,0x064e,0x0627,0x0621,0x0650,0};
+    SCRIPT_ITEM items[10];
+    SCRIPT_CONTROL  Control;
+    SCRIPT_STATE    State;
+    HRESULT hr;
+    int nItems;
+
+    memset(&Control, 0, sizeof(Control));
+    memset(&State, 0, sizeof(State));
+
+    hr = ScriptItemize(NULL, 4, 10, &Control, &State, items, NULL);
+    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if pwcInChars is NULL\n");
+
+    hr = ScriptItemize(test1, 4, 10, &Control, &State, NULL, NULL);
+    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if pItems is NULL\n");
+
+    hr = ScriptItemize(test1, 4, 1, &Control, &State, items, NULL);
+    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if cMaxItems < 2.");
+
+    hr = ScriptItemize(test1, 0, 10, NULL, NULL, items, &nItems);
+    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if cInChars is 0\n");
+
+    hr = ScriptItemize(test1, 4, 10, NULL, NULL, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 0;
+    hr = ScriptItemize(test1, 4, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 1;
+    hr = ScriptItemize(test1, 4, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    todo_wine ok(items[0].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+
+    hr = ScriptItemize(test2, 16, 10, NULL, NULL, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 6, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 3, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 4, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[2].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[3].iCharPos == 6, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[3].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+    ok(items[4].iCharPos == 13, "Wrong CharPos \n");
+    ok(items[4].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[4].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[4].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[5].iCharPos == 15, "Wrong CharPos \n");
+    ok(items[5].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[5].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[5].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 0;
+    hr = ScriptItemize(test2, 16, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 4, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    todo_wine ok(items[0].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 6, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 13, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    todo_wine ok(items[2].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    ok(items[3].iCharPos == 15, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[3].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 1;
+    hr = ScriptItemize(test2, 16, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 4, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    todo_wine ok(items[0].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 6, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 13, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    todo_wine ok(items[2].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    ok(items[3].iCharPos == 15, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[3].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+
+    hr = ScriptItemize(test3, 41, 10, NULL, NULL, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 0;
+    hr = ScriptItemize(test3, 41, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 1;
+    hr = ScriptItemize(test3, 41, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    todo_wine ok(items[0].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+
+    hr = ScriptItemize(test4, 12, 10, NULL, NULL, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 5, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 3, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 4, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[2].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[3].iCharPos == 7, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[3].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[4].iCharPos == 10, "Wrong CharPos \n");
+    ok(items[4].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[4].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[4].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 0;
+    hr = ScriptItemize(test4, 12, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 5, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 3, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 4, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[2].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[3].iCharPos == 7, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[3].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+    ok(items[4].iCharPos == 10, "Wrong CharPos \n");
+    ok(items[4].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[4].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[4].a.s.uBidiLevel == 0, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 1;
+    hr = ScriptItemize(test4, 12, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    todo_wine ok(nItems == 4, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 0, "Wrong fRTL\n");
+    todo_wine ok(items[0].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    ok(items[1].iCharPos == 6, "Wrong CharPos \n");
+    ok(items[1].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[1].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[1].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+    ok(items[2].iCharPos == 7, "Wrong CharPos \n");
+    ok(items[2].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[2].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    ok(items[2].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+    todo_wine ok(items[3].iCharPos == 10, "Wrong CharPos \n");
+    ok(items[3].a.fRTL == 0, "Wrong fRTL\n");
+    ok(items[3].a.fLayoutRTL == 0, "Wrong fLayoutRTL\n");
+    todo_wine ok(items[3].a.s.uBidiLevel == 2, "Wrong BidiLevel\n");
+
+    hr = ScriptItemize(test5, 38, 10, NULL, NULL, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 0;
+    hr = ScriptItemize(test5, 38, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+
+    State.uBidiLevel = 1;
+    hr = ScriptItemize(test5, 38, 10, &Control, &State, items, &nItems);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(nItems == 1, "Wrong number of items\n");
+    ok(items[0].iCharPos == 0, "Wrong CharPos \n");
+    ok(items[0].a.fRTL == 1, "Wrong fRTL\n");
+    ok(items[0].a.fLayoutRTL == 1, "Wrong fLayoutRTL\n");
+    ok(items[0].a.s.uBidiLevel == 1, "Wrong BidiLevel\n");
+}
+
+
+static void test_ScriptShape(HDC hdc)
+{
+    static const WCHAR test1[] = {'w', 'i', 'n', 'e',0};
+    static const WCHAR test2[] = {0x202B, 'i', 'n', 0x202C,0};
     HRESULT hr;
     SCRIPT_CACHE sc = NULL;
-    WORD glyphs[4], logclust[4];
+    WORD glyphs[4], glyphs2[4], logclust[4];
     SCRIPT_VISATTR attrs[4];
     SCRIPT_ITEM items[2];
-    int nb, widths[4];
-    GOFFSET offset[4];
-    ABC abc[4];
-
-    hr = ScriptItemize(NULL, 4, 2, NULL, NULL, items, NULL);
-    ok(hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG not %08x\n", hr);
-
-    hr = ScriptItemize(test1, 4, 2, NULL, NULL, NULL, NULL);
-    ok(hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG not %08x\n", hr);
+    int nb;
 
     hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
     ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
@@ -73,8 +322,122 @@ static void test_ScriptShape(HDC hdc)
     ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
     ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
 
+
+    memset(glyphs,-1,sizeof(glyphs));
+    memset(logclust,-1,sizeof(logclust));
+    memset(attrs,-1,sizeof(attrs));
     hr = ScriptShape(NULL, &sc, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
     ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(nb == 4, "Wrong number of items\n");
+    ok(logclust[0] == 0, "clusters out of order\n");
+    ok(logclust[1] == 1, "clusters out of order\n");
+    ok(logclust[2] == 2, "clusters out of order\n");
+    ok(logclust[3] == 3, "clusters out of order\n");
+    ok(attrs[0].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[1].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[2].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[3].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[0].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[1].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[2].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[3].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[0].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[1].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[2].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[3].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[0].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[1].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[2].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[3].fZeroWidth == 0, "fZeroWidth incorrect\n");
+
+    ScriptFreeCache(&sc);
+    sc = NULL;
+
+    memset(glyphs2,-1,sizeof(glyphs2));
+    memset(logclust,-1,sizeof(logclust));
+    memset(attrs,-1,sizeof(attrs));
+    hr = ScriptShape(hdc, &sc, test2, 4, 4, &items[0].a, glyphs2, logclust, attrs, &nb);
+    ok(hr == S_OK, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(nb == 4, "Wrong number of items\n");
+    ok(glyphs2[0] == 0, "Incorrect glyph for 0x202B\n");
+    ok(glyphs2[3] == 0, "Incorrect glyph for 0x202C\n");
+    ok(logclust[0] == 0, "clusters out of order\n");
+    ok(logclust[1] == 1, "clusters out of order\n");
+    ok(logclust[2] == 2, "clusters out of order\n");
+    ok(logclust[3] == 3, "clusters out of order\n");
+    ok(attrs[0].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[1].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[2].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[3].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[0].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[1].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[2].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[3].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[0].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[1].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[2].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[3].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[0].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[1].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[2].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[3].fZeroWidth == 0, "fZeroWidth incorrect\n");
+
+    /* modify LTR to RTL */
+    items[0].a.fRTL = 1;
+    memset(glyphs2,-1,sizeof(glyphs2));
+    memset(logclust,-1,sizeof(logclust));
+    memset(attrs,-1,sizeof(attrs));
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs2, logclust, attrs, &nb);
+    ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(nb == 4, "Wrong number of items\n");
+    ok(glyphs2[0] == glyphs[3], "Glyphs not reordered properly\n");
+    ok(glyphs2[1] == glyphs[2], "Glyphs not reordered properly\n");
+    ok(glyphs2[2] == glyphs[1], "Glyphs not reordered properly\n");
+    ok(glyphs2[3] == glyphs[0], "Glyphs not reordered properly\n");
+    ok(logclust[0] == 3, "clusters out of order\n");
+    ok(logclust[1] == 2, "clusters out of order\n");
+    ok(logclust[2] == 1, "clusters out of order\n");
+    ok(logclust[3] == 0, "clusters out of order\n");
+    ok(attrs[0].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[1].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[2].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[3].uJustification == SCRIPT_JUSTIFY_CHARACTER, "uJustification incorrect\n");
+    ok(attrs[0].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[1].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[2].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[3].fClusterStart == 1, "fClusterStart incorrect\n");
+    ok(attrs[0].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[1].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[2].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[3].fDiacritic == 0, "fDiacritic incorrect\n");
+    ok(attrs[0].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[1].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[2].fZeroWidth == 0, "fZeroWidth incorrect\n");
+    ok(attrs[3].fZeroWidth == 0, "fZeroWidth incorrect\n");
+
+    ScriptFreeCache(&sc);
+}
+
+static void test_ScriptPlace(HDC hdc)
+{
+    static const WCHAR test1[] = {'t', 'e', 's', 't',0};
+    BOOL ret;
+    HRESULT hr;
+    SCRIPT_CACHE sc = NULL;
+    WORD glyphs[4], logclust[4];
+    SCRIPT_VISATTR attrs[4];
+    SCRIPT_ITEM items[2];
+    int nb, widths[4];
+    GOFFSET offset[4];
+    ABC abc[4];
+
+    hr = ScriptItemize(test1, 4, 2, NULL, NULL, items, NULL);
+    ok(!hr, "ScriptItemize should return S_OK not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
+
+    hr = ScriptShape(hdc, &sc, test1, 4, 4, &items[0].a, glyphs, logclust, attrs, &nb);
+    ok(!hr, "ScriptShape should return S_OK not %08x\n", hr);
+    ok(items[0].a.fNoGlyphIndex == FALSE, "fNoGlyphIndex TRUE\n");
 
     hr = ScriptPlace(hdc, &sc, glyphs, 4, NULL, &items[0].a, widths, NULL, NULL);
     ok(hr == E_INVALIDARG, "ScriptPlace should return E_INVALIDARG not %08x\n", hr);
@@ -142,28 +505,6 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
     if  (iMaxProps > 0)
          ok( ppSp[5]->langid == 9, "Langid[5] not = to 9\n"); /* Check a known value to ensure   */
                                                               /* ptrs work                       */
-
-
-    /* This set of tests are to check that the various edits in ScriptIemize work           */
-    cInChars = 5;                                        /* Length of test without NULL     */
-    cMaxItems = 1;                                       /* Check threshold value           */
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if cMaxItems < 2.  Was %d\n",
-        cMaxItems);
-    cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(NULL, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if pwcInChars is NULL\n");
-
-    cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, 0, cMaxItems, NULL, NULL, pItem, &pcItems);
-    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if cInChars is 0\n");
-
-    cInChars = 5;
-    cMaxItems = 255;
-    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, NULL, &pcItems);
-    ok (hr == E_INVALIDARG, "ScriptItemize should return E_INVALIDARG if pItems is NULL\n");
 
     /* This is a valid test that will cause parsing to take place                             */
     cInChars = 5;
@@ -636,6 +977,78 @@ static void test_ScriptTextOut2(HDC hdc)
     }
 }
 
+static void test_ScriptTextOut3(HDC hdc)
+{
+    HRESULT         hr;
+
+    int             cInChars;
+    int             cMaxItems;
+    SCRIPT_ITEM     pItem[255];
+    int             pcItems;
+    WCHAR           TestItem1[] = {' ','\r', 0};
+
+    SCRIPT_CACHE    psc;
+    int             cChars;
+    int             cMaxGlyphs;
+    unsigned short  pwOutGlyphs1[256];
+    WORD            pwLogClust[256];
+    SCRIPT_VISATTR  psva[256];
+    int             pcGlyphs;
+    int             piAdvance[256];
+    GOFFSET         pGoffset[256];
+    ABC             pABC[256];
+    RECT            rect;
+
+    /* This is to ensure that non exisiting glyphs are translated into a valid glyph number */
+    cInChars = 2;
+    cMaxItems = 255;
+    hr = ScriptItemize(TestItem1, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
+    ok (hr == 0, "ScriptItemize should return 0, returned %08x\n", hr);
+    /*  This test is for the interim operation of ScriptItemize where only one SCRIPT_ITEM is *
+     *  returned.                                                                             */
+    ok (pcItems > 0, "The number of SCRIPT_ITEMS should be greater than 0\n");
+    if (pcItems > 0)
+        ok (pItem[0].iCharPos == 0 && pItem[2].iCharPos == cInChars,
+            "Start pos not = 0 (%d) or end pos not = %d (%d)\n",
+            pItem[0].iCharPos, cInChars, pItem[2].iCharPos);
+
+    /* It would appear that we have a valid SCRIPT_ANALYSIS and can continue
+     * ie. ScriptItemize has succeeded and that pItem has been set                            */
+    cInChars = 2;
+    cMaxItems = 255;
+    if (hr == 0) {
+        psc = NULL;                                   /* must be null on first call           */
+        cChars = cInChars;
+        cMaxGlyphs = cInChars;
+        cMaxGlyphs = 256;
+        hr = ScriptShape(hdc, &psc, TestItem1, cChars,
+                         cMaxGlyphs, &pItem[0].a,
+                         pwOutGlyphs1, pwLogClust, psva, &pcGlyphs);
+        ok (hr == 0, "ScriptShape should return 0 not (%08x)\n", hr);
+        ok (psc != NULL, "psc should not be null and have SCRIPT_CACHE buffer address\n");
+        ok (pcGlyphs == cChars, "Chars in (%d) should equal Glyphs out (%d)\n", cChars, pcGlyphs);
+        if (hr ==0) {
+            /* Note hdc is needed as glyph info is not yet in psc                  */
+            hr = ScriptPlace(hdc, &psc, pwOutGlyphs1, pcGlyphs, psva, &pItem[0].a, piAdvance,
+                             pGoffset, pABC);
+            ok (hr == 0, "Should return 0 not (%08x)\n", hr);
+
+            /* Test Rect Rgn is acceptable */
+            rect.top = 10;
+            rect.bottom = 20;
+            rect.left = 10;
+            rect.right = 40;
+            hr = ScriptTextOut(hdc, &psc, 0, 0, 0, &rect, &pItem[0].a, NULL, 0, pwOutGlyphs1, pcGlyphs,
+                               piAdvance, NULL, pGoffset);
+            ok (hr == 0, "ScriptTextOut should return 0 not (%08x)\n", hr);
+
+        }
+        /* Clean up and go   */
+        ScriptFreeCache(&psc);
+        ok( psc == NULL, "Expected psc to be NULL, got %p\n", psc);
+    }
+}
+
 static void test_ScriptXtoX(void)
 /****************************************************************************************
  *  This routine tests the ScriptXtoCP and ScriptCPtoX functions using static variables *
@@ -1078,20 +1491,55 @@ static void test_ScriptGetGlyphABCWidth(HDC hdc)
 static void test_ScriptLayout(void)
 {
     HRESULT hr;
-    static const BYTE levels[][5] =
+    static const BYTE levels[][10] =
     {
-        { 0, 0, 0, 0, 0 },
-        { 1, 1, 1, 1, 1 },
-        { 2, 2, 2, 2, 2 },
-        { 3, 3, 3, 3, 3 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+        { 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 },
+        { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3 },
+
+        { 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
+        { 1, 1, 1, 2, 2, 2, 1, 1, 1, 1 },
+        { 2, 2, 2, 1, 1, 1, 2, 2, 2, 2 },
+        { 0, 0, 1, 1, 2, 2, 1, 1, 0, 0 },
+        { 1, 1, 2, 2, 3, 3, 2, 2, 1, 1 },
+
+        { 0, 0, 1, 1, 2, 2, 1, 1, 0, 1 },
+        { 1, 0, 1, 2, 2, 1, 2, 1, 0, 1 },
     };
-    static const int expect[][5] =
+    static const int expect_l2v[][10] =
     {
-        { 0, 1, 2, 3, 4 },
-        { 4, 3, 2, 1, 0 },
-        { 0, 1, 2, 3, 4 },
-        { 4, 3, 2, 1, 0 }
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
+
+        { 0, 1, 2, 3, 4, 9, 8 ,7 ,6, 5},
+/**/    { 9, 8, 7, 4, 5, 6, 3 ,2 ,1, 0},
+/**/    { 7, 8, 9, 6, 5, 4, 0 ,1 ,2, 3},
+        { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
+        { 9, 8, 2, 3, 5, 4, 6 ,7 ,1, 0},
+
+        { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
+/**/    { 0, 1, 7, 5, 6, 4, 3 ,2 ,8, 9},
     };
+    static const int expect_v2l[][10] =
+    {
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
+        { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 },
+        { 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 },
+
+        { 0, 1, 2, 3, 4, 9, 8 ,7 ,6, 5},
+        { 9, 8, 7, 6, 3, 4, 5 ,2 ,1, 0},
+        { 6, 7, 8, 9, 5, 4, 3 ,0 ,1, 2},
+        { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
+        { 9, 8, 2, 3, 5, 4, 6 ,7 ,1, 0},
+
+        { 0, 1, 7, 6, 4, 5, 3 ,2 ,8, 9},
+        { 0, 1, 7, 6, 5, 3, 4 ,2 ,8, 9},
+    };
+
     int i, j, vistolog[sizeof(levels[0])], logtovis[sizeof(levels[0])];
 
     hr = ScriptLayout(sizeof(levels[0]), NULL, vistolog, logtovis);
@@ -1107,14 +1555,14 @@ static void test_ScriptLayout(void)
 
         for (j = 0; j < sizeof(levels[i]); j++)
         {
-            ok(expect[i][j] == vistolog[j],
+            ok(expect_v2l[i][j] == vistolog[j],
                "failure: levels[%d][%d] = %d, vistolog[%d] = %d\n",
                i, j, levels[i][j], j, vistolog[j] );
         }
 
         for (j = 0; j < sizeof(levels[i]); j++)
         {
-            ok(expect[i][j] == logtovis[j],
+            ok(expect_l2v[i][j] == logtovis[j],
                "failure: levels[%d][%d] = %d, logtovis[%d] = %d\n",
                i, j, levels[i][j], j, logtovis[j] );
         }
@@ -1325,15 +1773,18 @@ START_TEST(usp10)
 
     hfont = SelectObject(hdc, CreateFontIndirectA(&lf));
 
+    test_ScriptItemize();
     test_ScriptItemIzeShapePlace(hdc,pwOutGlyphs);
     test_ScriptGetCMap(hdc, pwOutGlyphs);
     test_ScriptCacheGetHeight(hdc);
     test_ScriptGetGlyphABCWidth(hdc);
     test_ScriptShape(hdc);
+    test_ScriptPlace(hdc);
 
     test_ScriptGetFontProperties(hdc);
     test_ScriptTextOut(hdc);
     test_ScriptTextOut2(hdc);
+    test_ScriptTextOut3(hdc);
     test_ScriptXtoX();
     test_ScriptString(hdc);
     test_ScriptStringXtoCP_CPtoX(hdc);

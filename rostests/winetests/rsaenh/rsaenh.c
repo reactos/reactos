@@ -128,16 +128,28 @@ static int init_base_environment(DWORD dwKeyFlags)
     hProv = (HCRYPTPROV)INVALID_HANDLE_VALUE;
 
     result = CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
-    ok(!result && GetLastError()==NTE_BAD_FLAGS, "%d, %08x\n", result, GetLastError());
+    ok(!result && (GetLastError()==NTE_BAD_FLAGS ||
+       broken(GetLastError() == NTE_KEYSET_NOT_DEF /* Win9x/NT4 */)),
+       "%d, %08x\n", result, GetLastError());
     
     if (!CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, 0))
     {
-        ok(GetLastError()==NTE_BAD_KEYSET, "%08x\n", GetLastError());
-        if (GetLastError()!=NTE_BAD_KEYSET) return 0;
+        ok(GetLastError()==NTE_BAD_KEYSET ||
+           broken(GetLastError() == NTE_KEYSET_NOT_DEF /* Win9x/NT4 */),
+           "%08x\n", GetLastError());
+        if (GetLastError()!=NTE_BAD_KEYSET)
+        {
+            win_skip("RSA full provider not available\n");
+            return 0;
+        }
         result = CryptAcquireContext(&hProv, szContainer, szProvider, PROV_RSA_FULL, 
                                      CRYPT_NEWKEYSET);
         ok(result, "%08x\n", GetLastError());
-        if (!result) return 0;
+        if (!result)
+        {
+            win_skip("Couldn't create crypto provider\n");
+            return 0;
+        }
         result = CryptGenKey(hProv, AT_KEYEXCHANGE, dwKeyFlags, &hKey);
         ok(result, "%08x\n", GetLastError());
         if (result) CryptDestroyKey(hKey);
@@ -275,7 +287,6 @@ static BOOL derive_key(ALG_ID aiAlgid, HCRYPTKEY *phKey, DWORD len)
         return FALSE;
     } 
     ok(result, "%08x\n", GetLastError());
-    if (!result) return FALSE;
     result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
     ok(result, "%08x\n", GetLastError());
     if (!result) return FALSE;
@@ -309,8 +320,9 @@ static void test_hashes(void)
     unsigned char pbData[2048];
     BOOL result;
     HCRYPTHASH hHash, hHashClone;
+    HCRYPTPROV prov;
     BYTE pbHashValue[36];
-    DWORD hashlen, len;
+    DWORD hashlen, len, error;
     int i;
 
     for (i=0; i<2048; i++) pbData[i] = (unsigned char)i;
@@ -441,6 +453,74 @@ static void test_hashes(void)
 
     result = CryptDestroyHash(hHash);
     ok(result, "%08x\n", GetLastError());
+
+    /* The SHA-2 variants aren't supported in the RSA full provider */
+    result = CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
+    ok(!result && GetLastError() == NTE_BAD_ALGID,
+       "expected NTE_BAD_ALGID, got %08x\n", GetLastError());
+    result = CryptCreateHash(hProv, CALG_SHA_384, 0, 0, &hHash);
+    ok(!result && GetLastError() == NTE_BAD_ALGID,
+       "expected NTE_BAD_ALGID, got %08x\n", GetLastError());
+    result = CryptCreateHash(hProv, CALG_SHA_512, 0, 0, &hHash);
+    ok(!result && GetLastError() == NTE_BAD_ALGID,
+       "expected NTE_BAD_ALGID, got %08x\n", GetLastError());
+
+    result = CryptAcquireContextA(&prov, NULL, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    ok(result, "CryptAcquireContext failed 0x%08x\n", GetLastError());
+
+    result = CryptCreateHash(prov, CALG_SHA1, 0, 0, &hHash);
+    ok(result, "CryptCreateHash failed 0x%08x\n", GetLastError());
+
+    /* release provider before using the hash */
+    result = CryptReleaseContext(prov, 0);
+    ok(result, "CryptReleaseContext failed 0x%08x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    result = CryptHashData(hHash, (const BYTE *)"data", sizeof("data"), 0);
+    error = GetLastError();
+    ok(!result, "CryptHashData succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    result = CryptDestroyHash(hHash);
+    error = GetLastError();
+    ok(!result, "CryptDestroyHash succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER got %u\n", error);
+
+    if (!pCryptDuplicateHash)
+    {
+        win_skip("CryptDuplicateHash is not available\n");
+        return;
+    }
+
+    result = CryptAcquireContextA(&prov, NULL, szProvider, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    ok(result, "CryptAcquireContext failed 0x%08x\n", GetLastError());
+
+    result = CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash);
+    ok(result, "CryptCreateHash failed 0x%08x\n", GetLastError());
+
+    result = CryptHashData(hHash, (const BYTE *)"data", sizeof("data"), 0);
+    ok(result, "CryptHashData failed 0x%08x\n", GetLastError());
+
+    result = pCryptDuplicateHash(hHash, NULL, 0, &hHashClone);
+    ok(result, "CryptDuplicateHash failed 0x%08x\n", GetLastError());
+
+    len = 20;
+    result = CryptGetHashParam(hHashClone, HP_HASHVAL, pbHashValue, &len, 0);
+    ok(result, "CryptGetHashParam failed 0x%08x\n", GetLastError());
+
+    /* add data after duplicating the hash */
+    result = CryptHashData(hHash, (const BYTE *)"more data", sizeof("more data"), 0);
+    ok(result, "CryptHashData failed 0x%08x\n", GetLastError());
+
+    result = CryptDestroyHash(hHash);
+    ok(result, "CryptDestroyHash failed 0x%08x\n", GetLastError());
+
+    result = CryptDestroyHash(hHashClone);
+    ok(result, "CryptDestroyHash failed 0x%08x\n", GetLastError());
+
+    result = CryptReleaseContext(prov, 0);
+    ok(result, "CryptReleaseContext failed 0x%08x\n", GetLastError());
 }
 
 static void test_block_cipher_modes(void)
@@ -470,6 +550,10 @@ static void test_block_cipher_modes(void)
     dwMode = CRYPT_MODE_ECB;
     result = CryptSetKeyParam(hKey, KP_MODE, (BYTE*)&dwMode, 0);
     ok(result, "%08x\n", GetLastError());
+
+    result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+    ok(result, "%08x\n", GetLastError());
+    ok(dwLen == 11 || broken(dwLen == 0 /* Win9x/NT4 */), "unexpected salt length %d\n", dwLen);
 
     dwLen = 23;
     result = CryptEncrypt(hKey, 0, TRUE, 0, NULL, &dwLen, 24);
@@ -716,6 +800,11 @@ static void test_aes(int keylen)
 
     for (i=0; i<sizeof(pbData); i++) pbData[i] = (unsigned char)i;
 
+    /* AES provider doesn't support salt */
+    result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+    ok(!result && (GetLastError() == NTE_BAD_KEY || GetLastError() == ERROR_NO_TOKEN /* Win7 */),
+       "expected NTE_BAD_KEY or ERROR_NO_TOKEN, got %08x\n", GetLastError());
+
     dwLen = 13;
     result = CryptEncrypt(hKey, 0, TRUE, 0, pbData, &dwLen, 16);
     ok(result, "%08x\n", GetLastError());
@@ -745,6 +834,108 @@ static void test_aes(int keylen)
     }
     result = CryptDestroyKey(hKey);
     ok(result, "%08x\n", GetLastError());
+}
+
+static void test_sha2(void)
+{
+    static const unsigned char sha256hash[32] = {
+        0x10, 0xfc, 0x3c, 0x51, 0xa1, 0x52, 0xe9, 0x0e, 0x5b, 0x90,
+        0x31, 0x9b, 0x60, 0x1d, 0x92, 0xcc, 0xf3, 0x72, 0x90, 0xef,
+        0x53, 0xc3, 0x5f, 0xf9, 0x25, 0x07, 0x68, 0x7d, 0x8a, 0x91,
+        0x1a, 0x08
+    };
+    static const unsigned char sha384hash[48] = {
+        0x98, 0xd3, 0x3f, 0x89, 0x0b, 0x23, 0x33, 0x44, 0x61, 0x32,
+        0x5a, 0x7c, 0xa3, 0x03, 0x89, 0xb5, 0x11, 0xd7, 0x41, 0xc8,
+        0x54, 0x6b, 0x12, 0x0c, 0x40, 0x15, 0xb6, 0x2a, 0x03, 0x43,
+        0xe5, 0x64, 0x7f, 0x10, 0x1e, 0xae, 0x47, 0xa9, 0x39, 0x05,
+        0x6f, 0x40, 0x60, 0x94, 0xd6, 0xad, 0x80, 0x55
+    };
+    static const unsigned char sha512hash[64] = {
+        0x37, 0x86, 0x0e, 0x7d, 0x25, 0xd9, 0xf9, 0x84, 0x3e, 0x3d,
+        0xc7, 0x13, 0x95, 0x73, 0x42, 0x04, 0xfd, 0x13, 0xad, 0x23,
+        0x39, 0x16, 0x32, 0x5f, 0x99, 0x3e, 0x3c, 0xee, 0x3f, 0x11,
+        0x36, 0xf9, 0xc9, 0x66, 0x08, 0x70, 0xcc, 0x49, 0xd8, 0xe0,
+        0x7d, 0xa1, 0x57, 0x62, 0x71, 0xa6, 0xc9, 0xa4, 0x24, 0x60,
+        0xfc, 0xde, 0x9d, 0xb2, 0xf1, 0xd2, 0xc2, 0xfb, 0x2d, 0xbf,
+        0xb7, 0xf4, 0x81, 0xd4
+    };
+    unsigned char pbData[2048];
+    BOOL result;
+    HCRYPTHASH hHash;
+    BYTE pbHashValue[64];
+    DWORD hashlen, len;
+    int i;
+
+    for (i=0; i<2048; i++) pbData[i] = (unsigned char)i;
+
+    /* SHA-256 hash */
+    SetLastError(0xdeadbeef);
+    result = CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
+    if (!result && GetLastError() == NTE_BAD_ALGID) {
+        win_skip("SHA-256/384/512 hashes are not supported before Windows XP SP3\n");
+        return;
+    }
+    ok(result, "%08x\n", GetLastError());
+    if (result) {
+        len = sizeof(DWORD);
+        result = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashlen, &len, 0);
+        ok(result && (hashlen == 32), "%08x, hashlen: %d\n", GetLastError(), hashlen);
+
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+        ok(result, "%08x\n", GetLastError());
+
+        len = 32;
+        result = CryptGetHashParam(hHash, HP_HASHVAL, pbHashValue, &len, 0);
+        ok(result, "%08x\n", GetLastError());
+
+        ok(!memcmp(pbHashValue, sha256hash, 32), "Wrong SHA-256 hash!\n");
+
+        result = CryptDestroyHash(hHash);
+        ok(result, "%08x\n", GetLastError());
+    }
+
+    /* SHA-384 hash */
+    result = CryptCreateHash(hProv, CALG_SHA_384, 0, 0, &hHash);
+    ok(result, "%08x\n", GetLastError());
+    if (result) {
+        len = sizeof(DWORD);
+        result = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashlen, &len, 0);
+        ok(result && (hashlen == 48), "%08x, hashlen: %d\n", GetLastError(), hashlen);
+
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+        ok(result, "%08x\n", GetLastError());
+
+        len = 48;
+        result = CryptGetHashParam(hHash, HP_HASHVAL, pbHashValue, &len, 0);
+        ok(result, "%08x\n", GetLastError());
+
+        ok(!memcmp(pbHashValue, sha384hash, 48), "Wrong SHA-384 hash!\n");
+
+        result = CryptDestroyHash(hHash);
+        ok(result, "%08x\n", GetLastError());
+    }
+
+    /* SHA-512 hash */
+    result = CryptCreateHash(hProv, CALG_SHA_512, 0, 0, &hHash);
+    ok(result, "%08x\n", GetLastError());
+    if (result) {
+        len = sizeof(DWORD);
+        result = CryptGetHashParam(hHash, HP_HASHSIZE, (BYTE*)&hashlen, &len, 0);
+        ok(result && (hashlen == 64), "%08x, hashlen: %d\n", GetLastError(), hashlen);
+
+        result = CryptHashData(hHash, pbData, sizeof(pbData), 0);
+        ok(result, "%08x\n", GetLastError());
+
+        len = 64;
+        result = CryptGetHashParam(hHash, HP_HASHVAL, pbHashValue, &len, 0);
+        ok(result, "%08x\n", GetLastError());
+
+        ok(!memcmp(pbHashValue, sha512hash, 64), "Wrong SHA-512 hash!\n");
+
+        result = CryptDestroyHash(hHash);
+        ok(result, "%08x\n", GetLastError());
+    }
 }
 
 static void test_rc2(void)
@@ -820,8 +1011,13 @@ static void test_rc2(void)
 
         result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
         ok(result, "%08x\n", GetLastError());
+        /* The default salt length is always 11... */
+        ok(dwLen == 11, "unexpected salt length %d\n", dwLen);
+        /* and the default salt is always empty. */
         pbTemp = HeapAlloc(GetProcessHeap(), 0, dwLen);
         CryptGetKeyParam(hKey, KP_SALT, pbTemp, &dwLen, 0);
+        for (i=0; i<dwLen; i++)
+            ok(!pbTemp[i], "unexpected salt value %02x @ %d\n", pbTemp[i], i);
         HeapFree(GetProcessHeap(), 0, pbTemp);
 
         dwLen = sizeof(DWORD);
@@ -845,6 +1041,16 @@ static void test_rc2(void)
         result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen);
         ok(result, "%08x\n", GetLastError());
 
+        /* Setting the salt also succeeds... */
+        result = CryptSetKeyParam(hKey, KP_SALT, pbData, 0);
+        ok(result, "setting salt failed: %08x\n", GetLastError());
+        /* but the resulting salt length is now zero? */
+        dwLen = 0;
+        result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwLen == 0 ||
+           broken(dwLen == 11), /* Win9x/WinMe/NT4 */
+           "unexpected salt length %d\n", dwLen);
         /* What sizes salt can I set? */
         salt.pbData = pbData;
         for (i=0; i<24; i++)
@@ -852,6 +1058,10 @@ static void test_rc2(void)
             salt.cbData = i;
             result = CryptSetKeyParam(hKey, KP_SALT_EX, (BYTE *)&salt, 0);
             ok(result, "setting salt failed for size %d: %08x\n", i, GetLastError());
+            /* The returned salt length is the same as the set salt length */
+            result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+            ok(result, "%08x\n", GetLastError());
+            ok(dwLen == i, "size %d: unexpected salt length %d\n", i, dwLen);
         }
         salt.cbData = 25;
         SetLastError(0xdeadbeef);
@@ -999,6 +1209,16 @@ static void test_rc4(void)
         result = CryptDecrypt(hKey, 0, TRUE, 0, pbData, &dwDataLen);
         ok(result, "%08x\n", GetLastError());
 
+        /* Setting the salt also succeeds... */
+        result = CryptSetKeyParam(hKey, KP_SALT, pbData, 0);
+        ok(result, "setting salt failed: %08x\n", GetLastError());
+        /* but the resulting salt length is now zero? */
+        dwLen = 0;
+        result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+        ok(result, "%08x\n", GetLastError());
+        ok(dwLen == 0 ||
+           broken(dwLen == 11), /* Win9x/WinMe/NT4 */
+           "unexpected salt length %d\n", dwLen);
         /* What sizes salt can I set? */
         salt.pbData = pbData;
         for (i=0; i<24; i++)
@@ -1006,6 +1226,10 @@ static void test_rc4(void)
             salt.cbData = i;
             result = CryptSetKeyParam(hKey, KP_SALT_EX, (BYTE *)&salt, 0);
             ok(result, "setting salt failed for size %d: %08x\n", i, GetLastError());
+            /* The returned salt length is the same as the set salt length */
+            result = CryptGetKeyParam(hKey, KP_SALT, NULL, &dwLen, 0);
+            ok(result, "%08x\n", GetLastError());
+            ok(dwLen == i, "size %d: unexpected salt length %d\n", i, dwLen);
         }
         salt.cbData = 25;
         SetLastError(0xdeadbeef);
@@ -1576,6 +1800,11 @@ static void test_rsa_encrypt(void)
         broken(dwVal == 0xffffffff), /* Win9x/NT4 */
         "expected CRYPT_MAC|CRYPT_WRITE|CRYPT_READ|CRYPT_DECRYPT|CRYPT_ENCRYPT,"
         " got %08x\n", dwVal);
+
+    /* An RSA key doesn't support salt */
+    result = CryptGetKeyParam(hRSAKey, KP_SALT, NULL, &dwLen, 0);
+    ok(!result && GetLastError() == NTE_BAD_KEY,
+       "expected NTE_BAD_KEY, got %08x\n", GetLastError());
 
     /* The key exchange key's public key may be exported.. */
     result = CryptExportKey(hRSAKey, 0, PUBLICKEYBLOB, 0, NULL, &dwLen);
@@ -2570,5 +2799,6 @@ START_TEST(rsaenh)
     test_aes(128);
     test_aes(192);
     test_aes(256);
+    test_sha2();
     clean_up_aes_environment();
 }

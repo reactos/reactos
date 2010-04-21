@@ -28,9 +28,14 @@
 #include "oaidl.h"
 #include "ocidl.h"
 #include "mlang.h"
+#include "shlwapi.h"
+#include "docobj.h"
+#include "shobjidl.h"
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi;
+static BOOL is_win2k_and_lower;
+
 static int (WINAPI *pSHSearchMapInt)(const int*,const int*,int,int);
 static HRESULT (WINAPI *pGetAcceptLanguagesA)(LPSTR,LPDWORD);
 
@@ -43,6 +48,14 @@ static HRESULT(WINAPI *pIConnectionPoint_SimpleInvoke)(IConnectionPoint*,DISPID,
 static HRESULT(WINAPI *pIConnectionPoint_InvokeWithCancel)(IConnectionPoint*,DISPID,DISPPARAMS*,DWORD,DWORD);
 static HRESULT(WINAPI *pConnectToConnectionPoint)(IUnknown*,REFIID,BOOL,IUnknown*, LPDWORD,IConnectionPoint **);
 static HRESULT(WINAPI *pSHPropertyBag_ReadLONG)(IPropertyBag *,LPCWSTR,LPLONG);
+static LONG   (WINAPI *pSHSetWindowBits)(HWND, INT, UINT, UINT);
+static INT    (WINAPI *pSHFormatDateTimeA)(const FILETIME UNALIGNED*, DWORD*, LPSTR, UINT);
+static INT    (WINAPI *pSHFormatDateTimeW)(const FILETIME UNALIGNED*, DWORD*, LPWSTR, UINT);
+static DWORD  (WINAPI *pSHGetObjectCompatFlags)(IUnknown*, const CLSID*);
+static BOOL   (WINAPI *pGUIDFromStringA)(LPSTR, CLSID *);
+static HRESULT (WINAPI *pIUnknown_QueryServiceExec)(IUnknown*, REFIID, const GUID*, DWORD, DWORD, VARIANT*, VARIANT*);
+static HRESULT (WINAPI *pIUnknown_ProfferService)(IUnknown*, REFGUID, IServiceProvider*, DWORD*);
+static HWND    (WINAPI *pSHCreateWorkerWindowA)(LONG, HWND, DWORD, DWORD, HMENU, LONG_PTR);
 
 static HMODULE hmlang;
 static HRESULT (WINAPI *pLcidToRfc1766A)(LCID, LPSTR, INT);
@@ -55,6 +68,79 @@ static const CHAR ie_international[] = {
 static const CHAR acceptlanguage[] = {
     'A','c','c','e','p','t','L','a','n','g','u','a','g','e',0};
 
+typedef struct {
+    int id;
+    const void *args[5];
+} call_entry_t;
+
+typedef struct {
+    call_entry_t *calls;
+    int count;
+    int alloc;
+} call_trace_t;
+
+static void init_call_trace(call_trace_t *ctrace)
+{
+    ctrace->alloc = 10;
+    ctrace->count = 0;
+    ctrace->calls = HeapAlloc(GetProcessHeap(), 0, sizeof(call_entry_t) * ctrace->alloc);
+}
+
+static void free_call_trace(const call_trace_t *ctrace)
+{
+    HeapFree(GetProcessHeap(), 0, ctrace->calls);
+}
+
+static void add_call(call_trace_t *ctrace, int id, const void *arg0,
+    const void *arg1, const void *arg2, const void *arg3, const void *arg4)
+{
+    call_entry_t call;
+
+    call.id = id;
+    call.args[0] = arg0;
+    call.args[1] = arg1;
+    call.args[2] = arg2;
+    call.args[3] = arg3;
+    call.args[4] = arg4;
+
+    if (ctrace->count == ctrace->alloc)
+    {
+        ctrace->alloc *= 2;
+        ctrace->calls = HeapReAlloc(GetProcessHeap(),0, ctrace->calls, ctrace->alloc*sizeof(call_entry_t));
+    }
+
+    ctrace->calls[ctrace->count++] = call;
+}
+
+static void ok_trace_(call_trace_t *texpected, call_trace_t *tgot, int line)
+{
+    if (texpected->count == tgot->count)
+    {
+        INT i;
+        /* compare */
+        for (i = 0; i < texpected->count; i++)
+        {
+            call_entry_t *expected = &texpected->calls[i];
+            call_entry_t *got = &tgot->calls[i];
+            INT j;
+
+            ok_(__FILE__, line)(expected->id == got->id, "got different ids %d: %d, %d\n", i+1, expected->id, got->id);
+
+            for (j = 0; j < 5; j++)
+            {
+                ok_(__FILE__, line)(expected->args[j] == got->args[j], "got different args[%d] for %d: %p, %p\n", j, i+1,
+                   expected->args[j], got->args[j]);
+            }
+        }
+    }
+    else
+        ok_(__FILE__, line)(0, "traces length mismatch\n");
+}
+
+#define ok_trace(a, b) ok_trace_(a, b, __LINE__)
+
+/* trace of actually made calls */
+static call_trace_t trace_got;
 
 static void test_GetAcceptLanguagesA(void)
 {
@@ -180,7 +266,7 @@ static void test_GetAcceptLanguagesA(void)
         /* There is no space for the string in the registry.
            When the buffer is large enough, the default language is returned
 
-           When the buffer is to small for that fallback, win7_32 and w2k8_64
+           When the buffer is too small for that fallback, win7_32 and w2k8_64
            and above fail with HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), but
            recent os succeed and return a partial result while
            older os succeed and overflow the buffer */
@@ -248,7 +334,7 @@ static void test_GetAcceptLanguagesA(void)
     memset(buffer, '#', maxlen);
     buffer[maxlen] = 0;
     hr = pGetAcceptLanguagesA( buffer, &len);
-    /* When the buffer is to small, win7_32 and w2k8_64 and above fail with
+    /* When the buffer is too small, win7_32 and w2k8_64 and above fail with
        HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER), other versions suceed
        and return a partial 0 terminated result while other versions
        fail with E_INVALIDARG and return a partial unterminated result */
@@ -1397,31 +1483,940 @@ static void test_SHPropertyBag_ReadLONG(void)
     IUnknown_Release((IUnknown*)pb);
 }
 
+
+
+static void test_SHSetWindowBits(void)
+{
+    HWND hwnd;
+    DWORD style, styleold;
+    WNDCLASSA clsA;
+
+    if(!pSHSetWindowBits)
+    {
+        win_skip("SHSetWindowBits is not available\n");
+        return;
+    }
+
+    clsA.style = 0;
+    clsA.lpfnWndProc = DefWindowProcA;
+    clsA.cbClsExtra = 0;
+    clsA.cbWndExtra = 0;
+    clsA.hInstance = GetModuleHandleA(NULL);
+    clsA.hIcon = 0;
+    clsA.hCursor = LoadCursorA(0, IDC_ARROW);
+    clsA.hbrBackground = NULL;
+    clsA.lpszMenuName = NULL;
+    clsA.lpszClassName = "Shlwapi test class";
+    RegisterClassA(&clsA);
+
+    hwnd = CreateWindowA("Shlwapi test class", "Test", WS_VISIBLE, 0, 0, 100, 100,
+                          NULL, NULL, GetModuleHandle(NULL), 0);
+    ok(IsWindow(hwnd), "failed to create window\n");
+
+    /* null window */
+    SetLastError(0xdeadbeef);
+    style = pSHSetWindowBits(NULL, GWL_STYLE, 0, 0);
+    ok(style == 0, "expected 0 retval, got %d\n", style);
+    ok(GetLastError() == ERROR_INVALID_WINDOW_HANDLE ||
+        broken(GetLastError() == 0xdeadbeef), /* Win9x/WinMe */
+        "expected ERROR_INVALID_WINDOW_HANDLE, got %d\n", GetLastError());
+
+    /* zero mask, zero flags */
+    styleold = GetWindowLongA(hwnd, GWL_STYLE);
+    style = pSHSetWindowBits(hwnd, GWL_STYLE, 0, 0);
+    ok(styleold == style, "expected old style\n");
+    ok(styleold == GetWindowLongA(hwnd, GWL_STYLE), "expected to keep old style\n");
+
+    /* test mask */
+    styleold = GetWindowLongA(hwnd, GWL_STYLE);
+    ok(styleold & WS_VISIBLE, "expected WS_VISIBLE\n");
+    style = pSHSetWindowBits(hwnd, GWL_STYLE, WS_VISIBLE, 0);
+
+    ok(style == styleold, "expected previous style, got %x\n", style);
+    ok((GetWindowLongA(hwnd, GWL_STYLE) & WS_VISIBLE) == 0, "expected updated style\n");
+
+    /* test mask, unset style bit used */
+    styleold = GetWindowLongA(hwnd, GWL_STYLE);
+    style = pSHSetWindowBits(hwnd, GWL_STYLE, WS_VISIBLE, 0);
+    ok(style == styleold, "expected previous style, got %x\n", style);
+    ok(styleold == GetWindowLongA(hwnd, GWL_STYLE), "expected to keep old style\n");
+
+    /* set back with flags */
+    styleold = GetWindowLongA(hwnd, GWL_STYLE);
+    style = pSHSetWindowBits(hwnd, GWL_STYLE, WS_VISIBLE, WS_VISIBLE);
+    ok(style == styleold, "expected previous style, got %x\n", style);
+    ok(GetWindowLongA(hwnd, GWL_STYLE) & WS_VISIBLE, "expected updated style\n");
+
+    /* reset and try to set without a mask */
+    pSHSetWindowBits(hwnd, GWL_STYLE, WS_VISIBLE, 0);
+    ok((GetWindowLongA(hwnd, GWL_STYLE) & WS_VISIBLE) == 0, "expected updated style\n");
+    styleold = GetWindowLongA(hwnd, GWL_STYLE);
+    style = pSHSetWindowBits(hwnd, GWL_STYLE, 0, WS_VISIBLE);
+    ok(style == styleold, "expected previous style, got %x\n", style);
+    ok((GetWindowLongA(hwnd, GWL_STYLE) & WS_VISIBLE) == 0, "expected updated style\n");
+
+    DestroyWindow(hwnd);
+
+    UnregisterClassA("Shlwapi test class", GetModuleHandleA(NULL));
+}
+
+static void test_SHFormatDateTimeA(void)
+{
+    FILETIME UNALIGNED filetime;
+    CHAR buff[100], buff2[100], buff3[100];
+    SYSTEMTIME st;
+    DWORD flags;
+    INT ret;
+
+    if(!pSHFormatDateTimeA)
+    {
+        win_skip("pSHFormatDateTimeA isn't available\n");
+        return;
+    }
+
+if (0)
+{
+    /* crashes on native */
+    ret = pSHFormatDateTimeA(NULL, NULL, NULL, 0);
+}
+
+    GetLocalTime(&st);
+    SystemTimeToFileTime(&st, &filetime);
+    /* SHFormatDateTime expects input as utc */
+    LocalFileTimeToFileTime(&filetime, &filetime);
+
+    /* no way to get required buffer length here */
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeA(&filetime, NULL, NULL, 0);
+    ok(ret == 0, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    buff[0] = 'a'; buff[1] = 0;
+    ret = pSHFormatDateTimeA(&filetime, NULL, buff, 0);
+    ok(ret == 0, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(buff[0] == 'a', "expected same string, got %s\n", buff);
+
+    /* flags needs to have FDTF_NOAUTOREADINGORDER for these tests to succeed on Vista+ */
+
+    /* all combinations documented as invalid succeeded */
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTTIME | FDTF_LONGTIME;
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTDATE | FDTF_LONGDATE;
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    flags =  FDTF_SHORTDATE | FDTF_LTRDATE | FDTF_RTLDATE;
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef ||
+        broken(GetLastError() == ERROR_INVALID_FLAGS), /* Win9x/WinMe */
+        "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    /* now check returned strings */
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    /* both time flags */
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGTIME | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTDATE;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGDATE;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    /* both date flags */
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGDATE | FDTF_SHORTDATE;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    /* various combinations of date/time flags */
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGDATE | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d, length %d\n", ret, lstrlenA(buff)+1);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    strcat(buff2, ", ");
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff3, sizeof(buff3));
+    ok(ret == lstrlenA(buff3)+1, "got %d\n", ret);
+    strcat(buff2, buff3);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_LONGDATE | FDTF_LONGTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    strcat(buff2, ", ");
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, buff3, sizeof(buff3));
+    ok(ret == lstrlenA(buff3)+1, "got %d\n", ret);
+    strcat(buff2, buff3);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTDATE | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    strcat(buff2, " ");
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff3, sizeof(buff3));
+    ok(ret == lstrlenA(buff3)+1, "got %d\n", ret);
+    strcat(buff2, buff3);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+
+    flags = FDTF_NOAUTOREADINGORDER | FDTF_SHORTDATE | FDTF_LONGTIME;
+    ret = pSHFormatDateTimeA(&filetime, &flags, buff, sizeof(buff));
+    ok(ret == lstrlenA(buff)+1, "got %d\n", ret);
+    ret = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2));
+    ok(ret == lstrlenA(buff2)+1, "got %d\n", ret);
+    strcat(buff2, " ");
+    ret = GetTimeFormat(LOCALE_USER_DEFAULT, 0, &st, NULL, buff3, sizeof(buff3));
+    ok(ret == lstrlenA(buff3)+1, "got %d\n", ret);
+    strcat(buff2, buff3);
+    ok(lstrcmpA(buff, buff2) == 0, "expected (%s), got (%s)\n", buff2, buff);
+}
+
+static void test_SHFormatDateTimeW(void)
+{
+    FILETIME UNALIGNED filetime;
+    WCHAR buff[100], buff2[100], buff3[100];
+    SYSTEMTIME st;
+    DWORD flags;
+    INT ret;
+    static const WCHAR spaceW[] = {' ',0};
+    static const WCHAR commaW[] = {',',' ',0};
+
+    if(!pSHFormatDateTimeW)
+    {
+        win_skip("pSHFormatDateTimeW isn't available\n");
+        return;
+    }
+
+if (0)
+{
+    /* crashes on native */
+    ret = pSHFormatDateTimeW(NULL, NULL, NULL, 0);
+}
+
+    GetLocalTime(&st);
+    SystemTimeToFileTime(&st, &filetime);
+    /* SHFormatDateTime expects input as utc */
+    LocalFileTimeToFileTime(&filetime, &filetime);
+
+    /* no way to get required buffer length here */
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeW(&filetime, NULL, NULL, 0);
+    ok(ret == 0, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    buff[0] = 'a'; buff[1] = 0;
+    ret = pSHFormatDateTimeW(&filetime, NULL, buff, 0);
+    ok(ret == 0, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+    ok(buff[0] == 'a', "expected same string\n");
+
+    /* all combinations documented as invalid succeeded */
+    flags = FDTF_SHORTTIME | FDTF_LONGTIME;
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    flags = FDTF_SHORTDATE | FDTF_LONGDATE;
+    SetLastError(0xdeadbeef);
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    flags = FDTF_SHORTDATE | FDTF_LTRDATE | FDTF_RTLDATE;
+    SetLastError(0xdeadbeef);
+    buff[0] = 0; /* NT4 doesn't clear the buffer on failure */
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef ||
+        broken(GetLastError() == ERROR_INVALID_FLAGS), /* Win9x/WinMe/NT4 */
+        "expected 0xdeadbeef, got %d\n", GetLastError());
+
+    /* now check returned strings */
+    flags = FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    SetLastError(0xdeadbeef);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    if (ret == 0 && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        win_skip("Needed W-functions are not implemented\n");
+        return;
+    }
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    flags = FDTF_LONGTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    /* both time flags */
+    flags = FDTF_LONGTIME | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal string\n");
+
+    flags = FDTF_SHORTDATE;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    flags = FDTF_LONGDATE;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    /* both date flags */
+    flags = FDTF_LONGDATE | FDTF_SHORTDATE;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    /* various combinations of date/time flags */
+    flags = FDTF_LONGDATE | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d, length %d\n", ret, lstrlenW(buff)+1);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    lstrcatW(buff2, commaW);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff3, sizeof(buff3)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff3)+1, "got %d\n", ret);
+    lstrcatW(buff2, buff3);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    flags = FDTF_LONGDATE | FDTF_LONGTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_LONGDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    lstrcatW(buff2, commaW);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, buff3, sizeof(buff3)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff3)+1, "got %d\n", ret);
+    lstrcatW(buff2, buff3);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    flags = FDTF_SHORTDATE | FDTF_SHORTTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    lstrcatW(buff2, spaceW);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buff3, sizeof(buff3)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff3)+1, "got %d\n", ret);
+    lstrcatW(buff2, buff3);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+
+    flags = FDTF_SHORTDATE | FDTF_LONGTIME;
+    ret = pSHFormatDateTimeW(&filetime, &flags, buff, sizeof(buff)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff)+1, "got %d\n", ret);
+    ret = GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &st, NULL, buff2, sizeof(buff2)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff2)+1, "got %d\n", ret);
+    lstrcatW(buff2, spaceW);
+    ret = GetTimeFormatW(LOCALE_USER_DEFAULT, 0, &st, NULL, buff3, sizeof(buff3)/sizeof(WCHAR));
+    ok(ret == lstrlenW(buff3)+1, "got %d\n", ret);
+    lstrcatW(buff2, buff3);
+    ok(lstrcmpW(buff, buff2) == 0, "expected equal strings\n");
+}
+
+static void test_SHGetObjectCompatFlags(void)
+{
+    struct compat_value {
+        CHAR nameA[30];
+        DWORD value;
+    };
+
+    struct compat_value values[] = {
+        { "OTNEEDSSFCACHE", 0x1 },
+        { "NO_WEBVIEW", 0x2 },
+        { "UNBINDABLE", 0x4 },
+        { "PINDLL", 0x8 },
+        { "NEEDSFILESYSANCESTOR", 0x10 },
+        { "NOTAFILESYSTEM", 0x20 },
+        { "CTXMENU_NOVERBS", 0x40 },
+        { "CTXMENU_LIMITEDQI", 0x80 },
+        { "COCREATESHELLFOLDERONLY", 0x100 },
+        { "NEEDSSTORAGEANCESTOR", 0x200 },
+        { "NOLEGACYWEBVIEW", 0x400 },
+        { "CTXMENU_XPQCMFLAGS", 0x1000 },
+        { "NOIPROPERTYSTORE", 0x2000 }
+    };
+
+    static const char compat_path[] = "Software\\Microsoft\\Windows\\CurrentVersion\\ShellCompatibility\\Objects";
+    CHAR keyA[39]; /* {CLSID} */
+    HKEY root;
+    DWORD ret;
+    int i;
+
+    if (!pSHGetObjectCompatFlags)
+    {
+        win_skip("SHGetObjectCompatFlags isn't available\n");
+        return;
+    }
+
+    /* null args */
+    ret = pSHGetObjectCompatFlags(NULL, NULL);
+    ok(ret == 0, "got %d\n", ret);
+
+    ret = RegOpenKeyA(HKEY_LOCAL_MACHINE, compat_path, &root);
+    if (ret != ERROR_SUCCESS)
+    {
+        skip("No compatibility class data found\n");
+        return;
+    }
+
+    for (i = 0; RegEnumKeyA(root, i, keyA, sizeof(keyA)) == ERROR_SUCCESS; i++)
+    {
+        HKEY clsid_key;
+
+        if (RegOpenKeyA(root, keyA, &clsid_key) == ERROR_SUCCESS)
+        {
+            CHAR valueA[30];
+            DWORD expected = 0, got, length = sizeof(valueA);
+            CLSID clsid;
+            int v;
+
+            for (v = 0; RegEnumValueA(clsid_key, v, valueA, &length, NULL, NULL, NULL, NULL) == ERROR_SUCCESS; v++)
+            {
+                int j;
+
+                for (j = 0; j < sizeof(values)/sizeof(struct compat_value); j++)
+                    if (lstrcmpA(values[j].nameA, valueA) == 0)
+                    {
+                        expected |= values[j].value;
+                        break;
+                    }
+
+                length = sizeof(valueA);
+            }
+
+            pGUIDFromStringA(keyA, &clsid);
+            got = pSHGetObjectCompatFlags(NULL, &clsid);
+            ok(got == expected, "got 0x%08x, expected 0x%08x. Key %s\n", got, expected, keyA);
+
+            RegCloseKey(clsid_key);
+        }
+    }
+
+    RegCloseKey(root);
+}
+
+typedef struct {
+    const IOleCommandTargetVtbl *lpVtbl;
+    LONG ref;
+} IOleCommandTargetImpl;
+
+static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl;
+
+IOleCommandTarget* IOleCommandTargetImpl_Construct(void)
+{
+    IOleCommandTargetImpl *obj;
+
+    obj = HeapAlloc(GetProcessHeap(), 0, sizeof(*obj));
+    obj->lpVtbl = &IOleCommandTargetImpl_Vtbl;
+    obj->ref = 1;
+
+    return (IOleCommandTarget*)obj;
+}
+
+static HRESULT WINAPI IOleCommandTargetImpl_QueryInterface(IOleCommandTarget *iface, REFIID riid, void **ppvObj)
+{
+    IOleCommandTargetImpl *This = (IOleCommandTargetImpl *)iface;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IOleCommandTarget))
+    {
+        *ppvObj = This;
+    }
+
+    if(*ppvObj)
+    {
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI IOleCommandTargetImpl_AddRef(IOleCommandTarget *iface)
+{
+    IOleCommandTargetImpl *This = (IOleCommandTargetImpl *)iface;
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI IOleCommandTargetImpl_Release(IOleCommandTarget *iface)
+{
+    IOleCommandTargetImpl *This = (IOleCommandTargetImpl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+        return 0;
+    }
+    return ref;
+}
+
+static HRESULT WINAPI IOleCommandTargetImpl_QueryStatus(
+    IOleCommandTarget *iface, const GUID *group, ULONG cCmds, OLECMD prgCmds[], OLECMDTEXT *pCmdText)
+{
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI IOleCommandTargetImpl_Exec(
+    IOleCommandTarget *iface,
+    const GUID *CmdGroup,
+    DWORD nCmdID,
+    DWORD nCmdexecopt,
+    VARIANT *pvaIn,
+    VARIANT *pvaOut)
+{
+    add_call(&trace_got, 3, CmdGroup, (void*)(DWORD_PTR)nCmdID, (void*)(DWORD_PTR)nCmdexecopt, pvaIn, pvaOut);
+    return S_OK;
+}
+
+static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl =
+{
+    IOleCommandTargetImpl_QueryInterface,
+    IOleCommandTargetImpl_AddRef,
+    IOleCommandTargetImpl_Release,
+    IOleCommandTargetImpl_QueryStatus,
+    IOleCommandTargetImpl_Exec
+};
+
+typedef struct {
+    const IServiceProviderVtbl *lpVtbl;
+    LONG ref;
+} IServiceProviderImpl;
+
+typedef struct {
+    const IProfferServiceVtbl *lpVtbl;
+    LONG ref;
+} IProfferServiceImpl;
+
+
+static const IServiceProviderVtbl IServiceProviderImpl_Vtbl;
+static const IProfferServiceVtbl IProfferServiceImpl_Vtbl;
+
+IServiceProvider* IServiceProviderImpl_Construct(void)
+{
+    IServiceProviderImpl *obj;
+
+    obj = HeapAlloc(GetProcessHeap(), 0, sizeof(*obj));
+    obj->lpVtbl = &IServiceProviderImpl_Vtbl;
+    obj->ref = 1;
+
+    return (IServiceProvider*)obj;
+}
+
+IProfferService* IProfferServiceImpl_Construct(void)
+{
+    IProfferServiceImpl *obj;
+
+    obj = HeapAlloc(GetProcessHeap(), 0, sizeof(*obj));
+    obj->lpVtbl = &IProfferServiceImpl_Vtbl;
+    obj->ref = 1;
+
+    return (IProfferService*)obj;
+}
+
+static HRESULT WINAPI IServiceProviderImpl_QueryInterface(IServiceProvider *iface, REFIID riid, void **ppvObj)
+{
+    IServiceProviderImpl *This = (IServiceProviderImpl *)iface;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IServiceProvider))
+    {
+        *ppvObj = This;
+    }
+
+    if(*ppvObj)
+    {
+        IUnknown_AddRef(iface);
+        /* native uses redefined IID_IServiceProvider symbol, so we can't compare pointers */
+        if (IsEqualIID(riid, &IID_IServiceProvider))
+            add_call(&trace_got, 1, iface, &IID_IServiceProvider, 0, 0, 0);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI IServiceProviderImpl_AddRef(IServiceProvider *iface)
+{
+    IServiceProviderImpl *This = (IServiceProviderImpl *)iface;
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI IServiceProviderImpl_Release(IServiceProvider *iface)
+{
+    IServiceProviderImpl *This = (IServiceProviderImpl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+        return 0;
+    }
+    return ref;
+}
+
+static HRESULT WINAPI IServiceProviderImpl_QueryService(
+    IServiceProvider *iface, REFGUID service, REFIID riid, void **ppv)
+{
+    /* native uses redefined pointer for IID_IOleCommandTarget, not one from uuid.lib */
+    if (IsEqualIID(riid, &IID_IOleCommandTarget))
+    {
+        add_call(&trace_got, 2, iface, service, &IID_IOleCommandTarget, 0, 0);
+        *ppv = IOleCommandTargetImpl_Construct();
+    }
+    if (IsEqualIID(riid, &IID_IProfferService))
+    {
+        if (IsEqualIID(service, &IID_IProfferService))
+            add_call(&trace_got, 2, &IID_IProfferService, &IID_IProfferService, 0, 0, 0);
+        *ppv = IProfferServiceImpl_Construct();
+    }
+    return S_OK;
+}
+
+static const IServiceProviderVtbl IServiceProviderImpl_Vtbl =
+{
+    IServiceProviderImpl_QueryInterface,
+    IServiceProviderImpl_AddRef,
+    IServiceProviderImpl_Release,
+    IServiceProviderImpl_QueryService
+};
+
+static void test_IUnknown_QueryServiceExec(void)
+{
+    IServiceProvider *provider = IServiceProviderImpl_Construct();
+    static const GUID dummy_serviceid = { 0xdeadbeef };
+    static const GUID dummy_groupid = { 0xbeefbeef };
+    call_trace_t trace_expected;
+    HRESULT hr;
+
+    /* on <=W2K platforms same ordinal used for another export with different
+       prototype, so skipping using this indirect condition */
+    if (is_win2k_and_lower)
+    {
+        win_skip("IUnknown_QueryServiceExec is not available\n");
+        return;
+    }
+
+    /* null source pointer */
+    hr = pIUnknown_QueryServiceExec(NULL, &dummy_serviceid, &dummy_groupid, 0, 0, 0, 0);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+
+    /* expected trace:
+       IUnknown_QueryServiceExec( ptr1, serviceid, groupid, arg1, arg2, arg3, arg4);
+         -> IUnknown_QueryInterface( ptr1, &IID_IServiceProvider, &prov );
+         -> IServiceProvider_QueryService( prov, serviceid, &IID_IOleCommandTarget, &obj );
+         -> IOleCommandTarget_Exec( obj, groupid, arg1, arg2, arg3, arg4 );
+    */
+    init_call_trace(&trace_expected);
+
+    add_call(&trace_expected, 1, provider, &IID_IServiceProvider, 0, 0, 0);
+    add_call(&trace_expected, 2, provider, &dummy_serviceid, &IID_IOleCommandTarget, 0, 0);
+    add_call(&trace_expected, 3, &dummy_groupid, (void*)0x1, (void*)0x2, (void*)0x3, (void*)0x4);
+
+    init_call_trace(&trace_got);
+    hr = pIUnknown_QueryServiceExec((IUnknown*)provider, &dummy_serviceid, &dummy_groupid, 0x1, 0x2, (void*)0x3, (void*)0x4);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ok_trace(&trace_expected, &trace_got);
+
+    free_call_trace(&trace_expected);
+    free_call_trace(&trace_got);
+
+    IServiceProvider_Release(provider);
+}
+
+
+static HRESULT WINAPI IProfferServiceImpl_QueryInterface(IProfferService *iface, REFIID riid, void **ppvObj)
+{
+    IProfferServiceImpl *This = (IProfferServiceImpl *)iface;
+
+    if (IsEqualIID(riid, &IID_IUnknown) ||
+        IsEqualIID(riid, &IID_IProfferService))
+    {
+        *ppvObj = This;
+    }
+    else if (IsEqualIID(riid, &IID_IServiceProvider))
+    {
+        *ppvObj = IServiceProviderImpl_Construct();
+        add_call(&trace_got, 1, iface, &IID_IServiceProvider, 0, 0, 0);
+        return S_OK;
+    }
+
+    if(*ppvObj)
+    {
+        IUnknown_AddRef(iface);
+        return S_OK;
+    }
+
+    return E_NOINTERFACE;
+}
+
+static ULONG WINAPI IProfferServiceImpl_AddRef(IProfferService *iface)
+{
+    IProfferServiceImpl *This = (IProfferServiceImpl *)iface;
+    return InterlockedIncrement(&This->ref);
+}
+
+static ULONG WINAPI IProfferServiceImpl_Release(IProfferService *iface)
+{
+    IProfferServiceImpl *This = (IProfferServiceImpl *)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+
+    if (!ref)
+    {
+        HeapFree(GetProcessHeap(), 0, This);
+        return 0;
+    }
+    return ref;
+}
+
+static HRESULT WINAPI IProfferServiceImpl_ProfferService(IProfferService *iface,
+    REFGUID service, IServiceProvider *pService, DWORD *pCookie)
+{
+    add_call(&trace_got, 3, service, pService, pCookie, 0, 0);
+    return S_OK;
+}
+
+static HRESULT WINAPI IProfferServiceImpl_RevokeService(IProfferService *iface, DWORD cookie)
+{
+    add_call(&trace_got, 4, (void*)(DWORD_PTR)cookie, 0, 0, 0, 0);
+    return S_OK;
+}
+
+static const IProfferServiceVtbl IProfferServiceImpl_Vtbl =
+{
+    IProfferServiceImpl_QueryInterface,
+    IProfferServiceImpl_AddRef,
+    IProfferServiceImpl_Release,
+    IProfferServiceImpl_ProfferService,
+    IProfferServiceImpl_RevokeService
+};
+
+static void test_IUnknown_ProfferService(void)
+{
+    IServiceProvider *provider = IServiceProviderImpl_Construct();
+    IProfferService *proff = IProfferServiceImpl_Construct();
+    static const GUID dummy_serviceid = { 0xdeadbeef };
+    call_trace_t trace_expected;
+    HRESULT hr;
+    DWORD cookie;
+
+    /* on <=W2K platforms same ordinal used for another export with different
+       prototype, so skipping using this indirect condition */
+    if (is_win2k_and_lower)
+    {
+        win_skip("IUnknown_ProfferService is not available\n");
+        return;
+    }
+
+    /* null source pointer */
+    hr = pIUnknown_ProfferService(NULL, &dummy_serviceid, 0, 0);
+    ok(hr == E_FAIL, "got 0x%08x\n", hr);
+
+    /* expected trace:
+       IUnknown_ProfferService( ptr1, serviceid, arg1, arg2);
+         -> IUnknown_QueryInterface( ptr1, &IID_IServiceProvider, &provider );
+         -> IServiceProvider_QueryService( provider, &IID_IProfferService, &IID_IProfferService, &proffer );
+
+         if (service pointer not null):
+             -> IProfferService_ProfferService( proffer, serviceid, arg1, arg2 );
+         else
+             -> IProfferService_RevokeService( proffer, *arg2 );
+    */
+    init_call_trace(&trace_expected);
+
+    add_call(&trace_expected, 1, proff, &IID_IServiceProvider, 0, 0, 0);
+    add_call(&trace_expected, 2, &IID_IProfferService, &IID_IProfferService, 0, 0, 0);
+    add_call(&trace_expected, 3, &dummy_serviceid, provider, &cookie, 0, 0);
+
+    init_call_trace(&trace_got);
+    hr = pIUnknown_ProfferService((IUnknown*)proff, &dummy_serviceid, provider, &cookie);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+
+    ok_trace(&trace_expected, &trace_got);
+    free_call_trace(&trace_got);
+    free_call_trace(&trace_expected);
+
+    /* same with ::Revoke path */
+    init_call_trace(&trace_expected);
+
+    add_call(&trace_expected, 1, proff, &IID_IServiceProvider, 0, 0, 0);
+    add_call(&trace_expected, 2, &IID_IProfferService, &IID_IProfferService, 0, 0, 0);
+    add_call(&trace_expected, 4, (void*)(DWORD_PTR)cookie, 0, 0, 0, 0);
+
+    init_call_trace(&trace_got);
+    hr = pIUnknown_ProfferService((IUnknown*)proff, &dummy_serviceid, 0, &cookie);
+    ok(hr == S_OK, "got 0x%08x\n", hr);
+    ok_trace(&trace_expected, &trace_got);
+    free_call_trace(&trace_got);
+    free_call_trace(&trace_expected);
+
+    IServiceProvider_Release(provider);
+    IProfferService_Release(proff);
+}
+
+static void test_SHCreateWorkerWindowA(void)
+{
+    WNDCLASSA cliA;
+    char classA[20];
+    HWND hwnd;
+    LONG_PTR ret;
+    BOOL res;
+
+    if (is_win2k_and_lower)
+    {
+        win_skip("SHCreateWorkerWindowA not available\n");
+        return;
+    }
+
+    hwnd = pSHCreateWorkerWindowA(0, NULL, 0, 0, 0, 0);
+    ok(hwnd != 0, "expected window\n");
+
+    GetClassName(hwnd, classA, 20);
+    ok(lstrcmpA(classA, "WorkerA") == 0, "expected WorkerA class, got %s\n", classA);
+
+    ret = GetWindowLongPtrA(hwnd, 0);
+    ok(ret == 0, "got %ld\n", ret);
+
+    /* class info */
+    memset(&cliA, 0, sizeof(cliA));
+    res = GetClassInfoA(GetModuleHandle("shlwapi.dll"), "WorkerA", &cliA);
+    ok(res, "failed to get class info\n");
+    ok(cliA.style == 0, "got 0x%08x\n", cliA.style);
+    ok(cliA.cbClsExtra == 0, "got %d\n", cliA.cbClsExtra);
+    ok(cliA.cbWndExtra == sizeof(LONG_PTR), "got %d\n", cliA.cbWndExtra);
+    ok(cliA.lpszMenuName == 0, "got %s\n", cliA.lpszMenuName);
+
+    DestroyWindow(hwnd);
+
+    /* set extra bytes */
+    hwnd = pSHCreateWorkerWindowA(0, NULL, 0, 0, 0, 0xdeadbeef);
+    ok(hwnd != 0, "expected window\n");
+
+    GetClassName(hwnd, classA, 20);
+    ok(lstrcmpA(classA, "WorkerA") == 0, "expected WorkerA class, got %s\n", classA);
+
+    ret = GetWindowLongPtrA(hwnd, 0);
+    ok(ret == 0xdeadbeef, "got %ld\n", ret);
+
+    /* test exstyle */
+    ret = GetWindowLongA(hwnd, GWL_EXSTYLE);
+    ok(ret == WS_EX_WINDOWEDGE, "0x%08lx\n", ret);
+
+    DestroyWindow(hwnd);
+
+    hwnd = pSHCreateWorkerWindowA(0, NULL, WS_EX_TOOLWINDOW, 0, 0, 0);
+    ret = GetWindowLongA(hwnd, GWL_EXSTYLE);
+    ok(ret == (WS_EX_WINDOWEDGE|WS_EX_TOOLWINDOW), "0x%08lx\n", ret);
+    DestroyWindow(hwnd);
+}
+
+static void init_pointers(void)
+{
+#define MAKEFUNC(f, ord) (p##f = (void*)GetProcAddress(hShlwapi, (LPSTR)(ord)))
+    MAKEFUNC(SHAllocShared, 7);
+    MAKEFUNC(SHLockShared, 8);
+    MAKEFUNC(SHUnlockShared, 9);
+    MAKEFUNC(SHFreeShared, 10);
+    MAKEFUNC(GetAcceptLanguagesA, 14);
+    MAKEFUNC(SHSetWindowBits, 165);
+    MAKEFUNC(ConnectToConnectionPoint, 168);
+    MAKEFUNC(SHSearchMapInt, 198);
+    MAKEFUNC(SHCreateWorkerWindowA, 257);
+    MAKEFUNC(GUIDFromStringA, 269);
+    MAKEFUNC(SHPackDispParams, 282);
+    MAKEFUNC(IConnectionPoint_InvokeWithCancel, 283);
+    MAKEFUNC(IConnectionPoint_SimpleInvoke, 284);
+    MAKEFUNC(SHFormatDateTimeA, 353);
+    MAKEFUNC(SHFormatDateTimeW, 354);
+    MAKEFUNC(SHGetObjectCompatFlags, 476);
+    MAKEFUNC(IUnknown_QueryServiceExec, 484);
+    MAKEFUNC(SHPropertyBag_ReadLONG, 496);
+    MAKEFUNC(IUnknown_ProfferService, 514);
+#undef MAKEFUNC
+}
+
 START_TEST(ordinal)
 {
-  hShlwapi = GetModuleHandleA("shlwapi.dll");
+    hShlwapi = GetModuleHandleA("shlwapi.dll");
+    is_win2k_and_lower = GetProcAddress(hShlwapi, "StrChrNW") == 0;
 
-  pGetAcceptLanguagesA = (void*)GetProcAddress(hShlwapi, (LPSTR)14);
-  pSHSearchMapInt = (void*)GetProcAddress(hShlwapi, (LPSTR)198);
-  pSHAllocShared=(void*)GetProcAddress(hShlwapi,(char*)7);
-  pSHLockShared=(void*)GetProcAddress(hShlwapi,(char*)8);
-  pSHUnlockShared=(void*)GetProcAddress(hShlwapi,(char*)9);
-  pSHFreeShared=(void*)GetProcAddress(hShlwapi,(char*)10);
-  pSHPackDispParams=(void*)GetProcAddress(hShlwapi,(char*)282);
-  pIConnectionPoint_SimpleInvoke=(void*)GetProcAddress(hShlwapi,(char*)284);
-  pIConnectionPoint_InvokeWithCancel=(void*)GetProcAddress(hShlwapi,(char*)283);
-  pConnectToConnectionPoint=(void*)GetProcAddress(hShlwapi,(char*)168);
-  pSHPropertyBag_ReadLONG=(void*)GetProcAddress(hShlwapi,(char*)496);
+    init_pointers();
 
-  hmlang = LoadLibraryA("mlang.dll");
-  pLcidToRfc1766A = (void *)GetProcAddress(hmlang, "LcidToRfc1766A");
+    hmlang = LoadLibraryA("mlang.dll");
+    pLcidToRfc1766A = (void *)GetProcAddress(hmlang, "LcidToRfc1766A");
 
-  test_GetAcceptLanguagesA();
-  test_SHSearchMapInt();
-  test_alloc_shared();
-  test_fdsa();
-  test_GetShellSecurityDescriptor();
-  test_SHPackDispParams();
-  test_IConnectionPoint();
-  test_SHPropertyBag_ReadLONG();
+    test_GetAcceptLanguagesA();
+    test_SHSearchMapInt();
+    test_alloc_shared();
+    test_fdsa();
+    test_GetShellSecurityDescriptor();
+    test_SHPackDispParams();
+    test_IConnectionPoint();
+    test_SHPropertyBag_ReadLONG();
+    test_SHSetWindowBits();
+    test_SHFormatDateTimeA();
+    test_SHFormatDateTimeW();
+    test_SHGetObjectCompatFlags();
+    test_IUnknown_QueryServiceExec();
+    test_IUnknown_ProfferService();
+    test_SHCreateWorkerWindowA();
 }

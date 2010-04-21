@@ -63,6 +63,8 @@ DEFINE_EXPECT(QI_IInternetProtocolInfo);
 DEFINE_EXPECT(CreateInstance);
 DEFINE_EXPECT(unk_Release);
 
+static HRESULT (WINAPI *pCoInternetCompareUrl)(LPCWSTR, LPCWSTR, DWORD);
+
 static void test_CreateFormatEnum(void)
 {
     IEnumFORMATETC *fenum = NULL, *fenum2 = NULL;
@@ -363,13 +365,18 @@ static void test_CoInternetCompareUrl(void)
 {
     HRESULT hres;
 
-    hres = CoInternetCompareUrl(url1, url1, 0);
+    if (!pCoInternetCompareUrl) {
+        win_skip("CoInternetCompareUrl not found\n");
+        return;
+    }
+
+    hres = pCoInternetCompareUrl(url1, url1, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
-    hres = CoInternetCompareUrl(url1, url3, 0);
+    hres = pCoInternetCompareUrl(url1, url3, 0);
     ok(hres == S_FALSE, "CoInternetParseUrl failed: %08x\n", hres);
 
-    hres = CoInternetCompareUrl(url3, url1, 0);
+    hres = pCoInternetCompareUrl(url3, url1, 0);
     ok(hres == S_FALSE, "CoInternetParseUrl failed: %08x\n", hres);
 }
 
@@ -1402,9 +1409,14 @@ static void test_IsValidURL(void)
 
 START_TEST(misc)
 {
+    HMODULE hurlmon;
+
     OleInitialize(NULL);
 
     register_protocols();
+
+    hurlmon = GetModuleHandle("urlmon.dll");
+    pCoInternetCompareUrl = (void *) GetProcAddress(hurlmon, "CoInternetCompareUrl");
 
     test_CreateFormatEnum();
     test_RegisterFormatEnumerator();

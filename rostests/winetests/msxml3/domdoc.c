@@ -535,6 +535,7 @@ static void test_domdoc( void )
     BSTR str;
     LONG code;
     LONG nLength = 0;
+    WCHAR buff[100];
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
@@ -542,6 +543,12 @@ static void test_domdoc( void )
         return;
 
     test_disp((IUnknown*)doc);
+
+if (0)
+{
+    /* crashes on native */
+    r = IXMLDOMDocument_loadXML( doc, (BSTR)0x1, NULL );
+}
 
     /* try some stupid things */
     r = IXMLDOMDocument_loadXML( doc, NULL, NULL );
@@ -600,6 +607,15 @@ static void test_domdoc( void )
     r = IXMLDOMDocument_get_documentElement( doc, &element );
     ok( r == S_FALSE, "should be no document element\n");
     ok( element == NULL, "Element should be NULL\n");
+
+    /* test for BSTR handling, pass broken BSTR */
+    memcpy(&buff[2], szComplete1, sizeof(szComplete1));
+    /* just a big length */
+    *(DWORD*)buff = 0xf0f0;
+    b = VARIANT_FALSE;
+    r = IXMLDOMDocument_loadXML( doc, &buff[2], &b );
+    ok( r == S_OK, "loadXML failed\n");
+    ok( b == VARIANT_TRUE, "failed to load XML string\n");
 
     /* try to load something valid */
     b = VARIANT_FALSE;
@@ -2734,6 +2750,12 @@ static void test_XMLHTTP(void)
     SysFreeString(str2);
 
     hr = IXMLHttpRequest_send(pXMLHttpRequest, varbody);
+    if (hr == INET_E_RESOURCE_NOT_FOUND)
+    {
+        skip("No connection could be made with crossover.codeweavers.com\n");
+        IXMLHttpRequest_Release(pXMLHttpRequest);
+        return;
+    }
     todo_wine ok(hr == S_OK, "IXMLHttpRequest_send should have succeeded instead of failing with 0x%08x\n", hr);
     VariantClear(&varbody);
 

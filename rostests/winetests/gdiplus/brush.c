@@ -646,6 +646,61 @@ static void test_linelinearblend(void)
     expect(Ok, status);
 }
 
+static void test_gradientsurroundcolorcount(void)
+{
+    GpStatus status;
+    GpPathGradient *grad;
+    ARGB *color;
+    INT count = 3;
+
+    status = GdipCreatePathGradient(blendcount_ptf, 2, WrapModeClamp, &grad);
+    expect(Ok, status);
+
+    color = GdipAlloc(sizeof(ARGB[3]));
+
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    expect(InvalidParameter, status);
+    GdipFree(color);
+
+    count = 2;
+
+    color = GdipAlloc(sizeof(ARGB[2]));
+
+    color[0] = 0x00ff0000;
+    color[1] = 0x0000ff00;
+
+    status = GdipSetPathGradientSurroundColorsWithCount(NULL, color, &count);
+    expect(InvalidParameter, status);
+
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, NULL, &count);
+    expect(InvalidParameter, status);
+
+    /* WinXP crashes on this test */
+    if(0)
+    {
+        status = GdipSetPathGradientSurroundColorsWithCount(grad, color, NULL);
+        expect(InvalidParameter, status);
+    }
+
+    status = GdipSetPathGradientSurroundColorsWithCount(grad, color, &count);
+    todo_wine expect(Ok, status);
+    expect(2, count);
+
+    status = GdipGetPathGradientSurroundColorCount(NULL, &count);
+    expect(InvalidParameter, status);
+
+    status = GdipGetPathGradientSurroundColorCount(grad, NULL);
+    expect(InvalidParameter, status);
+
+    count = 0;
+    status = GdipGetPathGradientSurroundColorCount(grad, &count);
+    todo_wine expect(Ok, status);
+    todo_wine expect(2, count);
+
+    GdipFree(color);
+    GdipDeleteBrush((GpBrush*)grad);
+}
+
 START_TEST(brush)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -669,6 +724,7 @@ START_TEST(brush)
     test_gradientgetrect();
     test_lineblend();
     test_linelinearblend();
+    test_gradientsurroundcolorcount();
 
     GdiplusShutdown(gdiplusToken);
 }

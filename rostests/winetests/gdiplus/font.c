@@ -18,11 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+
 #include "windows.h"
 #include "gdiplus.h"
 #include "wine/test.h"
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
+#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
 
 static const WCHAR arial[] = {'A','r','i','a','l','\0'};
 static const WCHAR nonexistent[] = {'T','h','i','s','F','o','n','t','s','h','o','u','l','d','N','o','t','E','x','i','s','t','\0'};
@@ -189,12 +192,9 @@ static void test_fontfamily (void)
     expect (FontFamilyNotFound, stat);
 
     /* Bitmap fonts are not found */
-todo_wine
-{
     stat = GdipCreateFontFamilyFromName (MSSansSerif, NULL, &family);
     expect (FontFamilyNotFound, stat);
     if(stat == Ok) GdipDeleteFontFamily(family);
-}
 
     stat = GdipCreateFontFamilyFromName (arial, NULL, &family);
     if(stat == FontFamilyNotFound)
@@ -345,6 +345,78 @@ static void test_installedfonts (void)
     ok (collection != NULL, "got NULL font collection\n");
 }
 
+static void test_heightgivendpi(void)
+{
+    GpStatus stat;
+    GpFont* font = NULL;
+    GpFontFamily* fontfamily = NULL;
+    REAL height;
+
+    stat = GdipCreateFontFamilyFromName(arial, NULL, &fontfamily);
+    if(stat == FontFamilyNotFound)
+    {
+        skip("Arial not installed\n");
+        return;
+    }
+    expect(Ok, stat);
+
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitPixel, &font);
+    expect(Ok, stat);
+
+    stat = GdipGetFontHeightGivenDPI(NULL, 96, &height);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetFontHeightGivenDPI(font, 96, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)34.497070, height);
+    GdipDeleteFont(font);
+
+    height = 12345;
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitWorld, &font);
+    expect(Ok, stat);
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)34.497070, height);
+    GdipDeleteFont(font);
+
+    height = 12345;
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitPoint, &font);
+    expect(Ok, stat);
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)45.996094, height);
+    GdipDeleteFont(font);
+
+    height = 12345;
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitInch, &font);
+    expect(Ok, stat);
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)3311.718750, height);
+    GdipDeleteFont(font);
+
+    height = 12345;
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitDocument, &font);
+    expect(Ok, stat);
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)11.039062, height);
+    GdipDeleteFont(font);
+
+    height = 12345;
+    stat = GdipCreateFont(fontfamily, 30, FontStyleRegular, UnitMillimeter, &font);
+    expect(Ok, stat);
+    stat = GdipGetFontHeightGivenDPI(font, 96, &height);
+    expect(Ok, stat);
+    expectf((REAL)130.382614, height);
+    GdipDeleteFont(font);
+
+    GdipDeleteFontFamily(fontfamily);
+}
+
 START_TEST(font)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -363,6 +435,7 @@ START_TEST(font)
     test_fontfamily_properties();
     test_getgenerics();
     test_installedfonts();
+    test_heightgivendpi();
 
     GdiplusShutdown(gdiplusToken);
 }

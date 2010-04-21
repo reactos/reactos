@@ -254,10 +254,8 @@ static void test_cryptTls(void)
         ret = pI_CryptFreeTls(index, 0);
         ok(ret, "I_CryptFreeTls failed: %08x\n", GetLastError());
         ret = pI_CryptFreeTls(index, 0);
-        /* Not sure if this fails because TlsFree should fail, so leave as
-         * todo for now.
-         */
-        todo_wine ok(!ret && GetLastError() == E_INVALIDARG,
+        ok(!ret, "I_CryptFreeTls succeeded\n");
+        ok(GetLastError() == E_INVALIDARG,
          "Expected E_INVALIDARG, got %08x\n", GetLastError());
     }
     /* Similar pass, check I_CryptDetachTls */

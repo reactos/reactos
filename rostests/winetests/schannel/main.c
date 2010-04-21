@@ -37,7 +37,13 @@
     SetContextAttributes)
 #define SECPKG_FUNCTION_TABLE_SIZE_2 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
     SetCredentialsAttributes)
-#define SECPKG_FUNCTION_TABLE_SIZE_3 sizeof(SECPKG_FUNCTION_TABLE)
+#define SECPKG_FUNCTION_TABLE_SIZE_3 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    ChangeAccountPassword)
+#define SECPKG_FUNCTION_TABLE_SIZE_4 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    QueryMetaData)
+#define SECPKG_FUNCTION_TABLE_SIZE_5 FIELD_OFFSET(SECPKG_FUNCTION_TABLE, \
+    ValidateTargetInfo)
+#define SECPKG_FUNCTION_TABLE_SIZE_6 sizeof(SECPKG_FUNCTION_TABLE)
 
 static NTSTATUS (NTAPI *pSpLsaModeInitialize)(ULONG, PULONG,
     PSECPKG_FUNCTION_TABLE*, PULONG);
@@ -121,6 +127,7 @@ static PSECPKG_FUNCTION_TABLE getNextSecPkgTable(PSECPKG_FUNCTION_TABLE pTable,
                                                  ULONG Version)
 {
     size_t size;
+    PSECPKG_FUNCTION_TABLE pNextTable;
 
     if (Version == SECPKG_INTERFACE_VERSION)
         size = SECPKG_FUNCTION_TABLE_SIZE_1;
@@ -128,12 +135,32 @@ static PSECPKG_FUNCTION_TABLE getNextSecPkgTable(PSECPKG_FUNCTION_TABLE pTable,
         size = SECPKG_FUNCTION_TABLE_SIZE_2;
     else if (Version == SECPKG_INTERFACE_VERSION_3)
         size = SECPKG_FUNCTION_TABLE_SIZE_3;
+    else if (Version == SECPKG_INTERFACE_VERSION_4)
+        size = SECPKG_FUNCTION_TABLE_SIZE_4;
+    else if (Version == SECPKG_INTERFACE_VERSION_5)
+        size = SECPKG_FUNCTION_TABLE_SIZE_5;
+    else if (Version == SECPKG_INTERFACE_VERSION_6)
+        size = SECPKG_FUNCTION_TABLE_SIZE_6;
     else {
         ok(FALSE, "Unknown package version 0x%x\n", Version);
         return NULL;
     }
 
-    return (PSECPKG_FUNCTION_TABLE)((PBYTE)pTable + size);
+    pNextTable = (PSECPKG_FUNCTION_TABLE)((PBYTE)pTable + size);
+    /* Win7 function tables appear to be SECPKG_INTERFACE_VERSION_6 format,
+       but unfortunately SpLsaModeInitialize returns SECPKG_INTERFACE_VERSION_3.
+       We detect that by comparing the "Initialize" pointer from the old table
+       to the "FreeCredentialsHandle" pointer of the new table. These functions
+       have different numbers of arguments, so they can't possibly point to the
+       same implementation */
+    if (broken((void *) pTable->Initialize == (void *) pNextTable->FreeCredentialsHandle &&
+               pNextTable->FreeCredentialsHandle != NULL))
+    {
+        win_skip("Invalid function pointers for next package\n");
+        return NULL;
+    }
+
+    return pNextTable;
 }
 
 static void testGetInfo(void)
@@ -181,7 +208,9 @@ static void testGetInfo(void)
            PackageInfo.fCapabilities);
         ok(PackageInfo.wVersion == 1, "wVersion: %d\n", PackageInfo.wVersion);
         ok(PackageInfo.wRPCID == 14, "wRPCID: %d\n", PackageInfo.wRPCID);
-        ok(PackageInfo.cbMaxToken == 0x4000, "cbMaxToken: 0x%x\n",
+        ok(PackageInfo.cbMaxToken == 0x4000 ||
+           PackageInfo.cbMaxToken == 0x6000, /* Win7 */
+           "cbMaxToken: 0x%x\n",
            PackageInfo.cbMaxToken);
     }
 }

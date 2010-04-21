@@ -1388,7 +1388,7 @@ static HRESULT WINAPI statusclb_OnProgress(IBindStatusCallbackEx *iface, ULONG u
             CHECK_EXPECT(Obj_OnProgress_CLASSIDAVAILABLE);
         else
             todo_wine CHECK_EXPECT(Obj_OnProgress_CLASSIDAVAILABLE);
-        hr = CLSIDFromString((LPOLESTR)szStatusText, &clsid);
+        hr = CLSIDFromString((LPCOLESTR)szStatusText, &clsid);
         ok(hr == S_OK, "CLSIDFromString failed with error 0x%08x\n", hr);
         ok(IsEqualCLSID(&clsid, &CLSID_HTMLDocument),
             "Expected clsid to be CLSID_HTMLDocument instead of %s\n", debugstr_guid(&clsid));

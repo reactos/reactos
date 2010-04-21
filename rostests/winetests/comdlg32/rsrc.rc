@@ -32,3 +32,28 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "",-1,28,16,204,31
     EDITTEXT        56,65,2,200,12,ES_AUTOHSCROLL
 }
+
+/* Used by the resize file dialog tests.
+ * Keep this template small or get failures
+ * resizing on small desk tops.
+ * This will work with 640x480 pixels
+ */
+TEMPLATE_SZ DIALOG LOADONCALL MOVEABLE DISCARDABLE 5, 43, 300, 40
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT           "Path:",-1,28,4,36,8
+    LTEXT           "Text1",-1,4,16,20,40
+    LTEXT           "Text2",-1,232,20,65,8
+    LTEXT           "",-1,28,16,204,31
+    EDITTEXT        56,65,2,200,12,ES_AUTOHSCROLL
+}
+
+/* note: the test program will modify coordinates and nr of controls in this template */
+TEMPLATE_STC32 DIALOG LOADONCALL MOVEABLE DISCARDABLE 11111, 0, 316, 76
+STYLE WS_CHILD | WS_CLIPSIBLINGS
+FONT 8, "MS Shell Dlg"
+{
+        LTEXT   "",  1119, 22222, 0, 204, 76
+        PUSHBUTTON "TEST", -1, 12345, 0, 20, 20
+}

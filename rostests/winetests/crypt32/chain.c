@@ -58,6 +58,8 @@ static VOID (WINAPI *pCertFreeCertificateChain)(PCCERT_CHAIN_CONTEXT);
 static VOID (WINAPI *pCertFreeCertificateChainEngine)(HCERTCHAINENGINE);
 static BOOL (WINAPI *pCertVerifyCertificateChainPolicy)(LPCSTR,PCCERT_CHAIN_CONTEXT,PCERT_CHAIN_POLICY_PARA,PCERT_CHAIN_POLICY_STATUS);
 
+#define IS_INTOID(x)    (((ULONG_PTR)(x) >> 16) == 0)
+
 
 static void testCreateCertChainEngine(void)
 {
@@ -3883,19 +3885,19 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
         if (check->todo & TODO_POLICY)
             todo_wine ok(ret,
              "%s[%d]: CertVerifyCertificateChainPolicy failed: %08x\n",
-             HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+             IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
              testIndex, GetLastError());
         else
         {
             if (!ret && GetLastError() == ERROR_FILE_NOT_FOUND)
             {
                 skip("%d: missing policy %s, skipping test\n", testIndex,
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)));
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy);
                 pCertFreeCertificateChain(chain);
                 return;
             }
             ok(ret, "%s[%d]: CertVerifyCertificateChainPolicy failed: %08x\n",
-             HIWORD(policy) ? policy : num_to_str(LOWORD(policy)), testIndex,
+             IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy, testIndex,
              GetLastError());
         }
         if (ret)
@@ -3906,7 +3908,7 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.dwError ==
                  check->brokenStatus->dwError)),
                  "%s[%d]: expected %08x, got %08x\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex, check->status.dwError, policyStatus.dwError);
             else
                 ok(policyStatus.dwError == check->status.dwError ||
@@ -3914,12 +3916,12 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.dwError ==
                  check->brokenStatus->dwError)),
                  "%s[%d]: expected %08x, got %08x\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex, check->status.dwError, policyStatus.dwError);
             if (policyStatus.dwError != check->status.dwError)
             {
                 skip("%s[%d]: error %08x doesn't match expected %08x, not checking indexes\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex, policyStatus.dwError, check->status.dwError);
                 pCertFreeCertificateChain(chain);
                 return;
@@ -3930,7 +3932,7 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.lChainIndex ==
                  check->brokenStatus->lChainIndex)),
                  "%s[%d]: expected %d, got %d\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex, check->status.lChainIndex,
                  policyStatus.lChainIndex);
             else
@@ -3938,7 +3940,7 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.lChainIndex ==
                  check->brokenStatus->lChainIndex)),
                  "%s[%d]: expected %d, got %d\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex,
                  check->status.lChainIndex, policyStatus.lChainIndex);
             if (check->todo & TODO_ELEMENTS)
@@ -3947,7 +3949,7 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.lElementIndex ==
                  check->brokenStatus->lElementIndex)),
                  "%s[%d]: expected %d, got %d\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex,
                  check->status.lElementIndex, policyStatus.lElementIndex);
             else
@@ -3955,7 +3957,7 @@ static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
                  (check->brokenStatus && broken(policyStatus.lElementIndex ==
                  check->brokenStatus->lElementIndex)),
                  "%s[%d]: expected %d, got %d\n",
-                 HIWORD(policy) ? policy : num_to_str(LOWORD(policy)),
+                 IS_INTOID(policy) ? num_to_str(LOWORD(policy)) : policy,
                  testIndex,
                  check->status.lElementIndex, policyStatus.lElementIndex);
         }

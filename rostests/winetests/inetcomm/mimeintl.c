@@ -156,7 +156,7 @@ static void test_charset(void)
     hr = MimeOleGetInternat(&internat);
     ok(hr == S_OK, "ret %08x\n", hr);
 
-    hr = IMimeInternational_FindCharset(internat, "non-existent", &hcs);
+    hr = IMimeInternational_FindCharset(internat, "nonexistent", &hcs);
     ok(hr == MIME_E_NOT_FOUND, "got %08x\n", hr);
 
     hr = IMimeInternational_FindCharset(internat, "windows-1252", &hcs_windows_1252);

@@ -25,14 +25,17 @@
 #include <math.h>
 
 #define expect(expected, got) ok(got == expected, "Expected %.8x, got %.8x\n", expected, got)
-#define expectf(expected, got) ok(fabs(expected - got) < 0.0001, "Expected %.2f, got %.2f\n", expected, got)
+#define expectf_(expected, got, precision) ok(fabs(expected - got) < precision, "Expected %.2f, got %.2f\n", expected, got)
+#define expectf(expected, got) expectf_(expected, got, 0.0001)
 #define TABLE_LEN (23)
+
+static HWND hwnd;
 
 static void test_constructor_destructor(void)
 {
     GpStatus stat;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     stat = GdipCreateFromHDC(NULL, &graphics);
     expect(OutOfMemory, stat);
@@ -56,7 +59,7 @@ static void test_constructor_destructor(void)
 
     stat = GdipDeleteGraphics(NULL);
     expect(InvalidParameter, stat);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 typedef struct node{
@@ -115,7 +118,7 @@ static void test_save_restore(void)
     InterpolationMode mode;
     GpGraphics *graphics1, *graphics2;
     node * state_log = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     state_a = state_b = state_c = 0xdeadbeef;
 
     /* Invalid saving. */
@@ -224,7 +227,7 @@ static void test_save_restore(void)
     todo_wine
         check_no_duplicates(state_log);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawArc(void)
@@ -232,7 +235,7 @@ static void test_GdipDrawArc(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* make a graphics object and pen object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -268,7 +271,7 @@ static void test_GdipDrawArc(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawArcI(void)
@@ -276,7 +279,7 @@ static void test_GdipDrawArcI(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* make a graphics object and pen object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -312,7 +315,7 @@ static void test_GdipDrawArcI(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_BeginContainer2(void)
@@ -334,7 +337,7 @@ static void test_BeginContainer2(void)
 
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     ok(hdc != NULL, "Expected HDC to be initialized\n");
 
@@ -497,7 +500,7 @@ static void test_BeginContainer2(void)
     expect(Ok, status);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawBezierI(void)
@@ -505,7 +508,7 @@ static void test_GdipDrawBezierI(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* make a graphics object and pen object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -535,7 +538,7 @@ static void test_GdipDrawBezierI(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurve3(void)
@@ -543,7 +546,7 @@ static void test_GdipDrawCurve3(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPointF points[3];
 
     points[0].X = 0;
@@ -615,7 +618,7 @@ static void test_GdipDrawCurve3(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurve3I(void)
@@ -623,7 +626,7 @@ static void test_GdipDrawCurve3I(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPoint points[3];
 
     points[0].X = 0;
@@ -695,7 +698,7 @@ static void test_GdipDrawCurve3I(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurve2(void)
@@ -703,7 +706,7 @@ static void test_GdipDrawCurve2(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPointF points[3];
 
     points[0].X = 0;
@@ -762,7 +765,7 @@ static void test_GdipDrawCurve2(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurve2I(void)
@@ -770,7 +773,7 @@ static void test_GdipDrawCurve2I(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPoint points[3];
 
     points[0].X = 0;
@@ -829,7 +832,7 @@ static void test_GdipDrawCurve2I(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurve(void)
@@ -837,7 +840,7 @@ static void test_GdipDrawCurve(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPointF points[3];
 
     points[0].X = 0;
@@ -890,7 +893,7 @@ static void test_GdipDrawCurve(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawCurveI(void)
@@ -898,7 +901,7 @@ static void test_GdipDrawCurveI(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPoint points[3];
 
     points[0].X = 0;
@@ -951,7 +954,7 @@ static void test_GdipDrawCurveI(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawLineI(void)
@@ -959,7 +962,7 @@ static void test_GdipDrawLineI(void)
     GpStatus status;
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* make a graphics object and pen object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -989,7 +992,7 @@ static void test_GdipDrawLineI(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawLinesI(void)
@@ -998,7 +1001,7 @@ static void test_GdipDrawLinesI(void)
     GpGraphics *graphics = NULL;
     GpPen *pen = NULL;
     GpPoint *ptf = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* make a graphics object and pen object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -1041,7 +1044,7 @@ static void test_GdipDrawLinesI(void)
     GdipDeletePen(pen);
     GdipDeleteGraphics(graphics);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_Get_Release_DC(void)
@@ -1051,7 +1054,7 @@ static void test_Get_Release_DC(void)
     GpPen *pen;
     GpSolidFill *brush;
     GpPath *path;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     HDC retdc;
     REAL r;
     CompositingQuality quality;
@@ -1345,14 +1348,14 @@ static void test_Get_Release_DC(void)
     GdipDeleteMatrix(m);
     DeleteObject(hrgn);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_transformpoints(void)
 {
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpPointF ptf[2];
     GpPoint pt[2];
 
@@ -1465,14 +1468,14 @@ static void test_transformpoints(void)
     expect(18, pt[1].Y);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_get_set_clip(void)
 {
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpRegion *clip;
     GpRectF rect;
     BOOL res;
@@ -1544,14 +1547,14 @@ static void test_get_set_clip(void)
     GdipDeleteRegion(clip);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_isempty(void)
 {
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpRegion *clip;
     BOOL res;
 
@@ -1578,7 +1581,7 @@ static void test_isempty(void)
     GdipDeleteRegion(clip);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_clear(void)
@@ -1592,7 +1595,7 @@ static void test_clear(void)
 static void test_textcontrast(void)
 {
     GpStatus status;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpGraphics *graphics;
     UINT contrast;
 
@@ -1608,7 +1611,7 @@ static void test_textcontrast(void)
     expect(4, contrast);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipDrawString(void)
@@ -1620,7 +1623,7 @@ static void test_GdipDrawString(void)
     GpStringFormat *format;
     GpBrush *brush;
     LOGFONTA logfont;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     static const WCHAR string[] = {'T','e','s','t',0};
 
     memset(&logfont,0,sizeof(logfont));
@@ -1658,7 +1661,7 @@ static void test_GdipDrawString(void)
     GdipDeleteFont(fnt);
     GdipDeleteStringFormat(format);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipGetVisibleClipBounds_screen(void)
@@ -1758,35 +1761,9 @@ static void test_GdipGetVisibleClipBounds_window(void)
     GpGraphics *graphics = NULL;
     GpRectF rectf, window, exp, clipr;
     GpRect recti;
-    HWND hwnd;
-    WNDCLASSA class;
     HDC hdc;
     PAINTSTRUCT ps;
-    HINSTANCE hInstance = GetModuleHandle(NULL);
     RECT wnd_rect;
-
-    window.X = 0;
-    window.Y = 0;
-    window.Width = 200;
-    window.Height = 300;
-
-    class.lpszClassName = "ClipBoundsTestClass";
-    class.style = CS_HREDRAW | CS_VREDRAW;
-    class.lpfnWndProc = DefWindowProcA;
-    class.hInstance = hInstance;
-    class.hIcon = LoadIcon(0, IDI_APPLICATION);
-    class.hCursor = LoadCursor(NULL, IDC_ARROW);
-    class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    class.lpszMenuName = 0;
-    class.cbClsExtra = 0;
-    class.cbWndExtra = 0;
-    RegisterClass(&class);
-
-    hwnd = CreateWindow(class.lpszClassName, "ClipboundsTest",
-        WS_OVERLAPPEDWINDOW, window.X, window.Y, window.Width, window.Height,
-        NULL, NULL, hInstance, NULL);
-
-    ok(hwnd != NULL, "Expected window to be created\n");
 
     /* get client area size */
     ok(GetClientRect(hwnd, &wnd_rect), "GetClientRect should have succeeded\n");
@@ -1870,7 +1847,6 @@ static void test_GdipGetVisibleClipBounds_window(void)
 
     GdipDeleteGraphics(graphics);
     EndPaint(hwnd, &ps);
-    DestroyWindow(hwnd);
 }
 
 static void test_GdipGetVisibleClipBounds(void)
@@ -1878,7 +1854,7 @@ static void test_GdipGetVisibleClipBounds(void)
     GpGraphics* graphics = NULL;
     GpRectF rectf;
     GpRect rect;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     GpStatus status;
 
     status = GdipCreateFromHDC(hdc, &graphics);
@@ -1899,7 +1875,7 @@ static void test_GdipGetVisibleClipBounds(void)
     expect(InvalidParameter, status);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 
     test_GdipGetVisibleClipBounds_screen();
     test_GdipGetVisibleClipBounds_window();
@@ -1933,7 +1909,7 @@ static void test_GdipIsVisiblePoint(void)
 {
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     REAL x, y;
     BOOL val;
 
@@ -2105,14 +2081,14 @@ static void test_GdipIsVisiblePoint(void)
     ok(val == FALSE, "After clipping, expected (%.2f, %.2f) not to be visible\n", x, y);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipIsVisibleRect(void)
 {
     GpStatus status;
     GpGraphics *graphics = NULL;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
     REAL x, y, width, height;
     BOOL val;
 
@@ -2267,7 +2243,7 @@ static void test_GdipIsVisibleRect(void)
     ok(val == TRUE, "Expected (%.2f, %.2f, %.2f, %.2f) to be visible\n", x, y, width, height);
 
     GdipDeleteGraphics(graphics);
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
 }
 
 static void test_GdipGetNearestColor(void)
@@ -2276,7 +2252,7 @@ static void test_GdipGetNearestColor(void)
     GpGraphics *graphics;
     GpBitmap *bitmap;
     ARGB color = 0xdeadbeef;
-    HDC hdc = GetDC(0);
+    HDC hdc = GetDC( hwnd );
 
     /* create a graphics object */
     ok(hdc != NULL, "Expected HDC to be initialized\n");
@@ -2415,17 +2391,269 @@ static void test_GdipGetNearestColor(void)
     expect(Ok, status);
     status = GdipGetNearestColor(graphics, &color);
     expect(Ok, status);
-    todo_wine expect(0xffa8b8e8, color);
+    todo_wine
+    ok(color == 0xffa8b8e8 ||
+       broken(color == 0xffa0b8e0), /* Win98/WinMe */
+       "Expected ffa8b8e8, got %.8x\n", color);
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap);
 
-    ReleaseDC(0, hdc);
+    ReleaseDC(hwnd, hdc);
+}
+
+static void test_string_functions(void)
+{
+    GpStatus status;
+    GpGraphics *graphics;
+    GpFontFamily *family;
+    GpFont *font;
+    RectF rc, char_bounds, bounds;
+    GpBrush *brush;
+    ARGB color = 0xff000000;
+    HDC hdc = GetDC( hwnd );
+    const WCHAR fontname[] = {'C','o','u','r','i','e','r',' ','N','e','w',0};
+    const WCHAR fontname2[] = {'C','o','u','r','i','e','r',0};
+    const WCHAR teststring[] = {'o','o',' ','o','\n','o',0};
+    REAL char_width, char_height;
+    INT codepointsfitted, linesfilled;
+    GpStringFormat *format;
+    CharacterRange ranges[3] = {{0, 1}, {1, 3}, {5, 1}};
+    GpRegion *regions[4] = {0};
+    BOOL region_isempty[4];
+    int i;
+
+    ok(hdc != NULL, "Expected HDC to be initialized\n");
+    status = GdipCreateFromHDC(hdc, &graphics);
+    expect(Ok, status);
+    ok(graphics != NULL, "Expected graphics to be initialized\n");
+
+    status = GdipCreateFontFamilyFromName(fontname, NULL, &family);
+
+    if (status != Ok)
+    {
+        /* Wine doesn't have Courier New? */
+        todo_wine expect(Ok, status);
+        status = GdipCreateFontFamilyFromName(fontname2, NULL, &family);
+    }
+
+    expect(Ok, status);
+
+    status = GdipCreateFont(family, 10.0, FontStyleRegular, UnitPixel, &font);
+    expect(Ok, status);
+
+    status = GdipCreateSolidFill(color, (GpSolidFill**)&brush);
+    expect(Ok, status);
+
+    status = GdipCreateStringFormat(0, LANG_NEUTRAL, &format);
+    expect(Ok, status);
+
+    rc.X = 0;
+    rc.Y = 0;
+    rc.Width = 100.0;
+    rc.Height = 100.0;
+
+    status = GdipDrawString(NULL, teststring, 6, font, &rc, NULL, brush);
+    expect(InvalidParameter, status);
+
+    status = GdipDrawString(graphics, NULL, 6, font, &rc, NULL, brush);
+    expect(InvalidParameter, status);
+
+    status = GdipDrawString(graphics, teststring, 6, NULL, &rc, NULL, brush);
+    expect(InvalidParameter, status);
+
+    status = GdipDrawString(graphics, teststring, 6, font, NULL, NULL, brush);
+    expect(InvalidParameter, status);
+
+    status = GdipDrawString(graphics, teststring, 6, font, &rc, NULL, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipDrawString(graphics, teststring, 6, font, &rc, NULL, brush);
+    expect(Ok, status);
+
+    status = GdipMeasureString(NULL, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureString(graphics, NULL, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureString(graphics, teststring, 6, NULL, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureString(graphics, teststring, 6, font, NULL, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, NULL, &codepointsfitted, &linesfilled);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, NULL, &linesfilled);
+    expect(Ok, status);
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, NULL);
+    expect(Ok, status);
+
+    status = GdipMeasureString(graphics, teststring, 1, font, &rc, NULL, &char_bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, char_bounds.X);
+    expectf(0.0, char_bounds.Y);
+    ok(char_bounds.Width > 0, "got %0.2f\n", bounds.Width);
+    ok(char_bounds.Height > 0, "got %0.2f\n", bounds.Height);
+    expect(1, codepointsfitted);
+    expect(1, linesfilled);
+
+    status = GdipMeasureString(graphics, teststring, 2, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+    ok(bounds.Width > char_bounds.Width, "got %0.2f, expected at least %0.2f\n", bounds.Width, char_bounds.Width);
+    expectf(char_bounds.Height, bounds.Height);
+    expect(2, codepointsfitted);
+    expect(1, linesfilled);
+    char_width = bounds.Width - char_bounds.Width;
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+    expectf_(char_bounds.Width + char_width * 3, bounds.Width, 0.01);
+    ok(bounds.Height > char_bounds.Height, "got %0.2f, expected at least %0.2f\n", bounds.Height, char_bounds.Height);
+    expect(6, codepointsfitted);
+    expect(2, linesfilled);
+    char_height = bounds.Height - char_bounds.Height;
+
+    /* Cut off everything after the first space. */
+    rc.Width = char_bounds.Width + char_width * 2.5;
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+    expectf_(char_bounds.Width + char_width, bounds.Width, 0.01);
+    expectf_(char_bounds.Height + char_height * 2, bounds.Height, 0.01);
+    expect(6, codepointsfitted);
+    expect(3, linesfilled);
+
+    /* Cut off everything including the first space. */
+    rc.Width = char_bounds.Width + char_width * 1.5;
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+    expectf_(char_bounds.Width + char_width, bounds.Width, 0.01);
+    expectf_(char_bounds.Height + char_height * 2, bounds.Height, 0.01);
+    expect(6, codepointsfitted);
+    expect(3, linesfilled);
+
+    /* Cut off everything after the first character. */
+    rc.Width = char_bounds.Width + char_width * 0.5;
+
+    status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
+    expect(Ok, status);
+    expectf(0.0, bounds.X);
+    expectf(0.0, bounds.Y);
+    expectf_(char_bounds.Width, bounds.Width, 0.01);
+    todo_wine expectf_(char_bounds.Height + char_height * 3, bounds.Height, 0.05);
+    expect(6, codepointsfitted);
+    todo_wine expect(4, linesfilled);
+
+    status = GdipSetStringFormatMeasurableCharacterRanges(format, 3, ranges);
+    expect(Ok, status);
+
+    rc.Width = 100.0;
+
+    for (i=0; i<4; i++)
+    {
+        status = GdipCreateRegion(&regions[i]);
+        expect(Ok, status);
+    }
+
+    status = GdipMeasureCharacterRanges(NULL, teststring, 6, font, &rc, format, 3, regions);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureCharacterRanges(graphics, NULL, 6, font, &rc, format, 3, regions);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, NULL, &rc, format, 3, regions);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, NULL, format, 3, regions);
+    expect(InvalidParameter, status);
+
+    if (0)
+    {
+        /* Crashes on Windows XP */
+        status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, NULL, 3, regions);
+        expect(InvalidParameter, status);
+    }
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, format, 3, NULL);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, format, 2, regions);
+    expect(InvalidParameter, status);
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, format, 4, regions);
+    expect(Ok, status);
+
+    for (i=0; i<4; i++)
+    {
+        status = GdipIsEmptyRegion(regions[i], graphics, &region_isempty[i]);
+        expect(Ok, status);
+    }
+
+    ok(!region_isempty[0], "region shouldn't be empty\n");
+    ok(!region_isempty[1], "region shouldn't be empty\n");
+    ok(!region_isempty[2], "region shouldn't be empty\n");
+    ok(!region_isempty[3], "region shouldn't be empty\n");
+
+    /* Cut off everything after the first space, and the second line. */
+    rc.Width = char_bounds.Width + char_width * 2.5;
+    rc.Height = char_bounds.Height + char_height * 0.5;
+
+    status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, format, 3, regions);
+    expect(Ok, status);
+
+    for (i=0; i<4; i++)
+    {
+        status = GdipIsEmptyRegion(regions[i], graphics, &region_isempty[i]);
+        expect(Ok, status);
+    }
+
+    ok(!region_isempty[0], "region shouldn't be empty\n");
+    ok(!region_isempty[1], "region shouldn't be empty\n");
+    ok(region_isempty[2], "region should be empty\n");
+    ok(!region_isempty[3], "region shouldn't be empty\n");
+
+    for (i=0; i<4; i++)
+        GdipDeleteRegion(regions[i]);
+
+    GdipDeleteStringFormat(format);
+    GdipDeleteBrush(brush);
+    GdipDeleteFont(font);
+    GdipDeleteFontFamily(family);
+    GdipDeleteGraphics(graphics);
+
+    ReleaseDC(hwnd, hdc);
 }
 
 START_TEST(graphics)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
+    WNDCLASSA class;
+
+    memset( &class, 0, sizeof(class) );
+    class.lpszClassName = "gdiplus_test";
+    class.style = CS_HREDRAW | CS_VREDRAW;
+    class.lpfnWndProc = DefWindowProcA;
+    class.hInstance = GetModuleHandleA(0);
+    class.hIcon = LoadIcon(0, IDI_APPLICATION);
+    class.hCursor = LoadCursor(NULL, IDC_ARROW);
+    class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    RegisterClassA( &class );
+    hwnd = CreateWindowA( "gdiplus_test", "graphics test", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                          CW_USEDEFAULT, CW_USEDEFAULT, 200, 200, 0, 0, GetModuleHandleA(0), 0 );
+    ok(hwnd != NULL, "Expected window to be created\n");
 
     gdiplusStartupInput.GdiplusVersion              = 1;
     gdiplusStartupInput.DebugEventCallback          = NULL;
@@ -2460,6 +2688,8 @@ START_TEST(graphics)
     test_clear();
     test_textcontrast();
     test_fromMemoryBitmap();
+    test_string_functions();
 
     GdiplusShutdown(gdiplusToken);
+    DestroyWindow( hwnd );
 }

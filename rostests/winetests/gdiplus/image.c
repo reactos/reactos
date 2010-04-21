@@ -226,10 +226,23 @@ static void test_GdipImageGetFrameDimensionsCount(void)
     stat = GdipImageGetFrameDimensionsList((GpImage*)bm, &dimension, 0);
     expect(InvalidParameter, stat);
 
+    stat = GdipImageGetFrameCount(NULL, &dimension, &count);
+    expect(InvalidParameter, stat);
+
+    /* WinXP crashes on this test */
+    if(0)
+    {
+        stat = GdipImageGetFrameCount((GpImage*)bm, &dimension, NULL);
+        expect(InvalidParameter, stat);
+    }
+
+    stat = GdipImageGetFrameCount((GpImage*)bm, NULL, &count);
+    expect(Ok, stat);
+
     count = 12345;
     stat = GdipImageGetFrameCount((GpImage*)bm, &dimension, &count);
-    todo_wine expect(Ok, stat);
-    todo_wine expect(1, count);
+    expect(Ok, stat);
+    expect(1, count);
 
     GdipBitmapSetPixel(bm, 0, 0, 0xffffffff);
 
@@ -793,6 +806,26 @@ static const unsigned char jpgimage[285] = {
 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xff,0xda,0x00,0x0c,0x03,0x01,
 0x00,0x02,0x11,0x03,0x11,0x00,0x3f,0x00,0xb2,0xc0,0x07,0xff,0xd9
 };
+/* 1x1 pixel tiff */
+static const unsigned char tiffimage[] = {
+0x49,0x49,0x2a,0x00,0x0c,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x10,0x00,0xfe,0x00,
+0x04,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x03,0x00,0x01,0x00,
+0x00,0x00,0x01,0x00,0x00,0x00,0x01,0x01,0x03,0x00,0x01,0x00,0x00,0x00,0x01,0x00,
+0x00,0x00,0x02,0x01,0x03,0x00,0x03,0x00,0x00,0x00,0xd2,0x00,0x00,0x00,0x03,0x01,
+0x03,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x06,0x01,0x03,0x00,0x01,0x00,
+0x00,0x00,0x02,0x00,0x00,0x00,0x0d,0x01,0x02,0x00,0x1b,0x00,0x00,0x00,0xd8,0x00,
+0x00,0x00,0x11,0x01,0x04,0x00,0x01,0x00,0x00,0x00,0x08,0x00,0x00,0x00,0x12,0x01,
+0x03,0x00,0x01,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x15,0x01,0x03,0x00,0x01,0x00,
+0x00,0x00,0x03,0x00,0x00,0x00,0x16,0x01,0x03,0x00,0x01,0x00,0x00,0x00,0x40,0x00,
+0x00,0x00,0x17,0x01,0x04,0x00,0x01,0x00,0x00,0x00,0x03,0x00,0x00,0x00,0x1a,0x01,
+0x05,0x00,0x01,0x00,0x00,0x00,0xf4,0x00,0x00,0x00,0x1b,0x01,0x05,0x00,0x01,0x00,
+0x00,0x00,0xfc,0x00,0x00,0x00,0x1c,0x01,0x03,0x00,0x01,0x00,0x00,0x00,0x01,0x00,
+0x00,0x00,0x28,0x01,0x03,0x00,0x01,0x00,0x00,0x00,0x02,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x08,0x00,0x08,0x00,0x08,0x00,0x2f,0x68,0x6f,0x6d,0x65,0x2f,0x6d,0x65,
+0x68,0x2f,0x44,0x65,0x73,0x6b,0x74,0x6f,0x70,0x2f,0x74,0x65,0x73,0x74,0x2e,0x74,
+0x69,0x66,0x00,0x00,0x00,0x00,0x00,0x48,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x48,
+0x00,0x00,0x00,0x01
+};
 /* 320x320 twip wmf */
 static const unsigned char wmfimage[180] = {
 0xd7,0xcd,0xc6,0x9a,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x01,0x40,0x01,0xa0,0x05,
@@ -814,6 +847,7 @@ static void test_getrawformat(void)
     test_bufferrawformat((void*)gifimage, sizeof(gifimage), &ImageFormatGIF,  __LINE__, FALSE);
     test_bufferrawformat((void*)bmpimage, sizeof(bmpimage), &ImageFormatBMP,  __LINE__, FALSE);
     test_bufferrawformat((void*)jpgimage, sizeof(jpgimage), &ImageFormatJPEG, __LINE__, FALSE);
+    test_bufferrawformat((void*)tiffimage, sizeof(tiffimage), &ImageFormatTIFF, __LINE__, FALSE);
     test_bufferrawformat((void*)wmfimage, sizeof(wmfimage), &ImageFormatWMF, __LINE__, FALSE);
 }
 
@@ -828,6 +862,7 @@ static void test_loadwmf(void)
     GpRectF bounds;
     GpUnit unit;
     REAL res = 12345.0;
+    MetafileHeader header;
 
     hglob = GlobalAlloc (0, sizeof(wmfimage));
     data = GlobalLock (hglob);
@@ -863,6 +898,27 @@ static void test_loadwmf(void)
     expect(Ok, stat);
     todo_wine expectf(1440.0, res);
 
+    memset(&header, 0, sizeof(header));
+    stat = GdipGetMetafileHeaderFromMetafile((GpMetafile*)img, &header);
+    expect(Ok, stat);
+    if (stat == Ok)
+    {
+        todo_wine expect(MetafileTypeWmfPlaceable, header.Type);
+        todo_wine expect(sizeof(wmfimage)-sizeof(WmfPlaceableFileHeader), header.Size);
+        todo_wine expect(0x300, header.Version);
+        expect(0, header.EmfPlusFlags);
+        todo_wine expectf(1440.0, header.DpiX);
+        todo_wine expectf(1440.0, header.DpiY);
+        expect(0, header.X);
+        expect(0, header.Y);
+        todo_wine expect(320, header.Width);
+        todo_wine expect(320, header.Height);
+        todo_wine expect(1, U(header).WmfHeader.mtType);
+        expect(0, header.EmfPlusHeaderSize);
+        expect(0, header.LogicalDpiX);
+        expect(0, header.LogicalDpiY);
+    }
+
     GdipDisposeImage(img);
 }
 
@@ -874,6 +930,7 @@ static void test_createfromwmf(void)
     GpRectF bounds;
     GpUnit unit;
     REAL res = 12345.0;
+    MetafileHeader header;
 
     hwmf = SetMetaFileBitsEx(sizeof(wmfimage)-sizeof(WmfPlaceableFileHeader),
         wmfimage+sizeof(WmfPlaceableFileHeader));
@@ -885,11 +942,11 @@ static void test_createfromwmf(void)
 
     stat = GdipGetImageBounds(img, &bounds, &unit);
     expect(Ok, stat);
-    todo_wine expect(UnitPixel, unit);
+    expect(UnitPixel, unit);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-    todo_wine expectf(320.0, bounds.Width);
-    todo_wine expectf(320.0, bounds.Height);
+    expectf(320.0, bounds.Width);
+    expectf(320.0, bounds.Height);
 
     stat = GdipGetImageHorizontalResolution(img, &res);
     expect(Ok, stat);
@@ -898,6 +955,27 @@ static void test_createfromwmf(void)
     stat = GdipGetImageVerticalResolution(img, &res);
     expect(Ok, stat);
     expectf(1440.0, res);
+
+    memset(&header, 0, sizeof(header));
+    stat = GdipGetMetafileHeaderFromMetafile((GpMetafile*)img, &header);
+    expect(Ok, stat);
+    if (stat == Ok)
+    {
+        todo_wine expect(MetafileTypeWmfPlaceable, header.Type);
+        todo_wine expect(sizeof(wmfimage)-sizeof(WmfPlaceableFileHeader), header.Size);
+        todo_wine expect(0x300, header.Version);
+        expect(0, header.EmfPlusFlags);
+        todo_wine expectf(1440.0, header.DpiX);
+        todo_wine expectf(1440.0, header.DpiY);
+        expect(0, header.X);
+        expect(0, header.Y);
+        todo_wine expect(320, header.Width);
+        todo_wine expect(320, header.Height);
+        todo_wine expect(1, U(header).WmfHeader.mtType);
+        expect(0, header.EmfPlusHeaderSize);
+        expect(0, header.LogicalDpiX);
+        expect(0, header.LogicalDpiY);
+    }
 
     GdipDisposeImage(img);
 }
@@ -1544,7 +1622,7 @@ static void test_multiframegif(void)
 
     count = 12345;
     stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
     todo_wine expect(2, count);
 
     /* SelectActiveFrame overwrites our current data */
@@ -1618,8 +1696,8 @@ static void test_multiframegif(void)
 
     count = 12345;
     stat = GdipImageGetFrameCount((GpImage*)bmp, &dimension, &count);
-    todo_wine expect(Ok, stat);
-    todo_wine expect(1, count);
+    expect(Ok, stat);
+    expect(1, count);
 
     GdipDisposeImage((GpImage*)bmp);
     IStream_Release(stream);
@@ -1641,30 +1719,30 @@ static void test_rotateflip(void)
     expect(Ok, stat);
 
     stat = GdipImageRotateFlip(bitmap, Rotate90FlipNone);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
 
     stat = GdipGetImageWidth(bitmap, &width);
     expect(Ok, stat);
     stat = GdipGetImageHeight(bitmap, &height);
     expect(Ok, stat);
-    todo_wine expect(2, width);
-    todo_wine expect(3, height);
+    expect(2, width);
+    expect(3, height);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff00ffff, color);
+    expect(0xff00ffff, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 1, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffff0000, color);
+    expect(0xffff0000, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 2, &color);
-    todo_wine expect(Ok, stat);
-    todo_wine expect(0xffffff00, color);
+    expect(Ok, stat);
+    expect(0xffffff00, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 1, 2, &color);
-    todo_wine expect(Ok, stat);
-    todo_wine expect(0xff0000ff, color);
+    expect(Ok, stat);
+    expect(0xff0000ff, color);
 
     expect(0, bits[0]);
     expect(0, bits[1]);
@@ -1677,7 +1755,7 @@ static void test_rotateflip(void)
     expect(Ok, stat);
 
     stat = GdipImageRotateFlip(bitmap, RotateNoneFlipX);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
 
     stat = GdipGetImageWidth(bitmap, &width);
     expect(Ok, stat);
@@ -1688,19 +1766,19 @@ static void test_rotateflip(void)
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff0000ff, color);
+    expect(0xff0000ff, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffff0000, color);
+    expect(0xffff0000, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 1, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffffff00, color);
+    expect(0xffffff00, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 1, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff00ffff, color);
+    expect(0xff00ffff, color);
 
     expect(0, bits[0]);
     expect(0, bits[1]);
@@ -1713,7 +1791,7 @@ static void test_rotateflip(void)
     expect(Ok, stat);
 
     stat = GdipImageRotateFlip(bitmap, RotateNoneFlipY);
-    todo_wine expect(Ok, stat);
+    expect(Ok, stat);
 
     stat = GdipGetImageWidth(bitmap, &width);
     expect(Ok, stat);
@@ -1724,19 +1802,19 @@ static void test_rotateflip(void)
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff00ffff, color);
+    expect(0xff00ffff, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 0, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffffff00, color);
+    expect(0xffffff00, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 0, 1, &color);
     expect(Ok, stat);
-    todo_wine expect(0xffff0000, color);
+    expect(0xffff0000, color);
 
     stat = GdipBitmapGetPixel((GpBitmap*)bitmap, 2, 1, &color);
     expect(Ok, stat);
-    todo_wine expect(0xff0000ff, color);
+    expect(0xff0000ff, color);
 
     expect(0, bits[0]);
     expect(0, bits[1]);
@@ -1801,7 +1879,7 @@ static void test_remaptable(void)
 
     stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
     expect(Ok, stat);
-    todo_wine ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8x\n", color);
+    ok(color_match(0xffff00ff, color, 1), "Expected ffff00ff, got %.8x\n", color);
 
     GdipDeleteGraphics(graphics);
     GdipDisposeImage((GpImage*)bitmap1);

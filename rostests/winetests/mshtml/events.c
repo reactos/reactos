@@ -67,6 +67,8 @@ DEFINE_EXPECT(div_onclick_disp);
 DEFINE_EXPECT(iframe_onreadystatechange_loading);
 DEFINE_EXPECT(iframe_onreadystatechange_interactive);
 DEFINE_EXPECT(iframe_onreadystatechange_complete);
+DEFINE_EXPECT(iframedoc_onreadystatechange);
+DEFINE_EXPECT(img_onload);
 
 static HWND container_hwnd = NULL;
 static IHTMLWindow2 *window;
@@ -92,7 +94,10 @@ static const char click_doc_str[] =
     "</body></html>";
 
 static const char readystate_doc_str[] =
-    "<<html><body><iframe id=\"iframe\"></iframe></body></html>";
+    "<html><body><iframe id=\"iframe\"></iframe></body></html>";
+
+static const char img_doc_str[] =
+    "<html><body><img id=\"imgid\"></img></body></html>";
 
 static const char *debugstr_guid(REFIID riid)
 {
@@ -879,14 +884,46 @@ static HRESULT WINAPI body_onclick(IDispatchEx *iface, DISPID id, LCID lcid, WOR
 
 EVENT_HANDLER_FUNC_OBJ(body_onclick);
 
+static HRESULT WINAPI img_onload(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    CHECK_EXPECT(img_onload);
+    test_event_args(&DIID_DispHTMLImg, id, wFlags, pdp, pvarRes, pei, pspCaller);
+    test_event_src("IMG");
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(img_onload);
+
+static HRESULT WINAPI iframedoc_onreadystatechange(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
+        VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
+{
+    IHTMLEventObj *event = NULL;
+    HRESULT hres;
+
+    CHECK_EXPECT2(iframedoc_onreadystatechange);
+    test_event_args(&DIID_DispHTMLDocument, id, wFlags, pdp, pvarRes, pei, pspCaller);
+
+    event = (void*)0xdeadbeef;
+    hres = IHTMLWindow2_get_event(window, &event);
+    ok(hres == S_OK, "get_event failed: %08x\n", hres);
+    ok(!event, "event = %p\n", event);
+
+    return S_OK;
+}
+
+EVENT_HANDLER_FUNC_OBJ(iframedoc_onreadystatechange);
+
 static HRESULT WINAPI iframe_onreadystatechange(IDispatchEx *iface, DISPID id, LCID lcid, WORD wFlags, DISPPARAMS *pdp,
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
+    IHTMLWindow2 *iframe_window;
+    IHTMLDocument2 *iframe_doc;
     IHTMLFrameBase2 *iframe;
     IHTMLElement2 *elem2;
     IHTMLElement *elem;
     VARIANT v;
-    BSTR str;
+    BSTR str, str2;
     HRESULT hres;
 
     test_event_args(&DIID_DispHTMLIFrame, id, wFlags, pdp, pvarRes, pei, pspCaller);
@@ -913,15 +950,33 @@ static HRESULT WINAPI iframe_onreadystatechange(IDispatchEx *iface, DISPID id, L
     ok(!lstrcmpW(str, V_BSTR(&v)), "ready states differ\n");
     VariantClear(&v);
 
-    if(!strcmp_wa(str, "loading"))
+    hres = IHTMLFrameBase2_get_contentWindow(iframe, &iframe_window);
+    ok(hres == S_OK, "get_contentDocument failed: %08x\n", hres);
+
+    hres = IHTMLWindow2_get_document(iframe_window, &iframe_doc);
+    IHTMLWindow2_Release(iframe_window);
+    ok(hres == S_OK, "get_document failed: %08x\n", hres);
+
+    hres = IHTMLDocument2_get_readyState(iframe_doc, &str2);
+    ok(!lstrcmpW(str, str2), "unexpected document readyState %s\n", wine_dbgstr_w(str2));
+    SysFreeString(str2);
+
+    if(!strcmp_wa(str, "loading")) {
         CHECK_EXPECT(iframe_onreadystatechange_loading);
-    else if(!strcmp_wa(str, "interactive"))
+
+        V_VT(&v) = VT_DISPATCH;
+        V_DISPATCH(&v) = (IDispatch*)&iframedoc_onreadystatechange_obj;
+        hres = IHTMLDocument2_put_onreadystatechange(iframe_doc, v);
+        ok(hres == S_OK, "put_onreadystatechange: %08x\n", hres);
+    }else if(!strcmp_wa(str, "interactive"))
         CHECK_EXPECT(iframe_onreadystatechange_interactive);
     else if(!strcmp_wa(str, "complete"))
         CHECK_EXPECT(iframe_onreadystatechange_complete);
     else
         ok(0, "unexpected state %s\n", wine_dbgstr_w(str));
 
+    IHTMLDocument2_Release(iframe_doc);
+    IHTMLFrameBase2_Release(iframe);
     return S_OK;
 }
 
@@ -1307,15 +1362,58 @@ static void test_onreadystatechange(IHTMLDocument2 *doc)
     ok(hres == S_OK, "put_src failed: %08x\n", hres);
 
     SET_EXPECT(iframe_onreadystatechange_loading);
+    SET_EXPECT(iframedoc_onreadystatechange);
     SET_EXPECT(iframe_onreadystatechange_interactive);
     SET_EXPECT(iframe_onreadystatechange_complete);
     pump_msgs(&called_iframe_onreadystatechange_complete);
-    todo_wine
     CHECK_CALLED(iframe_onreadystatechange_loading);
+    CHECK_CALLED(iframedoc_onreadystatechange);
     CHECK_CALLED(iframe_onreadystatechange_interactive);
     CHECK_CALLED(iframe_onreadystatechange_complete);
 
     IHTMLFrameBase_Release(iframe);
+}
+
+static void test_imgload(IHTMLDocument2 *doc)
+{
+    IHTMLImgElement *img;
+    IHTMLElement *elem;
+    VARIANT v;
+    BSTR str;
+    HRESULT hres;
+
+    elem = get_elem_id(doc, "imgid");
+    hres = IHTMLElement_QueryInterface(elem, &IID_IHTMLImgElement, (void**)&img);
+    IHTMLElement_Release(elem);
+    ok(hres == S_OK, "Could not get IHTMLImgElement iface: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLImgElement_get_onload(img, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_NULL, "V_VT(onload) = %d\n", V_VT(&v));
+
+    V_VT(&v) = VT_DISPATCH;
+    V_DISPATCH(&v) = (IDispatch*)&img_onload_obj;
+    hres = IHTMLImgElement_put_onload(img, v);
+    ok(hres == S_OK, "put_onload failed: %08x\n", hres);
+
+    V_VT(&v) = VT_EMPTY;
+    hres = IHTMLImgElement_get_onload(img, &v);
+    ok(hres == S_OK, "get_onload failed: %08x\n", hres);
+    ok(V_VT(&v) == VT_DISPATCH, "V_VT(onload) = %d\n", V_VT(&v));
+    ok(V_DISPATCH(&v) == (IDispatch*)&img_onload_obj, "V_DISPATCH(onload) != onloadkFunc\n");
+    VariantClear(&v);
+
+    str = a2bstr("http://www.winehq.org/images/winehq_logo_text.png");
+    hres = IHTMLImgElement_put_src(img, str);
+    ok(hres == S_OK, "put_src failed: %08x\n", hres);
+    SysFreeString(str);
+
+    SET_EXPECT(img_onload);
+    pump_msgs(&called_img_onload);
+    CHECK_CALLED(img_onload);
+
+    IHTMLImgElement_Release(img);
 }
 
 static void test_timeout(IHTMLDocument2 *doc)
@@ -1957,6 +2055,7 @@ START_TEST(events)
     run_test(empty_doc_str, test_timeout);
     run_test(click_doc_str, test_onclick);
     run_test(readystate_doc_str, test_onreadystatechange);
+    run_test(img_doc_str, test_imgload);
 
     DestroyWindow(container_hwnd);
     CoUninitialize();

@@ -28,12 +28,12 @@
 #include "shlwapi.h"
 #include "wininet.h"
 
-static HMODULE hShlwapi;
 static HRESULT (WINAPI *pPathIsValidCharA)(char,DWORD);
 static HRESULT (WINAPI *pPathIsValidCharW)(WCHAR,DWORD);
 static LPWSTR  (WINAPI *pPathCombineW)(LPWSTR, LPCWSTR, LPCWSTR);
 static HRESULT (WINAPI *pPathCreateFromUrlA)(LPCSTR, LPSTR, LPDWORD, DWORD);
 static HRESULT (WINAPI *pPathCreateFromUrlW)(LPCWSTR, LPWSTR, LPDWORD, DWORD);
+static BOOL    (WINAPI *pPathAppendA)(LPSTR, LPCSTR);
 
 /* ################ */
 
@@ -300,6 +300,15 @@ static void test_PathIsValidCharA(void)
     BOOL ret;
     unsigned int c;
 
+    /* For whatever reason, PathIsValidCharA and PathAppendA share the same
+     * ordinal number in some native versions. Check this to prevent a crash.
+     */
+    if (!pPathIsValidCharA || pPathIsValidCharA == (void*)pPathAppendA)
+    {
+        win_skip("PathIsValidCharA isn't available\n");
+        return;
+    }
+
     for (c = 0; c < 0x7f; c++)
     {
         ret = pPathIsValidCharA( c, ~0U );
@@ -317,6 +326,12 @@ static void test_PathIsValidCharW(void)
 {
     BOOL ret;
     unsigned int c;
+
+    if (!pPathIsValidCharW)
+    {
+        win_skip("PathIsValidCharW isn't available\n");
+        return;
+    }
 
     for (c = 0; c < 0x7f; c++)
     {
@@ -392,7 +407,13 @@ static void test_PathCombineW(void)
     WCHAR wbuf[MAX_PATH+1], wstr1[MAX_PATH] = {'C',':','\\',0}, wstr2[MAX_PATH];
     static const WCHAR expout[] = {'C',':','\\','A','A',0};
     int i;
-   
+
+    if (!pPathCombineW)
+    {
+        win_skip("PathCombineW isn't available\n");
+        return;
+    }
+
     wszString2 = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
 
     /* NULL test */
@@ -1312,43 +1333,60 @@ static void test_PathUnquoteSpaces(void)
     }
 }
 
+static void test_PathGetDriveNumber(void)
+{
+    static const CHAR test1A[] = "a:\\test.file";
+    static const CHAR test2A[] = "file:////b:\\test.file";
+    static const CHAR test3A[] = "file:///c:\\test.file";
+    static const CHAR test4A[] = "file:\\\\c:\\test.file";
+    int ret;
+
+    SetLastError(0xdeadbeef);
+    ret = PathGetDriveNumberA(NULL);
+    ok(ret == -1, "got %d\n", ret);
+    ok(GetLastError() == 0xdeadbeef, "got %d\n", GetLastError());
+
+    ret = PathGetDriveNumberA(test1A);
+    ok(ret == 0, "got %d\n", ret);
+    ret = PathGetDriveNumberA(test2A);
+    ok(ret == -1, "got %d\n", ret);
+    ret = PathGetDriveNumberA(test3A);
+    ok(ret == -1, "got %d\n", ret);
+    ret = PathGetDriveNumberA(test4A);
+    ok(ret == -1, "got %d\n", ret);
+}
+
 /* ################ */
 
 START_TEST(path)
 {
-  hShlwapi = GetModuleHandleA("shlwapi.dll");
-  pPathCreateFromUrlA = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlA");
-  pPathCreateFromUrlW = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlW");
+    HMODULE hShlwapi = GetModuleHandleA("shlwapi.dll");
 
-  test_PathSearchAndQualify();
-  test_PathCreateFromUrl();
-  test_PathIsUrl();
+    pPathCreateFromUrlA = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlA");
+    pPathCreateFromUrlW = (void*)GetProcAddress(hShlwapi, "PathCreateFromUrlW");
+    pPathCombineW = (void*)GetProcAddress(hShlwapi, "PathCombineW");
+    pPathIsValidCharA = (void*)GetProcAddress(hShlwapi, (LPSTR)455);
+    pPathIsValidCharW = (void*)GetProcAddress(hShlwapi, (LPSTR)456);
+    pPathAppendA = (void*)GetProcAddress(hShlwapi, "PathAppendA");
 
-  test_PathAddBackslash();
-  test_PathMakePretty();
-  test_PathMatchSpec();
+    test_PathSearchAndQualify();
+    test_PathCreateFromUrl();
+    test_PathIsUrl();
 
-  /* For whatever reason, PathIsValidCharA and PathAppendA share the same
-   * ordinal number in some native versions. Check this to prevent a crash.
-   */
-  pPathIsValidCharA = (void*)GetProcAddress(hShlwapi, (LPSTR)455);
-  if (pPathIsValidCharA && pPathIsValidCharA != (void*)GetProcAddress(hShlwapi, "PathAppendA"))
-  {
+    test_PathAddBackslash();
+    test_PathMakePretty();
+    test_PathMatchSpec();
+
     test_PathIsValidCharA();
+    test_PathIsValidCharW();
 
-     pPathIsValidCharW = (void*)GetProcAddress(hShlwapi, (LPSTR)456);
-     if (pPathIsValidCharW) test_PathIsValidCharW();
-  }
-
-  pPathCombineW = (void*)GetProcAddress(hShlwapi, "PathCombineW");
-  if (pPathCombineW)
     test_PathCombineW();
-
-  test_PathCombineA();
-  test_PathAppendA();
-  test_PathCanonicalizeA();
-  test_PathFindExtensionA();
-  test_PathBuildRootA();
-  test_PathCommonPrefixA();
-  test_PathUnquoteSpaces();
+    test_PathCombineA();
+    test_PathAppendA();
+    test_PathCanonicalizeA();
+    test_PathFindExtensionA();
+    test_PathBuildRootA();
+    test_PathCommonPrefixA();
+    test_PathUnquoteSpaces();
+    test_PathGetDriveNumber();
 }

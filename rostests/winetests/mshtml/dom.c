@@ -3173,6 +3173,16 @@ static void test_navigator(IHTMLDocument2 *doc)
     ok(!strcmp_wa(bstr, buf), "userAgent returned %s, expected \"%s\"\n", wine_dbgstr_w(bstr), buf);
     SysFreeString(bstr);
 
+    if(!strncmp(buf, "Mozilla/", 8)) {
+        bstr = NULL;
+        hres = IOmNavigator_get_appVersion(navigator, &bstr);
+        ok(hres == S_OK, "get_appVersion failed: %08x\n", hres);
+        ok(!strcmp_wa(bstr, buf+8), "appVersion returned %s, expected \"%s\"\n", wine_dbgstr_w(bstr), buf+8);
+        SysFreeString(bstr);
+    }else {
+        skip("nonstandard user agent\n");
+    }
+
     ref = IOmNavigator_Release(navigator);
     ok(!ref, "navigator should be destroyed here\n");
 }
@@ -3184,8 +3194,6 @@ static void test_screen(IHTMLWindow2 *window)
     LONG l, exl;
     HDC hdc;
     HRESULT hres;
-
-    static const WCHAR displayW[] = {'D','I','S','P','L','A','Y',0};
 
     screen = NULL;
     hres = IHTMLWindow2_get_screen(window, &screen);
@@ -3206,7 +3214,7 @@ static void test_screen(IHTMLWindow2 *window)
         IDispatchEx_Release(dispex);
     }
 
-    hdc = CreateICW(displayW, NULL, NULL, NULL);
+    hdc = CreateICA("DISPLAY", NULL, NULL, NULL);
 
     exl = GetDeviceCaps(hdc, HORZRES);
     l = 0xdeadbeef;
