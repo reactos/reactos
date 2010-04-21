@@ -110,6 +110,11 @@ DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
 
+    /* Timo : The text brush should never be changed.
+     * Jérôme : Yeah, but its palette must be updated anyway! */
+    if(pdcattr->ulDirty_ & DIRTY_TEXT)
+        EBRUSHOBJ_vUpdate(&pdc->eboText, pbrDefaultBrush, pdc);
+
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
 
