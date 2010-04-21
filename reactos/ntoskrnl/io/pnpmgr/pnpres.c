@@ -822,6 +822,7 @@ IopAssignDeviceResources(
    if (!DeviceNode->BootResources && !DeviceNode->ResourceRequirements)
    {
       DeviceNode->Flags |= DNF_NO_RESOURCE_REQUIRED;
+      DeviceNode->Flags &= ~DNF_ASSIGNING_RESOURCES;
 
       /* No resource needed for this device */
       DeviceNode->ResourceList = NULL;
