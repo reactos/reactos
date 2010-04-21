@@ -191,120 +191,6 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     return Status;
 }
 
-NTSTATUS
-NTAPI
-MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
-{
-    SIZE_T i;
-
-    /* Check if there's no imports or if we're a boot driver */
-    if ((ImportList == (PVOID)-1) ||
-        (ImportList == (PVOID)-2) ||
-        (ImportList->Count == 0))
-    {
-        /* Then there's nothing to do */
-        return STATUS_SUCCESS;
-    }
-
-    /* Otherwise, FIXME */
-    DPRINT1("%u imports not dereferenced!\n", ImportList->Count);
-    for (i = 0; i < ImportList->Count; i++)
-    {
-        DPRINT1("%wZ <%wZ>\n", &ImportList->Entry[i]->FullDllName, &ImportList->Entry[i]->BaseDllName);
-    }
-    return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
-{
-    PAGED_CODE();
-
-    /* Check if there's no imports or we're a boot driver or only one entry */
-    if ((LdrEntry->LoadedImports == (PVOID)-1) ||
-        (LdrEntry->LoadedImports == (PVOID)-2) ||
-        ((ULONG_PTR)LdrEntry->LoadedImports & 1))
-    {
-        /* Nothing to do */
-        return;
-    }
-
-    /* Otherwise, free the import list */
-    ExFreePool(LdrEntry->LoadedImports);
-}
-
-PVOID
-NTAPI
-MiFindExportedRoutineByName(IN PVOID DllBase,
-                            IN PANSI_STRING ExportName)
-{
-    PULONG NameTable;
-    PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    LONG Low = 0, Mid = 0, High, Ret;
-    USHORT Ordinal;
-    PVOID Function;
-    ULONG ExportSize;
-    PULONG ExportTable;
-    PAGED_CODE();
-
-    /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
-                                                   TRUE,
-                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                                   &ExportSize);
-    if (!ExportDirectory) return NULL;
-
-    /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
-
-    /* Do a binary search */
-    High = ExportDirectory->NumberOfNames - 1;
-    while (High >= Low)
-    {
-        /* Get new middle value */
-        Mid = (Low + High) >> 1;
-
-        /* Compare name */
-        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
-        if (Ret < 0)
-        {
-            /* Update high */
-            High = Mid - 1;
-        }
-        else if (Ret > 0)
-        {
-            /* Update low */
-            Low = Mid + 1;
-        }
-        else
-        {
-            /* We got it */
-            break;
-        }
-    }
-
-    /* Check if we couldn't find it */
-    if (High < Low) return NULL;
-
-    /* Otherwise, this is the ordinal */
-    Ordinal = OrdinalTable[Mid];
-
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
-
-    /* We found it! */
-    ASSERT(!(Function > (PVOID)ExportDirectory) &&
-           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
-    return Function;
-}
-
 PVOID
 NTAPI
 MiLocateExportName(IN PVOID DllBase,
@@ -441,6 +327,197 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
     /* Return status value which DllInitialize returned */
     return Status;
+}
+
+BOOLEAN
+NTAPI
+MiCallDllUnloadAndUnloadDll(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    NTSTATUS Status;
+    PMM_DLL_UNLOAD Func;
+    PAGED_CODE();
+
+    /* Get the unload routine */
+    Func = (PMM_DLL_UNLOAD)MiLocateExportName(LdrEntry->DllBase, "DllUnload");
+    if (!Func) return FALSE;
+
+    /* Call it and check for success */
+    Status = Func();
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Lie about the load count so we can unload the image */
+    ASSERT(LdrEntry->LoadCount == 0);
+    LdrEntry->LoadCount = 1;
+
+    /* Unload it and return true */
+    MmUnloadSystemImage(LdrEntry);
+    return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
+{
+    SIZE_T i;
+    LOAD_IMPORTS SingleEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PVOID CurrentImports;
+    PAGED_CODE();
+
+    /* Check if there's no imports or if we're a boot driver */
+    if ((ImportList == MM_SYSLDR_NO_IMPORTS) ||
+        (ImportList == MM_SYSLDR_BOOT_LOADED) ||
+        (ImportList->Count == 0))
+    {
+        /* Then there's nothing to do */
+        return STATUS_SUCCESS;
+    }
+    
+    /* Check for single-entry */
+    if ((ULONG_PTR)ImportList & MM_SYSLDR_SINGLE_ENTRY)
+    {
+        /* Set it up */
+        SingleEntry.Count = 1;
+        SingleEntry.Entry[0] = (PVOID)((ULONG_PTR)ImportList &~ MM_SYSLDR_SINGLE_ENTRY);
+        
+        /* Use this as the import list */
+        ImportList = &SingleEntry;
+    }
+
+    /* Loop the import list */
+    for (i = 0; (i < ImportList->Count) && (ImportList->Entry[i]); i++)
+    {
+        /* Get the entry */
+        LdrEntry = ImportList->Entry[i];
+        DPRINT1("%wZ <%wZ>\n", &LdrEntry->FullDllName, &LdrEntry->BaseDllName);
+        
+        /* Skip boot loaded images */
+        if (LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) continue;
+        
+        /* Dereference the entry */
+        ASSERT(LdrEntry->LoadCount >= 1);
+        if (!--LdrEntry->LoadCount)
+        {
+            /* Save the import data in case unload fails */
+            CurrentImports = LdrEntry->LoadedImports;
+            
+            /* This is the last entry */
+            LdrEntry->LoadedImports = MM_SYSLDR_NO_IMPORTS;
+            if (MiCallDllUnloadAndUnloadDll(LdrEntry))
+            {
+                /* Unloading worked, parse this DLL's imports too */
+                MiDereferenceImports(CurrentImports);
+                
+                /* Check if we had valid imports */
+                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) ||
+                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) ||
+                    !((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+                {
+                    /* Free them */
+                    ExFreePool(CurrentImports);
+                }
+            }
+            else
+            {
+                /* Unload failed, restore imports */
+                LdrEntry->LoadedImports = CurrentImports;
+            }
+        }
+    }
+    
+    /* Done */
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PAGED_CODE();
+
+    /* Check if there's no imports or we're a boot driver or only one entry */
+    if ((LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) ||
+        (LdrEntry->LoadedImports == MM_SYSLDR_NO_IMPORTS) ||
+        ((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+    {
+        /* Nothing to do */
+        return;
+    }
+
+    /* Otherwise, free the import list */
+    ExFreePool(LdrEntry->LoadedImports);
+    LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
+}
+
+PVOID
+NTAPI
+MiFindExportedRoutineByName(IN PVOID DllBase,
+                            IN PANSI_STRING ExportName)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    LONG Low = 0, Mid = 0, High, Ret;
+    USHORT Ordinal;
+    PVOID Function;
+    ULONG ExportSize;
+    PULONG ExportTable;
+    PAGED_CODE();
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+    if (!ExportDirectory) return NULL;
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Do a binary search */
+    High = ExportDirectory->NumberOfNames - 1;
+    while (High >= Low)
+    {
+        /* Get new middle value */
+        Mid = (Low + High) >> 1;
+
+        /* Compare name */
+        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
+        if (Ret < 0)
+        {
+            /* Update high */
+            High = Mid - 1;
+        }
+        else if (Ret > 0)
+        {
+            /* Update low */
+            Low = Mid + 1;
+        }
+        else
+        {
+            /* We got it */
+            break;
+        }
+    }
+
+    /* Check if we couldn't find it */
+    if (High < Low) return NULL;
+
+    /* Otherwise, this is the ordinal */
+    Ordinal = OrdinalTable[Mid];
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+
+    /* We found it! */
+    ASSERT(!(Function > (PVOID)ExportDirectory) &&
+           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
+    return Function;
 }
 
 VOID
