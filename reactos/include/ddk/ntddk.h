@@ -2957,6 +2957,159 @@ ZwSetTimer(
 
 #endif
 
+typedef struct _QUOTA_LIMITS {
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
+} QUOTA_LIMITS, *PQUOTA_LIMITS;
+
+struct _RTL_GENERIC_COMPARE_ROUTINE;
+struct _RTL_GENERIC_ALLOCATE_ROUTINE;
+struct _RTL_GENERIC_FREE_ROUTINE;
+
+typedef struct _RTL_GENERIC_TABLE {
+  PRTL_SPLAY_LINKS TableRoot;
+  LIST_ENTRY InsertOrderList;
+  PLIST_ENTRY OrderedPointer;
+  ULONG WhichOrderedElement;
+  ULONG NumberGenericTableElements;
+  struct _RTL_GENERIC_COMPARE_ROUTINE *CompareRoutine;
+  struct _RTL_GENERIC_ALLOCATE_ROUTINE *AllocateRoutine;
+  struct _RTL_GENERIC_FREE_ROUTINE *FreeRoutine;
+  PVOID TableContext;
+} RTL_GENERIC_TABLE, *PRTL_GENERIC_TABLE;
+
+typedef enum _TABLE_SEARCH_RESULT {
+  TableEmptyTree,
+  TableFoundNode,
+  TableInsertAsLeft,
+  TableInsertAsRight
+} TABLE_SEARCH_RESULT;
+
+typedef struct _FILE_FS_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER AvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
+
+#define IO_CHECK_CREATE_PARAMETERS      0x0200
+#define IO_ATTACH_DEVICE                0x0400
+#define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
+
+typedef struct _FILE_FS_VOLUME_INFORMATION {
+  LARGE_INTEGER VolumeCreationTime;
+  ULONG VolumeSerialNumber;
+  ULONG VolumeLabelLength;
+  BOOLEAN SupportsObjects;
+  WCHAR VolumeLabel[1];
+} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
+
+typedef struct _FILE_FS_FULL_SIZE_INFORMATION {
+  LARGE_INTEGER TotalAllocationUnits;
+  LARGE_INTEGER CallerAvailableAllocationUnits;
+  LARGE_INTEGER ActualAvailableAllocationUnits;
+  ULONG SectorsPerAllocationUnit;
+  ULONG BytesPerSector;
+} FILE_FS_FULL_SIZE_INFORMATION, *PFILE_FS_FULL_SIZE_INFORMATION;
+
+typedef struct _FILE_FS_OBJECTID_INFORMATION {
+  UCHAR ObjectId[16];
+  UCHAR ExtendedInfo[48];
+} FILE_FS_OBJECTID_INFORMATION, *PFILE_FS_OBJECTID_INFORMATION;
+
+typedef struct _FILE_FS_LABEL_INFORMATION {
+  ULONG VolumeLabelLength;
+  WCHAR VolumeLabel[1];
+} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
+
+typedef enum _RTL_GENERIC_COMPARE_RESULTS {
+  GenericLessThan,
+  GenericGreaterThan,
+  GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
+// Forwarder
+struct _RTL_AVL_TABLE;
+
+typedef RTL_GENERIC_COMPARE_RESULTS
+(NTAPI *PRTL_AVL_COMPARE_ROUTINE) (
+  IN struct _RTL_AVL_TABLE *Table,
+  IN PVOID FirstStruct,
+  IN PVOID SecondStruct);
+
+typedef PVOID
+(NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
+  IN struct _RTL_AVL_TABLE *Table,
+  IN CLONG ByteSize);
+
+typedef VOID
+(NTAPI *PRTL_AVL_FREE_ROUTINE) (
+  IN struct _RTL_AVL_TABLE *Table,
+  IN PVOID Buffer);
+
+typedef NTSTATUS
+(NTAPI *PRTL_AVL_MATCH_FUNCTION) (
+  IN struct _RTL_AVL_TABLE *Table,
+  IN PVOID UserData,
+  IN PVOID MatchData);
+
+typedef struct _RTL_BALANCED_LINKS {
+  struct _RTL_BALANCED_LINKS *Parent;
+  struct _RTL_BALANCED_LINKS *LeftChild;
+  struct _RTL_BALANCED_LINKS *RightChild;
+  CHAR Balance;
+  UCHAR Reserved[3];
+} RTL_BALANCED_LINKS, *PRTL_BALANCED_LINKS;
+
+typedef struct _RTL_AVL_TABLE {
+  RTL_BALANCED_LINKS BalancedRoot;
+  PVOID OrderedPointer;
+  ULONG WhichOrderedElement;
+  ULONG NumberGenericTableElements;
+  ULONG DepthOfTree;
+  PRTL_BALANCED_LINKS RestartKey;
+  ULONG DeleteCount;
+  PRTL_AVL_COMPARE_ROUTINE CompareRoutine;
+  PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine;
+  PRTL_AVL_FREE_ROUTINE FreeRoutine;
+  PVOID TableContext;
+} RTL_AVL_TABLE, *PRTL_AVL_TABLE;
+
+#ifndef RTL_USE_AVL_TABLES
+
+struct _RTL_GENERIC_TABLE;
+
+typedef RTL_GENERIC_COMPARE_RESULTS
+(NTAPI *PRTL_GENERIC_COMPARE_ROUTINE) (
+  IN struct _RTL_GENERIC_TABLE *Table,
+  IN PVOID FirstStruct,
+  IN PVOID SecondStruct);
+
+typedef PVOID
+(NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
+  IN struct _RTL_GENERIC_TABLE *Table,
+  IN CLONG ByteSize);
+
+typedef VOID
+(NTAPI *PRTL_GENERIC_FREE_ROUTINE) (
+  IN struct _RTL_GENERIC_TABLE *Table,
+  IN PVOID Buffer);
+
+#endif /* !RTL_USE_AVL_TABLES */
+
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTableAvl(
+  OUT PRTL_AVL_TABLE Table,
+  IN PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
+  IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
+  IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
+  IN PVOID TableContext OPTIONAL);
 
 #ifdef __cplusplus
 }
