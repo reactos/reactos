@@ -110,6 +110,9 @@ DC_vUpdateTextBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
 
+    if(pdcattr->ulDirty_ & DIRTY_TEXT)
+        EBRUSHOBJ_vUpdate(&pdc->eboText, pdc->eboText.pbrush, pdc);
+
     /* Update the eboText's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboText, pdcattr->crForegroundClr);
 
@@ -122,6 +125,9 @@ FASTCALL
 DC_vUpdateBackgroundBrush(PDC pdc)
 {
     PDC_ATTR pdcattr = pdc->pdcattr;
+
+    if(pdcattr->ulDirty_ & DIRTY_BACKGROUND)
+        EBRUSHOBJ_vUpdate(&pdc->eboBackground, pdc->eboBackground.pbrush, pdc);
 
     /* Update the eboBackground's solid color */
     EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboBackground, pdcattr->crBackgroundClr);
