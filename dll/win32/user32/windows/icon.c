@@ -140,7 +140,7 @@ CreateIcon(
   ICONINFO IconInfo;
 
   IconInfo.fIcon = TRUE;
-  
+
   if (cBitsPixel == 1)
   {
     nHeight <<= 1;
@@ -159,7 +159,7 @@ CreateIcon(
   {
     IconInfo.hbmColor = CreateBitmap(nWidth, nHeight, cPlanes, cBitsPixel, XORbits);
     if(!IconInfo.hbmColor)
-    { 
+    {
        DeleteObject(IconInfo.hbmMask);
        return (HICON)0;
     }
@@ -260,9 +260,7 @@ CreateIconFromResourceEx(
   Data = (PBYTE)SafeIconImage + HeaderSize;
 
   /* get a handle to the screen dc, the icon we create is going to be compatable with this */
-  // FIXME!!! This is a victim of the Win32k Initialization BUG!!!!!
-  //hScreenDc = CreateDCW(NULL, NULL, NULL, NULL);
-  hScreenDc = CreateCompatibleDC(NULL);
+  hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
   if (hScreenDc == NULL)
     {
       RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);

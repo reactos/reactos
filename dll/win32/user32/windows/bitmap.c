@@ -491,10 +491,10 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
          UnmapViewOfFile(BitmapInfo);
       return NULL;
    }
-   
+
    /* FIXME: Handle color conversion and transparency. */
 
-   hScreenDc = CreateCompatibleDC(NULL);
+   hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
    if (hScreenDc == NULL)
    {
       RtlFreeHeap(GetProcessHeap(), 0, PrivateInfo);

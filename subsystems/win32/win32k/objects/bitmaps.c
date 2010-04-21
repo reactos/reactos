@@ -176,7 +176,7 @@ IntCreateCompatibleBitmap(
                     Bmp = IntGdiCreateBitmap(abs(Width),
                                              abs(Height),
                                              dibs.dsBm.bmPlanes,
-                                             Dc->ppdev->gdiinfo.cBitsPixel,//<-- HACK! dibs.dsBm.bmBitsPixel, // <-- Correct!
+                                             dibs.dsBm.bmBitsPixel,
                                              NULL);
                 }
                 else
@@ -665,7 +665,7 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
     switch (*Color >> 24)
     {
         case 0x10: /* DIBINDEX */
-            if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1) 
+            if (IntGetDIBColorTable(hDC, LOWORD(*Color), 1, &quad) == 1)
             {
                 *Color = RGB(quad.rgbRed, quad.rgbGreen, quad.rgbBlue);
             }
@@ -707,7 +707,7 @@ VOID IntHandleSpecialColorType(HDC hDC, COLORREF* Color)
         default:
             DPRINT("Unsupported color type %d passed\n", *Color >> 24);
             break;
-    }   
+    }
 }
 
 BOOL APIENTRY
