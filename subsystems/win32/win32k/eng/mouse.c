@@ -514,20 +514,6 @@ EngMovePointer(
     }
 }
 
-VOID APIENTRY
-IntEngMovePointer(
-    IN SURFOBJ *pso,
-    IN LONG x,
-    IN LONG y,
-    IN RECTL *prcl)
-{
-    PPDEVOBJ ppdev = (PPDEVOBJ)pso->hdev;
-    if(ppdev->SafetyRemoveLevel)
-        return ;
-
-    ppdev->pfnMovePointer(pso, x, y, prcl);
-}
-
 ULONG APIENTRY
 IntEngSetPointerShape(
    IN SURFOBJ *pso,
@@ -694,14 +680,22 @@ GreMovePointer(
     }
     ASSERT(pdc->dctype == DCTYPE_DIRECT);
 
+    /* Acquire PDEV lock */
     EngAcquireSemaphore(pdc->ppdev->hsemDevLock);
-    /* Store the cursor exclude position in the PDEV */
-    prcl = &pdc->ppdev->Pointer.Exclude;
 
-    /* Call Eng/Drv function */
-    IntEngMovePointer(&pdc->ppdev->pSurface->SurfObj, x, y, prcl);
+    /* Check if we need to move it */
+    if(pdc->ppdev->SafetyRemoveLevel == 0)
+    {
+        /* Store the cursor exclude position in the PDEV */
+        prcl = &pdc->ppdev->Pointer.Exclude;
 
+        /* Call Eng/Drv function */
+        pdc->ppdev->pfnMovePointer(&pdc->ppdev->pSurface->SurfObj, x, y, prcl);
+    }
+
+    /* Release PDEV lock */
     EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
+
     /* Unlock the DC */
     DC_UnlockDc(pdc);
 }

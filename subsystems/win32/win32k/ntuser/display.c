@@ -674,6 +674,7 @@ NtUserEnumDisplaySettings(
 
 BOOL APIENTRY UserClipCursor(RECTL *prcl);
 VOID APIENTRY UserRedrawDesktop();
+HCURSOR FASTCALL UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange);
 
 LONG
 APIENTRY
@@ -753,7 +754,17 @@ UserChangeDisplaySettings(
     {
         ULONG ulResult;
 
-        if (!PDEVOBJ_bSwitchMode(ppdev, pdm))
+        /* Remove mouse pointer */
+        UserSetCursor(NULL, TRUE);
+
+        /* Do the mode switch */
+        ulResult = PDEVOBJ_bSwitchMode(ppdev, pdm);
+
+        /* Restore mouse pointer */
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
+
+        /* Check for failure */
+        if (!ulResult)
         {
             DPRINT1("failed to set mode\n");
             lResult = (lResult == DISP_CHANGE_NOTUPDATED) ?
@@ -765,10 +776,10 @@ UserChangeDisplaySettings(
         /* Update the system metrics */
         InitMetrics();
 
+        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
+
         /* Remove all cursor clipping */
         UserClipCursor(NULL);
-
-        //IntvGetDeviceCaps(&PrimarySurface, &GdiHandleTable->DevCaps);
 
         pdesk = IntGetActiveDesktop();
         //IntHideDesktop(pdesk);
