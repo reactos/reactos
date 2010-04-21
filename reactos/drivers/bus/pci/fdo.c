@@ -239,8 +239,6 @@ FdoQueryBusRelations(
         break;
       }
 
-      Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-
       Device->Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
       //Device->Pdo->Flags |= DO_POWER_PAGABLE;
