@@ -509,6 +509,9 @@ MiFindExportedRoutineByName(IN PVOID DllBase,
     /* Otherwise, this is the ordinal */
     Ordinal = OrdinalTable[Mid];
 
+    /* Validate the ordinal */
+    if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
+
     /* Resolve the address and write it */
     ExportTable = (PULONG)((ULONG_PTR)DllBase +
                            ExportDirectory->AddressOfFunctions);
@@ -554,9 +557,9 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG_PTR OldBaseTop, Delta;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG ImportSize;
+    ULONG ImportSize, i;
+    PULONG_PTR ImageThunk;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
-    PULONG ImageThunk;
 
     /* Calculate the top and delta */
     OldBaseTop = (ULONG_PTR)OldBase + Size - 1;
@@ -571,8 +574,30 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
+#ifdef _WORKING_LINKER_
+        /* Get the IAT */
+        ImageThunk = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                  TRUE,
+                                                  IMAGE_DIRECTORY_ENTRY_IAT,
+                                                  &ImportSize);
+        if (!ImageThunk) continue;
 
+        /* Make sure we have an IAT */
+        DPRINT("[Mm0]: Updating thunks in: %wZ\n", &LdrEntry->BaseDllName);
+        for (i = 0; i < ImportSize; i++, ImageThunk++)
+        {
+            /* Check if it's within this module */
+            if ((*ImageThunk >= (ULONG_PTR)OldBase) && (*ImageThunk <= OldBaseTop))
+            {
+                /* Relocate it */
+                DPRINT("[Mm0]: Updating IAT at: %p. Old Entry: %p. New Entry: %p.\n",
+                        ImageThunk, *ImageThunk, *ImageThunk + Delta);
+                *ImageThunk += Delta;
+            }
+        }
+#else
         /* Get the import table */
+        i = ImportSize;
         ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                         TRUE,
                                                         IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -605,6 +630,7 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Go to the next import */
             ImportDescriptor++;
         }
+#endif
     }
 }
 
@@ -672,7 +698,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Get the hint and check if it's valid */
         Hint = NameImport->Hint;
         if ((Hint < ExportDirectory->NumberOfNames) &&
-            !(strcmp((PCHAR) NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
+            !(strcmp((PCHAR)NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
         {
             /* We have a match, get the ordinal number from here */
             Ordinal = OrdinalTable[Hint];
@@ -843,7 +869,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
                           NULL);
 
     /* Check if this driver was loaded at boot and didn't get imports parsed */
-    if (LdrEntry->LoadedImports == (PVOID)-1) goto Done;
+    if (LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) goto Done;
 
     /* We should still be alive */
     ASSERT(LdrEntry->LoadCount != 0);
@@ -870,6 +896,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
     }
 
     /* FIXME: Free the driver */
+    DPRINT1("Leaking driver: %wZ\n", &LdrEntry->BaseDllName);
     //MmFreeSection(LdrEntry->DllBase);
 
     /* Check if we're linked in */
@@ -940,7 +967,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
            __FUNCTION__, ImageBase, ImageFileDirectory);
 
     /* Assume no imports */
-    *LoadImports = (PVOID)-2;
+    *LoadImports = MM_SYSLDR_NO_IMPORTS;
 
     /* Get the import descriptor */
     ImportDescriptor = RtlImageDirectoryEntryToData(ImageBase,
@@ -965,11 +992,12 @@ MiResolveImageReferences(IN PVOID ImageBase,
         LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
         LoadedImports = ExAllocatePoolWithTag(PagedPool,
                                               LoadedImportsSize,
-                                              TAG_LDR_WSTR);
+                                              'TDmM');
         if (LoadedImports)
         {
             /* Zero it */
             RtlZeroMemory(LoadedImports, LoadedImportsSize);
+            LoadedImports->Count = ImportCount;
         }
     }
     else
@@ -989,15 +1017,31 @@ MiResolveImageReferences(IN PVOID ImageBase,
         GdiLink = GdiLink |
                   !(_strnicmp(ImportName, "win32k", sizeof("win32k") - 1));
 
-        /* We can also allow dxapi */
+        /* We can also allow dxapi (for Windows compat, allow IRT and coverage )*/
         NormalLink = NormalLink |
                      ((_strnicmp(ImportName, "win32k", sizeof("win32k") - 1)) &&
-                      (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)));
+                      (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)) &&
+                      (_strnicmp(ImportName, "coverage", sizeof("coverage") - 1)) &&
+                      (_strnicmp(ImportName, "irt", sizeof("irt") - 1)));
 
         /* Check if this is a valid GDI driver */
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
+            MiDereferenceImports(LoadedImports);
+            if (LoadedImports) ExFreePool(LoadedImports);
+            return STATUS_PROCEDURE_NOT_FOUND;
+        }
+
+        /* Check for user-mode printer or video card drivers, which don't belong */
+        if (!(_strnicmp(ImportName, "ntdll", sizeof("ntdll") - 1)) ||
+            !(_strnicmp(ImportName, "winsrv", sizeof("winsrv") - 1)) ||
+            !(_strnicmp(ImportName, "advapi32", sizeof("advapi32") - 1)) ||
+            !(_strnicmp(ImportName, "kernel32", sizeof("kernel32") - 1)) ||
+            !(_strnicmp(ImportName, "user32", sizeof("user32") - 1)) ||
+            !(_strnicmp(ImportName, "gdi32", sizeof("gdi32") - 1)))
+        {
+            /* This is not kernel code */
             MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePool(LoadedImports);
             return STATUS_PROCEDURE_NOT_FOUND;
@@ -1079,7 +1123,7 @@ CheckDllState:
                                     sizeof(UNICODE_NULL);
             DllName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                    DllName.MaximumLength,
-                                                   TAG_LDR_WSTR);
+                                                   'TDmM');
             if (DllName.Buffer)
             {
                 /* Setup the base length and copy it */
@@ -1091,13 +1135,13 @@ CheckDllState:
                 /* Now add the import name and null-terminate it */
                 RtlAppendStringToString((PSTRING)&DllName,
                                         (PSTRING)&NameString);
-                DllName.Buffer[(DllName.MaximumLength - 1) /  sizeof(WCHAR)] = UNICODE_NULL;
+                DllName.Buffer[(DllName.MaximumLength - 1) / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Load the image */
                 Status = MmLoadSystemImage(&DllName,
                                            NamePrefix,
                                            NULL,
-                                           0,
+                                           FALSE,
                                            (PVOID)&DllEntry,
                                            &DllBase);
                 if (NT_SUCCESS(Status))
@@ -1160,8 +1204,8 @@ CheckDllState:
             if (!(LdrEntry->Flags & LDRP_LOAD_IN_PROGRESS))
             {
                 /* Add the entry */
-                LoadedImports->Entry[LoadedImports->Count] = LdrEntry;
-                LoadedImports->Count++;
+                LoadedImports->Entry[ImportCount] = LdrEntry;
+                ImportCount++;
             }
         }
 
@@ -1230,7 +1274,8 @@ CheckDllState:
             if (LoadedImports->Entry[i])
             {
                 /* Got an entry, OR it with 1 in case it's the single entry */
-                ImportEntry = (PVOID)((ULONG_PTR)LoadedImports->Entry[i] | 1);
+                ImportEntry = (PVOID)((ULONG_PTR)LoadedImports->Entry[i] |
+                                      MM_SYSLDR_SINGLE_ENTRY);
                 ImportCount++;
             }
         }
@@ -1240,7 +1285,7 @@ CheckDllState:
         {
             /* Free the list and set it to no imports */
             ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
-            LoadedImports = (PVOID)-2;
+            LoadedImports = MM_SYSLDR_NO_IMPORTS;
         }
         else if (ImportCount == 1)
         {
@@ -1254,7 +1299,7 @@ CheckDllState:
             LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
             NewImports = ExAllocatePoolWithTag(PagedPool,
                                                LoadedImportsSize,
-                                               TAG_LDR_WSTR);
+                                               'TDmM');
             if (NewImports)
             {
                 /* Set count */
