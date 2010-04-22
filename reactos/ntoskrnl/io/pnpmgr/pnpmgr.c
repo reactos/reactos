@@ -66,18 +66,19 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
    NTSTATUS Status;
 
    if (!DriverObject->DriverExtension->AddDevice)
+   {
+      DeviceNode->Flags |= DNF_LEGACY_DRIVER;
+   }
+
+   if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
+   {
+      DeviceNode->Flags |= DNF_ADDED + DNF_STARTED;
       return STATUS_SUCCESS;
+   }
 
    /* This is a Plug and Play driver */
    DPRINT("Plug and Play driver found\n");
    ASSERT(DeviceNode->PhysicalDeviceObject);
-
-   /* Check if this plug-and-play driver is used as a legacy one for this device node */
-   if (IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
-   {
-      IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-      return STATUS_SUCCESS;
-   }
 
    DPRINT("Calling %wZ->AddDevice(%wZ)\n",
       &DriverObject->DriverName,
@@ -124,6 +125,21 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
 
 VOID
 NTAPI
+IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
+{
+    IO_STACK_LOCATION Stack;
+    PVOID Dummy;
+
+    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
+    Stack.MajorFunction = IRP_MJ_PNP;
+    Stack.MinorFunction = IRP_MN_REMOVE_DEVICE;
+
+    /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
+    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+}
+
+VOID
+NTAPI
 IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
 {
     IO_STACK_LOCATION Stack;
@@ -156,10 +172,11 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
     if (!NT_SUCCESS(Status))
     {
-        /* We failed start */
-        DeviceNode->Flags |= DNF_START_FAILED;
+        /* Send an IRP_MN_REMOVE_DEVICE request */
+        IopSendRemoveDevice(DeviceObject);
 
-        /* TODO: Undo all the stuff we did up to this point */
+        /* Set the appropriate flag */
+        DeviceNode->Flags |= DNF_START_FAILED;
 
         DPRINT1("Warning: PnP Start failed (%wZ)\n", &DeviceNode->InstancePath);
         return;
@@ -167,9 +184,6 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     
     /* Otherwise, mark us as started */
     DeviceNode->Flags |= DNF_STARTED;
-
-    /* We reported the resources */
-    DeviceNode->Flags |= DNF_RESOURCE_REPORTED;
 
     /* We now need enumeration */
     DeviceNode->Flags |= DNF_NEED_ENUMERATION_ONLY;
@@ -184,10 +198,7 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
     PAGED_CODE();
     
     /* Sanity check */
-  //  ASSERT((DeviceNode->Flags & DNF_ADDED) || (DeviceNode->Flags & DNF_ENUMERATED));
-    if (!(DeviceNode->Flags & DNF_ADDED) && !(DeviceNode->Flags & DNF_ENUMERATED))
-        DPRINT1("Warning: Starting a device node without DNF_ADDED or DNF_ENUMERATED (%wZ)\n",
-                &DeviceNode->InstancePath);
+    ASSERT((DeviceNode->Flags & DNF_ADDED));
     ASSERT((DeviceNode->Flags & (DNF_RESOURCE_ASSIGNED |
                                  DNF_RESOURCE_REPORTED |
                                  DNF_NO_RESOURCE_REQUIRED)));
@@ -242,6 +253,12 @@ IopStartDevice(
    HANDLE InstanceHandle = INVALID_HANDLE_VALUE, ControlHandle = INVALID_HANDLE_VALUE;
    UNICODE_STRING KeyName;
    OBJECT_ATTRIBUTES ObjectAttributes;
+
+   if (DeviceNode->Flags & (DNF_STARTED | DNF_START_REQUEST_PENDING))
+   {
+       /* Nothing to do here */
+       return STATUS_SUCCESS;
+   }
 
    Status = IopAssignDeviceResources(DeviceNode);
    if (!NT_SUCCESS(Status))
@@ -542,8 +559,9 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
           return Status;
       }
 
-      /* This is for drivers passed on the command line to ntoskrnl.exe */
       IopDeviceNodeSetFlag(Node, DNF_LEGACY_DRIVER);
+      IopDeviceNodeSetFlag(Node, DNF_ADDED);
+      IopDeviceNodeSetFlag(Node, DNF_STARTED);
    }
 
    Node->PhysicalDeviceObject = PhysicalDeviceObject;
