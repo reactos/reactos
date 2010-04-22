@@ -539,19 +539,6 @@ IntRectangle(PDC dc,
 
     pdcattr = dc->pdcattr;
 
-    /* Do we rotate or shear? */
-    if (!(dc->dclevel.mxWorldToDevice.flAccel & MX_SCALE))
-    {
-
-        POINTL DestCoords[4];
-        ULONG  PolyCounts = 4;
-        DestCoords[0].x = DestCoords[3].x = LeftRect;
-        DestCoords[0].y = DestCoords[1].y = TopRect;
-        DestCoords[1].x = DestCoords[2].x = RightRect;
-        DestCoords[2].y = DestCoords[3].y = BottomRect;
-        // Use IntGdiPolyPolygon so to support PATH.
-        return IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
-    }
     // Rectangle Path only.
     if ( PATH_IsPathOpen(dc->dclevel) )
     {
@@ -577,6 +564,8 @@ IntRectangle(PDC dc,
         DestRect.bottom--;
     }
 
+    DC_vPrepareDCsForBlit(dc, DestRect, NULL, DestRect);
+
     if (pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
         DC_vUpdateFillBrush(dc);
 
@@ -590,6 +579,7 @@ IntRectangle(PDC dc,
         ret = FALSE;
         goto cleanup;
     }
+
     psurf = dc->dclevel.pSurface;
     if (!psurf)
     {
@@ -655,6 +645,8 @@ IntRectangle(PDC dc,
     }
 
 cleanup:
+    DC_vFinishBlit(dc, NULL);
+
     /* Move current position in DC?
        MSDN: The current position is neither used nor updated by Rectangle. */
 
@@ -671,7 +663,6 @@ NtGdiRectangle(HDC  hDC,
 {
     DC   *dc;
     BOOL ret; // default to failure
-    RECT rect = {LeftRect, TopRect, RightRect, BottomRect} ;
 
     dc = DC_LockDc(hDC);
     if (!dc)
@@ -686,16 +677,25 @@ NtGdiRectangle(HDC  hDC,
         return TRUE;
     }
 
-    DC_vPrepareDCsForBlit(dc, rect, NULL, rect);
-    if (dc->pdcattr->ulDirty_ & (DIRTY_FILL | DC_BRUSH_DIRTY))
-        DC_vUpdateFillBrush(dc);
+    /* Do we rotate or shear? */
+    if (!(dc->dclevel.mxWorldToDevice.flAccel & MX_SCALE))
+    {
+        POINTL DestCoords[4];
+        ULONG PolyCounts = 4;
 
-    if (dc->pdcattr->ulDirty_ & (DIRTY_LINE | DC_PEN_DIRTY))
-        DC_vUpdateLineBrush(dc);
+        DestCoords[0].x = DestCoords[3].x = LeftRect;
+        DestCoords[0].y = DestCoords[1].y = TopRect;
+        DestCoords[1].x = DestCoords[2].x = RightRect;
+        DestCoords[2].y = DestCoords[3].y = BottomRect;
+        // Use IntGdiPolyPolygon so to support PATH.
+        ret = IntGdiPolyPolygon(dc, DestCoords, &PolyCounts, 1);
+    }
+    else
+    {
+        ret = IntRectangle(dc, LeftRect, TopRect, RightRect, BottomRect );
+    }
 
-    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
-    DC_vFinishBlit(dc, NULL);
-    DC_UnlockDc ( dc );
+    DC_UnlockDc(dc);
 
     return ret;
 }

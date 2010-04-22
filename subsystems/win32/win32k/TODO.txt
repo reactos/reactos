@@ -10,7 +10,6 @@ requirements before it can be handled.
 
 Before the merge:
 -----------------
-# Fix mouse pointer regression
 # Resize the desktop window after mode switch
 # Update mouse area after mode switch
 # Invalidate the whole Window content after mode switch
