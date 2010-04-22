@@ -1590,6 +1590,63 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+LOGICAL
+NTAPI
+MiUseLargeDriverPage(IN ULONG NumberOfPtes,
+                     IN OUT PVOID *ImageBaseAddress,
+                     IN PUNICODE_STRING BaseImageName,
+                     IN BOOLEAN BootDriver)
+{
+    PLIST_ENTRY NextEntry;
+    BOOLEAN DriverFound = FALSE;
+    PMI_LARGE_PAGE_DRIVER_ENTRY LargePageDriverEntry;
+    ASSERT(KeGetCurrentIrql () <= APC_LEVEL);
+    ASSERT(*ImageBaseAddress >= MmSystemRangeStart);
+
+#ifdef _X86_
+    if (!(KeFeatureBits & KF_LARGE_PAGE)) return FALSE;
+    if (!(__readcr4() & CR4_PSE)) return FALSE;
+#endif
+
+    /* Make sure there's enough system PTEs for a large page driver */
+    if (MmTotalFreeSystemPtes[SystemPteSpace] < (16 * (PDE_MAPPED_VA >> PAGE_SHIFT)))
+    {
+        return FALSE;
+    }
+
+    /* This happens if the registry key had a "*" (wildcard) in it */
+    if (MiLargePageAllDrivers == 0)
+    {
+        /* It didn't, so scan the list */
+        NextEntry = MiLargePageDriverList.Flink;
+        while (NextEntry != &MiLargePageDriverList)
+        {
+            /* Check if the driver name matches */
+            LargePageDriverEntry = CONTAINING_RECORD(NextEntry,
+                                                     MI_LARGE_PAGE_DRIVER_ENTRY,
+                                                     Links);
+            if (RtlEqualUnicodeString(BaseImageName,
+                                      &LargePageDriverEntry->BaseName,
+                                      TRUE))
+            {
+                /* Enable large pages for this driver */
+                DriverFound = TRUE;
+                break;
+            }
+
+            /* Keep trying */
+            NextEntry = NextEntry->Flink;
+        }
+        
+        /* If we didn't find the driver, it doesn't need large pages */
+        if (DriverFound == FALSE) return FALSE;
+    }
+ 
+    /* Nothing to do yet */
+    DPRINT1("Large pages not supported!\n");
+    return FALSE;
+}
+
 ULONG
 NTAPI
 MiComputeDriverProtection(IN BOOLEAN SessionSpace,
@@ -1994,15 +2051,24 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_STANDARD_INFORMATION FileStandardInfo;
     KAPC_STATE ApcState;
+    PIMAGE_NT_HEADERS NtHeaders;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     PAGED_CODE();
+    
+    /* Setup the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
 
     /* Create a section for the DLL */
     Status = ZwCreateSection(&SectionHandle,
                              SECTION_MAP_EXECUTE,
-                             NULL,
+                             &ObjectAttributes,
                              NULL,
                              PAGE_EXECUTE,
-                             SEC_COMMIT,
+                             SEC_IMAGE,
                              ImageHandle);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -2034,17 +2100,35 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
                                     &FileStandardInfo,
                                     sizeof(FileStandardInfo),
                                     FileStandardInformation);
-    if ( NT_SUCCESS(Status) )
+    if (NT_SUCCESS(Status))
     {
         /* First, verify the checksum */
         if (!LdrVerifyMappedImageMatchesChecksum(ViewBase,
-                                                 FileStandardInfo.
-                                                 EndOfFile.LowPart,
+                                                 ViewSize,
                                                  FileStandardInfo.
                                                  EndOfFile.LowPart))
         {
             /* Set checksum failure */
             Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+            goto Fail;
+        }
+        
+        /* Make sure it's a real image */
+        NtHeaders = RtlImageNtHeader(ViewBase);
+        if (!NtHeaders)
+        {
+            /* Set checksum failure */
+            Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+            goto Fail;
+        }
+        
+        /* Make sure it's for the correct architecture */
+        if ((NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE) ||
+            (NtHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC))
+        {
+            /* Set protection failure */
+            Status = STATUS_INVALID_IMAGE_PROTECT;
+            goto Fail;
         }
 
         /* Check that it's a valid SMP image if we have more then one CPU */
@@ -2056,6 +2140,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     }
 
     /* Unmap the section, close the handle, and return status */
+Fail:
     ZwUnmapViewOfSection(NtCurrentProcess(), ViewBase);
     KeUnstackDetachProcess(&ApcState);
     ZwClose(SectionHandle);
@@ -2330,13 +2415,11 @@ LoaderScan:
         /* Check for success */
         if (NT_SUCCESS(Status))
         {
-            #if 0
             /* Support large pages for drivers */
             MiUseLargeDriverPage(DriverSize / PAGE_SIZE,
                                  &ModuleLoadBase,
                                  &BaseName,
                                  TRUE);
-                                 #endif
         }
 
         /* Dereference the section */
