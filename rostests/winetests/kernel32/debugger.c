@@ -45,6 +45,8 @@ static char** myARGV;
 static BOOL (WINAPI *pCheckRemoteDebuggerPresent)(HANDLE,PBOOL);
 static BOOL (WINAPI *pDebugActiveProcessStop)(DWORD);
 static BOOL (WINAPI *pDebugSetProcessKillOnExit)(BOOL);
+static BOOL (WINAPI *pIsDebuggerPresent)(void);
+static struct _TEB * (WINAPI *pNtCurrentTeb)(void);
 
 static LONG child_failures;
 
@@ -499,6 +501,7 @@ static void doChild(int argc, char **argv)
     const char *blackbox_file;
     HANDLE parent;
     DWORD ppid;
+    BOOL debug;
     BOOL ret;
 
     blackbox_file = argv[4];
@@ -507,14 +510,45 @@ static void doChild(int argc, char **argv)
     parent = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, ppid);
     child_ok(!!parent, "OpenProcess failed, last error %#x.\n", GetLastError());
 
+    ret = pCheckRemoteDebuggerPresent(parent, &debug);
+    child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+    child_ok(!debug, "Expected debug == 0, got %#x.\n", debug);
+
     ret = DebugActiveProcess(ppid);
     child_ok(ret, "DebugActiveProcess failed, last error %#x.\n", GetLastError());
+
+    ret = pCheckRemoteDebuggerPresent(parent, &debug);
+    child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+    child_ok(debug, "Expected debug != 0, got %#x.\n", debug);
 
     ret = pDebugActiveProcessStop(ppid);
     child_ok(ret, "DebugActiveProcessStop failed, last error %#x.\n", GetLastError());
 
+    ret = pCheckRemoteDebuggerPresent(parent, &debug);
+    child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+    child_ok(!debug, "Expected debug == 0, got %#x.\n", debug);
+
     ret = CloseHandle(parent);
     child_ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+
+    ret = pIsDebuggerPresent();
+    child_ok(ret, "Expected ret != 0, got %#x.\n", ret);
+    ret = pCheckRemoteDebuggerPresent(GetCurrentProcess(), &debug);
+    child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+    child_ok(debug, "Expected debug != 0, got %#x.\n", debug);
+
+    if (pNtCurrentTeb)
+    {
+        pNtCurrentTeb()->ProcessEnvironmentBlock->BeingDebugged = FALSE;
+
+        ret = pIsDebuggerPresent();
+        child_ok(!ret, "Expected ret != 0, got %#x.\n", ret);
+        ret = pCheckRemoteDebuggerPresent(GetCurrentProcess(), &debug);
+        child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+        child_ok(debug, "Expected debug != 0, got %#x.\n", debug);
+
+        pNtCurrentTeb()->ProcessEnvironmentBlock->BeingDebugged = TRUE;
+    }
 
     blackbox.failures = child_failures;
     save_blackbox(blackbox_file, &blackbox, sizeof(blackbox));
@@ -527,17 +561,21 @@ static void test_debug_loop(int argc, char **argv)
     char blackbox_file[MAX_PATH];
     PROCESS_INFORMATION pi;
     STARTUPINFOA si;
+    BOOL debug;
     DWORD pid;
     char *cmd;
     BOOL ret;
 
-    if (!pDebugActiveProcessStop)
+    if (!pDebugActiveProcessStop || !pCheckRemoteDebuggerPresent)
     {
-        win_skip("DebugActiveProcessStop not available, skipping test.\n");
+        win_skip("DebugActiveProcessStop or CheckRemoteDebuggerPresent not available, skipping test.\n");
         return;
     }
 
     pid = GetCurrentProcessId();
+    ret = DebugActiveProcess(pid);
+    ok(!ret, "DebugActiveProcess() succeeded on own process.\n");
+
     get_file_name(blackbox_file);
     cmd = HeapAlloc(GetProcessHeap(), 0, strlen(argv[0]) + strlen(arguments) + strlen(blackbox_file) + 10);
     sprintf(cmd, "%s%s%08x %s", argv[0], arguments, pid, blackbox_file);
@@ -548,6 +586,10 @@ static void test_debug_loop(int argc, char **argv)
     ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
 
     HeapFree(GetProcessHeap(), 0, cmd);
+
+    ret = pCheckRemoteDebuggerPresent(pi.hProcess, &debug);
+    ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
+    ok(debug, "Expected debug != 0, got %#x.\n", debug);
 
     for (;;)
     {
@@ -584,6 +626,9 @@ START_TEST(debugger)
     pCheckRemoteDebuggerPresent=(void*)GetProcAddress(hdll, "CheckRemoteDebuggerPresent");
     pDebugActiveProcessStop=(void*)GetProcAddress(hdll, "DebugActiveProcessStop");
     pDebugSetProcessKillOnExit=(void*)GetProcAddress(hdll, "DebugSetProcessKillOnExit");
+    pIsDebuggerPresent=(void*)GetProcAddress(hdll, "IsDebuggerPresent");
+    hdll=GetModuleHandle("ntdll.dll");
+    if (hdll) pNtCurrentTeb = (void*)GetProcAddress(hdll, "NtCurrentTeb");
 
     myARGC=winetest_get_mainargs(&myARGV);
     if (myARGC >= 3 && strcmp(myARGV[2], "crash") == 0)

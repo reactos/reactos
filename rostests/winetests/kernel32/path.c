@@ -1017,7 +1017,7 @@ static void test_GetLongPathNameA(void)
     /* Test a normal path with a small buffer size */
     memset(temppath, 0, MAX_PATH);
     length = pGetLongPathNameA(tempfile, temppath, 4);
-    /* We have a failure so length should be the minumum plus the terminating '0'  */
+    /* We have a failure so length should be the minimum plus the terminating '0'  */
     ok(length >= lstrlen(tempfile) + 1, "Wrong length\n");
     ok(temppath[0] == 0, "Buffer should not have been touched\n");
 

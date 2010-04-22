@@ -25,6 +25,7 @@
 
 static BOOL (WINAPI *pGetConsoleInputExeNameA)(DWORD, LPSTR);
 static DWORD (WINAPI *pGetConsoleProcessList)(LPDWORD, DWORD);
+static HANDLE (WINAPI *pOpenConsoleW)(LPCWSTR,DWORD,BOOL,DWORD);
 static BOOL (WINAPI *pSetConsoleInputExeNameA)(LPCSTR);
 
 /* DEFAULT_ATTRIB is used for all initial filling of the console.
@@ -65,6 +66,7 @@ static void init_function_pointers(void)
     hKernel32 = GetModuleHandleA("kernel32.dll");
     KERNEL32_GET_PROC(GetConsoleInputExeNameA);
     KERNEL32_GET_PROC(GetConsoleProcessList);
+    KERNEL32_GET_PROC(OpenConsoleW);
     KERNEL32_GET_PROC(SetConsoleInputExeNameA);
 
 #undef KERNEL32_GET_PROC
@@ -988,6 +990,99 @@ static void test_GetConsoleProcessList(void)
     HeapFree(GetProcessHeap(), 0, list);
 }
 
+static void test_OpenConsoleW(void)
+{
+    static const WCHAR coninW[] = {'C','O','N','I','N','$',0};
+    static const WCHAR conoutW[] = {'C','O','N','O','U','T','$',0};
+    static const WCHAR emptyW[] = {0};
+    static const WCHAR invalidW[] = {'I','N','V','A','L','I','D',0};
+
+    static const struct
+    {
+        LPCWSTR name;
+        DWORD access;
+        BOOL inherit;
+        DWORD creation;
+        DWORD gle;
+    } invalid_table[] = {
+        {NULL,     0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {NULL,     0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
+        {NULL,     0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {NULL,     GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
+        {emptyW,   0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {emptyW,   0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
+        {emptyW,   0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {emptyW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
+        {invalidW, 0,                            FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {invalidW, 0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
+        {invalidW, 0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_INVALID_PARAMETER},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {invalidW, GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_EXISTING,     ERROR_INVALID_PARAMETER},
+        {coninW,   0,                            FALSE,      0,                 ERROR_SHARING_VIOLATION},
+        {coninW,   0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
+        {coninW,   0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_SHARING_VIOLATION},
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        ERROR_SHARING_VIOLATION},
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     ERROR_SHARING_VIOLATION},
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {coninW,   GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, ERROR_INVALID_PARAMETER},
+        {conoutW,  0,                            FALSE,      0,                 ERROR_SHARING_VIOLATION},
+        {conoutW,  0xdeadbeef,                   0xdeadbeef, 0xdeadbeef,        ERROR_INVALID_PARAMETER},
+        {conoutW,  0,                            FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      0,                 ERROR_SHARING_VIOLATION},
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_NEW,        ERROR_SHARING_VIOLATION},
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      CREATE_ALWAYS,     ERROR_SHARING_VIOLATION},
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      OPEN_ALWAYS,       ERROR_INVALID_PARAMETER},
+        {conoutW,  GENERIC_READ | GENERIC_WRITE, FALSE,      TRUNCATE_EXISTING, ERROR_INVALID_PARAMETER},
+    };
+
+    int index;
+    HANDLE ret;
+
+    if (!pOpenConsoleW)
+    {
+        win_skip("OpenConsoleW is not available\n");
+        return;
+    }
+
+    for (index = 0; index < sizeof(invalid_table)/sizeof(invalid_table[0]); index++)
+    {
+        SetLastError(0xdeadbeef);
+        ret = pOpenConsoleW(invalid_table[index].name, invalid_table[index].access,
+                            invalid_table[index].inherit, invalid_table[index].creation);
+        ok(ret == INVALID_HANDLE_VALUE,
+           "Expected OpenConsoleW to return INVALID_HANDLE_VALUE for index %d, got %p\n",
+           index, ret);
+        ok(GetLastError() == invalid_table[index].gle,
+           "Expected GetLastError() to return %u for index %d, got %u\n",
+           invalid_table[index].gle, index, GetLastError());
+    }
+
+    /* OpenConsoleW should not touch the last error on success. */
+    SetLastError(0xdeadbeef);
+    ret = pOpenConsoleW(coninW, GENERIC_READ | GENERIC_WRITE, FALSE, OPEN_EXISTING);
+    ok(ret != INVALID_HANDLE_VALUE,
+       "Expected OpenConsoleW to return a valid handle\n");
+    ok(GetLastError() == 0xdeadbeef,
+       "Expected the last error to be untouched, got %u\n", GetLastError());
+    if (ret != INVALID_HANDLE_VALUE)
+        CloseHandle(ret);
+
+    SetLastError(0xdeadbeef);
+    ret = pOpenConsoleW(conoutW, GENERIC_READ | GENERIC_WRITE, FALSE, OPEN_EXISTING);
+    ok(ret != INVALID_HANDLE_VALUE,
+       "Expected OpenConsoleW to return a valid handle\n");
+    ok(GetLastError() == 0xdeadbeef,
+       "Expected the last error to be untouched, got %u\n", GetLastError());
+    if (ret != INVALID_HANDLE_VALUE)
+        CloseHandle(ret);
+}
+
 START_TEST(console)
 {
     HANDLE hConIn, hConOut;
@@ -1038,4 +1133,5 @@ START_TEST(console)
         test_GetSetConsoleInputExeName();
 
     test_GetConsoleProcessList();
+    test_OpenConsoleW();
 }

@@ -30,7 +30,6 @@
 
 #include "wine/test.h"
 
-
 #define MAGIC_DEAD 0xdeadbeef
 
 /* some undocumented flags (names are made up) */
@@ -531,7 +530,7 @@ static void test_heap_checks( DWORD flags )
             ok( p[15] == 0, "wrong padding %x\n", p[15] );
         }
     }
-    else skip( "realloc in place failed\n ");
+    else skip( "realloc in place failed\n");
 
     ret = HeapFree( GetProcessHeap(), 0, p );
     ok( ret, "HeapFree failed\n" );

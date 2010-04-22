@@ -814,9 +814,19 @@ static VOID test_thread_processor(void)
    ok(SetThreadAffinityMask(curthread,processMask+1)==0,
       "SetThreadAffinityMask passed for an illegal processor\n");
 /* NOTE: Pre-Vista does not recognize the "all processors" flag (all bits set) */
-   retMask = SetThreadAffinityMask(curthread,~0UL);
+   retMask = SetThreadAffinityMask(curthread,~0);
    ok(broken(retMask==0) || retMask==processMask,
       "SetThreadAffinityMask(thread,-1) failed to request all processors.\n");
+   if (retMask == processMask && sizeof(ULONG_PTR) > sizeof(ULONG))
+   {
+       /* only the low 32-bits matter */
+       retMask = SetThreadAffinityMask(curthread,~(ULONG_PTR)0);
+       ok(retMask == processMask, "SetThreadAffinityMask failed\n");
+       retMask = SetThreadAffinityMask(curthread,~(ULONG_PTR)0 >> 3);
+       ok(retMask == processMask, "SetThreadAffinityMask failed\n");
+       retMask = SetThreadAffinityMask(curthread,~(ULONG_PTR)1);
+       ok(retMask == 0, "SetThreadAffinityMask succeeded\n");
+   }
 /* NOTE: This only works on WinNT/2000/XP) */
    if (pSetThreadIdealProcessor) {
      SetLastError(0xdeadbeef);
