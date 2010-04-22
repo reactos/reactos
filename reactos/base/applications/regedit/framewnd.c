@@ -356,11 +356,11 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
 
         hwndExportAll = GetDlgItem(hdlg, IDC_EXPORT_ALL);
         if (hwndExportAll)
-			SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey[0] ? BST_UNCHECKED : BST_CHECKED, 0);
+            SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey ? BST_UNCHECKED : BST_CHECKED, 0);
 
         hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
         if (hwndExportBranch)
-            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey[0] ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey ? BST_CHECKED : BST_UNCHECKED, 0);
 
         hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
         if (hwndExportBranchText)
@@ -406,7 +406,12 @@ BOOL ExportRegistryFile(HWND hWnd)
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
     ofn.lpstrTitle = Caption;
-    ofn.lCustData = (LPARAM) ExportKeyPath;
+
+    /* Only set the path if a key (not the root node) is selected */
+    if (hKeyRoot != 0)
+    {
+        ofn.lCustData = (LPARAM) ExportKeyPath;
+    }
     ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
