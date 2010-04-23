@@ -810,7 +810,7 @@ static struct region *intersect_window_region( struct region *region, struct win
 
 
 /* convert coordinates from client to screen coords */
-static inline void client_to_screen( struct window *win, int *x, int *y )
+/*static*/ inline void client_to_screen( struct window *win, int *x, int *y )
 {
     for ( ; win && !is_desktop_window(win); win = win->parent)
     {

@@ -18,6 +18,7 @@
 #include <debug.h>
 
 /*static*/ inline struct window *get_window( user_handle_t handle );
+inline void client_to_screen( struct window *win, int *x, int *y );
 void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags );
 void req_update_window_zorder( const struct update_window_zorder_request *req, struct update_window_zorder_reply *reply );
 
@@ -62,6 +63,7 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     struct update_window_zorder_request req;
     struct update_window_zorder_reply reply;
     struct region *ClientRegion;
+    int client_left = 0, client_top = 0;
     UINT i;
 
     ClientRegion = create_empty_region();
@@ -98,7 +100,8 @@ SwmInvalidateRegion(PSWM_WINDOW Window, struct region *Region, rectangle_t *Rect
     //DbgPrint("\n");
 
     /* Convert region to client coordinates */
-    offset_region(ClientRegion, -Window->Window.left, -Window->Window.top);
+    client_to_screen( Win, &client_left, &client_top );
+    offset_region(ClientRegion, -client_left, -client_top);
 
     /* Redraw window */
     redraw_window(Win, ClientRegion, 1, RDW_INVALIDATE | RDW_ERASE | RDW_FRAME | RDW_ALLCHILDREN );
