@@ -191,9 +191,8 @@ void NTDRV_SendMouseInput( HWND hwnd, DWORD flags, DWORD x, DWORD y,
 		GetCursorPos(&pt);
     }
 
-    //hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
-
-    //FIXME("hwnd %x\n", hwnd);
+    /* get the window handle from cursor position */
+    hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
 
     if (flags & MOUSEEVENTF_MOVE)
     {
