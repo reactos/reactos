@@ -610,7 +610,7 @@ NtCreateSection(
 
 #define MAX_UNICODE_STACK_BUFFER_LENGTH 256
 
-#define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
+#define METHOD_FROM_CTL_CODE(ctrlCode)  ((ULONG)(ctrlCode & 3))
 
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
@@ -687,20 +687,20 @@ LsaFreeReturnBuffer(
 #define MSV1_0_SUBAUTHENTICATION_KEY "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0"
 #define MSV1_0_SUBAUTHENTICATION_VALUE "Auth"
 
-#define MSV1_0_CHALLENGE_LENGTH 8
-#define MSV1_0_USER_SESSION_KEY_LENGTH 16
-#define MSV1_0_LANMAN_SESSION_KEY_LENGTH 8
+#define MSV1_0_CHALLENGE_LENGTH                8
+#define MSV1_0_USER_SESSION_KEY_LENGTH         16
+#define MSV1_0_LANMAN_SESSION_KEY_LENGTH       8
 
-#define MSV1_0_CLEARTEXT_PASSWORD_ALLOWED    0x02
-#define MSV1_0_UPDATE_LOGON_STATISTICS       0x04
-#define MSV1_0_RETURN_USER_PARAMETERS        0x08
-#define MSV1_0_DONT_TRY_GUEST_ACCOUNT        0x10
-#define MSV1_0_ALLOW_SERVER_TRUST_ACCOUNT    0x20
-#define MSV1_0_RETURN_PASSWORD_EXPIRY        0x40
-#define MSV1_0_USE_CLIENT_CHALLENGE          0x80
-#define MSV1_0_TRY_GUEST_ACCOUNT_ONLY        0x100
-#define MSV1_0_RETURN_PROFILE_PATH           0x200
-#define MSV1_0_TRY_SPECIFIED_DOMAIN_ONLY     0x400
+#define MSV1_0_CLEARTEXT_PASSWORD_ALLOWED      0x02
+#define MSV1_0_UPDATE_LOGON_STATISTICS         0x04
+#define MSV1_0_RETURN_USER_PARAMETERS          0x08
+#define MSV1_0_DONT_TRY_GUEST_ACCOUNT          0x10
+#define MSV1_0_ALLOW_SERVER_TRUST_ACCOUNT      0x20
+#define MSV1_0_RETURN_PASSWORD_EXPIRY          0x40
+#define MSV1_0_USE_CLIENT_CHALLENGE            0x80
+#define MSV1_0_TRY_GUEST_ACCOUNT_ONLY          0x100
+#define MSV1_0_RETURN_PROFILE_PATH             0x200
+#define MSV1_0_TRY_SPECIFIED_DOMAIN_ONLY       0x400
 #define MSV1_0_ALLOW_WORKSTATION_TRUST_ACCOUNT 0x800
 
 #define MSV1_0_DISABLE_PERSONAL_FALLBACK     0x00001000
@@ -1148,7 +1148,7 @@ typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
       NETWORK_OPEN_LOCATION_QUALIFIER Location;
       NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -1165,7 +1165,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
     NETWORK_OPEN_LOCATION_QUALIFIER Location;
     NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -1181,7 +1181,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
       NETWORK_OPEN_LOCATION_QUALIFIER Location;
       NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -1194,7 +1194,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT {
 } NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
 #endif
 
-DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
+DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -1205,14 +1205,14 @@ typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
   PVOID Context;
 } PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
 
-DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
+DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
 DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
-DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
+DEFINE_GUID (GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53);
 
 typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
 
@@ -1238,9 +1238,9 @@ typedef struct _SRV_OPEN_ECP_CONTEXT {
 #define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
 #define PIN_HIGH_PRIORITY               (64)
 
-#define MAP_WAIT                          1
-#define MAP_NO_READ                       (16)
-#define MAP_HIGH_PRIORITY                 (64)
+#define MAP_WAIT                        1
+#define MAP_NO_READ                     (16)
+#define MAP_HIGH_PRIORITY               (64)
 
 #define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
 #define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
@@ -1279,7 +1279,7 @@ typedef struct _QUERY_PATH_RESPONSE {
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
 
-#define FS_LFN_APIS                     0x00004000
+#define FS_LFN_APIS                             0x00004000
 
 #define FILE_STORAGE_TYPE_SPECIFIED             0x00000041  /* FILE_DIRECTORY_FILE | FILE_NON_DIRECTORY_FILE */
 #define FILE_STORAGE_TYPE_DEFAULT               (StorageTypeDefault << FILE_STORAGE_TYPE_SHIFT)
@@ -1296,7 +1296,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define FILE_STORAGE_TYPE_MASK                  0x000f0000
 #define FILE_STORAGE_TYPE_SHIFT                 16
 
-#define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
+#define FILE_VC_QUOTAS_LOG_VIOLATIONS           0x00000004
 
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
@@ -1345,7 +1345,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define OB_TYPE_IO_COMPLETION           22
 #define OB_TYPE_FILE                    23
 
-#define SEC_BASED	0x00200000
+#define SEC_BASED 0x00200000
 
 /* end winnt.h */
 

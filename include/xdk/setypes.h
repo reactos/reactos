@@ -404,10 +404,10 @@ typedef struct _SID_IDENTIFIER_AUTHORITY {
 #ifndef SID_DEFINED
 #define SID_DEFINED
 typedef struct _SID {
-   UCHAR  Revision;
-   UCHAR  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   ULONG SubAuthority[ANYSIZE_ARRAY];
+  UCHAR Revision;
+  UCHAR SubAuthorityCount;
+  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+  ULONG SubAuthority[ANYSIZE_ARRAY];
 } SID, *PISID;
 #endif
 
@@ -416,16 +416,16 @@ typedef struct _SID {
 #define SID_RECOMMENDED_SUB_AUTHORITIES 1
 
 typedef enum _SID_NAME_USE {
-    SidTypeUser = 1,
-    SidTypeGroup,
-    SidTypeDomain,
-    SidTypeAlias,
-    SidTypeWellKnownGroup,
-    SidTypeDeletedAccount,
-    SidTypeInvalid,
-    SidTypeUnknown,
-    SidTypeComputer,
-    SidTypeLabel
+  SidTypeUser = 1,
+  SidTypeGroup,
+  SidTypeDomain,
+  SidTypeAlias,
+  SidTypeWellKnownGroup,
+  SidTypeDeletedAccount,
+  SidTypeInvalid,
+  SidTypeUnknown,
+  SidTypeComputer,
+  SidTypeLabel
 } SID_NAME_USE, *PSID_NAME_USE;
 
 typedef struct _SID_AND_ATTRIBUTES {
@@ -551,15 +551,15 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 
 /* Well-known groups */
 
-#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
-#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
-#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
-#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
-#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
-#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
-#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
-#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
-#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
+#define DOMAIN_GROUP_RID_ADMINS               (0x00000200L)
+#define DOMAIN_GROUP_RID_USERS                (0x00000201L)
+#define DOMAIN_GROUP_RID_GUESTS               (0x00000202L)
+#define DOMAIN_GROUP_RID_COMPUTERS            (0x00000203L)
+#define DOMAIN_GROUP_RID_CONTROLLERS          (0x00000204L)
+#define DOMAIN_GROUP_RID_CERT_ADMINS          (0x00000205L)
+#define DOMAIN_GROUP_RID_SCHEMA_ADMINS        (0x00000206L)
+#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS    (0x00000207L)
+#define DOMAIN_GROUP_RID_POLICY_ADMINS        (0x00000208L)
 #define DOMAIN_GROUP_RID_READONLY_CONTROLLERS (0x00000209L)
 
 /* Well-known aliases */
@@ -611,11 +611,11 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 /* Allocate the System Luid.  The first 1000 LUIDs are reserved.
    Use #999 here (0x3e7 = 999) */
 
-#define SYSTEM_LUID                     { 0x3e7, 0x0 }
-#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
-#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
-#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
-#define IUSER_LUID                      { 0x3e3, 0x0 }
+#define SYSTEM_LUID                     {0x3e7, 0x0}
+#define ANONYMOUS_LOGON_LUID            {0x3e6, 0x0}
+#define LOCALSERVICE_LUID               {0x3e5, 0x0}
+#define NETWORKSERVICE_LUID             {0x3e4, 0x0}
+#define IUSER_LUID                      {0x3e3, 0x0}
 
 typedef struct _ACE_HEADER {
   UCHAR AceType;
@@ -661,8 +661,8 @@ typedef struct _ACE_HEADER {
 #define INHERITED_ACE                     (0x10)
 #define VALID_INHERIT_FLAGS               (0x1F)
 
-#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
-#define FAILED_ACCESS_ACE_FLAG           (0x80)
+#define SUCCESSFUL_ACCESS_ACE_FLAG        (0x40)
+#define FAILED_ACCESS_ACE_FLAG            (0x80)
 
 typedef struct _ACCESS_ALLOWED_ACE {
   ACE_HEADER Header;

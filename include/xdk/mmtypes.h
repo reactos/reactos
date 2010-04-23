@@ -32,16 +32,15 @@ typedef ULONG NODE_REQUIREMENT;
 #define MDL_ALLOCATED_MUST_SUCCEED  0x4000
 #define MDL_INTERNAL                0x8000
 
-#define MDL_MAPPING_FLAGS ( \
-  MDL_MAPPED_TO_SYSTEM_VA     | \
-  MDL_PAGES_LOCKED            | \
-  MDL_SOURCE_IS_NONPAGED_POOL | \
-  MDL_PARTIAL_HAS_BEEN_MAPPED | \
-  MDL_PARENT_MAPPED_SYSTEM_VA | \
-  MDL_SYSTEM_VA               | \
-  MDL_IO_SPACE)
+#define MDL_MAPPING_FLAGS (MDL_MAPPED_TO_SYSTEM_VA     | \
+                           MDL_PAGES_LOCKED            | \
+                           MDL_SOURCE_IS_NONPAGED_POOL | \
+                           MDL_PARTIAL_HAS_BEEN_MAPPED | \
+                           MDL_PARENT_MAPPED_SYSTEM_VA | \
+                           MDL_SYSTEM_VA               | \
+                           MDL_IO_SPACE)
 
-#define FLUSH_MULTIPLE_MAXIMUM 32
+#define FLUSH_MULTIPLE_MAXIMUM       32
 
 /* Section access rights */
 #define SECTION_QUERY                0x0001
@@ -51,17 +50,17 @@ typedef ULONG NODE_REQUIREMENT;
 #define SECTION_EXTEND_SIZE          0x0010
 #define SECTION_MAP_EXECUTE_EXPLICIT 0x0020
 
-#define SECTION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SECTION_QUERY|\
-                            SECTION_MAP_WRITE |      \
-                            SECTION_MAP_READ |       \
-                            SECTION_MAP_EXECUTE |    \
+#define SECTION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SECTION_QUERY| \
+                            SECTION_MAP_WRITE |                     \
+                            SECTION_MAP_READ |                      \
+                            SECTION_MAP_EXECUTE |                   \
                             SECTION_EXTEND_SIZE)
 
-#define SESSION_QUERY_ACCESS  0x0001
-#define SESSION_MODIFY_ACCESS 0x0002
+#define SESSION_QUERY_ACCESS         0x0001
+#define SESSION_MODIFY_ACCESS        0x0002
 
 #define SESSION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |  \
-                            SESSION_QUERY_ACCESS |             \
+                            SESSION_QUERY_ACCESS     |  \
                             SESSION_MODIFY_ACCESS)
 
 #define SEGMENT_ALL_ACCESS SECTION_ALL_ACCESS
@@ -231,17 +230,17 @@ typedef union _MM_PREFETCH_FLAGS {
 #define HEAP_TAG_SHIFT                  18
 #define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
 
-#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE |             \
-                                        HEAP_GROWABLE |                 \
-                                        HEAP_GENERATE_EXCEPTIONS |      \
-                                        HEAP_ZERO_MEMORY |              \
-                                        HEAP_REALLOC_IN_PLACE_ONLY |    \
-                                        HEAP_TAIL_CHECKING_ENABLED |    \
-                                        HEAP_FREE_CHECKING_ENABLED |    \
-                                        HEAP_DISABLE_COALESCE_ON_FREE | \
-                                        HEAP_CLASS_MASK |               \
-                                        HEAP_CREATE_ALIGN_16 |          \
-                                        HEAP_CREATE_ENABLE_TRACING |    \
+#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE             |   \
+                                        HEAP_GROWABLE                 |   \
+                                        HEAP_GENERATE_EXCEPTIONS      |   \
+                                        HEAP_ZERO_MEMORY              |   \
+                                        HEAP_REALLOC_IN_PLACE_ONLY    |   \
+                                        HEAP_TAIL_CHECKING_ENABLED    |   \
+                                        HEAP_FREE_CHECKING_ENABLED    |   \
+                                        HEAP_DISABLE_COALESCE_ON_FREE |   \
+                                        HEAP_CLASS_MASK               |   \
+                                        HEAP_CREATE_ALIGN_16          |   \
+                                        HEAP_CREATE_ENABLE_TRACING    |   \
                                         HEAP_CREATE_ENABLE_EXECUTE)
 $endif (_NTIFS_)
 

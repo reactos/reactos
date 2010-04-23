@@ -93,7 +93,6 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-
 typedef struct _ZONE_SEGMENT_HEADER {
   SINGLE_LIST_ENTRY SegmentList;
   PVOID Reserved;
@@ -210,8 +209,7 @@ typedef enum _CONFIGURATION_TYPE {
 #define IO_ATTACH_DEVICE                0x0400
 #define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID Context,
   IN PUNICODE_STRING PathName,
@@ -578,7 +576,7 @@ typedef struct PCI_AGP_EXTENDED_CAPABILITY {
 typedef struct _PCIX_BRIDGE_CAPABILITY {
   PCI_CAPABILITIES_HEADER Header;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       USHORT Bus64Bit:1;
       USHORT Bus133MHzCapable:1;
       USHORT SplitCompletionDiscarded:1;
@@ -594,7 +592,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT AsUSHORT;
   } SecondaryStatus;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG FunctionNumber:3;
       ULONG DeviceNumber:5;
       ULONG BusNumber:8;
@@ -616,7 +614,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT DownstreamSplitTransactionCapacity;
   USHORT DownstreamSplitTransactionLimit;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG SelectSecondaryRegisters:1;
       ULONG ErrorPresentInOtherBank:1;
       ULONG AdditionalCorrectableError:1;
@@ -655,7 +653,7 @@ typedef struct _PCI_SUBSYSTEM_IDS_CAPABILITY {
 
 typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExtendedConfigOpRegions:1;
       ULONG ActiveStatePowerManagement:1;
       ULONG ClockPowerManagement:1;
@@ -670,7 +668,7 @@ typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
 
 typedef struct _PCI_ROOT_BUS_OSC_CONTROL_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExpressNativeHotPlug:1;
       ULONG ShpcNativeHotPlug:1;
       ULONG ExpressNativePME:1;
@@ -696,7 +694,7 @@ typedef enum {
 
 typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
   PCI_HARDWARE_INTERFACE SecondaryInterface;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     BOOLEAN BusCapabilitiesFound;
     ULONG CurrentSpeedAndMode;
     ULONG SupportedSpeedsAndModes;
@@ -709,7 +707,7 @@ typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
 } PCI_ROOT_BUS_HARDWARE_CAPABILITY, *PPCI_ROOT_BUS_HARDWARE_CAPABILITY;
 
 typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CapabilityVersion:4;
     USHORT DeviceType:4;
     USHORT SlotImplemented:1;
@@ -720,7 +718,7 @@ typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_CAPABILITIES_REGISTER, *PPCI_EXPRESS_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaxPayloadSizeSupported:3;
     ULONG PhantomFunctionsSupported:2;
     ULONG ExtendedTagSupported:1;
@@ -739,7 +737,7 @@ typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
 
 typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorEnable:1;
     USHORT NonFatalErrorEnable:1;
     USHORT FatalErrorEnable:1;
@@ -759,7 +757,7 @@ typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
 
 typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorDetected:1;
     USHORT NonFatalErrorDetected:1;
     USHORT FatalErrorDetected:1;
@@ -772,7 +770,7 @@ typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
 } PCI_EXPRESS_DEVICE_STATUS_REGISTER, *PPCI_EXPRESS_DEVICE_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaximumLinkSpeed:4;
     ULONG MaximumLinkWidth:6;
     ULONG ActiveStatePMSupport:2;
@@ -788,7 +786,7 @@ typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_LINK_CAPABILITIES_REGISTER, *PPCI_EXPRESS_LINK_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT ActiveStatePMControl:2;
     USHORT Rsvd1:1;
     USHORT ReadCompletionBoundary:1;
@@ -803,7 +801,7 @@ typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
 } PCI_EXPRESS_LINK_CONTROL_REGISTER, *PPCI_EXPRESS_LINK_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT LinkSpeed:4;
     USHORT LinkWidth:6;
     USHORT Undefined:1;
@@ -816,7 +814,7 @@ typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
 } PCI_EXPRESS_LINK_STATUS_REGISTER, *PPCI_EXPRESS_LINK_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG AttentionButtonPresent:1;
     ULONG PowerControllerPresent:1;
     ULONG MRLSensorPresent:1;
@@ -834,7 +832,7 @@ typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_SLOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonEnable:1;
     USHORT PowerFaultDetectEnable:1;
     USHORT MRLSensorEnable:1;
@@ -852,7 +850,7 @@ typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
 } PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonPressed:1;
     USHORT PowerFaultDetected:1;
     USHORT MRLSensorChanged:1;
@@ -868,7 +866,7 @@ typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
 } PCI_EXPRESS_SLOT_STATUS_REGISTER, *PPCI_EXPRESS_SLOT_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableSerrEnable:1;
     USHORT NonFatalSerrEnable:1;
     USHORT FatalSerrEnable:1;
@@ -880,7 +878,7 @@ typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
 } PCI_EXPRESS_ROOT_CONTROL_REGISTER, *PPCI_EXPRESS_ROOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CRSSoftwareVisibility:1;
     USHORT Rsvd:15;
   } DUMMYSTRUCTNAME;
@@ -888,7 +886,7 @@ typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_ROOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG PMERequestorId:16;
     ULONG PMEStatus:1;
     ULONG PMEPending:1;
@@ -991,25 +989,13 @@ typedef enum {
 } PCI_EXPRESS_MAX_PAYLOAD_SIZE;
 
 typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT FunctionNumber:3;
     USHORT DeviceNumber:5;
     USHORT BusNumber:8;
   } DUMMYSTRUCTNAME;
   USHORT AsUSHORT;
 } PCI_EXPRESS_PME_REQUESTOR_ID, *PPCI_EXPRESS_PME_REQUESTOR_ID;
-
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
 
 typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
   ResourceTypeSingle = 0,
@@ -1130,8 +1116,8 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
 #define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
-    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
-     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
+  (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
+   FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
 
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
@@ -1149,11 +1135,11 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
-                                            FILE_READ_ONLY_DEVICE  | \
-                                            FILE_FLOPPY_DISKETTE   | \
-                                            FILE_WRITE_ONCE_MEDIA  | \
-                                            FILE_DEVICE_SECURE_OPEN  )
+#define FILE_CHARACTERISTICS_PROPAGATED (FILE_REMOVABLE_MEDIA  | \
+                                         FILE_READ_ONLY_DEVICE | \
+                                         FILE_FLOPPY_DISKETTE  | \
+                                         FILE_WRITE_ONCE_MEDIA | \
+                                         FILE_DEVICE_SECURE_OPEN)
 
 typedef struct _FILE_ALIGNMENT_INFORMATION {
   ULONG AlignmentRequirement;
@@ -1888,9 +1874,9 @@ typedef struct _KUSER_SHARED_DATA {
   ULONG NumberOfPhysicalPages;
   BOOLEAN SafeBootMode;
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR TscQpcData;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       UCHAR TscQpcEnabled:1;
       UCHAR TscQpcSpareFlag:1;
       UCHAR TscQpcShift:6;
@@ -1899,9 +1885,9 @@ typedef struct _KUSER_SHARED_DATA {
   UCHAR TscQpcPad[2];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-  union {
+  _ANONYMOUS_UNION union {
     ULONG SharedDataFlags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG DbgErrorPortPresent:1;
       ULONG DbgElevationEnabled:1;
       ULONG DbgVirtEnabled:1;
@@ -2111,7 +2097,7 @@ typedef struct _QUOTA_LIMITS {
 
 typedef union _RATE_QUOTA_LIMIT {
   ULONG RateData;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG RatePercent:7;
     ULONG Reserved0:25;
   } DUMMYSTRUCTNAME;
@@ -2217,13 +2203,13 @@ typedef VOID
 
 typedef struct _PS_CREATE_NOTIFY_INFO {
   IN SIZE_T Size;
-  union {
+  _ANONYMOUS_UNION union {
     IN ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       IN ULONG FileOpenNameAvailable:1;
       IN ULONG Reserved:31;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   IN HANDLE ParentProcessId;
   IN CLIENT_ID CreatingThreadId;
   IN OUT struct _FILE_OBJECT *FileObject;
@@ -2300,10 +2286,10 @@ typedef struct _NT_TIB32 {
   ULONG StackBase;
   ULONG StackLimit;
   ULONG SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG ArbitraryUserPointer;
   ULONG Self;
 } NT_TIB32,*PNT_TIB32;
@@ -2313,10 +2299,10 @@ typedef struct _NT_TIB64 {
   ULONG64 StackBase;
   ULONG64 StackLimit;
   ULONG64 SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG64 FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG64 ArbitraryUserPointer;
   ULONG64 Self;
 } NT_TIB64,*PNT_TIB64;
@@ -2435,9 +2421,9 @@ typedef struct _PROCESS_BASIC_INFORMATION {
 typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
   SIZE_T Size;
   PROCESS_BASIC_INFORMATION BasicInfo;
-  union {
+  _ANONYMOUS_UNION union {
     ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG IsProtectedProcess:1;
       ULONG IsWow64Process:1;
       ULONG IsProcessDeleting:1;
@@ -2448,7 +2434,7 @@ typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
 } PROCESS_EXTENDED_BASIC_INFORMATION, *PPROCESS_EXTENDED_BASIC_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION {
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;
@@ -2456,11 +2442,11 @@ typedef struct _PROCESS_DEVICEMAP_INFORMATION {
       ULONG DriveMap;
       UCHAR DriveType[32];
     } Query;
-  };
+  } DUMMYUNIONNAME;
 } PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION_EX {
-  union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;
@@ -5538,9 +5524,9 @@ ZwSetTimerEx(
 
 /* UNSORTED */
 
-#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
-        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
-        (TypeBitMask), (ComparisonType)))
+#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType) \
+  ((ConditionMask) = VerSetConditionMask((ConditionMask),             \
+  (TypeBitMask), (ComparisonType)))
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
@@ -5611,28 +5597,28 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V  0x3
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED    \
-    (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SPARE_V                     0x4
 #define SHARED_GLOBAL_FLAGS_SPARE                       \
-    (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
 
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V      0x5
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V    0x6
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
 
 #define EX_INIT_BITS(Flags, Bit) \
-    *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
+  *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
 
 #define EX_TEST_SET_BIT(Flags, Bit) \
-    InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
 
 #define EX_TEST_CLEAR_BIT(Flags, Bit) \
-    InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
 
 #define PCCARD_MAP_ERROR               0x01
 #define PCCARD_DEVICE_PCI              0x10
@@ -5656,8 +5642,6 @@ NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS Status);
 #endif
-
-/* FIXME : These definitions below doesn't belong to NTDDK */
 
 #ifdef __cplusplus
 }

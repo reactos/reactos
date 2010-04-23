@@ -3,16 +3,16 @@
  ******************************************************************************/
 
 #define MAXIMUM_FILENAME_LENGTH           256
-#define OBJ_NAME_PATH_SEPARATOR     ((WCHAR)L'\\')
+#define OBJ_NAME_PATH_SEPARATOR           ((WCHAR)L'\\')
 
-#define OBJECT_TYPE_CREATE 0x0001
-#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+#define OBJECT_TYPE_CREATE                0x0001
+#define OBJECT_TYPE_ALL_ACCESS            (STANDARD_RIGHTS_REQUIRED | 0x1)
 
-#define DIRECTORY_QUERY 0x0001
-#define DIRECTORY_TRAVERSE 0x0002
-#define DIRECTORY_CREATE_OBJECT 0x0004
-#define DIRECTORY_CREATE_SUBDIRECTORY 0x0008
-#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
+#define DIRECTORY_QUERY                   0x0001
+#define DIRECTORY_TRAVERSE                0x0002
+#define DIRECTORY_CREATE_OBJECT           0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY     0x0008
+#define DIRECTORY_ALL_ACCESS              (STANDARD_RIGHTS_REQUIRED | 0xF)
 
 #define SYMBOLIC_LINK_QUERY               0x0001
 #define SYMBOLIC_LINK_ALL_ACCESS          (STANDARD_RIGHTS_REQUIRED | 0x1)
@@ -21,13 +21,13 @@
 #define DUPLICATE_SAME_ACCESS             0x00000002
 #define DUPLICATE_SAME_ATTRIBUTES         0x00000004
 
-#define OB_FLT_REGISTRATION_VERSION_0100         0x0100
-#define OB_FLT_REGISTRATION_VERSION OB_FLT_REGISTRATION_VERSION_0100
+#define OB_FLT_REGISTRATION_VERSION_0100  0x0100
+#define OB_FLT_REGISTRATION_VERSION       OB_FLT_REGISTRATION_VERSION_0100
 
 typedef ULONG OB_OPERATION;
 
-#define OB_OPERATION_HANDLE_CREATE               0x00000001
-#define OB_OPERATION_HANDLE_DUPLICATE            0x00000002
+#define OB_OPERATION_HANDLE_CREATE        0x00000001
+#define OB_OPERATION_HANDLE_DUPLICATE     0x00000002
 
 typedef struct _OB_PRE_CREATE_HANDLE_INFORMATION {
   IN OUT ACCESS_MASK DesiredAccess;
@@ -48,13 +48,13 @@ typedef union _OB_PRE_OPERATION_PARAMETERS {
 
 typedef struct _OB_PRE_OPERATION_INFORMATION {
   IN OB_OPERATION Operation;
-  union {
+  _ANONYMOUS_UNION union {
     IN ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       IN ULONG KernelHandle:1;
       IN ULONG Reserved:31;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   IN PVOID Object;
   IN POBJECT_TYPE ObjectType;
   OUT PVOID CallContext;
@@ -76,13 +76,13 @@ typedef union _OB_POST_OPERATION_PARAMETERS {
 
 typedef struct _OB_POST_OPERATION_INFORMATION {
   IN OB_OPERATION Operation;
-    union {
-      IN ULONG Flags;
-      struct {
-        IN ULONG KernelHandle:1;
-        IN ULONG Reserved:31;
-      };
-    };
+  _ANONYMOUS_UNION union {
+    IN ULONG Flags;
+    _ANONYMOUS_STRUCT struct {
+      IN ULONG KernelHandle:1;
+      IN ULONG Reserved:31;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   IN PVOID Object;
   IN POBJECT_TYPE ObjectType;
   IN PVOID CallContext;
@@ -131,5 +131,4 @@ extern POBJECT_TYPE NTSYSAPI IoFileObjectType;
 extern POBJECT_TYPE NTSYSAPI PsThreadType;
 extern POBJECT_TYPE NTSYSAPI SeTokenObjectType;
 extern POBJECT_TYPE NTSYSAPI PsProcessType;
-
 

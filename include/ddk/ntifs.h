@@ -73,10 +73,10 @@ typedef struct _SID_IDENTIFIER_AUTHORITY {
 #ifndef SID_DEFINED
 #define SID_DEFINED
 typedef struct _SID {
-   UCHAR  Revision;
-   UCHAR  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   ULONG SubAuthority[ANYSIZE_ARRAY];
+  UCHAR Revision;
+  UCHAR SubAuthorityCount;
+  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+  ULONG SubAuthority[ANYSIZE_ARRAY];
 } SID, *PISID;
 #endif
 
@@ -85,16 +85,16 @@ typedef struct _SID {
 #define SID_RECOMMENDED_SUB_AUTHORITIES 1
 
 typedef enum _SID_NAME_USE {
-    SidTypeUser = 1,
-    SidTypeGroup,
-    SidTypeDomain,
-    SidTypeAlias,
-    SidTypeWellKnownGroup,
-    SidTypeDeletedAccount,
-    SidTypeInvalid,
-    SidTypeUnknown,
-    SidTypeComputer,
-    SidTypeLabel
+  SidTypeUser = 1,
+  SidTypeGroup,
+  SidTypeDomain,
+  SidTypeAlias,
+  SidTypeWellKnownGroup,
+  SidTypeDeletedAccount,
+  SidTypeInvalid,
+  SidTypeUnknown,
+  SidTypeComputer,
+  SidTypeLabel
 } SID_NAME_USE, *PSID_NAME_USE;
 
 typedef struct _SID_AND_ATTRIBUTES {
@@ -220,15 +220,15 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 
 /* Well-known groups */
 
-#define DOMAIN_GROUP_RID_ADMINS        (0x00000200L)
-#define DOMAIN_GROUP_RID_USERS         (0x00000201L)
-#define DOMAIN_GROUP_RID_GUESTS        (0x00000202L)
-#define DOMAIN_GROUP_RID_COMPUTERS     (0x00000203L)
-#define DOMAIN_GROUP_RID_CONTROLLERS   (0x00000204L)
-#define DOMAIN_GROUP_RID_CERT_ADMINS   (0x00000205L)
-#define DOMAIN_GROUP_RID_SCHEMA_ADMINS (0x00000206L)
-#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS (0x00000207L)
-#define DOMAIN_GROUP_RID_POLICY_ADMINS (0x00000208L)
+#define DOMAIN_GROUP_RID_ADMINS               (0x00000200L)
+#define DOMAIN_GROUP_RID_USERS                (0x00000201L)
+#define DOMAIN_GROUP_RID_GUESTS               (0x00000202L)
+#define DOMAIN_GROUP_RID_COMPUTERS            (0x00000203L)
+#define DOMAIN_GROUP_RID_CONTROLLERS          (0x00000204L)
+#define DOMAIN_GROUP_RID_CERT_ADMINS          (0x00000205L)
+#define DOMAIN_GROUP_RID_SCHEMA_ADMINS        (0x00000206L)
+#define DOMAIN_GROUP_RID_ENTERPRISE_ADMINS    (0x00000207L)
+#define DOMAIN_GROUP_RID_POLICY_ADMINS        (0x00000208L)
 #define DOMAIN_GROUP_RID_READONLY_CONTROLLERS (0x00000209L)
 
 /* Well-known aliases */
@@ -280,11 +280,11 @@ typedef struct _SID_AND_ATTRIBUTES_HASH {
 /* Allocate the System Luid.  The first 1000 LUIDs are reserved.
    Use #999 here (0x3e7 = 999) */
 
-#define SYSTEM_LUID                     { 0x3e7, 0x0 }
-#define ANONYMOUS_LOGON_LUID            { 0x3e6, 0x0 }
-#define LOCALSERVICE_LUID               { 0x3e5, 0x0 }
-#define NETWORKSERVICE_LUID             { 0x3e4, 0x0 }
-#define IUSER_LUID                      { 0x3e3, 0x0 }
+#define SYSTEM_LUID                     {0x3e7, 0x0}
+#define ANONYMOUS_LOGON_LUID            {0x3e6, 0x0}
+#define LOCALSERVICE_LUID               {0x3e5, 0x0}
+#define NETWORKSERVICE_LUID             {0x3e4, 0x0}
+#define IUSER_LUID                      {0x3e3, 0x0}
 
 typedef struct _ACE_HEADER {
   UCHAR AceType;
@@ -330,8 +330,8 @@ typedef struct _ACE_HEADER {
 #define INHERITED_ACE                     (0x10)
 #define VALID_INHERIT_FLAGS               (0x1F)
 
-#define SUCCESSFUL_ACCESS_ACE_FLAG       (0x40)
-#define FAILED_ACCESS_ACE_FLAG           (0x80)
+#define SUCCESSFUL_ACCESS_ACE_FLAG        (0x40)
+#define FAILED_ACCESS_ACE_FLAG            (0x80)
 
 typedef struct _ACCESS_ALLOWED_ACE {
   ACE_HEADER Header;
@@ -2432,7 +2432,7 @@ NtCreateSection(
 
 #define MAX_UNICODE_STACK_BUFFER_LENGTH 256
 
-#define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
+#define METHOD_FROM_CTL_CODE(ctrlCode)  ((ULONG)(ctrlCode & 3))
 
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
@@ -2509,20 +2509,20 @@ LsaFreeReturnBuffer(
 #define MSV1_0_SUBAUTHENTICATION_KEY "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0"
 #define MSV1_0_SUBAUTHENTICATION_VALUE "Auth"
 
-#define MSV1_0_CHALLENGE_LENGTH 8
-#define MSV1_0_USER_SESSION_KEY_LENGTH 16
-#define MSV1_0_LANMAN_SESSION_KEY_LENGTH 8
+#define MSV1_0_CHALLENGE_LENGTH                8
+#define MSV1_0_USER_SESSION_KEY_LENGTH         16
+#define MSV1_0_LANMAN_SESSION_KEY_LENGTH       8
 
-#define MSV1_0_CLEARTEXT_PASSWORD_ALLOWED    0x02
-#define MSV1_0_UPDATE_LOGON_STATISTICS       0x04
-#define MSV1_0_RETURN_USER_PARAMETERS        0x08
-#define MSV1_0_DONT_TRY_GUEST_ACCOUNT        0x10
-#define MSV1_0_ALLOW_SERVER_TRUST_ACCOUNT    0x20
-#define MSV1_0_RETURN_PASSWORD_EXPIRY        0x40
-#define MSV1_0_USE_CLIENT_CHALLENGE          0x80
-#define MSV1_0_TRY_GUEST_ACCOUNT_ONLY        0x100
-#define MSV1_0_RETURN_PROFILE_PATH           0x200
-#define MSV1_0_TRY_SPECIFIED_DOMAIN_ONLY     0x400
+#define MSV1_0_CLEARTEXT_PASSWORD_ALLOWED      0x02
+#define MSV1_0_UPDATE_LOGON_STATISTICS         0x04
+#define MSV1_0_RETURN_USER_PARAMETERS          0x08
+#define MSV1_0_DONT_TRY_GUEST_ACCOUNT          0x10
+#define MSV1_0_ALLOW_SERVER_TRUST_ACCOUNT      0x20
+#define MSV1_0_RETURN_PASSWORD_EXPIRY          0x40
+#define MSV1_0_USE_CLIENT_CHALLENGE            0x80
+#define MSV1_0_TRY_GUEST_ACCOUNT_ONLY          0x100
+#define MSV1_0_RETURN_PROFILE_PATH             0x200
+#define MSV1_0_TRY_SPECIFIED_DOMAIN_ONLY       0x400
 #define MSV1_0_ALLOW_WORKSTATION_TRUST_ACCOUNT 0x800
 
 #define MSV1_0_DISABLE_PERSONAL_FALLBACK     0x00001000
@@ -2873,8 +2873,8 @@ typedef struct _MSV1_0_GETUSERINFO_RESPONSE {
 #define FILE_ACTION_TUNNELLED_ID_COLLISION  0x0000000B
 /* end  winnt.h */
 
-#define FILE_PIPE_BYTE_STREAM_TYPE      0x00000000
-#define FILE_PIPE_MESSAGE_TYPE          0x00000001
+#define FILE_PIPE_BYTE_STREAM_TYPE          0x00000000
+#define FILE_PIPE_MESSAGE_TYPE              0x00000001
 
 #define FILE_PIPE_ACCEPT_REMOTE_CLIENTS     0x00000000
 #define FILE_PIPE_REJECT_REMOTE_CLIENTS     0x00000002
@@ -2883,44 +2883,44 @@ typedef struct _MSV1_0_GETUSERINFO_RESPONSE {
 #define FILE_PIPE_REJECT_REMOTE_CLIENTS     0x00000002
 #define FILE_PIPE_TYPE_VALID_MASK           0x00000003
 
-#define FILE_PIPE_BYTE_STREAM_MODE      0x00000000
-#define FILE_PIPE_MESSAGE_MODE          0x00000001
+#define FILE_PIPE_BYTE_STREAM_MODE          0x00000000
+#define FILE_PIPE_MESSAGE_MODE              0x00000001
 
-#define FILE_PIPE_QUEUE_OPERATION       0x00000000
-#define FILE_PIPE_COMPLETE_OPERATION    0x00000001
+#define FILE_PIPE_QUEUE_OPERATION           0x00000000
+#define FILE_PIPE_COMPLETE_OPERATION        0x00000001
 
-#define FILE_PIPE_INBOUND               0x00000000
-#define FILE_PIPE_OUTBOUND              0x00000001
-#define FILE_PIPE_FULL_DUPLEX           0x00000002
+#define FILE_PIPE_INBOUND                   0x00000000
+#define FILE_PIPE_OUTBOUND                  0x00000001
+#define FILE_PIPE_FULL_DUPLEX               0x00000002
 
-#define FILE_PIPE_DISCONNECTED_STATE    0x00000001
-#define FILE_PIPE_LISTENING_STATE       0x00000002
-#define FILE_PIPE_CONNECTED_STATE       0x00000003
-#define FILE_PIPE_CLOSING_STATE         0x00000004
+#define FILE_PIPE_DISCONNECTED_STATE        0x00000001
+#define FILE_PIPE_LISTENING_STATE           0x00000002
+#define FILE_PIPE_CONNECTED_STATE           0x00000003
+#define FILE_PIPE_CLOSING_STATE             0x00000004
 
-#define FILE_PIPE_CLIENT_END            0x00000000
-#define FILE_PIPE_SERVER_END            0x00000001
+#define FILE_PIPE_CLIENT_END                0x00000000
+#define FILE_PIPE_SERVER_END                0x00000001
 
-#define FILE_CASE_SENSITIVE_SEARCH        0x00000001
-#define FILE_CASE_PRESERVED_NAMES         0x00000002
-#define FILE_UNICODE_ON_DISK              0x00000004
-#define FILE_PERSISTENT_ACLS              0x00000008
-#define FILE_FILE_COMPRESSION             0x00000010
-#define FILE_VOLUME_QUOTAS                0x00000020
-#define FILE_SUPPORTS_SPARSE_FILES        0x00000040
-#define FILE_SUPPORTS_REPARSE_POINTS      0x00000080
-#define FILE_SUPPORTS_REMOTE_STORAGE      0x00000100
-#define FILE_VOLUME_IS_COMPRESSED         0x00008000
-#define FILE_SUPPORTS_OBJECT_IDS          0x00010000
-#define FILE_SUPPORTS_ENCRYPTION          0x00020000
-#define FILE_NAMED_STREAMS                0x00040000
-#define FILE_READ_ONLY_VOLUME             0x00080000
-#define FILE_SEQUENTIAL_WRITE_ONCE        0x00100000
-#define FILE_SUPPORTS_TRANSACTIONS        0x00200000
-#define FILE_SUPPORTS_HARD_LINKS          0x00400000
-#define FILE_SUPPORTS_EXTENDED_ATTRIBUTES 0x00800000
-#define FILE_SUPPORTS_OPEN_BY_FILE_ID     0x01000000
-#define FILE_SUPPORTS_USN_JOURNAL         0x02000000
+#define FILE_CASE_SENSITIVE_SEARCH          0x00000001
+#define FILE_CASE_PRESERVED_NAMES           0x00000002
+#define FILE_UNICODE_ON_DISK                0x00000004
+#define FILE_PERSISTENT_ACLS                0x00000008
+#define FILE_FILE_COMPRESSION               0x00000010
+#define FILE_VOLUME_QUOTAS                  0x00000020
+#define FILE_SUPPORTS_SPARSE_FILES          0x00000040
+#define FILE_SUPPORTS_REPARSE_POINTS        0x00000080
+#define FILE_SUPPORTS_REMOTE_STORAGE        0x00000100
+#define FILE_VOLUME_IS_COMPRESSED           0x00008000
+#define FILE_SUPPORTS_OBJECT_IDS            0x00010000
+#define FILE_SUPPORTS_ENCRYPTION            0x00020000
+#define FILE_NAMED_STREAMS                  0x00040000
+#define FILE_READ_ONLY_VOLUME               0x00080000
+#define FILE_SEQUENTIAL_WRITE_ONCE          0x00100000
+#define FILE_SUPPORTS_TRANSACTIONS          0x00200000
+#define FILE_SUPPORTS_HARD_LINKS            0x00400000
+#define FILE_SUPPORTS_EXTENDED_ATTRIBUTES   0x00800000
+#define FILE_SUPPORTS_OPEN_BY_FILE_ID       0x01000000
+#define FILE_SUPPORTS_USN_JOURNAL           0x02000000
 
 #define FILE_NEED_EA                    0x00000080
 
@@ -3054,11 +3054,11 @@ typedef struct _FILE_OBJECTID_INFORMATION {
   LONGLONG FileReference;
   UCHAR ObjectId[16];
   _ANONYMOUS_UNION union {
-    __GNU_EXTENSION struct {
+    _ANONYMOUS_STRUCT struct {
       UCHAR BirthVolumeId[16];
       UCHAR BirthObjectId[16];
       UCHAR DomainId[16];
-    };
+    } DUMMYSTRUCTNAME;
     UCHAR ExtendedInfo[48];
   } DUMMYUNIONNAME;
 } FILE_OBJECTID_INFORMATION, *PFILE_OBJECTID_INFORMATION;
@@ -3689,8 +3689,8 @@ typedef struct _FILE_PREFETCH_EX {
 
 typedef struct _FILE_OBJECTID_BUFFER {
   UCHAR ObjectId[16];
-  union {
-    struct {
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
       UCHAR BirthVolumeId[16];
       UCHAR BirthObjectId[16];
       UCHAR DomainId[16];
@@ -3778,7 +3778,7 @@ typedef struct _FILE_MAKE_COMPATIBLE_BUFFER {
 } FILE_MAKE_COMPATIBLE_BUFFER, *PFILE_MAKE_COMPATIBLE_BUFFER;
 
 typedef struct _FILE_SET_DEFECT_MGMT_BUFFER {
-    BOOLEAN Disable;
+  BOOLEAN Disable;
 } FILE_SET_DEFECT_MGMT_BUFFER, *PFILE_SET_DEFECT_MGMT_BUFFER;
 
 typedef struct _FILE_QUERY_SPARING_BUFFER {
@@ -3847,24 +3847,23 @@ typedef struct _SHRINK_VOLUME_INFORMATION {
 #define TXFS_TRANSACTION_STATE_PREPARED     0x02
 #define TXFS_TRANSACTION_STATE_NOTACTIVE    0x03
 
-#define TXFS_MODIFY_RM_VALID_FLAGS                                      \
-                (TXFS_RM_FLAG_LOGGING_MODE                          |   \
-                 TXFS_RM_FLAG_RENAME_RM                             |   \
-                 TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX               |   \
-                 TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN               |   \
-                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS   |   \
-                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT          |   \
-                 TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE            |   \
-                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX            |   \
-                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN            |   \
-                 TXFS_RM_FLAG_SHRINK_LOG                            |   \
-                 TXFS_RM_FLAG_GROW_LOG                              |   \
-                 TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                  |   \
-                 TXFS_RM_FLAG_PRESERVE_CHANGES                      |   \
-                 TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                |   \
-                 TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START         |   \
-                 TXFS_RM_FLAG_PREFER_CONSISTENCY                    |   \
-                 TXFS_RM_FLAG_PREFER_AVAILABILITY)
+#define TXFS_MODIFY_RM_VALID_FLAGS (TXFS_RM_FLAG_LOGGING_MODE                        | \
+                                    TXFS_RM_FLAG_RENAME_RM                           | \
+                                    TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX             | \
+                                    TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN             | \
+                                    TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS | \
+                                    TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT        | \
+                                    TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE          | \
+                                    TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX          | \
+                                    TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN          | \
+                                    TXFS_RM_FLAG_SHRINK_LOG                          | \
+                                    TXFS_RM_FLAG_GROW_LOG                            | \
+                                    TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                | \
+                                    TXFS_RM_FLAG_PRESERVE_CHANGES                    | \
+                                    TXFS_RM_FLAG_RESET_RM_AT_NEXT_START              | \
+                                    TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START       | \
+                                    TXFS_RM_FLAG_PREFER_CONSISTENCY                  | \
+                                    TXFS_RM_FLAG_PREFER_AVAILABILITY)
 
 typedef struct _TXFS_MODIFY_RM {
   ULONG Flags;
@@ -4024,7 +4023,7 @@ typedef struct _TXFS_LIST_TRANSACTIONS {
 } TXFS_LIST_TRANSACTIONS, *PTXFS_LIST_TRANSACTIONS;
 
 typedef struct _TXFS_READ_BACKUP_INFORMATION_OUT {
-  union {
+  _ANONYMOUS_UNION union {
     ULONG BufferLength;
     UCHAR Buffer[1];
   } DUMMYUNIONNAME;
@@ -4153,17 +4152,17 @@ typedef struct _SD_CHANGE_MACHINE_SID_OUTPUT {
 typedef struct _SD_GLOBAL_CHANGE_INPUT {
   ULONG Flags;
   ULONG ChangeType;
-  union {
+  _ANONYMOUS_UNION union {
     SD_CHANGE_MACHINE_SID_INPUT SdChange;
-  };
+  } DUMMYUNIONNAME;
 } SD_GLOBAL_CHANGE_INPUT, *PSD_GLOBAL_CHANGE_INPUT;
 
 typedef struct _SD_GLOBAL_CHANGE_OUTPUT {
   ULONG Flags;
   ULONG ChangeType;
-  union {
+  _ANONYMOUS_UNION union {
     SD_CHANGE_MACHINE_SID_OUTPUT SdChange;
-  };
+  } DUMMYUNIONNAME;
 } SD_GLOBAL_CHANGE_OUTPUT, *PSD_GLOBAL_CHANGE_OUTPUT;
 
 #define ENCRYPTED_DATA_INFO_SPARSE_FILE    1
@@ -4214,15 +4213,15 @@ typedef struct _FILE_TYPE_NOTIFICATION_INPUT {
 #define FILE_TYPE_NOTIFICATION_FLAG_USAGE_BEGIN     0x00000001
 #define FILE_TYPE_NOTIFICATION_FLAG_USAGE_END       0x00000002
 
-DEFINE_GUID( FILE_TYPE_NOTIFICATION_GUID_PAGE_FILE,         0x0d0a64a1, 0x38fc, 0x4db8, 0x9f, 0xe7, 0x3f, 0x43, 0x52, 0xcd, 0x7c, 0x5c );
-DEFINE_GUID( FILE_TYPE_NOTIFICATION_GUID_HIBERNATION_FILE,  0xb7624d64, 0xb9a3, 0x4cf8, 0x80, 0x11, 0x5b, 0x86, 0xc9, 0x40, 0xe7, 0xb7 );
-DEFINE_GUID( FILE_TYPE_NOTIFICATION_GUID_CRASHDUMP_FILE,    0x9d453eb7, 0xd2a6, 0x4dbd, 0xa2, 0xe3, 0xfb, 0xd0, 0xed, 0x91, 0x09, 0xa9 );
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_PAGE_FILE,         0x0d0a64a1, 0x38fc, 0x4db8, 0x9f, 0xe7, 0x3f, 0x43, 0x52, 0xcd, 0x7c, 0x5c);
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_HIBERNATION_FILE,  0xb7624d64, 0xb9a3, 0x4cf8, 0x80, 0x11, 0x5b, 0x86, 0xc9, 0x40, 0xe7, 0xb7);
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_CRASHDUMP_FILE,    0x9d453eb7, 0xd2a6, 0x4dbd, 0xa2, 0xe3, 0xfb, 0xd0, 0xed, 0x91, 0x09, 0xa9);
 
 #ifndef _VIRTUAL_STORAGE_TYPE_DEFINED
 #define _VIRTUAL_STORAGE_TYPE_DEFINED
 typedef struct _VIRTUAL_STORAGE_TYPE {
   ULONG DeviceId;
-  GUID  VendorId;
+  GUID VendorId;
 } VIRTUAL_STORAGE_TYPE, *PVIRTUAL_STORAGE_TYPE;
 #endif
 
@@ -4260,10 +4259,10 @@ typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY {
 typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE {
   ULONG ResponseLevel;
   ULONG NumberEntries;
-  union {
+  _ANONYMOUS_UNION union {
     STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[];
     STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[];
-  };
+  } DUMMYUNIONNAME;
 } STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE, *PSTORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE;
 
 #endif /* (_WIN32_WINNT >= 0x0601) */
@@ -4392,7 +4391,7 @@ typedef struct _NTFS_STATISTICS {
   } Allocate;
 } NTFS_STATISTICS, *PNTFS_STATISTICS;
 
-#endif // _FILESYSTEMFSCTL_
+#endif /* _FILESYSTEMFSCTL_ */
 
 #define SYMLINK_FLAG_RELATIVE   1
 
@@ -4400,7 +4399,7 @@ typedef struct _REPARSE_DATA_BUFFER {
   ULONG ReparseTag;
   USHORT ReparseDataLength;
   USHORT Reserved;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     struct {
       USHORT SubstituteNameOffset;
       USHORT SubstituteNameLength;
@@ -4419,7 +4418,7 @@ typedef struct _REPARSE_DATA_BUFFER {
     struct {
       UCHAR DataBuffer[1];
     } GenericReparseBuffer;
-  };
+  } DUMMYUNIONNAME;
 } REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
 
 #define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
@@ -4443,15 +4442,15 @@ typedef struct _REPARSE_GUID_DATA_BUFFER {
 #define IO_REPARSE_TAG_RESERVED_ONE             (1)
 #define IO_REPARSE_TAG_RESERVED_RANGE           IO_REPARSE_TAG_RESERVED_ONE
 
-#define IsReparseTagMicrosoft(_tag) (((_tag) & 0x80000000))
-#define IsReparseTagNameSurrogate(_tag) (((_tag) & 0x20000000))
+#define IsReparseTagMicrosoft(_tag)             (((_tag) & 0x80000000))
+#define IsReparseTagNameSurrogate(_tag)         (((_tag) & 0x20000000))
 
-#define IO_REPARSE_TAG_VALID_VALUES     (0xF000FFFF)
+#define IO_REPARSE_TAG_VALID_VALUES             (0xF000FFFF)
 
 #define IsReparseTagValid(tag) (                               \
                   !((tag) & ~IO_REPARSE_TAG_VALID_VALUES) &&   \
                   ((tag) > IO_REPARSE_TAG_RESERVED_RANGE)      \
-                 )
+                )
 
 /* MicroSoft reparse point tags */
 #define IO_REPARSE_TAG_MOUNT_POINT              (0xA0000003L)
@@ -4478,16 +4477,16 @@ typedef struct _REPARSE_INDEX_KEY {
 #define FSCTL_LMR_SET_LINK_TRACKING_INFORMATION   CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM,59,METHOD_BUFFERED,FILE_ANY_ACCESS)
 #define IOCTL_LMR_ARE_FILE_OBJECTS_ON_SAME_SERVER CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM,60,METHOD_BUFFERED,FILE_ANY_ACCESS)
 
-#define FSCTL_PIPE_ASSIGN_EVENT         CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_DISCONNECT           CTL_CODE(FILE_DEVICE_NAMED_PIPE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_LISTEN               CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_PEEK                 CTL_CODE(FILE_DEVICE_NAMED_PIPE, 3, METHOD_BUFFERED, FILE_READ_DATA)
-#define FSCTL_PIPE_QUERY_EVENT          CTL_CODE(FILE_DEVICE_NAMED_PIPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_TRANSCEIVE           CTL_CODE(FILE_DEVICE_NAMED_PIPE, 5, METHOD_NEITHER,  FILE_READ_DATA | FILE_WRITE_DATA)
-#define FSCTL_PIPE_WAIT                 CTL_CODE(FILE_DEVICE_NAMED_PIPE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_IMPERSONATE          CTL_CODE(FILE_DEVICE_NAMED_PIPE, 7, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_SET_CLIENT_PROCESS   CTL_CODE(FILE_DEVICE_NAMED_PIPE, 8, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define FSCTL_PIPE_QUERY_CLIENT_PROCESS CTL_CODE(FILE_DEVICE_NAMED_PIPE, 9, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_ASSIGN_EVENT             CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_DISCONNECT               CTL_CODE(FILE_DEVICE_NAMED_PIPE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_LISTEN                   CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_PEEK                     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 3, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_PIPE_QUERY_EVENT              CTL_CODE(FILE_DEVICE_NAMED_PIPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_TRANSCEIVE               CTL_CODE(FILE_DEVICE_NAMED_PIPE, 5, METHOD_NEITHER,  FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_PIPE_WAIT                     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_IMPERSONATE              CTL_CODE(FILE_DEVICE_NAMED_PIPE, 7, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_SET_CLIENT_PROCESS       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 8, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_QUERY_CLIENT_PROCESS     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 9, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_PIPE_GET_PIPE_ATTRIBUTE       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 10, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_PIPE_SET_PIPE_ATTRIBUTE       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 11, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_PIPE_GET_CONNECTION_ATTRIBUTE CTL_CODE(FILE_DEVICE_NAMED_PIPE, 12, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -4496,13 +4495,13 @@ typedef struct _REPARSE_INDEX_KEY {
 #define FSCTL_PIPE_SET_HANDLE_ATTRIBUTE     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 15, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_PIPE_FLUSH                    CTL_CODE(FILE_DEVICE_NAMED_PIPE, 16, METHOD_BUFFERED, FILE_WRITE_DATA)
 
-#define FSCTL_PIPE_INTERNAL_READ        CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2045, METHOD_BUFFERED, FILE_READ_DATA)
-#define FSCTL_PIPE_INTERNAL_WRITE       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2046, METHOD_BUFFERED, FILE_WRITE_DATA)
-#define FSCTL_PIPE_INTERNAL_TRANSCEIVE  CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2047, METHOD_NEITHER, FILE_READ_DATA | FILE_WRITE_DATA)
-#define FSCTL_PIPE_INTERNAL_READ_OVFLOW CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_PIPE_INTERNAL_READ            CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2045, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_PIPE_INTERNAL_WRITE           CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2046, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_PIPE_INTERNAL_TRANSCEIVE      CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2047, METHOD_NEITHER, FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_PIPE_INTERNAL_READ_OVFLOW     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
 
-#define FILE_PIPE_READ_DATA             0x00000000
-#define FILE_PIPE_WRITE_SPACE           0x00000001
+#define FILE_PIPE_READ_DATA                 0x00000000
+#define FILE_PIPE_WRITE_SPACE               0x00000001
 
 typedef struct _FILE_PIPE_ASSIGN_EVENT_BUFFER {
   HANDLE EventHandle;
@@ -4574,10 +4573,10 @@ typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
   UCHAR TargetLinkTrackingInformationBuffer[1];
 } REMOTE_LINK_TRACKING_INFORMATION, *PREMOTE_LINK_TRACKING_INFORMATION;
 
-#define IO_OPEN_PAGING_FILE             0x0002
-#define IO_OPEN_TARGET_DIRECTORY        0x0004
-#define IO_STOP_ON_SYMLINK              0x0008
-#define IO_MM_PAGING_FILE               0x0010
+#define IO_OPEN_PAGING_FILE                 0x0002
+#define IO_OPEN_TARGET_DIRECTORY            0x0004
+#define IO_STOP_ON_SYMLINK                  0x0008
+#define IO_MM_PAGING_FILE                   0x0010
 
 typedef VOID
 (NTAPI *PDRIVER_FS_NOTIFICATION) (
@@ -6019,17 +6018,17 @@ typedef union _MM_PREFETCH_FLAGS {
 #define HEAP_TAG_SHIFT                  18
 #define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
 
-#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE |             \
-                                        HEAP_GROWABLE |                 \
-                                        HEAP_GENERATE_EXCEPTIONS |      \
-                                        HEAP_ZERO_MEMORY |              \
-                                        HEAP_REALLOC_IN_PLACE_ONLY |    \
-                                        HEAP_TAIL_CHECKING_ENABLED |    \
-                                        HEAP_FREE_CHECKING_ENABLED |    \
-                                        HEAP_DISABLE_COALESCE_ON_FREE | \
-                                        HEAP_CLASS_MASK |               \
-                                        HEAP_CREATE_ALIGN_16 |          \
-                                        HEAP_CREATE_ENABLE_TRACING |    \
+#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE             |   \
+                                        HEAP_GROWABLE                 |   \
+                                        HEAP_GENERATE_EXCEPTIONS      |   \
+                                        HEAP_ZERO_MEMORY              |   \
+                                        HEAP_REALLOC_IN_PLACE_ONLY    |   \
+                                        HEAP_TAIL_CHECKING_ENABLED    |   \
+                                        HEAP_FREE_CHECKING_ENABLED    |   \
+                                        HEAP_DISABLE_COALESCE_ON_FREE |   \
+                                        HEAP_CLASS_MASK               |   \
+                                        HEAP_CREATE_ALIGN_16          |   \
+                                        HEAP_CREATE_ENABLE_TRACING    |   \
                                         HEAP_CREATE_ENABLE_EXECUTE)
 
 /******************************************************************************
@@ -6456,7 +6455,7 @@ typedef struct _OPLOCK_KEY_ECP_CONTEXT {
   ULONG Reserved;
 } OPLOCK_KEY_ECP_CONTEXT, *POPLOCK_KEY_ECP_CONTEXT;
 
-DEFINE_GUID( GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f );
+DEFINE_GUID(GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0xc3, 0x50, 0xce, 0x8d, 0x7f);
 
 #endif
 
@@ -8848,7 +8847,7 @@ typedef enum _NETWORK_OPEN_INTEGRITY_QUALIFIER {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
       NETWORK_OPEN_LOCATION_QUALIFIER Location;
       NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -8865,7 +8864,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
     NETWORK_OPEN_LOCATION_QUALIFIER Location;
     NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -8881,7 +8880,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT_V0 {
 typedef struct _NETWORK_OPEN_ECP_CONTEXT {
   USHORT Size;
   USHORT Reserved;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     struct {
       NETWORK_OPEN_LOCATION_QUALIFIER Location;
       NETWORK_OPEN_INTEGRITY_QUALIFIER Integrity;
@@ -8894,7 +8893,7 @@ typedef struct _NETWORK_OPEN_ECP_CONTEXT {
 } NETWORK_OPEN_ECP_CONTEXT, *PNETWORK_OPEN_ECP_CONTEXT;
 #endif
 
-DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8 );
+DEFINE_GUID(GUID_ECP_NETWORK_OPEN_CONTEXT, 0xc584edbf, 0x00df, 0x4d28, 0xb8, 0x84, 0x35, 0xba, 0xca, 0x89, 0x11, 0xe8);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
@@ -8905,14 +8904,14 @@ typedef struct _PREFETCH_OPEN_ECP_CONTEXT {
   PVOID Context;
 } PREFETCH_OPEN_ECP_CONTEXT, *PPREFETCH_OPEN_ECP_CONTEXT;
 
-DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55 );
+DEFINE_GUID(GUID_ECP_PREFETCH_OPEN, 0xe1777b21, 0x847e, 0x4837, 0xaa, 0x45, 0x64, 0x16, 0x1d, 0x28, 0x6, 0x55);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
 DEFINE_GUID (GUID_ECP_NFS_OPEN, 0xf326d30c, 0xe5f8, 0x4fe7, 0xab, 0x74, 0xf5, 0xa3, 0x19, 0x6d, 0x92, 0xdb);
-DEFINE_GUID(GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53 );
+DEFINE_GUID (GUID_ECP_SRV_OPEN, 0xbebfaebc, 0xaabf, 0x489d, 0x9d, 0x2c, 0xe9, 0xe3, 0x61, 0x10, 0x28, 0x53);
 
 typedef struct sockaddr_storage *PSOCKADDR_STORAGE_NFS;
 
@@ -8938,9 +8937,9 @@ typedef struct _SRV_OPEN_ECP_CONTEXT {
 #define PIN_CALLER_TRACKS_DIRTY_DATA    (32)
 #define PIN_HIGH_PRIORITY               (64)
 
-#define MAP_WAIT                          1
-#define MAP_NO_READ                       (16)
-#define MAP_HIGH_PRIORITY                 (64)
+#define MAP_WAIT                        1
+#define MAP_NO_READ                     (16)
+#define MAP_HIGH_PRIORITY               (64)
 
 #define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
 #define IOCTL_REDIR_QUERY_PATH_EX       CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 100, METHOD_NEITHER, FILE_ANY_ACCESS)
@@ -8979,7 +8978,7 @@ typedef struct _QUERY_PATH_RESPONSE {
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
 
-#define FS_LFN_APIS                     0x00004000
+#define FS_LFN_APIS                             0x00004000
 
 #define FILE_STORAGE_TYPE_SPECIFIED             0x00000041  /* FILE_DIRECTORY_FILE | FILE_NON_DIRECTORY_FILE */
 #define FILE_STORAGE_TYPE_DEFAULT               (StorageTypeDefault << FILE_STORAGE_TYPE_SHIFT)
@@ -8996,7 +8995,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define FILE_STORAGE_TYPE_MASK                  0x000f0000
 #define FILE_STORAGE_TYPE_SHIFT                 16
 
-#define FILE_VC_QUOTAS_LOG_VIOLATIONS   0x00000004
+#define FILE_VC_QUOTAS_LOG_VIOLATIONS           0x00000004
 
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
@@ -9045,7 +9044,7 @@ extern PACL                         SeSystemDefaultDacl;
 #define OB_TYPE_IO_COMPLETION           22
 #define OB_TYPE_FILE                    23
 
-#define SEC_BASED	0x00200000
+#define SEC_BASED 0x00200000
 
 /* end winnt.h */
 

@@ -81,7 +81,7 @@ typedef struct _SLIST_ENTRY32 {
 } SLIST_ENTRY32, *PSLIST_ENTRY32;
 
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Alignment;
     ULONGLONG Region;
   } DUMMYSTRUCTNAME;
@@ -113,7 +113,7 @@ typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
 
 typedef union _SLIST_HEADER32 {
   ULONGLONG Alignment;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     SLIST_ENTRY32 Next;
     USHORT Depth;
     USHORT Sequence;
@@ -130,7 +130,7 @@ typedef SLIST_ENTRY SLIST_ENTRY32, *PSLIST_ENTRY32;
 
 typedef union _SLIST_HEADER {
   ULONGLONG Alignment;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     SLIST_ENTRY Next;
     USHORT Depth;
     USHORT Sequence;

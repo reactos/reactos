@@ -156,7 +156,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     } Interrupt;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     struct {
-      __GNU_EXTENSION union {
+      _ANONYMOUS_UNION union {
         struct {
 #if defined(NT_PROCESSOR_GROUPS)
           USHORT Group;
@@ -1044,4 +1044,4 @@ typedef struct _CM_PCCARD_DEVICE_DATA {
   UCHAR IRQMap[16];
 } CM_PCCARD_DEVICE_DATA, *PCM_PCCARD_DEVICE_DATA;
 
-$endif  (_NTDDK_)
+$endif (_NTDDK_)

@@ -57,7 +57,7 @@ typedef struct _CACHE_DESCRIPTOR {
 typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
   ULONG_PTR ProcessorMask;
   LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-  union {
+  _ANONYMOUS_UNION union {
     struct {
       UCHAR Flags;
     } ProcessorCore;
@@ -65,7 +65,7 @@ typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
       ULONG NodeNumber;
     } NumaNode;
     CACHE_DESCRIPTOR Cache;
-    ULONGLONG  Reserved[2];
+    ULONGLONG Reserved[2];
   } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
@@ -109,7 +109,7 @@ typedef struct _GROUP_RELATIONSHIP {
 typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX {
   LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
   ULONG Size;
-  union {
+  _ANONYMOUS_UNION union {
     PROCESSOR_RELATIONSHIP Processor;
     NUMA_NODE_RELATIONSHIP NumaNode;
     CACHE_RELATIONSHIP Cache;
@@ -679,13 +679,13 @@ typedef struct _KDEVICE_QUEUE {
   LIST_ENTRY DeviceListHead;
   KSPIN_LOCK Lock;
   #if defined(_AMD64_)
-  union {
+  _ANONYMOUS_UNION union {
     BOOLEAN Busy;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       LONG64 Reserved:8;
       LONG64 Hint:56;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   #else
   BOOLEAN Busy;
   #endif
@@ -785,13 +785,13 @@ typedef struct _KGUARDED_MUTEX {
   PKTHREAD Owner;
   ULONG Contention;
   KGATE Gate;
-  __GNU_EXTENSION union {
-    __GNU_EXTENSION struct {
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
       SHORT KernelApcDisable;
       SHORT SpecialApcDisable;
-    };
+    } DUMMYSTRUCTNAME;
     ULONG CombinedApcDisable;
-  };
+  } DUMMYUNIONNAME;
 } KGUARDED_MUTEX, *PKGUARDED_MUTEX;
 
 typedef struct _KMUTANT {
@@ -942,8 +942,8 @@ typedef struct _XSTATE_SAVE {
 #elif defined(_IA64_)
   ULONG Dummy;
 #elif defined(_X86_)
-  union {
-    struct {
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
       LONG64 Reserved1;
       ULONG Reserved2;
       struct _XSTATE_SAVE* Prev;
@@ -951,9 +951,9 @@ typedef struct _XSTATE_SAVE {
       struct _KTHREAD* Thread;
       PVOID Reserved4;
       UCHAR Level;
-    };
+    } DUMMYSTRUCTNAME;
     XSTATE_CONTEXT XStateContext;
-  };
+  } DUMMYUNIONNAME;
 #endif
 } XSTATE_SAVE, *PXSTATE_SAVE;
 
@@ -1094,9 +1094,9 @@ typedef struct _KUSER_SHARED_DATA {
   ULONG NumberOfPhysicalPages;
   BOOLEAN SafeBootMode;
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR TscQpcData;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       UCHAR TscQpcEnabled:1;
       UCHAR TscQpcSpareFlag:1;
       UCHAR TscQpcShift:6;
@@ -1105,9 +1105,9 @@ typedef struct _KUSER_SHARED_DATA {
   UCHAR TscQpcPad[2];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-  union {
+  _ANONYMOUS_UNION union {
     ULONG SharedDataFlags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG DbgErrorPortPresent:1;
       ULONG DbgElevationEnabled:1;
       ULONG DbgVirtEnabled:1;
