@@ -360,7 +360,7 @@ VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogP
     if (pDC->pLineBrush) GreFreeBrush(pDC->pLineBrush);
 
     /* Create the pen */
-    if (pLogPen)
+    if (!pExtLogPen)
     {
         pDC->pLineBrush =
             GreCreatePen(pLogPen->lopnStyle,
