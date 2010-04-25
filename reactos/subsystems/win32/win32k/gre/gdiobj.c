@@ -51,7 +51,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {0, 0,                     0,                NULL},             /* 02 reserved entry */
   {0, 0,                     0,                NULL},             /* 03 reserved entry */
   {0, 0,                     0,                NULL},             /* 04 reserved entry */
-  {0, sizeof(SURFACE),       TAG_SURFOBJ,      SURFACE_Cleanup}, /* 05 SURFACE */
+  {0, sizeof(SURFACE),       TAG_SURFOBJ,      SURFACE_Cleanup},  /* 05 SURFACE */
   {0, 0,                     0,                NULL},             /* 06 reserved entry */
   {0, 0,                     0,                NULL},             /* 07 reserved entry */
   {0, sizeof(PALETTE),       TAG_PALETTE,      GDI_CleanupDummy}, /* 08 PAL */

@@ -34,6 +34,7 @@ VOID NTAPI SwmTest();
 
 LIST_ENTRY SwmWindows;
 ERESOURCE SwmLock;
+HDC SwmDc; /* Screen DC for copying operations */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -53,6 +54,23 @@ SwmRelease(VOID)
     /* Release user resource */
     ExReleaseResourceLite(&SwmLock);
     KeLeaveCriticalRegion();
+}
+
+VOID
+NTAPI
+SwmCreateScreenDc()
+{
+    ROS_DCINFO RosDc;
+
+    /* Create the display DC */
+    RtlZeroMemory(&RosDc, sizeof(ROS_DCINFO));
+    RosDc.dwType = OBJ_DC;
+    SwmDc = (HDC)0;
+    RosGdiCreateDC(&RosDc, &SwmDc, NULL, NULL, NULL, NULL);
+    RosGdiSetDeviceClipping(SwmDc, 0, NULL, NULL);
+
+    /* Make it global */
+    GDIOBJ_SetOwnership(SwmDc, NULL);
 }
 
 VOID
@@ -533,6 +551,18 @@ SwmSetForeground(HWND hWnd)
 
 VOID
 NTAPI
+SwmCopyBits(const RECT *WindowRect, const RECT *OldRect)
+{
+    /* Lazily create a global screen DC */
+    if (!SwmDc) SwmCreateScreenDc();
+
+    /* Copy bits */
+    RosGdiBitBlt(SwmDc, WindowRect->left, WindowRect->top, WindowRect->right - WindowRect->left,
+        WindowRect->bottom - WindowRect->top, SwmDc, OldRect->left, OldRect->top, SRCCOPY);
+}
+
+VOID
+NTAPI
 SwmPosChanging(HWND hWnd, const RECT *WindowRect)
 {
 }
@@ -542,6 +572,10 @@ NTAPI
 SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndAfter, UINT SwpFlags)
 {
     PSWM_WINDOW SwmWin, SwmPrev;
+    LONG Width, Height, OldWidth, OldHeight;
+    BOOLEAN IsMove = FALSE;
+    struct region *OldRegion, *DiffRegion;
+    rectangle_t OldRectSafe;
 
     /* Acquire the lock */
     SwmAcquire();
@@ -553,6 +587,25 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
         /* Release the lock */
         SwmRelease();
         return;
+    }
+
+    /* Save parameters */
+    OldRectSafe.left = OldRect->left; OldRectSafe.top = OldRect->top;
+    OldRectSafe.right = OldRect->right; OldRectSafe.bottom = OldRect->bottom;
+
+    Width = WindowRect->right - WindowRect->left;
+    Height = WindowRect->bottom - WindowRect->top;
+
+    OldWidth = OldRect->right - OldRect->left;
+    OldHeight = OldRect->bottom - OldRect->top;
+
+    /* Detect if it's a move without resizing */
+    if ((WindowRect->top != OldRect->top ||
+        WindowRect->left != OldRect->left) &&
+        Width == OldWidth &&
+        Height == OldHeight)
+    {
+        IsMove = TRUE;
     }
 
     /* Check if window really moved anywhere (origin, size or z order) */
@@ -590,6 +643,36 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
 
     /* Recalculate all clipping */
     SwmClipAllWindows();
+
+    /* Copy bitmap bits if it's a move */
+    if (IsMove)
+    {
+        /* FIXME: The window MUST be foreground, otherwise bits will be
+                  copied incorrectly */
+        SwmCopyBits(WindowRect, OldRect);
+    }
+
+    /* Paint area changed after moving or resizing */
+    if (Width < OldWidth ||
+        Height < OldHeight ||
+        IsMove)
+    {
+        /* Subtract new visible rect from the old one,
+           and invalidate the result */
+        OldRegion = create_empty_region();
+        set_region_rect(OldRegion, &OldRectSafe);
+
+        /* Compute the difference into the temp region */
+        DiffRegion = create_empty_region();
+        subtract_region(DiffRegion, OldRegion, SwmWin->Visible);
+
+        /* Paint it */
+        SwmPaintRegion(DiffRegion);
+
+        /* Free temporary regions */
+        free_region(OldRegion);
+        free_region(DiffRegion);
+    }
 
     /* Release the lock */
     SwmRelease();
