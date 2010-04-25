@@ -51,34 +51,34 @@
 /* FUNCTIONS ****************************************************************/
 
 static BOOL
-GetRootKey (PCHAR Name)
+GetRootKey (PWCHAR Name)
 {
-	if (!strcasecmp (Name, "HKCR"))
+	if (!wcsicmp (Name, L"HKCR"))
 	{
-		strcpy (Name, "\\Registry\\Machine\\SOFTWARE\\Classes\\");
+		wcscpy (Name, L"\\Registry\\Machine\\SOFTWARE\\Classes\\");
 		return TRUE;
 	}
 
-	if (!strcasecmp (Name, "HKCU"))
+	if (!wcsicmp (Name, L"HKCU"))
 	{
-		strcpy (Name, "\\Registry\\User\\.DEFAULT\\");
+		wcscpy (Name, L"\\Registry\\User\\.DEFAULT\\");
 		return TRUE;
 	}
 
-	if (!strcasecmp (Name, "HKLM"))
+	if (!wcsicmp (Name, L"HKLM"))
 	{
-		strcpy (Name, "\\Registry\\Machine\\");
+		wcscpy (Name, L"\\Registry\\Machine\\");
 		return TRUE;
 	}
 
-	if (!strcasecmp (Name, "HKU"))
+	if (!wcsicmp (Name, L"HKU"))
 	{
-		strcpy (Name, "\\Registry\\User\\");
+		wcscpy (Name, L"\\Registry\\User\\");
 		return TRUE;
 	}
 
 #if 0
-	if (!strcasecmp (Name, "HKR"))
+	if (!wcsicmp (Name, L"HKR"))
 		return FALSE;
 #endif
 
@@ -94,19 +94,19 @@ GetRootKey (PCHAR Name)
 static VOID
 AppendMultiSzValue (
 	IN HKEY KeyHandle,
-	IN PCHAR ValueName,
-	IN PCHAR Strings,
+	IN PWCHAR ValueName,
+	IN PWCHAR Strings,
 	IN SIZE_T StringSize)
 {
 	SIZE_T Size;
 	ULONG Type;
 	size_t Total;
-	PCHAR Buffer;
-	PCHAR p;
+	PWCHAR Buffer;
+	PWCHAR p;
 	size_t len;
 	LONG Error;
 
-	Error = RegQueryValueExA (
+	Error = RegQueryValueExW (
 		KeyHandle,
 		ValueName,
 		NULL,
@@ -117,11 +117,11 @@ AppendMultiSzValue (
 	    (Type != REG_MULTI_SZ))
 		return;
 
-	Buffer = malloc (Size + StringSize);
+	Buffer = malloc (Size + (StringSize * sizeof(WCHAR)));
 	if (Buffer == NULL)
 		return;
 
-	Error = RegQueryValueExA (
+	Error = RegQueryValueExW (
 		KeyHandle,
 		ValueName,
 		NULL,
@@ -135,25 +135,25 @@ AppendMultiSzValue (
 	Total = Size;
 	while (*Strings != 0)
 	{
-		len = strlen (Strings) + 1;
+		len = wcslen (Strings) + 1;
 
-		for (p = Buffer; *p != 0; p += strlen (p) + 1)
-			if (!strcasecmp (p, Strings))
+		for (p = Buffer; *p != 0; p += wcslen (p) + 1)
+			if (!wcsicmp (p, Strings))
 				break;
 
 		if (*p == 0)  /* not found, need to append it */
 		{
-			memcpy (p, Strings, len);
+			memcpy (p, Strings, len * sizeof(WCHAR));
 			p[len] = 0;
-			Total += len;
+			Total += len * sizeof(WCHAR);
 		}
 		Strings += len;
 	}
 
 	if (Total != Size)
 	{
-		DPRINT ("setting value %s to %s\n", ValueName, Buffer);
-		RegSetValueExA (
+		DPRINT ("setting value %S to %S\n", ValueName, Buffer);
+		RegSetValueExW (
 			KeyHandle,
 			ValueName,
 			0,
@@ -175,11 +175,11 @@ done:
 static BOOL
 do_reg_operation(
 	IN HKEY KeyHandle,
-	IN PCHAR ValueName,
+	IN PWCHAR ValueName,
 	IN PINFCONTEXT Context,
 	IN ULONG Flags)
 {
-	CHAR EmptyStr = (CHAR)0;
+	WCHAR EmptyStr = (WCHAR)0;
 	ULONG Type;
 	ULONG Size;
 	LONG Error;
@@ -188,11 +188,11 @@ do_reg_operation(
 	{
 		if (ValueName)
 		{
-				RegDeleteValueA (KeyHandle, ValueName);
+			RegDeleteValueW (KeyHandle, ValueName);
 		}
 		else
 		{
-			RegDeleteKeyA (KeyHandle, NULL);
+			RegDeleteKeyW (KeyHandle, NULL);
 		}
 
 		return TRUE;
@@ -203,7 +203,7 @@ do_reg_operation(
 
 	if (Flags & (FLG_ADDREG_NOCLOBBER | FLG_ADDREG_OVERWRITEONLY))
 	{
-		Error = RegQueryValueExA (
+		Error = RegQueryValueExW (
 			KeyHandle,
 			ValueName,
 			NULL,
@@ -253,7 +253,7 @@ do_reg_operation(
 	if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
 	    (Type == REG_DWORD && InfHostGetFieldCount (Context) == 5))
 	{
-		PCHAR Str = NULL;
+		WCHAR *Str = NULL;
 
 		if (Type == REG_MULTI_SZ)
 		{
@@ -262,7 +262,7 @@ do_reg_operation(
 
 			if (Size)
 			{
-				Str = malloc (Size);
+				Str = malloc (Size * sizeof(WCHAR));
 				if (Str == NULL)
 					return FALSE;
 
@@ -292,7 +292,7 @@ do_reg_operation(
 
 			if (Size)
 			{
-				Str = malloc (Size);
+				Str = malloc (Size * sizeof(WCHAR));
 				if (Str == NULL)
 					return FALSE;
 
@@ -302,11 +302,11 @@ do_reg_operation(
 
 		if (Type == REG_DWORD)
 		{
-			ULONG dw = Str ? strtoul (Str, NULL, 0) : 0;
+			ULONG dw = Str ? wcstoul (Str, NULL, 0) : 0;
 
-			DPRINT("setting dword %s to %x\n", ValueName, dw);
+			DPRINT("setting dword %S to %x\n", ValueName, dw);
 
-			RegSetValueExA (
+			RegSetValueExW (
 				KeyHandle,
 				ValueName,
 				0,
@@ -316,27 +316,27 @@ do_reg_operation(
 		}
 		else
 		{
-			DPRINT("setting value %s to %s\n", ValueName, Str);
+			DPRINT("setting value %S to %S\n", ValueName, Str);
 
 			if (Str)
 			{
-				RegSetValueExA (
+				RegSetValueExW (
 					KeyHandle,
 					ValueName,
 					0,
 					Type,
 					(PVOID)Str,
-					(ULONG)Size);
+					(ULONG)Size * sizeof(WCHAR));
 			}
 			else
 			{
-				RegSetValueExA (
+				RegSetValueExW (
 					KeyHandle,
 					ValueName,
 					0,
 					Type,
 					(PVOID)&EmptyStr,
-					(ULONG)sizeof(CHAR));
+					(ULONG)sizeof(WCHAR));
 			}
 		}
 		free (Str);
@@ -358,7 +358,7 @@ do_reg_operation(
 			InfHostGetBinaryField (Context, 5, Data, Size, NULL);
 		}
 
-		RegSetValueExA (
+		RegSetValueExW (
 			KeyHandle,
 			ValueName,
 			0,
@@ -378,10 +378,10 @@ do_reg_operation(
  * Called once for each AddReg and DelReg entry in a given section.
  */
 static BOOL
-registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
+registry_callback (HINF hInf, PWCHAR Section, BOOL Delete)
 {
-	CHAR Buffer[MAX_INF_STRING_LENGTH];
-	PCHAR ValuePtr;
+	WCHAR Buffer[MAX_INF_STRING_LENGTH];
+	PWCHAR ValuePtr;
 	ULONG Flags;
 	size_t Length;
 
@@ -403,11 +403,11 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 			continue;
 
 		/* get key */
-		Length = strlen (Buffer);
+		Length = wcslen (Buffer);
 		if (InfHostGetStringField (Context, 2, Buffer + Length, MAX_INF_STRING_LENGTH - (ULONG)Length, NULL) != 0)
 			*Buffer = 0;
 
-		DPRINT("KeyName: <%s>\n", Buffer);
+		DPRINT("KeyName: <%S>\n", Buffer);
 
 		if (Delete)
 		{
@@ -424,17 +424,17 @@ registry_callback (HINF hInf, PCHAR Section, BOOL Delete)
 
 		if (Delete || (Flags & FLG_ADDREG_OVERWRITEONLY))
 		{
-			if (RegOpenKeyA (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
+			if (RegOpenKeyW (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
 			{
-				DPRINT("RegOpenKey(%s) failed\n", Buffer);
+				DPRINT("RegOpenKey(%S) failed\n", Buffer);
 				continue;  /* ignore if it doesn't exist */
 			}
 		}
 		else
 		{
-			if (RegCreateKeyA (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
+			if (RegCreateKeyW (NULL, Buffer, &KeyHandle) != ERROR_SUCCESS)
 			{
-				DPRINT("RegCreateKey(%s) failed\n", Buffer);
+				DPRINT("RegCreateKey(%S) failed\n", Buffer);
 				continue;
 			}
 		}
@@ -469,18 +469,18 @@ ImportRegistryFile(PCHAR FileName)
 	ULONG ErrorLine;
 
 	/* Load inf file from install media. */
-	if (InfHostOpenFile(&hInf, FileName, &ErrorLine) != 0)
+	if (InfHostOpenFile(&hInf, FileName, 0, &ErrorLine) != 0)
 	{
 		DPRINT1 ("InfHostOpenFile(%s) failed\n", FileName);
 		return FALSE;
 	}
 
-	if (!registry_callback (hInf, "DelReg", TRUE))
+	if (!registry_callback (hInf, L"DelReg", TRUE))
 	{
 		DPRINT1 ("registry_callback() for DelReg failed\n");
 	}
 
-	if (!registry_callback (hInf, "AddReg", FALSE))
+	if (!registry_callback (hInf, L"AddReg", FALSE))
 	{
 		DPRINT1 ("registry_callback() for AddReg failed\n");
 	}

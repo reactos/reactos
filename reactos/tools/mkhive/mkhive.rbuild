@@ -1,13 +1,13 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="mkhive" type="buildtool">
-	<include base="inflibhost">.</include>
+	<include base="newinflibhost">.</include>
 	<include base="cmlibhost">.</include>
 	<include base="zlibhost">.</include>
 	<include base="rtl">.</include>
 	<define name="MKHIVE_HOST" />
 	<compilerflag compilerset="gcc">-fshort-wchar</compilerflag>
-	<library>inflibhost</library>
+	<library>newinflibhost</library>
 	<library>cmlibhost</library>
 	<library>host_wcsfuncs</library>
 	<file>binhive.c</file>
