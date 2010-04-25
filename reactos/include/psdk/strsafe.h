@@ -170,8 +170,8 @@ typedef unsigned long STRSAFE_DWORD;
 
 #define STRSAFE_CXXtoCB(x) (x)
 #define STRSAFE_CBtoCXX(x) (x)
-#define STRSAFE_CXXtoCCH(x) (x)*sizeof(STRSAFE_TCHAR)
-#define STRSAFE_CCHtoCXX(x) (x)/sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CXXtoCCH(x) (x)/sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CCHtoCXX(x) (x)*sizeof(STRSAFE_TCHAR)
 #define StringCxxCat StringCbCat
 #define StringCxxCatEx StringCbCatEx
 #define StringCxxCatN StringCbCatN
@@ -191,8 +191,8 @@ typedef unsigned long STRSAFE_DWORD;
 
 #else // !STRSAFE_CB
 
-#define STRSAFE_CXXtoCB(x) (x)/sizeof(STRSAFE_TCHAR)
-#define STRSAFE_CBtoCXX(x) (x)*sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CXXtoCB(x) (x)*sizeof(STRSAFE_TCHAR)
+#define STRSAFE_CBtoCXX(x) (x)/sizeof(STRSAFE_TCHAR)
 #define STRSAFE_CXXtoCCH(x) (x)
 #define STRSAFE_CCHtoCXX(x) (x)
 #define StringCxxCat StringCchCat
@@ -477,7 +477,7 @@ StringCxxVPrintfEx(
     }
 
 #if (STRSAFE_USE_SECURE_CRT == 1)
-    iResult = _vsntprintf_sAW(pszDest, cchDest, cchMax, pszFormat, args);
+    iResult = _vsnprintf_sAW(pszDest, cchDest, cchMax, pszFormat, args);
 #else
     iResult = _vsnprintfAW(pszDest, cchMax, pszFormat, args);
 #endif
