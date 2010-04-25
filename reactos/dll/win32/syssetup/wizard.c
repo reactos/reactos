@@ -1960,6 +1960,7 @@ FinishDlgProc(HWND hwndDlg,
       case WM_DESTROY:
          {
            SetupIsActive(0);
+           PostQuitMessage(0);
            return TRUE;
          }
 
@@ -1999,7 +2000,7 @@ FinishDlgProc(HWND hwndDlg,
                 break;
 
               case PSN_WIZFINISH:
-                /* Handle a Finish button click, if necessary */
+                DestroyWindow(GetParent(hwndDlg));
                 break;
 
               default:
@@ -2269,6 +2270,8 @@ InstallWizard(VOID)
   HPROPSHEETPAGE ahpsp[8];
   PROPSHEETPAGE psp = {0};
   UINT nPages = 0;
+  HWND hWnd;
+  MSG msg;
 
   /* Clear setup data */
   ZeroMemory(&SetupData, sizeof(SETUPDATA));
@@ -2345,7 +2348,7 @@ InstallWizard(VOID)
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
+  psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER | PSH_MODELESS;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
   psh.nPages = nPages;
@@ -2358,7 +2361,17 @@ InstallWizard(VOID)
   SetupData.hTitleFont = CreateTitleFont();
 
   /* Display the wizard */
-  PropertySheet(&psh);
+  hWnd = (HWND)PropertySheet(&psh);
+  ShowWindow(hWnd, SW_SHOW);
+
+  while (GetMessage(&msg, NULL, 0, 0)) 
+  {
+    if(!IsDialogMessage(hWnd, &msg))
+    {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    }
+  }
 
   DeleteObject(SetupData.hTitleFont);
 }
