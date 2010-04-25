@@ -30,7 +30,6 @@
 
 typedef char TCHAR, *PTCHAR, *PTSTR;
 typedef const TCHAR *PCTSTR;
-typedef WORD LCID;
 
 #define _T(x) x
 #define _tcsicmp strcasecmp
@@ -59,11 +58,6 @@ typedef WORD LCID;
 #define IS_TEXT_UNICODE_REVERSE_MASK 240
 #define IS_TEXT_UNICODE_NOT_UNICODE_MASK 3840
 #define IS_TEXT_UNICODE_NOT_ASCII_MASK 61440
-
-#define SUBLANG_NEUTRAL 0
-#define PRIMARYLANGID(lgid)  ((WORD)(lgid) & 0x3ff)
-#define MAKELANGID(p, s)     ((((WORD)(s)) << 10) | (WORD)(p))
-
 
 #else /* ! defined(INFLIB_HOST) */
 

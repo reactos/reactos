@@ -20,7 +20,7 @@ int
 InfHostOpenBufferedFile(PHINF InfHandle,
                         void *Buffer,
                         ULONG BufferSize,
-                        LCID LocaleId,
+                        LANGID LanguageId,
                         ULONG *ErrorLine)
 {
   INFSTATUS Status;
@@ -59,8 +59,9 @@ InfHostOpenBufferedFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-    Cache->LocaleId = LocaleId;
+    Cache->LanguageId = LanguageId;
 
+  /* Parse the inf buffer */
     if (!RtlIsTextUnicode(FileBuffer, (INT)FileBufferSize, NULL))
     {
 //        static const BYTE utf8_bom[3] = { 0xef, 0xbb, 0xbf };
@@ -77,9 +78,6 @@ InfHostOpenBufferedFile(PHINF InfHandle,
         new_buff = MALLOC(FileBufferSize * sizeof(WCHAR));
         if (new_buff != NULL)
         {
-//            DWORD len = MultiByteToWideChar( codepage, 0, (char *)FileBuffer + offset,
-//                                             FileBufferSize - offset, new_buff, FileBufferSize);
-
             ULONG len;
             Status = RtlMultiByteToUnicodeN(new_buff,
                                             FileBufferSize * sizeof(WCHAR),
@@ -111,11 +109,6 @@ InfHostOpenBufferedFile(PHINF InfHandle,
                                  ErrorLine);
     }
 
-  /* Parse the inf buffer */
-//  Status = InfpParseBuffer (Cache,
-//			    FileBuffer,
-//			    FileBuffer + BufferSize,
-//			    ErrorLine);
   if (!INF_SUCCESS(Status))
     {
       FREE(Cache);
@@ -134,7 +127,7 @@ InfHostOpenBufferedFile(PHINF InfHandle,
 int
 InfHostOpenFile(PHINF InfHandle,
                 const CHAR *FileName,
-                LCID LocaleId,
+                LANGID LanguageId,
                 ULONG *ErrorLine)
 {
   FILE *File;
@@ -219,7 +212,7 @@ InfHostOpenFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-    Cache->LocaleId = LocaleId;
+    Cache->LanguageId = LanguageId;
 
   /* Parse the inf buffer */
     if (!RtlIsTextUnicode(FileBuffer, (INT)FileBufferLength, NULL))
@@ -238,9 +231,6 @@ InfHostOpenFile(PHINF InfHandle,
         new_buff = MALLOC(FileBufferLength * sizeof(WCHAR));
         if (new_buff != NULL)
         {
-//            DWORD len = MultiByteToWideChar( codepage, 0, (char *)FileBuffer + offset,
-//                                             FileLength - offset, new_buff, FileLength);
-
             ULONG len;
             Status = RtlMultiByteToUnicodeN(new_buff,
                                             FileBufferLength * sizeof(WCHAR),
@@ -273,10 +263,6 @@ InfHostOpenFile(PHINF InfHandle,
                                  ErrorLine);
     }
 
-//  Status = InfpParseBuffer (Cache,
-//			    FileBuffer,
-//			    FileBuffer + FileLength,
-//			    ErrorLine);
   if (!INF_SUCCESS(Status))
     {
       FREE(Cache);

@@ -46,11 +46,11 @@ InfpGetSubstitutionString(PINFCACHE Inf,
 
     DPRINT("Value name: %S\n", ValueName);
 
-    if (Inf->LocaleId != 0)
+    if (Inf->LanguageId != 0)
     {
         swprintf(StringLangId,
                  L"Strings.%04hx",
-                 Inf->LocaleId);
+                 Inf->LanguageId);
 
         Status = InfpFindFirstLine(Inf,
                                    StringLangId,
@@ -60,7 +60,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
         {
             swprintf(StringLangId,
                      L"Strings.%04hx",
-                     MAKELANGID(PRIMARYLANGID(Inf->LocaleId), SUBLANG_NEUTRAL));
+                     MAKELANGID(PRIMARYLANGID(Inf->LanguageId), SUBLANG_NEUTRAL));
 
             Status = InfpFindFirstLine(Inf,
                                        StringLangId,

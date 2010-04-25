@@ -23,11 +23,11 @@ extern BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 extern int InfHostOpenBufferedFile(PHINF InfHandle,
                                    void *Buffer,
                                    ULONG BufferSize,
-                                   LCID LocaleId,
+                                   LANGID LanguageId,
                                    ULONG *ErrorLine);
 extern int InfHostOpenFile(PHINF InfHandle,
                            const CHAR *FileName,
-                           LCID LocaleId,
+                           LANGID LanguageId,
                            ULONG *ErrorLine);
 extern int InfHostWriteFile(HINF InfHandle,
                             const CHAR *FileName,

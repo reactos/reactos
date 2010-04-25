@@ -18,11 +18,11 @@ extern VOID InfSetHeap(PVOID Heap);
 extern NTSTATUS InfOpenBufferedFile(PHINF InfHandle,
                                     PVOID Buffer,
                                     ULONG BufferSize,
-                                    LCID LocaleId,
+                                    LANGID LanguageId,
                                     PULONG ErrorLine);
 extern NTSTATUS InfOpenFile(PHINF InfHandle,
                             PUNICODE_STRING FileName,
-                            LCID LocaleId,
+                            LANGID LanguageId,
                             PULONG ErrorLine);
 extern NTSTATUS InfWriteFile(HINF InfHandle,
                              PUNICODE_STRING FileName,

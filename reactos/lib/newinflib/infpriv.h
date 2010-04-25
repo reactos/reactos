@@ -55,7 +55,7 @@ typedef struct _INFCACHESECTION
 
 typedef struct _INFCACHE
 {
-  LCID LocaleId;
+  LANGID LanguageId;
   PINFCACHESECTION FirstSection;
   PINFCACHESECTION LastSection;
 

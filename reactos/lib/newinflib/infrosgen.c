@@ -51,7 +51,7 @@ NTSTATUS
 InfOpenBufferedFile(PHINF InfHandle,
                     PVOID Buffer,
                     ULONG BufferSize,
-                    LCID LocaleId,
+                    LANGID LanguageId,
                     PULONG ErrorLine)
 {
   INFSTATUS Status;
@@ -92,8 +92,9 @@ InfOpenBufferedFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-    Cache->LocaleId = LocaleId;
+    Cache->LanguageId = LanguageId;
 
+    /* Parse the inf buffer */
     if (!RtlIsTextUnicode(FileBuffer, FileBufferSize, NULL))
     {
 //        static const BYTE utf8_bom[3] = { 0xef, 0xbb, 0xbf };
@@ -110,9 +111,6 @@ InfOpenBufferedFile(PHINF InfHandle,
         new_buff = MALLOC(FileBufferSize * sizeof(WCHAR));
         if (new_buff != NULL)
         {
-//            DWORD len = MultiByteToWideChar( codepage, 0, (char *)FileBuffer + offset,
-//                                             FileBufferSize - offset, new_buff, FileBufferSize);
-
             ULONG len;
             Status = RtlMultiByteToUnicodeN(new_buff,
                                             FileBufferSize * sizeof(WCHAR),
@@ -162,7 +160,7 @@ InfOpenBufferedFile(PHINF InfHandle,
 NTSTATUS
 InfOpenFile(PHINF InfHandle,
 	    PUNICODE_STRING FileName,
-	    LCID LocaleId,
+	    LANGID LanguageId,
 	    PULONG ErrorLine)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -267,7 +265,7 @@ InfOpenFile(PHINF InfHandle,
   ZEROMEMORY(Cache,
              sizeof(INFCACHE));
 
-    Cache->LocaleId = LocaleId;
+    Cache->LanguageId = LanguageId;
 
     /* Parse the inf buffer */
     if (!RtlIsTextUnicode(FileBuffer, FileBufferLength, NULL))
@@ -286,9 +284,6 @@ InfOpenFile(PHINF InfHandle,
         new_buff = MALLOC(FileBufferLength * sizeof(WCHAR));
         if (new_buff != NULL)
         {
-//            DWORD len = MultiByteToWideChar( codepage, 0, (char *)FileBuffer + offset,
-//                                             FileLength - offset, new_buff, FileLength);
-
             ULONG len;
             Status = RtlMultiByteToUnicodeN(new_buff,
                                             FileBufferLength * sizeof(WCHAR),
