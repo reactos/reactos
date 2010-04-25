@@ -149,6 +149,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     /* Create an empty combined clipping region */
     pNewDC->CombinedClip = EngCreateClip();
     pNewDC->Clipping = create_empty_region();
+    pNewDC->pWindow = NULL;
 
     /* Set default palette */
     pNewDC->hPalette = hSystemPal;
