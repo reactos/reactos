@@ -22,66 +22,11 @@ BOOL FASTCALL IntCreatePrimarySurface();
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
-// FIXME: don't use floating point in the kernel! use XFORMOBJ function
-static
-BOOL
-NTAPI
-IntGdiCombineTransform(
-    LPXFORM XFormResult,
-    LPXFORM xform1,
-    LPXFORM xform2)
-{
-    XFORM xformTemp;
-    /* Check for illegal parameters */
-    if (!XFormResult || !xform1 || !xform2)
-    {
-        return  FALSE;
-    }
-
-    /* Create the result in a temporary XFORM, since xformResult may be
-     * equal to xform1 or xform2 */
-    xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
-    xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
-    xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
-    xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
-    xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
-    xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
-    *XFormResult = xformTemp;
-
-    return TRUE;
-}
-
-// FIXME: Don't use floating point in the kernel!
-static
-BOOL
-NTAPI
-DC_InvertXform(const XFORM *xformSrc,
-               XFORM *xformDest)
-{
-    FLOAT  determinant;
-
-    determinant = xformSrc->eM11*xformSrc->eM22 - xformSrc->eM12*xformSrc->eM21;
-    if (determinant > -1e-12 && determinant < 1e-12)
-    {
-        return  FALSE;
-    }
-
-    xformDest->eM11 =  xformSrc->eM22 / determinant;
-    xformDest->eM12 = -xformSrc->eM12 / determinant;
-    xformDest->eM21 = -xformSrc->eM21 / determinant;
-    xformDest->eM22 =  xformSrc->eM11 / determinant;
-    xformDest->eDx  = -xformSrc->eDx * xformDest->eM11 - xformSrc->eDy * xformDest->eM21;
-    xformDest->eDy  = -xformSrc->eDx * xformDest->eM12 - xformSrc->eDy * xformDest->eM22;
-
-    return  TRUE;
-}
-
 BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR device,
                             LPCWSTR output, const DEVMODEW* initData )
 {
     HGDIOBJ hNewDC;
     PDC pNewDC;
-    XFORM xformWorld2Vport, xformVport2World;
 
     /* TESTING: Create primary surface */
     if (!PrimarySurface.pSurface && !IntCreatePrimarySurface())
@@ -96,17 +41,6 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
 
     /* Set physical device pointer */
     pNewDC->pPDevice = (PVOID)&PrimarySurface;
-
-    /* Initialize xform objects */
-    IntGdiCombineTransform(&xformWorld2Vport, &dc->xfWorld2Wnd, &dc->xfWnd2Vport);
-
-    /* Create inverse of world-to-viewport transformation */
-    DC_InvertXform(&xformWorld2Vport, &xformVport2World);
-    XForm2MatrixS(&(pNewDC->mxWorldToDevice), &xformWorld2Vport);
-    XForm2MatrixS(&(pNewDC->mxDeviceToWorld), &xformVport2World);
-
-    /* Save the world transformation */
-    XForm2MatrixS(&(pNewDC->mxWorldToPage), &dc->xfWorld2Wnd);
 
     /* Set default fg/bg colors */
     pNewDC->crBackgroundClr = RGB(255, 255, 255);

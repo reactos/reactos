@@ -23,11 +23,6 @@ typedef struct _DC
     struct region *Clipping;
     CLIPOBJ      *CombinedClip;
     PSWM_WINDOW  pWindow;
-
-    /* Transformations */
-    MATRIX       mxWorldToDevice;
-    MATRIX       mxDeviceToWorld;
-    MATRIX       mxWorldToPage;
 } DC, *PDC;
 
 #define  DC_Lock(hDC)  \
