@@ -117,6 +117,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCchPrintfEx StringCchPrintfExW
 #define StringCchVPrintf StringCchVPrintfW
 #define StringCchVPrintfEx StringCchVPrintfExW
+#define _vsnprintfAW _vsnwprintf
 
 #else // (STRSAFE_UNICODE != 1)
 
@@ -156,6 +157,7 @@ typedef unsigned long STRSAFE_DWORD;
 #define StringCchPrintfEx StringCchPrintfExA
 #define StringCchVPrintf StringCchVPrintfA
 #define StringCchVPrintfEx StringCchVPrintfExA
+#define _vsnprintfAW _vsnprintf
 
 #endif // (STRSAFE_UNICODE != 1)
 #endif // defined(STRSAFE_UNICODE)
@@ -238,13 +240,24 @@ STRSAFEAPI StringCxxVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPT
 /* Create inlined versions */
 #define STRSAFEAPI HRESULT static __inline__
 
-STRSAFEAPI StringCxxCatWorker(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cxMaxAppend, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags, int UseN)
+#define STRSAFE_MAX_CXX STRSAFE_CCHtoCXX(STRSAFE_MAX_CCH)
+
+STRSAFEAPI
+StringCxxCatWorker(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszSrc,
+    size_t cxMaxAppend,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags,
+    int UseN)
 {
     HRESULT result;
     STRSAFE_LPTSTR psz = pszDest;
     size_t cch = STRSAFE_CXXtoCCH(cxDest);
 
-    if (!pszDest || !pszSrc || cch > STRSAFE_MAX_CCH || cch == 0)
+    if (!pszDest || !pszSrc || cxDest > STRSAFE_MAX_CXX || cxDest == 0)
     {
         return STRSAFE_E_INVALID_PARAMETER;
     }
@@ -300,57 +313,118 @@ STRSAFEAPI StringCxxCatWorker(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPC
     return result;
 }
 
-STRSAFEAPI StringCxxCatEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI
+StringCxxCatEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszSrc,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     return StringCxxCatWorker(pszDest, cxDest, pszSrc, 0, ppszDestEnd, pcbRemaining, dwFlags, 0);
 }
 
-STRSAFEAPI StringCxxCat(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc)
+STRSAFEAPI
+StringCxxCat(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszSrc)
 {
     return StringCxxCatWorker(pszDest, cxDest, pszSrc, 0, NULL, NULL, 0, 0);
 }
 
-STRSAFEAPI StringCxxCatN(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend)
+STRSAFEAPI
+StringCxxCatN(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszSrc,
+    size_t cbMaxAppend)
 {
     return StringCxxCatWorker(pszDest, cxDest, pszSrc, cbMaxAppend, NULL, NULL, 0, 1);
 }
 
-STRSAFEAPI StringCxxCatNEx(STRSAFE_LPTSTR pszDest, size_t cxDest, STRSAFE_LPCTSTR pszSrc, size_t cbMaxAppend, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI
+StringCxxCatNEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszSrc,
+    size_t cbMaxAppend,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     return StringCxxCatWorker(pszDest, cxDest, pszSrc, cbMaxAppend, ppszDestEnd, pcbRemaining, dwFlags, 1);
 }
 
-STRSAFEAPI StringCxxCopy(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc)
+STRSAFEAPI
+StringCxxCopy(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest,
+    STRSAFE_LPCTSTR pszSrc)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxCopyEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI
+StringCxxCopyEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest,
+    STRSAFE_LPCTSTR pszSrc,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxCopyN(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, size_t cbSrc)
+STRSAFEAPI
+StringCxxCopyN(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest,
+    STRSAFE_LPCTSTR pszSrc,
+    size_t cbSrc)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxCopyNEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszSrc, size_t cbSrc, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI
+StringCxxCopyNEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest,
+    STRSAFE_LPCTSTR pszSrc,
+    size_t cbSrc,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxGets(STRSAFE_LPTSTR pszDest, size_t cbDest)
+STRSAFEAPI
+StringCxxGets(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxGetsEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags)
+STRSAFEAPI
+StringCxxGetsEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cbDest,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags)
 {
     return 0; // FIXME
 }
 
-STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cxMax, size_t *pcx)
+STRSAFEAPI
+StringCxxLength(
+    STRSAFE_LPCTSTR psz,
+    size_t cxMax,
+    size_t *pcx)
 {
     size_t cch = STRSAFE_CXXtoCCH(cxMax);
 
@@ -358,7 +432,7 @@ STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cxMax, size_t *pcx)
     if (pcx)
         *pcx = 0;
 
-    if (!psz || cch > STRSAFE_MAX_CCH || cch == 0)
+    if (!psz || cxMax > STRSAFE_MAX_CXX || cxMax == 0)
     {
         return STRSAFE_E_INVALID_PARAMETER;
     }
@@ -376,32 +450,111 @@ STRSAFEAPI StringCxxLength(STRSAFE_LPCTSTR psz, size_t cxMax, size_t *pcx)
     return S_OK;
 }
 
-STRSAFEAPI StringCxxVPrintf(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszFormat, va_list args)
+STRSAFEAPI
+StringCxxVPrintfEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcxRemaining,
+    STRSAFE_DWORD dwFlags,
+    STRSAFE_LPCTSTR pszFormat,
+    va_list args)
 {
-    return 0; // FIXME
+    size_t cchDest = STRSAFE_CXXtoCCH(cxDest);
+    size_t cchMax = cchDest - 1;
+    int iResult;
+    HRESULT hr;
+
+    if (dwFlags & STRSAFE_IGNORE_NULLS)
+    {
+        if (!pszDest) pszDest = (STRSAFE_LPTSTR)L"";
+        if (!pszFormat) pszFormat = (STRSAFE_LPTSTR)L"";
+    }
+
+    if (!pszDest || !pszFormat || cxDest > STRSAFE_MAX_CXX || cxDest == 0)
+    {
+        return STRSAFE_E_INVALID_PARAMETER;
+    }
+
+#if (STRSAFE_USE_SECURE_CRT == 1)
+    iResult = _vsntprintf_sAW(pszDest, cchDest, cchMax, pszFormat, args);
+#else
+    iResult = _vsnprintfAW(pszDest, cchMax, pszFormat, args);
+#endif
+
+    hr = (iResult == -1) ? STRSAFE_E_INSUFFICIENT_BUFFER : S_OK;
+
+    if ((size_t)iResult >= cchMax)
+    {
+        pszDest[cchMax] = 0;
+        iResult = cchMax;
+    }
+
+    if (ppszDestEnd) *ppszDestEnd = pszDest + iResult;
+
+    if (pcxRemaining) *pcxRemaining = STRSAFE_CCHtoCXX(cchMax - iResult);
+
+    if (SUCCEEDED(hr))
+    {
+        if ((dwFlags & STRSAFE_FILL_BEHIND_NULL) && (iResult + 1 < cchMax))
+        {
+            memset(pszDest + iResult + 1,
+                   dwFlags & 0xff,
+                   (cchMax - iResult - 1) * sizeof(STRSAFE_TCHAR));
+        }
+    }
+    else
+    {
+        if (dwFlags & STRSAFE_FILL_ON_FAILURE)
+        {
+            memset(pszDest, dwFlags & 0xff, cchMax * sizeof(STRSAFE_TCHAR));
+        }
+        else if (dwFlags & STRSAFE_NULL_ON_FAILURE)
+        {
+            *pszDest = 0;
+        }
+    }
+
+    return hr;
 }
 
-STRSAFEAPI StringCxxVPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags, STRSAFE_LPCTSTR pszFormat, va_list args)
+STRSAFEAPI
+StringCxxVPrintf(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszFormat,
+    va_list args)
 {
-    return 0; // FIXME
+    return StringCxxVPrintfEx(pszDest, cxDest, NULL, NULL, 0, pszFormat, args);
 }
 
-STRSAFEAPI StringCxxPrintf(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPCTSTR pszFormat, ...)
+STRSAFEAPI
+StringCxxPrintf(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPCTSTR pszFormat, ...)
 {
     HRESULT result;
     va_list args;
     va_start(args, pszFormat);
-    result = StringCxxVPrintf(pszDest, cbDest, pszFormat, args);
+    result = StringCxxVPrintf(pszDest, cxDest, pszFormat, args);
     va_end(args);
     return result;
 }
 
-STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTSTR *ppszDestEnd, size_t *pcbRemaining, STRSAFE_DWORD dwFlags, STRSAFE_LPCTSTR pszFormat, ...)
+STRSAFEAPI
+StringCxxPrintfEx(
+    STRSAFE_LPTSTR pszDest,
+    size_t cxDest,
+    STRSAFE_LPTSTR *ppszDestEnd,
+    size_t *pcbRemaining,
+    STRSAFE_DWORD dwFlags,
+    STRSAFE_LPCTSTR pszFormat, ...)
 {
     HRESULT result;
     va_list args;
     va_start(args, pszFormat);
-    result = StringCxxVPrintfEx(pszDest, cbDest, ppszDestEnd, pcbRemaining, dwFlags, pszFormat, args);
+    result = StringCxxVPrintfEx(pszDest, cxDest, ppszDestEnd, pcbRemaining, dwFlags, pszFormat, args);
     va_end(args);
     return result;
 }
@@ -458,6 +611,7 @@ STRSAFEAPI StringCxxPrintfEx(STRSAFE_LPTSTR pszDest, size_t cbDest, STRSAFE_LPTS
 #undef StringCchPrintfEx
 #undef StringCchVPrintf
 #undef StringCchVPrintfEx
+#undef _vsnprintfAW
 
 #undef STRSAFE_LPTSTR
 #undef STRSAFE_LPCTSTR
