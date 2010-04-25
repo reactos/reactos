@@ -53,32 +53,32 @@
 static BOOL
 GetRootKey (PWCHAR Name)
 {
-	if (!wcsicmp (Name, L"HKCR"))
+	if (!_wcsicmp (Name, L"HKCR"))
 	{
 		wcscpy (Name, L"\\Registry\\Machine\\SOFTWARE\\Classes\\");
 		return TRUE;
 	}
 
-	if (!wcsicmp (Name, L"HKCU"))
+	if (!_wcsicmp (Name, L"HKCU"))
 	{
 		wcscpy (Name, L"\\Registry\\User\\.DEFAULT\\");
 		return TRUE;
 	}
 
-	if (!wcsicmp (Name, L"HKLM"))
+	if (!_wcsicmp (Name, L"HKLM"))
 	{
 		wcscpy (Name, L"\\Registry\\Machine\\");
 		return TRUE;
 	}
 
-	if (!wcsicmp (Name, L"HKU"))
+	if (!_wcsicmp (Name, L"HKU"))
 	{
 		wcscpy (Name, L"\\Registry\\User\\");
 		return TRUE;
 	}
 
 #if 0
-	if (!wcsicmp (Name, L"HKR"))
+	if (!_wcsicmp (Name, L"HKR"))
 		return FALSE;
 #endif
 
@@ -138,7 +138,7 @@ AppendMultiSzValue (
 		len = wcslen (Strings) + 1;
 
 		for (p = Buffer; *p != 0; p += wcslen (p) + 1)
-			if (!wcsicmp (p, Strings))
+			if (!_wcsicmp (p, Strings))
 				break;
 
 		if (*p == 0)  /* not found, need to append it */
