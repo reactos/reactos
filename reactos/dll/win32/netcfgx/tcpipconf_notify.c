@@ -3280,23 +3280,25 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                 RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
                 RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", sizeof(WCHAR) * 2);
             }
-
-            if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
-            {
-                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
-            }
-            else
-            {
-                pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
-                if(pStr)
-                {
-                    RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
-                    RegDeleteValueW(hKey, L"DhcpNameServer");
-                    CoTaskMemFree(pStr);
-                }
-            }
-            RegCloseKey(hKey);
         }
+
+        if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
+        {
+            RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+        }
+        else
+        {
+            pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
+            if(pStr)
+            {
+
+                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
+                RegDeleteValueW(hKey, L"DhcpNameServer");
+                CoTaskMemFree(pStr);
+            }
+        }
+
+        RegCloseKey(hKey);
     }
     return S_OK;
 }
