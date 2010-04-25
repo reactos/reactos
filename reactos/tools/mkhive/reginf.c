@@ -354,7 +354,7 @@ do_reg_operation(
 			if (Data == NULL)
 				return FALSE;
 
-			DPRINT("setting binary data %s len %d\n", ValueName, Size);
+			DPRINT("setting binary data %S len %d\n", ValueName, Size);
 			InfHostGetBinaryField (Context, 5, Data, Size, NULL);
 		}
 
