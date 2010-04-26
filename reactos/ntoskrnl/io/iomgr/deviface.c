@@ -1055,7 +1055,6 @@ IoRegisterDeviceInterface(IN PDEVICE_OBJECT PhysicalDeviceObject,
         RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
     }
     SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
-    SymbolicLinkName->Length += sizeof(WCHAR);
 
     /* Write symbolic link name in registry */
     SymbolicLinkName->Buffer[1] = '\\';
