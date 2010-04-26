@@ -736,7 +736,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
            else
            {
               DPRINT1("Not POWNED or CLASSDC hwndCurrent -> %x \n", pDCE->hwndCurrent);
-              ASSERT(FALSE);
+              //ASSERT(FALSE);
            }
         }
         else
