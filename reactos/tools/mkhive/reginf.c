@@ -188,7 +188,7 @@ do_reg_operation(
 	{
 		if (ValueName)
 		{
-			RegDeleteValueA (KeyHandle, ValueName);
+				RegDeleteValueA (KeyHandle, ValueName);
 		}
 		else
 		{
@@ -253,7 +253,7 @@ do_reg_operation(
 	if (!(Flags & FLG_ADDREG_BINVALUETYPE) ||
 	    (Type == REG_DWORD && InfHostGetFieldCount (Context) == 5))
 	{
-		CHAR *Str = NULL;
+		PCHAR Str = NULL;
 
 		if (Type == REG_MULTI_SZ)
 		{

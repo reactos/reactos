@@ -25,9 +25,9 @@
 
 /*
  * TODO:
- *	- Implement RegDeleteKeyW()
+ *	- Implement RegDeleteKey()
  *	- Implement RegEnumValue()
- *	- Implement RegQueryValueExW()
+ *	- Implement RegQueryValueExA()
  */
 
 #include <stdlib.h>
@@ -246,34 +246,15 @@ RegCreateKeyA(
 }
 
 LONG WINAPI
-RegDeleteKeyW(IN HKEY hKey,
-	      IN LPCWSTR lpSubKey)
+RegDeleteKeyA(HKEY Key,
+	     LPCSTR Name)
 {
-	if (lpSubKey != NULL && wcschr(lpSubKey, L'\\') != NULL)
-		return(ERROR_INVALID_PARAMETER);
+  if (Name != NULL && strchr(Name, '\\') != NULL)
+    return(ERROR_INVALID_PARAMETER);
 
-	DPRINT1("RegDeleteKeyW: FIXME!\n");
+  DPRINT1("FIXME!\n");
 
-	return(ERROR_SUCCESS);
-}
-
-LONG WINAPI
-RegDeleteKeyA(IN HKEY hKey,
-	      IN LPCSTR lpSubKey)
-{
-	PWSTR lpSubKeyW;
-	LONG rc;
-
-	if (lpSubKey != NULL && strchr(lpSubKey, '\\') != NULL)
-		return(ERROR_INVALID_PARAMETER);
-
-	lpSubKeyW = MultiByteToWideChar(lpSubKey);
-	if (!lpSubKeyW)
-		return ERROR_OUTOFMEMORY;
-
-	rc = RegDeleteKeyW(hKey, lpSubKeyW);
-	free(lpSubKeyW);
-	return rc;
+  return(ERROR_SUCCESS);
 }
 
 LONG WINAPI
