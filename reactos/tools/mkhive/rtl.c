@@ -207,32 +207,3 @@ unsigned char BitScanReverse(ULONG * const Index, unsigned long Mask)
     }
     return Mask ? 1 : 0;
 }
-
-#undef tolower
-WCHAR towlower(WCHAR ch)
-{
-    if (ch < L'A')
-    {
-        return ch;
-    }
-    else if (ch <= L'Z')
-    {
-        return ch + (L'a' - L'A');
-    }
-
-    return ch;
-}
-
-int _wcsicmp(PCWSTR cs, PCWSTR ct)
-{
-    while (towlower(*cs) == towlower(*ct))
-    {
-        if (*cs == 0)
-            return 0;
-
-        cs++;
-        ct++;
-    }
-
-    return towlower(*cs) - towlower(*ct);
-}
