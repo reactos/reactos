@@ -321,6 +321,10 @@ PDEVOBJ_vSwitchPdev(
     ppdev->gdiinfo = ppdev2->gdiinfo;
     ppdev2->gdiinfo = pdevTmp.gdiinfo;
 
+    /* Exchange DEVMODE */
+    ppdev->pdmwDev = ppdev2->pdmwDev;
+    ppdev2->pdmwDev = pdevTmp.pdmwDev ;
+
     /* Notify each driver instance of its new HDEV association */
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
     ppdev2->pfn.CompletePDEV(ppdev2->dhpdev, (HDEV)ppdev2);
@@ -382,6 +386,12 @@ PDEVOBJ_bSwitchMode(
     /* 8. Disable DirectDraw */
 
     PDEVOBJ_vRelease(ppdevTmp);
+
+    /* Update primary display capabilities */
+    if(ppdev == gppdevPrimary)
+    {
+        PDEVOBJ_vGetDeviceCaps(ppdev, &GdiHandleTable->DevCaps);
+    }
 
     /* Success! */
     retval = TRUE;
