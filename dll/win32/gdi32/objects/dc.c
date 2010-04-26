@@ -60,7 +60,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
  }
 
- hDC = NtGdiOpenDCW( (Default ? &Device : NULL),
+ hDC = NtGdiOpenDCW( (Default ? NULL : &Device),
                      (PDEVMODEW) lpInitData,
                      (lpwszOutput ? &Output : NULL),
                       iType,             // DCW 0 and ICW 1.
