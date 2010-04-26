@@ -61,13 +61,26 @@ NTAPI
 SwmCreateScreenDc()
 {
     ROS_DCINFO RosDc;
+    PDC pDC;
+    RECTL rcBounds;
 
     /* Create the display DC */
     RtlZeroMemory(&RosDc, sizeof(ROS_DCINFO));
     RosDc.dwType = OBJ_DC;
     SwmDc = (HDC)0;
     RosGdiCreateDC(&RosDc, &SwmDc, NULL, NULL, NULL, NULL);
-    RosGdiSetDeviceClipping(SwmDc, 0, NULL, NULL);
+
+    /* Set clipping to full screen */
+    pDC = DC_Lock(SwmDc);
+    RECTL_vSetRect(&rcBounds,
+                   0,
+                   0,
+                   pDC->rcVport.right,
+                   pDC->rcVport.bottom);
+    IntEngDeleteClipRegion(pDC->CombinedClip);
+    pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
+    DC_Unlock(pDC);
+    //RosGdiSetDeviceClipping(SwmDc, 1, &rcBounds, &rcBounds);
 
     /* Make it global */
     GDIOBJ_SetOwnership(SwmDc, NULL);
