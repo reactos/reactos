@@ -79,6 +79,8 @@ static PGENERIC_LIST KeyboardList = NULL;
 static PGENERIC_LIST LayoutList = NULL;
 static PGENERIC_LIST LanguageList = NULL;
 
+static LANGID LanguageId = 0;
+
 /* FUNCTIONS ****************************************************************/
 
 static VOID
@@ -422,6 +424,7 @@ CheckUnattendedSetup(VOID)
     UnattendInf = SetupOpenInfFileW(UnattendInfPath,
                                     NULL,
                                     INF_STYLE_WIN4,
+                                    LanguageId,
                                     &ErrorLine);
 
     if (UnattendInf == INVALID_HANDLE_VALUE)
@@ -678,6 +681,8 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
 
+            LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+
             if (wcscmp(SelectedLanguageId, DefaultLanguage))
             {
                 UpdateKBLayout();
@@ -765,6 +770,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     SetupInf = SetupOpenInfFileW(FileNameBuffer,
                                  NULL,
                                  INF_STYLE_WIN4,
+                                 LanguageId,
                                  &ErrorLine);
 
     if (SetupInf == INVALID_HANDLE_VALUE)
@@ -3045,6 +3051,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
                                           InfFileSize,
                                           (const CHAR*) NULL,
                                           INF_STYLE_WIN4,
+                                          LanguageId,
                                           &ErrorLine);
 
         if (InfHandle == INVALID_HANDLE_VALUE)
@@ -3274,7 +3281,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
-        if (!ImportRegistryFile(File, Section, Delete))
+        if (!ImportRegistryFile(File, Section, LanguageId, Delete))
         {
             DPRINT("Importing %S failed\n", File);
 
