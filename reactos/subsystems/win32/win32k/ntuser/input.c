@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 #include <ntddkbd.h>
 
 #define NDEBUG

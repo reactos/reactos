@@ -8,7 +8,7 @@
  *       19/1-2006   Magnus Olsen
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include <debug.h>
 
 PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
