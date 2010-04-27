@@ -136,7 +136,7 @@ DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
 		return FALSE;
 	}
     
-	if (0 != PartitionNumber)
+	if (0 != PartitionNumber || DriveNumber < 0x80)
 	{
 		return TRUE;
 	}
