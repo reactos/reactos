@@ -106,6 +106,7 @@ PWCHAR CreateLowerDeviceRegistryKey(PUNICODE_STRING RegistryPath, PWCHAR NewDriv
  * Test Declarations
  */
 VOID NtoskrnlIoTests();
+VOID NtoskrnlKeTests();
 VOID NtoskrnlObTest();
 VOID NtoskrnlExecutiveTests();
 VOID NtoskrnlPoolsTest();
@@ -214,6 +215,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
     ThisDriverObject = DriverObject;
 
     NtoskrnlExecutiveTests();
+    NtoskrnlKeTests();
     NtoskrnlIoTests();
     NtoskrnlObTest();
     NtoskrnlPoolsTest();
