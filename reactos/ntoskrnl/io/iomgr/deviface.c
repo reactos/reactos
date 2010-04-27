@@ -884,7 +884,8 @@ IoGetDeviceInterfaces(IN CONST GUID *InterfaceClassGuid,
 NextReferenceString:
             ExFreePool(ReferenceBi);
             ReferenceBi = NULL;
-            ExFreePool(bip);
+            if (bip)
+                ExFreePool(bip);
             bip = NULL;
             if (ReferenceKey != INVALID_HANDLE_VALUE)
             {
@@ -921,8 +922,11 @@ NextReferenceString:
             Status = STATUS_INSUFFICIENT_RESOURCES;
             goto cleanup;
         }
-        RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
-        ExFreePool(ReturnBuffer.Buffer);
+        if (ReturnBuffer.Buffer)
+        {
+            RtlCopyMemory(NewBuffer, ReturnBuffer.Buffer, ReturnBuffer.Length);
+            ExFreePool(ReturnBuffer.Buffer);
+        }
         ReturnBuffer.Buffer = NewBuffer;
     }
     ReturnBuffer.Buffer[ReturnBuffer.Length / sizeof(WCHAR)] = UNICODE_NULL;
