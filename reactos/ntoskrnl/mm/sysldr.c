@@ -2154,6 +2154,10 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
         {
             /* Same protection, so merge the request */
             CurrentAddress = BaseAddress + Size - 1;
+        
+            /* Next */
+            Sections--;
+            Section++;
             continue;
         }
         
