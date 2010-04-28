@@ -3266,6 +3266,8 @@ RegistryPage(PINPUT_RECORD Ir)
 
         DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
+        if (Action == NULL) break; // Hackfix
+
         if (!_wcsicmp (Action, L"AddReg"))
         {
             Delete = FALSE;

@@ -365,7 +365,7 @@ __inline static enum parser_state set_state( struct parser *parser, enum parser_
 /* check if the pointer points to an end of file */
 __inline static int is_eof( struct parser *parser, const WCHAR *ptr )
 {
-  return (ptr >= parser->end || *ptr == CONTROL_Z);
+  return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == 0);
 }
 
 
@@ -375,7 +375,8 @@ __inline static int is_eol( struct parser *parser, const WCHAR *ptr )
   return (ptr >= parser->end ||
           *ptr == CONTROL_Z ||
           *ptr == '\n' ||
-          (*ptr == '\r' && *(ptr + 1) == '\n'));
+          (*ptr == '\r' && *(ptr + 1) == '\n') ||
+          *ptr == 0);
 }
 
 

@@ -120,7 +120,7 @@ InfOpenBufferedFile(PHINF InfHandle,
 
             Status = InfpParseBuffer(Cache,
                                      new_buff,
-                                     new_buff + len,
+                                     new_buff + len / sizeof(WCHAR),
                                      ErrorLine);
             FREE(new_buff);
         }
@@ -293,7 +293,7 @@ InfOpenFile(PHINF InfHandle,
 
             Status = InfpParseBuffer(Cache,
                                      new_buff,
-                                     new_buff + len,
+                                     new_buff + len / sizeof(WCHAR),
                                      ErrorLine);
             FREE(new_buff);
         }
