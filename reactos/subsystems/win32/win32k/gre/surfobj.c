@@ -14,6 +14,13 @@
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+enum Rle_EscapeCodes
+{
+    RLE_EOL   = 0, /* End of line */
+    RLE_END   = 1, /* End of bitmap */
+    RLE_DELTA = 2  /* Delta */
+};
+
 ULONG
 NTAPI
 GrepBitmapFormat(WORD Bits, DWORD Compression)
@@ -118,6 +125,83 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp)
     return ((bmWidth * bpp + 15) & ~15) >> 3;
 }
 
+VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format)
+{
+    INT x = 0;
+    INT y = Size.cy - 1;
+    INT c;
+    INT length;
+    INT width;
+    INT height = Size.cy - 1;
+    BYTE *begin = CompressedBits;
+    BYTE *bits = CompressedBits;
+    BYTE *temp;
+    INT shift;
+
+    switch (Format)
+    {
+    case BMF_4RLE:
+        shift = 1;
+        break;
+    case BMF_8RLE:
+        shift = 0;
+        break;
+    default:
+        DPRINT1("Unsupported RLE format 0x%x\n", Format);
+        return;
+    }
+
+    width = ((Size.cx + shift) >> shift);
+
+    while (y >= 0)
+    {
+        length = (*bits++) >> shift;
+        if (length)
+        {
+            c = *bits++;
+            while (length--)
+            {
+                if (x >= width) break;
+                temp = UncompressedBits + (((height - y) * Delta) + x);
+                x++;
+                *temp = c;
+            }
+        }
+        else
+        {
+            length = *bits++;
+            switch (length)
+            {
+                case RLE_EOL:
+                    x = 0;
+                    y--;
+                    break;
+                case RLE_END:
+                    return;
+                case RLE_DELTA:
+                    x += (*bits++) >> shift;
+                    y -= (*bits++) >> shift;
+                    break;
+                default:
+                    length = length >> shift;
+                    while (length--)
+                    {
+                        c = *bits++;
+                        if (x < width)
+                        {
+                            temp = UncompressedBits + (((height - y) * Delta) + x);
+                            x++;
+                            *temp = c;
+                        }
+                    }
+                    if ((bits - begin) & 1)
+                    {
+                        bits++;
+                    }
+            }
+        }
+    }
+}
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
@@ -142,16 +226,6 @@ GreCreateBitmap(IN SIZEL Size,
     /* Save a handle to it */
     hSurface = pSurface->BaseObject.hHmgr;
 
-    /* Check the format */
-    if (Format == BMF_4RLE || Format == BMF_8RLE)
-    {
-        DPRINT1("Bitmaps with format 0x%x aren't supported yet!\n", Format);
-
-        /* Cleanup and exit */
-        GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
-        return 0;
-    }
-
     /* Initialize SURFOBJ */
     pSurfObj = &pSurface->SurfObj;
 
@@ -160,32 +234,57 @@ GreCreateBitmap(IN SIZEL Size,
     pSurfObj->iType = STYPE_BITMAP;
     pSurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
 
-    /* Calculate byte width automatically if it was not provided */
-    if (Width == 0)
-        Width = BITMAP_GetWidthBytes(Size.cx, BitsPerFormat(Format));
-
-    pSurfObj->lDelta = abs(Width);
-    pSurfObj->cjBits = pSurfObj->lDelta * Size.cy;
-
-    if (!Bits)
+    /* Check the format */
+    if (Format == BMF_4RLE || Format == BMF_8RLE)
     {
-        /* Allocate memory for bitmap bits */
-        pSurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
-                                       pSurfObj->cjBits,
-                                       TAG_DIB);
-        if (!pSurfObj->pvBits)
+        PVOID UncompressedBits;
+        pSurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
+        pSurfObj->cjBits = pSurfObj->lDelta * Size.cy;
+
+        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pSurfObj->cjBits, TAG_DIB);
+        if(!UncompressedBits)
         {
             /* Cleanup and exit */
             GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
             return 0;
         }
-
+        if(Bits)
+        {
+            DecompressBitmap(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pSurfObj->lDelta, Format);
+        }
+        pSurfObj->pvBits = UncompressedBits;
+        Format = (Format == BMF_4RLE)? BMF_4BPP : BMF_8BPP;
         /* Indicate we allocated memory ourselves */
         pSurface->ulFlags |= SRF_BITSALLOCD;
     }
     else
     {
-        pSurfObj->pvBits = Bits;
+        /* Calculate byte width automatically if it was not provided */
+        if (Width == 0)
+            Width = BITMAP_GetWidthBytes(Size.cx, BitsPerFormat(Format));
+        pSurfObj->lDelta = abs(Width);
+        pSurfObj->cjBits = pSurfObj->lDelta * Size.cy;
+
+        if (!Bits)
+        {
+            /* Allocate memory for bitmap bits */
+            pSurfObj->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
+                pSurfObj->cjBits,
+                TAG_DIB);
+            if (!pSurfObj->pvBits)
+            {
+                /* Cleanup and exit */
+                GDIOBJ_FreeObjByHandle(hSurface, GDI_OBJECT_TYPE_BITMAP);
+                return 0;
+            }
+
+            /* Indicate we allocated memory ourselves */
+            pSurface->ulFlags |= SRF_BITSALLOCD;
+        }
+        else
+        {
+            pSurfObj->pvBits = Bits;
+        }
     }
 
     pSurfObj->pvScan0 = pSurfObj->pvBits;
