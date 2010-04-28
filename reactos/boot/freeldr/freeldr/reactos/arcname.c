@@ -69,7 +69,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* B
 		 *  multi(0)disk(0)cdrom(x)\path
 		 */
 		p = p + 6;
-		*BootDrive = atoi(p);
+		*BootDrive = atoi(p) + 0x80;
 		p = strchr(p, ')');
 		if (p == NULL)
 			return FALSE;

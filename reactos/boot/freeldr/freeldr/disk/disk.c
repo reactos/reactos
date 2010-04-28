@@ -107,61 +107,79 @@ DiskGetBootPath(char *BootPath, unsigned Size)
 {
 	static char Path[] = "multi(0)disk(0)";
 	char Device[4];
-    
-	_itoa(BootDrive, Device, 10);
-	if (Size <= sizeof(Path) + 6 + strlen(Device))
+	char Partition[4];
+	PARTITION_TABLE_ENTRY PartitionEntry;
+	MASTER_BOOT_RECORD MasterBootRecord;
+
+	if (BootDrive < 0x80)
 	{
-		return FALSE;
+		/* This is a floppy */
+
+		if (Size <= sizeof(Path) + 7 + strlen(Device))
+		{
+			return FALSE;
+		}
+
+		strcpy(BootPath, Path);
+
+		strcat(BootPath, "fdisk");
+
+		_itoa(BootDrive, Device, 10);
+		strcat(BootPath, "(");
+		strcat(BootPath, Device);
+		strcat(BootPath, ")");
 	}
-	strcpy(BootPath, Path);
-	strcat(BootPath, BootDrive < 0x80 ? "fdisk" : "cdrom");
-	strcat(strcat(strcat(BootPath, "("), Device), ")");
-    
-	if (strcmp(BootPath, "multi(0)disk(0)cdrom(128)") == 0)
-		strcpy(BootPath, "multi(0)disk(0)rdisk(0)partition(1)");
+	/* FIXME */
+	else if (DiskReadBootRecord(BootDrive, 0, &MasterBootRecord))
+	{
+		/* This is a hard disk */
+
+		if (!DiskGetActivePartitionEntry(BootDrive, &PartitionEntry, &BootPartition))
+		{
+			DbgPrint("Invalid active partition information\n");
+			return FALSE;
+		}
+
+        	if (Size <= sizeof(Path) + 18 + strlen(Device) + strlen(Partition))
+            	{
+                	return FALSE;
+            	}
+
+		strcpy(BootPath, Path);
+
+		strcat(BootPath, "rdisk");
+
+		_itoa(BootDrive - 0x80, Device, 10);
+		strcat(BootPath, "(");
+		strcat(BootPath, Device);
+		strcat(BootPath, ")");
+
+		_itoa(BootPartition, Partition, 10);
+		strcat(BootPath, "partition(");
+		strcat(BootPath, Partition);
+		strcat(BootPath, ")");
+        }
+	else
+	{
+		/* This is a CD-ROM drive */
+
+		if (Size <= sizeof(Path) + 7 + strlen(Device))
+		{
+			return FALSE;
+		}
+
+		strcpy(BootPath, Path);
+
+		strcat(BootPath, "cdrom");
+
+		_itoa(BootDrive - 0x80, Device, 10);
+		strcat(BootPath, "(");
+		strcat(BootPath, Device);
+		strcat(BootPath, ")");
+	}
+
 	return TRUE;
 }
-
-BOOLEAN
-DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
-{
-	CHAR BootPath[256];
-	ULONG PartitionNumber;
-	ULONG DriveNumber;
-	PARTITION_TABLE_ENTRY PartEntry;
-	char *p;
-    
-	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
-	{
-		return FALSE;
-	}
-    
-	if (0 != PartitionNumber || DriveNumber < 0x80)
-	{
-		return TRUE;
-	}
-    
-	if (! DiskGetActivePartitionEntry(DriveNumber,
-	                                  &PartEntry,
-	                                  &PartitionNumber) ||
-	    PartitionNumber < 1 || 9 < PartitionNumber)
-	{
-		return FALSE;
-	}
-    
-	p = SystemPath;
-	while ('\0' != *p && 0 != _strnicmp(p, "partition(", 10)) {
-		p++;
-	}
-	p = strchr(p, ')');
-	if (NULL == p || '0' != *(p - 1)) {
-		return FALSE;
-	}
-	*(p - 1) = '0' + PartitionNumber;
-    
-	return TRUE;
-}
-
 
 // This function is in arch/i386/i386disk.c
 //VOID DiskStopFloppyMotor(VOID)

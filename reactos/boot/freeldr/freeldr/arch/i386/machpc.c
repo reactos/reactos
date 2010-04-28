@@ -45,7 +45,6 @@ PcMachInit(const char *CmdLine)
     MachVtbl.PrepareForReactOS = PcPrepareForReactOS;
     MachVtbl.GetMemoryMap = PcMemGetMemoryMap;
     MachVtbl.DiskGetBootPath = DiskGetBootPath;
-    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskReadLogicalSectors = PcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PcDiskGetDriveGeometry;
     MachVtbl.DiskGetCacheableBlockCount = PcDiskGetCacheableBlockCount;
