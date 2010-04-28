@@ -127,7 +127,7 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
     {
         ReferenceString.Buffer[0] = L'#';
 
-        SubKeyName.Length = ReferenceString.Buffer - SubKeyName.Buffer;
+        SubKeyName.Length = (USHORT)((ULONG_PTR)(ReferenceString.Buffer) - (ULONG_PTR)SubKeyName.Buffer);
         ReferenceString.Length = SymbolicLinkName->Length - SubKeyName.Length;
     }
     else
