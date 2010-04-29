@@ -645,6 +645,74 @@ co_IntTranslateMouseMessage(
    return FALSE;
 }
 
+BOOL ProcessMouseMessage(MSG* Msg, USHORT HitTest, UINT RemoveMsg)
+{
+    MOUSEHOOKSTRUCT MHook;
+    EVENTMSG Event;
+
+    Event.message = Msg->message;
+    Event.time    = Msg->time;
+    Event.hwnd    = Msg->hwnd;
+    Event.paramL  = Msg->pt.x;
+    Event.paramH  = Msg->pt.y;
+    co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
+
+
+    MHook.pt           = Msg->pt;
+    MHook.hwnd         = Msg->hwnd;
+    MHook.wHitTestCode = HitTest;
+    MHook.dwExtraInfo  = 0;
+    if (co_HOOK_CallHooks( WH_MOUSE,
+                           RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                           Msg->message,
+                           (LPARAM)&MHook ))
+    {
+        if (ISITHOOKED(WH_CBT))
+        {
+            MHook.pt           = Msg->pt;
+            MHook.hwnd         = Msg->hwnd;
+            MHook.wHitTestCode = HitTest;
+            MHook.dwExtraInfo  = 0;
+            co_HOOK_CallHooks( WH_CBT,
+                               HCBT_CLICKSKIPPED,
+                               Msg->message,
+                               (LPARAM)&MHook);
+        }
+        return FALSE;
+    }
+
+	return TRUE;
+}
+
+BOOL ProcessKeyboardMessage(MSG* Msg, UINT RemoveMsg)
+{
+   EVENTMSG Event;
+
+   Event.message = Msg->message;
+   Event.hwnd    = Msg->hwnd;
+   Event.time    = Msg->time;
+   Event.paramL  = (Msg->wParam & 0xFF) | (HIWORD(Msg->lParam) << 8);
+   Event.paramH  = Msg->lParam & 0x7FFF;
+   if (HIWORD(Msg->lParam) & 0x0100) Event.paramH |= 0x8000;
+   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
+
+    if (co_HOOK_CallHooks( WH_KEYBOARD,
+                           RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                           LOWORD(Msg->wParam),
+                           Msg->lParam))
+    {
+        if (ISITHOOKED(WH_CBT))
+        {
+            /* skip this message */
+            co_HOOK_CallHooks( WH_CBT,
+                               HCBT_KEYSKIPPED,
+                               LOWORD(Msg->wParam),
+                               Msg->lParam );
+        }
+        return FALSE;
+    }
+	return TRUE;
+}
 /*
  * Internal version of PeekMessage() doing all the work
  */
@@ -662,7 +730,6 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
    USHORT HitTest;
-   MOUSEHOOKSTRUCT MHook;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -867,52 +934,20 @@ MessageFound:
       }
 
 MsgExit:
-      if ( ISITHOOKED(WH_MOUSE) &&
-           Msg->Msg.message >= WM_MOUSEFIRST &&
-           Msg->Msg.message <= WM_MOUSELAST )
+      if ( ISITHOOKED(WH_MOUSE) && IS_MOUSE_MESSAGE(Msg->Msg.message))
       {
-         MHook.pt           = Msg->Msg.pt;
-         MHook.hwnd         = Msg->Msg.hwnd;
-         MHook.wHitTestCode = HitTest;
-         MHook.dwExtraInfo  = 0;
-         if (co_HOOK_CallHooks( WH_MOUSE,
-                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
-                                Msg->Msg.message,
-                                (LPARAM)&MHook ))
-         {
-            if (ISITHOOKED(WH_CBT))
-            {
-                MHook.pt           = Msg->Msg.pt;
-                MHook.hwnd         = Msg->Msg.hwnd;
-                MHook.wHitTestCode = HitTest;
-                MHook.dwExtraInfo  = 0;
-                co_HOOK_CallHooks( WH_CBT,
-                                   HCBT_CLICKSKIPPED,
-                                   Msg->Msg.message,
-                                  (LPARAM)&MHook);
-            }
-            return FALSE;
-         }
-      }
+          if(!ProcessMouseMessage(&Msg->Msg, HitTest, RemoveMsg))
+		  {
+			  return FALSE;
+		  }
+	  }
 
-      if ( ISITHOOKED(WH_KEYBOARD) &&
-          (Msg->Msg.message == WM_KEYDOWN || Msg->Msg.message == WM_KEYUP) )
+      if ( ISITHOOKED(WH_KEYBOARD) && IS_KBD_MESSAGE(Msg->Msg.message))
       {
-         if (co_HOOK_CallHooks( WH_KEYBOARD,
-                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
-                                LOWORD(Msg->Msg.wParam),
-                                Msg->Msg.lParam))
-         {
-            if (ISITHOOKED(WH_CBT))
-            {
-               /* skip this message */
-               co_HOOK_CallHooks( WH_CBT,
-                                  HCBT_KEYSKIPPED,
-                                  LOWORD(Msg->Msg.wParam),
-                                  Msg->Msg.lParam );
-            }
-            return FALSE;
-         }
+          if(!ProcessKeyboardMessage(&Msg->Msg, RemoveMsg))
+          {
+              return FALSE;
+          }
       }
       // The WH_GETMESSAGE hook enables an application to monitor messages about to
       // be returned by the GetMessage or PeekMessage function.

@@ -204,6 +204,16 @@ MouseThreadMain(PVOID StartContext)
    NTSTATUS Status;
    MOUSE_ATTRIBUTES MouseAttr;
 
+   Status = Win32kInitWin32Thread(PsGetCurrentThread());
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
+      return; //(Status);
+   }
+
+   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
+
    InitializeObjectAttributes(&MouseObjectAttributes,
                               &MouseDeviceName,
                               0,
