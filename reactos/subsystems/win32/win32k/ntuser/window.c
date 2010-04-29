@@ -2468,7 +2468,23 @@ AllocErr:
 
 CLEANUP:
    if (!_ret_ && Window && Window->Wnd && ti)
+   {
+      ULONG SavedHooks;
+      /* HACK: co_UserDestroyWindow will call CBT proc with code HCBT_DESTROYWND.
+         Applications can choke on this as a hwnd was never returned from this call */
+      /* Save the flags */
+      SavedHooks = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks;
+
+      /* Temporary remove the flag */
+      ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks &= ~HOOKID_TO_FLAG(WH_CBT);
+
+      /* Destroy the window */
       co_UserDestroyWindow(Window);
+
+      /* Restore the flag */
+      ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks = SavedHooks;
+   }
+
 //      UserFreeWindowInfo(ti, Window);
    if (Window)
    {
