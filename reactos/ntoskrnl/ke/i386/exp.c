@@ -584,7 +584,7 @@ KeContextToTrapFrame(IN PCONTEXT Context,
     }
 
     /* Handle the Debug Registers */
-    if ((ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    if (0 && (ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
     {
         /* Loop DR registers */
         for (i = 0; i < 4; i++)

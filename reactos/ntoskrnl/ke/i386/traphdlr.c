@@ -240,7 +240,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* User or kernel trap -- get ready to issue an exception */
-    if (Thread->NpxState == NPX_STATE_NOT_LOADED)
+    //if (Thread->NpxState == NPX_STATE_NOT_LOADED)
     {
         /* Update CR0 */
         Cr0 = __readcr0();
@@ -248,7 +248,7 @@ KiNpxHandler(IN PKTRAP_FRAME TrapFrame,
         __writecr0(Cr0);
 
         /* Save FPU state */
-        //Ke386SaveFpuState(SaveArea);
+        Ke386SaveFpuState(SaveArea);
 
         /* Mark CR0 state dirty */
         Cr0 |= NPX_STATE_NOT_LOADED;
@@ -1082,64 +1082,64 @@ KiTrap0DHandler(IN PKTRAP_FRAME TrapFrame)
      * we should probably table this for now since it's not a "real" issue.
      */
      
-     /*
-      * NOTE2: Another scenario is the IRET during a V8086 restore (BIOS Call)
-      * which will cause a GPF since the trap frame is a total mess (on purpose)
-      * as built in KiEnterV86Mode.
-      *
-      * The idea is to scan for IRET, scan for the known EIP adress, validate CS
-      * and then manually issue a jump to the V8086 return EIP.
-      */
-     Instructions = (PUCHAR)TrapFrame->Eip;
-     if (Instructions[0] == 0xCF)
-     {
-         /*
-          * Some evil shit is going on here -- this is not the SS:ESP you're 
-          * looking for! Instead, this is actually CS:EIP you're looking at!
-          * Why? Because part of the trap frame actually corresponds to the IRET
-          * stack during the trap exit!
-          */
-          if ((TrapFrame->HardwareEsp == (ULONG)Ki386BiosCallReturnAddress) &&
-              (TrapFrame->HardwareSegSs == (KGDT_R0_CODE | RPL_MASK)))
-          {
-              /* Exit the V86 trap! */
-              Ki386BiosCallReturnAddress(TrapFrame);
-          }
-          else
-          {
-              /* Otherwise, this is another kind of IRET fault */
-              UNIMPLEMENTED;
-              while (TRUE);
-          }
-     }
+    /*
+     * NOTE2: Another scenario is the IRET during a V8086 restore (BIOS Call)
+     * which will cause a GPF since the trap frame is a total mess (on purpose)
+     * as built in KiEnterV86Mode.
+     *
+     * The idea is to scan for IRET, scan for the known EIP adress, validate CS
+     * and then manually issue a jump to the V8086 return EIP.
+     */
+    Instructions = (PUCHAR)TrapFrame->Eip;
+    if (Instructions[0] == 0xCF)
+    {
+        /*
+         * Some evil shit is going on here -- this is not the SS:ESP you're 
+         * looking for! Instead, this is actually CS:EIP you're looking at!
+         * Why? Because part of the trap frame actually corresponds to the IRET
+         * stack during the trap exit!
+         */
+        if ((TrapFrame->HardwareEsp == (ULONG)Ki386BiosCallReturnAddress) &&
+            (TrapFrame->HardwareSegSs == (KGDT_R0_CODE | RPL_MASK)))
+        {
+            /* Exit the V86 trap! */
+            Ki386BiosCallReturnAddress(TrapFrame);
+        }
+        else
+        {
+            /* Otherwise, this is another kind of IRET fault */
+            UNIMPLEMENTED;
+            while (TRUE);
+        }
+    }
      
      /* So since we're not dealing with the above case, check for RDMSR/WRMSR */
-     if ((Instructions[0] == 0xF) &&            // 2-byte opcode
+    if ((Instructions[0] == 0xF) &&            // 2-byte opcode
         (((Instructions[1] >> 8) == 0x30) ||        // RDMSR
          ((Instructions[2] >> 8) == 0x32)))         // WRMSR
-     {
+    {
         /* Unknown CPU MSR, so raise an access violation */
         KiDispatchException0Args(STATUS_ACCESS_VIOLATION,
                                  TrapFrame->Eip,
                                  TrapFrame);
-     }
+    }
 
-     /* Check for lazy segment load */
-     if (TrapFrame->SegDs != (KGDT_R3_DATA | RPL_MASK))
-     {
-         /* Fix it */
-         TrapFrame->SegDs = (KGDT_R3_DATA | RPL_MASK);
-     }
-     else if (TrapFrame->SegEs != (KGDT_R3_DATA | RPL_MASK))
-     {
+    /* Check for lazy segment load */
+    if (TrapFrame->SegDs != (KGDT_R3_DATA | RPL_MASK))
+    {
+        /* Fix it */
+        TrapFrame->SegDs = (KGDT_R3_DATA | RPL_MASK);
+    }
+    else if (TrapFrame->SegEs != (KGDT_R3_DATA | RPL_MASK))
+    {
         /* Fix it */
         TrapFrame->SegEs = (KGDT_R3_DATA | RPL_MASK);
-     }
-     else
-     {
-         /* Whatever it is, we can't handle it */
-         KiSystemFatalException(EXCEPTION_GP_FAULT, TrapFrame);
-     }
+    }
+    else
+    {
+        /* Whatever it is, we can't handle it */
+        KiSystemFatalException(EXCEPTION_GP_FAULT, TrapFrame);
+    }
     
     /* Return to where we came from */
     KiTrapReturn(TrapFrame);
@@ -1353,7 +1353,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
     __writecr0(Cr0);
     
     /* Save FPU state */
-    //Ke386SaveFpuState(SaveArea);
+    Ke386SaveFpuState(SaveArea);
     
     /* Mark CR0 state dirty */
     Cr0 |= NPX_STATE_NOT_LOADED;
@@ -1379,7 +1379,7 @@ KiTrap13Handler(IN PKTRAP_FRAME TrapFrame)
                                                 FSW_UNDERFLOW |
                                                 FSW_PRECISION);
     Error &= MxCsrMask;
-    
+
     /* Now handle any of those legal errors */
     if (Error & (FSW_INVALID_OPERATION |
                  FSW_DENORMAL |
