@@ -1050,6 +1050,12 @@ NtUserCallNextHookEx(int Code,
 
     if (!HookObj) RETURN( 0);
 
+    /* Check that the first hook in the chain is not this hook */
+    NextObj = IntGetFirstHook(IntGetTable(HookObj), HookObj->HookId);
+
+    /* Its the same so it has already been called */
+    if (HookObj == NextObj) RETURN(0);
+
     UserReferenceObject(HookObj);
 
     Ansi = HookObj->Ansi;
