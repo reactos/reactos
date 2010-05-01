@@ -279,8 +279,6 @@ PostTimerMessages(PWINDOW_OBJECT Window)
 
   if (!pTmr) return FALSE;
 
-  ASSERT(Window);
-
   if (Window && ((ULONG_PTR)Window != 1))
   {
      if (!Window->Wnd) return FALSE;
