@@ -2333,6 +2333,11 @@ AllocErr:
 
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->Wnd, OBJID_WINDOW, 0);
 
+   /* By setting the flag below it can be examined to determine if the window
+      was created successfully and a valid pwnd was passed back to caller since
+      from here the function has to succeed. */
+   Window->Wnd->state2 |= WNDS2_WMCREATEMSGPROCESSED;
+
    /* Send move and size messages. */
    if (!(Window->state & WINDOWOBJECT_NEED_SIZE))
    {
@@ -2468,23 +2473,7 @@ AllocErr:
 
 CLEANUP:
    if (!_ret_ && Window && Window->Wnd && ti)
-   {
-      ULONG SavedHooks;
-      /* HACK: co_UserDestroyWindow will call CBT proc with code HCBT_DESTROYWND.
-         Applications can choke on this as a hwnd was never returned from this call */
-      /* Save the flags */
-      SavedHooks = ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks;
-
-      /* Temporary remove the flag */
-      ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks &= ~HOOKID_TO_FLAG(WH_CBT);
-
-      /* Destroy the window */
       co_UserDestroyWindow(Window);
-
-      /* Restore the flag */
-      ((PTHREADINFO)PsGetCurrentThreadWin32Thread())->fsHooks = SavedHooks;
-   }
-
 //      UserFreeWindowInfo(ti, Window);
    if (Window)
    {
@@ -2649,8 +2638,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       return FALSE;
    }
 
-   /* Call hooks */
-   if (ISITHOOKED(WH_CBT))
+   /* If window was created successfully and it is hooked */
+   if ((Wnd->state2 & WNDS2_WMCREATEMSGPROCESSED) && (ISITHOOKED(WH_CBT)))
    {
       if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
    }
