@@ -4268,8 +4268,8 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
    }
 
    Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
-
-   ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
+   if (SafeMessageName.Buffer)
+      ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
    RETURN( Ret);
 
 CLEANUP:
