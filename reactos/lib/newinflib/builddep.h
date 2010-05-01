@@ -8,6 +8,7 @@
 
 /* Definitions native to the host on which we're building */
 
+#include <wine/unicode.h>
 #include <host/typedefs.h>
 
 #include <stdarg.h>
@@ -65,15 +66,6 @@ BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
 
 extern PVOID InfpHeap;
 
-INT isspaceW(WCHAR c);
-INT strlenW(PCWSTR s);
-PWSTR strcpyW(PWSTR d, PCWSTR s);
-PWSTR strncpyW(PWSTR d, PCWSTR s, SIZE_T c);
-INT strcmpiW(PCWSTR s1, PCWSTR s2);
-LONG strtolW(PCWSTR s, PWSTR *e, INT r);
-ULONG strtoulW(PCWSTR s, PWSTR *e, INT r);
-
-
 #define FREE(Area) RtlFreeHeap(InfpHeap, 0, (Area))
 #define MALLOC(Size) RtlAllocateHeap(InfpHeap, 0, (Size))
 #define ZEROMEMORY(Area, Size) RtlZeroMemory((Area), (Size))
@@ -89,5 +81,7 @@ ULONG strtoulW(PCWSTR s, PWSTR *e, INT r);
 #define STRFMT "%S"
 
 #endif /* INFLIB_HOST */
+
+#include <host/wcsfuncs.h>
 
 /* EOF */

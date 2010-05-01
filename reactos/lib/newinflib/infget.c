@@ -41,7 +41,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
         return &percent;
     }
 
-    strncpyW(ValueName, str, *len);
+    memcpy(ValueName, str, *len * sizeof(WCHAR));
     ValueName[*len] = 0;
 
     DPRINT("Value name: %S\n", ValueName);
