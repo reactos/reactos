@@ -37,7 +37,7 @@ Output(POUTPUTBUFFER OutBuf, PCWSTR Text)
     }
 
   /* Doesn't fit? */
-  Length = (ULONG)wcslen(Text) * sizeof(WCHAR);
+  Length = (ULONG)strlenW(Text) * sizeof(WCHAR);
   if (OutBuf->FreeSize < Length + 1 && INF_SUCCESS(OutBuf->Status))
     {
       DPRINT("Out of free space. TotalSize %u FreeSize %u Length %u\n",

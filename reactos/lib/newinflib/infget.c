@@ -41,7 +41,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
         return &percent;
     }
 
-    wcsncpy(ValueName, str, *len);
+    strncpyW(ValueName, str, *len);
     ValueName[*len] = 0;
 
     DPRINT("Value name: %S\n", ValueName);
@@ -94,7 +94,7 @@ InfpGetSubstitutionString(PINFCACHE Inf,
 
     if (Status == STATUS_SUCCESS)
     {
-        *len = wcslen(Data);
+        *len = strlenW(Data);
         DPRINT("Substitute: %S  Length: %ul\n", Data, *len);
         return Data;
     }
@@ -253,7 +253,7 @@ InfpFindFirstMatchLine(PINFCONTEXT ContextIn,
   CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && _wcsicmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
         {
 
           if (ContextIn != ContextOut)
@@ -289,7 +289,7 @@ InfpFindNextMatchLine(PINFCONTEXT ContextIn,
   CacheLine = (PINFCACHELINE)ContextIn->Line;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && _wcsicmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcmpiW (CacheLine->Key, Key) == 0)
         {
 
           if (ContextIn != ContextOut)
@@ -329,7 +329,7 @@ InfpGetLineCount(HINF InfHandle,
   while (CacheSection != NULL)
     {
       /* Are the section names the same? */
-      if (_wcsicmp(CacheSection->Name, Section) == 0)
+      if (strcmpiW(CacheSection->Name, Section) == 0)
         {
           return CacheSection->LineCount;
         }
@@ -402,7 +402,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
       Ptr = ReturnBuffer;
       while (CacheField != NULL)
         {
-          *Ptr = (UCHAR)wcstoul(CacheField->Data, NULL, 16);
+          *Ptr = (UCHAR)strtoulW(CacheField->Data, NULL, 16);
 
           Ptr++;
           CacheField = CacheField->Next;
@@ -450,7 +450,7 @@ InfpGetIntField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-  *IntegerValue = (LONG)wcstol(Ptr, NULL, 0);
+  *IntegerValue = (LONG)strtolW(Ptr, NULL, 0);
 
   return INF_STATUS_SUCCESS;
 }
@@ -493,7 +493,7 @@ InfpGetMultiSzField(PINFCONTEXT Context,
   Size = 0;
   while (FieldPtr != NULL)
     {
-      Size += ((ULONG)wcslen (FieldPtr->Data) + 1);
+      Size += ((ULONG)strlenW(FieldPtr->Data) + 1);
       FieldPtr = FieldPtr->Next;
     }
   Size++;
@@ -511,9 +511,9 @@ InfpGetMultiSzField(PINFCONTEXT Context,
       FieldPtr = CacheField;
       while (FieldPtr != NULL)
         {
-          Size = (ULONG)wcslen (FieldPtr->Data) + 1;
+          Size = (ULONG)strlenW(FieldPtr->Data) + 1;
 
-          wcscpy (Ptr, FieldPtr->Data);
+          strcpyW(Ptr, FieldPtr->Data);
 
           Ptr = Ptr + Size;
           FieldPtr = FieldPtr->Next;
@@ -565,7 +565,7 @@ InfpGetStringField(PINFCONTEXT Context,
       Ptr = CacheField->Data;
     }
 
-//  Size = (ULONG)wcslen (Ptr) + 1;
+//  Size = (ULONG)strlenW(Ptr) + 1;
   Size = InfpSubstituteString(Context->Inf,
                               Ptr,
                               NULL,
@@ -579,7 +579,7 @@ InfpGetStringField(PINFCONTEXT Context,
       if (ReturnBufferSize <= Size)
         return INF_STATUS_BUFFER_OVERFLOW;
 
-//      wcscpy (ReturnBuffer, Ptr);
+//      strcpyW(ReturnBuffer, Ptr);
       InfpSubstituteString(Context->Inf,
                            Ptr,
                            ReturnBuffer,

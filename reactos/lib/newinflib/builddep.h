@@ -28,20 +28,13 @@
 #define INF_STATUS_BUFFER_OVERFLOW   E2BIG
 #define INF_SUCCESS(x) (0 == (x))
 
-typedef char TCHAR, *PTCHAR, *PTSTR;
-typedef const TCHAR *PCTSTR;
-
-#define _T(x) x
-#define _tcsicmp strcasecmp
-#define _tcslen strlen
-#define _tcscpy strcpy
-#define _tcstoul strtoul
-#define _tcstol strtol
 #define STRFMT "%s"
 
-#ifdef _MSC_VER
-#define strcasecmp _stricmp
-#endif
+NTSTATUS NTAPI RtlMultiByteToUnicodeN(IN PWCHAR UnicodeString,
+    IN ULONG UnicodeSize, IN PULONG ResultSize, IN PCSTR MbString, IN ULONG MbSize);
+
+BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
+
 
 #define IS_TEXT_UNICODE_ASCII16 1
 #define IS_TEXT_UNICODE_REVERSE_ASCII16 16
@@ -69,9 +62,17 @@ typedef const TCHAR *PCTSTR;
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <tchar.h>
 
 extern PVOID InfpHeap;
+
+INT isspaceW(WCHAR c);
+INT strlenW(PCWSTR s);
+PWSTR strcpyW(PWSTR d, PCWSTR s);
+PWSTR strncpyW(PWSTR d, PCWSTR s, SIZE_T c);
+INT strcmpiW(PCWSTR s1, PCWSTR s2);
+LONG strtolW(PCWSTR s, PWSTR *e, INT r);
+ULONG strtoulW(PCWSTR s, PWSTR *e, INT r);
+
 
 #define FREE(Area) RtlFreeHeap(InfpHeap, 0, (Area))
 #define MALLOC(Size) RtlAllocateHeap(InfpHeap, 0, (Size))

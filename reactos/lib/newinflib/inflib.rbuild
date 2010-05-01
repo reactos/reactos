@@ -9,6 +9,7 @@
 	<file>infrosgen.c</file>
 	<file>infrosget.c</file>
 	<file>infrosput.c</file>
+	<file>infrosrtl.c</file>
 </module>
 <module name="newinflibhost" type="hoststaticlibrary" allowwarnings="true">
 	<include base="newinflibhost">.</include>

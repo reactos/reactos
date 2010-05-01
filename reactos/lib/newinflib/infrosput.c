@@ -64,13 +64,13 @@ InfWriteFile(HINF InfHandle,
       HeaderBuffer = MALLOC(HeaderBufferSize);
       if (NULL != HeaderBuffer)
         {
-          wcscpy(HeaderBuffer, L"; ");
+          strcpyW(HeaderBuffer, L"; ");
           for (Index = 0; Index < HeaderComment->Length / sizeof(WCHAR); Index++)
             {
               HeaderBuffer[2 + Index] = HeaderComment->Buffer[Index];
             }
-          wcscpy(HeaderBuffer + (2 + HeaderComment->Length / sizeof(WCHAR)),
-                 L"\r\n\r\n");
+          strcpyW(HeaderBuffer + (2 + HeaderComment->Length / sizeof(WCHAR)),
+                  L"\r\n\r\n");
           NtWriteFile(FileHandle,
                       NULL,
                       NULL,

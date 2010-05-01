@@ -154,7 +154,7 @@ InfpFindSection(PINFCACHE Cache,
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (_wcsicmp (Section->Name, Name) == 0)
+      if (strcmpiW(Section->Name, Name) == 0)
         {
           return Section;
         }
@@ -182,7 +182,7 @@ InfpAddSection(PINFCACHE Cache,
 
   /* Allocate and initialize the new section */
   Size = (ULONG)FIELD_OFFSET(INFCACHESECTION,
-                             Name[wcslen (Name) + 1]);
+                             Name[strlenW(Name) + 1]);
   Section = (PINFCACHESECTION)MALLOC(Size);
   if (Section == NULL)
     {
@@ -193,7 +193,7 @@ InfpAddSection(PINFCACHE Cache,
               Size);
 
   /* Copy section name */
-  wcscpy (Section->Name, Name);
+  strcpyW(Section->Name, Name);
 
   /* Append section */
   if (Cache->FirstSection == NULL)
@@ -266,14 +266,14 @@ InfpAddKeyToLine(PINFCACHELINE Line,
       return NULL;
     }
 
-  Line->Key = (PWCHAR)MALLOC((wcslen(Key) + 1) * sizeof(WCHAR));
+  Line->Key = (PWCHAR)MALLOC((strlenW(Key) + 1) * sizeof(WCHAR));
   if (Line->Key == NULL)
     {
       DPRINT1("MALLOC() failed\n");
       return NULL;
     }
 
-  wcscpy(Line->Key, Key);
+  strcpyW(Line->Key, Key);
 
   return (PVOID)Line->Key;
 }
@@ -287,7 +287,7 @@ InfpAddFieldToLine(PINFCACHELINE Line,
   ULONG Size;
 
   Size = (ULONG)FIELD_OFFSET(INFCACHEFIELD,
-                             Data[wcslen(Data) + 1]);
+                             Data[strlenW(Data) + 1]);
   Field = (PINFCACHEFIELD)MALLOC(Size);
   if (Field == NULL)
     {
@@ -296,7 +296,7 @@ InfpAddFieldToLine(PINFCACHELINE Line,
     }
   ZEROMEMORY (Field,
               Size);
-  wcscpy (Field->Data, Data);
+  strcpyW(Field->Data, Data);
 
   /* Append key */
   if (Line->FirstField == NULL)
@@ -325,7 +325,7 @@ InfpFindKeyLine(PINFCACHESECTION Section,
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Key != NULL && _wcsicmp (Line->Key, Key) == 0)
+      if (Line->Key != NULL && strcmpiW(Line->Key, Key) == 0)
         {
           return Line;
         }
@@ -522,7 +522,7 @@ static const WCHAR *line_start_state( struct parser *parser, const WCHAR *pos )
             return p + 1;
 
           default:
-            if (!iswspace(*p))
+            if (!isspaceW(*p))
               {
                 parser->start = p;
                 set_state( parser, KEY_NAME );
@@ -595,7 +595,7 @@ static const WCHAR *key_name_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!iswspace(*p)) token_end = p + 1;
+            if (!isspaceW(*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -647,7 +647,7 @@ static const WCHAR *value_name_state( struct parser *parser, const WCHAR *pos )
             set_state( parser, EOL_BACKSLASH );
             return p;
         default:
-            if (!isspace(*p)) token_end = p + 1;
+            if (!isspaceW(*p)) token_end = p + 1;
             else
             {
                 push_token( parser, p );
@@ -692,7 +692,7 @@ static const WCHAR *eol_backslash_state( struct parser *parser, const WCHAR *pos
             return p + 1;
 
           default:
-            if (iswspace(*p))
+            if (isspaceW(*p))
               continue;
             push_token( parser, p );
             pop_state( parser );
@@ -749,7 +749,7 @@ static const WCHAR *leading_spaces_state( struct parser *parser, const WCHAR *po
           set_state( parser, EOL_BACKSLASH );
           return p;
         }
-      if (!iswspace(*p))
+      if (!isspaceW(*p))
         break;
     }
   parser->start = p;
@@ -770,7 +770,7 @@ static const WCHAR *trailing_spaces_state( struct parser *parser, const WCHAR *p
           set_state( parser, EOL_BACKSLASH );
           return p;
         }
-      if (!iswspace(*p))
+      if (!isspaceW(*p))
         break;
     }
   pop_state( parser );

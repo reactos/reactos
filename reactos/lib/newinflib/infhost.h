@@ -14,12 +14,6 @@ extern "C" {
 
 #include "infcommon.h"
 
-extern NTSTATUS NTAPI RtlMultiByteToUnicodeN(IN PWCHAR UnicodeString,
-    IN ULONG UnicodeSize, IN PULONG ResultSize, IN PCSTR MbString, IN ULONG MbSize);
-
-extern BOOLEAN NTAPI RtlIsTextUnicode( PVOID buf, INT len, INT *pf );
-
-
 extern int InfHostOpenBufferedFile(PHINF InfHandle,
                                    void *Buffer,
                                    ULONG BufferSize,

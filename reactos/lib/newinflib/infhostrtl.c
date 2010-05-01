@@ -115,7 +115,7 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
     {
         for (i = 0; i < len; i++)
         {
-            if (wcschr(std_control_chars, s[i]))
+            if (strchrW(std_control_chars, s[i]))
             {
                 out_flags |= IS_TEXT_UNICODE_CONTROLS;
                 break;
@@ -127,7 +127,7 @@ RtlIsTextUnicode( PVOID buf, INT len, INT *pf )
     {
         for (i = 0; i < len; i++)
         {
-            if (wcschr(byterev_control_chars, s[i]))
+            if (strchrW(byterev_control_chars, s[i]))
             {
                 out_flags |= IS_TEXT_UNICODE_REVERSE_CONTROLS;
                 break;
