@@ -526,6 +526,8 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
       ASSERT(RtlAreBitsSet(&WindowLessTimersBitMap, IDEvent - 1, 1));
       RtlClearBits(&WindowLessTimersBitMap, IDEvent - 1, 1);
 
+      HintIndex = IDEvent - 1;
+
       IntUnlockWindowlessTimerBitmap();
    }
 
