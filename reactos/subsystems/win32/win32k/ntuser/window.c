@@ -2619,6 +2619,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    BOOLEAN isChild;
    PWND Wnd;
    HWND hWnd;
+   PTHREADINFO ti;
 
    ASSERT_REFS_CO(Window); // FIXME: temp hack?
 
@@ -2661,6 +2662,21 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       Window->pti->MessageQueue->FocusWindow = NULL;
    if (Window->pti->MessageQueue->CaptureWindow == Window->hSelf)
       Window->pti->MessageQueue->CaptureWindow = NULL;
+
+   /*
+    * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
+    */
+
+   ti = PsGetCurrentThreadWin32Thread();
+
+   if ((ti != NULL) & (ti->pDeskInfo != NULL))
+   {
+      if (ti->pDeskInfo->hShellWindow == hWnd)
+      {
+         DPRINT1("Destroying the ShellWindow!\n");
+         ti->pDeskInfo->hShellWindow = NULL;
+      }
+   }
 
    IntDereferenceMessageQueue(Window->pti->MessageQueue);
 
