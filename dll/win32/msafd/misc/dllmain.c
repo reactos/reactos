@@ -664,14 +664,6 @@ WSPBind(SOCKET Handle,
                                                Socket->TdiConnectionHandle,
                                                WSH_NOTIFY_BIND);
 
-    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_BIND))
-    {
-        Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
-                                               Socket->Handle,
-                                               Socket->TdiAddressHandle,
-                                               Socket->TdiConnectionHandle,
-                                               WSH_NOTIFY_BIND);
-
         if (Status)
         {
             if (lpErrno) *lpErrno = Status;
