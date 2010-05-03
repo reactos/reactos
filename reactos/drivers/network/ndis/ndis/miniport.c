@@ -1722,6 +1722,22 @@ NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
   return Status;
 }
 
+NTSTATUS
+NTAPI
+NdisICreateClose(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+
+  DbgPrint("NdisICreateClose\n");
+
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return STATUS_SUCCESS;
+}
+
 
 NTSTATUS
 NTAPI
@@ -2499,6 +2515,8 @@ NdisMRegisterMiniport(
 
   *MiniportPtr = Miniport;
 
+  Miniport->DriverObject->MajorFunction[IRP_MJ_CREATE] = NdisICreateClose;
+  Miniport->DriverObject->MajorFunction[IRP_MJ_CLOSE] = NdisICreateClose;
   Miniport->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
   Miniport->DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = NdisIShutdown;
   Miniport->DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = NdisIDeviceIoControl;
@@ -2959,6 +2977,12 @@ NdisMRegisterDevice(
          DriverBlock->DriverObject->MajorFunction[i] = MajorFunctions[i];
 
     DriverBlock->DriverObject->MajorFunction[IRP_MJ_PNP] = NdisIDispatchPnp;
+
+    if (!DriverBlock->DriverObject->MajorFunction[IRP_MJ_CREATE])
+        DriverBlock->DriverObject->MajorFunction[IRP_MJ_CREATE] = NdisICreateClose;
+
+    if (!DriverBlock->DriverObject->MajorFunction[IRP_MJ_CLOSE])
+        DriverBlock->DriverObject->MajorFunction[IRP_MJ_CLOSE] = NdisICreateClose;
 
     DeviceBlock->DeviceObject = DeviceObject;
     DeviceBlock->SymbolicName = SymbolicName;
