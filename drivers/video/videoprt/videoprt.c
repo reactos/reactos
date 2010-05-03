@@ -31,10 +31,10 @@ ULONG VideoPortDeviceNumber = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS NTAPI
+ULONG NTAPI
 DriverEntry(
-   IN PDRIVER_OBJECT DriverObject,
-   IN PUNICODE_STRING RegistryPath)
+   IN PVOID Context1,
+   IN PVOID Context2)
 {
    return STATUS_SUCCESS;
 }
@@ -1357,7 +1357,7 @@ VP_STATUS NTAPI
 VideoPortRegisterBugcheckCallback(
    IN PVOID HwDeviceExtension,
    IN ULONG BugcheckCode,
-   IN PVOID Callback,
+   IN PVIDEO_BUGCHECK_CALLBACK Callback,
    IN ULONG BugcheckDataSize)
 {
     UNIMPLEMENTED;

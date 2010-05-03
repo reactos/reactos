@@ -36,7 +36,7 @@
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
-VP_STATUS NTAPI
+ULONG NTAPI
 DriverEntry(IN PVOID Context1, IN PVOID Context2)
 {
    VIDEO_HW_INITIALIZATION_DATA InitData;

@@ -241,7 +241,7 @@ VmxGetVideoChildDescriptor(IN PVOID HwDeviceExtension,
     return NO_ERROR;
 }
 
-VP_STATUS
+ULONG
 NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
