@@ -6,7 +6,7 @@
  * PROGRAMMERS:      Magnus Olsen (magnus@greatlord.com)
  */
 
-#include <win32k.h>
+#include <w32k.h>
 #include <debug.h>
 
 HSEMAPHORE  ghsemShareDevLock = NULL;

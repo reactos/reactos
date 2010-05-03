@@ -272,7 +272,7 @@ DrvSetPointerShape(
       VGADDI_ShowCursor(ppdev, prcl);
     }
 
-    return SPS_ACCEPT_NOEXCLUDE;
+    return SPS_ACCEPT_EXCLUDE;
 }
 
 static VOID FASTCALL

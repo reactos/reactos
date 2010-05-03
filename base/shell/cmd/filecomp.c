@@ -703,7 +703,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 				LastSpace = i;
 
 		}
-		/* insert the quotation and move things around */
+		/* insert the quoation and move things around */
 		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
 			memmove ( &szPrefix[LastSpace+1], &szPrefix[LastSpace], (_tcslen(szPrefix)-LastSpace+1) * sizeof(TCHAR) );
@@ -712,17 +712,14 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 			{
 				_tcscat(szPrefix,_T("\""));
 			}
-			szPrefix[LastSpace + 1] = _T('\"');
+				szPrefix[LastSpace + 1] = _T('\"');
 		}
 		else if(LastSpace == -1)
 		{
-			/* Add quotation only if none exists already */
-			if (szPrefix[0] != _T('\"'))
-			{
-				_tcscpy(szBaseWord,_T("\""));
-				_tcscat(szBaseWord,szPrefix);
-				_tcscpy(szPrefix,szBaseWord);
-			}
+			_tcscpy(szBaseWord,_T("\""));
+			_tcscat(szBaseWord,szPrefix);
+			_tcscpy(szPrefix,szBaseWord);
+
 		}
 	}
 

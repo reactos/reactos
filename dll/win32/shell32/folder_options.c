@@ -43,13 +43,6 @@ typedef struct
 
 typedef struct
 {
-    WCHAR FileExtension[30];
-    WCHAR FileDescription[100];
-    WCHAR ClassKey[MAX_PATH];
-}FOLDER_FILE_TYPE_ENTRY, *PFOLDER_FILE_TYPE_ENTRY;
-
-typedef struct
-{
    LPCWSTR szKeyName;
    UINT ResourceID;
 }FOLDER_VIEW_ENTRY, PFOLDER_VIEW_ENTRY;
@@ -162,49 +155,20 @@ InitializeFileTypesListCtrlColumns(HWND hDlgCtrl)
     RECT clientRect;
     LVCOLUMNW col;
     WCHAR szName[50];
-    DWORD dwStyle;
-    int columnSize = 140;
-
 
     if (!LoadStringW(shell32_hInstance, IDS_COLUMN_EXTENSION, szName, sizeof(szName) / sizeof(WCHAR)))
-    {
-        /* default to english */
-        wcscpy(szName, L"Extensions");
-    }
-
-    /* make sure its null terminated */
+        szName[0] = 0;
     szName[(sizeof(szName)/sizeof(WCHAR))-1] = 0;
 
     GetClientRect(hDlgCtrl, &clientRect);
     ZeroMemory(&col, sizeof(LV_COLUMN));
-    columnSize = 140; //FIXME
-    col.iSubItem   = 0;
-    col.mask      = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM | LVCF_FMT;
-    col.fmt = LVCFMT_FIXED_WIDTH;
-    col.cx         = columnSize | LVCFMT_LEFT;
-    col.cchTextMax = wcslen(szName);
-    col.pszText    = szName;
+    col.mask      = LVCF_SUBITEM | LVCF_WIDTH | LVCF_FMT;
+    col.iSubItem  = 0;
+    col.pszText = szName;
+    col.fmt = LVCFMT_LEFT;
+    col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 0, (LPARAM)&col);
-
-    if (!LoadStringW(shell32_hInstance, IDS_FILE_TYPES, szName, sizeof(szName) / sizeof(WCHAR)))
-    {
-        /* default to english */
-        wcscpy(szName, L"FileTypes");
-    }
-
-   col.iSubItem   = 1;
-   col.cx         = clientRect.right - clientRect.left - columnSize;
-   col.cchTextMax = wcslen(szName);
-   col.pszText    = szName;
-   (void)SendMessageW(hDlgCtrl, LVM_INSERTCOLUMNW, 1, (LPARAM)&col);
-
-   /* set full select style */
-   dwStyle = (DWORD) SendMessage(hDlgCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
-   dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
-   SendMessage(hDlgCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
-
 }
-
 INT
 FindItem(HWND hDlgCtrl, WCHAR * ItemName)
 {
@@ -217,105 +181,45 @@ FindItem(HWND hDlgCtrl, WCHAR * ItemName)
 }
 
 VOID
-InsertFileType(HWND hDlgCtrl, WCHAR * szName, PINT iItem, WCHAR * szFile)
+InsertFileType(HWND hDlgCtrl, WCHAR * szName, DWORD Size, INT iItem)
 {
-    PFOLDER_FILE_TYPE_ENTRY Entry;
+    WCHAR szPath[100];
     HKEY hKey;
     LVITEMW lvItem;
     DWORD dwSize;
 
-    if (szName[0] != L'.')
-    {
-        /* FIXME handle URL protocol handlers */
-        return;
-    }
- 
-    /* allocate file type entry */
-    Entry = (PFOLDER_FILE_TYPE_ENTRY)HeapAlloc(GetProcessHeap(), 0, sizeof(FOLDER_FILE_TYPE_ENTRY));
-
-    if (!Entry)
+    if (FindItem(hDlgCtrl, szName) != -1)
         return;
 
-    /* open key */
-    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szName, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
-        return;
-
-    /* FIXME check for duplicates */
-
-    /* query for the default key */
-    dwSize = sizeof(Entry->ClassKey);
-    if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->ClassKey, &dwSize) != ERROR_SUCCESS)
+    wcscpy(szPath, szName);
+    /* get the name */
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
-         /* no link available */
-         Entry->ClassKey[0] = 0;
-    }
-
-    if (Entry->ClassKey[0])
-    {
-        HKEY hTemp;
-        /* try open linked key */
-        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, Entry->ClassKey, 0, KEY_READ, &hTemp) == ERROR_SUCCESS)
+        if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", szName, Size, NULL, 0, NULL) != ERROR_SUCCESS)
         {
-            /* use linked key */
-            RegCloseKey(hKey);
-            hKey = hTemp;
+            dwSize = Size;
+            if (RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)szName, &dwSize) != ERROR_SUCCESS)
+            {
+                wcscpy(szName, szPath);
+            }
         }
+        RegCloseKey(hKey);
+        szName[(Size/sizeof(WCHAR))-1] = 0;
     }
-
-    /* read friendly type name */
-    if (RegLoadMUIStringW(hKey, L"FriendlyTypeName", Entry->FileDescription, sizeof(Entry->FileDescription), NULL, 0, NULL) != ERROR_SUCCESS)
-    {
-        /* read file description */
-        dwSize = sizeof(Entry->FileDescription);
-        Entry->FileDescription[0] = 0;
-
-        /* read default key */
-        RegQueryValueExW(hKey, NULL, NULL, NULL, (LPBYTE)Entry->FileDescription, &dwSize);
-    }
-
-    /* close key */
-    RegCloseKey(hKey);
-
-    /* convert extension to upper case */
-    wcscpy(Entry->FileExtension, szName);
-    _wcsupr(Entry->FileExtension);
-
-    if (!Entry->FileDescription[0])
-    {
-        /* construct default 'FileExtensionFile' */
-        wcscpy(Entry->FileDescription, &Entry->FileExtension[1]);
-        wcscat(Entry->FileDescription, L" ");
-        wcscat(Entry->FileDescription, szFile);
-    }
+    wcscat(szPath, L"\\shell");
 
     ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_TEXT | LVIF_PARAM;
-    lvItem.iSubItem = 0;
-    lvItem.pszText = &Entry->FileExtension[1];
-    lvItem.iItem = *iItem;
-    lvItem.lParam = (LPARAM)Entry;
-    (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+    lvItem.mask = LVIF_TEXT | LVIF_PARAM | LVIF_STATE;
+    lvItem.state = LVIS_SELECTED; 
+    lvItem.pszText = szName;
+    lvItem.iItem = iItem;
 
-    ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_TEXT;
-    lvItem.pszText = Entry->FileDescription;
-    lvItem.iItem = *iItem;
-    lvItem.iSubItem = 1;
-
-    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&lvItem);
-    (*iItem)++;
-}
-
-int
-CALLBACK
-ListViewCompareProc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-    PFOLDER_FILE_TYPE_ENTRY Entry1, Entry2;
-
-    Entry1 = (PFOLDER_FILE_TYPE_ENTRY)lParam1;
-    Entry2 = (PFOLDER_FILE_TYPE_ENTRY)lParam2;
-
-    return wcsicmp(Entry1->FileExtension, Entry2->FileExtension);
+    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szPath, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+    {
+        lvItem.lParam = 0;
+        (void)SendMessageW(hDlgCtrl, LVM_INSERTITEMW, 0, (LPARAM)&lvItem);
+        RegCloseKey(hKey);
+    }
 }
 
 BOOL
@@ -324,68 +228,20 @@ InitializeFileTypesListCtrl(HWND hwndDlg)
     HWND hDlgCtrl;
     DWORD dwIndex = 0;
     WCHAR szName[50];
-    WCHAR szFile[100];
     DWORD dwName;
-    LVITEMW lvItem;
     INT iItem = 0;
 
     hDlgCtrl = GetDlgItem(hwndDlg, 14000);
     InitializeFileTypesListCtrlColumns(hDlgCtrl);
 
-    szFile[0] = 0;
-    if (!LoadStringW(shell32_hInstance, IDS_SHV_COLUMN1, szFile, sizeof(szFile) / sizeof(WCHAR)))
-    {
-        /* default to english */
-        wcscpy(szFile, L"File");
-    }
-    szFile[(sizeof(szFile)/sizeof(WCHAR))-1] = 0;
-
     dwName = sizeof(szName) / sizeof(WCHAR);
 
     while(RegEnumKeyExW(HKEY_CLASSES_ROOT, dwIndex++, szName, &dwName, NULL, NULL, NULL, NULL) == ERROR_SUCCESS)
     {
-        InsertFileType(hDlgCtrl, szName, &iItem, szFile);
+        InsertFileType(hDlgCtrl, szName, sizeof(szName), iItem++);
         dwName = sizeof(szName) / sizeof(WCHAR);
     }
-
-    /* sort list */
-    ListView_SortItems(hDlgCtrl, ListViewCompareProc, NULL);
-
-    /* select first item */
-    ZeroMemory(&lvItem, sizeof(LVITEMW));
-    lvItem.mask = LVIF_STATE;
-    lvItem.stateMask = (UINT)-1;
-    lvItem.state = LVIS_FOCUSED|LVIS_SELECTED;
-    lvItem.iItem = 0;
-    (void)SendMessageW(hDlgCtrl, LVM_SETITEMW, 0, (LPARAM)&lvItem);
-
     return TRUE;
-}
-
-PFOLDER_FILE_TYPE_ENTRY
-FindSelectedItem(
-    HWND hDlgCtrl)
-{
-    UINT Count, Index;
-    LVITEMW lvItem;
-
-    Count = ListView_GetItemCount(hDlgCtrl);
-
-    for (Index = 0; Index < Count; Index++)
-    {
-        ZeroMemory(&lvItem, sizeof(LVITEM));
-        lvItem.mask = LVIF_PARAM | LVIF_STATE;
-        lvItem.iItem = Index;
-        lvItem.stateMask = (UINT)-1;
-
-        if (ListView_GetItem(hDlgCtrl, &lvItem))
-        {
-            if (lvItem.state & LVIS_SELECTED)
-               return (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-        }
-    }
-
-    return NULL;
 }
 
 
@@ -395,65 +251,14 @@ FolderOptionsFileTypesDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
-    LPARAM lParam)
+    LPARAM lParam
+)
 {
-    LPNMLISTVIEW lppl;
-    LVITEMW lvItem;
-    WCHAR Buffer[200], FormatBuffer[100];
-    PFOLDER_FILE_TYPE_ENTRY pItem;
-    OPENASINFO Info;
-
     switch(uMsg)
     {
         case WM_INITDIALOG:
             InitializeFileTypesListCtrl(hwndDlg);
             return TRUE;
-        case WM_COMMAND:
-            switch(LOWORD(wParam))
-            {
-                case 14006:
-                    pItem = FindSelectedItem(GetDlgItem(hwndDlg, 14000));
-                    if (pItem)
-                    {
-                        Info.oaifInFlags = OAIF_ALLOW_REGISTRATION | OAIF_REGISTER_EXT;
-                        Info.pcszClass = pItem->FileExtension;
-                        SHOpenWithDialog(hwndDlg, &Info);
-                    }
-                    break;
-            }
-
-            break;
-       case WM_NOTIFY:
-            lppl = (LPNMLISTVIEW) lParam;
-
-            if (lppl->hdr.code == LVN_ITEMCHANGING)
-            {
-                    ZeroMemory(&lvItem, sizeof(LVITEM));
-                    lvItem.mask = LVIF_PARAM;
-                    lvItem.iItem = lppl->iItem;
-                    if (!SendMessageW(lppl->hdr.hwndFrom, LVM_GETITEMW, 0, (LPARAM)&lvItem))
-                        return TRUE;
-
-                    pItem = (PFOLDER_FILE_TYPE_ENTRY)lvItem.lParam;
-                    if (!pItem)
-                        return TRUE;
-
-                    if (!(lppl->uOldState & LVIS_FOCUSED) && (lppl->uNewState & LVIS_FOCUSED))
-                    {
-                        /* new focused item */
-                        if (!LoadStringW(shell32_hInstance, IDS_FILE_DETAILS, FormatBuffer, sizeof(FormatBuffer) / sizeof(WCHAR)))
-                        {
-                            /* use default english format string */
-                            wcscpy(FormatBuffer, L"Details for '%s' extension");
-                        }
-
-                        /* format buffer */
-                        swprintf(Buffer, FormatBuffer, &pItem->FileExtension[1]);
-                        /* update dialog */
-                        SendDlgItemMessageW(hwndDlg, 14003, WM_SETTEXT, 0, (LPARAM)Buffer);
-                    }
-           }
-           break;
     }
 
     return FALSE;

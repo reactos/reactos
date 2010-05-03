@@ -25,34 +25,6 @@ placeSelWin()
     //SendMessage(hSelection, WM_PAINT, 0, 0);
 }
 
-void
-regularize(short x0, short y0, short *x1, short *y1)
-{
-    if (abs(*x1 - x0) >= abs(*y1 - y0))
-        *y1 = y0 + (*y1 > y0 ? abs(*x1 - x0) : -abs(*x1 - x0));
-    else
-        *x1 = x0 + (*x1 > x0 ? abs(*y1 - y0) : -abs(*y1 - y0));
-}
-
-void
-roundTo8Directions(short x0, short y0, short *x1, short *y1)
-{
-    if (abs(*x1 - x0) >= abs(*y1 - y0))
-    {
-        if (abs(*y1 - y0) * 5 < abs(*x1 - x0) * 2)
-            *y1 = y0;
-        else
-            *y1 = y0 + (*y1 > y0 ? abs(*x1 - x0) : -abs(*x1 - x0));
-    }
-    else
-    {
-        if (abs(*x1 - x0) * 5 < abs(*y1 - y0) * 2)
-            *x1 = x0;
-        else
-            *x1 = x0 + (*x1 > x0 ? abs(*y1 - y0) : -abs(*y1 - y0));
-    }
-}
-
 POINT pointStack[256];
 short pointSP;
 POINT *ptStack = NULL;
@@ -175,8 +147,6 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 11:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
         case 12:
@@ -199,30 +169,21 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 13:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 14:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
             break;
         case 15:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
     }
@@ -315,8 +276,6 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 11:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
         case 12:
@@ -326,17 +285,12 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 13:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 14:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {
@@ -356,14 +310,10 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 15:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             RRect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
     }
@@ -448,8 +398,6 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 11:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, bg, lineWidth);
             break;
         case 12:
@@ -472,30 +420,21 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 13:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
         case 14:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
             break;
         case 15:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             RRect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
     }
@@ -518,8 +457,6 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 11:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, bg, lineWidth);
             break;
         case 12:
@@ -529,17 +466,12 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 13:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
         case 14:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
-            if ((pointSP > 0) && (GetAsyncKeyState(VK_SHIFT) < 0))
-                roundTo8Directions(pointStack[pointSP - 1].x, pointStack[pointSP - 1].y,
-                                   (short *)&pointStack[pointSP].x, (short *)&pointStack[pointSP].y);
             pointSP++;
             if (pointSP >= 2)
             {
@@ -559,14 +491,10 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             break;
         case 15:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
         case 16:
             resetToU1();
-            if (GetAsyncKeyState(VK_SHIFT) < 0)
-                regularize(startX, startY, &x, &y);
             RRect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
     }

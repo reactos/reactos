@@ -979,7 +979,8 @@ static HRESULT WINAPI ISF_Fonts_IContextMenu2_InvokeCommand(
         pfont = _ILGetFontStruct(This->apidl);
         sei.lpFile = pfont->szName + pfont->offsFile;
 
-        if (ShellExecuteExW(&sei) == FALSE)
+        ShellExecuteExW(&sei);
+        if (sei.hInstApp <= (HINSTANCE)32)
            return E_FAIL;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(4))

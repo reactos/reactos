@@ -273,7 +273,7 @@ i386CommonExceptionHandler:
 	SAVE_CPU_REGS
 
 	pushl	$SCREEN_ATTR
-	call	MachVideoClearScreen
+	call	_MachVideoClearScreen
 	add	$4,%esp
 
 	movl	$i386ExceptionHandlerText,%esi
@@ -485,7 +485,7 @@ i386PrintChar:
 	pushl	$SCREEN_ATTR
 	andl	$0xff,%eax
 	pushl	%eax
-	call	MachVideoPutChar
+	call	_MachVideoPutChar
 	addl	$16,%esp
 
 	ret

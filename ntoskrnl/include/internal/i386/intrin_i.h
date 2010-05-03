@@ -42,11 +42,11 @@ Ke386SaveFpuState(IN PFX_SAVE_AREA SaveArea)
     extern ULONG KeI386FxsrPresent;
     if (KeI386FxsrPresent)
     {
-        __asm__ __volatile__ ("fxsave %0\n" : : "m"(*SaveArea));
+        __asm__ __volatile__ ("fxsave %0\n" : : "m"(SaveArea));
     }
     else
     {
-        __asm__ __volatile__ ("fnsave %0\n wait\n" : : "m"(*SaveArea));
+        __asm__ __volatile__ ("fnsave %0\n wait\n" : : "m"(SaveArea));
     }
 }
 
@@ -136,27 +136,17 @@ Ke386FnInit(VOID)
 
 FORCEINLINE
 VOID
-__sgdt(OUT PVOID Descriptor)
+Ke386GetGlobalDescriptorTable(OUT PVOID Descriptor)
 {
-    __asm
-    {
-        mov eax, Descriptor
-        sgdt [eax]
-    }
+    __asm sgdt [Descriptor];
 }
-#define Ke386GetGlobalDescriptorTable __sgdt
 
 FORCEINLINE
 VOID
-__lgdt(IN PVOID Descriptor)
+Ke386SetGlobalDescriptorTable(IN PVOID Descriptor)
 {
-    __asm
-    {
-        mov eax, Descriptor
-        lgdt [eax]
-    }
+    __asm lgdt [Descriptor];
 }
-#define Ke386SetGlobalDescriptorTable __lgdt
 
 FORCEINLINE
 USHORT

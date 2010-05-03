@@ -1298,23 +1298,30 @@ end_of_mci_open:
         }
 
     case MCI_SEEK:
-    case MCI_STEP:
         {
-            MCI_SEEK_PARMS mci_seek; /* Layout is usable as MCI_XYZ_STEP_PARMS */
-            DWORD flags = MCI_STEP == wMsg ? 0 :
-                          MCIWND_START == lParam ? MCI_SEEK_TO_START :
-                          MCIWND_END   == lParam ? MCI_SEEK_TO_END : MCI_TO;
+            MCI_SEEK_PARMS mci_seek;
+
+            switch (lParam)
+            {
+            case MCIWND_START:
+                lParam = SendMessageW(hWnd, MCIWNDM_GETSTART, 0, 0);
+                break;
+
+            case MCIWND_END:
+                lParam = SendMessageW(hWnd, MCIWNDM_GETEND, 0, 0);
+                break;
+            }
 
             mci_seek.dwTo = lParam;
-            mwi->lasterror = mciSendCommandW(mwi->mci, wMsg,
-                                             flags, (DWORD_PTR)&mci_seek);
+            mwi->lasterror = mciSendCommandW(mwi->mci, MCI_SEEK,
+                                             MCI_TO, (DWORD_PTR)&mci_seek);
             if (mwi->lasterror)
             {
                 MCIWND_notify_error(mwi);
                 return mwi->lasterror;
             }
             /* update window to reflect the state */
-            else InvalidateRect(hWnd, NULL, TRUE);
+            InvalidateRect(hWnd, NULL, TRUE);
             return 0;
         }
 
@@ -1357,9 +1364,15 @@ end_of_mci_open:
         }
 
     case MCI_PAUSE:
+    case MCI_STEP:
     case MCI_STOP:
     case MCI_RESUME:
         mci_generic_command(mwi, wMsg);
+        if (wMsg == MCI_STEP && !mwi->lasterror)
+        {
+            /* update window to reflect the state */
+            InvalidateRect(hWnd, NULL, TRUE);
+        }
         return mwi->lasterror;
 
     case MCI_CONFIGURE:

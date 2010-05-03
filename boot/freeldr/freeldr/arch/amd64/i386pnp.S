@@ -35,7 +35,7 @@ _pnp_bios_entry_point:
 _pnp_bios_data_segment:
 	.word	0
 
-EXTERN(PnpBiosSupported)
+EXTERN(_PnpBiosSupported)
 	.code64
 
 	push rdi
@@ -113,7 +113,7 @@ _pnp_node_size:
 _pnp_node_count:
 	.word	0
 
-EXTERN(PnpBiosGetDeviceNodeCount)
+EXTERN(_PnpBiosGetDeviceNodeCount)
 	.code64
 
 	push rbp
@@ -182,7 +182,7 @@ _pnp_buffer_offset:
 _pnp_node_number:
 	.byte	0
 
-EXTERN(PnpBiosGetDeviceNode)
+EXTERN(_PnpBiosGetDeviceNode)
 	.code64
 
 	push rbp

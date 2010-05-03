@@ -73,7 +73,7 @@ ENDM
 .altmacro
 
 /* Hex numbers need to be in 0x1AB format */
-#define HEX(y) 0x##y
+#define HEX(x) 0x##x
 
 /* Macro values need to be marked */
 #define VAL(x) \x

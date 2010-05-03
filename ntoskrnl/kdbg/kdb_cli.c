@@ -823,8 +823,7 @@ KdbpCmdBackTrace(
             break;
         }
 
-        /* Print the location of the call instruction */
-        if (!KdbSymPrintAddress((PVOID)(Address - 5)))
+        if (!KdbSymPrintAddress((PVOID)Address))
             KdbpPrint("<%08x>\n", Address);
         else
             KdbpPrint("\n");

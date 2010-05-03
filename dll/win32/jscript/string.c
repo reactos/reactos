@@ -622,9 +622,11 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     const WCHAR *str;
+    match_result_t *match_result;
     DispatchEx *regexp;
-    VARIANT *arg_var;
-    DWORD length;
+    DispatchEx *array;
+    VARIANT var, *arg_var;
+    DWORD length, match_cnt, i;
     BSTR val_str = NULL;
     HRESULT hres = S_OK;
 
@@ -643,7 +645,7 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
     case VT_DISPATCH:
         regexp = iface_to_jsdisp((IUnknown*)V_DISPATCH(arg_var));
         if(regexp) {
-            if(is_class(regexp, JSCLASS_REGEXP))
+            if(regexp->builtin_info->class == JSCLASS_REGEXP)
                 break;
             jsdisp_release(regexp);
         }
@@ -662,17 +664,54 @@ static HRESULT String_match(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISP
     }
 
     hres = get_string_val(ctx, jsthis, ei, &str, &length, &val_str);
-    if(SUCCEEDED(hres)) {
-        if(!val_str)
-            val_str = SysAllocStringLen(str, length);
-        if(val_str)
-            hres = regexp_string_match(ctx, regexp, val_str, retv, ei);
-        else
-            hres = E_OUTOFMEMORY;
+    if(SUCCEEDED(hres))
+        hres = regexp_match(ctx, regexp, str, length, FALSE, &match_result, &match_cnt);
+    jsdisp_release(regexp);
+    if(FAILED(hres)) {
+        SysFreeString(val_str);
+        return hres;
     }
 
-    jsdisp_release(regexp);
+    if(!match_cnt) {
+        TRACE("no match\n");
+
+        if(retv)
+            V_VT(retv) = VT_NULL;
+
+        SysFreeString(val_str);
+        return S_OK;
+    }
+
+    hres = create_array(ctx, match_cnt, &array);
+    if(FAILED(hres)) {
+        SysFreeString(val_str);
+        return hres;
+    }
+
+    V_VT(&var) = VT_BSTR;
+
+    for(i=0; i < match_cnt; i++) {
+        V_BSTR(&var) = SysAllocStringLen(match_result[i].str, match_result[i].len);
+        if(!V_BSTR(&var)) {
+            hres = E_OUTOFMEMORY;
+            break;
+        }
+
+        hres = jsdisp_propput_idx(array, i, &var, ei, NULL/*FIXME*/);
+        SysFreeString(V_BSTR(&var));
+        if(FAILED(hres))
+            break;
+    }
+
+    heap_free(match_result);
     SysFreeString(val_str);
+
+    if(SUCCEEDED(hres) && retv) {
+        V_VT(retv) = VT_DISPATCH;
+        V_DISPATCH(retv) = (IDispatch*)_IDispatchEx_(array);
+    }else {
+        jsdisp_release(array);
+    }
     return hres;
 }
 

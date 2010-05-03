@@ -4,10 +4,10 @@
 	<bootstrap installbase="$(CDOUTPUT)/system32" nameoncd="smss.exe" />
 	<include base="usetup">.</include>
 	<include base="zlib">.</include>
-	<include base="newinflib">.</include>
+	<include base="inflib">.</include>
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>zlib</library>
-	<library>newinflib</library>
+	<library>inflib</library>
 	<library>ext2lib</library>
 	<library>vfatlib</library>
 	<library>ntdll</library>

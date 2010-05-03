@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

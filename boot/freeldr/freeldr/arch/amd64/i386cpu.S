@@ -33,7 +33,7 @@
  *    0x00000400: Found 80486 CPU without CPUID support
  */
 
-EXTERN(CpuidSupported)
+EXTERN(_CpuidSupported)
 	.code32
 
 	pushl	%ecx			/* save ECX */
@@ -80,7 +80,7 @@ NoCpuid:
  * VOID GetCpuid(U32 Level, U32 *eax, U32 *ebx, U32 *ecx, U32 *edx);
  */
 
-EXTERN(GetCpuid)
+EXTERN(_GetCpuid)
 	.code32
 
 	pushl	%ebp
@@ -123,7 +123,7 @@ EXTERN(GetCpuid)
  * U64 RDTSC(VOID);
  */
 
-EXTERN(RDTSC)
+EXTERN(_RDTSC)
 	.code32
 	rdtsc
 	ret

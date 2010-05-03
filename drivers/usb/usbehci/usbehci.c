@@ -9,6 +9,11 @@
 
 /* DEFINES *******************************************************************/
 #include "usbehci.h"
+#define NDEBUG
+
+/* INCLUDES *******************************************************************/
+#include <debug.h>
+
 
 static NTSTATUS NTAPI
 IrpStub(PDEVICE_OBJECT DeviceObject, PIRP Irp)

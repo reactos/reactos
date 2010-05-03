@@ -60,7 +60,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* B
 		if (p == NULL)
 			return FALSE;
 		p++;
-		*BootPartition = 0;
+		*BootPartition = 0xff;
 	}
 	else if (_strnicmp(p, "cdrom(", 6) == 0)
 	{
@@ -69,7 +69,7 @@ BOOLEAN DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* B
 		 *  multi(0)disk(0)cdrom(x)\path
 		 */
 		p = p + 6;
-		*BootDrive = atoi(p) + 0x80;
+		*BootDrive = atoi(p);
 		p = strchr(p, ')');
 		if (p == NULL)
 			return FALSE;

@@ -829,7 +829,7 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, const RECT *rc)
  */
 static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 {
-    RECT     rc, r;
+    RECT     rc, focus_rect, r;
     UINT     dtFlags, uState;
     HPEN     hOldPen;
     HBRUSH   hOldBrush;
@@ -865,11 +865,13 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
             Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
+    
+    focus_rect = rc;
 
     /* completely skip the drawing if only focus has changed */
     if (action == ODA_FOCUS) goto draw_focus;
 
-    uState = DFCS_BUTTONPUSH;
+    uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
     if (style & BS_FLAT)
         uState |= DFCS_MONO;
@@ -896,6 +898,8 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
     if (pushedState)
        OffsetRect(&r, 1, 1);
 
+    IntersectClipRect(hDC, rc.left, rc.top, rc.right, rc.bottom);
+
     oldTxtColor = SetTextColor( hDC, GetSysColor(COLOR_BTNTEXT) );
 
     BUTTON_DrawLabel(hwnd, hDC, dtFlags, &r);
@@ -908,8 +912,9 @@ draw_focus:
     {
         if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
         {
-            InflateRect( &rc, -2, -2 );
-            DrawFocusRect( hDC, &rc );
+            InflateRect( &focus_rect, -1, -1 );
+            IntersectRect(&focus_rect, &focus_rect, &rc);
+            DrawFocusRect( hDC, &focus_rect );
         }
     }
 

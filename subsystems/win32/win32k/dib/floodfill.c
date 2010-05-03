@@ -6,7 +6,7 @@
 * PROGRAMMER:        Gregor Schneider, <grschneider AT gmail DOT com>
 */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

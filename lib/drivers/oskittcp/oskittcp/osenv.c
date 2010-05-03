@@ -41,10 +41,5 @@ void* oskit_bufio_create(int len)
 }
 void oskit_bufio_map(void *srcbuf, void**dstbuf, int off, int len)
 {
-#if DBG
-   if (off != 0)
-       panic("oskit_bufio_map: offset is non-zero");
-#endif
-
    *dstbuf = srcbuf;
 }

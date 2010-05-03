@@ -24,7 +24,7 @@
 #include <arch.h>
 
 
-EXTERN(DriveMapInt13HandlerStart)
+EXTERN(_DriveMapInt13HandlerStart)
 Int13Handler:
 
 	pushw	%bp
@@ -82,7 +82,7 @@ CallOldInt13Handler:
 
 	/* Call old int 13h handler with new drive number */
 	.byte	0x9a /* lcall */
-EXTERN(DriveMapOldInt13HandlerAddress)
+EXTERN(_DriveMapOldInt13HandlerAddress)
 	.word	0
 	.word	0
 
@@ -105,7 +105,7 @@ CallersFlags:
 PassedInDriveNumber:
 	.byte	0
 
-EXTERN(DriveMapInt13HandlerMapList)
+EXTERN(_DriveMapInt13HandlerMapList)
 Int13HandlerMapCount:
 	.byte	0
 
@@ -129,4 +129,4 @@ Int13HandlerDrive4:
 Int13HandlerDriveNew4:
 	.byte	0
 
-EXTERN(DriveMapInt13HandlerEnd)
+EXTERN(_DriveMapInt13HandlerEnd)

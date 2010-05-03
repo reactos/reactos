@@ -7,7 +7,7 @@
  * REVISION HISTORY:
  *       04-06-2001  CSH  Created
  */
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

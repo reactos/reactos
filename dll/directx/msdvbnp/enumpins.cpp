@@ -155,6 +155,14 @@ CEnumPins_fnConstructor(
 {
     CEnumPins * handler = new CEnumPins(NumPins, pins);
 
+#ifdef MSDVBNP_TRACE
+    WCHAR Buffer[MAX_PATH];
+    LPOLESTR lpstr;
+    StringFromCLSID(riid, &lpstr);
+    swprintf(Buffer, L"CEnumPins_fnConstructor riid %s pUnknown %p\n", lpstr, pUnknown);
+    OutputDebugStringW(Buffer);
+#endif
+
     if (!handler)
         return E_OUTOFMEMORY;
 

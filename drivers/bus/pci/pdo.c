@@ -413,8 +413,8 @@ PdoQueryResourceRequirements(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->ListSize = ListSize;
   ResourceList->InterfaceType = PCIBus;
-  ResourceList->BusNumber = DeviceExtension->PciDevice->BusNumber;
-  ResourceList->SlotNumber = DeviceExtension->PciDevice->SlotNumber.u.AsULONG;
+  ResourceList->BusNumber = 0;
+  ResourceList->SlotNumber = 0;
   ResourceList->AlternativeLists = 1;
 
   ResourceList->List[0].Version = 1;
@@ -717,7 +717,7 @@ PdoQueryResources(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->Count = 1;
   ResourceList->List[0].InterfaceType = PCIBus;
-  ResourceList->List[0].BusNumber = DeviceExtension->PciDevice->BusNumber;
+  ResourceList->List[0].BusNumber = 0;
 
   PartialList = &ResourceList->List[0].PartialResourceList;
   PartialList->Version = 1;
@@ -775,7 +775,7 @@ PdoQueryResources(
       Descriptor->ShareDisposition = CmResourceShareShared;
       Descriptor->Flags = CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE;
       Descriptor->u.Interrupt.Level = PciConfig.u.type0.InterruptLine;
-      Descriptor->u.Interrupt.Vector = PciConfig.u.type0.InterruptLine;
+      Descriptor->u.Interrupt.Vector = 0;
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
   }
@@ -1186,52 +1186,6 @@ PdoQueryInterface(
   return Status;
 }
 
-static NTSTATUS
-PdoStartDevice(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  PIO_STACK_LOCATION IrpSp)
-{
-  PCM_RESOURCE_LIST RawResList = IrpSp->Parameters.StartDevice.AllocatedResources;
-  PCM_FULL_RESOURCE_DESCRIPTOR RawFullDesc;
-  PCM_PARTIAL_RESOURCE_DESCRIPTOR RawPartialDesc;
-  ULONG i, ii;
-  PPDO_DEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
-  UCHAR Irq;
-
-  if (!RawResList)
-      return STATUS_SUCCESS;
-
-  /* TODO: Assign the other resources we get to the card */
-
-  for (i = 0; i < RawResList->Count; i++)
-  {
-      RawFullDesc = &RawResList->List[i];
-
-      for (ii = 0; ii < RawFullDesc->PartialResourceList.Count; ii++)
-      {
-          RawPartialDesc = &RawFullDesc->PartialResourceList.PartialDescriptors[ii];
-
-          if (RawPartialDesc->Type == CmResourceTypeInterrupt)
-          {
-              DPRINT1("Assigning IRQ %x to PCI device (%x, %x)\n",
-                      RawPartialDesc->u.Interrupt.Vector,
-                      DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                      DeviceExtension->PciDevice->BusNumber);
-
-              Irq = (UCHAR)RawPartialDesc->u.Interrupt.Vector;
-              HalSetBusDataByOffset(PCIConfiguration,
-                                    DeviceExtension->PciDevice->BusNumber,
-                                    DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                                    &Irq,
-                                    0x3c /* PCI_INTERRUPT_LINE */,
-                                    sizeof(UCHAR));
-          }
-      }
-   }
-
-   return STATUS_SUCCESS;
-}
 
 static NTSTATUS
 PdoReadConfig(
@@ -1293,33 +1247,6 @@ PdoWriteConfig(
   return STATUS_SUCCESS;
 }
 
-static NTSTATUS
-PdoQueryDeviceRelations(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN PIRP Irp,
-  PIO_STACK_LOCATION IrpSp)
-{
-  PDEVICE_RELATIONS DeviceRelations;
-
-  /* We only support TargetDeviceRelation for child PDOs */
-  if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
-      return Irp->IoStatus.Status;
-
-  /* We can do this because we only return 1 PDO for TargetDeviceRelation */
-  DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
-  if (!DeviceRelations)
-      return STATUS_INSUFFICIENT_RESOURCES;
-
-  DeviceRelations->Count = 1;
-  DeviceRelations->Objects[0] = DeviceObject;
-
-  /* The PnP manager will remove this when it is done with the PDO */
-  ObReferenceObject(DeviceObject);
-
-  Irp->IoStatus.Information = (ULONG_PTR)DeviceRelations;
-
-  return STATUS_SUCCESS;
-}
 
 static NTSTATUS
 PdoSetPower(
@@ -1392,7 +1319,8 @@ PdoPnpControl(
     break;
 
   case IRP_MN_QUERY_DEVICE_RELATIONS:
-    Status = PdoQueryDeviceRelations(DeviceObject, Irp, IrpSp);
+    /* FIXME: Possibly handle for RemovalRelations */
+    DPRINT("Unimplemented IRP_MN_QUERY_DEVICE_RELATIONS received\n");
     break;
 
   case IRP_MN_QUERY_DEVICE_TEXT:
@@ -1424,9 +1352,6 @@ PdoPnpControl(
     break;
 
   case IRP_MN_START_DEVICE:
-    Status = PdoStartDevice(DeviceObject, Irp, IrpSp);
-    break;
-
   case IRP_MN_QUERY_STOP_DEVICE:
   case IRP_MN_CANCEL_STOP_DEVICE:
   case IRP_MN_STOP_DEVICE:

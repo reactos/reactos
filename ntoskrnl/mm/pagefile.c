@@ -86,8 +86,6 @@ ULONG MiFreeSwapPages;
 /* Number of pages that have been allocated for swapping */
 ULONG MiUsedSwapPages;
 
-BOOLEAN MmZeroPageFile;
-
 /*
  * Number of pages that have been reserved for swapping but not yet allocated
  */

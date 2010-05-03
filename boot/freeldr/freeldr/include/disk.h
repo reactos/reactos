@@ -127,6 +127,7 @@ extern ULONG BootDrive;
 extern ULONG BootPartition;
 
 BOOLEAN DiskGetBootPath(char *BootPath, unsigned Size);
+BOOLEAN DiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 
 
 ///////////////////////////////////////////////////////////////////////////////////////

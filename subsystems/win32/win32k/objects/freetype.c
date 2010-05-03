@@ -35,7 +35,7 @@
 
 /** Includes ******************************************************************/
 
-#include <win32k.h>
+#include <w32k.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H

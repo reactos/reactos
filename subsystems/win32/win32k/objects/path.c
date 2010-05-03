@@ -32,7 +32,7 @@
  * PROGRAMMER:
  */
 
-#include <win32k.h>
+#include <w32k.h>
 #include "math.h"
 
 #define NDEBUG

@@ -617,7 +617,6 @@ registry_callback (HINF hInf, PCWSTR Section, BOOLEAN Delete)
 BOOLEAN
 ImportRegistryFile(PWSTR Filename,
                    PWSTR Section,
-                   LCID LocaleId,
                    BOOLEAN Delete)
 {
   WCHAR FileNameBuffer[MAX_PATH];
@@ -633,7 +632,6 @@ ImportRegistryFile(PWSTR Filename,
                        FileNameBuffer,
                        NULL,
                        INF_STYLE_WIN4,
-                       LocaleId,
                        &ErrorLine);
   if (hInf == INVALID_HANDLE_VALUE)
     {

@@ -52,10 +52,7 @@ struct dispex_data_t {
 typedef struct {
     VARIANT var;
     LPWSTR name;
-    DWORD flags;
 } dynamic_prop_t;
-
-#define DYNPROP_DELETED    0x01
 
 typedef struct {
     DispatchEx dispex;
@@ -248,12 +245,12 @@ static void add_func_info(dispex_data_t *data, DWORD *size, tid_t tid, const FUN
 
 static int dispid_cmp(const void *p1, const void *p2)
 {
-    return ((const func_info_t*)p1)->id - ((const func_info_t*)p2)->id;
+    return ((func_info_t*)p1)->id - ((func_info_t*)p2)->id;
 }
 
 static int func_name_cmp(const void *p1, const void *p2)
 {
-    return strcmpiW((*(func_info_t* const*)p1)->name, (*(func_info_t* const*)p2)->name);
+    return strcmpiW((*(func_info_t**)p1)->name, (*(func_info_t**)p2)->name);
 }
 
 static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
@@ -322,7 +319,7 @@ static dispex_data_t *preprocess_dispex_data(DispatchEx *This)
 
 static int id_cmp(const void *p1, const void *p2)
 {
-    return *(const DISPID*)p1 - *(const DISPID*)p2;
+    return *(DISPID*)p1 - *(DISPID*)p2;
 }
 
 HRESULT get_dispids(tid_t tid, DWORD *ret_size, DISPID **ret)
@@ -445,7 +442,7 @@ static HRESULT get_dynamic_prop(DispatchEx *This, const WCHAR *name, DWORD flags
 {
     const BOOL alloc = flags & fdexNameEnsure;
     dispex_dynamic_data_t *data;
-    dynamic_prop_t *prop;
+    unsigned i;
 
     data = get_dynamic_data(This, alloc);
     if(!data) {
@@ -456,14 +453,9 @@ static HRESULT get_dynamic_prop(DispatchEx *This, const WCHAR *name, DWORD flags
         return DISP_E_UNKNOWNNAME;
     }
 
-    for(prop = data->props; prop < data->props+data->prop_cnt; prop++) {
-        if(flags & fdexNameCaseInsensitive ? !strcmpiW(prop->name, name) : !strcmpW(prop->name, name)) {
-            if(prop->flags & DYNPROP_DELETED) {
-                if(!alloc)
-                    return DISP_E_UNKNOWNNAME;
-                prop->flags &= ~DYNPROP_DELETED;
-            }
-            *ret = prop;
+    for(i=0; i < data->prop_cnt; i++) {
+        if(flags & fdexNameCaseInsensitive ? !strcmpiW(data->props[i].name, name) : !strcmpW(data->props[i].name, name)) {
+            *ret = data->props+i;
             return S_OK;
         }
     }
@@ -489,16 +481,10 @@ static HRESULT get_dynamic_prop(DispatchEx *This, const WCHAR *name, DWORD flags
         data->buf_size <<= 1;
     }
 
-    prop = data->props + data->prop_cnt;
+    data->props[data->prop_cnt].name = heap_strdupW(name);
+    VariantInit(&data->props[data->prop_cnt].var);
+    *ret = data->props + data->prop_cnt++;
 
-    prop->name = heap_strdupW(name);
-    if(!prop->name)
-        return E_OUTOFMEMORY;
-
-    VariantInit(&prop->var);
-    prop->flags = 0;
-    data->prop_cnt++;
-    *ret = prop;
     return S_OK;
 }
 
@@ -743,109 +729,6 @@ static HRESULT get_builtin_func(dispex_data_t *data, DISPID id, func_info_t **re
     return DISP_E_UNKNOWNNAME;
 }
 
-static HRESULT get_builtin_id(DispatchEx *This, BSTR name, DWORD grfdex, DISPID *ret)
-{
-    dispex_data_t *data;
-    int min, max, n, c;
-
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
-    min = 0;
-    max = data->func_cnt-1;
-
-    while(min <= max) {
-        n = (min+max)/2;
-
-        c = strcmpiW(data->name_table[n]->name, name);
-        if(!c) {
-            if((grfdex & fdexNameCaseSensitive) && strcmpW(data->name_table[n]->name, name))
-                break;
-
-            *ret = data->name_table[n]->id;
-            return S_OK;
-        }
-
-        if(c > 0)
-            max = n-1;
-        else
-            min = n+1;
-    }
-
-    if(This->data->vtbl && This->data->vtbl->get_dispid) {
-        HRESULT hres;
-
-        hres = This->data->vtbl->get_dispid(This->outer, name, grfdex, ret);
-        if(hres != DISP_E_UNKNOWNNAME)
-            return hres;
-    }
-
-    return DISP_E_UNKNOWNNAME;
-}
-
-static HRESULT invoke_builtin_prop(DispatchEx *This, DISPID id, LCID lcid, WORD flags, DISPPARAMS *dp,
-        VARIANT *res, EXCEPINFO *ei, IServiceProvider *caller)
-{
-    dispex_data_t *data;
-    func_info_t *func;
-    HRESULT hres;
-
-    data = get_dispex_data(This);
-    if(!data)
-        return E_FAIL;
-
-    hres = get_builtin_func(data, id, &func);
-    if(id == DISPID_VALUE && hres == DISP_E_UNKNOWNNAME)
-        return dispex_value(This, lcid, flags, dp, res, ei, caller);
-    if(FAILED(hres))
-        return hres;
-
-    if(func->func_disp_idx == -1)
-        hres = typeinfo_invoke(This, func, flags, dp, res, ei);
-    else
-        hres = function_invoke(This, func, flags, dp, res, ei);
-
-    return hres;
-}
-
-HRESULT remove_prop(DispatchEx *This, BSTR name, VARIANT_BOOL *success)
-{
-    dynamic_prop_t *prop;
-    DISPID id;
-    HRESULT hres;
-
-    hres = get_builtin_id(This, name, 0, &id);
-    if(hres == S_OK) {
-        DISPID named_id = DISPID_PROPERTYPUT;
-        VARIANT var;
-        DISPPARAMS dp = {&var,&named_id,1,1};
-        EXCEPINFO ei;
-
-        V_VT(&var) = VT_EMPTY;
-        memset(&ei, 0, sizeof(ei));
-        hres = invoke_builtin_prop(This, id, 0, DISPATCH_PROPERTYPUT, &dp, NULL, &ei, NULL);
-        if(FAILED(hres))
-            return hres;
-
-        *success = VARIANT_TRUE;
-        return S_OK;
-    }
-
-    hres = get_dynamic_prop(This, name, 0, &prop);
-    if(FAILED(hres)) {
-        if(hres != DISP_E_UNKNOWNNAME)
-            return hres;
-        *success = VARIANT_FALSE;
-        return S_OK;
-    }
-
-    VariantClear(&prop->var);
-    prop->flags |= DYNPROP_DELETED;
-    *success = VARIANT_TRUE;
-    return S_OK;
-}
-
 #define DISPATCHEX_THIS(iface) DEFINE_THIS(DispatchEx, IDispatchEx, iface)
 
 static HRESULT WINAPI DispatchEx_QueryInterface(IDispatchEx *iface, REFIID riid, void **ppv)
@@ -932,6 +815,8 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
 {
     DispatchEx *This = DISPATCHEX_THIS(iface);
     dynamic_prop_t *dprop;
+    dispex_data_t *data;
+    int min, max, n, c;
     HRESULT hres;
 
     TRACE("(%p)->(%s %x %p)\n", This, debugstr_w(bstrName), grfdex, pid);
@@ -939,9 +824,38 @@ static HRESULT WINAPI DispatchEx_GetDispID(IDispatchEx *iface, BSTR bstrName, DW
     if(grfdex & ~(fdexNameCaseSensitive|fdexNameCaseInsensitive|fdexNameEnsure|fdexNameImplicit|FDEX_VERSION_MASK))
         FIXME("Unsupported grfdex %x\n", grfdex);
 
-    hres = get_builtin_id(This, bstrName, grfdex, pid);
-    if(hres != DISP_E_UNKNOWNNAME)
-        return hres;
+    data = get_dispex_data(This);
+    if(!data)
+        return E_FAIL;
+
+    min = 0;
+    max = data->func_cnt-1;
+
+    while(min <= max) {
+        n = (min+max)/2;
+
+        c = strcmpiW(data->name_table[n]->name, bstrName);
+        if(!c) {
+            if((grfdex & fdexNameCaseSensitive) && strcmpW(data->name_table[n]->name, bstrName))
+                break;
+
+            *pid = data->name_table[n]->id;
+            return S_OK;
+        }
+
+        if(c > 0)
+            max = n-1;
+        else
+            min = n+1;
+    }
+
+    if(This->data->vtbl && This->data->vtbl->get_dispid) {
+        HRESULT hres;
+
+        hres = This->data->vtbl->get_dispid(This->outer, bstrName, grfdex, pid);
+        if(hres != DISP_E_UNKNOWNNAME)
+            return hres;
+    }
 
     hres = get_dynamic_prop(This, bstrName, grfdex, &dprop);
     if(FAILED(hres))
@@ -955,6 +869,8 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
         VARIANT *pvarRes, EXCEPINFO *pei, IServiceProvider *pspCaller)
 {
     DispatchEx *This = DISPATCHEX_THIS(iface);
+    dispex_data_t *data;
+    func_info_t *func;
     HRESULT hres;
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
@@ -977,12 +893,12 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
 
     if(is_dynamic_dispid(id)) {
         DWORD idx = id - DISPID_DYNPROP_0;
-        dynamic_prop_t *prop;
+        VARIANT *var;
 
         if(!This->dynamic_data || This->dynamic_data->prop_cnt <= idx)
             return DISP_E_UNKNOWNNAME;
 
-        prop = This->dynamic_data->props+idx;
+        var = &This->dynamic_data->props[idx].var;
 
         switch(wFlags) {
         case DISPATCH_METHOD|DISPATCH_PROPERTYGET:
@@ -993,8 +909,8 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             DISPPARAMS dp = {NULL, &named_arg, 0, 1};
             IDispatchEx *dispex;
 
-            if(V_VT(&prop->var) != VT_DISPATCH) {
-                FIXME("invoke %s\n", debugstr_variant(&prop->var));
+            if(V_VT(var) != VT_DISPATCH) {
+                FIXME("invoke vt %d\n", V_VT(var));
                 return E_NOTIMPL;
             }
 
@@ -1013,14 +929,14 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             V_VT(dp.rgvarg) = VT_DISPATCH;
             V_DISPATCH(dp.rgvarg) = (IDispatch*)DISPATCHEX(This);
 
-            hres = IDispatch_QueryInterface(V_DISPATCH(&prop->var), &IID_IDispatchEx, (void**)&dispex);
+            hres = IDispatch_QueryInterface(V_DISPATCH(var), &IID_IDispatchEx, (void**)&dispex);
             TRACE("%s call\n", debugstr_w(This->dynamic_data->props[idx].name));
             if(SUCCEEDED(hres)) {
                 hres = IDispatchEx_InvokeEx(dispex, DISPID_VALUE, lcid, wFlags, &dp, pvarRes, pei, pspCaller);
                 IDispatchEx_Release(dispex);
             }else {
                 ULONG err = 0;
-                hres = IDispatch_Invoke(V_DISPATCH(&prop->var), DISPID_VALUE, &IID_NULL, lcid, wFlags, pdp, pvarRes, pei, &err);
+                hres = IDispatch_Invoke(V_DISPATCH(var), DISPID_VALUE, &IID_NULL, lcid, wFlags, pdp, pvarRes, pei, &err);
             }
             TRACE("%s ret %08x\n", debugstr_w(This->dynamic_data->props[idx].name), hres);
 
@@ -1028,9 +944,7 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             return hres;
         }
         case DISPATCH_PROPERTYGET:
-            if(prop->flags & DYNPROP_DELETED)
-                return DISP_E_UNKNOWNNAME;
-            return VariantCopy(pvarRes, &prop->var);
+            return VariantCopy(pvarRes, var);
         case DISPATCH_PROPERTYPUT|DISPATCH_PROPERTYPUTREF:
         case DISPATCH_PROPERTYPUT:
             if(pdp->cArgs != 1 || (pdp->cNamedArgs == 1 && *pdp->rgdispidNamedArgs != DISPID_PROPERTYPUT)
@@ -1040,20 +954,30 @@ static HRESULT WINAPI DispatchEx_InvokeEx(IDispatchEx *iface, DISPID id, LCID lc
             }
 
             TRACE("put %s\n", debugstr_variant(pdp->rgvarg));
-            VariantClear(&prop->var);
-            hres = VariantCopy(&prop->var, pdp->rgvarg);
-            if(FAILED(hres))
-                return hres;
-
-            prop->flags &= ~DYNPROP_DELETED;
-            return S_OK;
+            VariantClear(var);
+            return VariantCopy(var, pdp->rgvarg);
         default:
             FIXME("unhandled wFlags %x\n", wFlags);
             return E_NOTIMPL;
         }
     }
 
-    return invoke_builtin_prop(This, id, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+    data = get_dispex_data(This);
+    if(!data)
+        return E_FAIL;
+
+    hres = get_builtin_func(data, id, &func);
+    if(id == DISPID_VALUE && hres == DISP_E_UNKNOWNNAME)
+        return dispex_value(This, lcid, wFlags, pdp, pvarRes, pei, pspCaller);
+    if(FAILED(hres))
+        return hres;
+
+    if(func->func_disp_idx == -1)
+        hres = typeinfo_invoke(This, func, wFlags, pdp, pvarRes, pei);
+    else
+        hres = function_invoke(This, func, wFlags, pdp, pvarRes, pei);
+
+    return hres;
 }
 
 static HRESULT WINAPI DispatchEx_DeleteMemberByName(IDispatchEx *iface, BSTR bstrName, DWORD grfdex)
@@ -1131,14 +1055,12 @@ static HRESULT WINAPI DispatchEx_GetNextDispID(IDispatchEx *iface, DWORD grfdex,
         if(!This->dynamic_data || This->dynamic_data->prop_cnt <= idx)
             return DISP_E_UNKNOWNNAME;
 
-        while(++idx < This->dynamic_data->prop_cnt && This->dynamic_data->props[idx].flags & DYNPROP_DELETED);
-
-        if(idx == This->dynamic_data->prop_cnt) {
+        if(idx+1 == This->dynamic_data->prop_cnt) {
             *pid = DISPID_STARTENUM;
             return S_FALSE;
         }
 
-        *pid = DISPID_DYNPROP_0+idx;
+        *pid = id+1;
         return S_OK;
     }
 

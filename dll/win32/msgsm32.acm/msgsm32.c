@@ -179,10 +179,10 @@ static DWORD GSM_FormatValidate(const WAVEFORMATEX *wfx)
             WARN("GSM nBlockAlign %u\n", wfx->nBlockAlign);
             return 0;
         }
-        if (((const GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock != 320)
+        if (((GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock != 320)
         {
             WARN("GSM wSamplesPerBlock %u\n",
-                 ((const GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock);
+                 ((GSM610WAVEFORMAT*)wfx)->wSamplesPerBlock);
             return 0;
         }
         if (wfx->nAvgBytesPerSec != wfx->nSamplesPerSec * 65 / 320)

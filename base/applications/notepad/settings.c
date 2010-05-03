@@ -147,15 +147,15 @@ void LoadSettings(void)
 		if (dwPointSize != 0)
 			Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
 
-		RegCloseKey(hKey);
-	}
+		hFont = CreateFontIndirect(&Globals.lfFont);
+		if (hFont)
+		{
+			if (Globals.hFont)
+				DeleteObject(Globals.hFont);
+			Globals.hFont = hFont;
+		}
 
-	hFont = CreateFontIndirect(&Globals.lfFont);
-	if (hFont)
-	{
-		if (Globals.hFont)
-			DeleteObject(Globals.hFont);
-		Globals.hFont = hFont;
+		RegCloseKey(hKey);
 	}
 }
 

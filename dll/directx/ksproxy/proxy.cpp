@@ -1954,6 +1954,7 @@ CKsProxy::IsDirty()
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::IsDirty Notimplemented\n");
+    DebugBreak();
 #endif
     return E_NOTIMPL;
 }
@@ -2034,6 +2035,7 @@ CKsProxy::Load(
 
     }while(Length > 0);
 
+    DebugBreak();
     return S_OK;
 }
 
@@ -2057,6 +2059,7 @@ CKsProxy::GetSizeMax(
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CKsProxy::GetSizeMax Notimplemented\n");
+    DebugBreak();
 #endif
 
     return E_NOTIMPL;
@@ -2477,50 +2480,23 @@ CKsProxy::CreatePins()
         // query current instance count
         hr = GetPinInstanceCount(Index, &Instances);
         if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinInstanceCount failed with %lx\n", hr);
-            OutputDebugStringW(Buffer);
-#endif
             continue;
-        }
-
 
         // query pin communication;
         hr = GetPinCommunication(Index, &Communication);
         if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinCommunication failed with %lx\n", hr);
-            OutputDebugStringW(Buffer);
-#endif
             continue;
-        }
 
         if (Instances.CurrentCount == Instances.PossibleCount)
         {
             // already maximum reached for this pin
-#ifdef KSPROXY_TRACE
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins Instances.CurrentCount == Instances.PossibleCount\n");
-            OutputDebugStringW(Buffer);
-#endif
             continue;
         }
 
         // get direction of pin
         hr = GetPinDataflow(Index, &DataFlow);
         if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinDataflow failed with %lx\n", hr);
-            OutputDebugStringW(Buffer);
-#endif
             continue;
-        }
 
         if (DataFlow == KSPIN_DATAFLOW_IN)
             hr = GetPinName(Index, DataFlow, InputPin, &PinName);
@@ -2528,14 +2504,7 @@ CKsProxy::CreatePins()
             hr = GetPinName(Index, DataFlow, OutputPin, &PinName);
 
         if (FAILED(hr))
-        {
-#ifdef KSPROXY_TRACE
-            WCHAR Buffer[100];
-            swprintf(Buffer, L"CKsProxy::CreatePins GetPinName failed with %lx\n", hr);
-            OutputDebugStringW(Buffer);
-#endif
             continue;
-        }
 
         // construct the pins
         if (DataFlow == KSPIN_DATAFLOW_IN)
@@ -2543,11 +2512,6 @@ CKsProxy::CreatePins()
             hr = CInputPin_Constructor((IBaseFilter*)this, PinName, m_hDevice, Index, Communication, IID_IPin, (void**)&pPin);
             if (FAILED(hr))
             {
-#ifdef KSPROXY_TRACE
-                WCHAR Buffer[100];
-                swprintf(Buffer, L"CKsProxy::CreatePins CInputPin_Constructor failed with %lx\n", hr);
-                OutputDebugStringW(Buffer);
-#endif
                 CoTaskMemFree(PinName);
                 continue;
             }
@@ -2558,11 +2522,6 @@ CKsProxy::CreatePins()
             hr = COutputPin_Constructor((IBaseFilter*)this, PinName, Index, Communication, IID_IPin, (void**)&pPin);
             if (FAILED(hr))
             {
-#ifdef KSPROXY_TRACE
-                WCHAR Buffer[100];
-                swprintf(Buffer, L"CKsProxy::CreatePins COutputPin_Constructor failed with %lx\n", hr);
-                OutputDebugStringW(Buffer);
-#endif
                 CoTaskMemFree(PinName);
                 continue;
             }
@@ -2668,12 +2627,9 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
     hr = LoadProxyPlugins(pGuid, NumGuids);
     if (FAILED(hr))
     {
-#if 0 //HACK
         CloseHandle(m_hDevice);
         m_hDevice = NULL;
         return hr;
-#endif
-        OutputDebugStringW(L"CKsProxy::LoadProxyPlugins failed!\n");
     }
 
     // free sets
@@ -2681,14 +2637,6 @@ CKsProxy::Load(IPropertyBag *pPropBag, IErrorLog *pErrorLog)
 
     // now create the input / output pins
     hr = CreatePins();
-
-#ifdef KSPROXY_TRACE
-    swprintf(Buffer, L"CKsProxy::Load CreatePins %lx\n", hr);
-    OutputDebugStringW(Buffer);
-#endif
-
-    //HACK
-    hr = S_OK;
 
     return hr;
 }
@@ -3038,6 +2986,10 @@ STDMETHODCALLTYPE
 CKsProxy::EnumPins(
     IEnumPins **ppEnum)
 {
+#ifdef KSPROXY_TRACE
+    OutputDebugStringW(L"CKsProxy::EnumPins\n");
+#endif
+
     return CEnumPins_fnConstructor(m_Pins, IID_IEnumPins, (void**)ppEnum);
 }
 

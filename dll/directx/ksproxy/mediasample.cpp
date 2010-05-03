@@ -21,6 +21,7 @@ public:
     STDMETHODIMP_(ULONG) Release()
     {
         InterlockedDecrement(&m_Ref);
+        DebugBreak();
         if (!m_Ref)
         {
             if (m_Allocator)
@@ -279,6 +280,7 @@ STDMETHODCALLTYPE
 CMediaSample::SetMediaType(AM_MEDIA_TYPE *pMediaType)
 {
     OutputDebugStringW(L"CMediaSample::SetMediaType NotImplemented\n");
+    DebugBreak();
     return E_NOTIMPL;
 }
 

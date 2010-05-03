@@ -700,6 +700,7 @@ CInputPin::Receive(IMediaSample *pSample)
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Receive NotImplemented\n");
+    DebugBreak();
 #endif
 
     return E_NOTIMPL;
@@ -711,6 +712,7 @@ CInputPin::ReceiveMultiple(IMediaSample **pSamples, long nSamples, long *nSample
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ReceiveMultiple NotImplemented\n");
+    DebugBreak();
 #endif
 
     return E_NOTIMPL;
@@ -722,6 +724,7 @@ CInputPin::ReceiveCanBlock( void)
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ReceiveCanBlock NotImplemented\n");
+    DebugBreak();
 #endif
 
     return S_FALSE;
@@ -920,6 +923,7 @@ CInputPin::KsQualityNotify(
     OutputDebugStringW(L"CInputPin::KsQualityNotify NotImplemented\n");
 #endif
 
+    DebugBreak();
     return E_NOTIMPL;
 }
 
@@ -1110,6 +1114,7 @@ CInputPin::Connect(IPin *pReceivePin, const AM_MEDIA_TYPE *pmt)
 {
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::Connect NotImplemented\n");
+    DebugBreak();
 #endif
     return NOERROR;
 }
@@ -1194,6 +1199,7 @@ CInputPin::ConnectionMediaType(AM_MEDIA_TYPE *pmt)
 
 #ifdef KSPROXY_TRACE
     OutputDebugStringW(L"CInputPin::ConnectionMediaType NotImplemented\n");
+    DebugBreak();
 #endif
 
     return E_NOTIMPL;
@@ -1490,6 +1496,7 @@ CInputPin::CreatePin(
         WCHAR Buffer[100];
         swprintf(Buffer, L"CInputPin::CreatePin unexpected communication %u %s\n", m_Communication, m_PinName);
         OutputDebugStringW(Buffer);
+        DebugBreak();
 #endif
         hr = E_FAIL;
     }
@@ -1622,6 +1629,7 @@ CInputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle GetSupportedSets failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -1632,6 +1640,7 @@ CInputPin::CreatePinHandle(
         {
 #ifdef KSPROXY_TRACE
             OutputDebugStringW(L"CInputPin::CreatePinHandle LoadProxyPlugins failed\n");
+            DebugBreak();
 #endif
             return hr;
         }
@@ -1774,6 +1783,7 @@ CInputPin::LoadProxyPlugins(
         {
             // store plugin
             m_Plugins.push_back(pUnknown);
+DebugBreak();
         }
         // close key
         RegCloseKey(hSubKey);

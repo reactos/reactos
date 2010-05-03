@@ -414,6 +414,15 @@ CmpDoCreate(IN PHHIVE Hive,
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
 
+    /* Sanity check */
+#if 0
+    ASSERT((CmpIsKcbLockedExclusive(ParentKcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+#endif
+
+    /* Acquire the flusher lock */
+    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
+
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
     {
@@ -546,6 +555,7 @@ CmpDoCreate(IN PHHIVE Hive,
 
 Exit:
     /* Release the flusher lock and return status */
+    ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
 }
 
@@ -737,6 +747,9 @@ CmpCreateLinkNode(IN PHHIVE Hive,
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
     PCM_KEY_CONTROL_BLOCK Kcb = ParentKcb;
+#if 0
+    CMP_ASSERT_REGISTRY_LOCK();
+#endif
 
     /* Link nodes only allowed on the master */
     if (Hive != &CmiVolatileHive->Hive)
@@ -746,6 +759,10 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         return STATUS_ACCESS_DENIED;
     }
     
+    /* Acquire the flusher locks */
+    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
+    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
+
     /* Check if the parent is being deleted */
     if (ParentKcb->Delete)
     {
@@ -947,6 +964,8 @@ CmpCreateLinkNode(IN PHHIVE Hive,
     
 Exit:
     /* Release the flusher locks and return status */
+    ExReleasePushLock((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
+    ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
 }
 

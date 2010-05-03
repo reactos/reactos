@@ -283,9 +283,30 @@ static WCHAR *get_lcid_subkey( LCID lcid, SYSKIND syskind, WCHAR *buffer )
 static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath, ITypeLib2 **ppTypeLib);
 
 
-/* Get the path to a registered type library. Helper for QueryPathOfRegTypeLib. */
-static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
-                                   SYSKIND syskind, LCID lcid, LPBSTR path )
+/****************************************************************************
+ *		QueryPathOfRegTypeLib	[OLEAUT32.164]
+ *
+ * Gets the path to a registered type library.
+ *
+ * PARAMS
+ *  guid [I] referenced guid
+ *  wMaj [I] major version
+ *  wMin [I] minor version
+ *  lcid [I] locale id
+ *  path [O] path of typelib
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: If the type library is not registered then TYPE_E_LIBNOTREGISTERED
+ *  or TYPE_E_REGISTRYACCESS if the type library registration key couldn't be
+ *  opened.
+ */
+HRESULT WINAPI QueryPathOfRegTypeLib(
+	REFGUID guid,
+	WORD wMaj,
+	WORD wMin,
+	LCID lcid,
+	LPBSTR path )
 {
     HRESULT hr = TYPE_E_LIBNOTREGISTERED;
     LCID myLCID = lcid;
@@ -315,7 +336,7 @@ static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
     {
         LONG dwPathLen = sizeof(Path);
 
-        get_lcid_subkey( myLCID, syskind, buffer );
+        get_lcid_subkey( myLCID, SYS_WIN32, buffer );
 
         if (RegQueryValueW(hkey, buffer, Path, &dwPathLen))
         {
@@ -345,29 +366,6 @@ static HRESULT query_typelib_path( REFGUID guid, WORD wMaj, WORD wMin,
     RegCloseKey( hkey );
     TRACE_(typelib)("-- 0x%08x\n", hr);
     return hr;
-}
-
-/****************************************************************************
- *		QueryPathOfRegTypeLib	[OLEAUT32.164]
- *
- * Gets the path to a registered type library.
- *
- * PARAMS
- *  guid [I] referenced guid
- *  wMaj [I] major version
- *  wMin [I] minor version
- *  lcid [I] locale id
- *  path [O] path of typelib
- *
- * RETURNS
- *  Success: S_OK.
- *  Failure: If the type library is not registered then TYPE_E_LIBNOTREGISTERED
- *  or TYPE_E_REGISTRYACCESS if the type library registration key couldn't be
- *  opened.
- */
-HRESULT WINAPI QueryPathOfRegTypeLib( REFGUID guid, WORD wMaj, WORD wMin, LCID lcid, LPBSTR path )
-{
-    return query_typelib_path( guid, wMaj, wMin, SYS_WIN32, lcid, path );
 }
 
 /******************************************************************************
@@ -693,10 +691,7 @@ HRESULT WINAPI RegisterTypeLib(
 			MESSAGE("\n");
 		    }
 
-                    /* Register all dispinterfaces (which includes dual interfaces) and
-                       oleautomation interfaces */
-		    if ((kind == TKIND_INTERFACE && (tattr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
-                        kind == TKIND_DISPATCH)
+		    if (tattr->wTypeFlags & (TYPEFLAG_FOLEAUTOMATION|TYPEFLAG_FDUAL|TYPEFLAG_FDISPATCHABLE))
 		    {
 			/* register interface<->typelib coupling */
 			get_interface_key( &tattr->guid, keyName );
@@ -801,7 +796,7 @@ HRESULT WINAPI UnRegisterTypeLib(
     }
 
     /* get the path to the typelib on disk */
-    if (query_typelib_path(libid, wVerMajor, wVerMinor, syskind, lcid, &tlibPath) != S_OK) {
+    if (QueryPathOfRegTypeLib(libid, wVerMajor, wVerMinor, lcid, &tlibPath) != S_OK) {
         result = E_INVALIDARG;
         goto end;
     }
@@ -837,23 +832,19 @@ HRESULT WINAPI UnRegisterTypeLib(
             goto enddeleteloop;
         }
 
-        if ((kind == TKIND_INTERFACE && (typeAttr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
-            kind == TKIND_DISPATCH)
-        {
-            /* the path to the type */
-            get_interface_key( &typeAttr->guid, subKeyName );
+        /* the path to the type */
+        get_interface_key( &typeAttr->guid, subKeyName );
 
-            /* Delete its bits */
-            if (RegOpenKeyExW(HKEY_CLASSES_ROOT, subKeyName, 0, KEY_WRITE, &subKey) != ERROR_SUCCESS)
-                goto enddeleteloop;
-
-            RegDeleteKeyW(subKey, ProxyStubClsidW);
-            RegDeleteKeyW(subKey, ProxyStubClsid32W);
-            RegDeleteKeyW(subKey, TypeLibW);
-            RegCloseKey(subKey);
-            subKey = NULL;
-            RegDeleteKeyW(HKEY_CLASSES_ROOT, subKeyName);
+        /* Delete its bits */
+        if (RegOpenKeyExW(HKEY_CLASSES_ROOT, subKeyName, 0, KEY_WRITE, &subKey) != ERROR_SUCCESS) {
+            goto enddeleteloop;
         }
+        RegDeleteKeyW(subKey, ProxyStubClsidW);
+        RegDeleteKeyW(subKey, ProxyStubClsid32W);
+        RegDeleteKeyW(subKey, TypeLibW);
+        RegCloseKey(subKey);
+        subKey = NULL;
+        RegDeleteKeyW(HKEY_CLASSES_ROOT, subKeyName);
 
 enddeleteloop:
         if (typeAttr) ITypeInfo_ReleaseTypeAttr(typeInfo, typeAttr);
@@ -1910,7 +1901,7 @@ MSFT_DoFuncs(TLBContext*     pcx,
                     {
                        if (!IS_INTRESOURCE(pFuncRec->OptAttr[2]))
                            ERR("ordinal 0x%08x invalid, IS_INTRESOURCE is false\n", pFuncRec->OptAttr[2]);
-                       (*pptfd)->Entry = (BSTR)(DWORD_PTR)LOWORD(pFuncRec->OptAttr[2]);
+                       (*pptfd)->Entry = (BSTR)pFuncRec->OptAttr[2];
                     }
                     else
                     {
@@ -2936,7 +2927,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
 	    else if(td[0] == VT_CARRAY)
             {
 	        /* array descr table here */
-	        pTypeLibImpl->pTypeDesc[i].u.lpadesc = (void *)(INT_PTR)td[2];  /* temp store offset in*/
+	        pTypeLibImpl->pTypeDesc[i].u.lpadesc = (void *)((int) td[2]);  /* temp store offset in*/
             }
             else if(td[0] == VT_USERDEFINED)
 	    {
@@ -2951,7 +2942,7 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
             if(pTypeLibImpl->pTypeDesc[i].vt != VT_CARRAY) continue;
             if(tlbSegDir.pArrayDescriptions.offset>0)
 	    {
-                MSFT_ReadLEWords(td, sizeof(td), &cx, tlbSegDir.pArrayDescriptions.offset + (INT_PTR)pTypeLibImpl->pTypeDesc[i].u.lpadesc);
+                MSFT_ReadLEWords(td, sizeof(td), &cx, tlbSegDir.pArrayDescriptions.offset + (int) pTypeLibImpl->pTypeDesc[i].u.lpadesc);
                 pTypeLibImpl->pTypeDesc[i].u.lpadesc = TLB_Alloc(sizeof(ARRAYDESC)+sizeof(SAFEARRAYBOUND)*(td[3]-1));
 
                 if(td[1]<0)
@@ -4788,7 +4779,13 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                 &subtypeinfo, &subdesckind, &subbindptr);
             if (SUCCEEDED(hr) && (subdesckind != DESCKIND_NONE))
             {
-                TYPEDESC tdesc_appobject;
+                TYPEDESC tdesc_appobject =
+                {
+                    {
+                        (TYPEDESC *)pTypeInfo->hreftype
+                    },
+                    VT_USERDEFINED
+                };
                 const VARDESC vardesc_appobject =
                 {
                     -2,         /* memid */
@@ -4809,9 +4806,6 @@ static HRESULT WINAPI ITypeLibComp_fnBind(
                     0,          /* wVarFlags */
                     VAR_STATIC  /* varkind */
                 };
-
-                tdesc_appobject.u.hreftype = pTypeInfo->hreftype;
-                tdesc_appobject.vt = VT_USERDEFINED;
 
                 TRACE("found in implicit app object: %s\n", debugstr_w(szName));
 
@@ -5702,8 +5696,7 @@ _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) {
     if (TRACE_ON(ole)) {
 	int i;
 	TRACE("Calling %p(",func);
-	for (i=0;i<min(nrargs,30);i++) TRACE("%08x,",args[i]);
-	if (nrargs > 30) TRACE("...");
+	for (i=0;i<nrargs;i++) TRACE("%08x,",args[i]);
 	TRACE(")\n");
     }
 
@@ -6109,11 +6102,10 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                     continue;
                 }
 
-                src_arg = NULL;
-
                 if (cNamedArgs)
                 {
                     USHORT j;
+                    src_arg = NULL;
                     for (j = 0; j < cNamedArgs; j++)
                         if (rgdispidNamedArgs[j] == i || (i == func_desc->cParams-1 && rgdispidNamedArgs[j] == DISPID_PROPERTYPUT))
                         {
@@ -6121,10 +6113,9 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
                             break;
                         }
                 }
-
-                if (!src_arg && vargs_converted + cNamedArgs < pDispParams->cArgs)
+                else
                 {
-                    src_arg = &pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted];
+                    src_arg = vargs_converted < pDispParams->cArgs ? &pDispParams->rgvarg[pDispParams->cArgs - 1 - vargs_converted] : NULL;
                     vargs_converted++;
                 }
 
@@ -6605,7 +6596,7 @@ static HRESULT WINAPI ITypeInfo_fnGetDllEntry( ITypeInfo2 *iface, MEMBERID memid
 	    if (pBstrName)
 		*pBstrName = NULL;
 	    if (pwOrdinal)
-		*pwOrdinal = LOWORD(pFDesc->Entry);
+		*pwOrdinal = (DWORD)pFDesc->Entry;
 	    return S_OK;
         }
     return TYPE_E_ELEMENTNOTFOUND;

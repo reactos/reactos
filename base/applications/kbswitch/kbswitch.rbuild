@@ -1,5 +1,4 @@
 <?xml version="1.0"?>
-<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="kbswitch" type="win32gui" installbase="system32" installname="kbswitch.exe" unicode="yes">
 	<include base="kbswitch">.</include>

@@ -360,17 +360,6 @@ MMixerInitializeWaveInfo(
     WaveInfo->DeviceId = MixerData->DeviceId;
     WaveInfo->PinId = PinId;
 
-
-    /* copy device name */
-    if (bWaveIn)
-    {
-        wcscpy(WaveInfo->u.InCaps.szPname, DeviceName);
-    }
-    else
-    {
-        wcscpy(WaveInfo->u.OutCaps.szPname, DeviceName);
-    }
-
     /* FIXME determine manufacturer / product id */
     if (bWaveIn)
     {
@@ -419,8 +408,6 @@ MMixerInitializeWaveInfo(
 
     /* free dataranges buffer */
     MixerContext->Free(MultipleItem);
-
-
 
 
     if (bWaveIn)

@@ -1,4 +1,5 @@
-/*
+/* $Id$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/appearance.c
@@ -485,17 +486,11 @@ AppearancePage_OnDestroy(HWND hwndDlg, GLOBALS *g)
 	return TRUE;
 }
 
-static void
-UpdateSelectedThemeId(HWND hwndDlg, GLOBALS *g)
-{
-	int sel;
-	sel = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
-	g->Theme.Id = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)sel, 0);
-}
 
 INT_PTR CALLBACK
 AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	INT i;
 	GLOBALS *g;
 	LPNMHDR lpnm;
 
@@ -543,7 +538,8 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					{
 						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 						g->Theme.bHasChanged = TRUE;
-						UpdateSelectedThemeId(hwndDlg, g);
+						i = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETCURSEL, 0, 0);
+						g->Theme.Id = SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_GETITEMDATA, (WPARAM)i, 0);
 						LoadThemeFromReg(g);
 						//SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, WM_PAINT, 0, 0);
 					}
@@ -561,7 +557,6 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				case PSN_APPLY:
 					if (g->Theme.bHasChanged)
 					{
-						UpdateSelectedThemeId(hwndDlg, g);
 						ApplyTheme(g);
 					}
 					return TRUE;

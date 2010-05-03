@@ -71,6 +71,7 @@ CEnumPins::QueryInterface(
     OutputDebugStringW(Buffer);
     CoTaskMemFree(lpstr);
 
+DebugBreak();
     return E_NOINTERFACE;
 }
 

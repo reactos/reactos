@@ -24,14 +24,14 @@
 #include <arch.h>
 
 
-EXTERN(ChainLoadBiosBootSectorCode)
+EXTERN(_ChainLoadBiosBootSectorCode)
 	.code64
 
 	call x86_64_SwitchToReal
 	.code16
 
 	/* Set the boot drive */
-	mov dl, BootDrive
+	mov dl, _BootDrive
 
 	/* Load segment registers */
 	cli
@@ -46,7 +46,7 @@ EXTERN(ChainLoadBiosBootSectorCode)
 //	ljmpl	$0x0000,$0x7C00
 	jmp 0x7c00:0x0000
 
-EXTERN(SoftReboot)
+EXTERN(_SoftReboot)
 	.code64
 
 	call	x86_64_SwitchToReal

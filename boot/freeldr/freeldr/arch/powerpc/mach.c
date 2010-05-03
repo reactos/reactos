@@ -440,6 +440,7 @@ void PpcDefaultMachVtbl()
 
     MachVtbl.GetMemoryMap = PpcGetMemoryMap;
 
+    MachVtbl.DiskNormalizeSystemPath = DiskNormalizeSystemPath;
     MachVtbl.DiskGetBootPath = PpcDiskGetBootPath;
     MachVtbl.DiskReadLogicalSectors = PpcDiskReadLogicalSectors;
     MachVtbl.DiskGetDriveGeometry = PpcDiskGetDriveGeometry;

@@ -630,9 +630,8 @@ int main(int argc, char* argv[])
         while ((NeverStop) || (Count < PingCount))
         {
             Ping();
+            Sleep(Timeout);
             Count++;
-            if((NeverStop) || (Count < PingCount))
-                Sleep(Timeout);
         };
 
         Cleanup();

@@ -48,7 +48,7 @@ static LPIDefaultContextMenuImpl __inline impl_from_IContextMenu( IContextMenu2 
 }
 
 VOID INewItem_SetCurrentShellFolder(IShellFolder * psfParent); // HACK
-WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
+
 
 static
 HRESULT
@@ -1297,11 +1297,11 @@ DoDelete(
     HRESULT hr;
     STRRET strTemp;
     WCHAR szPath[MAX_PATH];
-    LPWSTR wszPath, wszPos;
     SHFILEOPSTRUCTW op;
     int ret;
     LPSHELLBROWSER lpSB;
     HWND hwnd;
+
 
     hr = IShellFolder2_GetDisplayNameOf(This->dcm.psf, This->dcm.apidl[0], SHGDN_FORPARSING, &strTemp);
     if(hr != S_OK)
@@ -1316,26 +1316,20 @@ DoDelete(
         ERR("StrRetToBufW failed with %x\n", hr);
         return hr;
     }
-
-    /* Only keep the base path */
-    wszPos = strrchrW(szPath, '\\');
-    if (wszPos != NULL)
-    {
-        *(wszPos + 1) = '\0';
-    }
-
-    wszPath = build_paths_list(szPath, This->dcm.cidl, This->dcm.apidl);
+    /* FIXME
+     * implement deletion with multiple files
+     */
 
     ZeroMemory(&op, sizeof(op));
     op.hwnd = GetActiveWindow();
     op.wFunc = FO_DELETE;
-    op.pFrom = wszPath;
+    op.pFrom = szPath;
     op.fFlags = FOF_ALLOWUNDO;
     ret = SHFileOperationW(&op);
 
     if (ret)
     {
-        ERR("SHFileOperation failed with 0x%x for %s\n", GetLastError(), debugstr_w(wszPath));
+        TRACE("SHFileOperation failed with %0x%x", GetLastError());
         return S_OK;
     }
 
@@ -1354,7 +1348,6 @@ DoDelete(
     }
     NotifyShellViewWindow(lpcmi, TRUE);
 
-    HeapFree(GetProcessHeap(), 0, wszPath);
     return S_OK;
 
 }

@@ -420,8 +420,7 @@ static DWORD MCICDA_Open(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpOpenPar
     if (dwFlags & MCI_OPEN_ELEMENT) {
         if (dwFlags & MCI_OPEN_ELEMENT_ID) {
             WARN("MCI_OPEN_ELEMENT_ID %p! Abort\n", lpOpenParms->lpstrElementName);
-            ret = MCIERR_NO_ELEMENT_ALLOWED;
-            goto the_error;
+            return MCIERR_NO_ELEMENT_ALLOWED;
         }
         TRACE("MCI_OPEN_ELEMENT element name: %s\n", debugstr_w(lpOpenParms->lpstrElementName));
         if (!isalpha(lpOpenParms->lpstrElementName[0]) || lpOpenParms->lpstrElementName[1] != ':' ||
@@ -483,8 +482,6 @@ static DWORD MCICDA_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParm
     TRACE("(%04X, %08X, %p);\n", wDevID, dwParam, lpParms);
 
     if (wmcda == NULL) 	return MCIERR_INVALID_DEVICE_ID;
-
-    MCICDA_Stop(wDevID, MCI_WAIT, NULL);
 
     if (--wmcda->nUseCount == 0) {
 	CloseHandle(wmcda->handle);

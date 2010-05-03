@@ -11,7 +11,7 @@
 // - does setting invalid fonts work?
 // - save appropriate text metrics
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

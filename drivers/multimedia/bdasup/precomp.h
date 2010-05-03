@@ -3,9 +3,6 @@
 #include <ntddk.h>
 #include <windef.h>
 #include <ks.h>
-#define NOBITMAP
-#include <mmreg.h>
-#include <ksmedia.h>
 #include <bdatypes.h>
 #include <bdamedia.h>
 #include <bdasup.h>

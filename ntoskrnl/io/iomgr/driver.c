@@ -34,9 +34,6 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
 
-USHORT IopGroupIndex;
-PLIST_ENTRY IopGroupTable;
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS NTAPI
@@ -200,7 +197,6 @@ IopDisplayLoadingMessage(PUNICODE_STRING ServiceName)
     UNICODE_STRING DotSys = RTL_CONSTANT_STRING(L".SYS");
 
     if (ExpInTextModeSetup) return;
-    if (!KeLoaderBlock) return;
     RtlUpcaseUnicodeString(ServiceName, ServiceName, FALSE);
     snprintf(TextBuffer, sizeof(TextBuffer),
             "%s%sSystem32\\Drivers\\%wZ%s\n",
@@ -438,6 +434,7 @@ IopInitializeDriverModule(
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
    PDRIVER_OBJECT Driver;
+   PDEVICE_OBJECT DeviceObject;
    NTSTATUS Status;
 
    DriverEntry = ModuleObject->EntryPoint;
@@ -494,7 +491,14 @@ IopInitializeDriverModule(
    }
 
    /* Set the driver as initialized */
-   IopReadyDeviceObjects(Driver);
+   Driver->Flags |= DRVO_INITIALIZED;
+   DeviceObject = Driver->DeviceObject;
+   while (DeviceObject)
+   {
+       /* Set every device as initialized too */
+       DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+       DeviceObject = DeviceObject->NextDevice;
+   }
 
    if (PnpSystemInit) IopReinitializeDrivers();
 
@@ -876,17 +880,14 @@ VOID
 FASTCALL
 IopInitializeBootDrivers(VOID)
 {
-    PLIST_ENTRY ListHead, NextEntry, NextEntry2;
+    PLIST_ENTRY ListHead, NextEntry;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     LDR_DATA_TABLE_ENTRY ModuleObject;
     NTSTATUS Status;
     UNICODE_STRING DriverName;
-    ULONG i, Index;
-    PDRIVER_INFORMATION DriverInfo, DriverInfoTag;
-    HANDLE KeyHandle;
-    PBOOT_DRIVER_LIST_ENTRY BootEntry;
+
     DPRINT("IopInitializeBootDrivers()\n");
 
     /* Use IopRootDeviceNode for now */
@@ -930,19 +931,6 @@ IopInitializeBootDrivers(VOID)
         return;
     }
 
-    /* Get highest group order index */
-    IopGroupIndex = PpInitGetGroupOrderIndex(NULL);
-    if (IopGroupIndex == 0xFFFF) ASSERT(FALSE);
-    
-    /* Allocate the group table */
-    IopGroupTable = ExAllocatePoolWithTag(PagedPool,
-                                          IopGroupIndex * sizeof(LIST_ENTRY),
-                                          TAG_IO);
-    if (IopGroupTable == NULL) ASSERT(FALSE);
-    
-    /* Initialize the group table lists */
-    for (i = 0; i < IopGroupIndex; i++) InitializeListHead(&IopGroupTable[i]);
-    
     /* Loop the boot modules */
     ListHead = &KeLoaderBlock->LoadOrderListHead;
     NextEntry = ListHead->Flink;
@@ -952,83 +940,19 @@ IopInitializeBootDrivers(VOID)
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
-                                     
-        /* Check if the DLL needs to be initialized */
-        if (LdrEntry->Flags & LDRP_DRIVER_DEPENDENT_DLL)
+
+        /*
+         * HACK: Make sure we're loading a driver
+         * (we should be using BootDriverListHead!)
+         */
+        if (wcsstr(_wcsupr(LdrEntry->BaseDllName.Buffer), L".SYS"))
         {
-            /* Call its entrypoint */
-            MmCallDllInitialize(LdrEntry, NULL);
-        }
-        
-        /* Go to the next driver */
-        NextEntry = NextEntry->Flink;
-    }
-    
-    /* Loop the boot drivers */
-    ListHead = &KeLoaderBlock->BootDriverListHead;
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
-    {
-        /* Get the entry */
-        BootEntry = CONTAINING_RECORD(NextEntry,
-                                      BOOT_DRIVER_LIST_ENTRY,
-                                      Link);
-        
-        /* Get the driver loader entry */
-        LdrEntry = BootEntry->LdrEntry;
-        
-        /* Allocate our internal accounting structure */
-        DriverInfo = ExAllocatePoolWithTag(PagedPool,
-                                           sizeof(DRIVER_INFORMATION),
-                                           TAG_IO);
-        if (DriverInfo)
-        {
-            /* Zero it and initialize it */
-            RtlZeroMemory(DriverInfo, sizeof(DRIVER_INFORMATION));
-            InitializeListHead(&DriverInfo->Link);
-            DriverInfo->DataTableEntry = BootEntry;
-            
-            /* Open the registry key */
-            Status = IopOpenRegistryKeyEx(&KeyHandle,
-                                          NULL,
-                                          &BootEntry->RegistryPath,
-                                          KEY_READ);
-            if ((NT_SUCCESS(Status)) || /* ReactOS HACK for SETUPLDR */
-                ((KeLoaderBlock->SetupLdrBlock) && (KeyHandle = (PVOID)1)))
+            /* Make sure we didn't load this driver already */
+            if (!(LdrEntry->Flags & LDRP_ENTRY_INSERTED))
             {
-                /* Save the handle */
-                DriverInfo->ServiceHandle = KeyHandle;
-                
-                /* Get the group oder index */
-                Index = PpInitGetGroupOrderIndex(KeyHandle);
-                
-                /* Get the tag position */
-                DriverInfo->TagPosition = PipGetDriverTagPriority(KeyHandle);
-                
-                /* Insert it into the list, at the right place */
-                ASSERT(Index < IopGroupIndex);
-                NextEntry2 = IopGroupTable[Index].Flink;
-                while (NextEntry2 != &IopGroupTable[Index])
-                {
-                    /* Get the driver info */
-                    DriverInfoTag = CONTAINING_RECORD(NextEntry2,
-                                                      DRIVER_INFORMATION,
-                                                      Link);
-                    
-                    /* Check if we found the right tag position */
-                    if (DriverInfoTag->TagPosition > DriverInfo->TagPosition)
-                    {
-                        /* We're done */
-                        break;
-                    }
-                    
-                    /* Next entry */
-                    NextEntry2 = NextEntry2->Flink;
-                }
-                
-                /* Insert us right before the next entry */
-                NextEntry2 = NextEntry2->Blink;
-                InsertHeadList(NextEntry2, &DriverInfo->Link);
+                DPRINT("Initializing bootdriver %wZ\n", &LdrEntry->BaseDllName);
+                /* Initialize it */
+                IopInitializeBuiltinDriver(LdrEntry);
             }
         }
 
@@ -1036,63 +960,8 @@ IopInitializeBootDrivers(VOID)
         NextEntry = NextEntry->Flink;
     }
 
-    /* Loop each group index */
-    for (i = 0; i < IopGroupIndex; i++)
-    {
-        /* Loop each group table */
-        NextEntry = IopGroupTable[i].Flink;
-        while (NextEntry != &IopGroupTable[i])
-        {
-            /* Get the entry */
-            DriverInfo = CONTAINING_RECORD(NextEntry,
-                                           DRIVER_INFORMATION,
-                                           Link);
-            
-            /* Get the driver loader entry */
-            LdrEntry = DriverInfo->DataTableEntry->LdrEntry;
-            
-            /* Initialize it */
-            IopInitializeBuiltinDriver(LdrEntry);
-            
-            /* Next entry */
-            NextEntry = NextEntry->Flink;
-        }
-    }
-    
     /* In old ROS, the loader list became empty after this point. Simulate. */
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
-}
-
-VOID
-FASTCALL
-IopInitializeSystemDrivers(VOID)
-{
-    PUNICODE_STRING *DriverList, *SavedList;
-    
-    /* No system drivers on the boot cd */
-    if (KeLoaderBlock->SetupLdrBlock) return;
-    
-    /* Get the driver list */
-    SavedList = DriverList = CmGetSystemDriverList();
-    ASSERT(DriverList);
-    
-    /* Loop it */
-    while (*DriverList)
-    {
-        /* Load the driver */
-        ZwLoadDriver(*DriverList);
-        
-        /* Free the entry */
-        RtlFreeUnicodeString(*DriverList);
-        ExFreePool(*DriverList);
-        
-        /* Next entry */
-        InbvIndicateProgress();
-        DriverList++;
-    }
-
-    /* Free the list */
-    ExFreePool(SavedList);
 }
 
 /*
@@ -1815,8 +1684,6 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
       }
       cur--;
    }
-
-   IopDisplayLoadingMessage(&ServiceName);
 
    /*
     * Get service type.

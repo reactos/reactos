@@ -175,21 +175,16 @@ KsGetObjectTypeFromIrp(
 }
 
 /*
-    @implemented
+    @unimplemented
 */
 PUNKNOWN
 NTAPI
 KsGetOuterUnknown(
     IN PVOID  Object)
 {
-    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+    UNIMPLEMENTED
+    return NULL;
 
-    /* sanity check */
-    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
-           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
-
-    /* return objects outer unknown */
-    return BasicHeader->OuterUnknown;
 }
 
 /*

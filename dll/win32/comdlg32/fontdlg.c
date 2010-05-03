@@ -766,7 +766,7 @@ static LRESULT CFn_WMInitDialog(HWND hDlg, LPARAM lParam, LPCHOOSEFONTW lpcf)
 /***********************************************************************
  *           CFn_WMMeasureItem                           [internal]
  */
-static LRESULT CFn_WMMeasureItem(HWND hDlg, LPARAM lParam)
+static LRESULT CFn_WMMeasureItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
 {
     HDC hdc;
     HFONT hfontprev;
@@ -794,7 +794,7 @@ static LRESULT CFn_WMMeasureItem(HWND hDlg, LPARAM lParam)
 /***********************************************************************
  *           CFn_WMDrawItem                              [internal]
  */
-static LRESULT CFn_WMDrawItem(LPARAM lParam)
+static LRESULT CFn_WMDrawItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
 {
     HBRUSH hBrush;
     WCHAR buffer[40];
@@ -1190,9 +1190,9 @@ static INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, 
     switch (uMsg)
     {
     case WM_MEASUREITEM:
-        return CFn_WMMeasureItem(hDlg,lParam);
+        return CFn_WMMeasureItem(hDlg, wParam, lParam);
     case WM_DRAWITEM:
-        return CFn_WMDrawItem(lParam);
+        return CFn_WMDrawItem(hDlg, wParam, lParam);
     case WM_COMMAND:
         return CFn_WMCommand(hDlg, wParam, lParam, lpcfw);
     case WM_DESTROY:
@@ -1239,9 +1239,9 @@ static INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, 
     switch (uMsg)
     {
     case WM_MEASUREITEM:
-        return CFn_WMMeasureItem(hDlg, lParam);
+        return CFn_WMMeasureItem(hDlg, wParam, lParam);
     case WM_DRAWITEM:
-        return CFn_WMDrawItem(lParam);
+        return CFn_WMDrawItem(hDlg, wParam, lParam);
     case WM_COMMAND:
         return CFn_WMCommand(hDlg, wParam, lParam, lpcf);
     case WM_DESTROY:

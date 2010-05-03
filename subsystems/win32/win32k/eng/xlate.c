@@ -6,7 +6,7 @@
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #include <intrin.h>
 

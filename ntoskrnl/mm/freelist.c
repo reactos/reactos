@@ -36,9 +36,8 @@
 /* The first array contains ReactOS PFNs, the second contains ARM3 PFNs */
 PPHYSICAL_PAGE MmPfnDatabase[2];
 
-PFN_NUMBER MmAvailablePages;
-PFN_NUMBER MmResidentAvailablePages;
-PFN_NUMBER MmResidentAvailableAtInit;
+ULONG MmAvailablePages;
+ULONG MmResidentAvailablePages;
 
 SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommittedPages;

@@ -63,7 +63,7 @@ Int386_regsout:
 /*
  * int Int386(int ivec, REGS* in, REGS* out);
  */
-EXTERN(Int386)
+EXTERN(_Int386)
 	.code64
 
 	/* Get the function parameters */

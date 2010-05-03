@@ -1017,8 +1017,8 @@ ExecuteAppletFromCLSID(LPOLESTR pOleStr)
     dwSize = sizeof(szCmd);
     if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
     {
-        wcscpy(szCmd, L"%SystemRoot%\\Explorer.exe ::");
-        wcscat(szCmd, pOleStr);
+        ERR("RegGetValueW failed with %u\n", GetLastError());
+        return E_FAIL;
     }
 
 #if 0
@@ -1298,8 +1298,8 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
        sei.hwnd = lpcmi->hwnd;
        sei.nShow = SW_SHOWNORMAL;
        sei.lpVerb = L"open";
-
-       if (ShellExecuteExW(&sei) == FALSE)
+       ShellExecuteExW(&sei);
+       if (sei.hInstApp <= (HINSTANCE)32)
           return E_FAIL;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME

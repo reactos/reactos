@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -2333,11 +2333,6 @@ AllocErr:
 
    IntNotifyWinEvent(EVENT_OBJECT_CREATE, Window->Wnd, OBJID_WINDOW, 0);
 
-   /* By setting the flag below it can be examined to determine if the window
-      was created successfully and a valid pwnd was passed back to caller since
-      from here the function has to succeed. */
-   Window->Wnd->state2 |= WNDS2_WMCREATEMSGPROCESSED;
-
    /* Send move and size messages. */
    if (!(Window->state & WINDOWOBJECT_NEED_SIZE))
    {
@@ -2619,7 +2614,6 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    BOOLEAN isChild;
    PWND Wnd;
    HWND hWnd;
-   PTHREADINFO ti;
 
    ASSERT_REFS_CO(Window); // FIXME: temp hack?
 
@@ -2639,8 +2633,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       return FALSE;
    }
 
-   /* If window was created successfully and it is hooked */
-   if ((Wnd->state2 & WNDS2_WMCREATEMSGPROCESSED) && (ISITHOOKED(WH_CBT)))
+   /* Call hooks */
+   if (ISITHOOKED(WH_CBT))
    {
       if (co_HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hWnd, 0)) return FALSE;
    }
@@ -2662,21 +2656,6 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       Window->pti->MessageQueue->FocusWindow = NULL;
    if (Window->pti->MessageQueue->CaptureWindow == Window->hSelf)
       Window->pti->MessageQueue->CaptureWindow = NULL;
-
-   /*
-    * Check if this window is the Shell's Desktop Window. If so set hShellWindow to NULL
-    */
-
-   ti = PsGetCurrentThreadWin32Thread();
-
-   if ((ti != NULL) & (ti->pDeskInfo != NULL))
-   {
-      if (ti->pDeskInfo->hShellWindow == hWnd)
-      {
-         DPRINT1("Destroying the ShellWindow!\n");
-         ti->pDeskInfo->hShellWindow = NULL;
-      }
-   }
 
    IntDereferenceMessageQueue(Window->pti->MessageQueue);
 
@@ -4284,8 +4263,8 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
    }
 
    Ret = (UINT)IntAddAtom(SafeMessageName.Buffer);
-   if (SafeMessageName.Buffer)
-      ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
+
+   ExFreePoolWithTag(SafeMessageName.Buffer, TAG_STRING);
    RETURN( Ret);
 
 CLEANUP:

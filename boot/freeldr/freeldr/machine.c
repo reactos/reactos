@@ -37,6 +37,7 @@
 #undef MachBeep
 #undef MachPrepareForReactOS
 #undef MachDiskGetBootPath
+#undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetDriveGeometry
 #undef MachDiskGetCacheableBlockCount
@@ -149,6 +150,12 @@ BOOLEAN
 MachDiskGetBootPath(char *BootPath, unsigned Size)
 {
   return MachVtbl.DiskGetBootPath(BootPath, Size);
+}
+
+BOOLEAN
+MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size)
+{
+  return MachVtbl.DiskNormalizeSystemPath(SystemPath, Size);
 }
 
 BOOLEAN

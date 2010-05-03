@@ -35,11 +35,4 @@
 
 /* shared header with console.dll */
 #include "console.h"
-
-BOOL
-WINAPI
-Win32CsrHardError(
-    IN PCSRSS_PROCESS_DATA ProcessData,
-    IN PHARDERROR_MSG Message);
-
 /* EOF */

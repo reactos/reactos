@@ -8,7 +8,7 @@
  *       2008/03/20  Split from misc.c
  */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

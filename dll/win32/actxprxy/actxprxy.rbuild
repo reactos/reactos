@@ -31,6 +31,7 @@
 	<file>actxprxy_ocmm.idl</file>
 	<file>actxprxy_servprov.idl</file>
 	<!-- file>actxprxy_shobjidl.idl</file -->
-	<file>actxprxy_urlhist.idl</file>
+	<file>actxprxy_urlhist.idl
+</file>
 </module>
 </group>

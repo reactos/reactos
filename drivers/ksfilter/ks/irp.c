@@ -1360,7 +1360,7 @@ KsRemoveIrpFromCancelableQueue(
     PLIST_ENTRY CurEntry;
     KIRQL OldIrql;
 
-    //DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
+    DPRINT("KsRemoveIrpFromCancelableQueue ListHead %p SpinLock %p ListLocation %x RemovalOperation %x\n", QueueHead, SpinLock, ListLocation, RemovalOperation);
 
     /* check parameters */
     if (!QueueHead || !SpinLock)
@@ -1719,24 +1719,10 @@ FindMatchingCreateItem(
 {
     PLIST_ENTRY Entry;
     PCREATE_ITEM_ENTRY CreateItemEntry;
-    UNICODE_STRING RefString;
 
-
-#ifndef MS_KSUSER
     /* remove '\' slash */
     Buffer++;
     BufferSize -= sizeof(WCHAR);
-#endif
-
-    if (!wcschr(Buffer, L'\\'))
-    {
-        RtlInitUnicodeString(&RefString, Buffer);
-    }
-    else
-    {
-        RefString.Buffer = Buffer;
-        RefString.Length = RefString.MaximumLength = ((ULONG_PTR)wcschr(Buffer, L'\\') - (ULONG_PTR)Buffer);
-    }
 
     /* point to first entry */
     Entry = ListHead->Flink;
@@ -1765,9 +1751,9 @@ FindMatchingCreateItem(
 
         ASSERT(CreateItemEntry->CreateItem->ObjectClass.Buffer);
 
-        DPRINT("CreateItem %S Length %u Request %wZ %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
+        DPRINT("CreateItem %S Length %u Request %S %u\n", CreateItemEntry->CreateItem->ObjectClass.Buffer,
                                                            CreateItemEntry->CreateItem->ObjectClass.Length,
-                                                           &RefString,
+                                                           Buffer,
                                                            BufferSize);
 
         if (CreateItemEntry->CreateItem->ObjectClass.Length > BufferSize)
@@ -1778,7 +1764,7 @@ FindMatchingCreateItem(
         }
 
          /* now check if the object class is the same */
-        if (!RtlCompareUnicodeString(&CreateItemEntry->CreateItem->ObjectClass, &RefString, TRUE))
+        if (RtlCompareMemory(CreateItemEntry->CreateItem->ObjectClass.Buffer, Buffer, CreateItemEntry->CreateItem->ObjectClass.Length) == CreateItemEntry->CreateItem->ObjectClass.Length)
         {
             /* found matching create item */
             *OutCreateItem = CreateItemEntry;
@@ -2006,7 +1992,7 @@ KsDispatchIrp(
     PKSIDEVICE_HEADER DeviceHeader;
     PDEVICE_EXTENSION DeviceExtension;
 
-    //DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
+    DPRINT("KsDispatchIrp DeviceObject %p Irp %p\n", DeviceObject, Irp);
 
     /* get device extension */
     DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -2022,7 +2008,7 @@ KsDispatchIrp(
         if (IoStack->MajorFunction == IRP_MJ_CREATE)
         {
             /* check internal type */
-            if (DeviceHeader->BasicHeader.OuterUnknown) /* FIXME improve check */
+            if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
             {
                 /* AVStream client */
                 return IKsDevice_Create(DeviceObject, Irp);
@@ -2054,7 +2040,7 @@ KsDispatchIrp(
     if (IoStack->MajorFunction == IRP_MJ_POWER)
     {
         /* check internal type */
-        if (DeviceHeader->BasicHeader.OuterUnknown) /* FIXME improve check */
+        if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
         {
             /* AVStream client */
             return IKsDevice_Power(DeviceObject, Irp);
@@ -2068,7 +2054,7 @@ KsDispatchIrp(
     else if (IoStack->MajorFunction == IRP_MJ_PNP) /* dispatch pnp */
     {
         /* check internal type */
-        if (DeviceHeader->BasicHeader.OuterUnknown) /* FIXME improve check */
+        if (DeviceHeader->lpVtblIKsDevice) /* FIXME improve check */
         {
             /* AVStream client */
             return IKsDevice_Pnp(DeviceObject, Irp);

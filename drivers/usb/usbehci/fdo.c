@@ -11,6 +11,26 @@
 #include "usbehci.h"
 #include <stdio.h>
 
+//#include "ntstrsafe.h"
+
+VOID NTAPI
+DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context)
+{
+    PWORKITEM_DATA WorkItemData;
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+
+    WorkItemData = (PWORKITEM_DATA)Context;
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    if (PdoDeviceExtension->CallbackRoutine)
+        PdoDeviceExtension->CallbackRoutine(PdoDeviceExtension->CallbackContext);
+    else
+        DPRINT1("PdoDeviceExtension->CallbackRoutine is NULL!\n");
+
+    IoFreeWorkItem(WorkItemData->IoWorkItem);
+    ExFreePool(WorkItemData);
+}
+
 VOID NTAPI
 EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID SystemArgument2)
 {
@@ -40,6 +60,7 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
             /* Check for port change on this port */
             if (tmp & 0x02)
             {
+                PWORKITEM_DATA WorkItemData = NULL;
                 /* Connect or Disconnect? */
                 if (tmp & 0x01)
                 {
@@ -62,11 +83,11 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
                             DPRINT1("Releasing ownership to companion host controller!\n");
                             /* Release ownership to companion host controller */
                             WRITE_REGISTER_ULONG((PULONG) ((Base + EHCI_PORTSC) + (4 * i)), 0x4000);
-                            continue;
                         }
                     }
 
                     KeStallExecutionProcessor(30);
+                    DPRINT("port tmp %x\n", tmp);
 
                     /* As per USB 2.0 Specs, 9.1.2. Reset the port and clear the status change */
                     tmp |= 0x100 | 0x02;
@@ -79,12 +100,17 @@ EhciDefferedRoutine(PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVO
 
                     tmp = READ_REGISTER_ULONG((PULONG)((Base + EHCI_PORTSC) + (4 * i)));
 
+                    GetDeviceDescriptor(FdoDeviceExtension, 0, 0, FALSE);
                     PdoDeviceExtension->ChildDeviceCount++;
-                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT;
-                    PdoDeviceExtension->Ports[i].PortChange |= USB_PORT_STATUS_CONNECT;
-
-                    PdoDeviceExtension->HaltQueue = FALSE;
-                    KeSetEvent(&PdoDeviceExtension->QueueDrainedEvent, 0, FALSE);
+                    PdoDeviceExtension->Ports[i].PortStatus |= USB_PORT_STATUS_HIGH_SPEED | USB_PORT_STATUS_CONNECT | USB_PORT_STATUS_ENABLE;
+                    WorkItemData = ExAllocatePool(NonPagedPool, sizeof(WORKITEM_DATA));
+                    if (!WorkItemData) ASSERT(FALSE);
+                    WorkItemData->IoWorkItem = IoAllocateWorkItem(PdoDeviceExtension->DeviceObject);
+                    WorkItemData->PdoDeviceExtension = PdoDeviceExtension;
+                    IoQueueWorkItem(WorkItemData->IoWorkItem,
+                                    (PIO_WORKITEM_ROUTINE)DeviceArrivalWorkItem,
+                                    DelayedWorkQueue,
+                                    WorkItemData);
                 }
                 else
                 {
@@ -519,7 +545,6 @@ StartDevice(PDEVICE_OBJECT DeviceObject, PCM_PARTIAL_RESOURCE_LIST raw, PCM_PART
 
     StartEhci(DeviceObject);
     FdoDeviceExtension->DeviceState = DEVICESTARTED;
-
     return STATUS_SUCCESS;
 }
 
@@ -584,10 +609,6 @@ FdoQueryBusRelations(
 
     InitializeListHead(&PdoDeviceExtension->IrpQueue);
     KeInitializeSpinLock(&PdoDeviceExtension->IrpQueueLock);
-
-    KeInitializeEvent(&PdoDeviceExtension->QueueDrainedEvent, SynchronizationEvent, TRUE);
-
-    ExInitializeFastMutex(&PdoDeviceExtension->ListLock);
 
     Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -793,6 +814,7 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
         IoDetachDevice(FdoDeviceExtension->LowerDevice);
         IoDeleteSymbolicLink(&SymLinkName);
         IoDeleteDevice(Fdo);
+
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -818,14 +840,11 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Unable to register device interface!\n");
-        ASSERT(FALSE);
     }
     else
     {
         Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
         DPRINT1("SetInterfaceState %x\n", Status);
-        if (!NT_SUCCESS(Status))
-            ASSERT(FALSE);
     }
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 

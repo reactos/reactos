@@ -11,19 +11,14 @@
 
 #ifdef USE_HOST_WCSFUNCS
     /* Function prototypes */
-
+    SIZE_T utf16_wcslen(PCWSTR str);
+    PWSTR utf16_wcschr(PWSTR str, WCHAR c);
+    INT utf16_wcsncmp(PCWSTR string1, PCWSTR string2, size_t count);
 #else
-    /* Map str*W functions to wcs* function */
-
-    #define isspaceW iswspace
-    #define strchrW  wcschr
-    #define strcmpiW _wcsicmp
-    #define strcpyW  wcscpy
-    #define strlenW  wcslen
-    #define strncmpW wcsncmp
-    #define strtolW  wcstol
-    #define strtoulW wcstoul
-
+    /* Define the utf16_ functions to the CRT functions */
+    #define utf16_wcslen  wcslen
+    #define utf16_wcschr  wcschr
+    #define utf16_wcsncmp wcsncmp
 #endif
 
 #endif

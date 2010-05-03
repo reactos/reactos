@@ -7,7 +7,7 @@
  *                   Pablo Borobia <pborobia@gmail.com>
  */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

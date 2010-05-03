@@ -489,7 +489,6 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
     switch (font->unit)
     {
         case UnitPixel:
-        case UnitWorld:
             *height = font_height;
             break;
         case UnitPoint:
@@ -521,7 +520,7 @@ GpStatus WINGDIPAPI GdipGetFontHeightGivenDPI(GDIPCONST GpFont *font, REAL dpi, 
 static INT CALLBACK is_font_installed_proc(const LOGFONTW *elf,
                             const TEXTMETRICW *ntm, DWORD type, LPARAM lParam)
 {
-    if (!ntm || type == RASTER_FONTTYPE)
+    if (!ntm)
     {
         return 1;
     }
@@ -643,14 +642,12 @@ GpStatus WINGDIPAPI GdipCloneFontFamily(GpFontFamily* FontFamily, GpFontFamily**
 GpStatus WINGDIPAPI GdipGetFamilyName (GDIPCONST GpFontFamily *family,
                                        WCHAR *name, LANGID language)
 {
-    static int lang_fixme;
-
     if (family == NULL)
          return InvalidParameter;
 
     TRACE("%p, %p, %d\n", family, name, language);
 
-    if (language != LANG_NEUTRAL && !lang_fixme++)
+    if (language != LANG_NEUTRAL)
         FIXME("No support for handling of multiple languages!\n");
 
     lstrcpynW (name, family->FamilyName, LF_FACESIZE);
@@ -829,21 +826,15 @@ GpStatus WINGDIPAPI GdipGetGenericFontFamilySerif(GpFontFamily **nativeFamily)
  */
 GpStatus WINGDIPAPI GdipGetGenericFontFamilySansSerif(GpFontFamily **nativeFamily)
 {
-    GpStatus stat;
-    static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
-    static const WCHAR Tahoma[] = {'T','a','h','o','m','a','\0'};
+    /* FIXME: On Windows this is called Microsoft Sans Serif, this shouldn't
+     * affect anything */
+    static const WCHAR MSSansSerif[] = {'M','S',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
 
     TRACE("(%p)\n", nativeFamily);
 
     if (nativeFamily == NULL) return InvalidParameter;
 
-    stat = GdipCreateFontFamilyFromName(MicrosoftSansSerif, NULL, nativeFamily);
-
-    if (stat == FontFamilyNotFound)
-        /* FIXME: Microsoft Sans Serif is not installed on Wine. */
-        stat = GdipCreateFontFamilyFromName(Tahoma, NULL, nativeFamily);
-
-    return stat;
+    return GdipCreateFontFamilyFromName(MSSansSerif, NULL, nativeFamily);
 }
 
 /*****************************************************************************
@@ -965,9 +956,6 @@ static INT CALLBACK add_font_proc(const LOGFONTW *lfw, const TEXTMETRICW *ntm,
 {
     GpFontCollection* fonts = (GpFontCollection*)lParam;
     int i;
-
-    if (type == RASTER_FONTTYPE)
-        return 1;
 
     /* skip duplicates */
     for (i=0; i<fonts->count; i++)

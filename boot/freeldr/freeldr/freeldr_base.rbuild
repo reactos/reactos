@@ -23,9 +23,7 @@
 		<file>disk.c</file>
 		<file>partition.c</file>
 		<file>ramdisk.c</file>
-		<if property="ARCH" value="i386">
-			<file>scsiport.c</file>
-		</if>
+		<file>scsiport.c</file>
 	</directory>
 	<directory name="fs">
 		<file>ext2.c</file>

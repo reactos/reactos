@@ -20,7 +20,7 @@
  *  Entry Point for win32k.sys
  */
 
-#include <win32k.h>
+#include <w32k.h>
 #include <include/napi.h>
 
 #define NDEBUG

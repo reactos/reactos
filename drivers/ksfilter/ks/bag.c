@@ -41,7 +41,7 @@ KsAllocateObjectBag(
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* get device interface */
-    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
+    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
 
     /* initialize object bag */
     return KsDevice->lpVtbl->InitializeObjectBag(KsDevice, Bag, NULL);
@@ -88,8 +88,6 @@ KsAddItemToObjectBag(
 {
     PKSIOBJECT_BAG Bag;
     PKSIOBJECT_BAG_ENTRY BagEntry;
-
-    DPRINT("KsAddItemToObjectBag\n");
 
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;
@@ -364,8 +362,6 @@ _KsEdit(
     PKSIOBJECT_BAG_ENTRY BagEntry;
     PVOID Item;
     NTSTATUS Status;
-
-    DPRINT("_KsEdit\n");
 
     /* get real object bag */
     Bag = (PKSIOBJECT_BAG)ObjectBag;

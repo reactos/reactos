@@ -42,8 +42,6 @@ IopNotifyPlugPlayNotification(
 	PLIST_ENTRY ListEntry;
 	PVOID NotificationStructure;
 	BOOLEAN CallCurrentEntry;
-	UNICODE_STRING GuidString;
-	NTSTATUS Status;
 
 	ASSERT(DeviceObject);
 
@@ -73,13 +71,6 @@ IopNotifyPlugPlayNotification(
 			RtlCopyMemory(&NotificationInfos->Event, Event, sizeof(GUID));
 			RtlCopyMemory(&NotificationInfos->InterfaceClassGuid, EventCategoryData1, sizeof(GUID));
 			NotificationInfos->SymbolicLinkName = (PUNICODE_STRING)EventCategoryData2;
-			Status = RtlStringFromGUID(&NotificationInfos->InterfaceClassGuid, &GuidString);
-			if (!NT_SUCCESS(Status))
-			{
-				KeReleaseGuardedMutex(&PnpNotifyListLock);
-				ExFreePool(NotificationStructure);
-				return;
-			}
 			break;
 		}
 		case EventCategoryHardwareProfileChange:
@@ -134,17 +125,12 @@ IopNotifyPlugPlayNotification(
 		ChangeEntry = CONTAINING_RECORD(ListEntry, PNP_NOTIFY_ENTRY, PnpNotifyList);
 		CallCurrentEntry = FALSE;
 
-		if (ChangeEntry->EventCategory != EventCategory)
-		{
-			ListEntry = ListEntry->Flink;
-			continue;
-		}
-
 		switch (EventCategory)
 		{
 			case EventCategoryDeviceInterfaceChange:
 			{
-				if (RtlCompareUnicodeString(&ChangeEntry->Guid, &GuidString, FALSE) == 0)
+				if (ChangeEntry->EventCategory == EventCategory
+					&& RtlCompareUnicodeString(&ChangeEntry->Guid, (PUNICODE_STRING)EventCategoryData1, FALSE) == 0)
 				{
 					CallCurrentEntry = TRUE;
 				}
@@ -188,8 +174,6 @@ IopNotifyPlugPlayNotification(
 	}
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
 	ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);
-	if (EventCategory == EventCategoryDeviceInterfaceChange)
-		RtlFreeUnicodeString(&GuidString);
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/

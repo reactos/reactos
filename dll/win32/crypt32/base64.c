@@ -99,7 +99,8 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
 
     TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
     needed = bytes + pad_bytes + 1;
-    needed += (needed / 64 + 1) * strlen(sep);
+    if (sep)
+        needed += (needed / 64 + 1) * strlen(sep);
 
     if (needed > *out_len)
     {
@@ -116,7 +117,7 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
     i = 0;
     while (div > 0)
     {
-        if (i && i % 64 == 0)
+        if (sep && i && i % 64 == 0)
         {
             strcpy(ptr, sep);
             ptr += strlen(sep);
@@ -162,7 +163,8 @@ static LONG encodeBase64A(const BYTE *in_buf, int in_len, LPCSTR sep,
             *ptr++ = '=';
             break;
     }
-    strcpy(ptr, sep);
+    if (sep)
+        strcpy(ptr, sep);
 
     return ERROR_SUCCESS;
 }
@@ -178,7 +180,7 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
     if (dwFlags & CRYPT_STRING_NOCR)
         sep = lf;
     else if (dwFlags & CRYPT_STRING_NOCRLF)
-        sep = "";
+        sep = NULL;
     else
         sep = crlf;
     switch (dwFlags & 0x0fffffff)
@@ -202,6 +204,8 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
 
     charsNeeded = 0;
     encodeBase64A(pbBinary, cbBinary, sep, NULL, &charsNeeded);
+    if (sep)
+        charsNeeded += strlen(sep);
     if (header)
         charsNeeded += strlen(header) + strlen(sep);
     if (trailer)
@@ -215,8 +219,11 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
         {
             strcpy(ptr, header);
             ptr += strlen(ptr);
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
+            if (sep)
+            {
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         encodeBase64A(pbBinary, cbBinary, sep, ptr, &size);
         ptr += size - 1;
@@ -224,8 +231,11 @@ static BOOL BinaryToBase64A(const BYTE *pbBinary,
         {
             strcpy(ptr, trailer);
             ptr += strlen(ptr);
-            strcpy(ptr, sep);
-            ptr += strlen(sep);
+            if (sep)
+            {
+                strcpy(ptr, sep);
+                ptr += strlen(sep);
+            }
         }
         *pcchString = charsNeeded - 1;
     }
@@ -294,7 +304,8 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
 
     TRACE("bytes is %d, pad bytes is %d\n", bytes, pad_bytes);
     needed = bytes + pad_bytes + 1;
-    needed += (needed / 64 + 1) * strlenW(sep);
+    if (sep)
+        needed += (needed / 64 + 1) * strlenW(sep);
 
     if (needed > *out_len)
     {
@@ -311,7 +322,7 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
     i = 0;
     while (div > 0)
     {
-        if (i && i % 64 == 0)
+        if (sep && i && i % 64 == 0)
         {
             strcpyW(ptr, sep);
             ptr += strlenW(sep);
@@ -357,7 +368,8 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
             *ptr++ = '=';
             break;
     }
-    strcpyW(ptr, sep);
+    if (sep)
+        strcpyW(ptr, sep);
 
     return ERROR_SUCCESS;
 }
@@ -365,7 +377,7 @@ static LONG encodeBase64W(const BYTE *in_buf, int in_len, LPCWSTR sep,
 static BOOL BinaryToBase64W(const BYTE *pbBinary,
  DWORD cbBinary, DWORD dwFlags, LPWSTR pszString, DWORD *pcchString)
 {
-    static const WCHAR crlf[] = { '\r','\n',0 }, lf[] = { '\n',0 }, empty[] = {0};
+    static const WCHAR crlf[] = { '\r','\n',0 }, lf[] = { '\n',0 };
     BOOL ret = TRUE;
     LPCWSTR header = NULL, trailer = NULL, sep;
     DWORD charsNeeded;
@@ -373,7 +385,7 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
     if (dwFlags & CRYPT_STRING_NOCR)
         sep = lf;
     else if (dwFlags & CRYPT_STRING_NOCRLF)
-        sep = empty;
+        sep = NULL;
     else
         sep = crlf;
     switch (dwFlags & 0x0fffffff)
@@ -397,6 +409,8 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
 
     charsNeeded = 0;
     encodeBase64W(pbBinary, cbBinary, sep, NULL, &charsNeeded);
+    if (sep)
+        charsNeeded += strlenW(sep);
     if (header)
         charsNeeded += strlenW(header) + strlenW(sep);
     if (trailer)
@@ -410,8 +424,11 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
         {
             strcpyW(ptr, header);
             ptr += strlenW(ptr);
-            strcpyW(ptr, sep);
-            ptr += strlenW(sep);
+            if (sep)
+            {
+                strcpyW(ptr, sep);
+                ptr += strlenW(sep);
+            }
         }
         encodeBase64W(pbBinary, cbBinary, sep, ptr, &size);
         ptr += size - 1;
@@ -419,8 +436,11 @@ static BOOL BinaryToBase64W(const BYTE *pbBinary,
         {
             strcpyW(ptr, trailer);
             ptr += strlenW(ptr);
-            strcpyW(ptr, sep);
-            ptr += strlenW(sep);
+            if (sep)
+            {
+                strcpyW(ptr, sep);
+                ptr += strlenW(sep);
+            }
         }
         *pcchString = charsNeeded - 1;
     }

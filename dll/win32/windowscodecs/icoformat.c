@@ -62,7 +62,6 @@ typedef struct {
     BOOL initialized;
     IStream *stream;
     ICONHEADER header;
-    CRITICAL_SECTION lock; /* must be held when accessing stream */
 } IcoDecoder;
 
 typedef struct {
@@ -513,17 +512,15 @@ static HRESULT WINAPI IcoFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
     const WICRect *prc, UINT cbStride, UINT cbBufferSize, BYTE *pbBuffer)
 {
     IcoFrameDecode *This = (IcoFrameDecode*)iface;
-    HRESULT hr=S_OK;
+    HRESULT hr;
     UINT width, height, stride;
     TRACE("(%p,%p,%u,%u,%p)\n", iface, prc, cbStride, cbBufferSize, pbBuffer);
 
-    EnterCriticalSection(&This->parent->lock);
     if (!This->bits)
     {
         hr = IcoFrameDecode_ReadPixels(This);
+        if (FAILED(hr)) return hr;
     }
-    LeaveCriticalSection(&This->parent->lock);
-    if (FAILED(hr)) return hr;
 
     width = This->entry.bWidth ? This->entry.bWidth : 256;
     height = This->entry.bHeight ? This->entry.bHeight : 256;
@@ -609,8 +606,6 @@ static ULONG WINAPI IcoDecoder_Release(IWICBitmapDecoder *iface)
 
     if (ref == 0)
     {
-        This->lock.DebugInfo->Spare[0] = 0;
-        DeleteCriticalSection(&This->lock);
         if (This->stream) IStream_Release(This->stream);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -634,37 +629,23 @@ static HRESULT WINAPI IcoDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
     ULONG bytesread;
     TRACE("(%p,%p,%x)\n", iface, pIStream, cacheOptions);
 
-    EnterCriticalSection(&This->lock);
-
-    if (This->initialized)
-    {
-        hr = WINCODEC_ERR_WRONGSTATE;
-        goto end;
-    }
+    if (This->initialized) return WINCODEC_ERR_WRONGSTATE;
 
     seek.QuadPart = 0;
     hr = IStream_Seek(pIStream, seek, STREAM_SEEK_SET, NULL);
-    if (FAILED(hr)) goto end;
+    if (FAILED(hr)) return hr;
 
     hr = IStream_Read(pIStream, &This->header, sizeof(ICONHEADER), &bytesread);
-    if (FAILED(hr)) goto end;
+    if (FAILED(hr)) return hr;
     if (bytesread != sizeof(ICONHEADER) ||
         This->header.idReserved != 0 ||
-        This->header.idType != 1)
-    {
-        hr = E_FAIL;
-        goto end;
-    }
+        This->header.idType != 1) return E_FAIL;
 
     This->initialized = TRUE;
     This->stream = pIStream;
     IStream_AddRef(pIStream);
 
-end:
-
-    LeaveCriticalSection(&This->lock);
-
-    return hr;
+    return S_OK;
 }
 
 static HRESULT WINAPI IcoDecoder_GetContainerFormat(IWICBitmapDecoder *iface,
@@ -734,32 +715,18 @@ static HRESULT WINAPI IcoDecoder_GetFrame(IWICBitmapDecoder *iface,
     UINT index, IWICBitmapFrameDecode **ppIBitmapFrame)
 {
     IcoDecoder *This = (IcoDecoder*)iface;
-    IcoFrameDecode *result=NULL;
+    IcoFrameDecode *result;
     LARGE_INTEGER seek;
     HRESULT hr;
     ULONG bytesread;
     TRACE("(%p,%u,%p)\n", iface, index, ppIBitmapFrame);
 
-    EnterCriticalSection(&This->lock);
+    if (!This->initialized) return WINCODEC_ERR_NOTINITIALIZED;
 
-    if (!This->initialized)
-    {
-        hr = WINCODEC_ERR_NOTINITIALIZED;
-        goto fail;
-    }
-
-    if (This->header.idCount < index)
-    {
-        hr = E_INVALIDARG;
-        goto fail;
-    }
+    if (This->header.idCount < index) return E_INVALIDARG;
 
     result = HeapAlloc(GetProcessHeap(), 0, sizeof(IcoFrameDecode));
-    if (!result)
-    {
-        hr = E_OUTOFMEMORY;
-        goto fail;
-    }
+    if (!result) return E_OUTOFMEMORY;
 
     result->lpVtbl = &IcoFrameDecode_Vtbl;
     result->ref = 1;
@@ -778,12 +745,9 @@ static HRESULT WINAPI IcoDecoder_GetFrame(IWICBitmapDecoder *iface,
 
     *ppIBitmapFrame = (IWICBitmapFrameDecode*)result;
 
-    LeaveCriticalSection(&This->lock);
-
     return S_OK;
 
 fail:
-    LeaveCriticalSection(&This->lock);
     HeapFree(GetProcessHeap(), 0, result);
     if (SUCCEEDED(hr)) hr = E_FAIL;
     TRACE("<-- %x\n", hr);
@@ -825,8 +789,6 @@ HRESULT IcoDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
     This->ref = 1;
     This->stream = NULL;
     This->initialized = FALSE;
-    InitializeCriticalSection(&This->lock);
-    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": IcoDecoder.lock");
 
     ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
     IUnknown_Release((IUnknown*)This);

@@ -244,6 +244,7 @@
 			<file>device.c</file>
 			<file>deviface.c</file>
 			<file>driver.c</file>
+			<file>drvrlist.c</file>
 			<file>error.c</file>
 			<file>file.c</file>
 			<file>iocomp.c</file>
@@ -266,13 +267,10 @@
 		<directory name="pnpmgr">
 			<file>plugplay.c</file>
 			<file>pnpdma.c</file>
-			<file>pnpinit.c</file>
 			<file>pnpmgr.c</file>
 			<file>pnpnotify.c</file>
 			<file>pnpreport.c</file>
-			<file>pnpres.c</file>
 			<file>pnproot.c</file>
-			<file>pnputil.c</file>
 		</directory>
 	</directory>
 	<if property="_WINKD_" value="0">
@@ -395,7 +393,6 @@
 			<file>expool.c</file>
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
-			<file>largepag.c</file>
 			<file>mdlsup.c</file>
 			<file>mminit.c</file>
 			<file>mmsup.c</file>

@@ -18,6 +18,4 @@ IntGdiModifyWorldTransform(PDC pDc,
                            DWORD Mode);
 
 VOID FASTCALL IntMirrorWindowOrg(PDC);
-void FASTCALL IntFixIsotropicMapping(PDC);
-LONG FASTCALL IntCalcFillOrigin(PDC);
-PPOINTL FASTCALL IntptlBrushOrigin(PDC pdc,LONG,LONG);
+void FASTCALL IntFixIsotropicMapping(PDC dc);

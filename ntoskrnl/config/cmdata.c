@@ -11,8 +11,7 @@
 #include "ntoskrnl.h"
 #define NDEBUG
 #include "debug.h"
-#include "./../mm/ARM3/miarm.h"
-
+ 
 /* GLOBALS *******************************************************************/
 
 ULONG DummyData;
@@ -253,7 +252,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"DynamicMemory",
-        &MmDynamicPfn,
+        &DummyData,
         NULL,
         NULL
     },
@@ -261,7 +260,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"Mirroring",
-        &MmMirroring,
+        &DummyData,
         NULL,
         NULL
     },
@@ -269,6 +268,14 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"SystemViewSize",
+        &DummyData,
+        NULL,
+        NULL
+    },
+
+    {
+        L"Session Manager\\Memory Management",
+        L"SessionViewSize",
         &DummyData,
         NULL,
         NULL
@@ -293,7 +300,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"PoolUsageMaximum",
-        &MmConsumedPoolPercentage,
+        &DummyData,
         NULL,
         NULL
     },
@@ -301,7 +308,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"MapAllocationFragment",
-        &MmAllocationFragment,
+        &DummyData,
         NULL,
         NULL
     },
@@ -309,7 +316,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"PagedPoolSize",
-        &MmSizeOfPagedPoolInBytes,
+        &DummyData,
         NULL,
         NULL
     },
@@ -317,7 +324,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"NonPagedPoolSize",
-        &MmSizeOfNonPagedPoolInBytes,
+        &DummyData,
         NULL,
         NULL
     },
@@ -333,7 +340,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"LargeSystemCache",
-        &MmLargeSystemCache,
+        &DummyData,
         NULL,
         NULL
     },
@@ -349,7 +356,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"SystemPages",
-        &MmNumberOfSystemPtes,
+        &DummyData,
         NULL,
         NULL
     },
@@ -357,7 +364,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"LowMemoryThreshold",
-        &MmLowMemoryThreshold,
+        &DummyData,
         NULL,
         NULL
     },
@@ -365,7 +372,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"HighMemoryThreshold",
-        &MmHighMemoryThreshold,
+        &DummyData,
         NULL,
         NULL
     },
@@ -389,7 +396,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"SecondLevelDataCache",
-        &MmSecondaryColors,
+        &DummyData,
         NULL,
         NULL
     },
@@ -397,7 +404,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"ClearPageFileAtShutdown",
-        &MmZeroPageFile,
+        &DummyData,
         NULL,
         NULL
     },
@@ -445,7 +452,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"ProtectNonPagedPool",
-        &MmProtectFreedNonPagedPool,
+        &DummyData,
         NULL,
         NULL
     },
@@ -453,7 +460,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"TrackLockedPages",
-        &MmTrackLockedPages,
+        &DummyData,
         NULL,
         NULL
     },
@@ -461,7 +468,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"TrackPtes",
-        &MmTrackPtes,
+        &DummyData,
         NULL,
         NULL
     },
@@ -469,15 +476,15 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"VerifyDrivers",
-        MmVerifyDriverBuffer,
-        &MmVerifyDriverBufferLength,
-        &MmVerifyDriverBufferType
+        &DummyData,
+        &DummyData,
+        &DummyData
     },
 
     {
         L"Session Manager\\Memory Management",
         L"VerifyDriverLevel",
-        &MmVerifyDriverLevel,
+        &DummyData,
         NULL,
         NULL
     },
@@ -501,7 +508,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"EnforceWriteProtection",
-        &MmEnforceWriteProtection,
+        &DummyData,
         NULL,
         NULL
     },
@@ -509,7 +516,7 @@ CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
     {
         L"Session Manager\\Memory Management",
         L"MakeLowMemory",
-        &MmMakeLowMemory,
+        &DummyData,
         NULL,
         NULL
     },

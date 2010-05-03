@@ -11,6 +11,8 @@
 #include "usbehci.h"
 #include <wdmguid.h>
 #include <stdio.h>
+#define NDEBUG
+#include <debug.h>
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 

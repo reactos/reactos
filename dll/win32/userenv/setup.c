@@ -674,6 +674,10 @@ InitializeProfiles(VOID)
         }
     }
 
+    SetEnvironmentVariableW(L"ProgramFiles", szProfilesPath);
+    SetEnvironmentVariableW(L"CommonProgramFiles", szCommonFilesDirPath);
+
+
     DPRINT("Success\n");
 
     return TRUE;

@@ -12,7 +12,7 @@
  *   refer to \test\microwin\src\engine\devdraw.c for info on correct pixel plotting for various formats
  */
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

@@ -29,35 +29,35 @@
 	 * This boots the kernel
 	 */
 	.code64
-    .globl PageDirectoryStart
+    .globl _PageDirectoryStart
     
-    .globl pml4_startup
-    .globl pdp_startup
-    .globl pd_startup
+    .globl _pml4_startup
+    .globl _pdp_startup
+    .globl _pd_startup
 
-    .globl PageDirectoryEnd
+    .globl _PageDirectoryEnd
 
 	//
 	// Boot information structure
 	//
 
-EXTERN(reactos_memory_map_descriptor_size)
+EXTERN(_reactos_memory_map_descriptor_size)
 	.long	0
 
-EXTERN(reactos_memory_map)
+EXTERN(_reactos_memory_map)
 	.rept	(32 * /*sizeof(memory_map_t)*/24)
 	.byte	0
 	.endr
 
 .bss
-PageDirectoryStart:
-pml4_startup:
+_PageDirectoryStart:
+_pml4_startup:
 	.fill 4096, 1, 0
 
-pdp_startup:
+_pdp_startup:
 	.fill 4096, 1, 0
 
-pd_startup:
+_pd_startup:
 	.fill 4096, 1, 0
 
-PageDirectoryEnd:
+_PageDirectoryEnd:

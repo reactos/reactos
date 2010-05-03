@@ -1,5 +1,5 @@
 
-#include <win32k.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -106,10 +106,9 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCSetBrushOrg:
      {
         PGDIBSSETBRHORG pgSBO;
-        if (!dc) break;
+        if(!dc) break;
         pgSBO = (PGDIBSSETBRHORG) pHdr;
         pdcattr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
-        IntptlBrushOrigin(dc, pgSBO->ptlBrushOrigin.x, pgSBO->ptlBrushOrigin.y);
         break;
      }
      case GdiBCExtSelClipRgn:
@@ -117,34 +116,10 @@ GdiFlushUserBatch(PDC dc, PGDIBATCHHDR pHdr)
      case GdiBCSelObj:
      {
         PGDIBSOBJECT pgO;
-        PTEXTOBJ pOrgFnt, pNewFnt = NULL;
-        HFONT hOrgFont = NULL;
-
-        if (!dc) break;
+        if(!dc) break;
         pgO = (PGDIBSOBJECT) pHdr;
-
-        if (NT_SUCCESS(TextIntRealizeFont((HFONT)pgO->hgdiobj,NULL)))
-        {
-           /* LFONTOBJ use share and locking. */
-           pNewFnt = TEXTOBJ_LockText(pgO->hgdiobj);
-
-           pOrgFnt = dc->dclevel.plfnt;
-           if (pOrgFnt)
-           {
-              hOrgFont = pOrgFnt->BaseObject.hHmgr;
-           }
-           else
-           {
-              hOrgFont = pdcattr->hlfntNew;
-           }
-           dc->dclevel.plfnt = pNewFnt;
-           dc->hlfntCur = pgO->hgdiobj;
-           pdcattr->hlfntNew = pgO->hgdiobj;
-           pdcattr->ulDirty_ |= DIRTY_CHARSET;
-           pdcattr->ulDirty_ &= ~SLOW_WIDTHS;
-        }
-        if (pNewFnt) TEXTOBJ_UnlockText(pNewFnt);
-        break;
+        TextIntRealizeFont((HFONT) pgO->hgdiobj, NULL);
+        pdcattr->ulDirty_ &= ~(DIRTY_CHARSET);
      }
      case GdiBCDelRgn:
         DPRINT("Delete Region Object!\n");

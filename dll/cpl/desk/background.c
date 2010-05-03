@@ -94,17 +94,14 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
     ZeroMemory(&listItem, sizeof(LV_ITEM));
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-    listItem.state      = 0;
+    listItem.state      = LVIS_SELECTED;
     listItem.pszText    = backgroundItem->szDisplayName;
     listItem.iImage     = -1;
     listItem.iItem      = pGlobalData->listViewItemCount;
     listItem.lParam     = pGlobalData->listViewItemCount;
 
     (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-    ListView_SetItemState(hwndBackgroundList, 
-                          pGlobalData->listViewItemCount,
-                          LVIS_SELECTED,
-                          LVIS_SELECTED);
+    ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
     pGlobalData->listViewItemCount++;
 
@@ -146,17 +143,14 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
             ZeroMemory(&listItem, sizeof(LV_ITEM));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.state      = 0;
+            listItem.state      = LVIS_SELECTED;
             listItem.pszText    = backgroundItem->szDisplayName;
             listItem.iImage     = sfi.iIcon;
             listItem.iItem      = pGlobalData->listViewItemCount;
             listItem.lParam     = pGlobalData->listViewItemCount;
 
             (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-            ListView_SetItemState(hwndBackgroundList,
-                                  pGlobalData->listViewItemCount,
-                                  LVIS_SELECTED,
-                                  LVIS_SELECTED);
+            ListView_SetItemState(hwndBackgroundList, pGlobalData->listViewItemCount, LVIS_SELECTED, LVIS_SELECTED);
 
             pGlobalData->listViewItemCount++;
         }
@@ -460,17 +454,13 @@ OnBrowseButton(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
         ZeroMemory(&listItem, sizeof(LV_ITEM));
         listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-        listItem.state      = 0;
+        listItem.state      = LVIS_SELECTED;
         listItem.pszText    = backgroundItem->szDisplayName;
         listItem.iImage     = sfi.iIcon;
         listItem.iItem      = pGlobalData->listViewItemCount;
         listItem.lParam     = pGlobalData->listViewItemCount;
 
         (void)ListView_InsertItem(hwndBackgroundList, &listItem);
-        ListView_SetItemState(hwndBackgroundList,
-                              pGlobalData->listViewItemCount,
-                              LVIS_SELECTED,
-                              LVIS_SELECTED);
         SendMessage(hwndBackgroundList, WM_VSCROLL, SB_BOTTOM, 0);
 
         pGlobalData->listViewItemCount++;

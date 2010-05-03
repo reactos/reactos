@@ -21,234 +21,19 @@ typedef struct
     PFNKSSETTIMER SetTimer;
     PFNKSCANCELTIMER CancelTimer;
     PFNKSCORRELATEDTIME CorrelatedTime;
-    LONGLONG Granularity;
-    LONGLONG Error;
+    KSRESOLUTION* Resolution;
     ULONG Flags;
 
 }KSIDEFAULTCLOCK, *PKSIDEFAULTCLOCK;
 
 typedef struct
 {
+    IKsClock *lpVtbl;
     LONG ref;
     PKSCLOCK_CREATE ClockCreate;
     PKSIDEFAULTCLOCK DefaultClock;
     PKSIOBJECT_HEADER ObjectHeader;
 }KSICLOCK, *PKSICLOCK;
-
-NTSTATUS NTAPI ClockPropertyTime(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyPhysicalTime(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyCorrelatedTime(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyCorrelatedPhysicalTime(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyResolution(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyState(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-NTSTATUS NTAPI ClockPropertyFunctionTable(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-
-DEFINE_KSPROPERTY_CLOCKSET(ClockPropertyTable, ClockPropertyTime, ClockPropertyPhysicalTime, ClockPropertyCorrelatedTime, ClockPropertyCorrelatedPhysicalTime, ClockPropertyResolution, ClockPropertyState, ClockPropertyFunctionTable);
-
-KSPROPERTY_SET ClockPropertySet[] =
-{
-    {
-        &KSPROPSETID_Clock,
-        sizeof(ClockPropertyTable) / sizeof(KSPROPERTY_ITEM),
-        (const KSPROPERTY_ITEM*)&ClockPropertyTable,
-        0,
-        NULL
-    }
-};
-
-LONGLONG
-FASTCALL
-ClockGetPhysicalTime(
-    IN PFILE_OBJECT FileObject)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-LONGLONG
-FASTCALL
-ClockGetCorrelatedTime(
-    IN PFILE_OBJECT FileObject,
-    OUT PLONGLONG SystemTime)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-LONGLONG
-FASTCALL
-ClockGetTime(
-    IN PFILE_OBJECT FileObject)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-LONGLONG
-FASTCALL
-ClockGetCorrelatedPhysicalTime(
-    IN PFILE_OBJECT FileObject,
-    OUT PLONGLONG SystemTime)
-{
-    UNIMPLEMENTED
-    return 0;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyTime(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PLONGLONG Time = (PLONGLONG)Data;
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("ClockPropertyTime\n");
-
-    *Time = ClockGetTime(IoStack->FileObject);
-
-    Irp->IoStatus.Information = sizeof(LONGLONG);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyPhysicalTime(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PLONGLONG Time = (PLONGLONG)Data;
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("ClockPropertyPhysicalTime\n");
-
-    *Time = ClockGetPhysicalTime(IoStack->FileObject);
-
-    Irp->IoStatus.Information = sizeof(LONGLONG);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyCorrelatedTime(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PKSCORRELATED_TIME Time = (PKSCORRELATED_TIME)Data;
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("ClockPropertyCorrelatedTime\n");
-
-    Time->Time = ClockGetCorrelatedTime(IoStack->FileObject, &Time->SystemTime);
-
-    Irp->IoStatus.Information = sizeof(KSCORRELATED_TIME);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyCorrelatedPhysicalTime(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PKSCORRELATED_TIME Time = (PKSCORRELATED_TIME)Data;
-    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    DPRINT("ClockPropertyCorrelatedPhysicalTime\n");
-
-    Time->Time = ClockGetCorrelatedPhysicalTime(IoStack->FileObject, &Time->SystemTime);
-
-    Irp->IoStatus.Information = sizeof(KSCORRELATED_TIME);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyResolution(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PKSICLOCK Clock;
-    PKSIOBJECT_HEADER ObjectHeader;
-    PIO_STACK_LOCATION IoStack;
-    PKSRESOLUTION Resolution = (PKSRESOLUTION)Data;
-
-    DPRINT("ClockPropertyResolution\n");
-
-    /* get stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
-
-    /* sanity check */
-    ASSERT(ObjectHeader);
-
-    /* locate ks pin implemention from KSPIN offset */
-    Clock = (PKSICLOCK)ObjectHeader->ObjectType;
-
-    Resolution->Error = Clock->DefaultClock->Error;
-    Resolution->Granularity = Clock->DefaultClock->Granularity;
-
-    Irp->IoStatus.Information = sizeof(KSRESOLUTION);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyState(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PKSICLOCK Clock;
-    PKSIOBJECT_HEADER ObjectHeader;
-    PKSSTATE State = (PKSSTATE)Data;
-    PIO_STACK_LOCATION IoStack;
-
-    DPRINT("ClockPropertyState\n");
-
-    /* get stack location */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* get the object header */
-    ObjectHeader = (PKSIOBJECT_HEADER)IoStack->FileObject->FsContext2;
-
-    /* sanity check */
-    ASSERT(ObjectHeader);
-
-    /* locate ks pin implemention from KSPIN offset */
-    Clock = (PKSICLOCK)ObjectHeader->ObjectType;
-
-    *State = Clock->DefaultClock->State;
-    Irp->IoStatus.Information = sizeof(KSSTATE);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-ClockPropertyFunctionTable(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER Request,
-    IN OUT PVOID Data)
-{
-    PKSCLOCK_FUNCTIONTABLE Table = (PKSCLOCK_FUNCTIONTABLE)Data;
-
-    DPRINT("ClockPropertyFunctionTable\n");
-
-    Table->GetCorrelatedPhysicalTime = ClockGetCorrelatedPhysicalTime;
-    Table->GetCorrelatedTime = ClockGetCorrelatedTime;
-    Table->GetPhysicalTime = ClockGetPhysicalTime;
-    Table->GetTime = ClockGetTime;
-
-    return STATUS_SUCCESS;
-}
 
 
 /*
@@ -311,37 +96,12 @@ IKsClock_DispatchDeviceIoControl(
     IN PDEVICE_OBJECT DeviceObject,
     IN  PIRP Irp)
 {
-    PIO_STACK_LOCATION IoStack;
-    UNICODE_STRING GuidString;
-    PKSPROPERTY Property;
-    NTSTATUS Status;
+    UNIMPLEMENTED
 
-    DPRINT("IKsClock_DispatchDeviceIoControl\n");
-
-    /* get current io stack */
-    IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-    /* FIXME support events */
-    ASSERT(IoStack->Parameters.DeviceIoControl.IoControlCode == IOCTL_KS_PROPERTY);
-
-    /* sanity check */
-    ASSERT(IoStack->Parameters.DeviceIoControl.InputBufferLength >= sizeof(KSPROPERTY));
-
-    /* call property handler */
-    Status = KsPropertyHandler(Irp, 1, ClockPropertySet);
-
-    /* get property from input buffer */
-    Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
-
-    RtlStringFromGUID(&Property->Set, &GuidString);
-    DPRINT("IKsClock_DispatchDeviceIoControl property Set |%S| Id %u Flags %x Status %lx ResultLength %lu\n", GuidString.Buffer, Property->Id, Property->Flags, Status, Irp->IoStatus.Information);
-    RtlFreeUnicodeString(&GuidString);
-
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 NTSTATUS
@@ -352,11 +112,13 @@ IKsClock_DispatchClose(
 {
     UNIMPLEMENTED
 
-    Irp->IoStatus.Status = STATUS_SUCCESS;
+    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-    return STATUS_SUCCESS;
+    return STATUS_NOT_IMPLEMENTED;
 }
+
+
 
 static KSDISPATCH_TABLE DispatchTable =
 {
@@ -385,6 +147,7 @@ KsCreateDefaultClock(
     NTSTATUS Status;
     PKSCLOCK_CREATE ClockCreate;
     PKSICLOCK Clock;
+    PKSOBJECT_CREATE_ITEM CreateItem;
 
     Status = KsValidateClockCreateRequest(Irp, &ClockCreate);
     if (!NT_SUCCESS(Status))
@@ -408,13 +171,16 @@ KsCreateDefaultClock(
 
     /* initialize clock */
     /* FIXME IKsClock */
-    Clock->ObjectHeader->ObjectType = (PVOID)Clock;
+    Clock->ObjectHeader->Unknown = (PUNKNOWN)&Clock->lpVtbl;
     Clock->ref = 1;
     Clock->ClockCreate = ClockCreate;
     Clock->DefaultClock = (PKSIDEFAULTCLOCK)DefaultClock;
 
     /* increment reference count */
     InterlockedIncrement(&Clock->DefaultClock->ReferenceCount);
+
+    /* get create item */
+    CreateItem = KSCREATE_ITEM_IRP_STORAGE(Irp);
 
     return Status;
 }
@@ -464,20 +230,8 @@ KsAllocateDefaultClockEx(
     Clock->SetTimer = SetTimer;
     Clock->CancelTimer = CancelTimer;
     Clock->CorrelatedTime = CorrelatedTime;
+    Clock->Resolution = (PKSRESOLUTION)Resolution;
     Clock->Flags = Flags;
-
-    if (Resolution)
-    {
-        if (SetTimer)
-        {
-            Clock->Error = Resolution->Error;
-        }
-
-        if (CorrelatedTime)
-        {
-            Clock->Granularity = Resolution->Granularity;
-        }
-    }
 
     *DefaultClock = (PKSDEFAULTCLOCK)Clock;
     return STATUS_SUCCESS;

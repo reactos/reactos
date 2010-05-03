@@ -362,7 +362,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Ouvrir avec"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -669,8 +669,6 @@ BEGIN
 	IDS_RESTART_PROMPT          "Voulez-vous redémarrer votre ordinateur ?"
 	IDS_SHUTDOWN_TITLE          "Arrêter"
 	IDS_SHUTDOWN_PROMPT         "Voulez-vous fermer la session ReactOS ?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menu Démarrer\\Programmes"
@@ -755,6 +753,4 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Taille d'allocation par défaut"
 	IDS_COPY_OF                 "Copy of"
-
-	IDS_SHLEXEC_NOASSOC         "Aucun programme Windows n'est configuré pour ouvrir ce type de fichier."
 END

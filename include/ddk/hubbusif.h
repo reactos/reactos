@@ -1,14 +1,8 @@
 #pragma once
 
-#define _HUBBUSIF_
-
-#include "usbdi.h"
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
-#if !defined(_USBBUSIF_)
 typedef PVOID PUSB_DEVICE_HANDLE;
-#endif
 
 typedef struct _ROOTHUB_PDO_EXTENSION {
   ULONG Signature;

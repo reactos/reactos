@@ -177,8 +177,6 @@ HDC FASTCALL IntGdiCreateDisplayDC(HDEV hDev, ULONG DcType, BOOL EmptyDC);
 BOOL FASTCALL IntGdiCleanDC(HDC hDC);
 VOID FASTCALL IntvGetDeviceCaps(PPDEVOBJ, PDEVCAPS);
 INT FASTCALL IntGdiGetDeviceCaps(PDC,INT);
-BOOL FASTCALL MakeInfoDC(PDC,BOOL);
-BOOL FASTCALL IntSetDefaultRegion(PDC);
 
 extern PPDEVOBJ pPrimarySurface;
 
@@ -230,5 +228,6 @@ DC_vSelectPalette(PDC pdc, PPALETTE ppal)
     pdc->dclevel.ppal = ppal;
 }
 
-BOOL FASTCALL IntPrepareDriverIfNeeded(VOID);
+BOOL FASTCALL
+IntPrepareDriverIfNeeded(VOID);
 extern PDEVOBJ PrimarySurface;

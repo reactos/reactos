@@ -39,19 +39,10 @@ KsGetDevice(
 {
     PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
 
-    DPRINT("KsGetDevice Type %lu KsDevice %p\n", BasicHeader->Type, BasicHeader->KsDevice);
+    DPRINT("KsGetDevice %p BasicHeader %p Type %x\n", Object, BasicHeader, BasicHeader->Type);
 
-    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+    ASSERT(BasicHeader->Type == KsObjectTypeFilterFactory || BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == BasicHeader->Type);
     ASSERT(BasicHeader->KsDevice);
-    ASSERT(BasicHeader->KsDevice->Descriptor);
-    ASSERT(BasicHeader->KsDevice->Bag);
-    ASSERT(BasicHeader->KsDevice->Context);
-    ASSERT(BasicHeader->KsDevice->FunctionalDeviceObject);
-    ASSERT(BasicHeader->KsDevice->PhysicalDeviceObject);
-    ASSERT(BasicHeader->KsDevice->NextDeviceObject);
-    ASSERT(BasicHeader->KsDevice->Started);
-    ASSERT(BasicHeader->KsDevice->SystemPowerState == PowerSystemWorking);
-    ASSERT(BasicHeader->KsDevice->DevicePowerState == PowerDeviceD0);
 
     return BasicHeader->KsDevice;
 }
@@ -160,8 +151,6 @@ KsInitializeDriver(
 {
     PKS_DRIVER_EXTENSION DriverObjectExtension;
     NTSTATUS Status = STATUS_SUCCESS;
-
-    DPRINT("KsInitializeDriver\n");
 
     if (Descriptor)
     {

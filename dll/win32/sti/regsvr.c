@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+
 #include <stdarg.h>
 #include <string.h>
 
@@ -30,7 +31,6 @@
 #include "objbase.h"
 #include "initguid.h"
 #include "sti.h"
-#include "wia_lh.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -395,11 +395,8 @@ static struct regsvr_interface const interface_list[] = {
     { NULL }			/* list terminator */
 };
 
-extern HRESULT WINAPI STI_DllRegisterServer(void) DECLSPEC_HIDDEN;
-extern HRESULT WINAPI STI_DllUnregisterServer(void) DECLSPEC_HIDDEN;
-
 /***********************************************************************
- *		DllRegisterServer (STI.@)
+ *		DllRegisterServer (INETCOMM.@)
  */
 HRESULT WINAPI DllRegisterServer(void)
 {
@@ -407,16 +404,14 @@ HRESULT WINAPI DllRegisterServer(void)
 
     TRACE("\n");
 
-    hr = STI_DllRegisterServer();
-    if (SUCCEEDED(hr))
-        hr = register_coclasses(coclass_list);
+    hr = register_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
     return hr;
 }
 
 /***********************************************************************
- *		DllUnregisterServer (STI.@)
+ *		DllUnregisterServer (INETCOMM.@)
  */
 HRESULT WINAPI DllUnregisterServer(void)
 {
@@ -427,7 +422,5 @@ HRESULT WINAPI DllUnregisterServer(void)
     hr = unregister_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = unregister_interfaces(interface_list);
-    if (SUCCEEDED(hr))
-        hr = STI_DllUnregisterServer();
     return hr;
 }

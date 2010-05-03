@@ -15,16 +15,29 @@
 NTSTATUS
 NTAPI
 IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
-                       IN ULONG CreateOptions,
                        OUT PHANDLE Handle);
+
+NTSTATUS
+IopAssignDeviceResources(
+   IN PDEVICE_NODE DeviceNode,
+   OUT ULONG *pRequiredSize);
 
 NTSTATUS
 IopSetDeviceInstanceData(HANDLE InstanceKey,
                          PDEVICE_NODE DeviceNode);
 
 NTSTATUS
+IopTranslateDeviceResources(
+   IN PDEVICE_NODE DeviceNode,
+   IN ULONG RequiredSize);
+
+NTSTATUS
 IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context);
+
+NTSTATUS
+IopUpdateResourceMapForPnPDevice(
+   IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 IopDetectResourceConflict(
@@ -175,11 +188,6 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     /* We don't send IRP_MN_START_DEVICE */
     IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
 
-    /* We need to get device IDs */
-#if 0
-    IopDeviceNodeSetFlag(DeviceNode, DNF_NEED_QUERY_IDS);
-#endif
-
     /* This is a legacy driver for this device */
     IopDeviceNodeSetFlag(DeviceNode, DNF_LEGACY_DRIVER);
 
@@ -188,7 +196,7 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
 
     /* Open a handle to the instance path key */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, 0, &InstanceKey);
+    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceKey);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -249,28 +257,37 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     if (DeviceNode->BootResources)
        IopDeviceNodeSetFlag(DeviceNode, DNF_HAS_BOOT_CONFIG);
 
-    if (!DeviceNode->ResourceRequirements && !DeviceNode->BootResources)
+    if (DeviceNode->ResourceRequirements)
+       IopDeviceNodeSetFlag(DeviceNode, DNF_RESOURCE_REPORTED);
+    else
        IopDeviceNodeSetFlag(DeviceNode, DNF_NO_RESOURCE_REQUIRED);
 
     /* Write the resource information to the registry */
     IopSetDeviceInstanceData(InstanceKey, DeviceNode);
 
+    /* Close the instance key handle */
+    ZwClose(InstanceKey);
+
     /* If the caller didn't get the resources assigned for us, do it now */
     if (!ResourceAssigned)
     {
-       Status = IopAssignDeviceResources(DeviceNode);
+       IopDeviceNodeSetFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
+       Status = IopAssignDeviceResources(DeviceNode, &RequiredLength);
+       if (NT_SUCCESS(Status))
+       {
+          Status = IopTranslateDeviceResources(DeviceNode, RequiredLength);
+          if (NT_SUCCESS(Status))
+              Status = IopUpdateResourceMapForPnPDevice(DeviceNode);
+       }
+       IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
        /* See if we failed */
        if (!NT_SUCCESS(Status))
        {
            DPRINT("Assigning resources failed: 0x%x\n", Status);
-           ZwClose(InstanceKey);
            return Status;
        }
     }
-
-    /* Close the instance key handle */
-    ZwClose(InstanceKey);
 
     /* Report the device's enumeration to umpnpmgr */
     IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
