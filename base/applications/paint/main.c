@@ -143,6 +143,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     HBITMAP tempBm;
     int i;
     TCHAR tooltips[16][30];
+    HDC hDC;
     
     TCHAR *c;
     TCHAR sfnFilename[1000];
@@ -152,7 +153,7 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
     TCHAR ofnFiletitle[256];
     TCHAR ofnFilter[1000];
     TCHAR miniaturetitle[100];
-    int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
+    static int custColors[16] = { 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff,
         0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff, 0xffffff
     };
 
@@ -371,8 +372,10 @@ _tWinMain (HINSTANCE hThisInstance, HINSTANCE hPrevInstance, LPTSTR lpszArgument
         CreateWindowEx(0, _T("Scrollbox"), _T(""), WS_CHILD | WS_VISIBLE, 3, 3, imgXRes, imgYRes, hScrlClient,
                        NULL, hThisInstance, NULL);
 
-    hDrawingDC = CreateCompatibleDC(GetDC(hImageArea));
-    hSelDC     = CreateCompatibleDC(GetDC(hImageArea));
+    hDC = GetDC(hImageArea);
+    hDrawingDC = CreateCompatibleDC(hDC);
+    hSelDC     = CreateCompatibleDC(hDC);
+    ReleaseDC(hImageArea, hDC);
     SelectObject(hDrawingDC, CreatePen(PS_SOLID, 0, fgColor));
     SelectObject(hDrawingDC, CreateSolidBrush(bgColor));
 

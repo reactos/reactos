@@ -131,3 +131,6 @@ GDIOBJ_IncrementShareCount(POBJ Object)
 #endif
 
 INT FASTCALL GreGetObjectOwner(HGDIOBJ, GDIOBJTYPE);
+
+#define GDIOBJ_GetKernelObj(Handle) \
+  ((PGDI_TABLE_ENTRY)&GdiHandleTable->Entries[GDI_HANDLE_GET_INDEX(Handle)])->KernelData

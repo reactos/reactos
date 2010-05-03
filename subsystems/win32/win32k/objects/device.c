@@ -6,7 +6,7 @@
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -19,6 +19,22 @@ static KEVENT VideoDriverNeedsPreparation;
 static KEVENT VideoDriverPrepared;
 PDC defaultDCstate = NULL;
 
+PSIZEL
+FASTCALL
+PDEV_sizl(PPDEVOBJ ppdev, PSIZEL psizl)
+{
+    if (ppdev->flFlags & PDEV_META_DEVICE)
+    {
+        psizl->cx = ppdev->ulHorzRes;
+        psizl->cy = ppdev->ulVertRes;
+    }
+    else
+    {
+        psizl->cx = ppdev->gdiinfo.ulHorzRes;
+        psizl->cy = ppdev->gdiinfo.ulVertRes;
+    }
+    return psizl;
+}
 
 NTSTATUS FASTCALL
 InitDcImpl(VOID)

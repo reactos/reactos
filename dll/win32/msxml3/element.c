@@ -594,7 +594,7 @@ static HRESULT WINAPI domelem_removeAttribute(
     IXMLDOMNamedNodeMap *attr;
     HRESULT hr;
 
-    TRACE("(%p)->(%s)", This, debugstr_w(p));
+    TRACE("(%p)->(%s)\n", This, debugstr_w(p));
 
     hr = IXMLDOMElement_get_attributes(iface, &attr);
     if (hr != S_OK) return hr;

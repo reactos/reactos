@@ -1375,7 +1375,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
     }
 
     /* Verified with the Adobe PS Driver, that w2k does not use di.Version */
-    RegSetValueExW(hdrv, versionW, 0, REG_DWORD, (LPBYTE) &env->driverversion,
+    RegSetValueExW(hdrv, versionW, 0, REG_DWORD, (const BYTE*) &env->driverversion,
                    sizeof(DWORD));
 
     RegSetValueExW(hdrv, driverW, 0, REG_SZ, (LPBYTE) di.pDriverPath,
@@ -1395,7 +1395,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
         RegSetValueExW(hdrv, help_fileW, 0, REG_SZ, (LPBYTE) di.pHelpFile,
                        (lstrlenW(di.pHelpFile)+1)* sizeof(WCHAR));
     else
-        RegSetValueExW(hdrv, help_fileW, 0, REG_SZ, (LPBYTE)emptyW, sizeof(emptyW));
+        RegSetValueExW(hdrv, help_fileW, 0, REG_SZ, (const BYTE*)emptyW, sizeof(emptyW));
     apd_copyfile(di.pHelpFile, &apd);
 
 
@@ -1404,7 +1404,7 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
         RegSetValueExW(hdrv, dependent_filesW, 0, REG_MULTI_SZ, (LPBYTE) di.pDependentFiles,
                        multi_sz_lenW(di.pDependentFiles));
     else
-        RegSetValueExW(hdrv, dependent_filesW, 0, REG_MULTI_SZ, (LPBYTE)emptyW, sizeof(emptyW));
+        RegSetValueExW(hdrv, dependent_filesW, 0, REG_MULTI_SZ, (const BYTE*)emptyW, sizeof(emptyW));
     while ((ptr != NULL) && (ptr[0])) {
         if (apd_copyfile(ptr, &apd)) {
             ptr += lstrlenW(ptr) + 1;
@@ -1420,20 +1420,20 @@ static BOOL myAddPrinterDriverEx(DWORD level, LPBYTE pDriverInfo, DWORD dwFileCo
         RegSetValueExW(hdrv, monitorW, 0, REG_SZ, (LPBYTE) di.pMonitorName,
                        (lstrlenW(di.pMonitorName)+1)* sizeof(WCHAR));
     else
-        RegSetValueExW(hdrv, monitorW, 0, REG_SZ, (LPBYTE)emptyW, sizeof(emptyW));
+        RegSetValueExW(hdrv, monitorW, 0, REG_SZ, (const BYTE*)emptyW, sizeof(emptyW));
 
     if (di.pDefaultDataType)
         RegSetValueExW(hdrv, datatypeW, 0, REG_SZ, (LPBYTE) di.pDefaultDataType,
                        (lstrlenW(di.pDefaultDataType)+1)* sizeof(WCHAR));
     else
-        RegSetValueExW(hdrv, datatypeW, 0, REG_SZ, (LPBYTE)emptyW, sizeof(emptyW));
+        RegSetValueExW(hdrv, datatypeW, 0, REG_SZ, (const BYTE*)emptyW, sizeof(emptyW));
 
     /* settings for level 4 */
     if (di.pszzPreviousNames)
         RegSetValueExW(hdrv, previous_namesW, 0, REG_MULTI_SZ, (LPBYTE) di.pszzPreviousNames,
                        multi_sz_lenW(di.pszzPreviousNames));
     else
-        RegSetValueExW(hdrv, previous_namesW, 0, REG_MULTI_SZ, (LPBYTE)emptyW, sizeof(emptyW));
+        RegSetValueExW(hdrv, previous_namesW, 0, REG_MULTI_SZ, (const BYTE*)emptyW, sizeof(emptyW));
 
     if (level > 5) TRACE("level %u for Driver %s is incomplete\n", level, debugstr_w(di.pName));
 

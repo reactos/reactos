@@ -6,7 +6,7 @@
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@rectos.org)
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include <bugcodes.h>
 
 #define NDEBUG
@@ -119,6 +119,8 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
     pdcattr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
     TextIntRealizeFont(pdcattr->hlfntNew,NULL);
+    NewDC->hlfntCur = pdcattr->hlfntNew;
+    NewDC->dclevel.plfnt = GDIOBJ_GetKernelObj(pdcattr->hlfntNew);
 
     NewDC->dclevel.hpal = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->dclevel.ppal = PALETTE_ShareLockPalette(NewDC->dclevel.hpal);
@@ -586,8 +588,59 @@ DC_InitDC(HDC  DCHandle)
     NtGdiSetVirtualResolution(DCHandle, 0, 0, 0, 0);
 }
 
+BOOL
+FASTCALL
+MakeInfoDC(PDC pdc, BOOL bSet)
+{
+    PSURFACE pSurface;
+    SIZEL sizl;
+
+    /* Can not be a display DC. */
+    if (pdc->fs & DC_FLAG_DISPLAY) return FALSE;
+    if (bSet)
+    {
+        if (pdc->fs & DC_FLAG_TEMPINFODC || pdc->dctype == DC_TYPE_DIRECT)
+            return FALSE;
+
+        pSurface = pdc->dclevel.pSurface;
+        pdc->fs |= DC_FLAG_TEMPINFODC;
+        pdc->pSurfInfo = pSurface;
+        pdc->dctype = DC_TYPE_INFO;
+        pdc->dclevel.pSurface = NULL;
+
+        PDEV_sizl(pdc->ppdev, &sizl);
+
+        if ( sizl.cx == pdc->dclevel.sizl.cx &&
+             sizl.cy == pdc->dclevel.sizl.cy )
+            return TRUE;
+
+        pdc->dclevel.sizl.cx = sizl.cx;
+        pdc->dclevel.sizl.cy = sizl.cy;
+    }
+    else
+    {
+        if (!(pdc->fs & DC_FLAG_TEMPINFODC) || pdc->dctype != DC_TYPE_INFO)
+            return FALSE;
+
+        pSurface = pdc->pSurfInfo;
+        pdc->fs &= ~DC_FLAG_TEMPINFODC;
+        pdc->dclevel.pSurface = pSurface;
+        pdc->dctype = DC_TYPE_DIRECT;
+        pdc->pSurfInfo = NULL;
+
+        if ( !pSurface ||
+             (pSurface->SurfObj.sizlBitmap.cx == pdc->dclevel.sizl.cx &&
+              pSurface->SurfObj.sizlBitmap.cy == pdc->dclevel.sizl.cy) )
+            return TRUE;
+
+        pdc->dclevel.sizl.cx = pSurface->SurfObj.sizlBitmap.cx;
+        pdc->dclevel.sizl.cy = pSurface->SurfObj.sizlBitmap.cy;
+    }
+    return IntSetDefaultRegion(pdc);
+}
+
 /*
-* @unimplemented
+* @implemented
 */
 BOOL
 APIENTRY
@@ -595,7 +648,14 @@ NtGdiMakeInfoDC(
     IN HDC hdc,
     IN BOOL bSet)
 {
-    UNIMPLEMENTED;
+    BOOL Ret;
+    PDC pdc = DC_LockDc(hdc);
+    if (pdc)
+    {
+        Ret = MakeInfoDC(pdc, bSet);
+        DC_UnlockDc(pdc);
+        return Ret;
+    }
     return FALSE;
 }
 
@@ -705,32 +765,14 @@ BOOL
 APIENTRY
 NtGdiDeleteObjectApp(HANDLE DCHandle)
 {
-    /* Complete all pending operations */
-    NtGdiFlushUserBatch();
-
-    if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
-
-    if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
-        return GreDeleteObject((HGDIOBJ) DCHandle);
-
-    if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
-
-    if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
-    {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-
-    return IntGdiDeleteDC(DCHandle, FALSE);
-}
-
-BOOL
-APIENTRY
-NewNtGdiDeleteObjectApp(HANDLE DCHandle)
-{
   GDIOBJTYPE ObjType;
 
+  /* Complete all pending operations */
+  NtGdiFlushUserBatch();
+
   if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
+
+  if (IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
 
   ObjType = GDI_HANDLE_GET_TYPE(DCHandle) >> GDI_ENTRY_UPPER_SHIFT;
 

@@ -137,7 +137,7 @@ KspPropertyHandler(
     /* get input property request */
     Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
-    DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
+//    DPRINT("KspPropertyHandler Irp %p PropertySetsCount %u PropertySet %p Allocator %p PropertyItemSize %u ExpectedPropertyItemSize %u\n", Irp, PropertySetsCount, PropertySet, Allocator, PropertyItemSize, sizeof(KSPROPERTY_ITEM));
 
     /* sanity check */
     ASSERT(PropertyItemSize == 0 || PropertyItemSize == sizeof(KSPROPERTY_ITEM));

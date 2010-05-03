@@ -19,7 +19,7 @@
    Boston, MA 02110-1301, USA.
 */
 
-#include <w32k.h>
+#include <win32k.h>
 
 /*
  * FIXME! Is there a better algorithm. like FT_MulDiv

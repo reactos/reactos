@@ -344,7 +344,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                             else
                                 pdir[3] = '\0';
                             }
-                        if (ShellExecuteA(NULL, "open", psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
+                        if (ShellExecuteA(NULL, NULL, psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
@@ -357,7 +357,7 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                                 ) ;
                             sprintf (szMsg, "Error: %s", pszSysMsg) ;
                             LocalFree ((HLOCAL)pszSysMsg) ;
-                            MessageBoxA (hwnd, szMsg, "Nix", MB_OK | MB_ICONEXCLAMATION) ;
+                            MessageBoxA (hwnd, szMsg, NULL, MB_OK | MB_ICONEXCLAMATION) ;
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             HeapFree(GetProcessHeap(), 0, pdir);
@@ -612,9 +612,11 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
-   UNIMPLEMENTED;
-   ExitWindowsEx(EWX_LOGOFF, 0);
-   return 0;
+    if (ConfirmDialog(hWndOwner, IDS_LOGOFF_PROMPT, IDS_LOGOFF_TITLE))
+    {
+        ExitWindowsEx(EWX_LOGOFF, 0);
+    }
+    return 0;
 }
 
 /*************************************************************************

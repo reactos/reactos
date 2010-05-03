@@ -27,7 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1131,6 +1131,16 @@ IntCalcFillOrigin(PDC pdc)
     pdc->ptlFillOrigin.y = pdc->dclevel.ptlBrushOrigin.y + pdc->ptlDCOrig.y;
 
     return pdc->ptlFillOrigin.y;
+}
+
+PPOINTL
+FASTCALL
+IntptlBrushOrigin(PDC pdc, LONG x, LONG y )
+{
+    pdc->dclevel.ptlBrushOrigin.x = x;
+    pdc->dclevel.ptlBrushOrigin.y = y;
+    IntCalcFillOrigin(pdc);
+    return &pdc->dclevel.ptlBrushOrigin;
 }
 
 VOID

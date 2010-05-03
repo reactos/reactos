@@ -727,25 +727,25 @@ static struct regsvr_coclass const coclass_list[] = {
 	"WIC Imaging Factory",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICBmpDecoder,
 	"WIC BMP Decoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICPngDecoder,
 	"WIC PNG Decoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICPngEncoder,
 	"WIC PNG Encoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICBmpEncoder,
 	"WIC BMP Encoder",
@@ -757,25 +757,31 @@ static struct regsvr_coclass const coclass_list[] = {
 	"WIC GIF Decoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICIcoDecoder,
 	"WIC ICO Decoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     {   &CLSID_WICJpegDecoder,
 	"WIC JPEG Decoder",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
+    },
+    {   &CLSID_WICTiffDecoder,
+	"WIC TIFF Decoder",
+	NULL,
+	"windowscodecs.dll",
+	"Both"
     },
     {   &CLSID_WICDefaultFormatConverter,
 	"WIC Default Format Converter",
 	NULL,
 	"windowscodecs.dll",
-	"Apartment"
+	"Both"
     },
     { NULL }			/* list terminator */
 };
@@ -868,6 +874,27 @@ static struct decoder_pattern const png_patterns[] = {
     {0}
 };
 
+static const BYTE tiff_magic_le[] = {0x49,0x49,42,0};
+static const BYTE tiff_magic_be[] = {0x4d,0x4d,0,42};
+
+static GUID const * const tiff_formats[] = {
+    &GUID_WICPixelFormatBlackWhite,
+    &GUID_WICPixelFormat4bppGray,
+    &GUID_WICPixelFormat8bppGray,
+    &GUID_WICPixelFormat4bppIndexed,
+    &GUID_WICPixelFormat8bppIndexed,
+    &GUID_WICPixelFormat32bppBGR,
+    &GUID_WICPixelFormat32bppBGRA,
+    &GUID_WICPixelFormat32bppPBGRA,
+    NULL
+};
+
+static struct decoder_pattern const tiff_patterns[] = {
+    {4,0,tiff_magic_le,mask_all,0},
+    {4,0,tiff_magic_be,mask_all,0},
+    {0}
+};
+
 static struct regsvr_decoder const decoder_list[] = {
     {   &CLSID_WICBmpDecoder,
 	"The Wine Project",
@@ -918,6 +945,16 @@ static struct regsvr_decoder const decoder_list[] = {
 	".png",
 	png_formats,
 	png_patterns
+    },
+    {   &CLSID_WICTiffDecoder,
+	"The Wine Project",
+	"TIFF Decoder",
+	"1.0.0.0",
+	&GUID_VendorMicrosoft,
+	"image/tiff",
+	".tif;.tiff",
+	tiff_formats,
+	tiff_patterns
     },
     { NULL }			/* list terminator */
 };

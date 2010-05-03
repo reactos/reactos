@@ -5127,7 +5127,7 @@ Return Value:
         // The data buffer must be aligned.
         //
 
-        srb->DataBuffer = (PVOID) (((ULONG) (context + 1) + (alignment - 1)) &
+        srb->DataBuffer = (PVOID) (((ULONG_PTR) (context + 1) + (alignment - 1)) &
             ~(alignment - 1));
 
 
@@ -5877,7 +5877,7 @@ Return Value:
         irpStack = IoGetCurrentIrpStackLocation(irp);
 
         if (irpStack->Parameters.Others.Argument3) {
-            ULONG count;
+            ULONG_PTR count;
 
             //
             // Decrement the countdown timer and put the IRP back in the list.
@@ -6497,7 +6497,7 @@ Return Value:
     PIO_STACK_LOCATION  irpStack;
     NTSTATUS            status;
     BOOLEAN             retry;
-    ULONG               retryCount;
+    ULONG_PTR           retryCount;
     ULONG               lastSector;
     PIRP                originalIrp;
     PCDROM_DATA         cddata;

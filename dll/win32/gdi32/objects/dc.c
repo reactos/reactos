@@ -1540,7 +1540,6 @@ SelectObject(HDC hDC,
     PDC_ATTR pDc_Attr;
     HGDIOBJ hOldObj = NULL;
     UINT uType;
-//    PTEB pTeb;
 
     if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
     {
@@ -1582,29 +1581,23 @@ SelectObject(HDC hDC,
         case GDI_OBJECT_TYPE_FONT:
             hOldObj = pDc_Attr->hlfntNew;
             if (hOldObj == hGdiObj) return hOldObj;
-#if 0
+
             pDc_Attr->ulDirty_ &= ~SLOW_WIDTHS;
             pDc_Attr->ulDirty_ |= DIRTY_CHARSET;
             pDc_Attr->hlfntNew = hGdiObj;
-            pTeb = NtCurrentTeb();
-            if (((pTeb->GdiTebBatch.HDC == 0) ||
-                 (pTeb->GdiTebBatch.HDC == hDC)) &&
-                ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE) &&
-               (!(pDc_Attr->ulDirty_ & DC_DIBSECTION)))
-            {
-              PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
-                                                pTeb->GdiTebBatch.Offset);
-              pgO->gbHdr.Cmd = GdiBCSelObj;
-              pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
-              pgO->hgdiobj = hGdiObj;
 
-              pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
-              pTeb->GdiTebBatch.HDC = hDC;
-              pTeb->GdiBatchCount++;
-              if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
-              return hOldObj;
+            if (!(pDc_Attr->ulDirty_ & DC_DIBSECTION))
+            {
+                PGDIBSOBJECT pgO;
+
+                pgO = GdiAllocBatchCommand(hDC, GdiBCSelObj);
+                if (pgO)
+                {
+                    pgO->hgdiobj = hGdiObj;
+                    return hOldObj;
+                }
             }
-#endif
+
             // default for select object font
             return NtGdiSelectFont(hDC, hGdiObj);
 

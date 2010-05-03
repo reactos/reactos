@@ -257,6 +257,7 @@ IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
                 case DRIVE_CDROM:       icon_idx = IDI_SHELL_CDROM;         break;
                 case DRIVE_REMOTE:      icon_idx = IDI_SHELL_NETDRIVE;      break;
                 case DRIVE_RAMDISK:     icon_idx = IDI_SHELL_RAMDISK;       break;
+                case DRIVE_NO_ROOT_DIR: icon_idx = IDI_SHELL_CDROM;         break;
             }
         }
 

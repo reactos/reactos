@@ -27,7 +27,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 /* FIXME: find include file for these */
 #define MONITORINFOF_PRIMARY      1

@@ -29,7 +29,7 @@
 /* TODO: Check how the WNDOBJ implementation should behave with a driver on windows.
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

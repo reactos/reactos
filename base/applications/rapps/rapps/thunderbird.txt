@@ -2,35 +2,35 @@
 
 [Section]
 Name = Mozilla Thunderbird
-Version = 3.0.3
+Version = 3.0.4
 Licence = MPL/GPL/LGPL
 Description = The most popular and one of the best free Mail Clients out there.
 Size = 8.6M
 Category = 5
 URLSite = http://www.mozilla-europe.org/en/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.3/win32/en-US/Thunderbird%20Setup%203.0.3.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.4/win32/en-US/Thunderbird%20Setup%203.0.4.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Mail-Clients.
-Size = 8.4M
+Size = 8.5M
 URLSite = http://www.mozilla-europe.org/de/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.3/win32/de/Thunderbird%20Setup%203.0.3.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.4/win32/de/Thunderbird%20Setup%203.0.4.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores clientes mail que hay.
 Size = 8.4M
 URLSite = http://www.mozilla-europe.org/es/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.3/win32/es-ES/Thunderbird%20Setup%203.0.3.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.4/win32/es-ES/Thunderbird%20Setup%203.0.4.exe
 
 [Section.0415]
 Description = Najpopularniejszy i jeden z najlepszych darmowych klientów poczty.
 Size = 9.3M
 URLSite = http://www.mozilla-europe.org/pl/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.3/win32/pl/Thunderbird%20Setup%203.0.3.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.4/win32/pl/Thunderbird%20Setup%203.0.4.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных почтовых клиентов.
 Size = 8.8M
 URLSite = http://www.mozilla-europe.org/ru/products/thunderbird/
-URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.3/win32/ru/Thunderbird%20Setup%203.0.3.exe
+URLDownload = http://releases.mozilla.org/pub/mozilla.org/thunderbird/releases/3.0.4/win32/ru/Thunderbird%20Setup%203.0.4.exe

@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

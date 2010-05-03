@@ -60,7 +60,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #include <ntgdi.h>
 
 /* Internal Win32K Header */
-#include "include/win32k.h"
+#include "include/win32kp.h"
 
 /* Undocumented stuff */
 typedef DRIVEROBJ *PDRIVEROBJ;

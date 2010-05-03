@@ -62,7 +62,6 @@ typedef struct tagMACHVTBL
   ULONG (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
 
   BOOLEAN (*DiskGetBootPath)(char *BootPath, unsigned Size);
-  BOOLEAN (*DiskNormalizeSystemPath)(char *SystemPath, unsigned Size);
   BOOLEAN (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
   BOOLEAN (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
   ULONG (*DiskGetCacheableBlockCount)(ULONG DriveNumber);

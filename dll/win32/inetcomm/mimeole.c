@@ -1419,7 +1419,7 @@ static HRESULT create_sub_stream(IStream *stream, ULARGE_INTEGER start, ULARGE_I
 typedef struct body_t
 {
     struct list entry;
-    HBODY hbody;
+    DWORD index;
     IMimeBody *mime_body;
 
     struct body_t *parent;
@@ -1434,7 +1434,7 @@ typedef struct MimeMessage
     IStream *stream;
 
     struct list body_tree;
-    HBODY next_hbody;
+    DWORD next_index;
 } MimeMessage;
 
 static HRESULT WINAPI MimeMessage_QueryInterface(IMimeMessage *iface, REFIID riid, void **ppv)
@@ -1512,13 +1512,13 @@ static HRESULT WINAPI MimeMessage_IsDirty(
     return E_NOTIMPL;
 }
 
-static body_t *new_body_entry(IMimeBody *mime_body, HBODY hbody, body_t *parent)
+static body_t *new_body_entry(IMimeBody *mime_body, DWORD index, body_t *parent)
 {
     body_t *body = HeapAlloc(GetProcessHeap(), 0, sizeof(*body));
     if(body)
     {
         body->mime_body = mime_body;
-        body->hbody = hbody;
+        body->index = index;
         list_init(&body->children);
         body->parent = parent;
     }
@@ -1630,8 +1630,7 @@ static body_t *create_sub_body(MimeMessage *msg, IStream *pStm, BODYOFFSETS *off
     offset->cbBodyStart = cur.u.LowPart + offset->cbHeaderStart;
     if(parent) MimeBody_set_offsets(impl_from_IMimeBody(mime_body), offset);
     IMimeBody_SetData(mime_body, IET_BINARY, NULL, NULL, &IID_IStream, pStm);
-    body = new_body_entry(mime_body, msg->next_hbody, parent);
-    msg->next_hbody = (HBODY)((DWORD)msg->next_hbody + 1);
+    body = new_body_entry(mime_body, msg->next_index++, parent);
 
     if(IMimeBody_IsContentType(mime_body, "multipart", NULL) == S_OK)
     {
@@ -1812,7 +1811,7 @@ static HRESULT find_body(struct list *list, HBODY hbody, body_t **body)
 
     LIST_FOR_EACH_ENTRY(cur, list, body_t, entry)
     {
-        if(cur->hbody == hbody)
+        if(cur->index == HandleToUlong(hbody))
         {
             *body = cur;
             return S_OK;
@@ -1948,7 +1947,7 @@ static HRESULT WINAPI MimeMessage_GetBody(
 
     hr = get_body(This, location, hPivot, &body);
 
-    if(hr == S_OK) *phBody = body->hbody;
+    if(hr == S_OK) *phBody = UlongToHandle(body->index);
 
     return hr;
 }
@@ -2003,38 +2002,35 @@ static HRESULT WINAPI MimeMessage_CountBodies(
     return S_OK;
 }
 
-static HRESULT find_next(IMimeMessage *msg, LPFINDBODY find_body, HBODY *out)
+static HRESULT find_next(IMimeMessage *msg, body_t *body, LPFINDBODY find, HBODY *out)
 {
-    HRESULT hr;
-    IMimeBody *mime_body;
+    MimeMessage *This = (MimeMessage *)msg;
+    struct list *ptr;
     HBODY next;
 
-    if(find_body->dwReserved == 0)
-        find_body->dwReserved = (DWORD)HBODY_ROOT;
-    else
+    for (;;)
     {
-        hr = IMimeMessage_GetBody(msg, IBL_FIRST, (HBODY)find_body->dwReserved, &next);
-        if(hr == S_OK)
-            find_body->dwReserved = (DWORD)next;
+        if (!body) ptr = list_head( &This->body_tree );
         else
         {
-            hr = IMimeMessage_GetBody(msg, IBL_NEXT, (HBODY)find_body->dwReserved, &next);
-            if(hr == S_OK)
-                find_body->dwReserved = (DWORD)next;
-            else
-                return MIME_E_NOT_FOUND;
+            ptr = list_head( &body->children );
+            while (!ptr)
+            {
+                if (!body->parent) return MIME_E_NOT_FOUND;
+                if (!(ptr = list_next( &body->parent->children, &body->entry ))) body = body->parent;
+            }
+        }
+
+        body = LIST_ENTRY( ptr, body_t, entry );
+        next = UlongToHandle( body->index );
+        find->dwReserved = body->index;
+        if (IMimeBody_IsContentType(body->mime_body, find->pszPriType, find->pszSubType) == S_OK)
+        {
+            *out = next;
+            return S_OK;
         }
     }
-
-    hr = IMimeMessage_BindToObject(msg, (HBODY)find_body->dwReserved, &IID_IMimeBody, (void**)&mime_body);
-    if(IMimeBody_IsContentType(mime_body, find_body->pszPriType, find_body->pszSubType) == S_OK)
-    {
-        IMimeBody_Release(mime_body);
-        *out = (HBODY)find_body->dwReserved;
-        return S_OK;
-    }
-    IMimeBody_Release(mime_body);
-    return find_next(msg, find_body, out);
+    return MIME_E_NOT_FOUND;
 }
 
 static HRESULT WINAPI MimeMessage_FindFirst(
@@ -2045,7 +2041,7 @@ static HRESULT WINAPI MimeMessage_FindFirst(
     TRACE("(%p)->(%p, %p)\n", iface, pFindBody, phBody);
 
     pFindBody->dwReserved = 0;
-    return find_next(iface, pFindBody, phBody);
+    return find_next( iface, NULL, pFindBody, phBody );
 }
 
 static HRESULT WINAPI MimeMessage_FindNext(
@@ -2053,9 +2049,15 @@ static HRESULT WINAPI MimeMessage_FindNext(
     LPFINDBODY pFindBody,
     LPHBODY phBody)
 {
+    MimeMessage *This = (MimeMessage *)iface;
+    body_t *body;
+    HRESULT hr;
+
     TRACE("(%p)->(%p, %p)\n", iface, pFindBody, phBody);
 
-    return find_next(iface, pFindBody, phBody);
+    hr = find_body( &This->body_tree, UlongToHandle( pFindBody->dwReserved ), &body );
+    if (hr != S_OK) return MIME_E_NOT_FOUND;
+    return find_next( iface, body, pFindBody, phBody );
 }
 
 static HRESULT WINAPI MimeMessage_ResolveURL(
@@ -2562,7 +2564,7 @@ HRESULT MimeMessage_create(IUnknown *outer, void **obj)
     This->refs = 1;
     This->stream = NULL;
     list_init(&This->body_tree);
-    This->next_hbody = (HBODY)1;
+    This->next_index = 1;
 
     *obj = &This->lpVtbl;
     return S_OK;

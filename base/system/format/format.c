@@ -363,6 +363,12 @@ _tmain(int argc, TCHAR *argv[])
 		PrintWin32Error( szMsg, GetLastError());
 		return -1;
 	}
+	else if ( driveType == 1 )
+	{
+		LoadString( GetModuleHandle(NULL), STRING_NO_VOLUME, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+		PrintWin32Error( szMsg, GetLastError());
+		return -1;
+	}
 
 	if( driveType != DRIVE_FIXED ) {
 		LoadString( GetModuleHandle(NULL), STRING_INSERT_DISK, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);

@@ -741,7 +741,7 @@ GetShortPathNameW (
     }
 
     /* check for drive letter */
-    if (longpath[1] == ':' )
+    if (longpath[0] != '/' && longpath[1] == ':' )
     {
         tmpshortpath[0] = longpath[0];
         tmpshortpath[1] = ':';
@@ -772,7 +772,7 @@ GetShortPathNameW (
         tmplen = p - (longpath + lp);
         lstrcpynW(tmpshortpath + sp, longpath + lp, tmplen + 1);
         /* Check, if the current element is a valid dos name */
-        if (tmplen <= 8+1+3+1)
+        if (tmplen <= 8+1+3)
         {
             BOOLEAN spaces;
             memcpy(ustr_buf, longpath + lp, tmplen * sizeof(WCHAR));

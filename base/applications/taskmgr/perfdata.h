@@ -60,6 +60,7 @@ void	PerfDataUninitialize(void);
 void	PerfDataRefresh(void);
 
 BOOL    PerfDataGet(ULONG Index, PPERFDATA *lppData);
+ULONG   PerfDataGetProcessIndex(ULONG pid);
 ULONG	PerfDataGetProcessCount(void);
 ULONG	PerfDataGetProcessorUsage(void);
 ULONG	PerfDataGetProcessorSystemUsage(void);

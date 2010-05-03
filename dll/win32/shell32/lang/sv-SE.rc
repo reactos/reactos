@@ -358,7 +358,7 @@ BEGIN
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
-STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Open With"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -665,6 +665,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Do you want to restart the system?"
 	IDS_SHUTDOWN_TITLE          "Shutdown"
 	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_LOGOFF_TITLE            "Log Off"
+	IDS_LOGOFF_PROMPT           "Do you want to log off?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
@@ -749,4 +751,6 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 	IDS_COPY_OF                 "Copy of"
+
+	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
 END

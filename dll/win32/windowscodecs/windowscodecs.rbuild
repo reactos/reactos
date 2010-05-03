@@ -28,6 +28,7 @@
 	<file>propertybag.c</file>
 	<file>regsvr.c</file>
 	<file>stream.c</file>
+	<file>tiffformat.c</file>
 	<file>ungif.c</file>
 
 	<file>version.rc</file>

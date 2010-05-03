@@ -1523,6 +1523,40 @@ CmSetLazyFlushState(
 );
 
 //
+// Driver List Routines
+//
+PUNICODE_STRING*
+NTAPI
+CmGetSystemDriverList(
+    VOID
+);
+
+BOOLEAN
+NTAPI
+CmpFindDrivers(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ControlSet,
+    IN SERVICE_LOAD_TYPE LoadType,
+    IN PWSTR BootFileSystem OPTIONAL,
+    IN PLIST_ENTRY DriverListHead
+);
+
+
+BOOLEAN
+NTAPI
+CmpSortDriverList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ControlSet,
+    IN PLIST_ENTRY DriverListHead
+);
+
+BOOLEAN
+NTAPI
+CmpResolveDriverDependencies(
+    IN PLIST_ENTRY DriverListHead
+);
+
+//
 // Global variables accessible from all of Cm
 //
 extern ULONG CmpTraceLevel;

@@ -452,7 +452,23 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         SectorCount = Geometry.Sectors;
     }
     else
-        return EINVAL;
+    {
+        DPRINTM(DPRINT_HWDETECT, "Using legacy sector size detection\n");
+
+        /* Fall back to legacy detection */
+        if (DrivePartition == 0xff)
+        {
+            /* This is a CD-ROM device */
+            SectorSize = 2048;
+        }
+        else
+        {
+            /* This is either a floppy disk device (DrivePartition == 0) or
+             * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
+             * it doesn't matter which one because they both have 512 bytes per sector */
+            SectorSize = 512;
+        }
+    }
 
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
@@ -1419,10 +1435,10 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
       /* Set Interrupt */
       PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
       PartialDescriptor->Type = CmResourceTypeInterrupt;
-      PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
+      PartialDescriptor->ShareDisposition = CmResourceShareShared;
       PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
       PartialDescriptor->u.Interrupt.Level = Irq[i];
-      PartialDescriptor->u.Interrupt.Vector = 0;
+      PartialDescriptor->u.Interrupt.Vector = Irq[i];
       PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
       /* Set serial data (device specific) */
@@ -1529,7 +1545,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 	  PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
 	  PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
 	  PartialDescriptor->u.Interrupt.Level = Irq[i];
-	  PartialDescriptor->u.Interrupt.Vector = 0;
+	  PartialDescriptor->u.Interrupt.Vector = Irq[i];
 	  PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 	}
 
@@ -1715,7 +1731,7 @@ DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
   PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
   PartialDescriptor->Flags = CM_RESOURCE_INTERRUPT_LATCHED;
   PartialDescriptor->u.Interrupt.Level = 1;
-  PartialDescriptor->u.Interrupt.Vector = 0;
+  PartialDescriptor->u.Interrupt.Vector = 1;
   PartialDescriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
 
   /* Set IO Port 0x60 */
@@ -1887,7 +1903,7 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
       PartialResourceList.PartialDescriptors[0].ShareDisposition = CmResourceShareUndetermined;
       PartialResourceList.PartialDescriptors[0].Flags = CM_RESOURCE_INTERRUPT_LATCHED;
       PartialResourceList.PartialDescriptors[0].u.Interrupt.Level = 12;
-      PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 0;
+      PartialResourceList.PartialDescriptors[0].u.Interrupt.Vector = 12;
       PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
 
       /* Create controller key */

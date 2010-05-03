@@ -155,7 +155,7 @@ HWND get_notif_hwnd(void)
             NULL
         };
 
-        wndclass.hInstance = URLMON_hInstance;
+        wndclass.hInstance = hProxyDll;
 
         wnd_class = RegisterClassExW(&wndclass);
         if (!wnd_class && GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
@@ -164,7 +164,7 @@ HWND get_notif_hwnd(void)
 
     tls_data->notif_hwnd = CreateWindowExW(0, wszURLMonikerNotificationWindow,
             wszURLMonikerNotificationWindow, 0, 0, 0, 0, 0, HWND_MESSAGE,
-            NULL, URLMON_hInstance, NULL);
+            NULL, hProxyDll, NULL);
     if(tls_data->notif_hwnd)
         tls_data->notif_hwnd_cnt++;
 
