@@ -1223,7 +1223,13 @@ KdbpCmdThread(
                 str2 = "";
             }
 
-            if (Thread->Tcb.TrapFrame)
+            if (!Thread->Tcb.InitialStack)
+            {
+                /* Thread has no kernel stack (probably terminated) */
+                Esp = Ebp = NULL;
+                Eip = 0;
+            }
+            else if (Thread->Tcb.TrapFrame)
             {
                 if (Thread->Tcb.TrapFrame->PreviousPreviousMode == KernelMode)
                     Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
