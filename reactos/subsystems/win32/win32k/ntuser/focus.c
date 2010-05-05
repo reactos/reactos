@@ -227,6 +227,7 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    if (PrevForegroundQueue != 0)
    {
       hWndPrev = PrevForegroundQueue->ActiveWindow;
+      hWndFocusPrev = PrevForegroundQueue->FocusWindow;
    }
 
    if (hWndPrev == hWnd)
@@ -234,9 +235,6 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       DPRINT("Failed - Same\n");
       return TRUE;
    }
-
-   hWndFocusPrev = (PrevForegroundQueue == FocusWindow->pti->MessageQueue
-                    ? FocusWindow->pti->MessageQueue->FocusWindow : NULL);
 
    /* FIXME: Call hooks. */
 
