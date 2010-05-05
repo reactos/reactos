@@ -170,10 +170,12 @@ CreateUserProfileW(PSID Sid,
     WCHAR szProfilesPath[MAX_PATH];
     WCHAR szUserProfilePath[MAX_PATH];
     WCHAR szDefaultUserPath[MAX_PATH];
+    WCHAR szUserProfileName[MAX_PATH];
     WCHAR szBuffer[MAX_PATH];
     LPWSTR SidString;
     DWORD dwLength;
     DWORD dwDisposition;
+    UINT i;
     HKEY hKey;
     LONG Error;
 
@@ -245,14 +247,11 @@ CreateUserProfileW(PSID Sid,
 
     RegCloseKey (hKey);
 
+    wcscpy(szUserProfileName, lpUserName);
+
     wcscpy(szUserProfilePath, szProfilesPath);
     wcscat(szUserProfilePath, L"\\");
-    wcscat(szUserProfilePath, lpUserName);
-    if (!AppendSystemPostfix(szUserProfilePath, MAX_PATH))
-    {
-        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-        return FALSE;
-    }
+    wcscat(szUserProfilePath, szUserProfileName);
 
     wcscpy(szDefaultUserPath, szProfilesPath);
     wcscat(szDefaultUserPath, L"\\");
@@ -265,6 +264,24 @@ CreateUserProfileW(PSID Sid,
         {
             DPRINT1("Error: %lu\n", GetLastError());
             return FALSE;
+        }
+
+        for (i = 0; i < 1000; i++)
+        {
+            swprintf(szUserProfileName, L"%s.%03u", lpUserName, i);
+
+            wcscpy(szUserProfilePath, szProfilesPath);
+            wcscat(szUserProfilePath, L"\\");
+            wcscat(szUserProfilePath, szUserProfileName);
+
+            if (CreateDirectoryW(szUserProfilePath, NULL))
+                break;
+
+            if (GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                return FALSE;
+            }
         }
     }
 
@@ -308,14 +325,7 @@ CreateUserProfileW(PSID Sid,
     /* Create non-expanded user profile path */
     wcscpy(szBuffer, szRawProfilesPath);
     wcscat(szBuffer, L"\\");
-    wcscat(szBuffer, lpUserName);
-    if (!AppendSystemPostfix(szBuffer, MAX_PATH))
-    {
-        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-        LocalFree((HLOCAL)SidString);
-        RegCloseKey (hKey);
-        return FALSE;
-    }
+    wcscat(szBuffer, szUserProfileName);
 
     /* Set 'ProfileImagePath' value (non-expanded) */
     Error = RegSetValueExW(hKey,
@@ -958,16 +968,9 @@ LoadUserProfileW(IN HANDLE hToken,
         }
     }
 
+    /* Create user hive name */
     wcscat(szUserHivePath, L"\\");
     wcscat(szUserHivePath, lpProfileInfo->lpUserName);
-    dwLength = sizeof(szUserHivePath) / sizeof(szUserHivePath[0]);
-    if (!AppendSystemPostfix(szUserHivePath, dwLength))
-    {
-        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-        return FALSE;
-    }
-
-    /* Create user hive name */
     wcscat(szUserHivePath, L"\\ntuser.dat");
     DPRINT("szUserHivePath: %S\n", szUserHivePath);
 
@@ -1129,8 +1132,21 @@ UnloadUserProfile(HANDLE hToken,
 
     DPRINT("SidString: '%wZ'\n", &SidString);
 
+    /* Acquire restore privilege */
+    if (!AcquireRemoveRestorePrivilege(TRUE))
+    {
+        DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
+        RtlFreeUnicodeString(&SidString);
+        return FALSE;
+    }
+
+    /* Unload the hive */
     Error = RegUnLoadKeyW(HKEY_USERS,
                           SidString.Buffer);
+
+    /* Remove restore privilege */
+    AcquireRemoveRestorePrivilege(FALSE);
+
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("RegUnLoadKeyW() failed (Error %ld)\n", Error);
