@@ -659,37 +659,87 @@ Ke386CallBios(IN ULONG Int,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 Ke386IoSetAccessProcess(IN PKPROCESS Process,
-                        IN ULONG Flag)
+                        IN ULONG MapNumber)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    USHORT MapOffset;
+    PKPRCB Prcb;
+    KAFFINITY TargetProcessors;
+
+    if(MapNumber > IOPM_COUNT)
+        return FALSE;
+
+    MapOffset = KiComputeIopmOffset(MapNumber);
+
+    Process->IopmOffset = MapOffset;
+
+    TargetProcessors = Process->ActiveProcessors;
+    Prcb = KeGetCurrentPrcb();
+    if (TargetProcessors & Prcb->SetMember)
+        KeGetPcr()->TSS->IoMapBase = MapOffset;
+
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
-Ke386SetIoAccessMap(IN ULONG Flag,
-                    IN PVOID IopmBuffer)
+Ke386SetIoAccessMap(IN ULONG MapNumber,
+                    IN PKIO_ACCESS_MAP IopmBuffer)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PKPROCESS CurrentProcess;
+    PKPRCB Prcb;
+    PVOID pt;
+
+    if ((MapNumber > IOPM_COUNT) || (MapNumber == IO_ACCESS_MAP_NONE))
+        return FALSE;
+
+    Prcb = KeGetCurrentPrcb();
+
+    // Copy the IOP map and load the map for the current process.
+    pt = &(KeGetPcr()->TSS->IoMaps[MapNumber-1].IoMap);
+    RtlMoveMemory(pt, (PVOID)IopmBuffer, IOPM_SIZE);
+    CurrentProcess = Prcb->CurrentThread->ApcState.Process;
+    KeGetPcr()->TSS->IoMapBase = CurrentProcess->IopmOffset;
+
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
-Ke386QueryIoAccessMap(IN ULONG Flag,
-                      IN PVOID IopmBuffer)
+Ke386QueryIoAccessMap(IN ULONG MapNumber,
+                      IN PKIO_ACCESS_MAP IopmBuffer)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    ULONG i;
+    PVOID Map;
+    PUCHAR p;
+
+    if (MapNumber > IOPM_COUNT)
+        return FALSE;
+
+    if (MapNumber == IO_ACCESS_MAP_NONE)
+    {
+        // no access, simply return a map of all 1s
+        p = (PUCHAR)IopmBuffer;
+        for (i = 0; i < IOPM_SIZE; i++) {
+            p[i] = (UCHAR)-1;
+        }
+    }
+    else
+    {
+        // copy the bits
+        Map = (PVOID)&(KeGetPcr()->TSS->IoMaps[MapNumber-1].IoMap);
+        RtlMoveMemory((PVOID)IopmBuffer, Map, IOPM_SIZE);
+    }
+
+    return TRUE;
 }
