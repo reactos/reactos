@@ -259,7 +259,8 @@ EngpCreatePDEV(
 
     ppdev->pGraphicsDevice = pGraphicsDevice;
     ppdev->hsemDevLock = EngCreateSemaphore();
-    ppdev->pdmwDev = pGraphicsDevice->pDevModeList[pGraphicsDevice->iCurrentMode].pdm;
+    // Should we change the ative mode of pGraphicsDevice ?
+    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, pdm) ;
 
     /* FIXME! */
     ppdev->flFlags = PDEV_DISPLAY;
