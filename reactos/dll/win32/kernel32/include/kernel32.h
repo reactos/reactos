@@ -190,3 +190,7 @@ IntGetCodePageEntry(UINT CodePage);
 
 LPWSTR
 GetDllLoadPath(LPCWSTR lpModule);
+
+VOID
+WINAPI
+InitCommandLines(VOID);

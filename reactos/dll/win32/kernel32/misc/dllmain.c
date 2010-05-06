@@ -330,6 +330,9 @@ DllMain(HANDLE hDll,
         wcscpy(SystemDirectory.Buffer, WindowsDirectory.Buffer);
         wcscat(SystemDirectory.Buffer, L"\\System32");
 
+        /* Initialize command line */
+        InitCommandLines();
+
         /* Open object base directory */
         Status = OpenBaseDirectory(&hBaseDir);
         if (!NT_SUCCESS(Status))
