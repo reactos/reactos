@@ -796,7 +796,6 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     if (DCToDelete == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        DPRINT1("Could not lock DC to delete\n");
         return FALSE;
     }
 
@@ -843,7 +842,6 @@ NtGdiDeleteObjectApp(HANDLE DCHandle)
 
     if (!GDIOBJ_OwnedByCurrentProcess(DCHandle))
     {
-        DPRINT1("Not a DC from current process!\n");
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
