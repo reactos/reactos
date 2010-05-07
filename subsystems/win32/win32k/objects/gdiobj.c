@@ -646,7 +646,7 @@ LockHandle:
                  */
                 DPRINT1("Object->cExclusiveLock = %d\n", Object->cExclusiveLock);
                 GDIDBG_TRACECALLER();
-                GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
+                GDIDBG_TRACELOCKER(hObj);
                 (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
                 /* do not assert here for it will call again from dxg.sys it being call twice */
 
@@ -688,7 +688,7 @@ LockHandle:
             }
             DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
             GDIDBG_TRACECALLER();
-            GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+            GDIDBG_TRACEALLOCATOR(hObj);
         }
     }
 
@@ -989,7 +989,7 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
     {
         DPRINT1("Tried to lock object (0x%p) of wrong owner! ProcessId = %p, HandleProcessId = %p\n", hObj, ProcessId, HandleProcessId);
         GDIDBG_TRACECALLER();
-        GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+        GDIDBG_TRACEALLOCATOR(hObj);
         return NULL;
     }
 
@@ -1039,8 +1039,8 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
                     {
                         GDIDBG_TRACELOOP(hObj, Object->Tid, Thread);
                         GDIDBG_TRACECALLER();
-                        GDIDBG_TRACELOCKER(GDI_HANDLE_GET_INDEX(hObj));
-                        GDIDBG_TRACEALLOCATOR(GDI_HANDLE_GET_INDEX(hObj));
+                        GDIDBG_TRACELOCKER(hObj);
+                        GDIDBG_TRACEALLOCATOR(hObj);
 
                         /* Unlock the handle table entry. */
                         (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
