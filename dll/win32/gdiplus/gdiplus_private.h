@@ -78,6 +78,29 @@ static inline REAL deg2rad(REAL degrees)
     return M_PI * degrees / 180.0;
 }
 
+static inline ARGB color_over(ARGB bg, ARGB fg)
+{
+    BYTE b, g, r, a;
+    BYTE bg_alpha, fg_alpha;
+
+    fg_alpha = (fg>>24)&0xff;
+
+    if (fg_alpha == 0xff) return fg;
+
+    if (fg_alpha == 0) return bg;
+
+    bg_alpha = (((bg>>24)&0xff) * (0xff-fg_alpha)) / 0xff;
+
+    if (bg_alpha == 0) return fg;
+
+    a = bg_alpha + fg_alpha;
+    b = ((bg&0xff)*bg_alpha + (fg&0xff)*fg_alpha)*0xff/a;
+    g = (((bg>>8)&0xff)*bg_alpha + ((fg>>8)&0xff)*fg_alpha)*0xff/a;
+    r = (((bg>>16)&0xff)*bg_alpha + ((fg>>16)&0xff)*fg_alpha)*0xff/a;
+
+    return (a<<24)|(r<<16)|(g<<8)|b;
+}
+
 extern const char *debugstr_rectf(CONST RectF* rc);
 
 extern const char *debugstr_pointf(CONST PointF* pt);
@@ -112,6 +135,7 @@ struct GpGraphics{
     HDC hdc;
     HWND hwnd;
     BOOL owndc;
+    GpImage *image;
     SmoothingMode smoothing;
     CompositingQuality compqual;
     InterpolationMode interpolation;

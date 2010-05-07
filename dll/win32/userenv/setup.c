@@ -140,22 +140,6 @@ InitializeProfiles(VOID)
         return FALSE;
     }
 
-    /* Store profiles directory path */
-    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
-    Error = RegSetValueExW(hKey,
-                           L"ProfilesDirectory",
-                           0,
-                           REG_EXPAND_SZ,
-                           (LPBYTE)szBuffer,
-                           dwLength);
-    if (Error != ERROR_SUCCESS)
-    {
-        DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
-    }
-
     /* Expand it */
     if (!ExpandEnvironmentStringsW(szBuffer,
                                    szProfilesPath,
@@ -177,15 +161,66 @@ InitializeProfiles(VOID)
         }
     }
 
-    /* Set 'DefaultUserProfile' value */
-    wcscpy(szBuffer, L"Default User");
-    if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+    /* Store the profiles directory path in the registry */
+    dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
+    Error = RegSetValueExW(hKey,
+                           L"ProfilesDirectory",
+                           0,
+                           REG_EXPAND_SZ,
+                           (LPBYTE)szBuffer,
+                           dwLength);
+    if (Error != ERROR_SUCCESS)
     {
-        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+        DPRINT1("Error: %lu\n", Error);
         RegCloseKey(hKey);
+        SetLastError((DWORD)Error);
         return FALSE;
     }
 
+    /* Set 'DefaultUserProfile' value */
+    wcscpy(szBuffer, L"Default User");
+
+    /* Create Default User profile directory path */
+    wcscpy(szProfilePath, szProfilesPath);
+    wcscat(szProfilePath, L"\\");
+    wcscat(szProfilePath, szBuffer);
+
+    /* Attempt default user directory creation */
+    if (!CreateDirectoryW (szProfilePath, NULL))
+    {
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        /* Directory existed, let's try to append the postfix */
+        if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+        {
+            DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+
+        /* Create Default User profile directory path again */
+        wcscpy(szProfilePath, szProfilesPath);
+        wcscat(szProfilePath, L"\\");
+        wcscat(szProfilePath, szBuffer);
+
+        /* Attempt creation again with appended postfix */
+        if (!CreateDirectoryW(szProfilePath, NULL))
+        {
+            if (GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                RegCloseKey(hKey);
+                return FALSE;
+            }
+        }
+    }
+
+    /* Store the default user profile path in the registry */
     dwLength = (wcslen (szBuffer) + 1) * sizeof(WCHAR);
     Error = RegSetValueExW(hKey,
                            L"DefaultUserProfile",
@@ -202,19 +237,6 @@ InitializeProfiles(VOID)
     }
 
     RegCloseKey(hKey);
-
-    /* Create 'Default User' profile directory */
-    wcscpy(szProfilePath, szProfilesPath);
-    wcscat(szProfilePath, L"\\");
-    wcscat(szProfilePath, szBuffer);
-    if (!CreateDirectoryW (szProfilePath, NULL))
-    {
-        if (GetLastError() != ERROR_ALREADY_EXISTS)
-        {
-            DPRINT1("Error: %lu\n", GetLastError());
-            return FALSE;
-        }
-    }
 
     /* Set current user profile */
     SetEnvironmentVariableW(L"USERPROFILE", szProfilePath);
@@ -382,10 +404,41 @@ InitializeProfiles(VOID)
 
     /* Set 'AllUsersProfile' value */
     wcscpy(szBuffer, L"All Users");
-    if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+
+    /* Create 'All Users' profile directory path */
+    wcscpy(szProfilePath, szProfilesPath);
+    wcscat(szProfilePath, L"\\");
+    wcscat(szProfilePath, szBuffer);
+
+    /* Attempt 'All Users' directory creation */
+    if (!CreateDirectoryW (szProfilePath, NULL))
     {
-        DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
-        return FALSE;
+        if (GetLastError() != ERROR_ALREADY_EXISTS)
+        {
+            DPRINT1("Error: %lu\n", GetLastError());
+            return FALSE;
+        }
+
+        /* Directory existed, let's try to append the postfix */
+        if (!AppendSystemPostfix(szBuffer, MAX_PATH))
+        {
+            DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+            return FALSE;
+        }
+
+        /* Attempt again creation with appended postfix */
+        wcscpy(szProfilePath, szProfilesPath);
+        wcscat(szProfilePath, L"\\");
+        wcscat(szProfilePath, szBuffer);
+
+        if (!CreateDirectoryW(szProfilePath, NULL))
+        {
+            if (GetLastError() != ERROR_ALREADY_EXISTS)
+            {
+                DPRINT1("Error: %lu\n", GetLastError());
+                return FALSE;
+            }
+        }
     }
 
     Error = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -407,27 +460,14 @@ InitializeProfiles(VOID)
                            REG_SZ,
                            (LPBYTE)szBuffer,
                            dwLength);
-    if (Error != ERROR_SUCCESS)
-    {
-        DPRINT1("Error: %lu\n", Error);
-        RegCloseKey(hKey);
-        SetLastError((DWORD)Error);
-        return FALSE;
-    }
 
     RegCloseKey(hKey);
 
-    /* Create 'All Users' profile directory */
-    wcscpy(szProfilePath, szProfilesPath);
-    wcscat(szProfilePath, L"\\");
-    wcscat(szProfilePath, szBuffer);
-    if (!CreateDirectoryW(szProfilePath, NULL))
+    if (Error != ERROR_SUCCESS)
     {
-        if (GetLastError() != ERROR_ALREADY_EXISTS)
-        {
-            DPRINT1("Error: %lu\n", GetLastError());
-            return FALSE;
-        }
+        DPRINT1("Error: %lu\n", Error);
+        SetLastError((DWORD)Error);
+        return FALSE;
     }
 
     /* Set 'All Users' profile */

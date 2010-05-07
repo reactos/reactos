@@ -122,7 +122,7 @@ static inline void getpixel_16bppGrayScale(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
 static inline void getpixel_16bppRGB555(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
     const BYTE *row, UINT x)
 {
-    WORD pixel = *((WORD*)(row)+x);
+    WORD pixel = *((const WORD*)(row)+x);
     *r = (pixel>>7&0xf8)|(pixel>>12&0x7);
     *g = (pixel>>2&0xf8)|(pixel>>6&0x7);
     *b = (pixel<<3&0xf8)|(pixel>>2&0x7);
@@ -132,7 +132,7 @@ static inline void getpixel_16bppRGB555(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
 static inline void getpixel_16bppRGB565(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
     const BYTE *row, UINT x)
 {
-    WORD pixel = *((WORD*)(row)+x);
+    WORD pixel = *((const WORD*)(row)+x);
     *r = (pixel>>8&0xf8)|(pixel>>13&0x7);
     *g = (pixel>>3&0xfc)|(pixel>>9&0x3);
     *b = (pixel<<3&0xf8)|(pixel>>2&0x7);
@@ -142,7 +142,7 @@ static inline void getpixel_16bppRGB565(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
 static inline void getpixel_16bppARGB1555(BYTE *r, BYTE *g, BYTE *b, BYTE *a,
     const BYTE *row, UINT x)
 {
-    WORD pixel = *((WORD*)(row)+x);
+    WORD pixel = *((const WORD*)(row)+x);
     *r = (pixel>>7&0xf8)|(pixel>>12&0x7);
     *g = (pixel>>2&0xf8)|(pixel>>6&0x7);
     *b = (pixel<<3&0xf8)|(pixel>>2&0x7);
@@ -1831,6 +1831,37 @@ GpStatus WINGDIPAPI GdipEmfToWmfBits(HENHMETAFILE hemf, UINT cbData16,
     return NotImplemented;
 }
 
+/* Internal utility function: Replace the image data of dst with that of src,
+ * and free src. */
+static void move_bitmap(GpBitmap *dst, GpBitmap *src, BOOL clobber_palette)
+{
+    GdipFree(dst->bitmapbits);
+    DeleteDC(dst->hdc);
+    DeleteObject(dst->hbitmap);
+
+    if (clobber_palette)
+    {
+        GdipFree(dst->image.palette_entries);
+        dst->image.palette_flags = src->image.palette_flags;
+        dst->image.palette_count = src->image.palette_count;
+        dst->image.palette_entries = src->image.palette_entries;
+    }
+    else
+        GdipFree(src->image.palette_entries);
+
+    dst->image.xres = src->image.xres;
+    dst->image.yres = src->image.yres;
+    dst->width = src->width;
+    dst->height = src->height;
+    dst->format = src->format;
+    dst->hbitmap = src->hbitmap;
+    dst->hdc = src->hdc;
+    dst->bits = src->bits;
+    dst->stride = src->stride;
+
+    GdipFree(src);
+}
+
 GpStatus WINGDIPAPI GdipDisposeImage(GpImage *image)
 {
     TRACE("%p\n", image);
@@ -1946,6 +1977,7 @@ GpStatus WINGDIPAPI GdipGetImageGraphicsContext(GpImage *image,
     GpGraphics **graphics)
 {
     HDC hdc;
+    GpStatus stat;
 
     TRACE("%p %p\n", image, graphics);
 
@@ -1965,7 +1997,12 @@ GpStatus WINGDIPAPI GdipGetImageGraphicsContext(GpImage *image,
         ((GpBitmap*)image)->hdc = hdc;
     }
 
-    return GdipCreateFromHDC(hdc, graphics);
+    stat = GdipCreateFromHDC(hdc, graphics);
+
+    if (stat == Ok)
+        (*graphics)->image = image;
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipGetImageHeight(GpImage *image, UINT *height)
@@ -2459,6 +2496,11 @@ static GpStatus decode_image_gif(IStream* stream, REFCLSID clsid, GpImage **imag
     return decode_image_wic(stream, &CLSID_WICGifDecoder, image);
 }
 
+static GpStatus decode_image_tiff(IStream* stream, REFCLSID clsid, GpImage **image)
+{
+    return decode_image_wic(stream, &CLSID_WICTiffDecoder, image);
+}
+
 static GpStatus decode_image_olepicture_metafile(IStream* stream, REFCLSID clsid, GpImage **image)
 {
     IPicture *pic;
@@ -2505,6 +2547,7 @@ typedef enum {
     BMP,
     JPEG,
     GIF,
+    TIFF,
     EMF,
     WMF,
     PNG,
@@ -2517,10 +2560,11 @@ static const struct image_codec codecs[NUM_CODECS];
 static GpStatus get_decoder_info(IStream* stream, const struct image_codec **result)
 {
     BYTE signature[8];
+    const BYTE *pattern, *mask;
     LARGE_INTEGER seek;
     HRESULT hr;
     UINT bytesread;
-    int i, j;
+    int i, j, sig;
 
     /* seek to the start of the stream */
     seek.QuadPart = 0;
@@ -2528,7 +2572,7 @@ static GpStatus get_decoder_info(IStream* stream, const struct image_codec **res
     if (FAILED(hr)) return hresult_to_status(hr);
 
     /* read the first 8 bytes */
-    /* FIXME: This assumes all codecs have one signature <= 8 bytes in length */
+    /* FIXME: This assumes all codecs have signatures <= 8 bytes in length */
     hr = IStream_Read(stream, signature, 8, &bytesread);
     if (FAILED(hr)) return hresult_to_status(hr);
     if (hr == S_FALSE || bytesread == 0) return GenericError;
@@ -2537,13 +2581,18 @@ static GpStatus get_decoder_info(IStream* stream, const struct image_codec **res
         if ((codecs[i].info.Flags & ImageCodecFlagsDecoder) &&
             bytesread >= codecs[i].info.SigSize)
         {
-            for (j=0; j<codecs[i].info.SigSize; j++)
-                if ((signature[j] & codecs[i].info.SigMask[j]) != codecs[i].info.SigPattern[j])
-                    break;
-            if (j == codecs[i].info.SigSize)
+            for (sig=0; sig<codecs[i].info.SigCount; sig++)
             {
-                *result = &codecs[i];
-                return Ok;
+                pattern = &codecs[i].info.SigPattern[codecs[i].info.SigSize*sig];
+                mask = &codecs[i].info.SigMask[codecs[i].info.SigSize*sig];
+                for (j=0; j<codecs[i].info.SigSize; j++)
+                    if ((signature[j] & mask[j]) != pattern[j])
+                        break;
+                if (j == codecs[i].info.SigSize)
+                {
+                    *result = &codecs[i];
+                    return Ok;
+                }
             }
         }
     }
@@ -2900,6 +2949,13 @@ static const WCHAR gif_format[] = {'G','I','F',0};
 static const BYTE gif_sig_pattern[4] = "GIF8";
 static const BYTE gif_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF };
 
+static const WCHAR tiff_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'T','I','F','F', 0};
+static const WCHAR tiff_extension[] = {'*','.','T','I','F','F',';','*','.','T','I','F',0};
+static const WCHAR tiff_mimetype[] = {'i','m','a','g','e','/','t','i','f','f', 0};
+static const WCHAR tiff_format[] = {'T','I','F','F',0};
+static const BYTE tiff_sig_pattern[] = {0x49,0x49,42,0,0x4d,0x4d,0,42};
+static const BYTE tiff_sig_mask[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+
 static const WCHAR emf_codecname[] = {'B', 'u', 'i','l', 't', '-','i', 'n', ' ', 'E','M','F', 0};
 static const WCHAR emf_extension[] = {'*','.','E','M','F',0};
 static const WCHAR emf_mimetype[] = {'i','m','a','g','e','/','x','-','e','m','f', 0};
@@ -2985,6 +3041,25 @@ static const struct image_codec codecs[NUM_CODECS] = {
         },
         NULL,
         decode_image_gif
+    },
+    {
+        { /* TIFF */
+            /* Clsid */              { 0x557cf405, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x0, 0x0, 0xf8, 0x1e, 0xf3, 0x2e } },
+            /* FormatID */           { 0xb96b3cb1U, 0x0728U, 0x11d3U, {0x9d, 0x7b, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e} },
+            /* CodecName */          tiff_codecname,
+            /* DllName */            NULL,
+            /* FormatDescription */  tiff_format,
+            /* FilenameExtension */  tiff_extension,
+            /* MimeType */           tiff_mimetype,
+            /* Flags */              ImageCodecFlagsDecoder | ImageCodecFlagsSupportBitmap | ImageCodecFlagsBuiltin,
+            /* Version */            1,
+            /* SigCount */           2,
+            /* SigSize */            4,
+            /* SigPattern */         tiff_sig_pattern,
+            /* SigMask */            tiff_sig_mask,
+        },
+        NULL,
+        decode_image_tiff
     },
     {
         { /* EMF */
@@ -3394,6 +3469,112 @@ GpStatus WINGDIPAPI GdipGetImageThumbnail(GpImage *image, UINT width, UINT heigh
  */
 GpStatus WINGDIPAPI GdipImageRotateFlip(GpImage *image, RotateFlipType type)
 {
-    FIXME("(%p %u) stub\n", image, type);
-    return NotImplemented;
+    GpBitmap *new_bitmap;
+    GpBitmap *bitmap;
+    int bpp, bytesperpixel;
+    int rotate_90, flip_x, flip_y;
+    int src_x_offset, src_y_offset;
+    LPBYTE src_origin;
+    UINT x, y, width, height;
+    BitmapData src_lock, dst_lock;
+    GpStatus stat;
+
+    TRACE("(%p, %u)\n", image, type);
+
+    rotate_90 = type&1;
+    flip_x = (type&6) == 2 || (type&6) == 4;
+    flip_y = (type&3) == 1 || (type&3) == 2;
+
+    if (image->type != ImageTypeBitmap)
+    {
+        FIXME("Not implemented for type %i\n", image->type);
+        return NotImplemented;
+    }
+
+    bitmap = (GpBitmap*)image;
+    bpp = PIXELFORMATBPP(bitmap->format);
+
+    if (bpp < 8)
+    {
+        FIXME("Not implemented for %i bit images\n", bpp);
+        return NotImplemented;
+    }
+
+    if (rotate_90)
+    {
+        width = bitmap->height;
+        height = bitmap->width;
+    }
+    else
+    {
+        width = bitmap->width;
+        height = bitmap->height;
+    }
+
+    bytesperpixel = bpp/8;
+
+    stat = GdipCreateBitmapFromScan0(width, height, 0, bitmap->format, NULL, &new_bitmap);
+
+    if (stat != Ok)
+        return stat;
+
+    stat = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead, bitmap->format, &src_lock);
+
+    if (stat == Ok)
+    {
+        stat = GdipBitmapLockBits(new_bitmap, NULL, ImageLockModeWrite, bitmap->format, &dst_lock);
+
+        if (stat == Ok)
+        {
+            LPBYTE src_row, src_pixel;
+            LPBYTE dst_row, dst_pixel;
+
+            src_origin = src_lock.Scan0;
+            if (flip_x) src_origin += bytesperpixel * (bitmap->width - 1);
+            if (flip_y) src_origin += src_lock.Stride * (bitmap->height - 1);
+
+            if (rotate_90)
+            {
+                if (flip_y) src_x_offset = -src_lock.Stride;
+                else src_x_offset = src_lock.Stride;
+                if (flip_x) src_y_offset = -bytesperpixel;
+                else src_y_offset = bytesperpixel;
+            }
+            else
+            {
+                if (flip_x) src_x_offset = -bytesperpixel;
+                else src_x_offset = bytesperpixel;
+                if (flip_y) src_y_offset = -src_lock.Stride;
+                else src_y_offset = src_lock.Stride;
+            }
+
+            src_row = src_origin;
+            dst_row = dst_lock.Scan0;
+            for (y=0; y<height; y++)
+            {
+                src_pixel = src_row;
+                dst_pixel = dst_row;
+                for (x=0; x<width; x++)
+                {
+                    /* FIXME: This could probably be faster without memcpy. */
+                    memcpy(dst_pixel, src_pixel, bytesperpixel);
+                    dst_pixel += bytesperpixel;
+                    src_pixel += src_x_offset;
+                }
+                src_row += src_y_offset;
+                dst_row += dst_lock.Stride;
+            }
+
+            GdipBitmapUnlockBits(new_bitmap, &dst_lock);
+        }
+
+        GdipBitmapUnlockBits(bitmap, &src_lock);
+    }
+
+    if (stat == Ok)
+        move_bitmap(bitmap, new_bitmap, FALSE);
+    else
+        GdipDisposeImage((GpImage*)new_bitmap);
+
+    return stat;
 }

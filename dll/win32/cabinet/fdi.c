@@ -77,7 +77,7 @@ THOSE_ZIP_CONSTS;
 
 struct fdi_file {
   struct fdi_file *next;               /* next file in sequence          */
-  LPCSTR filename;                     /* output name of file            */
+  LPSTR filename;                     /* output name of file            */
   int    fh;                           /* open file handle or NULL       */
   cab_ULONG length;                    /* uncompressed length of file    */
   cab_ULONG offset;                    /* uncompressed offset in folder  */
@@ -2301,7 +2301,7 @@ static void free_decompression_mem(HFDI hfdi,
     }
     while (CAB(firstfile)) {
       file = CAB(firstfile);
-      if (file->filename) PFDI_FREE(hfdi, (void *)file->filename);
+      if (file->filename) PFDI_FREE(hfdi, file->filename);
       CAB(firstfile) = CAB(firstfile)->next;
       PFDI_FREE(hfdi, file);
     }

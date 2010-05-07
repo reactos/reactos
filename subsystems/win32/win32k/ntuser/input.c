@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 #include <ntddkbd.h>
 
 #define NDEBUG
@@ -203,6 +203,16 @@ MouseThreadMain(PVOID StartContext)
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
    MOUSE_ATTRIBUTES MouseAttr;
+
+   Status = Win32kInitWin32Thread(PsGetCurrentThread());
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Win32K: Failed making keyboard thread a win32 thread.\n");
+      return; //(Status);
+   }
+
+   KeSetPriorityThread(&PsGetCurrentThread()->Tcb,
+                       LOW_REALTIME_PRIORITY + 3);
 
    InitializeObjectAttributes(&MouseObjectAttributes,
                               &MouseDeviceName,
@@ -1101,7 +1111,7 @@ IntMouseInput(MOUSEINPUT *mi)
    /*
     * Insert the messages into the system queue
     */
-   Msg.wParam = CurInfo->ButtonsDown;
+   Msg.wParam = 0;
    Msg.lParam = MAKELPARAM(MousePos.x, MousePos.y);
    Msg.pt = MousePos;
 
@@ -1124,6 +1134,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_LBUTTON] |= 0xc0;
       Msg.message = SwapBtnMsg[0][SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[SwapButtons];
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_LEFTUP)
@@ -1131,6 +1142,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_LBUTTON] &= ~0x80;
       Msg.message = SwapBtnMsg[1][SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[SwapButtons];
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_MIDDLEDOWN)
@@ -1138,6 +1150,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_MBUTTON] |= 0xc0;
       Msg.message = WM_MBUTTONDOWN;
       CurInfo->ButtonsDown |= MK_MBUTTON;
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_MIDDLEUP)
@@ -1145,6 +1158,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_MBUTTON] &= ~0x80;
       Msg.message = WM_MBUTTONUP;
       CurInfo->ButtonsDown &= ~MK_MBUTTON;
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
    if(mi->dwFlags & MOUSEEVENTF_RIGHTDOWN)
@@ -1152,6 +1166,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_RBUTTON] |= 0xc0;
       Msg.message = SwapBtnMsg[0][!SwapButtons];
       CurInfo->ButtonsDown |= SwapBtn[!SwapButtons];
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
    else if(mi->dwFlags & MOUSEEVENTF_RIGHTUP)
@@ -1159,6 +1174,7 @@ IntMouseInput(MOUSEINPUT *mi)
       gQueueKeyStateTable[VK_RBUTTON] &= ~0x80;
       Msg.message = SwapBtnMsg[1][!SwapButtons];
       CurInfo->ButtonsDown &= ~SwapBtn[!SwapButtons];
+      Msg.wParam |= CurInfo->ButtonsDown;
       MsqInsertSystemMessage(&Msg);
    }
 
@@ -1175,15 +1191,15 @@ IntMouseInput(MOUSEINPUT *mi)
       if(mi->mouseData & XBUTTON1)
       {
          gQueueKeyStateTable[VK_XBUTTON1] |= 0xc0;
+         CurInfo->ButtonsDown |= MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         CurInfo->ButtonsDown |= XBUTTON1;
          MsqInsertSystemMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] |= 0xc0;
+         CurInfo->ButtonsDown |= MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         CurInfo->ButtonsDown |= XBUTTON2;
          MsqInsertSystemMessage(&Msg);
       }
    }
@@ -1193,15 +1209,15 @@ IntMouseInput(MOUSEINPUT *mi)
       if(mi->mouseData & XBUTTON1)
       {
          gQueueKeyStateTable[VK_XBUTTON1] &= ~0x80;
+         CurInfo->ButtonsDown &= ~MK_XBUTTON1;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON1);
-         CurInfo->ButtonsDown &= ~XBUTTON1;
          MsqInsertSystemMessage(&Msg);
       }
       if(mi->mouseData & XBUTTON2)
       {
          gQueueKeyStateTable[VK_XBUTTON2] &= ~0x80;
+         CurInfo->ButtonsDown &= ~MK_XBUTTON2;
          Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, XBUTTON2);
-         CurInfo->ButtonsDown &= ~XBUTTON2;
          MsqInsertSystemMessage(&Msg);
       }
    }

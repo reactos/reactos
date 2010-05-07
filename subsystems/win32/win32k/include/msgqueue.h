@@ -248,6 +248,16 @@ VOID APIENTRY MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers,
    (message) == WM_NCRBUTTON##code || \
    (message) == WM_NCXBUTTON##code )
 
+#define WM_NCMOUSEFIRST WM_NCMOUSEMOVE
+#define WM_NCMOUSELAST  (WM_NCMOUSEFIRST+(WM_MOUSELAST-WM_MOUSEFIRST))
+
+#define IS_MOUSE_MESSAGE(message) \
+    ((message >= WM_NCMOUSEFIRST && message <= WM_NCMOUSELAST) || \
+            (message >= WM_MOUSEFIRST && message <= WM_MOUSELAST))
+
+#define IS_KBD_MESSAGE(message) \
+    (message == WM_KEYDOWN || message == WM_KEYUP)
+
 HANDLE FASTCALL
 IntMsqSetWakeMask(DWORD WakeMask);
 

@@ -144,6 +144,28 @@ typedef struct
     /* [size_is((size+7)&~7)] */ unsigned char data[1];
 } WIRE_ORPC_EXTENT;
 
+typedef struct
+{
+    ULONG size;
+    ULONG reserved;
+    unsigned char extent[1];
+} WIRE_ORPC_EXTENT_ARRAY;
+
+typedef struct
+{
+    ULONG version;
+    ULONG flags;
+    ULONG reserved1;
+    GUID  cid;
+    unsigned char extensions[1];
+} WIRE_ORPCTHIS;
+
+typedef struct
+{
+    ULONG flags;
+    unsigned char extensions[1];
+} WIRE_ORPCTHAT;
+
 struct channel_hook_entry
 {
     struct list entry;
@@ -503,10 +525,10 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     extensions_size = ChannelHooks_ServerGetSize(&message_state->channel_hook_info,
                                                  &channel_hook_data, &channel_hook_count, &extension_count);
 
-    msg->BufferLength += FIELD_OFFSET(ORPCTHAT, extensions) + 4;
+    msg->BufferLength += FIELD_OFFSET(WIRE_ORPCTHAT, extensions) + sizeof(DWORD);
     if (extensions_size)
     {
-        msg->BufferLength += FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent) + 2*sizeof(DWORD) + extensions_size;
+        msg->BufferLength += FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent[2*sizeof(DWORD) + extensions_size]);
         if (extension_count & 1)
             msg->BufferLength += FIELD_OFFSET(WIRE_ORPC_EXTENT, data[0]);
     }
@@ -523,7 +545,7 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
         status = I_RpcGetBuffer(msg);
 
     orpcthat = msg->Buffer;
-    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHAT, extensions);
+    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPCTHAT, extensions);
 
     orpcthat->flags = ORPCF_NULL /* FIXME? */;
 
@@ -533,10 +555,10 @@ static HRESULT WINAPI ServerRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
 
     if (extensions_size)
     {
-        ORPC_EXTENT_ARRAY *orpc_extent_array = msg->Buffer;
+        WIRE_ORPC_EXTENT_ARRAY *orpc_extent_array = msg->Buffer;
         orpc_extent_array->size = extension_count;
         orpc_extent_array->reserved = 0;
-        msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent);
+        msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent);
         /* NDR representation of orpc_extent_array->extent */
         *(DWORD *)msg->Buffer = 1;
         msg->Buffer = (char *)msg->Buffer + sizeof(DWORD);
@@ -645,10 +667,10 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     extensions_size = ChannelHooks_ClientGetSize(&message_state->channel_hook_info,
         &channel_hook_data, &channel_hook_count, &extension_count);
 
-    msg->BufferLength += FIELD_OFFSET(ORPCTHIS, extensions) + 4;
+    msg->BufferLength += FIELD_OFFSET(WIRE_ORPCTHIS, extensions) + sizeof(DWORD);
     if (extensions_size)
     {
-        msg->BufferLength += FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent) + 2*sizeof(DWORD) + extensions_size;
+        msg->BufferLength += FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent[2*sizeof(DWORD) + extensions_size]);
         if (extension_count & 1)
             msg->BufferLength += FIELD_OFFSET(WIRE_ORPC_EXTENT, data[0]);
     }
@@ -703,7 +725,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
     if (status == RPC_S_OK)
     {
         orpcthis = msg->Buffer;
-        msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHIS, extensions);
+        msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPCTHIS, extensions);
 
         orpcthis->version.MajorVersion = COM_MAJOR_VERSION;
         orpcthis->version.MinorVersion = COM_MINOR_VERSION;
@@ -720,7 +742,7 @@ static HRESULT WINAPI ClientRpcChannelBuffer_GetBuffer(LPRPCCHANNELBUFFER iface,
             ORPC_EXTENT_ARRAY *orpc_extent_array = msg->Buffer;
             orpc_extent_array->size = extension_count;
             orpc_extent_array->reserved = 0;
-            msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent);
+            msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent);
             /* NDR representation of orpc_extent_array->extent */
             *(DWORD *)msg->Buffer = 1;
             msg->Buffer = (char *)msg->Buffer + sizeof(DWORD);
@@ -1152,8 +1174,8 @@ static HRESULT unmarshal_ORPC_EXTENT_ARRAY(RPC_MESSAGE *msg, const char *end,
     DWORD pointer_id;
     DWORD i;
 
-    memcpy(extensions, msg->Buffer, FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent));
-    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPC_EXTENT_ARRAY, extent);
+    memcpy(extensions, msg->Buffer, FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent));
+    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPC_EXTENT_ARRAY, extent);
 
     if ((const char *)msg->Buffer + 2 * sizeof(DWORD) > end)
         return RPC_E_INVALID_HEADER;
@@ -1205,14 +1227,14 @@ static HRESULT unmarshal_ORPCTHIS(RPC_MESSAGE *msg, ORPCTHIS *orpcthis,
 
     *first_wire_orpc_extent = NULL;
 
-    if (msg->BufferLength < FIELD_OFFSET(ORPCTHIS, extensions) + 4)
+    if (msg->BufferLength < FIELD_OFFSET(WIRE_ORPCTHIS, extensions) + sizeof(DWORD))
     {
         ERR("invalid buffer length\n");
         return RPC_E_INVALID_HEADER;
     }
 
-    memcpy(orpcthis, msg->Buffer, FIELD_OFFSET(ORPCTHIS, extensions));
-    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHIS, extensions);
+    memcpy(orpcthis, msg->Buffer, FIELD_OFFSET(WIRE_ORPCTHIS, extensions));
+    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPCTHIS, extensions);
 
     if ((const char *)msg->Buffer + sizeof(DWORD) > end)
         return RPC_E_INVALID_HEADER;
@@ -1256,14 +1278,14 @@ static HRESULT unmarshal_ORPCTHAT(RPC_MESSAGE *msg, ORPCTHAT *orpcthat,
 
     *first_wire_orpc_extent = NULL;
 
-    if (msg->BufferLength < FIELD_OFFSET(ORPCTHAT, extensions) + 4)
+    if (msg->BufferLength < FIELD_OFFSET(WIRE_ORPCTHAT, extensions) + sizeof(DWORD))
     {
         ERR("invalid buffer length\n");
         return RPC_E_INVALID_HEADER;
     }
 
-    memcpy(orpcthat, msg->Buffer, FIELD_OFFSET(ORPCTHAT, extensions));
-    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(ORPCTHAT, extensions);
+    memcpy(orpcthat, msg->Buffer, FIELD_OFFSET(WIRE_ORPCTHAT, extensions));
+    msg->Buffer = (char *)msg->Buffer + FIELD_OFFSET(WIRE_ORPCTHAT, extensions);
 
     if ((const char *)msg->Buffer + sizeof(DWORD) > end)
         return RPC_E_INVALID_HEADER;

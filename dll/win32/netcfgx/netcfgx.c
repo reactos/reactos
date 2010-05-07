@@ -325,7 +325,6 @@ InstallNetDevice(
 	HKEY hLinkageKey = NULL;
 	HKEY hConnectionKey = NULL;
 	DWORD dwShowIcon, dwLength;
-	SP_DEVINSTALL_PARAMS_W installParams;
 
 	/* Get Instance ID */
 	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
@@ -550,31 +549,6 @@ InstallNetDevice(
 		goto cleanup;
 	}
 
-	/* HACK: hpoussin, Dec 2005. TCP/IP driver is not able to manage devices
-	 * which are installed after its startup. So, we have to reboot to take
-	 * this new netcard into account.
-	 */
-	/* Should we reboot? */
-	installParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
-	if (!SetupDiGetDeviceInstallParamsW(
-		DeviceInfoSet,
-		DeviceInfoData,
-		&installParams))
-	{
-		rc = GetLastError();
-		DPRINT("SetupDiGetDeviceInstallParams() failed with error 0x%lx\n", rc);
-		goto cleanup;
-	}
-	installParams.Flags |= DI_NEEDRESTART;
-	if (!SetupDiSetDeviceInstallParamsW(
-		DeviceInfoSet,
-		DeviceInfoData,
-		&installParams))
-	{
-		rc = GetLastError();
-		DPRINT("SetupDiSetDeviceInstallParams() failed with error 0x%lx\n", rc);
-		goto cleanup;
-	}
 	rc = ERROR_SUCCESS;
 
 cleanup:

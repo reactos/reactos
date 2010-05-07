@@ -1017,8 +1017,8 @@ ExecuteAppletFromCLSID(LPOLESTR pOleStr)
     dwSize = sizeof(szCmd);
     if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, NULL, RRF_RT_REG_SZ, &dwType, (PVOID)szCmd, &dwSize) != ERROR_SUCCESS)
     {
-        ERR("RegGetValueW failed with %u\n", GetLastError());
-        return E_FAIL;
+        wcscpy(szCmd, L"%SystemRoot%\\Explorer.exe ::");
+        wcscat(szCmd, pOleStr);
     }
 
 #if 0

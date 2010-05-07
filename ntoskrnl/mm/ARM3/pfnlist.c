@@ -18,6 +18,9 @@
 
 /* GLOBALS ********************************************************************/
 
+BOOLEAN MmDynamicPfn;
+BOOLEAN MmMirroring;
+
 MMPFNLIST MmZeroedPageListHead = {0, ZeroedPageList, LIST_HEAD, LIST_HEAD};
 MMPFNLIST MmFreePageListHead = {0, FreePageList, LIST_HEAD, LIST_HEAD};
 MMPFNLIST MmStandbyPageListHead = {0, StandbyPageList, LIST_HEAD, LIST_HEAD};

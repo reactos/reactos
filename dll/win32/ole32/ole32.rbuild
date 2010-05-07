@@ -20,6 +20,7 @@
 	<library>ole32_irot_client</library>
 	<library>ole32_proxy</library>
 	<library>rpcrt4</library>
+	<library>kernel32</library>
 	<library>ntdll</library>
 	<library>uuid</library>
 	<library>pseh</library>

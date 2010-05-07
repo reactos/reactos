@@ -735,16 +735,24 @@ NTSTATUS TCPClose
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
 
-    /* We need to close here otherwise oskit will never indicate
-     * SEL_FIN and we will never fully close the connection
-     */
-    Status = TCPTranslateError( OskitTCPClose( Socket ) );
-
-    if (!NT_SUCCESS(Status))
+    /* Don't try to close again if the other side closed us already */
+    if (Connection->SignalState != SEL_FIN)
     {
-        Connection->SocketContext = Socket;
-        UnlockObject(Connection, OldIrql);
-        return Status;
+       /* We need to close here otherwise oskit will never indicate
+        * SEL_FIN and we will never fully close the connection */
+       Status = TCPTranslateError( OskitTCPClose( Socket ) );
+
+       if (!NT_SUCCESS(Status))
+       {
+           Connection->SocketContext = Socket;
+           UnlockObject(Connection, OldIrql);
+           return Status;
+       }
+    }
+    else
+    {
+       /* We are already closed by the other end so return success */
+       Status = STATUS_SUCCESS;
     }
 
     if (Connection->AddressFile)

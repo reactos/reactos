@@ -29,6 +29,7 @@
 BOOLEAN
 ImportRegistryFile(PWSTR Filename,
 		   PWSTR Section,
+		   LCID LocaleId,
 		   BOOLEAN Delete);
 
 BOOLEAN

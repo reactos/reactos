@@ -138,7 +138,20 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
 
     if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
         return EINVAL;
-    SectorSize = (DrivePartition == 0xff ? 2048 : 512);
+
+    if (DrivePartition == 0xff)
+    {
+        /* This is a CD-ROM device */
+        SectorSize = 2048;
+    }
+    else
+    {
+        /* This is either a floppy disk device (DrivePartition == 0) or
+         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
+         * it doesn't matter which one because they both have 512 bytes per sector */
+         SectorSize = 512;
+    }
+
     if (DrivePartition != 0xff && DrivePartition != 0)
     {
         if (!XboxDiskGetPartitionEntry(DriveNumber, DrivePartition, &PartitionTableEntry))

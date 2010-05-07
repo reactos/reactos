@@ -109,23 +109,14 @@ DeleteRegion( HRGN hRgn )
   if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
       ( Rgn_Attr != NULL ))
   {
-     PTEB pTeb = NtCurrentTeb();
-     if (pTeb->Win32ThreadInfo != NULL)
-     {
-        if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE)
-        {
-           PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
-                                                      pTeb->GdiTebBatch.Offset);
-           pgO->gbHdr.Cmd = GdiBCDelRgn;
-           pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
-           pgO->hgdiobj = (HGDIOBJ)hRgn;
-
-           pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
-           pTeb->GdiBatchCount++;
-           if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
-           return TRUE;
-        }
-     }
+      PGDIBSOBJECT pgO;
+      
+      pgO = GdiAllocBatchCommand(NULL, GdiBCDelRgn);
+      if (pgO)
+      {
+          pgO->hgdiobj = (HGDIOBJ)hRgn;
+          return TRUE;
+      }
   }
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }

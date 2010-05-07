@@ -228,8 +228,6 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-#define MAX_CUSTOM_FILTER_SIZE 50
-TCHAR CustomFilterBuffer[MAX_CUSTOM_FILTER_SIZE];
 TCHAR FileNameBuffer[_MAX_PATH];
 TCHAR FileTitleBuffer[_MAX_PATH];
 
@@ -275,25 +273,11 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     BuildFilterStrings(Filter, FilterPairs, sizeof(FilterPairs) / sizeof(FILTERPAIR));
 
     pofn->lpstrFilter = Filter;
-    pofn->lpstrCustomFilter = CustomFilterBuffer;
-    pofn->nMaxCustFilter = MAX_CUSTOM_FILTER_SIZE;
-    pofn->nFilterIndex = 0;
     pofn->lpstrFile = FileNameBuffer;
     pofn->nMaxFile = _MAX_PATH;
     pofn->lpstrFileTitle = FileTitleBuffer;
     pofn->nMaxFileTitle = _MAX_PATH;
-    /*    pofn->lpstrInitialDir = _T("");*/
-    /*    pofn->lpstrTitle = _T("Import Registry File");*/
-    /*    pofn->Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER + OFN_ENABLESIZING;*/
     pofn->Flags = OFN_HIDEREADONLY;
-    /*    pofn->nFileOffset = ;*/
-    /*    pofn->nFileExtension = ;*/
-    /*    pofn->lpstrDefExt = _T("");*/
-    /*    pofn->lCustData = ;*/
-    /*    pofn->lpfnHook = ImportRegistryFile_OFNHookProc;*/
-    /*    pofn->lpTemplateName = _T("ID_DLG_IMPORT_REGFILE");*/
-    /*    pofn->lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);*/
-    /*    pofn->FlagsEx = ;*/
     return TRUE;
 }
 
@@ -356,11 +340,11 @@ static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, W
 
         hwndExportAll = GetDlgItem(hdlg, IDC_EXPORT_ALL);
         if (hwndExportAll)
-			SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey[0] ? BST_UNCHECKED : BST_CHECKED, 0);
+            SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey ? BST_UNCHECKED : BST_CHECKED, 0);
 
         hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
         if (hwndExportBranch)
-            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey[0] ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey ? BST_CHECKED : BST_UNCHECKED, 0);
 
         hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
         if (hwndExportBranchText)
@@ -406,7 +390,12 @@ BOOL ExportRegistryFile(HWND hWnd)
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
     ofn.lpstrTitle = Caption;
-    ofn.lCustData = (LPARAM) ExportKeyPath;
+
+    /* Only set the path if a key (not the root node) is selected */
+    if (hKeyRoot != 0)
+    {
+        ofn.lCustData = (LPARAM) ExportKeyPath;
+    }
     ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);

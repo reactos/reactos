@@ -40,7 +40,7 @@ windows/threads on destops not belonging to WinSta0 to set hotkeys (recieve noti
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

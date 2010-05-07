@@ -65,6 +65,7 @@ typedef PVOID HANDLE, HKEY, *PHKEY;
 typedef INT NTSTATUS, POOL_TYPE;
 typedef LONG HRESULT;
 typedef ULONG_PTR SIZE_T, *PSIZE_T;
+typedef WORD LANGID;
 
 #define MAXUSHORT USHRT_MAX
 
@@ -231,6 +232,11 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define RtlZeroMemory(Destination, Length)            memset(Destination, 0, Length)
 #define RtlCopyMemory(Destination, Source, Length)    memcpy(Destination, Source, Length)
 #define RtlMoveMemory(Destination, Source, Length)    memmove(Destination, Source, Length)
+
+#define MAKELANGID(p,s)         ((((WORD)(s))<<10)|(WORD)(p))
+#define PRIMARYLANGID(l)        ((WORD)(l)&0x3ff)
+#define SUBLANGID(l)            ((WORD)(l)>>10)
+#define SUBLANG_NEUTRAL         0x00
 
 /* Prevent inclusion of some other headers */
 #define __INTERNAL_DEBUG

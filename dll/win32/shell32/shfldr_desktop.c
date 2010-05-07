@@ -387,6 +387,9 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
     ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
     ret = ret && CreateFolderEnumList(list, szPath, dwFlags);
 
+    ret = ret && SHGetSpecialFolderPathW(0, szPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
+    ret = ret && CreateFolderEnumList(list, szPath, dwFlags);
+
     return ret;
 }
 
@@ -739,6 +742,22 @@ static HRESULT WINAPI ISF_Desktop_fnGetDisplayNameOf (IShellFolder2 * iface,
             _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
             if (!_ILIsFolder(pidl))
                 SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
+
+            if (GetFileAttributes(pszPath) == INVALID_FILE_ATTRIBUTES)
+            {
+                /* file system folder or file rooted at the AllUsers desktop */
+                if ((GET_SHGDN_FOR(dwFlags) == SHGDN_FORPARSING) &&
+                    (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
+                {
+                    SHGetSpecialFolderPathW(0, pszPath, CSIDL_COMMON_DESKTOPDIRECTORY, FALSE);
+                    PathAddBackslashW(pszPath);
+                    cLen = wcslen(pszPath);
+                }
+
+                _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
+                if (!_ILIsFolder(pidl))
+                    SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
+            }
         }
     }
     else

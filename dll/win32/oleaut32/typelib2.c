@@ -2456,7 +2456,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnLayOut(
             return hres;
         }
 
-        This->typeinfo->cbSizeVft = typeattr->cbSizeVft;
+        This->typeinfo->cbSizeVft = typeattr->cbSizeVft * 4 / sizeof(void *);
 
         ITypeInfo_ReleaseTypeAttr(inherited, typeattr);
         ITypeInfo_Release(inherited);
@@ -2928,7 +2928,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetTypeAttr(
         (*ppTypeAttr)->cFuncs += 7;
     (*ppTypeAttr)->cVars = This->typeinfo->cElement>>16;
     (*ppTypeAttr)->cImplTypes = This->typeinfo->cImplTypes;
-    (*ppTypeAttr)->cbSizeVft = This->typekind==TKIND_DISPATCH ? 28 : This->typeinfo->cbSizeVft;
+    (*ppTypeAttr)->cbSizeVft = This->typekind==TKIND_DISPATCH ? 7 * sizeof(void*) : This->typeinfo->cbSizeVft;
     (*ppTypeAttr)->cbAlignment = (This->typeinfo->typekind>>11) & 0x1f;
     (*ppTypeAttr)->wTypeFlags = This->typeinfo->flags;
     (*ppTypeAttr)->wMajorVerNum = This->typeinfo->version&0xffff;

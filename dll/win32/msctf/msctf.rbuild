@@ -11,6 +11,7 @@
 	<file>categorymgr.c</file>
 	<file>compartmentmgr.c</file>
 	<file>context.c</file>
+	<file>displayattributemgr.c</file>
 	<file>documentmgr.c</file>
 	<file>inputprocessor.c</file>
 	<file>langbarmgr.c</file>

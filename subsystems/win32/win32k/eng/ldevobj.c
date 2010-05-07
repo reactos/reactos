@@ -6,7 +6,7 @@
  * PROGRAMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #include <intrin.h>
 
@@ -39,7 +39,7 @@ InitLDEVImpl()
 
     /* Allocate a LDEVOBJ for win32k */
     gpldevWin32k = ExAllocatePoolWithTag(PagedPool,
-                                         sizeof(LDEVOBJ) + 
+                                         sizeof(LDEVOBJ) +
                                          sizeof(SYSTEM_GDI_DRIVER_INFORMATION),
                                          GDITAG_LDEV);
     if (!gpldevWin32k)
@@ -80,7 +80,7 @@ LDEVOBJ_AllocLDEV(LDEVTYPE ldevtype)
 
     /* Zero out the structure */
     RtlZeroMemory(pldev, sizeof(LDEVOBJ));
-    
+
     /* Set the ldevtype */
     pldev->ldevtype = ldevtype;
 

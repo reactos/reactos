@@ -109,6 +109,12 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetExtendedInformation */
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
+    NULL, /* ChangeAccountPassword */
+    NULL, /* QueryMetaData */
+    NULL, /* ExchangeMetaData */
+    NULL, /* GetCredUIContext */
+    NULL, /* UpdateCredentials */
+    NULL, /* ValidateTargetInfo */
   }, {
     NULL, /* InitializePackage */
     NULL, /* LsaLogonUser */
@@ -139,6 +145,12 @@ static SECPKG_FUNCTION_TABLE secPkgFunctionTable[2] =
     NULL, /* SetExtendedInformation */
     NULL, /* SetContextAttributes */
     NULL, /* SetCredentialsAttributes */
+    NULL, /* ChangeAccountPassword */
+    NULL, /* QueryMetaData */
+    NULL, /* ExchangeMetaData */
+    NULL, /* GetCredUIContext */
+    NULL, /* UpdateCredentials */
+    NULL, /* ValidateTargetInfo */
   }
 };
 
@@ -150,7 +162,7 @@ NTSTATUS WINAPI SpLsaModeInitialize(ULONG LsaVersion, PULONG PackageVersion,
 {
     TRACE("(%u, %p, %p, %p)\n", LsaVersion, PackageVersion, ppTables, pcTables);
 
-    *PackageVersion = SECPKG_INTERFACE_VERSION_3;
+    *PackageVersion = SECPKG_INTERFACE_VERSION_6;
     *pcTables = 2;
     *ppTables = secPkgFunctionTable;
 

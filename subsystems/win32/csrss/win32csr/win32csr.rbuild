@@ -15,6 +15,7 @@
 	<library>delayimp</library>
 	<library>win32ksys</library>
 	<library>psapi</library>
+	<library>pseh</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
 	<file>conio.c</file>
@@ -22,6 +23,7 @@
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
 	<file>guiconsole.c</file>
+	<file>harderror.c</file>
 	<file>tuiconsole.c</file>
 	<file>appswitch.c</file>
 	<file>win32csr.rc</file>

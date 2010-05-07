@@ -11,7 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -279,7 +279,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
 
   if (!pTmr) return FALSE;
 
-  if (Window && (int)Window != 1)
+  if (Window && ((ULONG_PTR)Window != 1))
   {
      if (!Window->Wnd) return FALSE;
   }
@@ -294,6 +294,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
           (pTmr->pti == pti) &&
           (pTmr->pWnd == Window))
         {
+           ASSERT((ULONG_PTR)Window != 1);
            Msg.hwnd    = Window->hSelf;
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
@@ -525,6 +526,8 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 
       ASSERT(RtlAreBitsSet(&WindowLessTimersBitMap, IDEvent - 1, 1));
       RtlClearBits(&WindowLessTimersBitMap, IDEvent - 1, 1);
+
+      HintIndex = IDEvent - 1;
 
       IntUnlockWindowlessTimerBitmap();
    }

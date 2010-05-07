@@ -27,19 +27,17 @@ static BOOL bCommandLineInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
-static
 VOID
+WINAPI
 InitCommandLines(VOID)
 {
     PRTL_USER_PROCESS_PARAMETERS Params;
 
-    /* FIXME - not thread-safe! */
-
-    // get command line
+    /* get command line */
     Params = NtCurrentPeb()->ProcessParameters;
     RtlNormalizeProcessParams (Params);
 
-    // initialize command line buffers
+    /* initialize command line buffers */
     CommandLineStringW.Length = Params->CommandLine.Length;
     CommandLineStringW.MaximumLength = CommandLineStringW.Length + sizeof(WCHAR);
     CommandLineStringW.Buffer = RtlAllocateHeap(GetProcessHeap(),
@@ -80,13 +78,7 @@ LPSTR
 WINAPI
 GetCommandLineA(VOID)
 {
-    if (bCommandLineInitialized == FALSE)
-    {
-        InitCommandLines();
-    }
-
     DPRINT("CommandLine \'%s\'\n", CommandLineStringA.Buffer);
-
     return CommandLineStringA.Buffer;
 }
 
@@ -98,13 +90,7 @@ LPWSTR
 WINAPI
 GetCommandLineW(VOID)
 {
-    if (bCommandLineInitialized == FALSE)
-    {
-        InitCommandLines();
-    }
-
     DPRINT("CommandLine \'%S\'\n", CommandLineStringW.Buffer);
-
     return CommandLineStringW.Buffer;
 }
 

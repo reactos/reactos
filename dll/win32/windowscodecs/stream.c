@@ -41,6 +41,8 @@ typedef struct StreamOnMemory {
     BYTE *pbMemory;
     DWORD dwMemsize;
     DWORD dwCurPos;
+
+    CRITICAL_SECTION lock; /* must be held when pbMemory or dwCurPos is accessed */
 } StreamOnMemory;
 
 static HRESULT WINAPI StreamOnMemory_QueryInterface(IStream *iface,
@@ -82,6 +84,8 @@ static ULONG WINAPI StreamOnMemory_Release(IStream *iface)
     TRACE("(%p) refcount=%u\n", iface, ref);
 
     if (ref == 0) {
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         HeapFree(GetProcessHeap(), 0, This);
     }
     return ref;
@@ -96,9 +100,12 @@ static HRESULT WINAPI StreamOnMemory_Read(IStream *iface,
 
     if (!pv) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
     uBytesRead = min(cb, This->dwMemsize - This->dwCurPos);
     memcpy(pv, This->pbMemory + This->dwCurPos, uBytesRead);
     This->dwCurPos += uBytesRead;
+    LeaveCriticalSection(&This->lock);
+
     if (pcbRead) *pcbRead = uBytesRead;
 
     return S_OK;
@@ -108,18 +115,24 @@ static HRESULT WINAPI StreamOnMemory_Write(IStream *iface,
     void const *pv, ULONG cb, ULONG *pcbWritten)
 {
     StreamOnMemory *This = (StreamOnMemory*)iface;
+    HRESULT hr;
     TRACE("(%p)\n", This);
 
     if (!pv) return E_INVALIDARG;
 
-    if (cb > This->dwMemsize - This->dwCurPos) return STG_E_MEDIUMFULL;
-    if (cb) {
+    EnterCriticalSection(&This->lock);
+    if (cb > This->dwMemsize - This->dwCurPos) {
+        hr = STG_E_MEDIUMFULL;
+    }
+    else {
         memcpy(This->pbMemory + This->dwCurPos, pv, cb);
         This->dwCurPos += cb;
+        hr = S_OK;
+        if (pcbWritten) *pcbWritten = cb;
     }
-    if (pcbWritten) *pcbWritten = cb;
+    LeaveCriticalSection(&This->lock);
 
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI StreamOnMemory_Seek(IStream *iface,
@@ -127,20 +140,29 @@ static HRESULT WINAPI StreamOnMemory_Seek(IStream *iface,
 {
     StreamOnMemory *This = (StreamOnMemory*)iface;
     LARGE_INTEGER NewPosition;
+    HRESULT hr=S_OK;
     TRACE("(%p)\n", This);
 
+    EnterCriticalSection(&This->lock);
     if (dwOrigin == STREAM_SEEK_SET) NewPosition.QuadPart = dlibMove.QuadPart;
     else if (dwOrigin == STREAM_SEEK_CUR) NewPosition.QuadPart = This->dwCurPos + dlibMove.QuadPart;
     else if (dwOrigin == STREAM_SEEK_END) NewPosition.QuadPart = This->dwMemsize + dlibMove.QuadPart;
-    else return E_INVALIDARG;
+    else hr = E_INVALIDARG;
 
-    if (NewPosition.u.HighPart) return HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
-    if (NewPosition.QuadPart > This->dwMemsize) return E_INVALIDARG;
-    if (NewPosition.QuadPart < 0) return E_INVALIDARG;
-    This->dwCurPos = NewPosition.u.LowPart;
+    if (SUCCEEDED(hr)) {
+        if (NewPosition.u.HighPart) hr = HRESULT_FROM_WIN32(ERROR_ARITHMETIC_OVERFLOW);
+        else if (NewPosition.QuadPart > This->dwMemsize) hr = E_INVALIDARG;
+        else if (NewPosition.QuadPart < 0) hr = E_INVALIDARG;
+    }
 
-    if(plibNewPosition) plibNewPosition->QuadPart = This->dwCurPos;
-    return S_OK;
+    if (SUCCEEDED(hr)) {
+        This->dwCurPos = NewPosition.u.LowPart;
+
+        if(plibNewPosition) plibNewPosition->QuadPart = This->dwCurPos;
+    }
+    LeaveCriticalSection(&This->lock);
+
+    return hr;
 }
 
 /* SetSize isn't implemented in the native windowscodecs DLL either */
@@ -450,8 +472,16 @@ static HRESULT WINAPI IWICStreamImpl_InitializeFromMemory(IWICStream *iface,
     pObject->pbMemory = pbBuffer;
     pObject->dwMemsize = cbBufferSize;
     pObject->dwCurPos = 0;
+    InitializeCriticalSection(&pObject->lock);
+    pObject->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": StreamOnMemory.lock");
 
-    This->pStream = (IStream*)pObject;
+    if (InterlockedCompareExchangePointer((void**)&This->pStream, pObject, NULL))
+    {
+        /* Some other thread set the stream first. */
+        IStream_Release((IStream*)pObject);
+        return WINCODEC_ERR_WRONGSTATE;
+    }
+
     return S_OK;
 }
 

@@ -42,6 +42,9 @@
 #define _1KB (1024)
 #define _1MB (1024 * _1KB)
 
+/* Are mapped by a PDE */
+#define PDE_MAPPED_VA   (PTE_COUNT * PAGE_SIZE)
+
 /* Size of a PDE directory, and size of a page table */
 #define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
@@ -58,6 +61,40 @@
 #else
 #error Define these please!
 #endif
+
+#ifdef _M_IX86
+#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_I386
+#elif _M_ARM
+#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_ARM
+#elif _M_AMD64
+#define IMAGE_FILE_MACHINE_NATIVE   IMAGE_FILE_MACHINE_AMD64
+#else
+#error Define these please!
+#endif
+
+//
+// Protection Bits part of the internal memory manager Protection Mask
+// Taken from http://www.reactos.org/wiki/Techwiki:Memory_management_in_the_Windows_XP_kernel
+// and public assertions.
+//
+#define MM_ZERO_ACCESS         0
+#define MM_READONLY            1 
+#define MM_EXECUTE             2 
+#define MM_EXECUTE_READ        3 
+#define MM_READWRITE           4
+#define MM_WRITECOPY           5 
+#define MM_EXECUTE_READWRITE   6 
+#define MM_EXECUTE_WRITECOPY   7 
+#define MM_NOCACHE             8 
+#define MM_DECOMMIT            0x10 
+#define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
+
+//
+// Special values for LoadedImports
+//
+#define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
+#define MM_SYSLDR_BOOT_LOADED  (PVOID)0xFFFFFFFF
+#define MM_SYSLDR_SINGLE_ENTRY 0x1
 
 //
 // PFN List Sentinel
@@ -168,10 +205,34 @@ typedef struct _MMCOLOR_TABLES
     PFN_NUMBER Count;
 } MMCOLOR_TABLES, *PMMCOLOR_TABLES;
 
+typedef struct _MI_LARGE_PAGE_RANGES
+{
+    PFN_NUMBER StartFrame;
+    PFN_NUMBER LastFrame;
+} MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
+
 extern MMPTE HyperTemplatePte;
 extern MMPTE ValidKernelPde;
 extern MMPTE ValidKernelPte;
-
+extern BOOLEAN MmLargeSystemCache;
+extern BOOLEAN MmZeroPageFile;
+extern BOOLEAN MmProtectFreedNonPagedPool;
+extern BOOLEAN MmTrackLockedPages;
+extern BOOLEAN MmTrackPtes;
+extern BOOLEAN MmDynamicPfn;
+extern BOOLEAN MmMirroring;
+extern BOOLEAN MmMakeLowMemory;
+extern BOOLEAN MmEnforceWriteProtection;
+extern ULONG MmAllocationFragment;
+extern ULONG MmConsumedPoolPercentage;
+extern ULONG MmVerifyDriverBufferType;
+extern ULONG MmVerifyDriverLevel;
+extern WCHAR MmVerifyDriverBuffer[512];
+extern WCHAR MmLargePageDriverBuffer[512];
+extern LIST_ENTRY MiLargePageDriverList;
+extern BOOLEAN MiLargePageAllDrivers;
+extern ULONG MmVerifyDriverBufferLength;
+extern ULONG MmLargePageDriverBufferLength;
 extern ULONG MmSizeOfNonPagedPoolInBytes;
 extern ULONG MmMaximumNonPagedPoolInBytes;
 extern PFN_NUMBER MmMaximumNonPagedPoolInPages;
@@ -243,10 +304,31 @@ extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
 extern PFN_NUMBER MiExpansionPoolPagesInitialCharge;
 extern PFN_NUMBER MmResidentAvailablePages;
-extern PFN_NUMBER MmResidentAvailablePagesAtInit;
+extern PFN_NUMBER MmResidentAvailableAtInit;
+extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
+extern PFN_NUMBER MmTotalSystemDriverPages;
+extern PVOID MiSessionImageStart;
+extern PVOID MiSessionImageEnd;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
+
+#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
+    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
+
+#define MI_IS_SESSION_ADDRESS(Address) \
+    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
+        
+FORCEINLINE
+BOOLEAN
+MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
+{
+    PMMPDE PointerPde;
+    
+    /* Large pages are never paged out, always physically resident */
+    PointerPde = MiAddressToPde(Address);
+    return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
+}
 
 NTSTATUS
 NTAPI
@@ -455,6 +537,30 @@ VOID
 NTAPI
 MiInsertPageInFreeList(
     IN PFN_NUMBER PageFrameIndex
+);
+
+PLDR_DATA_TABLE_ENTRY
+NTAPI
+MiLookupDataTableEntry(
+    IN PVOID Address
+);
+
+VOID
+NTAPI
+MiInitializeDriverLargePageList(
+    VOID
+);
+
+VOID
+NTAPI
+MiInitializeLargePageSupport(
+    VOID
+);
+
+VOID
+NTAPI
+MiSyncCachedRanges(
+    VOID
 );
 
 /* EOF */

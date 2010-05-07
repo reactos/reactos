@@ -153,7 +153,8 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
 
     MCIQTZ_mciStop(wDevID, MCI_WAIT, NULL);
 
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    wma->uninit = SUCCEEDED(hr);
 
     hr = CoCreateInstance(&CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, &IID_IGraphBuilder, (LPVOID*)&wma->pgraph);
     if (FAILED(hr)) {
@@ -197,7 +198,8 @@ err:
         IMediaControl_Release(wma->pmctrl);
     wma->pmctrl = NULL;
 
-    CoUninitialize();
+    if (wma->uninit)
+        CoUninitialize();
 
     return MCIERR_INTERNAL;
 }
@@ -220,7 +222,8 @@ static DWORD MCIQTZ_mciClose(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpP
     if (wma->opened) {
         IGraphBuilder_Release(wma->pgraph);
         IMediaControl_Release(wma->pmctrl);
-        CoUninitialize();
+        if (wma->uninit)
+            CoUninitialize();
         wma->opened = FALSE;
     }
 

@@ -302,7 +302,7 @@ int WINAPI doWinMain(HINSTANCE hInstance, LPSTR szCmdLine)
         }
         else
         {
-            FIXME("Unhandled HTML Help command line parameter! (%.*s)\n", space-szCmdLine, szCmdLine);
+            FIXME("Unhandled HTML Help command line parameter! (%.*s)\n", (int)(space-szCmdLine), szCmdLine);
             return 0;
         }
     }

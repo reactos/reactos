@@ -3,6 +3,7 @@
  *
  * Copyright 2005 Steven Edwards for CodeWeavers
  * Copyright 2006 Hans Leidekker
+ * Copyright 2010 CodeWeavers, Aric Stewart
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +32,8 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "usp10.h"
+
+#include "usp10_internal.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -524,12 +527,31 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
 
     int   cnt = 0, index = 0;
     int   New_Script = SCRIPT_UNDEFINED;
+    WORD  *levels = NULL;
 
     TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems, 
           psControl, psState, pItems, pcItems);
 
     if (!pwcInChars || !cInChars || !pItems || cMaxItems < 2)
         return E_INVALIDARG;
+
+    if (psState && psControl)
+    {
+        int i;
+        levels = heap_alloc_zero(cInChars * sizeof(WORD));
+        if (!levels)
+            return E_OUTOFMEMORY;
+
+        BIDI_DetermineLevels(pwcInChars, cInChars, psState, psControl, levels);
+        for (i = 0; i < cInChars; i++)
+            if (levels[i]!=levels[0])
+                break;
+        if (i >= cInChars)
+        {
+            heap_free(levels);
+            levels = NULL;
+        }
+    }
 
     pItems[index].iCharPos = 0;
     memset(&pItems[index].a, 0, sizeof(SCRIPT_ANALYSIS));
@@ -549,15 +571,29 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
     if  (pwcInChars[cnt] >= Latin_start && pwcInChars[cnt] <= Latin_stop)
         pItems[index].a.eScript = Script_Latin;
 
-    if  (pItems[index].a.eScript  == Script_Arabic)
+    if (levels)
+    {
+        pItems[index].a.fRTL = odd(levels[cnt]);
+        pItems[index].a.fLayoutRTL = odd(levels[cnt]);
+        pItems[index].a.s.uBidiLevel = levels[cnt];
+    }
+    else if (pItems[index].a.eScript  == Script_Arabic)
+    {
         pItems[index].a.s.uBidiLevel = 1;
+        pItems[index].a.fRTL = 1;
+        pItems[index].a.fLayoutRTL = 1;
+    }
 
-    TRACE("New_Script=%d, eScript=%d index=%d cnt=%d iCharPos=%d\n",
-          New_Script, pItems[index].a.eScript, index, cnt,
+
+    TRACE("New_Level=%i New_Script=%d, eScript=%d index=%d cnt=%d iCharPos=%d\n",
+          levels?levels[cnt]:-1, New_Script, pItems[index].a.eScript, index, cnt,
           pItems[index].iCharPos);
 
     for (cnt=1; cnt < cInChars; cnt++)
     {
+        if (levels && (levels[cnt] == pItems[index].a.s.uBidiLevel))
+            continue;
+
         if  (pwcInChars[cnt] == '\r')
             New_Script = Script_CR;
         else
@@ -578,9 +614,9 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
         else
             New_Script = SCRIPT_UNDEFINED;
 
-        if  (New_Script != pItems[index].a.eScript)
+        if ((levels && (levels[cnt] != pItems[index].a.s.uBidiLevel)) || New_Script != pItems[index].a.eScript)
         {
-            TRACE("New_Script=%d, eScript=%d ", New_Script, pItems[index].a.eScript);
+            TRACE("New_Level = %i, New_Script=%d, eScript=%d ", levels?levels[cnt]:-1, New_Script, pItems[index].a.eScript);
             index++;
             if  (index+1 > cMaxItems)
                 return E_OUTOFMEMORY;
@@ -588,9 +624,18 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
             pItems[index].iCharPos = cnt;
             memset(&pItems[index].a, 0, sizeof(SCRIPT_ANALYSIS));
 
-            if  (New_Script == Script_Arabic)
+            if (levels)
+            {
+                pItems[index].a.fRTL = odd(levels[cnt]);
+                pItems[index].a.fLayoutRTL = odd(levels[cnt]);
+                pItems[index].a.s.uBidiLevel = levels[cnt];
+            }
+            else if  (New_Script == Script_Arabic)
+            {
                 pItems[index].a.s.uBidiLevel = 1;
-
+                pItems[index].a.fRTL = 1;
+                pItems[index].a.fLayoutRTL = 1;
+            }
             pItems[index].a.eScript = New_Script;
 
             TRACE("index=%d cnt=%d iCharPos=%d\n", index, cnt, pItems[index].iCharPos);
@@ -610,6 +655,7 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
     /*  Set SCRIPT_ITEM                                     */
     pItems[index+1].iCharPos = cnt;       /* the last + 1 item
                                              contains the ptr to the lastchar */
+    heap_free(levels);
     return S_OK;
 }
 
@@ -686,7 +732,7 @@ HRESULT WINAPI ScriptStringAnalyse(HDC hdc, const void *pString, int cString,
         int numGlyphsReturned;
 
         /* FIXME: non unicode strings */
-        WCHAR* pStr = (WCHAR*)pString;
+        const WCHAR* pStr = (const WCHAR*)pString;
         hr = ScriptShape(hdc, sc, &pStr[analysis->pItem[i].iCharPos],
                          cChar, numGlyphs, &analysis->pItem[i].a,
                          glyphs, pwLogClust, psva, &numGlyphsReturned);
@@ -1286,6 +1332,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
 {
     HRESULT hr;
     unsigned int i;
+    BOOL rtl;
 
     TRACE("(%p, %p, %s, %d, %d, %p, %p, %p, %p, %p)\n", hdc, psc, debugstr_wn(pwcChars, cChars),
           cChars, cMaxGlyphs, psa, pwOutGlyphs, pwLogClust, psva, pcGlyphs);
@@ -1295,6 +1342,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
 
     if (!psva || !pcGlyphs) return E_INVALIDARG;
     if (cChars > cMaxGlyphs) return E_OUTOFMEMORY;
+    rtl = (!psa->fLogicalOrder && psa->fRTL);
 
     *pcGlyphs = cChars;
     if ((hr = init_script_cache(hdc, psc)) != S_OK) return hr;
@@ -1304,33 +1352,42 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
     {
         for (i = 0; i < cChars; i++)
         {
-            if (!(pwOutGlyphs[i] = get_cache_glyph(psc, pwcChars[i])))
+            int idx = i;
+            if (rtl) idx = cChars - 1 - i;
+            if (!(pwOutGlyphs[i] = get_cache_glyph(psc, pwcChars[idx])))
             {
                 WORD glyph;
                 if (!hdc) return E_PENDING;
-                if (GetGlyphIndicesW(hdc, &pwcChars[i], 1, &glyph, 0) == GDI_ERROR) return S_FALSE;
-                pwOutGlyphs[i] = set_cache_glyph(psc, pwcChars[i], glyph);
+                if (GetGlyphIndicesW(hdc, &pwcChars[idx], 1, &glyph, 0) == GDI_ERROR) return S_FALSE;
+                pwOutGlyphs[i] = set_cache_glyph(psc, pwcChars[idx], glyph);
             }
         }
     }
     else
     {
         TRACE("no glyph translation\n");
-        for (i = 0; i < cChars; i++) pwOutGlyphs[i] = pwcChars[i];
+        for (i = 0; i < cChars; i++)
+        {
+            int idx = i;
+            if (rtl) idx = cChars - 1 - i;
+            pwOutGlyphs[i] = pwcChars[idx];
+        }
     }
 
     /* set up a valid SCRIPT_VISATTR and LogClust for each char in this run */
     for (i = 0; i < cChars; i++)
     {
+        int idx = i;
+        if (rtl) idx = cChars - 1 - i;
         /* FIXME: set to better values */
-        psva[i].uJustification = (pwcChars[i] == ' ') ? SCRIPT_JUSTIFY_BLANK : SCRIPT_JUSTIFY_CHARACTER;
+        psva[i].uJustification = (pwcChars[idx] == ' ') ? SCRIPT_JUSTIFY_BLANK : SCRIPT_JUSTIFY_CHARACTER;
         psva[i].fClusterStart  = 1;
         psva[i].fDiacritic     = 0;
         psva[i].fZeroWidth     = 0;
         psva[i].fReserved      = 0;
         psva[i].fShapeReserved = 0;
 
-        pwLogClust[i] = i;
+        pwLogClust[i] = idx;
     }
     return S_OK;
 }
@@ -1573,28 +1630,45 @@ HRESULT WINAPI ScriptGetGlyphABCWidth(HDC hdc, SCRIPT_CACHE *psc, WORD glyph, AB
  */
 HRESULT WINAPI ScriptLayout(int runs, const BYTE *level, int *vistolog, int *logtovis)
 {
-    int i, j = runs - 1, k = 0;
+    int* indexs;
+    int ich;
 
     TRACE("(%d, %p, %p, %p)\n", runs, level, vistolog, logtovis);
 
     if (!level || (!vistolog && !logtovis))
         return E_INVALIDARG;
 
-    for (i = 0; i < runs; i++)
+    indexs = heap_alloc(sizeof(int) * runs);
+    if (!indexs)
+        return E_OUTOFMEMORY;
+
+
+    if (vistolog)
     {
-        if (level[i] % 2)
-        {
-            if (vistolog) *vistolog++ = j;
-            if (logtovis) *logtovis++ = j;
-            j--;
-        }
-        else
-        {
-            if (vistolog) *vistolog++ = k;
-            if (logtovis) *logtovis++ = k;
-            k++;
-        }
+        for( ich = 0; ich < runs; ich++)
+            indexs[ich] = ich;
+
+        ich = 0;
+        while (ich < runs)
+            ich += BIDI_ReorderV2lLevel(0, indexs+ich, level+ich, runs - ich, FALSE);
+        for (ich = 0; ich < runs; ich++)
+            vistolog[ich] = indexs[ich];
     }
+
+
+    if (logtovis)
+    {
+        for( ich = 0; ich < runs; ich++)
+            indexs[ich] = ich;
+
+        ich = 0;
+        while (ich < runs)
+            ich += BIDI_ReorderL2vLevel(0, indexs+ich, level+ich, runs - ich, FALSE);
+        for (ich = 0; ich < runs; ich++)
+            logtovis[ich] = indexs[ich];
+    }
+    heap_free(indexs);
+
     return S_OK;
 }
 
@@ -1838,10 +1912,4 @@ HRESULT WINAPI ScriptJustify(const SCRIPT_VISATTR *sva, const int *advance,
 
     for (i = 0; i < num_glyphs; i++) justify[i] = advance[i];
     return S_OK;
-}
-
-BOOL gbLpkPresent = FALSE;
-VOID WINAPI LpkPresent()
-{
-    gbLpkPresent = TRUE; /* Turn it on this way! Wine is out of control! */
 }

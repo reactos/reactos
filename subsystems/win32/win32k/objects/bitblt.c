@@ -18,7 +18,7 @@
 */
 /* $Id: bitmaps.c 28300 2007-08-12 15:20:09Z tkreuzer $ */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

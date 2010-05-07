@@ -87,9 +87,6 @@
 		<file>engwindow.c</file>
 		<file>xlate.c</file>
 	</directory>
-	<directory name="ldr">
-		<file>loader.c</file>
-	</directory>
 	<directory name="main">
 		<file>dllmain.c</file>
 	</directory>
