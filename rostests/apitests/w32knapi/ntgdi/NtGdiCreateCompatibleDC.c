@@ -22,6 +22,8 @@ Test_NtGdiCreateCompatibleDC(PTESTINFO pti)
 	hObj = SelectObject(hDC, GetStockObject(WHITE_PEN));
 	TEST(hObj == GetStockObject(BLACK_PEN));
 
+	TEST(NtGdiDeleteObjectApp(hDC) != 0);
+
 	return APISTATUS_NORMAL;
 }
 
