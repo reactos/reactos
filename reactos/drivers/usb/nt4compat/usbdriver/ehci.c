@@ -3461,18 +3461,19 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     PDEVICE_OBJECT pdev;
     BYTE buffer[sizeof(PCI_COMMON_CONFIG)];
     PEHCI_DEVICE_EXTENSION pdev_ext;
+    LONG count = 0;
 
     slot_num.u.AsULONG = 0;
     pci_config = (PPCI_COMMON_CONFIG) buffer;
     pdev = NULL;
 
-    //scan the bus to find ehci controller
-    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
+    //scan the PCI buses to find ehci controller
+    for (bus = 0; bus <= PCI_MAX_BRIDGE_NUMBER; bus++) //Yes, it should be <=
     {
-        for(i = 0; i < PCI_MAX_DEVICES; i++)
+        for(i = 0; i <= PCI_MAX_DEVICES; i++)
         {
             slot_num.u.bits.DeviceNumber = i;
-            for(j = 0; j < PCI_MAX_FUNCTIONS; j++)
+            for(j = 0; j <= PCI_MAX_FUNCTION; j++)
             {
                 slot_num.u.bits.FunctionNumber = j;
 
@@ -3490,9 +3491,12 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
                 {
                     //well, we find our usb host controller( EHCI ), create device
                     pdev = ehci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
-
-                    if (!pdev)
-                        continue;
+                    if (pdev)
+#ifdef _MULTI_EHCI
+                        count++;
+#else
+                        goto LBL_LOOPOUT;
+#endif
                 }
             }
 
@@ -3500,6 +3504,11 @@ ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
                 break;
         }
     }
+
+#ifndef _MULTI_EHCI
+LBL_LOOPOUT:
+#endif
+    DbgPrint("Found %d EHCI controllers\n", count);
 
     if (pdev)
     {

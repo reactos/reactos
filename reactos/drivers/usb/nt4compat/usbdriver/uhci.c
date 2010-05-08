@@ -626,13 +626,13 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
     count = 0;
     pdev = NULL;
 
-    //scan the bus to find uhci controller
-    for(bus = 0; bus < 3; bus++)        /* enum bus0-bus2 */
+    //scan the PCI buses to find uhci controller
+    for (bus = 0; bus <= PCI_MAX_BRIDGE_NUMBER; bus++)
     {
-        for(i = 0; i < PCI_MAX_DEVICES; i++)
+        for(i = 0; i <= PCI_MAX_DEVICES; i++)
         {
             slot_num.u.bits.DeviceNumber = i;
-            for(j = 0; j < PCI_MAX_FUNCTIONS; j++)
+            for(j = 0; j <= PCI_MAX_FUNCTION; j++)
             {
                 slot_num.u.bits.FunctionNumber = j;
 
@@ -645,18 +645,15 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
                 if (ret == 2)   /*no device on the slot */
                     break;
 
-                if (pci_config->BaseClass == 0x0c && pci_config->SubClass == 0x03)
+                if (pci_config->BaseClass == 0x0c && pci_config->SubClass == 0x03 &&
+                    pci_config->ProgIf == 0x00)
                 {
                     // well, we find our usb host controller, create device
-#ifdef _MULTI_UHCI
-                    {
-                        pdev = uhci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
-                        if (pdev)
-                            count++;
-                    }
-#else
                     pdev = uhci_alloc(drvr_obj, reg_path, ((bus << 8) | (i << 3) | j), dev_mgr);
                     if (pdev)
+#ifdef _MULTI_UHCI
+                        count++;
+#else
                         goto LBL_LOOPOUT;
 #endif
                 }
@@ -669,6 +666,8 @@ uhci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, PUSB_DEV_MANAGER d
 #ifndef _MULTI_UHCI
 LBL_LOOPOUT:
 #endif
+    DbgPrint("Found %d UHCI controllers\n", count);
+
     if (pdev)
     {
         pdev_ext = pdev->DeviceExtension;
