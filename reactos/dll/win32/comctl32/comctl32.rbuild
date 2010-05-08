@@ -8,6 +8,8 @@
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
+	<define name="_COMCTL32_" />
+	<redefine name="_WIN32_WINNT">0x600</redefine>
 	<file>animate.c</file>
 	<file>comboex.c</file>
 	<file>comctl32undoc.c</file>
