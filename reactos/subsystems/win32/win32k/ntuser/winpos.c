@@ -69,9 +69,6 @@ IntGetClientOrigin(PWINDOW_OBJECT Window OPTIONAL, LPPOINT Point)
    return TRUE;
 }
 
-
-
-
 BOOL FASTCALL
 UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point)
 {
@@ -120,8 +117,13 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
     style = Wnd->Wnd->style;
     if (!(style & WS_VISIBLE) &&
         Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
+    if ((style & WS_MINIMIZE) &&
+        Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
-    return !(style & WS_DISABLED);
+    return TRUE;
+    /* FIXME: This window could be disable  because the child that closed
+              was a popup. */
+    //return !(style & WS_DISABLED);
 }
 
 
@@ -312,7 +314,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
       if (Wnd->style & WS_MINIMIZE)
       {
-         if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
+         if (!co_IntSendMessageNoWait(Window->hSelf, WM_QUERYOPEN, 0, 0))
          {
             return(SWP_NOSIZE | SWP_NOMOVE);
          }
@@ -531,7 +533,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
+      wvrFlags = co_IntSendMessageNoWait(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
@@ -590,7 +592,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
 
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
-      co_IntPostOrSendMessage(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+      co_IntSendMessageNoWait(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 
    *WindowRect = Wnd->rcWindow;
@@ -1320,7 +1322,7 @@ co_WinPosSetWindowPos(
       {
          if ((Window->Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
          {
-            co_IntSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
+            co_IntSendMessageNoWait(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
          }
          else
          {
@@ -1330,7 +1332,7 @@ co_WinPosSetWindowPos(
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
-      co_IntPostOrSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+      co_IntSendMessageNoWait(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
 
    return TRUE;
 }
@@ -1343,7 +1345,7 @@ co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientR
    ASSERT_REFS_CO(Window);
 
    *ClientRect = *WindowRect;
-   Result = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
+   Result = co_IntSendMessageNoWait(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
 
    FixClientRect(ClientRect, WindowRect);
 
@@ -1462,7 +1464,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
    if (ShowFlag != WasVisible)
    {
-      co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
+      co_IntSendMessageNoWait(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
    }
 
    /* We can't activate a child window */
@@ -1476,7 +1478,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
                          ? HWND_TOPMOST : HWND_TOP,
                          NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
 
-   if (Cmd == SW_HIDE)
+   if ((Cmd == SW_HIDE) || (Cmd == SW_MINIMIZE))
    {
       PWINDOW_OBJECT ThreadFocusWindow;
 
@@ -1520,12 +1522,12 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          wParam = SIZE_MINIMIZED;
       }
 
-      co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
+      co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
                         MAKELONG(Wnd->rcClient.right -
                                  Wnd->rcClient.left,
                                  Wnd->rcClient.bottom -
                                  Wnd->rcClient.top));
-      co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
+      co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
                         MAKELONG(Wnd->rcClient.left,
                                  Wnd->rcClient.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);

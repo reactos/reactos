@@ -969,7 +969,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
    /* remove the message from the dispatching list, so lock the sender's message queue */
    SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
-   if(!SenderReturned)
+   if (!SenderReturned)
    {
       /* only remove it from the dispatching list if not already removed by a timeout */
       RemoveEntryList(&Message->DispatchingListEntry);
@@ -981,6 +981,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    if (Message->Result != NULL)
    {
       *Message->Result = Result;
+   }
+
+   if (Message->HasPackedLParam == TRUE)
+   {
+      if (Message->Msg.lParam)
+         ExFreePool((PVOID)Message->Msg.lParam);
    }
 
    /* Notify the sender. */
@@ -1010,9 +1016,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
 Notified:
 
-   /* dereference both sender and our queue */
-   IntDereferenceMessageQueue(MessageQueue);
-   IntDereferenceMessageQueue(Message->SenderQueue);
+   /* Only if it is not a no wait message */
+   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   {
+      IntDereferenceMessageQueue(Message->SenderQueue);
+      IntDereferenceMessageQueue(MessageQueue);
+   }
 
    /* free the message */
    ExFreePool(Message);
@@ -1147,6 +1156,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
    Message->HookMessage = HookMessage;
+   Message->HasPackedLParam = FALSE;
 
    IntReferenceMessageQueue(MessageQueue);
 

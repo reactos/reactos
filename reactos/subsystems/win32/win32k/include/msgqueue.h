@@ -6,6 +6,7 @@
 #define MSQ_NORMAL      0
 #define MSQ_ISHOOK      1
 #define MSQ_ISEVENT     2
+#define MSQ_SENTNOWAIT  0x80000000
 
 typedef struct _USER_MESSAGE
 {
@@ -28,6 +29,7 @@ typedef struct _USER_SENT_MESSAGE
   /* entry in the dispatching list of the sender's message queue */
   LIST_ENTRY DispatchingListEntry;
   INT HookMessage;
+  BOOL HasPackedLParam;
 } USER_SENT_MESSAGE, *PUSER_SENT_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE_NOTIFY
@@ -184,6 +186,20 @@ co_IntSendMessageTimeout(HWND hWnd,
                       UINT uFlags,
                       UINT uTimeout,
                       ULONG_PTR *uResult);
+
+LRESULT FASTCALL co_IntSendMessageNoWait(HWND hWnd,
+                        UINT Msg,
+                        WPARAM wParam,
+                        LPARAM lParam);
+LRESULT FASTCALL
+co_IntSendMessageWithCallBack(HWND hWnd,
+                              UINT Msg,
+                              WPARAM wParam,
+                              LPARAM lParam,
+                              SENDASYNCPROC CompletionCallback,
+                              ULONG_PTR CompletionCallbackContext,
+                              ULONG_PTR *uResult);
+
 LRESULT FASTCALL
 IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL
