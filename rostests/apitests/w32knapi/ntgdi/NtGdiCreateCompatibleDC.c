@@ -21,8 +21,6 @@ Test_NtGdiCreateCompatibleDC(PTESTINFO pti)
 	/* The default pen should be GetStockObject(BLACK_PEN) */
 	hObj = SelectObject(hDC, GetStockObject(WHITE_PEN));
 	TEST(hObj == GetStockObject(BLACK_PEN));
-	
-	TEST(NtGdiDeleteObjectApp(hDC) != 0);
 
 	TEST(NtGdiDeleteObjectApp(hDC) != 0);
 
