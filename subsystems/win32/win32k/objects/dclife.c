@@ -801,11 +801,28 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
 
     if (!Force)
     {
+        /* Windows permits NtGdiDeleteObjectApp to delete a permanent DC
+         * For some reason, it's still a valid handle, pointing to some kernel data.
+         * Not sure if this is a bug, a feature, some cache stuff... Who knows?
+         * See NtGdiDeleteObjectApp test for details */
         if (DCToDelete->fs & DC_FLAG_PERMANENT)
         {
-            DPRINT1("No! You Naughty Application!\n");
             DC_UnlockDc(DCToDelete);
-            return UserReleaseDC(NULL, hDC, FALSE);
+            if(UserReleaseDC(NULL, hDC, FALSE))
+            {
+                /* ReactOs feature : call UserReleaseDC
+                 * I don't think windows does it.
+                 * Still, complain, no one should ever call DeleteDC
+                 * on a window DC */
+                 DPRINT1("No, you naughty application!\n");
+                 return TRUE;
+            }
+            else
+            {
+                /* This is not a window owned DC.
+                 * Force its deletion */
+                return IntGdiDeleteDC(hDC, TRUE);
+            }
         }
     }
 
