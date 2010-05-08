@@ -3168,7 +3168,6 @@ GreExtTextOutW(
     BOOLEAN Render;
     POINT Start;
     BOOL DoBreak = FALSE;
-    HPALETTE hDestPalette;
     PPALETTE ppalDst;
     USHORT DxShift;
 
@@ -3440,14 +3439,22 @@ GreExtTextOutW(
     SurfObj = &psurf->SurfObj ;
 
     /* Create the xlateobj */
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
-    //if (!hDestPalette) hDestPalette = StockObjects[DEFAULT_PALETTE];//pPrimarySurface->devinfo.hpalDefault;
-    ppalDst = PALETTE_LockPalette(hDestPalette);
+    if (psurf->hDIBPalette)
+    {
+        ppalDst = PALETTE_ShareLockPalette(psurf->hDIBPalette);
+    }
+    else if (psurf->ppal)
+    {
+        ppalDst = psurf->ppal;
+        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
+    }
+    else
+        // Destination palette obtained from the hDC
+        ppalDst = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
     ASSERT(ppalDst);
     EXLATEOBJ_vInitialize(&exloRGB2Dst, &gpalRGB, ppalDst, 0, 0, 0);
     EXLATEOBJ_vInitialize(&exloDst2RGB, ppalDst, &gpalRGB, 0, 0, 0);
-    PALETTE_UnlockPalette(ppalDst);
+    PALETTE_ShareUnlockPalette(ppalDst);
 
     if ((fuOptions & ETO_OPAQUE) && (dc->pdcattr->ulDirty_ & DIRTY_BACKGROUND))
         DC_vUpdateBackgroundBrush(dc) ;

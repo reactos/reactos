@@ -603,7 +603,6 @@ EXLATEOBJ_vInitXlateFromDCs(
     PDC pdcDst)
 {
     PSURFACE psurfDst, psurfSrc;
-    HPALETTE hpalSrc, hpalDst;
     PPALETTE ppalSrc, ppalDst, ppalDstDc;
 
     DPRINT("Enter EXLATEOBJ_vInitXlateFromDCs\n");
@@ -619,18 +618,33 @@ EXLATEOBJ_vInitXlateFromDCs(
         return;
     }
 
-    hpalSrc = psurfSrc->hDIBPalette;
-    if (!hpalSrc) 
-        hpalSrc = pPrimarySurface->devinfo.hpalDefault;
+    if (psurfSrc->hDIBPalette)
+    {
+        ppalSrc = PALETTE_ShareLockPalette(psurfSrc->hDIBPalette);
+    }
+    else if (psurfSrc->ppal)
+    {
+        ppalSrc = psurfSrc->ppal;
+        GDIOBJ_IncrementShareCount(&ppalSrc->BaseObject);
+    }
+    else
+        ppalSrc = PALETTE_ShareLockPalette(pdcSrc->ppdev->devinfo.hpalDefault);
 
-    ppalSrc = PALETTE_ShareLockPalette(hpalSrc);
-    if (!ppalSrc)
+    if(!ppalSrc)
         return;
 
-    hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
+    if (psurfDst->hDIBPalette)
+    {
+        ppalDst = PALETTE_ShareLockPalette(psurfDst->hDIBPalette);
+    }
+    else if (psurfDst->ppal)
+    {
+        ppalDst = psurfDst->ppal;
+        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
+    }
+    else
+        ppalDst = PALETTE_ShareLockPalette(pdcDst->ppdev->devinfo.hpalDefault);
 
-    ppalDst = PALETTE_ShareLockPalette(hpalDst);
     if (!ppalDst)
     {
         PALETTE_ShareUnlockPalette(ppalSrc);
@@ -683,7 +697,6 @@ EXLATEOBJ_vInitBrushXlate(
     COLORREF crForegroundClr,
     COLORREF crBackgroundClr)
 {
-    HPALETTE hpalDst = NULL;
     PPALETTE ppalDst, ppalPattern;
     SURFACE *psurfPattern;
 
@@ -694,9 +707,18 @@ EXLATEOBJ_vInitBrushXlate(
 
     EXLATEOBJ_vInitTrivial(pexlo);
 
-    hpalDst = psurfDst->hDIBPalette;
-    if (!hpalDst) hpalDst = pPrimarySurface->devinfo.hpalDefault;
-    ppalDst = PALETTE_ShareLockPalette(hpalDst);
+    if (psurfDst->hDIBPalette)
+    {
+        ppalDst = PALETTE_ShareLockPalette(psurfDst->hDIBPalette);
+    }
+    else if (psurfDst->ppal)
+    {
+        ppalDst = psurfDst->ppal;
+        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
+    }
+    else
+        ppalDst = PALETTE_ShareLockPalette(pPrimarySurface->devinfo.hpalDefault);
+
     if (!ppalDst)
     {
         DPRINT1("No ppalDst!\n");

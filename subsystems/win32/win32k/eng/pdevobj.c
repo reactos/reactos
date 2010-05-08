@@ -65,6 +65,12 @@ PDEVOBJ_vRelease(PPDEVOBJ ppdev)
             ppdev->pfn.DisableSurface(ppdev->dhpdev);
         }
 
+        /* Do we have a palette? */
+        if(ppdev->ppalSurf)
+        {
+            PALETTE_ShareUnlockPalette(ppdev->ppalSurf);
+        }
+
         /* Disable PDEV */
         ppdev->pfn.DisablePDEV(ppdev->dhpdev);
 
@@ -132,6 +138,10 @@ PDEVOBJ_bEnablePDEV(
 
     if (ppdev->gdiinfo.ulLogPixelsY == 0)
         ppdev->gdiinfo.ulLogPixelsY = 96;
+
+    /* Setup Palette */
+    GDIOBJ_SetOwnership(ppdev->devinfo.hpalDefault, NULL);
+    ppdev->ppalSurf = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
     DPRINT1("PDEVOBJ_bEnablePDEV - dhpdev = %p\n", ppdev->dhpdev);
 

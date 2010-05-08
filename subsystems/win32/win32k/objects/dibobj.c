@@ -230,7 +230,7 @@ IntSetDIBits(
     EXLATEOBJ   exlo;
     PPALETTE    ppalDDB, ppalDIB;
     //RGBQUAD    *lpRGB;
-    HPALETTE    DDB_Palette, DIB_Palette;
+    HPALETTE    DIB_Palette;
     ULONG       DIB_Palette_Type;
     INT         DIBWidth;
 
@@ -279,15 +279,17 @@ IntSetDIBits(
     // Use hDIBPalette if it exists
     if (bitmap->hDIBPalette)
     {
-        DDB_Palette = bitmap->hDIBPalette;
+        ppalDDB = PALETTE_ShareLockPalette(bitmap->hDIBPalette);
+    }
+    else if (bitmap->ppal)
+    {
+        ppalDDB = bitmap->ppal;
+        GDIOBJ_IncrementShareCount(&ppalDDB->BaseObject);
     }
     else
-    {
         // Destination palette obtained from the hDC
-        DDB_Palette = DC->ppdev->devinfo.hpalDefault;
-    }
+        ppalDDB = PALETTE_ShareLockPalette(DC->ppdev->devinfo.hpalDefault);
 
-    ppalDDB = PALETTE_LockPalette(DDB_Palette);
     if (NULL == ppalDDB)
     {
         EngUnlockSurface(SourceSurf);
@@ -304,6 +306,7 @@ IntSetDIBits(
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
         SURFACE_UnlockSurface(bitmap);
+        PALETTE_ShareUnlockPalette(ppalDDB);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -336,7 +339,7 @@ IntSetDIBits(
     // Clean up
     EXLATEOBJ_vCleanup(&exlo);
     PALETTE_UnlockPalette(ppalDIB);
-    PALETTE_UnlockPalette(ppalDDB);
+    PALETTE_ShareUnlockPalette(ppalDDB);
     PALETTE_FreePaletteByHandle(DIB_Palette);
     EngUnlockSurface(SourceSurf);
     EngDeleteSurface((HSURF)SourceBitmap);
@@ -441,7 +444,7 @@ NtGdiSetDIBitsToDeviceInternal(
     SIZEL SourceSize;
     EXLATEOBJ exlo;
     PPALETTE ppalDDB = NULL, ppalDIB = NULL;
-    HPALETTE hpalDDB, hpalDIB = NULL;
+    HPALETTE hpalDIB = NULL;
     ULONG DIBPaletteType;
 
     if (!Bits) return 0;
@@ -474,15 +477,7 @@ NtGdiSetDIBitsToDeviceInternal(
         return 0;
     }
 
-    /* Use destination palette obtained from the DC by default */
-    hpalDDB = pDC->ppdev->devinfo.hpalDefault;
-
-    /* Try to use hDIBPalette if it exists */
     pSurf = pDC->dclevel.pSurface;
-    if (pSurf && pSurf->hDIBPalette)
-    {
-        hpalDDB = pSurf->hDIBPalette;
-    }
 
     pDestSurf = pSurf ? &pSurf->SurfObj : NULL;
 
@@ -528,7 +523,18 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Obtain destination palette */
-    ppalDDB = PALETTE_LockPalette(hpalDDB);
+    if (pSurf && pSurf->hDIBPalette)
+    {
+        ppalDDB = PALETTE_ShareLockPalette(pSurf->hDIBPalette);
+    }
+    else if (pSurf && pSurf->ppal)
+    {
+        ppalDDB = pSurf->ppal;
+        GDIOBJ_IncrementShareCount(&ppalDDB->BaseObject);
+    }
+    else
+        ppalDDB = PALETTE_ShareLockPalette(pDC->ppdev->devinfo.hpalDefault);
+
     if (!ppalDDB)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -547,7 +553,7 @@ NtGdiSetDIBitsToDeviceInternal(
 
     /* Lock the DIB palette */
     ppalDIB = PALETTE_LockPalette(hpalDIB);
-    if (!ppalDDB)
+    if (!ppalDIB)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         Status = STATUS_UNSUCCESSFUL;
@@ -558,7 +564,7 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ_vInitialize(&exlo, ppalDIB, ppalDDB, 0, 0, 0);
 
     /* Copy the bits */
-    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n", 
+    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
         rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
         ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
     Status = IntEngBitBlt(pDestSurf,
@@ -583,7 +589,7 @@ Exit:
     }
 
     if (ppalDIB) PALETTE_UnlockPalette(ppalDIB);
-    if (ppalDDB) PALETTE_UnlockPalette(ppalDDB);
+    if (ppalDDB) PALETTE_ShareUnlockPalette(ppalDDB);
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
@@ -611,7 +617,6 @@ NtGdiGetDIBitsInternal(
     PDC Dc;
     SURFACE *psurf = NULL;
     HBITMAP hDestBitmap = NULL;
-    HPALETTE hSourcePalette = NULL;
     HPALETTE hDestPalette = NULL;
     PPALETTE ppalSrc = NULL;
     PPALETTE ppalDst = NULL;
@@ -636,7 +641,7 @@ NtGdiGetDIBitsInternal(
     _SEH2_TRY
     {
         ProbeForRead(&Info->bmiHeader.biSize, sizeof(DWORD), 1);
-        
+
         ProbeForWrite(Info, Info->bmiHeader.biSize, 1); // Comp for Core.
         if (ChkBits) ProbeForWrite(ChkBits, MaxBits, 1);
     }
@@ -658,18 +663,30 @@ NtGdiGetDIBitsInternal(
         DC_UnlockDc(Dc);
         return 0;
     }
-    DC_UnlockDc(Dc);
 
     /* Get a pointer to the source bitmap object */
     psurf = SURFACE_LockSurface(hBitmap);
     if (psurf == NULL)
-        return 0;
-
-    hSourcePalette = psurf->hDIBPalette;
-    if (!hSourcePalette)
     {
-        hSourcePalette = pPrimarySurface->devinfo.hpalDefault;
+        DC_UnlockDc(Dc);
+        return 0;
     }
+
+    if (psurf->hDIBPalette)
+    {
+        ppalSrc = PALETTE_ShareLockPalette(psurf->hDIBPalette);
+    }
+    else if (psurf->ppal)
+    {
+        ppalSrc = psurf->ppal;
+        GDIOBJ_IncrementShareCount(&ppalSrc->BaseObject);
+    }
+    else
+        ppalSrc = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+
+    DC_UnlockDc(Dc);
+
+    ASSERT(ppalSrc != NULL);
 
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);
     rgbQuads = (RGBQUAD *)ColorPtr;
@@ -680,15 +697,11 @@ NtGdiGetDIBitsInternal(
          Info->bmiHeader.biBitCount != 15 && Info->bmiHeader.biBitCount != 16) ||
          !ChkBits)
     {
-        hDestPalette = hSourcePalette;
+        ppalDst = ppalSrc;
         bPaletteMatch = TRUE;
     }
     else
         hDestPalette = BuildDIBPalette(Info, (PINT)&DestPaletteType); //hDestPalette = Dc->DevInfo->hpalDefault;
-
-    ppalSrc = PALETTE_LockPalette(hSourcePalette);
-    /* FIXME - ppalSrc can be NULL!!! Don't assert here! */
-    ASSERT(ppalSrc);
 
     if (!bPaletteMatch)
     {
@@ -696,10 +709,6 @@ NtGdiGetDIBitsInternal(
         /* FIXME - ppalDst can be NULL!!!! Don't assert here!!! */
         DPRINT("ppalDst : %p\n", ppalDst);
         ASSERT(ppalDst);
-    }
-    else
-    {
-        ppalDst = ppalSrc;
     }
 
     /* Copy palette. */
@@ -970,7 +979,7 @@ NtGdiGetDIBitsInternal(
         }
     }
 cleanup:
-    PALETTE_UnlockPalette(ppalSrc);
+    PALETTE_ShareUnlockPalette(ppalSrc);
 
     if (hDestBitmap != NULL)
         EngDeleteSurface((HSURF)hDestBitmap);

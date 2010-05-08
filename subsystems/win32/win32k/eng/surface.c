@@ -136,6 +136,12 @@ SURFACE_Cleanup(PVOID ObjectBody)
         }
     }
 
+    /* Free palette */
+    if(psurf->ppal)
+    {
+        PALETTE_ShareUnlockPalette(psurf->ppal);
+    }
+
     return TRUE;
 }
 
@@ -731,6 +737,9 @@ EngAssociateSurface(
     /* Hook up specified functions */
     psurf->flHooks = flHooks;
 
+    /* Get palette */
+    psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
+
     SURFACE_UnlockSurface(psurf);
 
     return TRUE;
@@ -772,6 +781,9 @@ EngModifySurface(
 
     /* Hook up specified functions */
     psurf->flHooks = flHooks;
+
+    /* Get palette */
+    psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
 
     SURFACE_UnlockSurface(psurf);
 

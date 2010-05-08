@@ -872,7 +872,6 @@ IntGdiGradientFill(
     POINTL DitherOrg;
     ULONG i;
     BOOL Ret;
-    HPALETTE hDestPalette;
 
     ASSERT(dc);
     ASSERT(pVertex);
@@ -936,10 +935,19 @@ IntGdiGradientFill(
     /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(psurf);
 
-    hDestPalette = psurf->hDIBPalette;
-    if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
+    if (psurf->hDIBPalette)
+    {
+        PalDestGDI = PALETTE_ShareLockPalette(psurf->hDIBPalette);
+    }
+    else if (psurf->ppal)
+    {
+        PalDestGDI = psurf->ppal;
+        GDIOBJ_IncrementShareCount(&PalDestGDI->BaseObject);
+    }
+    else
+        // Destination palette obtained from the hDC
+        PalDestGDI = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
 
-    PalDestGDI = PALETTE_LockPalette(hDestPalette);
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalDestGDI, 0, 0, 0);
 
     Ret = IntEngGradientFill(&psurf->SurfObj,
@@ -956,7 +964,7 @@ IntGdiGradientFill(
     EXLATEOBJ_vCleanup(&exlo);
 
     if (PalDestGDI)
-        PALETTE_UnlockPalette(PalDestGDI);
+        PALETTE_ShareUnlockPalette(PalDestGDI);
 
     return Ret;
 }
@@ -1089,7 +1097,6 @@ NtGdiExtFloodFill(
     PDC dc;
     PDC_ATTR   pdcattr;
     SURFACE    *psurf = NULL;
-    HPALETTE   hpal;
     PPALETTE   ppal;
     EXLATEOBJ  exlo;
     BOOL       Ret = FALSE;
@@ -1135,9 +1142,18 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    hpal = dc->dclevel.pSurface->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
-    ppal = PALETTE_ShareLockPalette(hpal);
+    if (psurf->hDIBPalette)
+    {
+        ppal = PALETTE_ShareLockPalette(psurf->hDIBPalette);
+    }
+    else if (psurf->ppal)
+    {
+        ppal = psurf->ppal;
+        GDIOBJ_IncrementShareCount(&ppal->BaseObject);
+    }
+    else
+        // Destination palette obtained from the hDC
+        ppal = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
 
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
 

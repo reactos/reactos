@@ -116,7 +116,7 @@ typedef struct _PDEVOBJ
 //  ULONG                     TagSig;
     struct _LDEVOBJ *         pldev;
     DHPDEV                    dhpdev;         /* DHPDEV for device. */
-    PVOID                     ppalSurf;       /* PEPALOBJ/PPALETTE for this device. */
+    struct _PALETTE*          ppalSurf;       /* PEPALOBJ/PPALETTE for this device. */
     DEVINFO                   devinfo;
     GDIINFO                   gdiinfo;
     PSURFACE                  pSurface;       /* SURFACE for this device. */

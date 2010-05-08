@@ -328,9 +328,7 @@ NtGdiTransparentBlt(
     PGDIOBJ apObj[2];
     RECTL rcDest, rcSrc;
     SURFACE *BitmapDest, *BitmapSrc = NULL;
-    HPALETTE SourcePalette = 0, DestPalette = 0;
-    PPALETTE PalDestGDI, PalSourceGDI;
-    USHORT PalDestMode, PalSrcMode;
+    PPALETTE PalSourceGDI;
     ULONG TransparentColor = 0;
     BOOL Ret = FALSE;
     EXLATEOBJ exlo;
@@ -396,42 +394,29 @@ NtGdiTransparentBlt(
         goto done;
     }
 
-    DestPalette = BitmapDest->hDIBPalette;
-    if (!DestPalette) DestPalette = pPrimarySurface->devinfo.hpalDefault;
+    if (BitmapSrc->hDIBPalette)
+        PalSourceGDI = PALETTE_ShareLockPalette(BitmapSrc->hDIBPalette);
+    else if (BitmapSrc->ppal)
+    {
+        GDIOBJ_IncrementShareCount(&BitmapSrc->ppal->BaseObject);
+        PalSourceGDI = BitmapSrc->ppal ;
+    }
+    else
+        PalSourceGDI = PALETTE_ShareLockPalette(pPrimarySurface->devinfo.hpalDefault) ;
 
-    SourcePalette = BitmapSrc->hDIBPalette;
-    if (!SourcePalette) SourcePalette = pPrimarySurface->devinfo.hpalDefault;
-
-    if(!(PalSourceGDI = PALETTE_LockPalette(SourcePalette)))
+    if(!PalSourceGDI)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         goto done;
-    }
-    PalSrcMode = PalSourceGDI->Mode;
-    PALETTE_UnlockPalette(PalSourceGDI);
-
-    if(DestPalette != SourcePalette)
-    {
-        if (!(PalDestGDI = PALETTE_LockPalette(DestPalette)))
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            goto done;
-        }
-        PalDestMode = PalDestGDI->Mode;
-        PALETTE_UnlockPalette(PalDestGDI);
-    }
-    else
-    {
-        PalDestMode = PalSrcMode;
-        PalDestGDI = PalSourceGDI;
     }
 
     /* Translate Transparent (RGB) Color to the source palette */
     EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalSourceGDI, 0, 0, 0);
     TransparentColor = XLATEOBJ_iXlate(&exlo.xlo, (ULONG)TransColor);
     EXLATEOBJ_vCleanup(&exlo);
+    PALETTE_ShareUnlockPalette(PalSourceGDI);
 
-    EXLATEOBJ_vInitialize(&exlo, PalSourceGDI, PalDestGDI, 0, 0, 0);
+    EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
 
     Ret = IntEngTransparentBlt(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
         DCDest->rosdc.CombinedClip, &exlo.xlo, &rcDest, &rcSrc,

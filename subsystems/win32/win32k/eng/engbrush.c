@@ -18,8 +18,6 @@ VOID
 NTAPI
 EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 {
-    HPALETTE hpal = NULL;
-
     ASSERT(pebo);
     ASSERT(pbrush);
     ASSERT(pdc);
@@ -35,12 +33,20 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     pebo->crCurrentText = pdc->pdcattr->crForegroundClr;
 
     pebo->psurfTrg = pdc->dclevel.pSurface;
-//    ASSERT(pebo->psurfTrg); // FIXME: some dcs don't have a surface
+    ASSERT(pebo->psurfTrg);
 
-    if (pebo->psurfTrg)
-        hpal = pebo->psurfTrg->hDIBPalette;
-    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
-    pebo->ppalSurf = PALETTE_ShareLockPalette(hpal);
+    if (pebo->psurfTrg->hDIBPalette)
+    {
+        pebo->ppalSurf = PALETTE_ShareLockPalette(pebo->psurfTrg->hDIBPalette);
+    }
+    else if (pebo->psurfTrg->ppal)
+    {
+        pebo->ppalSurf = pebo->psurfTrg->ppal;
+        GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);
+    }
+    else
+        pebo->ppalSurf = PALETTE_ShareLockPalette(pdc->ppdev->devinfo.hpalDefault);
+
     if (!pebo->ppalSurf)
         pebo->ppalSurf = &gpalRGB;
 

@@ -143,11 +143,23 @@ IntCreateCompatibleBitmap(
     {
         if (Dc->dctype != DC_TYPE_MEMORY)
         {
+            PSURFACE psurf;
             Bmp = IntGdiCreateBitmap(abs(Width),
                                      abs(Height),
                                      Dc->ppdev->gdiinfo.cPlanes,
                                      Dc->ppdev->gdiinfo.cBitsPixel,
                                      NULL);
+            /* Set palette */
+            psurf = SURFACE_LockSurface(Bmp);
+            if(!psurf)
+            {
+                DPRINT1("Could not lock surface?\n");
+            }
+            else
+            {
+                psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+                SURFACE_UnlockSurface(psurf);
+            }
         }
         else
         {
@@ -334,7 +346,6 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
     BOOL bInRect = FALSE;
     SURFACE *psurf;
     SURFOBJ *pso;
-    HPALETTE hpal = 0;
     PPALETTE ppal;
     EXLATEOBJ exlo;
     HBITMAP hBmpTmp;
@@ -362,9 +373,15 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         if (psurf)
         {
             pso = &psurf->SurfObj;
-            hpal = psurf->hDIBPalette;
-            if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
-            ppal = PALETTE_ShareLockPalette(hpal);
+            if(psurf->hDIBPalette)
+                ppal = PALETTE_ShareLockPalette(psurf->hDIBPalette);
+            else if (psurf->ppal)
+            {
+                ppal = psurf->ppal;
+                GDIOBJ_IncrementShareCount(&ppal->BaseObject);
+            }
+            else
+                ppal = PALETTE_ShareLockPalette(dc->ppdev->devinfo.hpalDefault);
 
             if (psurf->SurfObj.iBitmapFormat == BMF_1BPP && !psurf->hSecure)
             {
