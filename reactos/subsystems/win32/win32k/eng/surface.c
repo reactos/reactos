@@ -204,108 +204,59 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
     return NewBitmap;
 }
 
-VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
+BOOL DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format)
 {
-    int x = 0;
-    int y = Size.cy - 1;
-    int c;
-    int length;
-    int width = ((Size.cx+1)/2);
-    int height = Size.cy - 1;
+    INT x = 0;
+    INT y = Size.cy - 1;
+    INT c;
+    INT length;
+    INT width;
+    INT height = Size.cy - 1;
     BYTE *begin = CompressedBits;
     BYTE *bits = CompressedBits;
     BYTE *temp;
-    while (y >= 0)
-    {
-        length = *bits++ / 2;
-        if (length)
-        {
-            c = *bits++;
-            while (length--)
-            {
-                if (x >= width) break;
-                temp = UncompressedBits + (((height - y) * Delta) + x);
-                x++;
-                *temp = c;
-            }
-        }
-        else
-        {
-            length = *bits++;
-            switch (length)
-            {
-                case RLE_EOL:
-                    x = 0;
-                    y--;
-                    break;
-                case RLE_END:
-                    return;
-                case RLE_DELTA:
-                    x += (*bits++)/2;
-                    y -= (*bits++)/2;
-                    break;
-                default:
-                    length /= 2;
-                    while (length--)
-                    {
-                        c = *bits++;
-                        if (x < width)
-                        {
-                            temp = UncompressedBits + (((height - y) * Delta) + x);
-                            x++;
-                            *temp = c;
-                        }
-                    }
-                    if ((bits - begin) & 1)
-                    {
-                        bits++;
-                    }
-            }
-        }
-    }
-}
+    INT shift = 0;
 
-VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta)
-{
-    int x = 0;
-    int y = Size.cy - 1;
-    int c;
-    int length;
-    int width = Size.cx;
-    int height = Size.cy - 1;
-    BYTE *begin = CompressedBits;
-    BYTE *bits = CompressedBits;
-    BYTE *temp;
-    while (y >= 0)
+    if (Format == BMF_4RLE)
+        shift = 1;
+    else if(Format != BMF_8RLE)
+        return FALSE;
+
+    width = ((Size.cx + shift) >> shift);
+
+    _SEH2_TRY
     {
-        length = *bits++;
-        if (length)
+        while (y >= 0)
         {
-            c = *bits++;
-            while (length--)
+            length = (*bits++) >> shift;
+            if (length)
             {
-                if (x >= width) break;
-                temp = UncompressedBits + (((height - y) * Delta) + x);
-                x++;
-                *temp = c;
+                c = *bits++;
+                while (length--)
+                {
+                    if (x >= width) break;
+                    temp = UncompressedBits + (((height - y) * Delta) + x);
+                    x++;
+                    *temp = c;
+                }
             }
-        }
-        else
-        {
-            length = *bits++;
-            switch (length)
+            else
             {
+                length = *bits++;
+                switch (length)
+                {
                 case RLE_EOL:
                     x = 0;
                     y--;
                     break;
                 case RLE_END:
-                    return;
+                    _SEH2_YIELD(return TRUE);
                 case RLE_DELTA:
-                    x += *bits++;
-                    y -= *bits++;
+                    x += (*bits++) >> shift;
+                    y -= (*bits++) >> shift;
                     break;
                 default:
+                    length = length >> shift;
                     while (length--)
                     {
                         c = *bits++;
@@ -320,9 +271,18 @@ VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
                     {
                         bits++;
                     }
+                }
             }
         }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        DPRINT1("Decoding error\n");
+        _SEH2_YIELD(return FALSE);
+    }
+    _SEH2_END;
+
+    return TRUE;
 }
 
 HBITMAP FASTCALL
@@ -362,7 +322,7 @@ IntCreateBitmap(IN SIZEL Size,
         pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_4BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
+        DecompressBitmap(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta, Format);
     }
     else if (Format == BMF_8RLE)
     {
@@ -370,7 +330,7 @@ IntCreateBitmap(IN SIZEL Size,
         pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_8BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
+        DecompressBitmap(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta, Format);
     }
     else
     {
@@ -467,6 +427,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     PSURFACE psurf;
     SIZEL LocalSize;
     BOOLEAN AllocatedLocally = FALSE;
+    PVOID DecompressedBits = NULL;
 
     /*
      * First, check the format so we can get the aligned scanline width.
@@ -500,16 +461,28 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             break;
 
         case BMF_8RLE:
-        case BMF_4RLE:
-        case BMF_JPEG:
-        case BMF_PNG:
+            ScanLine = (BitmapInfo->Width + 3) & ~3;
             Compressed = TRUE;
             break;
+        case BMF_4RLE:
+            ScanLine = ((BitmapInfo->Width + 7) & ~7) >> 1;
+            Compressed = TRUE;
+            break;
+
+        case BMF_JPEG:
+        case BMF_PNG:
+            ASSERT(FALSE); // ENGDDI shouldn't be creating PNGs for drivers ;-)
+            DPRINT1("No support for JPEG and PNG formats\n");
+            return NULL;
 
         default:
             DPRINT1("Invalid bitmap format\n");
             return NULL;
     }
+
+    /* Save local bitmap size */
+    LocalSize.cy = BitmapInfo->Height;
+    LocalSize.cx = BitmapInfo->Width;
 
     /* Does the device manage its own surface? */
     if (!Bits)
@@ -519,7 +492,8 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
         {
             /* Note: we should not be seeing this scenario from ENGDDI */
             ASSERT(FALSE);
-            Size = BitmapInfo->Size;
+            DPRINT1("RLE compressed bitmap requested with no valid bitmap bits\n");
+            return NULL;
         }
         else
         {
@@ -551,6 +525,22 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     {
         /* Should not have asked for user memory */
         ASSERT((BitmapInfo->Flags & BMF_USERMEM) == 0);
+
+        if (Compressed)
+        {
+            DecompressedBits = EngAllocMem(FL_ZERO_MEMORY, BitmapInfo->Height * ScanLine, TAG_DIB);
+
+            if(!DecompressedBits)
+                return NULL;
+
+            if(!DecompressBitmap(LocalSize, (BYTE *)Bits, (BYTE *)DecompressedBits, ScanLine, BitmapInfo->Format))
+            {
+                EngFreeMem(DecompressedBits);
+                return NULL;
+            }
+
+            BitmapInfo->Format = (BitmapInfo->Format == BMF_4RLE) ? BMF_4BPP : BMF_8BPP;
+        }
     }
 
     /* Allocate the actual surface object structure */
@@ -564,6 +554,8 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             else
                 EngFreeMem(Bits);
         }
+        if (DecompressedBits)
+            EngFreeMem(DecompressedBits);
         return NULL;
     }
 
@@ -584,11 +576,9 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     pso->fjBitmap = BitmapInfo->Flags & (BMF_TOPDOWN | BMF_UMPDMEM | BMF_USERMEM);
 
     /* Save size and type */
-    LocalSize.cy = BitmapInfo->Height;
-    LocalSize.cx = BitmapInfo->Width;
     pso->sizlBitmap = LocalSize;
     pso->iType = STYPE_BITMAP;
-    
+
     /* Device-managed surface, no flags or dimension */
     pso->dhsurf = 0;
     pso->dhpdev = NULL;
@@ -599,48 +589,28 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     psurf->hSecure = NULL;
     psurf->hDIBSection = NULL;
     psurf->flHooks = 0;
-    
+
     /* Set bits */
-    pso->pvBits = Bits;
-    
-    /* Check for bitmap type */
-    if (!Compressed)
+     if(Compressed)
+         pso->pvBits = DecompressedBits;
+     else
+         pso->pvBits = Bits;
+
+    /* Number of bits is based on the height times the scanline */
+    pso->cjBits = BitmapInfo->Height * ScanLine;
+    if (BitmapInfo->Flags & BMF_TOPDOWN)
     {
-        /* Number of bits is based on the height times the scanline */
-        pso->cjBits = BitmapInfo->Height * ScanLine;
-        if (BitmapInfo->Flags & BMF_TOPDOWN)
-        {
-            /* For topdown, the base address starts with the bits */
-            pso->pvScan0 = pso->pvBits;
-            pso->lDelta = ScanLine;
-        }
-        else
-        {
-            /* Otherwise we start with the end and go up */
-            pso->pvScan0 = (PVOID)((ULONG_PTR)pso->pvBits + pso->cjBits - ScanLine);
-            pso->lDelta = -ScanLine;
-        }
+        /* For topdown, the base address starts with the bits */
+        pso->pvScan0 = pso->pvBits;
+        pso->lDelta = ScanLine;
     }
     else
     {
-        /* Compressed surfaces don't have scanlines! */
-        pso->lDelta = 0;
-        pso->cjBits = BitmapInfo->Size;
-        
-        /* Check for JPG or PNG */
-        if ((BitmapInfo->Format != BMF_JPEG) && (BitmapInfo->Format != BMF_PNG))
-        {
-            /* Wherever the bit data is */
-            pso->pvScan0 = pso->pvBits;
-        }
-        else
-        {
-            /* Fancy formats don't use a base address */
-            pso->pvScan0 = NULL;
-            ASSERT(FALSE); // ENGDDI shouldn't be creating PNGs for drivers ;-)
-        }
+        /* Otherwise we start with the end and go up */
+        pso->pvScan0 = (PVOID)((ULONG_PTR)pso->pvBits + pso->cjBits - ScanLine);
+        pso->lDelta = -ScanLine;
     }
-    
+
     /* Finally set the handle and uniq */
     pso->hsurf = (HSURF)psurf->BaseObject.hHmgr;
     pso->iUniq = 0;
