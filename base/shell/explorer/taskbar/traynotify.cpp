@@ -1282,14 +1282,17 @@ HWND ClockWindow::Create(HWND hwndParent)
 	ClientRect clnt(hwndParent);
 
 	WindowCanvas canvas(hwndParent);
-	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
+	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
 
 	RECT rect = {0, 0, 0, 0};
-	TCHAR buffer[8];
+	TCHAR buffer[16];
+	// Arbitrary high time so that the created clock window is big enough
+	SYSTEMTIME st = { 1601, 1, 0, 1, 23, 59, 59, 999 };
 
-	if (!GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
+	if (!GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, &st, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
 		_tcscpy(buffer, TEXT("00:00"));
 
+	// Calculate the rectangle needed to draw the time (without actually drawing it)
 	DrawText(canvas, buffer, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 	int clockwindowWidth = rect.right-rect.left + 4;
 

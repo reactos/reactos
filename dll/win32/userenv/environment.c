@@ -317,9 +317,13 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                        BOOL bInherit)
 {
     WCHAR Buffer[MAX_PATH];
+    WCHAR szValue[1024];
     DWORD Length;
+    DWORD dwType;
+    HKEY hKey;
     HKEY hKeyUser;
     NTSTATUS Status;
+    LONG lError;
 
     DPRINT("CreateEnvironmentBlock() called\n");
 
@@ -349,17 +353,6 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    FALSE);
     }
 
-    if (hToken == NULL)
-        return TRUE;
-
-    hKeyUser = GetCurrentUserKey(hToken);
-    if (hKeyUser == NULL)
-    {
-        DPRINT1("GetCurrentUserKey() failed\n");
-        RtlDestroyEnvironment(*lpEnvironment);
-        return FALSE;
-    }
-
     /* Set 'ALLUSERSPROFILE' variable */
     Length = MAX_PATH;
     if (GetAllUsersProfileDirectoryW(Buffer,
@@ -369,6 +362,57 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    L"ALLUSERSPROFILE",
                                    Buffer,
                                    FALSE);
+    }
+
+    lError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                           L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion",
+                           0,
+                           KEY_READ,
+                           &hKey);
+    if (lError == ERROR_SUCCESS)
+    {
+        Length = 1024 * sizeof(WCHAR);
+        lError = RegQueryValueExW(hKey,
+                                  L"ProgramFilesDir",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)szValue,
+                                  &Length);
+        if (lError == ERROR_SUCCESS)
+        {
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"ProgramFiles",
+                                       szValue,
+                                       FALSE);
+        }
+
+        Length = 1024 * sizeof(WCHAR);
+        lError = RegQueryValueExW(hKey,
+                                  L"CommonFilesDir",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)szValue,
+                                  &Length);
+        if (lError == ERROR_SUCCESS)
+        {
+            SetUserEnvironmentVariable(lpEnvironment,
+                                       L"CommonProgramFiles",
+                                       szValue,
+                                       FALSE);
+        }
+
+        RegCloseKey(hKey);
+    }
+
+    if (hToken == NULL)
+        return TRUE;
+
+    hKeyUser = GetCurrentUserKey(hToken);
+    if (hKeyUser == NULL)
+    {
+        DPRINT1("GetCurrentUserKey() failed\n");
+        RtlDestroyEnvironment(*lpEnvironment);
+        return FALSE;
     }
 
     /* Set 'USERPROFILE' variable */

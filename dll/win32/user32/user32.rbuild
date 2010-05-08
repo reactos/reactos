@@ -3,6 +3,7 @@
 	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<include base="ReactOS">include/reactos/subsys</include>
+	<include base="ReactOS">include/reactos/wine</include>
 	<library>wine</library>
 	<library>gdi32</library>
 	<library>advapi32</library>

@@ -69,7 +69,7 @@ PlayLogonSoundThread(
 		if (!hService)
 		{
 			CloseServiceHandle(hSCManager);
-			TRACE("WL: failed to open sysaudio Status %x", GetLastError());
+			TRACE("WL: failed to open sysaudio Status %x\n", GetLastError());
 			ExitThread(0);
 		}
 

@@ -104,6 +104,7 @@ BOOL
 FASTCALL
 DeleteRegion( HRGN hRgn )
 {
+#if 0
   PRGN_ATTR Rgn_Attr;
 
   if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
@@ -118,6 +119,7 @@ DeleteRegion( HRGN hRgn )
           return TRUE;
       }
   }
+#endif
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }
 
@@ -198,6 +200,9 @@ CombineRgn(HRGN  hDest,
   PRGN_ATTR pRgn_Attr_Src2 = NULL;
   INT Complexity;
   BOOL Ret;
+
+// HACK
+return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
 
   Ret = GdiGetHandleUserData((HGDIOBJ) hDest, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Dest);
   Ret = GdiGetHandleUserData((HGDIOBJ) hSrc1, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr_Src1);
@@ -436,6 +441,11 @@ CreateRectRgn(int x1, int y1, int x2, int y2)
   HRGN hrgn;
   int tmp;
 
+/// <-
+//// Remove when Brush/Pen/Rgn Attr is ready!
+  return NtGdiCreateRectRgn(x1,y1,x2,y2);
+////
+
  /* Normalize points */
   tmp = x1;
   if ( x1 > x2 )
@@ -586,7 +596,7 @@ ExtSelectClipRgn( IN HDC hdc, IN HRGN hrgn, IN INT iMode)
       {
          if (pLDC->iType != LDC_EMFLDC || EMFDRV_ExtSelectClipRgn( hdc, ))
              return NtGdiExtSelectClipRgn(hdc, );
-      }
+}
       else
         SetLastError(ERROR_INVALID_HANDLE);
       return ERROR;
@@ -734,7 +744,7 @@ GetRgnBox(HRGN hrgn,
 {
   PRGN_ATTR Rgn_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+  //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
      return NtGdiGetRgnBox(hrgn, prcOut);
 
   if (Rgn_Attr->Flags == NULLREGION)
@@ -845,7 +855,8 @@ OffsetRgn( HRGN hrgn,
   PRGN_ATTR pRgn_Attr;
   int nLeftRect, nTopRect, nRightRect, nBottomRect;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+// HACKFIX
+//  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
      return NtGdiOffsetRgn(hrgn,nXOffset,nYOffset);
 
   if ( pRgn_Attr->Flags == NULLREGION)
@@ -898,7 +909,8 @@ PtInRegion(IN HRGN hrgn,
 {
   PRGN_ATTR pRgn_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+  // HACKFIX
+  //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
      return NtGdiPtInRegion(hrgn,x,y);
 
   if ( pRgn_Attr->Flags == NULLREGION)
@@ -921,7 +933,8 @@ RectInRegion(HRGN hrgn,
   PRGN_ATTR pRgn_Attr;
   RECTL rc;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
+  // HACKFIX
+  //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &pRgn_Attr))
      return NtGdiRectInRegion(hrgn, (LPRECT) prcl);
 
   if ( pRgn_Attr->Flags == NULLREGION)
@@ -984,7 +997,7 @@ SetRectRgn(HRGN hrgn,
 {
   PRGN_ATTR Rgn_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
+  //if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr))
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
 
   if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
