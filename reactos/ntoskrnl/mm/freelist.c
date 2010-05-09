@@ -130,10 +130,21 @@ MmRemoveLRUUserPage(PFN_TYPE Page)
 
 BOOLEAN
 NTAPI
+MiIsPfnFree(IN PMMPFN Pfn1)
+{
+    /* Must be a free or zero page, with no references, linked */
+    return ((Pfn1->u3.e1.PageLocation <= StandbyPageList) &&
+            (Pfn1->u1.Flink) &&
+            (Pfn1->u2.Blink) &&
+            !(Pfn1->u3.e2.ReferenceCount));
+}
+
+BOOLEAN
+NTAPI
 MiIsPfnInUse(IN PMMPFN Pfn1)
 {
-    return ((Pfn1->u3.e1.PageLocation != FreePageList) &&
-            (Pfn1->u3.e1.PageLocation != ZeroedPageList));
+    /* Standby list or higher, unlinked, and with references */
+    return !MiIsPfnFree(Pfn1);
 }
 
 PFN_NUMBER
