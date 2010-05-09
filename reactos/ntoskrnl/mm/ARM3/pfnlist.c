@@ -244,6 +244,175 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     }
 }
 
+PFN_NUMBER
+NTAPI
+MiRemovePageByColor(IN PFN_NUMBER PageIndex,
+                    IN ULONG Color)
+{
+    PMMPFN Pfn1;
+    PMMPFNLIST ListHead;
+    MMLISTS ListName;
+    PFN_NUMBER OldFlink, OldBlink;
+    ULONG OldColor, OldCache;
+#if 0
+    PMMCOLOR_TABLES ColorTable;
+#endif   
+    /* Make sure PFN lock is held */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(Color < MmSecondaryColors);
+
+    /* Get the PFN entry */
+    Pfn1 = MiGetPfnEntry(PageIndex);
+    ASSERT(Pfn1->u3.e1.RemovalRequested == 0);
+    ASSERT(Pfn1->u3.e1.Rom == 0);
+    
+    /* Capture data for later */
+    OldColor = Pfn1->u3.e1.PageColor;
+    OldCache = Pfn1->u3.e1.CacheAttribute;
+
+    /* Could be either on free or zero list */
+    ListHead = MmPageLocationList[Pfn1->u3.e1.PageLocation];
+    ListName = ListHead->ListName;
+    ASSERT(ListName <= FreePageList);
+    
+    /* Remove a page */
+    ListHead->Total--;
+
+    /* Get the forward and back pointers */
+    OldFlink = Pfn1->u1.Flink;
+    OldBlink = Pfn1->u2.Blink;
+    
+    /* Check if the next entry is the list head */
+    if (OldFlink != LIST_HEAD)
+    {
+        /* It is not, so set the backlink of the actual entry, to our backlink */
+        MiGetPfnEntry(OldFlink)->u2.Blink = OldBlink;
+    }
+    else
+    {
+        /* Set the list head's backlink instead */
+        ListHead->Blink = OldFlink;
+    }
+    
+    /* Check if the back entry is the list head */
+    if (OldBlink != LIST_HEAD)
+    {
+        /* It is not, so set the backlink of the actual entry, to our backlink */
+        MiGetPfnEntry(OldBlink)->u1.Flink = OldFlink;
+    }
+    else
+    {
+        /* Set the list head's backlink instead */
+        ListHead->Flink = OldFlink;
+    }
+    
+    /* We are not on a list anymore */
+    Pfn1->u1.Flink = Pfn1->u2.Blink = 0;
+    
+    /* Zero flags but restore color and cache */
+    Pfn1->u3.e2.ShortFlags = 0;
+    Pfn1->u3.e1.PageColor = OldColor;
+    Pfn1->u3.e1.CacheAttribute = OldCache;
+#if 0 // When switching to ARM3
+    /* Get the first page on the color list */
+    ColorTable = &MmFreePagesByColor[ListName][Color];
+    ASSERT(ColorTable->Count >= 1);
+    
+    /* Set the forward link to whoever we were pointing to */
+    ColorTable->Flink = Pfn1->OriginalPte.u.Long;
+    if (ColorTable->Flink == LIST_HEAD)
+    {
+        /* This is the beginning of the list, so set the sentinel value */
+        ColorTable->Blink = LIST_HEAD;    
+    }
+    else
+    {
+        /* The list is empty, so we are the first page */
+        MiGetPfnEntry(ColorTable->Flink)->u4.PteFrame = -1;
+    }
+    
+    /* One more page */
+    ColorTable->Total++;
+#endif
+    /* See if we hit any thresholds */
+    if (MmAvailablePages == MmHighMemoryThreshold)
+    {
+        /* Clear the high memory event */
+        KeClearEvent(MiHighMemoryEvent);
+    }
+    else if (MmAvailablePages == MmLowMemoryThreshold)
+    {
+        /* Signal the low memory event */
+        KeSetEvent(MiLowMemoryEvent, 0, FALSE);
+    }
+    
+    /* One less page */
+    if (--MmAvailablePages < MmMinimumFreePages)
+    {
+        /* FIXME: Should wake up the MPW and working set manager, if we had one */
+    }
+
+    /* Return the page */
+    return PageIndex;
+}
+
+PFN_NUMBER
+NTAPI
+MiRemoveAnyPage(IN ULONG Color)
+{
+    PFN_NUMBER PageIndex;
+    PMMPFN Pfn1;
+
+    /* Make sure PFN lock is held and we have pages */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(MmAvailablePages != 0);
+    ASSERT(Color < MmSecondaryColors);
+    
+    /* Check the colored free list */
+#if 0 // Enable when using ARM3 database */
+    PageIndex = MmFreePagesByColor[FreePageList][Color].Flink;
+    if (PageIndex == LIST_HEAD)
+    {
+        /* Check the colored zero list */
+        PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
+        if (PageIndex == LIST_HEAD)
+        {
+#endif
+            /* Check the free list */
+            PageIndex = MmFreePageListHead.Flink;
+            Color = PageIndex & MmSecondaryColorMask;
+            if (PageIndex == LIST_HEAD)
+            {
+                /* Check the zero list */
+                ASSERT(MmFreePageListHead.Total == 0);
+                PageIndex = MmZeroedPageListHead.Flink;
+                Color = PageIndex & MmSecondaryColorMask;
+                ASSERT(PageIndex != LIST_HEAD);
+                if (PageIndex == LIST_HEAD)
+                {
+                    /* FIXME: Should check the standby list */
+                    ASSERT(MmZeroedPageListHead.Total == 0);
+                }
+            }
+#if 0 // Enable when using ARM3 database */
+        }
+    }
+#endif
+
+    /* Remove the page from its list */
+    PageIndex = MiRemovePageByColor(PageIndex, Color);
+
+    /* Sanity checks */
+    Pfn1 = MiGetPfnEntry(PageIndex);
+    ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
+           (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    ASSERT(Pfn1->u2.ShareCount == 0);
+        
+    /* Return the page */
+    return PageIndex;
+}
+
 PMMPFN
 NTAPI
 MiRemoveHeadList(IN PMMPFNLIST ListHead)
@@ -285,10 +454,12 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 {
     PMMPFNLIST ListHead;
     PFN_NUMBER LastPage;
-    PMMPFN Pfn1, Blink;
+    PMMPFN Pfn1;
+#if 0
     ULONG Color;
-    PMMCOLOR_TABLES ColorHead;
-
+    PMMPFN Blink;
+    PMMCOLOR_TABLES ColorTable;
+#endif
     /* Make sure the page index is valid */
     ASSERT((PageFrameIndex != 0) &&
            (PageFrameIndex <= MmHighestPhysicalPage) &&
@@ -351,21 +522,22 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         KeSetEvent(MiHighMemoryEvent, 0, FALSE);
     }
 
+#if 0 // When using ARM3 PFN
     /* Get the page color */
     Color = PageFrameIndex & MmSecondaryColorMask;
 
     /* Get the first page on the color list */
-    ColorHead = &MmFreePagesByColor[FreePageList][Color];
-    if (ColorHead->Flink == LIST_HEAD)
+    ColorTable = &MmFreePagesByColor[FreePageList][Color];
+    if (ColorTable->Flink == LIST_HEAD)
     {
         /* The list is empty, so we are the first page */
         Pfn1->u4.PteFrame = -1;
-        ColorHead->Flink = PageFrameIndex;
+        ColorTable->Flink = PageFrameIndex;
     }
     else
     {
         /* Get the previous page */
-        Blink = (PMMPFN)ColorHead->Blink;
+        Blink = (PMMPFN)ColorTable->Blink;
         
         /* Make it link to us */
         Pfn1->u4.PteFrame = MI_PFNENTRY_TO_PFN(Blink);
@@ -373,11 +545,12 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     }
     
     /* Now initialize our own list pointers */
-    ColorHead->Blink = Pfn1;
+    ColorTable->Blink = Pfn1;
     Pfn1->OriginalPte.u.Long = LIST_HEAD;
     
     /* And increase the count in the colored list */
-    ColorHead->Count++;
+    ColorTable->Count++;
+#endif
     
     /* FIXME: Notify zero page thread if enough pages are on the free list now */
 }
