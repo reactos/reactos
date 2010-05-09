@@ -90,6 +90,24 @@
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
 
 //
+// Corresponds to MMPTE_SOFTWARE.Protection
+//
+#ifdef _M_IX86
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#elif _M_ARM
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#elif _M_AMD64
+#define MM_PTE_SOFTWARE_PROTECTION_BITS   5
+#else
+#error Define these please!
+#endif
+
+//
+// Creates a software PTE with the given protection
+//
+#define MI_MAKE_SOFTWARE_PTE(x)          ((x) << MM_PTE_SOFTWARE_PROTECTION_BITS)
+
+//
 // Special values for LoadedImports
 //
 #define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
@@ -409,6 +427,12 @@ MmArmAccessFault(
     IN PVOID TrapInformation
 );
 
+NTSTATUS
+FASTCALL
+MiCheckPdeForPagedPool(
+    IN PVOID Address
+);
+
 VOID
 NTAPI
 MiInitializeNonPagedPool(
@@ -532,6 +556,18 @@ MiRemoveHeadList(
     IN PMMPFNLIST ListHead
 );
 
+PFN_NUMBER
+NTAPI
+MiAllocatePfn(
+    IN PMMPTE PointerPte,
+    IN ULONG Protection
+);
+
+PFN_NUMBER
+NTAPI
+MiRemoveAnyPage(
+    IN ULONG Color
+);
 
 VOID
 NTAPI

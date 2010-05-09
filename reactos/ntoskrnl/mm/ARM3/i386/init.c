@@ -151,6 +151,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
     ULONG OldCount;
+    KIRQL OldIrql;
 
     /* Check for kernel stack size that's too big */
     if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
@@ -541,20 +542,25 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
     
-    //
-    // Get the PDE For hyperspace
-    //
+    /* Get the PDE For hyperspace */
     StartPde = MiAddressToPde(HYPER_SPACE);
     
-    //
-    // Allocate a page for it and create it
-    //
-    PageFrameIndex = MmAllocPage(MC_SYSTEM);
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Allocate a page for hyperspace and create it */
+    PageFrameIndex = MiRemoveAnyPage(0);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     ASSERT(StartPde->u.Hard.Valid == 0);
     ASSERT(TempPde.u.Hard.Valid == 1);
     *StartPde = TempPde;
+    
+    /* Flush the TLB */
+    KeFlushCurrentTb();
+    
+    /* Release the lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     
     //
     // Zero out the page table now
