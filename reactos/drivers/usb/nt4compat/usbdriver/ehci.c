@@ -58,15 +58,7 @@
 
 #define endp_mult_count( endp ) ( ( ( endp->pusb_endp_desc->wMaxPacketSize & 0x1800 ) >> 11 ) + 1 )
 
-#if 0
-/* WTF?! */
-#define release_adapter( padapTER ) \
-{\
-    ( ( padapTER ) ); \
-}
-#else
-#define release_adapter( padapTER ) (void)(padapTER)
-#endif
+#define release_adapter( padapTER ) HalPutDmaAdapter(padapTER)
 
 #define get_int_idx( _urb, _idx ) \
 {\
@@ -3538,6 +3530,7 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
     PCI_SLOT_NUMBER slot_num;
     NTSTATUS status;
+    UCHAR hcd_id;
 
 
     pdev = ehci_create_device(drvr_obj, dev_mgr);
@@ -3704,6 +3697,13 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         return NULL;
     }
 
+    //register with dev_mgr
+    ehci_init_hcd_interface(pdev_ext->ehci);
+    hcd_id = dev_mgr_register_hcd(dev_mgr, &pdev_ext->ehci->hcd_interf);
+
+    pdev_ext->ehci->hcd_interf.hcd_set_id(&pdev_ext->ehci->hcd_interf, hcd_id);
+    pdev_ext->ehci->hcd_interf.hcd_set_dev_mgr(&pdev_ext->ehci->hcd_interf, dev_mgr);
+
     return pdev;
 }
 
@@ -3719,7 +3719,6 @@ ehci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 
     STRING string, another_string;
     CHAR str_dev_name[64], str_symb_name[64];
-    UCHAR hcd_id;
 
     if (drvr_obj == NULL)
         return NULL;
@@ -3768,13 +3767,6 @@ ehci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 
     RtlFreeUnicodeString(&dev_name);
     RtlFreeUnicodeString(&symb_name);
-
-    //register with dev_mgr though it is not initilized
-    ehci_init_hcd_interface(pdev_ext->ehci);
-    hcd_id = dev_mgr_register_hcd(dev_mgr, &pdev_ext->ehci->hcd_interf);
-
-    pdev_ext->ehci->hcd_interf.hcd_set_id(&pdev_ext->ehci->hcd_interf, hcd_id);
-    pdev_ext->ehci->hcd_interf.hcd_set_dev_mgr(&pdev_ext->ehci->hcd_interf, dev_mgr);
 
     return pdev;
 
