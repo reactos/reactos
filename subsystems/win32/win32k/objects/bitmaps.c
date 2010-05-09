@@ -151,15 +151,9 @@ IntCreateCompatibleBitmap(
                                      NULL);
             /* Set palette */
             psurf = SURFACE_LockSurface(Bmp);
-            if(!psurf)
-            {
-                DPRINT1("Could not lock surface?\n");
-            }
-            else
-            {
-                psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
-                SURFACE_UnlockSurface(psurf);
-            }
+            ASSERT(psurf);
+            psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+            SURFACE_UnlockSurface(psurf);
         }
         else
         {
@@ -190,6 +184,15 @@ IntCreateCompatibleBitmap(
                                              dibs.dsBm.bmPlanes,
                                              dibs.dsBm.bmBitsPixel,
                                              NULL);
+                    /* Assign palette */
+                    if(Bmp && psurf->ppal)
+                    {
+                        PSURFACE psurfBmp = SURFACE_LockSurface(Bmp);
+                        ASSERT(psurfBmp);
+                        psurfBmp->ppal = psurf->ppal;
+                        GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
+                        SURFACE_UnlockSurface(psurfBmp);
+                    }
                 }
                 else
                 {
@@ -890,6 +893,14 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
             IntSetBitmapBits(resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
             ExFreePoolWithTag(buf,TAG_BITMAP);
             resBitmap->flFlags = Bitmap->flFlags;
+            /* Copy palette */
+            if(Bitmap->hDIBPalette)
+                resBitmap->ppal = PALETTE_ShareLockPalette(Bitmap->hDIBPalette);
+            else if (Bitmap->ppal)
+            {
+                resBitmap->ppal = Bitmap->ppal ;
+                GDIOBJ_IncrementShareCount(&Bitmap->ppal->BaseObject);
+            }
             GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
         }
         else

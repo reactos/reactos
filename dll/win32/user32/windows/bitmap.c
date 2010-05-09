@@ -56,11 +56,6 @@ typedef struct
 
 #include "poppack.h"
 
-/* forward declarations... actually in user32\windows\icon.c but useful here */
-HICON CreateCursorIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot, BOOL fIcon);
-CURSORICONDIRENTRY *CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors);
-CURSORICONDIRENTRY *CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors);
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -95,13 +90,6 @@ LoadImageA(HINSTANCE hinst,
    return Handle;
 }
 
-
-/*
- *  The following macro functions account for the irregularities of
- *   accessing cursor and icon resources in files and resource entries.
- */
-typedef BOOL (*fnGetCIEntry)( LPVOID dir, int n,
-                              int *width, int *height, int *bits );
 
 /**********************************************************************
  *	    CURSORICON_FindBestCursor2
@@ -311,16 +299,6 @@ LoadCursorIconImage(
       return NULL;
    }
 
-   /* Get a handle to the screen dc, the icon we create is going to be
-    * compatable with this. */
-   hScreenDc = CreateDCW(NULL, NULL, NULL, NULL);
-   if (hScreenDc == NULL)
-   {
-      UnmapViewOfFile(IconDIR);
-      RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
-      return NULL;
-   }
-
    if (fuLoad & LR_MONOCHROME)
    {
       ColorBits = 1;
@@ -334,14 +312,12 @@ LoadCursorIconImage(
    dirEntry = CURSORICON_FindBestCursorFile( IconDIR, width, height, ColorBits );
    if (!dirEntry)
    {
-      DeleteDC(hScreenDc);
       UnmapViewOfFile(IconDIR);
       return NULL;
    }
 
    if ( dirEntry->dwDIBOffset > filesize )
    {
-      DeleteDC(hScreenDc);
       UnmapViewOfFile(IconDIR);
       return NULL;
    }
@@ -355,7 +331,6 @@ LoadCursorIconImage(
    SafeIconImage = RtlAllocateHeap(GetProcessHeap(), 0, dirEntry->dwDIBSize);
    if (SafeIconImage == NULL)
    {
-      DeleteDC(hScreenDc);
       UnmapViewOfFile(IconDIR);
       return NULL;
    }
@@ -384,9 +359,8 @@ LoadCursorIconImage(
    /* Make data point to the start of the XOR image data. */
    Data = (PBYTE)SafeIconImage + HeaderSize;
 
-   hIcon = CreateCursorIconFromData(hScreenDc, Data, SafeIconImage, width, height, width/2, height/2, Icon);
+   hIcon = CreateCursorIconFromData(Data, SafeIconImage, width, height, width/2, height/2, Icon);
    RtlFreeHeap(GetProcessHeap(), 0, SafeIconImage);
-   DeleteDC(hScreenDc);
 
    return hIcon;
 }

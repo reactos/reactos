@@ -1473,17 +1473,22 @@ DIB_CreateDIBSection(
         switch (bi->biBitCount)
         {
             case 15:
+                dsBitfields[0] = 0x7c00;
+                dsBitfields[1] = 0x03e0;
+                dsBitfields[2] = 0x001f;
+                break;
+
             case 16:
-                dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0x7c00;
-                dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x03e0;
-                dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x001f;
+                dsBitfields[0] = 0xF800;
+                dsBitfields[1] = 0x07e0;
+                dsBitfields[2] = 0x001f;
                 break;
 
             case 24:
             case 32:
-                dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)lpRGB       : 0xff0000;
-                dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 1) : 0x00ff00;
-                dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)lpRGB + 2) : 0x0000ff;
+                dsBitfields[0] = 0xff0000;
+                dsBitfields[1] = 0x00ff00;
+                dsBitfields[2] = 0x0000ff;
                 break;
         }
     }
@@ -1741,11 +1746,18 @@ BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
         GreenMask = ((ULONG *)bmi->bmiColors)[1];
         BlueMask = ((ULONG *)bmi->bmiColors)[2];
     }
-    else if (bits < 24)
+    else if (bits == 15)
     {
         *paletteType = PAL_BITFIELDS;
         RedMask = 0x7c00;
         GreenMask = 0x03e0;
+        BlueMask = 0x001f;
+    }
+    else if (bits == 16)
+    {
+        *paletteType = PAL_BITFIELDS;
+        RedMask = 0xF800;
+        GreenMask = 0x07e0;
         BlueMask = 0x001f;
     }
     else
