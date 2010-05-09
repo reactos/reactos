@@ -559,22 +559,7 @@ typedef NTSTATUS
 );
 
 //
-// Version Info redefinitions
-//
-typedef OSVERSIONINFOW RTL_OSVERSIONINFOW;
-typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
-typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
-typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
-
-//
-// Simple pointer definitions
-//
-typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
-typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
-
-//
 // Parameters for RtlCreateHeap
-// FIXME: Determine whether Length is SIZE_T or ULONG
 //
 typedef struct _RTL_HEAP_PARAMETERS
 {
