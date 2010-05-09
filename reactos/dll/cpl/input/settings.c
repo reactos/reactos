@@ -5,6 +5,7 @@
  * PURPOSE:         input.dll
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck
+ *                  Gregor Schneider
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -376,6 +377,59 @@ UpdateLayoutsList(VOID)
     (VOID) ListView_SetImageList(GetDlgItem(MainDlgWnd, IDC_KEYLAYOUT_LIST), hImgList, LVSIL_SMALL);
 }
 
+typedef struct _REG_KB_ENTRY_
+{
+    TCHAR szLayoutID[3];
+    DWORD dwType;
+    TCHAR szData[CCH_LAYOUT_ID + 1];
+    DWORD dwDataSize;
+} REG_KB_ENTRY;
+
+/* Layouts were deleted so we have to order the existing ones */
+static VOID
+UpdateRegValueNames(HKEY hKey)
+{
+    DWORD dwIndex = 0, dwGot = 0, dwLayoutSize;
+    DWORD dwSets = 5;
+    REG_KB_ENTRY* data = HeapAlloc(GetProcessHeap(), 0, dwSets * sizeof(REG_KB_ENTRY));
+
+    /* Get all existing entries and delete them */
+    dwLayoutSize = sizeof(data[0].szLayoutID);
+    while (RegEnumValue(hKey,
+                        dwIndex,
+                        data[dwGot].szLayoutID, 
+                        &dwLayoutSize,
+                        NULL, 
+                        &data[dwGot].dwType,
+                        (PBYTE)data[dwGot].szData, 
+                        &data[dwGot].dwDataSize) != ERROR_NO_MORE_ITEMS)
+    {
+        if (_tcslen(data[dwGot].szLayoutID) <= 2 && _tcslen(data[dwGot].szData) == CCH_LAYOUT_ID)
+        {
+            RegDeleteValue(hKey, data[dwGot].szLayoutID);
+            dwGot++;
+            if (dwGot == dwSets)
+            {
+                dwSets += 5;
+                data = HeapReAlloc(GetProcessHeap(), 0, data, dwSets * sizeof(REG_KB_ENTRY));
+            }
+        }
+        dwIndex++;
+        dwLayoutSize = sizeof(data[0].szLayoutID);
+    }
+
+    /* Set all entries with an updated value name */
+    for (dwIndex = 0; dwIndex < dwGot; dwIndex++)
+    {
+        TCHAR szNewLayoutID[3];
+
+        _stprintf(szNewLayoutID, TEXT("%u"), dwIndex + 1);
+        RegSetValueEx(hKey, szNewLayoutID, 0, data[dwIndex].dwType, 
+                      (PBYTE)data[dwIndex].szData, data[dwIndex].dwDataSize);
+    }
+    HeapFree(GetProcessHeap(), 0, data);
+}
+
 static VOID
 DeleteLayout(VOID)
 {
@@ -430,6 +484,7 @@ DeleteLayout(VOID)
                 if (RegDeleteValue(hKey, szLayoutNum) == ERROR_SUCCESS)
                 {
                     UpdateLayoutsList();
+                    UpdateRegValueNames(hKey);
                 }
             }
             RegCloseKey(hKey);
