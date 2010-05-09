@@ -166,19 +166,6 @@ IntCreateCompatibleBitmap(
             {
                 if (Count == sizeof(BITMAP))
                 {
-                    /* We have a bitmap bug!!! W/O the HACK, we have white icons.
-
-                       MSDN Note: When a memory device context is created, it initially
-                       has a 1-by-1 monochrome bitmap selected into it. If this memory
-                       device context is used in CreateCompatibleBitmap, the bitmap that
-                       is created is a monochrome bitmap. To create a color bitmap, use
-                       the hDC that was used to create the memory device context, as
-                       shown in the following code:
-
-                           HDC memDC = CreateCompatibleDC(hDC);
-                           HBITMAP memBM = CreateCompatibleBitmap(hDC, nWidth, nHeight);
-                           SelectObject(memDC, memBM);
-                     */
                     Bmp = IntGdiCreateBitmap(abs(Width),
                                              abs(Height),
                                              dibs.dsBm.bmPlanes,

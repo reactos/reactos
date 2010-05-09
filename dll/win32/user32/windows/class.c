@@ -289,7 +289,7 @@ IntGetWndProc(PWND pWnd, BOOL Ansi)
      }
      return Ret;
   }
-  // Wine Class tests: 
+  // Wine Class tests:
   /*  Edit controls are special - they return a wndproc handle when
       GetWindowLongPtr is called with a different A/W.
       On the other hand there is no W->A->W conversion so this control
@@ -809,7 +809,6 @@ CreateSmallIcon(HICON StdIcon)
    int SmallIconWidth;
    int SmallIconHeight;
    BITMAP StdBitmapInfo;
-   HDC hInfoDc = NULL;
    HDC hSourceDc = NULL;
    HDC hDestDc = NULL;
    ICONINFO SmallInfo;
@@ -845,15 +844,6 @@ CreateSmallIcon(HICON StdIcon)
       return StdIcon;
    }
 
-   /* Get a handle to a info DC and handles to DCs which can be used to
-      select a bitmap into. This is done to avoid triggering a switch to
-      graphics mode (if we're currently in text/blue screen mode) */
-   hInfoDc = CreateICW(NULL, NULL, NULL, NULL);
-   if (NULL == hInfoDc)
-   {
-      ERR("Failed to create info DC\n");
-      goto cleanup;
-   }
    hSourceDc = CreateCompatibleDC(NULL);
    if (NULL == hSourceDc)
    {
@@ -873,7 +863,7 @@ CreateSmallIcon(HICON StdIcon)
       ERR("Failed to select source color bitmap\n");
       goto cleanup;
    }
-   SmallInfo.hbmColor = CreateCompatibleBitmap(hInfoDc, SmallIconWidth,
+   SmallInfo.hbmColor = CreateCompatibleBitmap(hSourceDc, SmallIconWidth,
                                               SmallIconHeight);
    if (NULL == SmallInfo.hbmColor)
    {
@@ -899,8 +889,7 @@ CreateSmallIcon(HICON StdIcon)
       ERR("Failed to select source mask bitmap\n");
       goto cleanup;
    }
-   SmallInfo.hbmMask = CreateBitmap(SmallIconWidth, SmallIconHeight, 1, 1,
-                                    NULL);
+   SmallInfo.hbmMask = CreateCompatibleBitmap(hSourceDc, SmallIconWidth, SmallIconHeight);
    if (NULL == SmallInfo.hbmMask)
    {
       ERR("Failed to create mask bitmap\n");
@@ -953,10 +942,6 @@ cleanup:
    if (NULL != hSourceDc)
    {
       DeleteDC(hSourceDc);
-   }
-   if (NULL != hInfoDc)
-   {
-      DeleteDC(hInfoDc);
    }
 
    return SmallIcon;
@@ -1048,9 +1033,9 @@ RegisterClassExWOWW(WNDCLASSEXW *lpwcx,
    clsMenuName.pszClientAnsiMenuName = AnsiMenuName.Buffer;
    clsMenuName.pwszClientUnicodeMenuName = MenuName.Buffer;
    clsMenuName.pusMenuName = &MenuName;
-   
+
    Atom = NtUserRegisterClassExWOW( &WndClass,
-                                    &ClassName,  
+                                    &ClassName,
                                      NULL, //PUNICODE_STRING ClsNVersion,
                                     &clsMenuName,
                                      fnID,
