@@ -2469,7 +2469,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_FAILED_DRIVER_ENTRY
 Language=Russian
-ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed it's initialization call.
+ERROR_FAILED_DRIVER_ENTRY - The driver was not loaded because it failed its initialization call.
 .
 
 MessageId=648

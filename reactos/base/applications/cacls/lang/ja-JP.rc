@@ -1,0 +1,78 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+
+IDS_HELP, "ファイルのアクセス制御リスト(ACL) を表\示または変更します。\n\n\
+CACLS ファイル名 [/T] [/E] [/C] [/G ユーザー名:アクセス権]\n\
+                 [/R ユーザー名 [...]] [/P ユーザー名:アクセス権 [...]]\n\
+                 [/D ユーザー名 [...]]\n\
+  ファイル名        ACL を表\示します。\n\
+  /T                現在のディレクトリとすべてのサブディレクトリにある\n\
+                    指定されたファイルの ACL を変更します。\n\
+  /E                ACL を置き換えずに、ACL を編集します。\n\
+  /C                アクセス拒否エラーを無視して、ACL の変更を続行します。\n\
+  /G ユーザー名:アクセス権\n\
+                    指定されたユーザーにアクセス権を与えます。\n\
+                    アクセス権: R  読み取り\n\
+                                W  書き込み\n\
+                                C  変更 (書き込み)\n\
+                                F  フル コントロール\n\
+  /R ユーザー名     指定されたユーザーのアクセス権を失効させます。\n\
+                    (/E オプションと共に使用)。\n\
+  /P ユーザー名:アクセス権\n\
+                    指定されたユーザーのアクセス権を置き換えます。\n\
+                    アクセス権: N  なし\n\
+                                W  書き込み\n\
+                                R  読み取り\n\
+                                C  変更 (書き込み)\n\
+                                F  フル コントロール\n\
+  /D ユーザー名     指定されたユーザーのアクセスを拒否します。\n\
+複数のファイルを指定するには、ワイルドカードを使用できます。\n\
+複数のユーザーを指定できます。\n\n\
+省略形:\n\
+   CI - コンテナ継承。\n\
+        ACE はディレクトリに継承されます。\n\
+   OI - オブジェクト継承。\n\
+        ACE はファイルに継承されます。\n\
+   IO - 継承のみ。\n\
+        ACE は現在のファイル/ディレクトリに適用されません。\n"
+
+IDS_ABBR_CI, "(CI)"
+IDS_ABBR_OI, "(OI)"
+IDS_ABBR_IO, "(IO)"
+IDS_ABBR_FULL, "F"
+IDS_ABBR_READ, "R"
+IDS_ABBR_WRITE, "W"
+IDS_ABBR_CHANGE, "C"
+IDS_ABBR_NONE, "N"
+IDS_ALLOW, ""
+IDS_DENY, "(DENY)"
+IDS_SPECIAL_ACCESS, "(special access:)"
+IDS_GENERIC_READ, "GENERIC_READ"
+IDS_GENERIC_WRITE, "GENERIC_WRITE"
+IDS_GENERIC_EXECUTE, "GENERIC_EXECUTE"
+IDS_GENERIC_ALL, "GENERIC_ALL"
+IDS_FILE_GENERIC_EXECUTE, "FILE_GENERIC_EXECUTE"
+IDS_FILE_GENERIC_READ, "FILE_GENERIC_READ"
+IDS_FILE_GENERIC_WRITE, "FILE_GENERIC_WRITE"
+IDS_FILE_READ_DATA, "FILE_READ_DATA"
+IDS_FILE_WRITE_DATA, "FILE_WRITE_DATA"
+IDS_FILE_APPEND_DATA, "FILE_APPEND_DATA"
+IDS_FILE_READ_EA, "FILE_READ_EA"
+IDS_FILE_WRITE_EA, "FILE_WRITE_EA"
+IDS_FILE_EXECUTE, "FILE_EXECUTE"
+IDS_FILE_DELETE_CHILD, "FILE_DELETE_CHILD"
+IDS_FILE_READ_ATTRIBUTES, "FILE_READ_ATTRIBUTES"
+IDS_FILE_WRITE_ATTRIBUTES, "FILE_WRITE_ATTRIBUTES"
+IDS_MAXIMUM_ALLOWED, "MAXIMUM_ALLOWED"
+IDS_ACCESS_SYSTEM_SECURITY, "ACCESS_SYSTEM_SECURITY"
+IDS_SPECIFIC_RIGHTS_ALL, "SPECIFIC_RIGHTS_ALL"
+IDS_STANDARD_RIGHTS_REQUIRED, "STANDARD_RIGHTS_REQUIRED"
+IDS_SYNCHRONIZE, "SYNCHRONIZE"
+IDS_WRITE_OWNER, "WRITE_OWNER"
+IDS_WRITE_DAC, "WRITE_DAC"
+IDS_READ_CONTROL, "READ_CONTROL"
+IDS_DELETE, "DELETE"
+IDS_STANDARD_RIGHTS_ALL, "STANDARD_RIGHTS_ALL"
+END

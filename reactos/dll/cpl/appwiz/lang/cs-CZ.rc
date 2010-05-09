@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/appwiz/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2008-07-27
+ * UPDATED:     2010-03-14
  */
  
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -48,7 +48,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CPLSYSTEMNAME "Pøidat/Odebrat programy"
+	IDS_CPLSYSTEMNAME "Pøidat a odebrat programy"
 	IDS_CPLSYSTEMDESCRIPTION "Nastavuje programy a vytváøí zástupce."
     IDS_CREATE_SHORTCUT "Vytvoøit zástupce"
     IDS_ERROR_NOT_FOUND "Soubor %s nebyl nalezen."

@@ -399,13 +399,13 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6,
         19,
-        "Pu• scegliere la configurazione con i tasti SU e GIë",
+        "Pu• scegliere un elemento della configurazione con i tasti SU e GIë",
         TEXT_STYLE_NORMAL
     },
     {
         6, 
         20, 
-        "Premere INVIO per modificare la configurazione alternativa.",
+        "e modificarlo premendo INVIO per selezionare un valore alternativo.",
         TEXT_STYLE_NORMAL
     },
     {

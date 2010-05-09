@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/sysdm/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-01-25
+ * UPDATED:     2010-03-04
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -48,17 +48,6 @@ BEGIN
     PUSHBUTTON  "Hard&warové profily...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
-IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    GROUPBOX        "Version Info",IDC_STATIC,6,3,210,73
-    CONTROL         "Report as Workstation",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
-    LTEXT           "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.",IDC_STATIC,15,15,183,41
-    PUSHBUTTON      "OK",IDOK,166,83,50,14
-END
-
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -78,8 +67,20 @@ BEGIN
     LTEXT       "Možnosti spuštìní a zotavení øíkají poèítaèi, jak se spustit a co dìlat, jestliže jej chyba donutí zastavit.", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON  "Nastavení", IDC_STAREC, 194, 162, 50, 15
 
+    PUSHBUTTON  "Nastavení systému", IDC_SYSSETTINGS, 2, 192, 80, 15
     PUSHBUTTON  "Promìnné prostøedí", IDC_ENVVAR, 84, 192, 80, 15
     PUSHBUTTON  "Hlášení chyb", IDC_ERRORREPORT, 170, 192, 80, 15
+END
+
+IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Nastavení systému"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Informace o verzi",IDC_STATIC,6,3,210,73
+    CONTROL         "Hlásit se jako pracovní stanice",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
+    LTEXT           "ReactOS je vytvoøen jako serverový OS a jako takový se i hlásí. Po zaškrtnutí tohoto políèka se pro aplikace toto chování zmìní.",IDC_STATIC,15,15,183,41
+    PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 
 
