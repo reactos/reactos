@@ -231,6 +231,7 @@ ColorsProc(
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 				InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
 				pConInfo->ActiveStaticControl = index;
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 				break;
 			}
 		}
