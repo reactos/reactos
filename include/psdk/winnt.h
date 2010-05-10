@@ -63,6 +63,14 @@ extern "C" {
 #define UNALIGNED
 #endif
 
+#ifndef DECLSPEC_NOVTABLE
+# if defined(_MSC_VER) && (_MSC_VER >= 1100) && defined(__cplusplus)
+#  define DECLSPEC_NOVTABLE __declspec(novtable)
+# else
+#  define DECLSPEC_NOVTABLE
+# endif
+#endif
+
 #ifndef DECLSPEC_ADDRSAFE
 #if (_MSC_VER >= 1200) && (defined(_M_ALPHA) || defined(_M_AXP64))
 #define DECLSPEC_ADDRSAFE __declspec(address_safe)

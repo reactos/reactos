@@ -12,17 +12,25 @@
 	<define name="_X86BIOS_" />
 	<library>hal_generic</library>
 	<library>hal_generic_acpi</library>
-	<library>hal_generic_up</library>
 	<library>ntoskrnl</library>
-	<!-- library>x86emu</library -->
+	<library>x86emu</library>
 
-	<directory name="mp">
+	<directory name="generic">
+		<file>spinlock.c</file>
+	</directory>
+
+	<directory name="up">
+		<file>processor.c</file>
+	</directory>
+
+	<!-- directory name="mp">
 		<file>halinit_mp.c</file>
+		<file>processor_mp.c</file>
 		<file>halmp.rc</file>
 		<directory name="amd64">
-			<!-- file>mps.S</file -->
+			<file>mps.S</file>
 		</directory>
-	</directory>
+	</directory -->
 </module>
 </group>
 

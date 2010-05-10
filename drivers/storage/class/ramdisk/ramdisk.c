@@ -2422,18 +2422,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
                                         0,
                                         &PhysicalDeviceObject);
         if (NT_SUCCESS(Status))
-        {
-            //
-            // ReactOS Fix
-            // The ReactOS Plug and Play Manager is broken and does not create
-            // the required keys when reporting a detected device.
-            // We hack around this ourselves.
-            //
-            RtlCreateUnicodeString(&((PEXTENDED_DEVOBJ_EXTENSION)
-                                   PhysicalDeviceObject->DeviceObjectExtension)
-                                   ->DeviceNode->InstancePath,
-                                   L"Root\\UNKNOWN\\0000");
-            
+        {            
             //
             // Create the device object
             //

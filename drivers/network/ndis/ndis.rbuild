@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ndis" type="kernelmodedriver" installbase="system32/drivers" installname="ndis.sys">
-	<importlibrary definition="ndis.def"></importlibrary>
+	<importlibrary definition="ndis.spec"></importlibrary>
 	<include base="ndis">include</include>
 	<define name="NDIS_WRAPPER" />
 	<define name="NDIS51" />

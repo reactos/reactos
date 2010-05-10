@@ -213,7 +213,7 @@ BEGIN
     IDS_GAMES           "Giochi"
     IDS_CMT_SOLITAIRE   "Solitario"
     IDS_CMT_WINEMINE    "Campo minato"
-	IDS_CMT_SPIDER      "Spider Solitaire"
+	IDS_CMT_SPIDER      "Spider"
 END
 
 STRINGTABLE
@@ -235,7 +235,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Divertimento"
     IDS_CMT_MPLAY32             "Esegui Multimedia Player"
     IDS_CMT_SNDVOL32            "Esegui Controllo Volume"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
+    IDS_CMT_SNDREC32            "Esegui il Registratore di suonoi"
 END
 
 STRINGTABLE
@@ -255,7 +255,7 @@ STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Prompt dei comandi.lnk"
     IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
-    IDS_SHORT_DOWNLOADER "ReactOS Applications Manager.lnk"
+    IDS_SHORT_DOWNLOADER "ReactOS gestione applicazioni.lnk"
     IDS_SHORT_SERVICE    "Service Manager.lnk"
     IDS_SHORT_DEVICE     "Device Manager.lnk"
     IDS_SHORT_MPLAY32    "Multimedia Player.lnk"
@@ -271,12 +271,12 @@ BEGIN
     IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
     IDS_SHORT_KBSWITCH   "Layout di tastiera.lnk"
     IDS_SHORT_EVENTVIEW  "Visualizzatore Eventi.lnk"
-    IDS_SHORT_MSCONFIG   "Configuratione del sistema.lnk"
+    IDS_SHORT_MSCONFIG   "Configurazione del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Controllo Volume.lnk"
     IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
     IDS_SHORT_DXDIAG     "ReactX Diagnostica.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
-    IDS_SHORT_SPIDER     "Spider Solitaire.lnk"
+	IDS_SHORT_SPIDER     "Spider.lnk"
 END
 
 STRINGTABLE

@@ -27,6 +27,24 @@ extern LIST_ENTRY IopTapeFsListHead;
 
 VOID
 NTAPI
+IopReadyDeviceObjects(IN PDRIVER_OBJECT Driver)
+{
+    PAGED_CODE();
+    PDEVICE_OBJECT DeviceObject;
+
+    /* Set the driver as initialized */
+    Driver->Flags |= DRVO_INITIALIZED;
+    DeviceObject = Driver->DeviceObject;
+    while (DeviceObject)
+    {
+        /* Set every device as initialized too */
+        DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+        DeviceObject = DeviceObject->NextDevice;
+    }
+}
+
+VOID
+NTAPI
 IopDeleteDevice(IN PVOID ObjectBody)
 {
     PDEVICE_OBJECT DeviceObject = ObjectBody;

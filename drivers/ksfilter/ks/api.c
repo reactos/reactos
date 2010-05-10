@@ -94,6 +94,8 @@ KsReleaseDeviceSecurityLock(
 {
     PKSIDEVICE_HEADER Header = (PKSIDEVICE_HEADER)DevHeader;
 
+    DPRINT("KsReleaseDevice\n");
+
     ExReleaseResourceLite(&Header->SecurityLock);
     KeLeaveCriticalRegion();
 }
@@ -1589,7 +1591,7 @@ KsAcquireControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeWaitForSingleObject(&BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
+    KeWaitForSingleObject(BasicHeader->ControlMutex, Executive, KernelMode, FALSE, NULL);
 
 }
 
@@ -1606,7 +1608,7 @@ KsReleaseControl(
     /* sanity check */
     ASSERT(BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
 
-    KeReleaseMutex(&BasicHeader->ControlMutex, FALSE);
+    KeReleaseMutex(BasicHeader->ControlMutex, FALSE);
 }
 
 
@@ -1623,11 +1625,11 @@ KsAcquireDevice(
     IKsDevice *KsDevice;
     PKSIDEVICE_HEADER DeviceHeader;
 
-
+    DPRINT("KsAcquireDevice\n");
     DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* acquire device mutex */
     KsDevice->lpVtbl->AcquireDevice(KsDevice);
@@ -1645,7 +1647,7 @@ KsReleaseDevice(
     PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* release device mutex */
     KsDevice->lpVtbl->ReleaseDevice(KsDevice);
@@ -1668,7 +1670,7 @@ KsTerminateDevice(
     DeviceHeader = DeviceExtension->DeviceHeader;
 
     /* get device interface*/
-    KsDevice = (IKsDevice*)&DeviceHeader->lpVtblIKsDevice;
+    KsDevice = (IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown;
 
     /* now free device header */
     KsFreeDeviceHeader((KSDEVICE_HEADER)DeviceHeader);
@@ -1958,7 +1960,7 @@ KsDeviceGetBusData(
 }
 
 /*
-    @unimplemented
+    @implemented
 */
 KSDDKAPI
 void
@@ -1969,7 +1971,12 @@ KsDeviceRegisterAdapterObject(
     IN ULONG MaxMappingsByteCount,
     IN ULONG MappingTableStride)
 {
-    UNIMPLEMENTED
+    PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)CONTAINING_RECORD(Device, KSIDEVICE_HEADER, KsDevice);
+
+    DeviceHeader->AdapterObject = AdapterObject;
+    DeviceHeader->MaxMappingsByteCount = MaxMappingsByteCount;
+    DeviceHeader->MappingTableStride = MappingTableStride;
+
 }
 
 /*
@@ -1982,6 +1989,7 @@ KsGetBusEnumIdentifier(
     IN PIRP Irp)
 {
     UNIMPLEMENTED
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -2094,8 +2102,15 @@ KspCountMethodSets(
     if (!AutomationTableB)
         return AutomationTableA->MethodSetsCount;
 
-    /* sanity check */
-    ASSERT(AutomationTableA->MethodItemSize  == AutomationTableB->MethodItemSize);
+
+    DPRINT("AutomationTableA MethodItemSize %lu MethodSetsCount %lu\n", AutomationTableA->MethodItemSize, AutomationTableA->MethodSetsCount);
+    DPRINT("AutomationTableB MethodItemSize %lu MethodSetsCount %lu\n", AutomationTableB->MethodItemSize, AutomationTableB->MethodSetsCount);
+
+    if (AutomationTableA->MethodItemSize && AutomationTableB->MethodItemSize)
+    {
+        /* sanity check */
+        ASSERT(AutomationTableA->MethodItemSize  == AutomationTableB->MethodItemSize);
+    }
 
     /* now iterate all property sets and compare their guids */
     Count = AutomationTableA->MethodSetsCount;
@@ -2136,8 +2151,14 @@ KspCountEventSets(
     if (!AutomationTableB)
         return AutomationTableA->EventSetsCount;
 
-    /* sanity check */
-    ASSERT(AutomationTableA->EventItemSize == AutomationTableB->EventItemSize);
+    DPRINT("AutomationTableA EventItemSize %lu EventSetsCount %lu\n", AutomationTableA->EventItemSize, AutomationTableA->EventSetsCount);
+    DPRINT("AutomationTableB EventItemSize %lu EventSetsCount %lu\n", AutomationTableB->EventItemSize, AutomationTableB->EventSetsCount);
+
+    if (AutomationTableA->EventItemSize && AutomationTableB->EventItemSize)
+    {
+        /* sanity check */
+        ASSERT(AutomationTableA->EventItemSize == AutomationTableB->EventItemSize);
+    }
 
     /* now iterate all Event sets and compare their guids */
     Count = AutomationTableA->EventSetsCount;
@@ -2180,6 +2201,8 @@ KspCountPropertySets(
         return AutomationTableA->PropertySetsCount;
 
     /* sanity check */
+    DPRINT("AutomationTableA PropertyItemSize %lu PropertySetsCount %lu\n", AutomationTableA->PropertyItemSize, AutomationTableA->PropertySetsCount);
+    DPRINT("AutomationTableB PropertyItemSize %lu PropertySetsCount %lu\n", AutomationTableB->PropertyItemSize, AutomationTableB->PropertySetsCount);
     ASSERT(AutomationTableA->PropertyItemSize == AutomationTableB->PropertyItemSize);
 
     /* now iterate all property sets and compare their guids */
@@ -2219,18 +2242,18 @@ KspCopyMethodSets(
     if (!AutomationTableA)
     {
         /* copy of property set */
-        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableB->MethodSets, Table->MethodItemSize * AutomationTableB->MethodSetsCount);
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableB->MethodSets, sizeof(KSMETHOD_SET) * AutomationTableB->MethodSetsCount);
         return STATUS_SUCCESS;
     }
     else if (!AutomationTableB)
     {
         /* copy of property set */
-        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+        RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, sizeof(KSMETHOD_SET) * AutomationTableA->MethodSetsCount);
         return STATUS_SUCCESS;
     }
 
     /* first copy all property items from dominant table */
-    RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, Table->MethodItemSize * AutomationTableA->MethodSetsCount);
+    RtlMoveMemory((PVOID)Table->MethodSets, AutomationTableA->MethodSets, sizeof(KSMETHOD_SET) * AutomationTableA->MethodSetsCount);
     /* set counter */
     Count = AutomationTableA->MethodSetsCount;
 
@@ -2253,7 +2276,7 @@ KspCopyMethodSets(
         if (!bFound)
         {
             /* copy new property item set */
-            RtlMoveMemory((PVOID)&Table->MethodSets[Count], &AutomationTableB->MethodSets[Index], Table->MethodItemSize);
+            RtlMoveMemory((PVOID)&Table->MethodSets[Count], &AutomationTableB->MethodSets[Index], sizeof(KSMETHOD_SET));
             Count++;
         }
     }
@@ -2274,18 +2297,18 @@ KspCopyPropertySets(
     if (!AutomationTableA)
     {
         /* copy of property set */
-        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableB->PropertySets, Table->PropertyItemSize * AutomationTableB->PropertySetsCount);
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableB->PropertySets, sizeof(KSPROPERTY_SET) * AutomationTableB->PropertySetsCount);
         return STATUS_SUCCESS;
     }
     else if (!AutomationTableB)
     {
         /* copy of property set */
-        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+        RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, sizeof(KSPROPERTY_SET) * AutomationTableA->PropertySetsCount);
         return STATUS_SUCCESS;
     }
 
     /* first copy all property items from dominant table */
-    RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, Table->PropertyItemSize * AutomationTableA->PropertySetsCount);
+    RtlMoveMemory((PVOID)Table->PropertySets, AutomationTableA->PropertySets, sizeof(KSPROPERTY_SET) * AutomationTableA->PropertySetsCount);
     /* set counter */
     Count = AutomationTableA->PropertySetsCount;
 
@@ -2308,7 +2331,7 @@ KspCopyPropertySets(
         if (!bFound)
         {
             /* copy new property item set */
-            RtlMoveMemory((PVOID)&Table->PropertySets[Count], &AutomationTableB->PropertySets[Index], Table->PropertyItemSize);
+            RtlMoveMemory((PVOID)&Table->PropertySets[Count], &AutomationTableB->PropertySets[Index], sizeof(KSPROPERTY_SET));
             Count++;
         }
     }
@@ -2328,18 +2351,18 @@ KspCopyEventSets(
     if (!AutomationTableA)
     {
         /* copy of Event set */
-        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableB->EventSets, Table->EventItemSize * AutomationTableB->EventSetsCount);
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableB->EventSets, sizeof(KSEVENT_SET) * AutomationTableB->EventSetsCount);
         return STATUS_SUCCESS;
     }
     else if (!AutomationTableB)
     {
         /* copy of Event set */
-        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+        RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, sizeof(KSEVENT_SET) * AutomationTableA->EventSetsCount);
         return STATUS_SUCCESS;
     }
 
     /* first copy all Event items from dominant table */
-    RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, Table->EventItemSize * AutomationTableA->EventSetsCount);
+    RtlMoveMemory((PVOID)Table->EventSets, AutomationTableA->EventSets, sizeof(KSEVENT_SET) * AutomationTableA->EventSetsCount);
     /* set counter */
     Count = AutomationTableA->EventSetsCount;
 
@@ -2362,7 +2385,7 @@ KspCopyEventSets(
         if (!bFound)
         {
             /* copy new Event item set */
-            RtlMoveMemory((PVOID)&Table->EventSets[Count], &AutomationTableB->EventSets[Index], Table->EventItemSize);
+            RtlMoveMemory((PVOID)&Table->EventSets[Count], &AutomationTableB->EventSets[Index], sizeof(KSEVENT_SET));
             Count++;
         }
     }
@@ -2426,7 +2449,7 @@ KsMergeAutomationTables(
         }
 
         /* now allocate the property sets */
-        Table->PropertySets = AllocateItem(NonPagedPool, Table->PropertyItemSize * Table->PropertySetsCount);
+        Table->PropertySets = AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * Table->PropertySetsCount);
 
         if (!Table->PropertySets)
         {
@@ -2469,7 +2492,7 @@ KsMergeAutomationTables(
         }
 
         /* now allocate the property sets */
-        Table->MethodSets = AllocateItem(NonPagedPool, Table->MethodItemSize * Table->MethodSetsCount);
+        Table->MethodSets = AllocateItem(NonPagedPool, sizeof(KSMETHOD_SET) * Table->MethodSetsCount);
 
         if (!Table->MethodSets)
         {
@@ -2512,7 +2535,7 @@ KsMergeAutomationTables(
         }
 
         /* now allocate the property sets */
-        Table->EventSets = AllocateItem(NonPagedPool, Table->EventItemSize * Table->EventSetsCount);
+        Table->EventSets = AllocateItem(NonPagedPool, sizeof(KSEVENT_SET) * Table->EventSetsCount);
 
         if (!Table->EventSets)
         {
@@ -2683,8 +2706,26 @@ KsRegisterAggregatedClientUnknown(
     IN PVOID  Object,
     IN PUNKNOWN  ClientUnknown)
 {
-    UNIMPLEMENTED
-    return NULL;
+    PKSBASIC_HEADER BasicHeader = (PKSBASIC_HEADER)((ULONG_PTR)Object - sizeof(KSBASIC_HEADER));
+
+    /* sanity check */
+    ASSERT(BasicHeader->Type == KsObjectTypeDevice || BasicHeader->Type == KsObjectTypeFilterFactory || 
+           BasicHeader->Type == KsObjectTypeFilter || BasicHeader->Type == KsObjectTypePin);
+
+    if (BasicHeader->ClientAggregate)
+    {
+        /* release existing aggregate */
+        BasicHeader->ClientAggregate->lpVtbl->Release(BasicHeader->ClientAggregate);
+    }
+
+    /* increment reference count */
+    ClientUnknown->lpVtbl->AddRef(ClientUnknown);
+
+    /* store client aggregate */
+    BasicHeader->ClientAggregate = ClientUnknown;
+
+    /* return objects outer unknown */
+    return BasicHeader->OuterUnknown;
 }
 
 /*

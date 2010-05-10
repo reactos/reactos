@@ -91,9 +91,9 @@ HRESULT WINAPI CorBindToRuntimeHost(LPCWSTR pwszVersion, LPCWSTR pwszBuildFlavor
 {
     WCHAR *mono_exe;
 
-    FIXME("(%s, %s, %s, %p, %d, %p, %p, %p): semi-stub!\n", debugstr_w(pwszVersion),
+    FIXME("(%s, %s, %s, %p, %d, %s, %s, %p): semi-stub!\n", debugstr_w(pwszVersion),
           debugstr_w(pwszBuildFlavor), debugstr_w(pwszHostConfigFile), pReserved,
-          startupFlags, rclsid, riid, ppv);
+          startupFlags, debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
     if (!(mono_exe = get_mono_exe()))
     {
@@ -144,6 +144,11 @@ __int32 WINAPI _CorExeMain(void)
     PROCESS_INFORMATION pi;
     WCHAR *mono_exe, *cmd_line;
     DWORD size, exit_code;
+    static const WCHAR WINE_MONO_TRACE[]={'W','I','N','E','_','M','O','N','O','_','T','R','A','C','E',0};
+    static const WCHAR trace_switch_start[]={'"','-','-','t','r','a','c','e','=',0};
+    static const WCHAR trace_switch_end[]={'"',' ',0};
+    int trace_size;
+    WCHAR trace_setting[256];
 
     if (!(mono_exe = get_mono_exe()))
     {
@@ -151,7 +156,13 @@ __int32 WINAPI _CorExeMain(void)
         return -1;
     }
 
+    trace_size = GetEnvironmentVariableW(WINE_MONO_TRACE, trace_setting, sizeof(trace_setting)/sizeof(WCHAR));
+
     size = (lstrlenW(mono_exe) + lstrlenW(GetCommandLineW()) + 1) * sizeof(WCHAR);
+
+    if (trace_size)
+        size += (trace_size + lstrlenW(trace_switch_start) + lstrlenW(trace_switch_end)) * sizeof(WCHAR);
+
     if (!(cmd_line = HeapAlloc(GetProcessHeap(), 0, size)))
     {
         HeapFree(GetProcessHeap(), 0, mono_exe);
@@ -160,6 +171,14 @@ __int32 WINAPI _CorExeMain(void)
 
     lstrcpyW(cmd_line, mono_exe);
     HeapFree(GetProcessHeap(), 0, mono_exe);
+
+    if (trace_size)
+    {
+        lstrcatW(cmd_line, trace_switch_start);
+        lstrcatW(cmd_line, trace_setting);
+        lstrcatW(cmd_line, trace_switch_end);
+    }
+
     lstrcatW(cmd_line, GetCommandLineW());
 
     TRACE("new command line: %s\n", debugstr_w(cmd_line));
@@ -271,7 +290,7 @@ HRESULT WINAPI CoInitializeCor(DWORD fFlags)
 
 HRESULT WINAPI GetAssemblyMDImport(LPCWSTR szFileName, REFIID riid, IUnknown **ppIUnk)
 {
-    FIXME("(%p %s, %p, %p): stub\n", szFileName, debugstr_w(szFileName), riid, *ppIUnk);
+    FIXME("(%p %s, %s, %p): stub\n", szFileName, debugstr_w(szFileName), debugstr_guid(riid), *ppIUnk);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
@@ -324,6 +343,12 @@ HRESULT WINAPI CorBindToCurrentRuntime(LPCWSTR filename, REFCLSID rclsid, REFIID
     return E_NOTIMPL;
 }
 
+STDAPI ClrCreateManagedInstance(LPCWSTR pTypeName, REFIID riid, void **ppObject)
+{
+    FIXME("(%s,%s,%p)\n", debugstr_w(pTypeName), debugstr_guid(riid), ppObject);
+    return E_NOTIMPL;
+}
+
 BOOL WINAPI StrongNameSignatureVerification(LPCWSTR filename, DWORD inFlags, DWORD* pOutFlags)
 {
     FIXME("(%s, 0x%X, %p): stub\n", debugstr_w(filename), inFlags, pOutFlags);
@@ -338,7 +363,7 @@ BOOL WINAPI StrongNameSignatureVerificationEx(LPCWSTR filename, BOOL forceVerifi
 
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID* ppv)
 {
-    FIXME("(%p, %p, %p): stub\n", rclsid, riid, ppv);
+    FIXME("(%s, %s, %p): stub\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     if(!ppv)
         return E_INVALIDARG;
 

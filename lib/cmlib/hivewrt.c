@@ -265,6 +265,14 @@ HvSyncHive(
    return TRUE;
 }
 
+BOOLEAN
+CMAPI
+HvHiveWillShrink(IN PHHIVE RegistryHive)
+{
+    /* No shrinking yet */
+    return FALSE;
+}
+
 BOOLEAN CMAPI
 HvWriteHive(
    PHHIVE RegistryHive)

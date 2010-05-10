@@ -21,22 +21,22 @@ RealEntryPoint:
 	mov ss, ax
 
 	/* checkPoint Charlie - where it all began... */
-	mov si, offset _CheckPoint0
+	mov si, offset CheckPoint0
 	call writestr	
-	
+
 	/* Setup a real mode stack */
 	mov	sp, stack16
 
 	/* Zero BootDrive and BootPartition */
 	xor eax, eax
-	mov _BootDrive, eax
-	mov _BootPartition, eax
+	mov BootDrive, eax
+	mov BootPartition, eax
 
 	/* Store the boot drive */
-	mov _BootDrive, dl
+	mov BootDrive, dl
 
 	/* Store the boot partition */
-	mov _BootPartition, dh
+	mov BootPartition, dh
 
 	/* Load the GDT */
 	lgdt gdtptr
@@ -46,13 +46,13 @@ RealEntryPoint:
 	call x86_16_EnableA20
 
 	/* checkPoint Charlie - where it all began... */
-	mov si, offset _CheckPoint1
+	mov si, offset CheckPoint1
 	call writestr	
 	
 	call x86_16_BuildPageTables
 	
 	/* checkPoint Charlie - where it all began... */
-	mov si, offset _CheckPoint2
+	mov si, offset CheckPoint2
 	call writestr	
 
 	/* Check if CPU supports CPUID */
@@ -89,26 +89,26 @@ RealEntryPoint:
 	/* X64 Processor */
 	
 	/* checkPoint Charlie - where it all began... */
-	mov si, offset _CheckPoint3
+	mov si, offset CheckPoint3
 	call writestr	
 
-	jmp _switch64
+	jmp switch64
 	
 NO_X64_SUPPORT_DETECTED:
-	mov  si, offset _NotAnX64Processor	// Loading message
+	mov  si, offset NotAnX64Processor	// Loading message
 	call writestr
-	jmp _fail
+	jmp fail
 
 NO_CPUID_SUPPORT_DETECTED:
-	mov  si, offset _NoCPUIDSupport	// Loading message
-    	call writestr
+	mov  si, offset NoCPUIDSupport	// Loading message
+   	call writestr
 
-_fail:
-	jmp _fail
+fail:
+	jmp fail
 	nop
 	nop
 
-_switch64:
+switch64:
 	call x86_16_SwitchToLong
 
 	.code64
@@ -119,7 +119,7 @@ _switch64:
 
 	/* GO! */
 	xor rcx, rcx
-	call _BootMain
+	call BootMain
 
 	/* Checkpoint */
 //	mov ax, LMODE_DS
@@ -174,14 +174,14 @@ x86_16_BuildPageTables:
 	push es
 
 	/* Get segment of pml4 */
-	mov eax, offset _pml4_startup
+	mov eax, offset pml4_startup
 	shr eax, 4
 	mov es, ax
 	cld
 	xor di, di
 
 	/* One entry in the PML4 pointing to PDP */
-	mov eax, offset _pdp_startup
+	mov eax, offset pdp_startup
 	or eax, 0x00f
 	stosd
 	/* clear rest */
@@ -190,7 +190,7 @@ x86_16_BuildPageTables:
 	rep stosd
 
 	/* One entry in the PDP pointing to PD */
-	mov eax, offset _pd_startup
+	mov eax, offset pd_startup
 	or eax, 0x00f
 	stosd
 	/* clear rest */
@@ -268,7 +268,7 @@ x86_16_SwitchToLong:
 	mov eax, 0x00a0			// Set PAE and PGE: 10100000b
 	mov cr4, eax
 
-	mov edx, offset _pml4_startup // Point cr3 at PML4
+	mov edx, offset pml4_startup // Point cr3 at PML4
 	mov cr3, edx
 
 	mov ecx, 0xC0000080		// Specify EFER MSR
@@ -405,42 +405,42 @@ gdtptr:
 	.long	gdt			/* Base Address */
 
 
-.global _BootDrive
-_BootDrive:
+.global BootDrive
+BootDrive:
     .long 0
     
-.global _BootPartition
-_BootPartition:
+.global BootPartition
+BootPartition:
     .long 0
 
-.global _NotAnX64Processor
-_NotAnX64Processor:
+.global NotAnX64Processor
+NotAnX64Processor:
 	.ascii "FreeLoader: No x64-compatible CPU detected! Exiting..."
 	.byte 0x0d, 0x0a, 0
 
-.global _NoCPUIDSupport
-_NoCPUIDSupport:
+.global NoCPUIDSupport
+NoCPUIDSupport:
 	.ascii "FreeLoader: No CPUID instruction support detected! Exiting..."
 	.byte 0x0d, 0x0a, 0
 
 /////////////////////////// Checkpoint messages ///////////////////////////////
-.global _CheckPoint0
-_CheckPoint0:
+.global CheckPoint0
+CheckPoint0:
 	.ascii "Starting FreeLoader..."
 	.byte 0x0d, 0x0a, 0
 	
-.global _CheckPoint1
-_CheckPoint1:
+.global CheckPoint1
+CheckPoint1:
 	.ascii "FreeLoader[16-bit]: building page tables..."
 	.byte 0x0d, 0x0a, 0
 	
-.global _CheckPoint2
-_CheckPoint2:
+.global CheckPoint2
+CheckPoint2:
 	.ascii "FreeLoader[16-bit]: checking CPU for x64 long mode..."
 	.byte 0x0d, 0x0a, 0
 
-.global _CheckPoint3
-_CheckPoint3:
+.global CheckPoint3
+CheckPoint3:
 	.ascii "FreeLoader: Switching to x64 long mode..."
 	.byte 0x0d, 0x0a, 0
 

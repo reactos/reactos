@@ -488,10 +488,7 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!IopCreateRootDirectories()) return FALSE;
 
     /* Initialize PnP manager */
-    PnpInit();
-
-    /* Create the group driver list */
-    IoCreateDriverList();
+    IopInitializePlugPlayServices();
 
     /* Load boot start drivers */
     IopInitializeBootDrivers();
@@ -529,9 +526,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Load system start drivers */
     IopInitializeSystemDrivers();
     PnpSystemInit = TRUE;
-
-    /* Destroy the group driver list */
-    IoDestroyDriverList();
 
     /* Reinitialize drivers that requested it */
     IopReinitializeDrivers();

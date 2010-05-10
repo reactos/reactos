@@ -45,7 +45,7 @@
 
 #define HYPERSPACE_BASE             0xfffff70000000000ULL
 #define HAL_BASE                    0xffffffff80000000ULL
-#define APIC_BASE                   0xfffffffffee00000ULL // FIXME
+#define APIC_BASE                   0xFFFFFFFFFFFE0000ULL
 
 #define APIC_PHYS_BASE              0xfee00000
 

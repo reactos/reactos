@@ -84,19 +84,17 @@ VOID
 FreeItem(
     IN PVOID Item);
 
-NTSTATUS
-NTAPI
-KspTopologyPropertyHandler(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER  Request,
-    IN OUT PVOID  Data);
-
+KSDDKAPI
 NTSTATUS
 NTAPI
 KspPinPropertyHandler(
-    IN PIRP Irp,
-    IN PKSIDENTIFIER  Request,
-    IN OUT PVOID  Data);
+    IN  PIRP Irp,
+    IN  PKSPROPERTY Property,
+    IN  OUT PVOID Data,
+    IN  ULONG DescriptorsCount,
+    IN  const KSPIN_DESCRIPTOR* Descriptors,
+    IN  ULONG DescriptorSize);
+
 
 NTSTATUS
 FindMatchingCreateItem(
@@ -121,11 +119,6 @@ KspCreatePin(
     IN IKsFilter* Filter,
     IN PKSPIN_CONNECT Connect,
     IN KSPIN_DESCRIPTOR_EX* Descriptor);
-
-NTSTATUS
-IKsFilter_AddPin(
-    IKsFilter * Filter,
-    PKSPIN Pin);
 
 NTSTATUS
 KspAddCreateItemToList(
@@ -156,3 +149,40 @@ KspSetFilterFactoriesState(
     IN PKSIDEVICE_HEADER DeviceHeader,
     IN BOOLEAN NewState);
 
+NTSTATUS
+NTAPI
+KspMethodHandlerWithAllocator(
+    IN  PIRP Irp,
+    IN  ULONG MethodSetsCount,
+    IN  const KSMETHOD_SET *MethodSet,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG MethodItemSize OPTIONAL);
+
+VOID
+IKsFilter_AddPin(
+    PKSFILTER Filter,
+    PKSPIN Pin);
+
+VOID
+IKsFilter_RemovePin(
+    PKSFILTER Filter,
+    PKSPIN Pin);
+
+NTSTATUS
+KspEnableEvent(
+    IN  PIRP Irp,
+    IN  ULONG EventSetsCount,
+    IN  PKSEVENT_SET EventSet,
+    IN  OUT PLIST_ENTRY EventsList OPTIONAL,
+    IN  KSEVENTS_LOCKTYPE EventsFlags OPTIONAL,
+    IN  PVOID EventsLock OPTIONAL,
+    IN  PFNKSALLOCATOR Allocator OPTIONAL,
+    IN  ULONG EventItemSize OPTIONAL);
+
+NTSTATUS
+KspValidateConnectRequest(
+    IN PIRP Irp,
+    IN ULONG DescriptorsCount,
+    IN PVOID Descriptors,
+    IN ULONG DescriptorSize,
+    OUT PKSPIN_CONNECT* Connect);

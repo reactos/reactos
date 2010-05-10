@@ -90,6 +90,10 @@ KspRegisterDeviceInterfaces(
             /* return result */
             return Status;
         }
+
+        /* copy device class */
+        RtlMoveMemory(&SymEntry->DeviceInterfaceClass, &Categories[Index], sizeof(CLSID));
+
         /* insert symbolic link entry */
         InsertTailList(SymbolicLinkList, &SymEntry->Entry);
     }

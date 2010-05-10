@@ -1298,8 +1298,8 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
        sei.hwnd = lpcmi->hwnd;
        sei.nShow = SW_SHOWNORMAL;
        sei.lpVerb = L"open";
-       ShellExecuteExW(&sei);
-       if (sei.hInstApp <= (HINSTANCE)32)
+
+       if (ShellExecuteExW(&sei) == FALSE)
           return E_FAIL;
     }
     else if (lpcmi->lpVerb == MAKEINTRESOURCEA(IDS_CREATELINK)) //FIXME
