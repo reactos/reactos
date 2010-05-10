@@ -2,13 +2,13 @@
 
 [Section]
 Name = Miranda IM
-Version = 0.8.21
+Version = 0.8.22
 Licence = GPL
 Description = Open source multiprotocol instant messaging application - May not work completely.
 Size = 1.6MB
 Category = 5
 URLSite = http://www.miranda-im.org/
-URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.21-unicode.exe
+URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.22-unicode.exe
 CDPath = none
 
 [Section.0407]
