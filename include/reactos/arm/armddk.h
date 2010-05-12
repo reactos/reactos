@@ -185,7 +185,7 @@ struct _TEB* NtCurrentTeb(VOID)
 }
 
 NTSYSAPI
-PKTHREAD
+struct _KTHREAD*
 NTAPI
 KeGetCurrentThread(VOID);
 

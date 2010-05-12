@@ -27,11 +27,6 @@ $if (_WDMDDK_)
 #define EFLAG_ZERO              0x4000
 #define EFLAG_SELECT            (EFLAG_SIGN | EFLAG_ZERO)
 
-#define RESULT_NEGATIVE         ((EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_ZERO             ((~EFLAG_SIGN & EFLAG_ZERO) & EFLAG_SELECT)
-#define RESULT_POSITIVE         ((~EFLAG_SIGN & ~EFLAG_ZERO) & EFLAG_SELECT)
-
-
 typedef struct _KFLOATING_SAVE {
   ULONG Dummy;
 } KFLOATING_SAVE, *PKFLOATING_SAVE;
