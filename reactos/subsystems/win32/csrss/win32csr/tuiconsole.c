@@ -290,6 +290,19 @@ TuiCleanupConsole(PCSRSS_CONSOLE Console)
     }
 }
 
+static BOOL WINAPI
+TuiChangeIcon(PCSRSS_CONSOLE Console, HICON hWindowIcon)
+{
+  return TRUE;
+}
+
+static NTSTATUS WINAPI
+TuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size)
+{
+  UNIMPLEMENTED;
+  return STATUS_NOT_IMPLEMENTED;
+}
+
 DWORD WINAPI
 TuiConsoleThread (PVOID Data)
 {
@@ -340,7 +353,8 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
   TuiUpdateScreenInfo,
   TuiChangeTitle,
   TuiCleanupConsole,
-  NULL  // ChangeIcon
+  TuiChangeIcon,
+  TuiResizeBuffer,
 };
 
 NTSTATUS FASTCALL

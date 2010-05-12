@@ -3118,4 +3118,33 @@ CSR_API(CsrGenerateCtrlEvent)
   return Status;
 }
 
+CSR_API(CsrSetScreenBufferSize)
+{
+    NTSTATUS Status;
+    PCSRSS_CONSOLE Console;
+    PCSRSS_SCREEN_BUFFER Buff;
+
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetScreenBufferSize.OutputHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        ConioUnlockConsole(Console);
+        return Status;
+    }
+
+    Status = ConioResizeBuffer(Console, Buff, Request->Data.SetScreenBufferSize.Size);
+    ConioUnlockScreenBuffer(Buff);
+    ConioUnlockConsole(Console);
+
+    return Status;
+}
+
 /* EOF */

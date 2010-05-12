@@ -1708,11 +1708,105 @@ GuiConsoleHandleScrollbarMenu()
 
 }
 
+static NTSTATUS WINAPI
+GuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size)
+{
+    BYTE * Buffer;
+    DWORD Offset = 0;
+    BYTE * OldPtr;
+    USHORT CurrentY;
+    BYTE * OldBuffer;
+#if HAVE_WMEMSET
+    USHORT value = MAKEWORD(' ', ScreenBuffer->DefaultAttrib);
+#endif
+    DWORD diff;
+    DWORD i;
+
+    /* Buffer size is not allowed to be smaller than window size */
+    if (Size.X < Console->Size.X || Size.Y < Console->Size.Y)
+        return STATUS_INVALID_PARAMETER;
+
+    if (Size.X == ScreenBuffer->MaxX && Size.Y == ScreenBuffer->MaxY)
+        return STATUS_SUCCESS;
+
+    Buffer = HeapAlloc(Win32CsrApiHeap, 0, Size.X * Size.Y * 2);
+    if (!Buffer)
+        return STATUS_NO_MEMORY;
+
+    DPRINT1("Resizing (%d,%d) to (%d,%d)\n", ScreenBuffer->MaxX, ScreenBuffer->MaxY, Size.X, Size.Y);
+    OldBuffer = ScreenBuffer->Buffer;
+
+    for (CurrentY = 0; CurrentY < ScreenBuffer->MaxY && CurrentY < Size.Y; CurrentY++)
+    {
+        OldPtr = ConioCoordToPointer(ScreenBuffer, 0, CurrentY);
+        if (Size.X <= ScreenBuffer->MaxX)
+        {
+            /* reduce size */
+            RtlCopyMemory(&Buffer[Offset], OldPtr, Size.X * 2);
+            Offset += (Size.X * 2);
+        }
+        else
+        {
+            /* enlarge size */
+            RtlCopyMemory(&Buffer[Offset], OldPtr, ScreenBuffer->MaxX * 2);
+            Offset += (ScreenBuffer->MaxX * 2);
+
+            diff = Size.X - ScreenBuffer->MaxX;
+            /* zero new part of it */
+#if HAVE_WMEMSET
+            wmemset((WCHAR*)&Buffer[Offset], value, diff);
+#else
+            for (i = 0; i < diff; i++)
+            {
+                Buffer[Offset++] = ' ';
+                Buffer[Offset++] = ScreenBuffer->DefaultAttrib;
+            }
+#endif
+        }
+    }
+
+    if (Size.Y > ScreenBuffer->MaxY)
+    {
+        diff = Size.X * (Size.Y - ScreenBuffer->MaxY);
+#if HAVE_WMEMSET
+        wmemset((WCHAR*)&Buffer[Offset], value, diff);
+#else
+        for (i = 0; i < diff; i++)
+        {
+            Buffer[Offset++] = ' ';
+            Buffer[Offset++] = ScreenBuffer->DefaultAttrib;
+        }
+#endif
+    }
+
+    (void)InterlockedExchangePointer((PVOID volatile  *)&ScreenBuffer->Buffer, Buffer);
+    HeapFree(Win32CsrApiHeap, 0, OldBuffer);
+    ScreenBuffer->MaxX = Size.X;
+    ScreenBuffer->MaxY = Size.Y;
+    ScreenBuffer->VirtualY = 0;
+
+    /* Ensure cursor and window are within buffer */
+    if (ScreenBuffer->CurrentX >= Size.X)
+        ScreenBuffer->CurrentX = Size.X - 1;
+    if (ScreenBuffer->CurrentY >= Size.Y)
+        ScreenBuffer->CurrentY = Size.Y - 1;
+    if (ScreenBuffer->ShowX > Size.X - Console->Size.X)
+        ScreenBuffer->ShowX = Size.X - Console->Size.X;
+    if (ScreenBuffer->ShowY > Size.Y - Console->Size.Y)
+        ScreenBuffer->ShowY = Size.Y - Console->Size.Y;
+
+    /* TODO: Should update scrollbar, but can't use anything that
+     * calls SendMessage or it could cause deadlock */
+
+    return STATUS_SUCCESS;
+}
+
 static VOID FASTCALL
 GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
 {
   DWORD windx, windy;
   PCSRSS_SCREEN_BUFFER ActiveBuffer = Console->ActiveBuffer;
+  COORD BufSize;
   BOOL SizeChanged = FALSE;
 
   EnterCriticalSection(&ActiveBuffer->Header.Lock);
@@ -1724,85 +1818,6 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
   /* apply cursor size */
   ActiveBuffer->CursorInfo.dwSize = min(max(pConInfo->CursorSize, 1), 100);
 
-  windx = LOWORD(pConInfo->ScreenBuffer);
-  windy = HIWORD(pConInfo->ScreenBuffer);
-
-  if (windx != ActiveBuffer->MaxX || windy != ActiveBuffer->MaxY)
-  {
-     BYTE * Buffer = HeapAlloc(Win32CsrApiHeap, 0, windx * windy * 2);
-
-     if (Buffer)
-     {
-        DWORD Offset = 0;
-        BYTE * OldPtr;
-        USHORT CurrentY;
-        BYTE * OldBuffer;
-        USHORT value;
-        DWORD diff;
-        DWORD i;
-
-        value = MAKEWORD(' ', ActiveBuffer->DefaultAttrib);
-
-        DPRINT("MaxX %d MaxY %d windx %d windy %d value %04x DefaultAttrib %d\n",ActiveBuffer->MaxX, ActiveBuffer->MaxY, windx, windy, value, ActiveBuffer->DefaultAttrib);
-        OldBuffer = ActiveBuffer->Buffer;
-
-        for (CurrentY = 0; CurrentY < min(ActiveBuffer->MaxY, windy); CurrentY++)
-        {
-            OldPtr = ConioCoordToPointer(ActiveBuffer, 0, CurrentY);
-            if (windx <= ActiveBuffer->MaxX)
-            {
-                /* reduce size */
-                RtlCopyMemory(&Buffer[Offset], OldPtr, windx * 2);
-                Offset += (windx * 2);
-            }
-            else
-            {
-                /* enlarge size */
-                RtlCopyMemory(&Buffer[Offset], OldPtr, ActiveBuffer->MaxX * 2);
-                Offset += (ActiveBuffer->MaxX * 2);
-
-                diff = windx - ActiveBuffer->MaxX;
-                /* zero new part of it */
-#if HAVE_WMEMSET
-                wmemset((WCHAR*)&Buffer[Offset], value, diff);
-#else
-                for (i = 0; i < diff; i++)
-                {
-                    Buffer[Offset++] = ' ';
-                    Buffer[Offset++] = ActiveBuffer->DefaultAttrib;
-                }
-#endif
-            }
-        }
-
-        if (windy > ActiveBuffer->MaxY)
-        {
-            diff = windy - ActiveBuffer->MaxY;
-#if HAVE_WMEMSET
-                wmemset((WCHAR*)&Buffer[Offset], value, diff * windx);
-#else
-                for (i = 0; i < diff * windx; i++)
-                {
-                    Buffer[Offset++] = ' ';
-                    Buffer[Offset++] = ActiveBuffer->DefaultAttrib;
-                }
-#endif
-        }
-
-        (void)InterlockedExchangePointer((PVOID volatile  *)&ActiveBuffer->Buffer, Buffer);
-        HeapFree(Win32CsrApiHeap, 0, OldBuffer);
-        ActiveBuffer->MaxX = windx;
-        ActiveBuffer->MaxY = windy;
-        ActiveBuffer->VirtualY = 0;
-        SizeChanged = TRUE;
-     }
-     else
-     {
-        LeaveCriticalSection(&ActiveBuffer->Header.Lock);
-        return;
-     }
-  }
-
   windx = LOWORD(pConInfo->WindowSize);
   windy = HIWORD(pConInfo->WindowSize);
 
@@ -1812,6 +1827,14 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
       Console->Size.X = windx;
       Console->Size.Y = windy;
       SizeChanged = TRUE;
+  }
+
+  BufSize.X = LOWORD(pConInfo->ScreenBuffer);
+  BufSize.Y = HIWORD(pConInfo->ScreenBuffer);
+  if (BufSize.X != ActiveBuffer->MaxX || BufSize.Y != ActiveBuffer->MaxY)
+  {
+      if (NT_SUCCESS(GuiResizeBuffer(Console, ActiveBuffer, BufSize)))
+          SizeChanged = TRUE;
   }
 
   if (SizeChanged)
@@ -2222,7 +2245,8 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
   GuiUpdateScreenInfo,
   GuiChangeTitle,
   GuiCleanupConsole,
-  GuiChangeIcon
+  GuiChangeIcon,
+  GuiResizeBuffer,
 };
 
 NTSTATUS FASTCALL
