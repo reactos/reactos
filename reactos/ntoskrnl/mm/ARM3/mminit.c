@@ -136,6 +136,14 @@ ULONG MmSessionViewSize;
 ULONG MmSessionPoolSize;
 ULONG MmSessionImageSize;
 
+/*
+ * These are the PTE addresses of the boundaries carved out above
+ */
+PMMPTE MiSessionImagePteStart;
+PMMPTE MiSessionImagePteEnd;
+PMMPTE MiSessionBasePte;
+PMMPTE MiSessionLastPte;
+
 //
 // The system view space, on the other hand, is where sections that are memory
 // mapped into "system space" end up.
@@ -217,6 +225,11 @@ ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
 
+/* And these store the respective highest PTE/PDE address */
+PMMPTE MiHighestUserPte;
+PMMPDE MiHighestUserPde;
+
+/* These variables define the system cache address space */
 PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
@@ -1700,6 +1713,10 @@ MmArmInitSystem(IN ULONG Phase,
         MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
         MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
         
+        /* Highest PTE and PDE based on the addresses above */
+        MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
+        MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
+        
         //
         // Get the size of the boot loader's image allocations and then round
         // that region up to a PDE size, so that any PDEs we might create for
@@ -1772,7 +1789,12 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
                                     MmSystemViewSize);
-                                    
+
+        /* Compute the PTE addresses for all the addresses we carved out */
+        MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+        MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+        MiSessionBasePte = MiAddressToPte(MmSessionBase);
+        MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
                                     
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
