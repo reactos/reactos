@@ -132,23 +132,14 @@ MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
                             //
                             MiUnlinkFreeOrZeroedPage(Pfn1);
                             Pfn1->u3.e2.ReferenceCount = 1;
-                            
-                            //
-                            // Check if it was already zeroed
-                            //
-                            if (Pfn1->u3.e1.PageLocation != ZeroedPageList)
-                            {
-                                //
-                                // It wasn't, so zero it
-                                //
-                                MiZeroPage(MiGetPfnEntryIndex(Pfn1));
-                            }
-                            
-                            //
-                            // Mark it in use
-                            //
+                            Pfn1->u2.ShareCount = 1;
                             Pfn1->u3.e1.PageLocation = ActiveAndValid;
-
+                            Pfn1->u3.e1.StartOfAllocation = 0;
+                            Pfn1->u3.e1.EndOfAllocation = 0;
+                            Pfn1->u3.e1.PrototypePte = 0;
+                            Pfn1->u4.VerifierAllocation = 0;
+                            Pfn1->PteAddress = (PVOID)0xBAADF00D;
+                            
                             //
                             // Check if this is the last PFN, otherwise go on
                             //
@@ -331,7 +322,10 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
 {
     PFN_NUMBER Page;
     PHYSICAL_ADDRESS PhysicalAddress;
-    PAGED_CODE ();
+    PMMPFN Pfn1, EndPfn;
+    PMMPTE PointerPte;
+    PVOID BaseAddress;
+    PAGED_CODE();
     ASSERT(SizeInPages != 0);
 
     //
@@ -348,7 +342,22 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
     // We'll just piggyback on the I/O memory mapper
     //
     PhysicalAddress.QuadPart = Page << PAGE_SHIFT;
-    return MmMapIoSpace(PhysicalAddress, SizeInPages << PAGE_SHIFT, CacheType);
+    BaseAddress = MmMapIoSpace(PhysicalAddress, SizeInPages << PAGE_SHIFT, CacheType);
+    ASSERT(BaseAddress);
+    
+    /* Loop the PFN entries */
+    Pfn1 = MiGetPfnEntry(Page);
+    EndPfn = Pfn1 + SizeInPages;
+    PointerPte = MiAddressToPte(BaseAddress);
+    do
+    {
+        /* Write the PTE address */
+        Pfn1->PteAddress = PointerPte++;
+        Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte));
+    } while (Pfn1++ < EndPfn);
+    
+    /* Return the address */
+    return BaseAddress;
 }
 
 PVOID
@@ -437,6 +446,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex, LastPage, PageCount;
     PMMPFN Pfn1, StartPfn;
+    PMMPTE PointerPte;
     PAGED_CODE();
     
     //
@@ -455,10 +465,9 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         return;
     }
     
-    //
-    // Otherwise, get the PTE and page number for the allocation
-    //
-    PageFrameIndex = PFN_FROM_PTE(MiAddressToPte(BaseAddress));
+    /* Get the PTE and frame number for the allocation*/
+    PointerPte = MiAddressToPte(BaseAddress);
+    PageFrameIndex = PFN_FROM_PTE(PointerPte);
     
     //
     // Now get the PFN entry for this, and make sure it's the correct one
@@ -469,11 +478,11 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         //
         // This probably means you did a free on an address that was in between
         //
-        KeBugCheckEx (BAD_POOL_CALLER,
-                      0x60,
-                      (ULONG_PTR)BaseAddress,
-                      0,
-                      0);
+        KeBugCheckEx(BAD_POOL_CALLER,
+                     0x60,
+                     (ULONG_PTR)BaseAddress,
+                     0,
+                     0);
     }
     
     //
@@ -482,16 +491,21 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     StartPfn = Pfn1;
     Pfn1->u3.e1.StartOfAllocation = 0;
     
-    //
-    // Look the PFNs
-    //
+    /* Look the PFNs until we find the one that marks the end of the allocation */
     do
     {
-        //
-        // Until we find the one that marks the end of the allocation
-        //
+        /* Make sure these are the pages we setup in the allocation routine */
+        ASSERT(Pfn1->u3.e2.ReferenceCount == 1);
+        ASSERT(Pfn1->u2.ShareCount == 1);
+        ASSERT(Pfn1->PteAddress == PointerPte);
+        ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+        ASSERT(Pfn1->u4.VerifierAllocation == 0);
+        ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+        
+        /* Keep going for assertions */
+        PointerPte++;
     } while (Pfn1++->u3.e1.EndOfAllocation == 0);
-    
+         
     //
     // Found it, unmark it
     //
