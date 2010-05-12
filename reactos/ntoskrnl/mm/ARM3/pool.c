@@ -334,12 +334,13 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Save it into our double-buffered system page directory
                 //
+                /* This seems to be making the assumption that one PDE is one page long */
+                ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
                 MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
                                  sizeof(MMPTE)] = TempPte;
                             
-                //
-                // Write the actual PTE now
-                //
+                /* Write the actual PTE now */
+                ASSERT(TempPte.u.Hard.Valid == 1);
                 *PointerPte++ = TempPte;
                 
                 //
@@ -432,6 +433,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             //
             // Write the demand zero PTE and keep going
             //
+            ASSERT(PointerPte->u.Hard.Valid == 0);
             *PointerPte++ = TempPte;
         } while (PointerPte < StartPte);
         

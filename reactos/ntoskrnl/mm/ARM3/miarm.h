@@ -42,7 +42,7 @@
 #define _1KB (1024)
 #define _1MB (1024 * _1KB)
 
-/* Are mapped by a PDE */
+/* Area mapped by a PDE */
 #define PDE_MAPPED_VA   (PTE_COUNT * PAGE_SIZE)
 
 /* Size of a PDE directory, and size of a page table */
@@ -90,6 +90,18 @@
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
 
 //
+// Assertions for session images, addresses, and PTEs
+//
+#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
+    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
+    
+#define MI_IS_SESSION_ADDRESS(Address) \
+    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
+        
+#define MI_IS_SESSION_PTE(Pte) \
+    ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
+
+//
 // Corresponds to MMPTE_SOFTWARE.Protection
 //
 #ifdef _M_IX86
@@ -119,6 +131,11 @@
 //
 #define LIST_HEAD 0xFFFFFFFF
 
+//
+// Special IRQL value (found in assertions)
+//
+#define MM_NOIRQL (KIRQL)0xFFFFFFFF
+    
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
@@ -284,6 +301,10 @@ extern PVOID MiSystemViewStart;
 extern ULONG MmSystemViewSize;
 extern PVOID MmSessionBase;
 extern PVOID MiSessionSpaceEnd;
+extern PMMPTE MiSessionImagePteStart;
+extern PMMPTE MiSessionImagePteEnd;
+extern PMMPTE MiSessionBasePte;
+extern PMMPTE MiSessionLastPte;
 extern ULONG MmSizeOfPagedPoolInBytes;
 extern PMMPTE MmSystemPagePtes;
 extern PVOID MmSystemCacheStart;
@@ -327,16 +348,17 @@ extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 extern PFN_NUMBER MmTotalSystemDriverPages;
 extern PVOID MiSessionImageStart;
 extern PVOID MiSessionImageEnd;
+extern PMMPTE MiHighestUserPte;
+extern PMMPDE MiHighestUserPde;
+extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
-#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
-    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
-
-#define MI_IS_SESSION_ADDRESS(Address) \
-    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
-        
+//
+// Returns if the page is physically resident (ie: a large page)
+// FIXFIX: CISC/x86 only?
+//
 FORCEINLINE
 BOOLEAN
 MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)

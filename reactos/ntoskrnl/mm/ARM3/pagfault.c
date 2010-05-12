@@ -27,6 +27,10 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     PMMPDE PointerPde;
     NTSTATUS Status = STATUS_SUCCESS;
     
+    /* No session support in ReactOS yet */
+    ASSERT(MI_IS_SESSION_ADDRESS(Address) == FALSE);
+    ASSERT(MI_IS_SESSION_PTE(Address) == FALSE);
+    
     //
     // Check if this is a fault while trying to access the page table itself
     //
@@ -60,6 +64,9 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     if (PointerPde->u.Hard.Valid == 0)
     {
+        /* This seems to be making the assumption that one PDE is one page long */
+        ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+        
         //
         // Copy it from our double-mapped system page directory
         //
@@ -88,6 +95,10 @@ MiResolveDemandZeroFault(IN PVOID Address,
             Address,
             Process);
     
+    /* Must currently only be called by paging path, for system addresses only */
+    ASSERT(OldIrql == MM_NOIRQL);
+    ASSERT(Process == NULL);
+        
     //
     // Lock the PFN database
     //
@@ -110,11 +121,16 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
     
+    /* Shouldn't see faults for user PTEs yet */
+    ASSERT(PointerPte > MiHighestUserPte);
+    
     //
     // Build the PTE
     //
     TempPte = ValidKernelPte;
     TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    ASSERT(PointerPte->u.Hard.Valid == 0);
     *PointerPte = TempPte;
     ASSERT(PointerPte->u.Hard.Valid == 1);
     
@@ -155,6 +171,9 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     //
     TempPte = *PointerPte;
     
+    /* No prototype */
+    ASSERT(PrototypePte == NULL);
+    
     //
     // The PTE must be invalid, but not totally blank
     //
@@ -175,7 +194,8 @@ MiDispatchFault(IN BOOLEAN StoreInstruction,
     Status = MiResolveDemandZeroFault(Address,
                                       PointerPte,
                                       Process,
-                                      -1);
+                                      MM_NOIRQL);
+    ASSERT(KeAreAllApcsDisabled () == TRUE);
     if (NT_SUCCESS(Status))
     {
         //
