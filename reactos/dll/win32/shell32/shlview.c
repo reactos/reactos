@@ -1511,6 +1511,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	      msg.pt = 0;*/
 
 	      LPNMLVKEYDOWN plvKeyDown = (LPNMLVKEYDOWN) lpnmh;
+          SHORT ctrl = GetAsyncKeyState(VK_CONTROL);
 
               /* initiate a rename of the selected file or directory */
               if(plvKeyDown->wVKey == VK_F2)
@@ -1590,6 +1591,14 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
             {
                 IShellBrowser_BrowseObject(lpSb, NULL, SBSP_PARENT);
             }
+        }
+        else if(plvKeyDown->wVKey == 'C' && (ctrl & 0x8000))
+        {
+            FIXME("Need to copy\n");
+        }
+        else if(plvKeyDown->wVKey == 'V' && (ctrl & 0x8000))
+        {
+            FIXME("Need to paste\n");
         }
         else
             FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
