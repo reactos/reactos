@@ -466,7 +466,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
            (PageFrameIndex >= MmLowestPhysicalPage));
 
     /* Get the PFN entry */
-    Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
     /* Sanity checks that a right kind of page is being inserted here */
     ASSERT(Pfn1->u4.MustBeCached == 0);
@@ -484,7 +484,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     if (LastPage != LIST_HEAD)
     {
         /* Link us with the previous page, so we're at the end now */
-        MI_PFN_TO_PFNENTRY(LastPage)->u1.Flink = PageFrameIndex;
+        MiGetPfnEntry(LastPage)->u1.Flink = PageFrameIndex;
     }
     else
     {
@@ -507,8 +507,8 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     Pfn1->u4.InPageError = 0;
     Pfn1->u4.AweAllocation = 0;
 
-    /* Not yet until we switch to this */
-    //MmAvailablePages++;
+    /* Increase available pages */
+    MmAvailablePages++;
 
     /* Check if we've reached the configured low memory threshold */
     if (MmAvailablePages == MmLowMemoryThreshold)
@@ -552,7 +552,13 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     ColorTable->Count++;
 #endif
     
-    /* FIXME: Notify zero page thread if enough pages are on the free list now */
+    /* Notify zero page thread if enough pages are on the free list now */
+    extern KEVENT ZeroPageThreadEvent;
+    if ((MmFreePageListHead.Total > 8) && !(KeReadStateEvent(&ZeroPageThreadEvent)))
+    {
+        /* This is ReactOS-specific */
+        KeSetEvent(&ZeroPageThreadEvent, IO_NO_INCREMENT, FALSE);
+    }
 }
 
 /* EOF */

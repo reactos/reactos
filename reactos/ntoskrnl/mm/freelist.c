@@ -49,7 +49,7 @@ SIZE_T MmPagedPoolCommit;
 SIZE_T MmPeakCommitment; 
 SIZE_T MmtotalCommitLimitMaximum;
 
-static KEVENT ZeroPageThreadEvent;
+KEVENT ZeroPageThreadEvent;
 static BOOLEAN ZeroPageThreadShouldTerminate = FALSE;
 static RTL_BITMAP MiUserPfnBitMap;
 
