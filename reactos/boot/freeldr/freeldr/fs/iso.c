@@ -161,6 +161,7 @@ static LONG IsoLookupFile(PCSTR FileName, ULONG DeviceId, PISO_FILE_INFO IsoFile
 	DPRINTM(DPRINT_FILESYSTEM, "IsoLookupFile() FileName = %s\n", FileName);
 
 	RtlZeroMemory(IsoFileInfoPointer, sizeof(ISO_FILE_INFO));
+	RtlZeroMemory(&IsoFileInfo, sizeof(ISO_FILE_INFO));
 
 	//
 	// Read The Primary Volume Descriptor

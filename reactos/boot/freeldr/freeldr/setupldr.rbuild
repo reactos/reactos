@@ -5,7 +5,9 @@
 	<library>freeldr_startup</library>
 	<library>freeldr_base64k</library>
 	<library>freeldr_base</library>
-	<library>mini_hal</library>
+	<if property="ARCH" value="i386">
+		<library>mini_hal</library>
+	</if>
 	<library>freeldr_arch</library>
 	<library>setupldr_main</library>
 	<library>rossym</library>
