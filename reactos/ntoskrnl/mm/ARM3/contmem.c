@@ -18,6 +18,194 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+PFN_NUMBER
+NTAPI
+MiFindContiguousPages(IN PFN_NUMBER LowestPfn,
+                      IN PFN_NUMBER HighestPfn,
+                      IN PFN_NUMBER BoundaryPfn,
+                      IN PFN_NUMBER SizeInPages,
+                      IN MEMORY_CACHING_TYPE CacheType)
+{
+    PFN_NUMBER Page, PageCount, LastPage, Length, BoundaryMask;
+    ULONG i = 0;
+    PMMPFN Pfn1, EndPfn;
+    KIRQL OldIrql;
+    PAGED_CODE ();
+    ASSERT(SizeInPages != 0);
+        
+    //
+    // Convert the boundary PFN into an alignment mask
+    //
+    BoundaryMask = ~(BoundaryPfn - 1);
+    
+    //
+    // Loop all the physical memory blocks
+    //
+    do
+    {
+        //
+        // Capture the base page and length of this memory block
+        //
+        Page = MmPhysicalMemoryBlock->Run[i].BasePage;
+        PageCount = MmPhysicalMemoryBlock->Run[i].PageCount;
+        
+        //
+        // Check how far this memory block will go
+        //
+        LastPage = Page + PageCount;
+        
+        //
+        // Trim it down to only the PFNs we're actually interested in
+        //
+        if ((LastPage - 1) > HighestPfn) LastPage = HighestPfn + 1;
+        if (Page < LowestPfn) Page = LowestPfn;
+        
+        //
+        // Skip this run if it's empty or fails to contain all the pages we need
+        //
+        if (!(PageCount) || ((Page + SizeInPages) > LastPage)) continue;
+        
+        //
+        // Now scan all the relevant PFNs in this run
+        //
+        Length = 0;
+        for (Pfn1 = MiGetPfnEntry(Page); Page < LastPage; Page++, Pfn1++)
+        {
+            //
+            // If this PFN is in use, ignore it
+            //
+            if (MiIsPfnInUse(Pfn1)) continue;
+            
+            //
+            // If we haven't chosen a start PFN yet and the caller specified an
+            // alignment, make sure the page matches the alignment restriction
+            //
+            if ((!(Length) && (BoundaryPfn)) &&
+                (((Page ^ (Page + SizeInPages - 1)) & BoundaryMask)))
+            {
+                //
+                // It does not, so bail out
+                //
+                continue;
+            }
+            
+            //
+            // Increase the number of valid pages, and check if we have enough
+            //
+            if (++Length == SizeInPages)
+            {
+                //
+                // It appears we've amassed enough legitimate pages, rollback
+                //
+                Pfn1 -= (Length - 1);
+                Page -= (Length - 1);
+                
+                //
+                // Acquire the PFN lock
+                //
+                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                do
+                {
+                    //
+                    // Things might've changed for us. Is the page still free?
+                    //
+                    if (MiIsPfnInUse(Pfn1)) break;
+                    
+                    //
+                    // So far so good. Is this the last confirmed valid page?
+                    //
+                    if (!--Length)
+                    {
+                        //
+                        // Sanity check that we didn't go out of bounds
+                        //
+                        ASSERT(i != MmPhysicalMemoryBlock->NumberOfRuns);
+                        
+                        //
+                        // Loop until all PFN entries have been processed
+                        //
+                        EndPfn = Pfn1 - SizeInPages + 1;
+                        do
+                        {
+                            //
+                            // This PFN is now a used page, set it up
+                            //
+                            MiUnlinkFreeOrZeroedPage(Pfn1);
+                            Pfn1->u3.e2.ReferenceCount = 1;
+                            
+                            //
+                            // Check if it was already zeroed
+                            //
+                            if (Pfn1->u3.e1.PageLocation != ZeroedPageList)
+                            {
+                                //
+                                // It wasn't, so zero it
+                                //
+                                MiZeroPage(MiGetPfnEntryIndex(Pfn1));
+                            }
+                            
+                            //
+                            // Mark it in use
+                            //
+                            Pfn1->u3.e1.PageLocation = ActiveAndValid;
+
+                            //
+                            // Check if this is the last PFN, otherwise go on
+                            //
+                            if (Pfn1 == EndPfn) break;
+                            Pfn1--;
+                        } while (TRUE);
+                        
+                        //
+                        // Mark the first and last PFN so we can find them later
+                        //
+                        Pfn1->u3.e1.StartOfAllocation = 1;
+                        (Pfn1 + SizeInPages - 1)->u3.e1.EndOfAllocation = 1;
+                        
+                        //
+                        // Now it's safe to let go of the PFN lock
+                        //
+                        KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                        
+                        //
+                        // Quick sanity check that the last PFN is consistent
+                        //
+                        EndPfn = Pfn1 + SizeInPages;
+                        ASSERT(EndPfn == MiGetPfnEntry(Page + 1));
+                        
+                        //
+                        // Compute the first page, and make sure it's consistent
+                        //
+                        Page -= SizeInPages - 1;
+                        ASSERT(Pfn1 == MiGetPfnEntry(Page));
+                        ASSERT(Page != 0);
+                        return Page;                                
+                    }
+                    
+                    //
+                    // Keep going. The purpose of this loop is to reconfirm that
+                    // after acquiring the PFN lock these pages are still usable
+                    //
+                    Pfn1++;
+                    Page++;
+                } while (TRUE);
+                
+                //
+                // If we got here, something changed while we hadn't acquired
+                // the PFN lock yet, so we'll have to restart
+                //
+                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                Length = 0;
+            }
+        }
+    } while (++i != MmPhysicalMemoryBlock->NumberOfRuns);
+    
+    //
+    // And if we get here, it means no suitable physical memory runs were found
+    //
+    return 0;    
+}
+
 PVOID
 NTAPI
 MiCheckForContiguousMemory(IN PVOID BaseAddress,

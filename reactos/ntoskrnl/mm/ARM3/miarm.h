@@ -621,4 +621,10 @@ MiSyncCachedRanges(
     VOID
 );
 
+BOOLEAN
+NTAPI
+MiIsPfnInUse(
+    IN PMMPFN Pfn1
+);
+
 /* EOF */
