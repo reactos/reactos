@@ -299,11 +299,19 @@ ExFreeToZone(
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
+#ifndef _M_IX86
+#define RESULT_ZERO     0
+#define RESULT_NEGATIVE 1
+#define RESULT_POSITIVE 2
+#endif
+
+#if defined(_X86_) || defined(_IA64_) || defined(_M_AMD64) && !defined(RC_INVOKED) && !defined(MIDL_PASS)
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
+#endif
 
 #ifdef _X86_
 
