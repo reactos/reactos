@@ -294,16 +294,16 @@ UserNew(HWND hwndDlg)
     }
 
     if (user.usri3_name)
-        HeapFree(GetProcessHeap, 0, user.usri3_name);
+        HeapFree(GetProcessHeap(), 0, user.usri3_name);
 
     if (user.usri3_full_name)
-        HeapFree(GetProcessHeap, 0, user.usri3_full_name);
+        HeapFree(GetProcessHeap(), 0, user.usri3_full_name);
 
     if (user.usri3_comment)
-        HeapFree(GetProcessHeap, 0, user.usri3_comment);
+        HeapFree(GetProcessHeap(), 0, user.usri3_comment);
 
     if (user.usri3_password)
-        HeapFree(GetProcessHeap, 0, user.usri3_password);
+        HeapFree(GetProcessHeap(), 0, user.usri3_password);
 }
 
 
