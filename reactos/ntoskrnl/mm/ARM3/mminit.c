@@ -151,7 +151,7 @@ ULONG MmSystemViewSize;
 // map paged pool PDEs into external processes when they fault on a paged pool
 // address.
 //
-PFN_NUMBER MmSystemPageDirectory;
+PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPTE MmSystemPagePtes;
 
 //
@@ -1483,7 +1483,8 @@ MiBuildPagedPool(VOID)
     // Get the page frame number for the system page directory
     //
     PointerPte = MiAddressToPte(PDE_BASE);
-    MmSystemPageDirectory = PFN_FROM_PTE(PointerPte);
+    ASSERT(PD_COUNT == 1);
+    MmSystemPageDirectory[0] = PFN_FROM_PTE(PointerPte);
     
     //
     // Allocate a system PTE which will hold a copy of the page directory
@@ -1500,7 +1501,8 @@ MiBuildPagedPool(VOID)
     // way).
     //
     TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory;
+    ASSERT(PD_COUNT == 1);
+    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
     *PointerPte = TempPte;
