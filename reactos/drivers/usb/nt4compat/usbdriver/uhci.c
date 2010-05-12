@@ -67,7 +67,6 @@ extern PDEVICE_OBJECT ehci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_pa
 
 #define release_adapter( padapTER ) HalPutDmaAdapter(padapTER)
 
-
 #define get_int_idx( _urb, _idx ) \
 {\
 	UCHAR interVAL;\
@@ -406,6 +405,7 @@ uhci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 
     STRING string, another_string;
     CHAR str_dev_name[64], str_symb_name[64];
+    UCHAR hcd_id;
 
     if (drvr_obj == NULL)
         return NULL;
@@ -455,6 +455,12 @@ uhci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
     RtlFreeUnicodeString(&dev_name);
     RtlFreeUnicodeString(&symb_name);
 
+    //register with dev_mgr though it is not initilized
+    uhci_init_hcd_interface(pdev_ext->uhci);
+    hcd_id = dev_mgr_register_hcd(dev_mgr, &pdev_ext->uhci->hcd_interf);
+
+    pdev_ext->uhci->hcd_interf.hcd_set_id(&pdev_ext->uhci->hcd_interf, hcd_id);
+    pdev_ext->uhci->hcd_interf.hcd_set_dev_mgr(&pdev_ext->uhci->hcd_interf, dev_mgr);
     return pdev;
 }
 
@@ -681,7 +687,6 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
     PCI_SLOT_NUMBER slot_num;
     NTSTATUS status;
-    UCHAR hcd_id;
 
 
     pdev = uhci_create_device(drvr_obj, dev_mgr);
@@ -846,13 +851,6 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         uhci_release(pdev);
         return NULL;
     }
-
-    //register with dev_mgr
-    uhci_init_hcd_interface(pdev_ext->uhci);
-    hcd_id = dev_mgr_register_hcd(dev_mgr, &pdev_ext->uhci->hcd_interf);
-
-    pdev_ext->uhci->hcd_interf.hcd_set_id(&pdev_ext->uhci->hcd_interf, hcd_id);
-    pdev_ext->uhci->hcd_interf.hcd_set_dev_mgr(&pdev_ext->uhci->hcd_interf, dev_mgr);
 
     return pdev;
 }
