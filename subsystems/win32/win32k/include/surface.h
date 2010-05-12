@@ -37,7 +37,6 @@ typedef struct _SURFACE
   DWORD       dwOffset;
 
   /* reactos specific */
-  HPALETTE hDIBPalette;
   DWORD dsBitfields[3]; // hack, should probably use palette instead
   DWORD biClrUsed;
   DWORD biClrImportant;

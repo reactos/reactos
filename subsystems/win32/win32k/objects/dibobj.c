@@ -109,13 +109,14 @@ IntSetDIBColorTable(
         if (StartIndex + Entries > (1 << biBitCount))
             Entries = (1 << biBitCount) - StartIndex;
 
-        PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
-        if (PalGDI == NULL)
+        if (psurf->ppal == NULL)
         {
             DC_UnlockDc(dc);
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return 0;
         }
+
+        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
 
         for (Index = StartIndex;
              Index < StartIndex + Entries && Index < PalGDI->NumColors;
@@ -181,13 +182,14 @@ IntGetDIBColorTable(
         if (StartIndex + Entries > (1 << biBitCount))
             Entries = (1 << biBitCount) - StartIndex;
 
-        PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
-        if (PalGDI == NULL)
+        if (psurf->ppal == NULL)
         {
             DC_UnlockDc(dc);
             SetLastWin32Error(ERROR_INVALID_HANDLE);
             return 0;
         }
+
+        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
 
         for (Index = StartIndex;
              Index < StartIndex + Entries && Index < PalGDI->NumColors;
@@ -276,12 +278,7 @@ IntSetDIBits(
         return 0;
     }
 
-    // Use hDIBPalette if it exists
-    if (bitmap->hDIBPalette)
-    {
-        ppalDDB = PALETTE_ShareLockPalette(bitmap->hDIBPalette);
-    }
-    else if (bitmap->ppal)
+    if (bitmap->ppal)
     {
         ppalDDB = bitmap->ppal;
         GDIOBJ_IncrementShareCount(&ppalDDB->BaseObject);
@@ -523,11 +520,7 @@ NtGdiSetDIBitsToDeviceInternal(
     }
 
     /* Obtain destination palette */
-    if (pSurf && pSurf->hDIBPalette)
-    {
-        ppalDDB = PALETTE_ShareLockPalette(pSurf->hDIBPalette);
-    }
-    else if (pSurf && pSurf->ppal)
+    if (pSurf && pSurf->ppal)
     {
         ppalDDB = pSurf->ppal;
         GDIOBJ_IncrementShareCount(&ppalDDB->BaseObject);
@@ -672,11 +665,7 @@ NtGdiGetDIBitsInternal(
         return 0;
     }
 
-    if (psurf->hDIBPalette)
-    {
-        ppalSrc = PALETTE_ShareLockPalette(psurf->hDIBPalette);
-    }
-    else if (psurf->ppal)
+    if (psurf->ppal)
     {
         ppalSrc = psurf->ppal;
         GDIOBJ_IncrementShareCount(&ppalSrc->BaseObject);
@@ -1357,6 +1346,7 @@ DIB_CreateDIBSection(
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
     PDC_ATTR pdcattr;
+    HPALETTE hpal ;
 
     // Fill BITMAP32 structure with DIB data
     BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1525,7 +1515,7 @@ DIB_CreateDIBSection(
             ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
         }
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        GreDeleteObject(bmp);
+        GreDeleteObject(res);
         return NULL;
     }
 
@@ -1554,15 +1544,19 @@ DIB_CreateDIBSection(
 
     if (bi->biClrUsed != 0)
     {
-        bmp->hDIBPalette = PALETTE_AllocPaletteIndexedRGB(ColorCount, lpRGB);
+        hpal = PALETTE_AllocPaletteIndexedRGB(ColorCount, lpRGB);
     }
     else
     {
-        bmp->hDIBPalette = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
+        hpal = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
                                                 dsBitfields[0],
                                                 dsBitfields[1],
                                                 dsBitfields[2]);
     }
+
+    bmp->ppal = PALETTE_ShareLockPalette(hpal);
+    /* Lazy delete hpal, it will be freed at surface release */
+    GreDeleteObject(hpal);
 
     // Clean up in case of errors
     if (!res || !bmp || !bm.bmBits)

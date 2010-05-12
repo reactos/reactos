@@ -394,9 +394,7 @@ NtGdiTransparentBlt(
         goto done;
     }
 
-    if (BitmapSrc->hDIBPalette)
-        PalSourceGDI = PALETTE_ShareLockPalette(BitmapSrc->hDIBPalette);
-    else if (BitmapSrc->ppal)
+    if (BitmapSrc->ppal)
     {
         GDIOBJ_IncrementShareCount(&BitmapSrc->ppal->BaseObject);
         PalSourceGDI = BitmapSrc->ppal ;

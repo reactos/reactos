@@ -35,11 +35,7 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
     pebo->psurfTrg = pdc->dclevel.pSurface;
     ASSERT(pebo->psurfTrg);
 
-    if (pebo->psurfTrg->hDIBPalette)
-    {
-        pebo->ppalSurf = PALETTE_ShareLockPalette(pebo->psurfTrg->hDIBPalette);
-    }
-    else if (pebo->psurfTrg->ppal)
+    if (pebo->psurfTrg->ppal)
     {
         pebo->ppalSurf = pebo->psurfTrg->ppal;
         GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);

@@ -219,14 +219,16 @@ IntCreateCompatibleBitmap(
                         {
                             /* Copy the color table */
                             UINT Index;
-                            PPALETTE PalGDI = PALETTE_LockPalette(psurf->hDIBPalette);
+                            PPALETTE PalGDI;
 
-                            if (!PalGDI)
+                            if (!psurf->ppal)
                             {
                                 ExFreePoolWithTag(bi, TAG_TEMP);
                                 SetLastWin32Error(ERROR_INVALID_HANDLE);
                                 return 0;
                             }
+
+                            PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
 
                             for (Index = 0;
                                     Index < 256 && Index < PalGDI->NumColors;
@@ -363,9 +365,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
         if (psurf)
         {
             pso = &psurf->SurfObj;
-            if(psurf->hDIBPalette)
-                ppal = PALETTE_ShareLockPalette(psurf->hDIBPalette);
-            else if (psurf->ppal)
+            if (psurf->ppal)
             {
                 ppal = psurf->ppal;
                 GDIOBJ_IncrementShareCount(&ppal->BaseObject);
@@ -881,9 +881,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
             ExFreePoolWithTag(buf,TAG_BITMAP);
             resBitmap->flFlags = Bitmap->flFlags;
             /* Copy palette */
-            if(Bitmap->hDIBPalette)
-                resBitmap->ppal = PALETTE_ShareLockPalette(Bitmap->hDIBPalette);
-            else if (Bitmap->ppal)
+            if (Bitmap->ppal)
             {
                 resBitmap->ppal = Bitmap->ppal ;
                 GDIOBJ_IncrementShareCount(&Bitmap->ppal->BaseObject);

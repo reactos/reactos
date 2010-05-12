@@ -618,11 +618,7 @@ EXLATEOBJ_vInitXlateFromDCs(
         return;
     }
 
-    if (psurfSrc->hDIBPalette)
-    {
-        ppalSrc = PALETTE_ShareLockPalette(psurfSrc->hDIBPalette);
-    }
-    else if (psurfSrc->ppal)
+    if (psurfSrc->ppal)
     {
         ppalSrc = psurfSrc->ppal;
         GDIOBJ_IncrementShareCount(&ppalSrc->BaseObject);
@@ -633,11 +629,7 @@ EXLATEOBJ_vInitXlateFromDCs(
     if(!ppalSrc)
         return;
 
-    if (psurfDst->hDIBPalette)
-    {
-        ppalDst = PALETTE_ShareLockPalette(psurfDst->hDIBPalette);
-    }
-    else if (psurfDst->ppal)
+    if (psurfDst->ppal)
     {
         ppalDst = psurfDst->ppal;
         GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
@@ -697,7 +689,7 @@ EXLATEOBJ_vInitBrushXlate(
     COLORREF crForegroundClr,
     COLORREF crBackgroundClr)
 {
-    PPALETTE ppalDst, ppalPattern;
+    PPALETTE ppalDst;
     SURFACE *psurfPattern;
 
     ASSERT(pexlo);
@@ -707,11 +699,7 @@ EXLATEOBJ_vInitBrushXlate(
 
     EXLATEOBJ_vInitTrivial(pexlo);
 
-    if (psurfDst->hDIBPalette)
-    {
-        ppalDst = PALETTE_ShareLockPalette(psurfDst->hDIBPalette);
-    }
-    else if (psurfDst->ppal)
+    if (psurfDst->ppal)
     {
         ppalDst = psurfDst->ppal;
         GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
@@ -766,11 +754,9 @@ EXLATEOBJ_vInitBrushXlate(
     else
     {
         /* Default: use the patterns' palette */
-        ppalPattern = PALETTE_LockPalette(psurfPattern->hDIBPalette);
-        if (ppalPattern)
+        if (psurfPattern->ppal)
         {
-            EXLATEOBJ_vInitialize(pexlo, &gpalRGB, ppalDst, 0, 0, 0);
-            PALETTE_UnlockPalette(ppalPattern);
+            EXLATEOBJ_vInitialize(pexlo, psurfPattern->ppal, ppalDst, 0, 0, 0);
         }
     }
 

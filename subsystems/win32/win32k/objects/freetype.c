@@ -3439,11 +3439,7 @@ GreExtTextOutW(
     SurfObj = &psurf->SurfObj ;
 
     /* Create the xlateobj */
-    if (psurf->hDIBPalette)
-    {
-        ppalDst = PALETTE_ShareLockPalette(psurf->hDIBPalette);
-    }
-    else if (psurf->ppal)
+    if (psurf->ppal)
     {
         ppalDst = psurf->ppal;
         GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);

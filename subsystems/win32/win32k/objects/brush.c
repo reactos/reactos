@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS win32 subsystem
  * PURPOSE:           Functions for brushes
  * FILE:              subsystem/win32/win32k/objects/brush.c
- * PROGRAMER:         
+ * PROGRAMER:
  */
 
 #include <win32k.h>
@@ -19,7 +19,7 @@ typedef struct _GDI_OBJ_ATTR_FREELIST
   DWORD nEntries;
   PVOID AttrList[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_FREELIST, *PGDI_OBJ_ATTR_FREELIST;
-      
+
 typedef struct _GDI_OBJ_ATTR_ENTRY
 {
   RGN_ATTR Attr[GDIOBJATTRFREE];
@@ -46,7 +46,7 @@ AllocateObjectAttr(VOID)
   PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
   PGDI_OBJ_ATTR_ENTRY pGdiObjAttrEntry;
   int i;
-  
+
   pti = PsGetCurrentThreadWin32Thread();
   if (pti->pgdiBrushAttr)
   {
@@ -127,9 +127,9 @@ FreeObjectAttr(PVOID pAttr)
   PGDI_OBJ_ATTR_FREELIST pGdiObjAttrFreeList;
 
   pti = PsGetCurrentThreadWin32Thread();
-  
+
   if (!pti) return;
-  
+
   if (!pti->pgdiBrushAttr)
   {  // If it is null, just cache it for the next time.
      pti->pgdiBrushAttr = pAttr;
@@ -382,6 +382,7 @@ IntGdiCreateDIBBrush(
     UINT PaletteEntryCount;
     PSURFACE psurfPattern;
     INT PaletteType;
+    HPALETTE hpal ;
 
     if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
     {
@@ -417,7 +418,10 @@ IntGdiCreateDIBBrush(
 
     psurfPattern = SURFACE_LockSurface(hPattern);
     ASSERT(psurfPattern != NULL);
-    psurfPattern->hDIBPalette = BuildDIBPalette(BitmapInfo, &PaletteType);
+    hpal = BuildDIBPalette(BitmapInfo, &PaletteType);
+    psurfPattern->ppal = PALETTE_ShareLockPalette(hpal);
+    /* Lazy delete palette, it will be freed when its shared reference is zeroed */
+    GreDeleteObject(hpal);
     SURFACE_UnlockSurface(psurfPattern);
 
     pbrush = BRUSH_AllocBrushWithHandle();

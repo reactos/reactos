@@ -130,10 +130,6 @@ SURFACE_Cleanup(PVOID ObjectBody)
             ExFreePool(psurf->SurfObj.pvBits);
         }
 
-        if (psurf->hDIBPalette != NULL)
-        {
-            GreDeleteObject(psurf->hDIBPalette);
-        }
     }
 
     /* Free palette */

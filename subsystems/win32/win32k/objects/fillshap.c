@@ -935,11 +935,7 @@ IntGdiGradientFill(
     /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */
     ASSERT(psurf);
 
-    if (psurf->hDIBPalette)
-    {
-        PalDestGDI = PALETTE_ShareLockPalette(psurf->hDIBPalette);
-    }
-    else if (psurf->ppal)
+    if (psurf->ppal)
     {
         PalDestGDI = psurf->ppal;
         GDIOBJ_IncrementShareCount(&PalDestGDI->BaseObject);
@@ -1142,11 +1138,7 @@ NtGdiExtFloodFill(
         goto cleanup;
     }
 
-    if (psurf->hDIBPalette)
-    {
-        ppal = PALETTE_ShareLockPalette(psurf->hDIBPalette);
-    }
-    else if (psurf->ppal)
+    if (psurf->ppal)
     {
         ppal = psurf->ppal;
         GDIOBJ_IncrementShareCount(&ppal->BaseObject);
