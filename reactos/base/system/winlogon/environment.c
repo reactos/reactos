@@ -66,7 +66,7 @@ CreateUserEnvironment(IN PWLSESSION Session,
         }
 
         /* Allocate enough memory */
-        lpFullEnviron = HeapAlloc(GetProcessHeap, 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
+        lpFullEnviron = HeapAlloc(GetProcessHeap(), 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
         if (!lpFullEnviron)
         {
             TRACE("HeapAlloc() failed\n");
