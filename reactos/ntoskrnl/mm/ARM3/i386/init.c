@@ -339,7 +339,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
                                     (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
-                                    ~((4 * 1024 * 1024) - 1));
+                                    ~(PDE_MAPPED_VA - 1));
     
     //
     // Don't let it go below the minimum
@@ -387,7 +387,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MmPfnDatabase[0] = (PVOID)0xB0000000;
     MmPfnDatabase[1] = &MmPfnDatabase[0][MmHighestPhysicalPage];
-    ASSERT(((ULONG_PTR)MmPfnDatabase[0] & ((4 * 1024 * 1024) - 1)) == 0);
+    ASSERT(((ULONG_PTR)MmPfnDatabase[0] & (PDE_MAPPED_VA - 1)) == 0);
             
     //
     // Non paged pool comes after the PFN database

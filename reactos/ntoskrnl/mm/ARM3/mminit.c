@@ -1725,8 +1725,8 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
         MmBootImageSize *= PAGE_SIZE;
-        MmBootImageSize = (MmBootImageSize + (4 * 1024 * 1024) - 1) & ~((4 * 1024 * 1024) - 1);
-        ASSERT((MmBootImageSize % (4 * 1024 * 1024)) == 0);
+        MmBootImageSize = (MmBootImageSize + PDE_MAPPED_VA - 1) & ~(PDE_MAPPED_VA - 1);
+        ASSERT((MmBootImageSize % PDE_MAPPED_VA) == 0);
         
         //
         // Set the size of session view, pool, and image
