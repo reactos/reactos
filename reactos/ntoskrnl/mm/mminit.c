@@ -400,13 +400,11 @@ MmInitSystem(IN ULONG Phase,
         
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
-        
-        /* Initialize working sets */
-        MiInitializeUserPfnBitmap();
-        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     }
     else if (Phase == 1)
     {
+        MiInitializeUserPfnBitmap();
+        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
         MmInitializeRmapList();
         MmInitializePageOp();
         MmInitSectionImplementation();
