@@ -369,10 +369,6 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
     }
 #endif
 
-    /* Make sure the bus number is in our range of good bus numbers */
-    if (BusHandler->BusNumber > HalpMaxPciBus || BusHandler->BusNumber < HalpMinPciBus)
-        return 0;
-
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
 
@@ -394,15 +390,9 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
         /* Validate the vendor ID */
         if (PciConfig->VendorID == PCI_INVALID_VENDORID)
         {
-            /* It's invalid, but we can copy PCI_INVALID_VENDORID */
-            if (Offset == 0 && Length >= sizeof(USHORT))
-            {
-                *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
-                return sizeof(USHORT);
-            }
-
-            /* We can't copy PCI_INVALID_VENDORID so just return 0 */
-            return 0;
+            /* It's invalid, but we want to return this much */
+            PciConfig->VendorID = PCI_INVALID_VENDORID;
+            Len = sizeof(USHORT);
         }
 
         /* Now check if there's space left */
@@ -464,10 +454,6 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
         return 0;
     }
 #endif
-
-    /* Make sure this bus number is in our range of good bus numbers */
-    if (BusHandler->BusNumber > HalpMaxPciBus || BusHandler->BusNumber < HalpMinPciBus)
-        return 0;
 
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
