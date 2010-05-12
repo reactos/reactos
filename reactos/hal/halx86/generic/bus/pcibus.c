@@ -360,14 +360,18 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
         (1 == BusHandler->BusNumber && 0 != Slot.u.bits.DeviceNumber))
     {
         DPRINT("Blacklisted PCI slot\n");
-        if (0 == Offset && 2 <= Length)
+        if (0 == Offset && sizeof(USHORT) <= Length)
         {
             *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
-            return 2;
+            return sizeof(USHORT);
         }
         return 0;
     }
 #endif
+
+    /* Make sure the bus number is in our range of good bus numbers */
+    if (BusHandler->BusNumber > HalpMaxPciBus || BusHandler->BusNumber < HalpMinPciBus)
+        return 0;
 
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
@@ -390,9 +394,15 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
         /* Validate the vendor ID */
         if (PciConfig->VendorID == PCI_INVALID_VENDORID)
         {
-            /* It's invalid, but we want to return this much */
-            PciConfig->VendorID = PCI_INVALID_VENDORID;
-            Len = sizeof(USHORT);
+            /* It's invalid, but we can copy PCI_INVALID_VENDORID */
+            if (Offset == 0 && Length >= sizeof(USHORT))
+            {
+                *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
+                return sizeof(USHORT);
+            }
+
+            /* We can't copy PCI_INVALID_VENDORID so just return 0 */
+            return 0;
         }
 
         /* Now check if there's space left */
@@ -454,6 +464,10 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
         return 0;
     }
 #endif
+
+    /* Make sure this bus number is in our range of good bus numbers */
+    if (BusHandler->BusNumber > HalpMaxPciBus || BusHandler->BusNumber < HalpMinPciBus)
+        return 0;
 
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
@@ -700,7 +714,6 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
                            IN ULONG Length)
 {
     BUS_HANDLER BusHandler;
-    PPCI_COMMON_CONFIG PciData = (PPCI_COMMON_CONFIG)Buffer;
 
     /* Setup fake PCI Bus handler */
     RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
@@ -708,21 +721,6 @@ HaliPciInterfaceReadConfig(IN PBUS_HANDLER RootBusHandler,
 
     /* Read configuration data */
     HalpReadPCIConfig(&BusHandler, SlotNumber, Buffer, Offset, Length);
-
-    /* Check if caller only wanted at least Vendor ID */
-    if (Length >= 2)
-    {
-        /* Validate it */
-        if (PciData->VendorID != PCI_INVALID_VENDORID)
-        {
-            /* Check if this is the new maximum bus number */
-            if (HalpMaxPciBus < BusHandler.BusNumber)
-            {
-                /* Set it */
-                HalpMaxPciBus = BusHandler.BusNumber;
-            }
-        }
-    }
 
     /* Return length */
     return Length;
@@ -970,6 +968,7 @@ HalpInitializePciStubs(VOID)
     ULONG i;
     PCI_SLOT_NUMBER j;
     ULONG VendorId = 0;
+    ULONG MaxPciBusNumber;
 
     /* Query registry information */
     PciRegistryInfo = HalpQueryPciRegistryInfo();
@@ -977,11 +976,19 @@ HalpInitializePciStubs(VOID)
     {
         /* Assume type 1 */
         PciType = 1;
+
+        /* Force a manual bus scan later */
+        MaxPciBusNumber = MAXULONG;
     }
     else
     {
-        /* Get the type and free the info structure */
+        /* Get the PCI type */
         PciType = PciRegistryInfo->HardwareMechanism & 0xF;
+
+        /* Get MaxPciBusNumber and make it 0-based */
+        MaxPciBusNumber = PciRegistryInfo->NoBuses - 1;
+
+        /* Free the info structure */
         ExFreePool(PciRegistryInfo);
     }
 
@@ -1007,7 +1014,7 @@ HalpInitializePciStubs(VOID)
         /* Type 2 PCI Bus */
         case 2:
 
-            /* Copy the Type 1 handler data */
+            /* Copy the Type 2 handler data */
             RtlCopyMemory(&PCIConfigHandler,
                           &PCIConfigHandlerType2,
                           sizeof (PCIConfigHandler));
@@ -1027,30 +1034,43 @@ HalpInitializePciStubs(VOID)
             DbgPrint("HAL: Unknown PCI type\n");
     }
 
-    /* Loop all possible buses */
-    for (i = 0; i < 256; i++)
+    /* Run a forced bus scan if needed */
+    if (MaxPciBusNumber == MAXULONG)
     {
-        /* Loop all devices */
-        for (j.u.AsULONG = 0; j.u.AsULONG < 32; j.u.AsULONG++)
+        /* Initialize the max bus number to 0xFF */
+        HalpMaxPciBus = 0xFF;
+
+        /* Initialize the counter */
+        MaxPciBusNumber = 0;
+
+        /* Loop all possible buses */
+        for (i = 0; i < HalpMaxPciBus; i++)
         {
-            /* Query the interface */
-            if (HaliPciInterfaceReadConfig(NULL,
-                                           i,
-                                           j,
-                                           &VendorId,
-                                           0,
-                                           sizeof(ULONG)))
+            /* Loop all devices */
+            for (j.u.AsULONG = 0; j.u.AsULONG < BusData->MaxDevice; j.u.AsULONG++)
             {
-                /* Validate the vendor ID */
-                if ((USHORT)VendorId != PCI_INVALID_VENDORID)
+                /* Query the interface */
+                if (HaliPciInterfaceReadConfig(NULL,
+                                               i,
+                                               j,
+                                               &VendorId,
+                                               0,
+                                               sizeof(ULONG)))
                 {
-                    /* Set this as the maximum ID */
-                    HalpMaxPciBus = i;
-                    break;
+                    /* Validate the vendor ID */
+                    if ((USHORT)VendorId != PCI_INVALID_VENDORID)
+                    {
+                        /* Set this as the maximum ID */
+                        MaxPciBusNumber = i;
+                        break;
+                    }
                 }
             }
         }
     }
+
+    /* Set the real max bus number */
+    HalpMaxPciBus = MaxPciBusNumber;
 
     /* We're done */
     HalpPCIConfigInitialized = TRUE;
