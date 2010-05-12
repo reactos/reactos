@@ -491,7 +491,7 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     StartPfn = Pfn1;
     Pfn1->u3.e1.StartOfAllocation = 0;
     
-    /* Look the PFNs until we find the one that marks the end of the allocation */
+    /* Loop the PFNs until we find the one that marks the end of the allocation */
     do
     {
         /* Make sure these are the pages we setup in the allocation routine */
@@ -530,14 +530,14 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     //
     // Loop all the pages
     //
-    LastPage = PageFrameIndex + PageCount;    
+    LastPage = PageFrameIndex + PageCount;
     do
     {
         //
         // Free each one, and move on
         //
-        MmReleasePageMemoryConsumer(MC_NPPOOL, PageFrameIndex);
-    } while (++PageFrameIndex < LastPage);
+        MmReleasePageMemoryConsumer(MC_NPPOOL, PageFrameIndex++);
+    } while (PageFrameIndex < LastPage);
     
     //
     // Release the PFN lock

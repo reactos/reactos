@@ -595,14 +595,15 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         //
         PageFrameNumber = MmAllocPage(MC_NPPOOL);
         
-        //
-        // Get the PFN entry for it
-        //
+        /* Get the PFN entry for it and fill it out */
         Pfn1 = MiGetPfnEntry(PageFrameNumber);
+        Pfn1->u3.e2.ReferenceCount = 1;
+        Pfn1->u2.ShareCount = 1;
+        Pfn1->PteAddress = PointerPte;
+        Pfn1->u3.e1.PageLocation = ActiveAndValid;
+        Pfn1->u4.VerifierAllocation = 0;
         
-        //
-        // Write the PTE for it
-        //
+        /* Write the PTE for it */
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
         ASSERT(PointerPte->u.Hard.Valid == 0);
         ASSERT(TempPte.u.Hard.Valid == 1);

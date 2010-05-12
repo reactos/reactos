@@ -324,7 +324,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             //
             // This might happen...not sure yet
             //
-            DPRINT1("FAULT ON PAGE TABLES!\n");
+            DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
             
             //
             // Map in the page table

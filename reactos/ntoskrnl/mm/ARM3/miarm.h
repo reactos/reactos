@@ -117,7 +117,7 @@
 //
 // Creates a software PTE with the given protection
 //
-#define MI_MAKE_SOFTWARE_PTE(x)          ((x) << MM_PTE_SOFTWARE_PROTECTION_BITS)
+#define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
 
 //
 // Special values for LoadedImports
