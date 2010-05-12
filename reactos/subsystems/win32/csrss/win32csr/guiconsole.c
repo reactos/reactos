@@ -22,7 +22,6 @@ typedef struct GUI_CONSOLE_DATA_TAG
   HFONT Font;
   unsigned CharWidth;
   unsigned CharHeight;
-  PWCHAR LineBuffer;
   BOOL CursorBlinkOn;
   BOOL ForceCursorOff;
   CRITICAL_SECTION Lock;
@@ -713,9 +712,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 
   InitializeCriticalSection(&GuiData->Lock);
 
-  GuiData->LineBuffer = (PWCHAR)HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY,
-                                          Console->Size.X * sizeof(WCHAR));
-
   GuiData->Font = CreateFontW(LOWORD(GuiData->FontSize),
                               0, //HIWORD(GuiData->FontSize),
                               0,
@@ -895,21 +891,22 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     for (Line = TopLine; Line <= BottomLine; Line++)
     {
+        WCHAR LineBuffer[80];
         From = ConioCoordToPointer(Buff, LeftChar, Line);
         Start = LeftChar;
-        To = GuiData->LineBuffer;
+        To = LineBuffer;
 
         for (Char = LeftChar; Char <= RightChar; Char++)
         {
-            if (*(From + 1) != LastAttribute)
+            if (*(From + 1) != LastAttribute || (Char - Start == sizeof(LineBuffer) / sizeof(WCHAR)))
             {
                 TextOutW(hDC,
                          (Start - Buff->ShowX) * GuiData->CharWidth,
                          (Line - Buff->ShowY) * GuiData->CharHeight,
-                         GuiData->LineBuffer,
+                         LineBuffer,
                          Char - Start);
                 Start = Char;
-                To = GuiData->LineBuffer;
+                To = LineBuffer;
                 Attribute = *(From + 1);
                 if (Attribute != LastAttribute)
                 {
@@ -932,7 +929,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
         TextOutW(hDC,
                  (Start - Buff->ShowX) * GuiData->CharWidth,
                  (Line - Buff->ShowY) * GuiData->CharHeight,
-                 GuiData->LineBuffer,
+                 LineBuffer,
                  RightChar - Start + 1);
     }
 
@@ -1808,22 +1805,6 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
 
   windx = LOWORD(pConInfo->WindowSize);
   windy = HIWORD(pConInfo->WindowSize);
-
-  if (windx > Console->Size.X)
-  {
-      PWCHAR LineBuffer = HeapAlloc(Win32CsrApiHeap, HEAP_ZERO_MEMORY, windx * sizeof(WCHAR));
-      if (LineBuffer)
-      {
-          HeapFree(Win32CsrApiHeap, 0, GuiData->LineBuffer);
-          GuiData->LineBuffer = LineBuffer;
-      }
-      else
-      {
-          LeaveCriticalSection(&ActiveBuffer->Header.Lock);
-          return;
-      }
-  }
-
 
   if (windx != Console->Size.X || windy != Console->Size.Y)
   {
