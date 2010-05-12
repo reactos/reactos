@@ -1457,6 +1457,20 @@ dev_mgr_register_hcd(PUSB_DEV_MANAGER dev_mgr, PHCD hcd)
     return dev_mgr->hcd_count - 1;
 }
 
+VOID
+dev_mgr_deregister_hcd(PUSB_DEV_MANAGER dev_mgr, UCHAR hcd_id)
+{
+    UCHAR i;
+
+    if (dev_mgr == NULL || hcd_id >= MAX_HCDS - 1)
+        return;
+
+    for (i = hcd_id; i < dev_mgr->hcd_count - 1; i++)
+        dev_mgr->hcd_array[i] = dev_mgr->hcd_array[i + 1];
+
+    dev_mgr->hcd_count--;
+}
+
 BOOLEAN
 dev_mgr_register_irp(PUSB_DEV_MANAGER dev_mgr, PIRP pirp, PURB purb)
 {

@@ -102,7 +102,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
 BOOLEAN uhci_init_schedule(PUHCI_DEV uhci, PADAPTER_OBJECT padapter);
 
-BOOLEAN uhci_release(PDEVICE_OBJECT pdev);
+BOOLEAN uhci_release(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr);
 
 static VOID uhci_stop(PUHCI_DEV uhci);
 
@@ -465,7 +465,7 @@ uhci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 }
 
 BOOLEAN
-uhci_delete_device(PDEVICE_OBJECT pdev)
+uhci_delete_device(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr)
 {
     STRING string;
     UNICODE_STRING symb_name;
@@ -484,6 +484,8 @@ uhci_delete_device(PDEVICE_OBJECT pdev)
     RtlAnsiStringToUnicodeString(&symb_name, &string, TRUE);
     IoDeleteSymbolicLink(&symb_name);
     RtlFreeUnicodeString(&symb_name);
+
+    dev_mgr_deregister_hcd(dev_mgr, pdev_ext->uhci->hcd_interf.hcd_get_id(&pdev_ext->uhci->hcd_interf));
 
     if (pdev_ext->res_list)
         ExFreePool(pdev_ext->res_list); //      not allocated by usb_alloc_mem
@@ -723,7 +725,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     if (pdev_ext->padapter == NULL)
     {
         //fatal error
-        uhci_delete_device(pdev);
+        uhci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -742,7 +744,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         DbgPrint("uhci_alloc(): error assign slot res, 0x%x\n", status);
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        uhci_delete_device(pdev);
+        uhci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -772,7 +774,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         DbgPrint("uhci_alloc(): error, can not translate bus address\n");
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        uhci_delete_device(pdev);
+        uhci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -791,7 +793,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         {
             release_adapter(pdev_ext->padapter);
             pdev_ext->padapter = NULL;
-            uhci_delete_device(pdev);
+            uhci_delete_device(pdev, dev_mgr);
             return NULL;
         }
     }
@@ -810,7 +812,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     {
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
-        uhci_delete_device(pdev);
+        uhci_delete_device(pdev, dev_mgr);
         return NULL;
     }
 
@@ -848,7 +850,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                            FALSE)     //No float save
         != STATUS_SUCCESS)
     {
-        uhci_release(pdev);
+        uhci_release(pdev, dev_mgr);
         return NULL;
     }
 
@@ -856,7 +858,7 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 }
 
 BOOLEAN
-uhci_release(PDEVICE_OBJECT pdev)
+uhci_release(PDEVICE_OBJECT pdev, PUSB_DEV_MANAGER dev_mgr)
 {
     PDEVICE_EXTENSION pdev_ext;
     PUHCI_DEV uhci;
@@ -892,7 +894,7 @@ uhci_release(PDEVICE_OBJECT pdev)
     release_adapter(pdev_ext->padapter);
     pdev_ext->padapter = NULL;
 
-    uhci_delete_device(pdev);
+    uhci_delete_device(pdev, dev_mgr);
 
     return FALSE;
 
@@ -3671,7 +3673,7 @@ uhci_hcd_release(struct _HCD * hcd)
     uhci = uhci_from_hcd(hcd);
     pdev_ext = uhci->pdev_ext;
 
-    return uhci_release(pdev_ext->pdev_obj);
+    return uhci_release(pdev_ext->pdev_obj, hcd->dev_mgr);
 }
 
 NTSTATUS
