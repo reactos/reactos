@@ -315,9 +315,6 @@ static PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
- /**************************************************************************
- *		ISF_ControlPanel_fnEnumObjects
- */
 static BOOL SHELL_RegisterCPanelApp(IEnumIDList* list, LPCSTR path)
 {
     LPITEMIDLIST pidl;
