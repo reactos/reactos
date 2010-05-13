@@ -439,12 +439,15 @@ CreateEnvironmentBlock(LPVOID *lpEnvironment,
                                    FALSE);
     }
 
-
-
     /* Set user environment variables */
     SetUserEnvironment(lpEnvironment,
                        hKeyUser,
                        L"Environment");
+
+    /* Set user volatile environment variables */
+    SetUserEnvironment(lpEnvironment,
+                       hKeyUser,
+                       L"Volatile Environment");
 
     RegCloseKey(hKeyUser);
 
