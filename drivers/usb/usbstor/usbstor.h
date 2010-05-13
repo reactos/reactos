@@ -7,12 +7,6 @@
 #define USB_STOR_TAG 'sbsu'
 #define USB_MAXCHILDREN              (16)
 
-NTSTATUS NTAPI
-IoAttachDeviceToDeviceStackSafe(
-  IN PDEVICE_OBJECT SourceDevice,
-  IN PDEVICE_OBJECT TargetDevice,
-  OUT PDEVICE_OBJECT *AttachedToDeviceObject);
-
 typedef struct _USBSTOR_DEVICE_EXTENSION
 {
 	BOOLEAN IsFDO;
