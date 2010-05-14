@@ -49,9 +49,10 @@
 
 void usage (void)
 {
-	printf ("Usage: mkhive <srcdir> <dstdir> [addinf]\n\n");
+	printf ("Usage: mkhive <srcdir> <dstdir> <arch> [addinf]\n\n");
 	printf ("  srcdir  - inf files are read from this directory\n");
 	printf ("  dstdir  - binary hive files are created in this directory\n");
+	printf ("  arch    - architecture\n");
 	printf ("  addinf  - additional inf files with full path\n");
 }
 
@@ -88,13 +89,13 @@ int main (int argc, char *argv[])
 	char FileName[PATH_MAX];
 	int Param;
 
-	printf ("Binary hive maker: %s\n", argv[3]);
-
 	if (argc < 4)
 	{
 		usage ();
 		return 1;
 	}
+
+	printf ("Binary hive maker: %s\n", argv[3]);
 
 	RegInitializeRegistry ();
 
