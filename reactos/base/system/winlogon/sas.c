@@ -170,7 +170,6 @@ HandleLogon(
 {
 	PROFILEINFOW ProfileInfo;
 	LPVOID lpEnvironment = NULL;
-	LPWSTR lpFullEnv = NULL;
 	BOOLEAN Old;
 	BOOL ret = FALSE;
 
@@ -208,9 +207,16 @@ HandleLogon(
 	}
 
 	/* Create environment block for the user */
-	if (!CreateUserEnvironment(Session, &lpEnvironment, &lpFullEnv))
+	if (!CreateUserEnvironment(Session))
 	{
 		WARN("WL: SetUserEnvironment() failed\n");
+		goto cleanup;
+	}
+
+	/* Create environment block for the user */
+	if (!CreateEnvironmentBlock(&lpEnvironment, Session->UserToken, TRUE))
+	{
+		WARN("WL: CreateEnvironmentBlock() failed\n");
 		goto cleanup;
 	}
 
@@ -233,7 +239,7 @@ HandleLogon(
 		Session->Gina.Context,
 		L"Default",
 		NULL, /* FIXME */
-		lpFullEnv))
+		lpEnvironment))
 	{
 		//WCHAR StatusMsg[256];
 		WARN("WL: WlxActivateUserShell() failed\n");
@@ -260,8 +266,6 @@ cleanup:
 	{
 		UnloadUserProfile(WLSession->UserToken, ProfileInfo.hProfile);
 	}
-	if (lpFullEnv != lpEnvironment)
-		HeapFree(GetProcessHeap(), 0, lpFullEnv);
 	if (lpEnvironment)
 		DestroyEnvironmentBlock(lpEnvironment);
 	RemoveStatusMessage(Session);

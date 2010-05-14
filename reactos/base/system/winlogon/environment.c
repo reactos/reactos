@@ -11,6 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include "winlogon.h"
+#include <shlobj.h>
 
 #include <wine/debug.h>
 
@@ -18,74 +19,104 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 /* GLOBALS ******************************************************************/
 
+typedef HRESULT (WINAPI *PFSHGETFOLDERPATHW)(HWND, int, HANDLE, DWORD, LPWSTR);
+
 
 /* FUNCTIONS ****************************************************************/
 
-BOOL
-CreateUserEnvironment(IN PWLSESSION Session,
-                      IN LPVOID *lpEnvironment,
-                      IN LPWSTR *lpFullEnv)
+static VOID
+BuildVolatileEnvironment(IN PWLSESSION Session,
+                         IN HKEY hKey)
 {
+    HINSTANCE hShell32 = NULL;
+    PFSHGETFOLDERPATHW pfSHGetFolderPathW = NULL;
+    WCHAR szPath[MAX_PATH + 1];
     LPCWSTR wstr;
-    SIZE_T EnvBlockSize = 0, ProfileSize = 0;
-    LPVOID lpEnviron = NULL;
-    LPWSTR lpFullEnviron = NULL;
+    SIZE_T size;
+
+    WCHAR szEnvKey[MAX_PATH];
+    WCHAR szEnvValue[1024];
+
+    SIZE_T length;
+    LPWSTR eqptr, endptr;
+
+    if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 &&
+        Session->Profile->pszEnvironment != NULL)
+    {
+        wstr = Session->Profile->pszEnvironment;
+        while (*wstr != UNICODE_NULL)
+        {
+            size = wcslen(wstr) + 1;
+
+            eqptr = wcschr(wstr, L'=');
+
+            if (eqptr != NULL)
+            {
+                endptr = eqptr;
+
+                endptr--;
+                while (iswspace(*endptr))
+                    endptr--;
+
+                length = (SIZE_T)(endptr - wstr + 1);
+
+                wcsncpy(szEnvKey, wstr, length);
+                szEnvKey[length] = 0;
+
+                eqptr++;
+                while (iswspace(*eqptr))
+                    eqptr++;
+                wcscpy(szEnvValue, eqptr);
+
+                RegSetValueExW(hKey,
+                               szEnvKey,
+                               0,
+                               REG_SZ,
+                               (LPBYTE)szEnvValue,
+                               (wcslen(szEnvValue) + 1) * sizeof(WCHAR));
+            }
+
+            wstr += size;
+        }
+    }
+
+
+    hShell32 = LoadLibraryW(L"shell32.dll");
+    if (hShell32 != NULL)
+    {
+        pfSHGetFolderPathW = (PFSHGETFOLDERPATHW)GetProcAddress(hShell32,
+                                                                "SHGetFolderPathW");
+        if (pfSHGetFolderPathW != NULL)
+        {
+            if (pfSHGetFolderPathW(NULL,
+                                   CSIDL_APPDATA | CSIDL_FLAG_DONT_VERIFY,
+                                   Session->UserToken,
+                                   0,
+                                   szPath) == S_OK)
+            {
+                RegSetValueExW(hKey,
+                               L"APPDATA",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)szPath,
+                               (wcslen(szPath) + 1) * sizeof(WCHAR));
+            }
+        }
+
+        FreeLibrary(hShell32);
+    }
+}
+
+
+BOOL
+CreateUserEnvironment(IN PWLSESSION Session)
+{
     HKEY hKey;
     DWORD dwDisp;
     LONG lError;
     HKEY hKeyCurrentUser;
 
     TRACE("WL: CreateUserEnvironment called\n");
-
-    /* Create environment block for the user */
-    if (!CreateEnvironmentBlock(&lpEnviron,
-                                Session->UserToken,
-                                TRUE))
-    {
-        WARN("WL: CreateEnvironmentBlock() failed\n");
-        return FALSE;
-    }
-
-    if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 && Session->Profile->pszEnvironment)
-    {
-        /* Count required size for full environment */
-        wstr = (LPCWSTR)lpEnviron;
-        while (*wstr != UNICODE_NULL)
-        {
-            SIZE_T size = wcslen(wstr) + 1;
-            wstr += size;
-            EnvBlockSize += size;
-        }
-
-        wstr = Session->Profile->pszEnvironment;
-        while (*wstr != UNICODE_NULL)
-        {
-            SIZE_T size = wcslen(wstr) + 1;
-            wstr += size;
-            ProfileSize += size;
-        }
-
-        /* Allocate enough memory */
-        lpFullEnviron = HeapAlloc(GetProcessHeap(), 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
-        if (!lpFullEnviron)
-        {
-            TRACE("HeapAlloc() failed\n");
-            return FALSE;
-        }
-
-        /* Fill user environment block */
-        CopyMemory(lpFullEnviron,
-                   lpEnviron,
-                   EnvBlockSize * sizeof(WCHAR));
-        CopyMemory(&lpFullEnviron[EnvBlockSize],
-                   Session->Profile->pszEnvironment,
-                   ProfileSize * sizeof(WCHAR));
-        lpFullEnviron[EnvBlockSize + ProfileSize] = UNICODE_NULL;
-    }
-    else
-    {
-        lpFullEnviron = (LPWSTR)lpEnviron;
-    }
 
     /* Impersonate the new user */
     ImpersonateLoggedOnUser(Session->UserToken);
@@ -107,6 +138,9 @@ CreateUserEnvironment(IN PWLSESSION Session,
                                  &dwDisp);
         if (lError == ERROR_SUCCESS)
         {
+            BuildVolatileEnvironment(Session,
+                                     hKey);
+
             RegCloseKey(hKey);
         }
         else
@@ -119,9 +153,6 @@ CreateUserEnvironment(IN PWLSESSION Session,
 
     /* Revert the impersonation */
     RevertToSelf();
-
-    *lpEnvironment = lpEnviron;
-    *lpFullEnv = lpFullEnviron;
 
     TRACE("WL: CreateUserEnvironment done\n");
 
