@@ -3760,6 +3760,7 @@ typedef struct _IMAGE_SECTION_HEADER {
 } IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
 
 #include <pshpack2.h>
+
 typedef struct _IMAGE_SYMBOL {
 	union {
 		BYTE ShortName[8];
@@ -3817,6 +3818,17 @@ typedef union _IMAGE_AUX_SYMBOL {
 		BYTE Selection;
 	} Section;
 } IMAGE_AUX_SYMBOL,*PIMAGE_AUX_SYMBOL;
+
+typedef struct _IMAGE_RELOCATION {
+	_ANONYMOUS_UNION union {
+		DWORD VirtualAddress;
+		DWORD RelocCount;
+	} DUMMYUNIONNAME;
+	DWORD SymbolTableIndex;
+	WORD Type;
+} IMAGE_RELOCATION,*PIMAGE_RELOCATION;
+
+#include <poppack.h>
 
 #ifndef __IMAGE_COR20_HEADER_DEFINED__
 #define __IMAGE_COR20_HEADER_DEFINED__
@@ -3884,16 +3896,6 @@ typedef struct _IMAGE_COFF_SYMBOLS_HEADER {
 	DWORD RvaToFirstByteOfData;
 	DWORD RvaToLastByteOfData;
 } IMAGE_COFF_SYMBOLS_HEADER,*PIMAGE_COFF_SYMBOLS_HEADER;
-
-typedef struct _IMAGE_RELOCATION {
-	_ANONYMOUS_UNION union {
-		DWORD VirtualAddress;
-		DWORD RelocCount;
-	} DUMMYUNIONNAME;
-	DWORD SymbolTableIndex;
-	WORD Type;
-} IMAGE_RELOCATION,*PIMAGE_RELOCATION;
-#include <poppack.h>
 
 typedef struct _IMAGE_BASE_RELOCATION {
 	DWORD VirtualAddress;
@@ -5081,7 +5083,7 @@ MemoryBarrier(VOID)
 #elif defined(_M_MIPS)
 #define YieldProcessor() __asm__ __volatile__("nop");
 #elif defined(_M_ARM)
-#define YieldProcessor()
+#define YieldProcessor __yield
 #else
 #error Unknown architecture
 #endif
