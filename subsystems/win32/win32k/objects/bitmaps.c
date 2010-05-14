@@ -87,6 +87,38 @@ IntGdiCreateBitmap(
         IntSetBitmapBits(psurfBmp, psurfBmp->SurfObj.cjBits, pBits);
     }
 
+    /* Find a suitable palette for this bitmap
+     * Increment internal objects share count
+     * so we can call PALETTE_ShareUnlockPalette
+     * or GDIOBJ_IncrementShareCount safely */
+    switch(BitsPixel)
+    {
+        case 1:
+            psurfBmp->ppal = &gpalMono;
+            gpalMono.BaseObject.ulShareCount++;
+            break;
+        case 4:
+        case 8:
+            psurfBmp->ppal = PALETTE_ShareLockPalette(StockObjects[DEFAULT_PALETTE]);
+            break;
+        case 15:
+            psurfBmp->ppal = &gpalRGB555;
+            gpalRGB555.BaseObject.ulShareCount++;
+            break;
+        case 16:
+            psurfBmp->ppal = &gpalRGB565;
+            gpalRGB565.BaseObject.ulShareCount++;
+            break;
+        case 24:
+        case 32:
+            psurfBmp->ppal = &gpalRGB;
+            gpalRGB.BaseObject.ulShareCount++;
+            break;
+        default:
+            DPRINT1("Could not determine palette for bit depth %u.\n", BitsPixel);
+            break;
+    }
+
     SURFACE_UnlockSurface(psurfBmp);
 
     DPRINT("IntGdiCreateBitmap : %dx%d, %d BPP colors, topdown %d, returning %08x\n",
@@ -144,15 +176,24 @@ IntCreateCompatibleBitmap(
         if (Dc->dctype != DC_TYPE_MEMORY)
         {
             PSURFACE psurf;
-            Bmp = IntGdiCreateBitmap(abs(Width),
-                                     abs(Height),
-                                     Dc->ppdev->gdiinfo.cPlanes,
-                                     Dc->ppdev->gdiinfo.cBitsPixel,
-                                     NULL);
-            /* Set palette */
+            SIZEL size;
+
+            size.cx = abs(Width);
+            size.cy = abs(Height);
+
+            Bmp = IntCreateBitmap(size,
+                                  BITMAP_GetWidthBytes(Width, Dc->ppdev->gdiinfo.cBitsPixel),
+                                  Dc->ppdev->pSurface->SurfObj.iBitmapFormat,
+                                  0,
+                                  NULL);
+
             psurf = SURFACE_LockSurface(Bmp);
             ASSERT(psurf);
+            /* Set palette */
             psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
+            /* Set flags */
+            psurf->flFlags = BITMAPOBJ_IS_APIBITMAP;
+            psurf->hDC = NULL; // Fixme
             SURFACE_UnlockSurface(psurf);
         }
         else
@@ -166,20 +207,24 @@ IntCreateCompatibleBitmap(
             {
                 if (Count == sizeof(BITMAP))
                 {
-                    Bmp = IntGdiCreateBitmap(abs(Width),
-                                             abs(Height),
-                                             dibs.dsBm.bmPlanes,
-                                             dibs.dsBm.bmBitsPixel,
-                                             NULL);
+                    SIZEL size;
+                    PSURFACE psurfBmp;
+                    size.cx = abs(Width);
+                    size.cy = abs(Height);
+                    Bmp = IntCreateBitmap(size,
+                                          BITMAP_GetWidthBytes(Width, dibs.dsBm.bmBitsPixel),
+                                          psurf->SurfObj.iBitmapFormat,
+                                          0,
+                                          NULL);
+                    psurfBmp = SURFACE_LockSurface(Bmp);
+                    ASSERT(psurfBmp);
                     /* Assign palette */
-                    if(Bmp && psurf->ppal)
-                    {
-                        PSURFACE psurfBmp = SURFACE_LockSurface(Bmp);
-                        ASSERT(psurfBmp);
-                        psurfBmp->ppal = psurf->ppal;
-                        GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
-                        SURFACE_UnlockSurface(psurfBmp);
-                    }
+                    psurfBmp->ppal = psurf->ppal;
+                    GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
+                    /* Set flags */
+                    psurfBmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+                    psurfBmp->hDC = NULL; // Fixme
+                    SURFACE_UnlockSurface(psurfBmp);
                 }
                 else
                 {

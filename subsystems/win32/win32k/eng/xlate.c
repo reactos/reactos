@@ -618,65 +618,31 @@ EXLATEOBJ_vInitXlateFromDCs(
         return;
     }
 
-    if (psurfSrc->ppal)
-    {
-        ppalSrc = psurfSrc->ppal;
-        GDIOBJ_IncrementShareCount(&ppalSrc->BaseObject);
-    }
-    else
-        ppalSrc = PALETTE_ShareLockPalette(pdcSrc->ppdev->devinfo.hpalDefault);
+    ppalSrc = psurfSrc->ppal;
 
     if(!ppalSrc)
-        return;
-
-    if (psurfDst->ppal)
     {
-        ppalDst = psurfDst->ppal;
-        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
+        DPRINT1("No palette for src surface %p.\n", psurfSrc);
+        return;
     }
-    else
-        ppalDst = PALETTE_ShareLockPalette(pdcDst->ppdev->devinfo.hpalDefault);
+
+    ppalDst = psurfDst->ppal;
 
     if (!ppalDst)
     {
-        PALETTE_ShareUnlockPalette(ppalSrc);
+        DPRINT1("No palette for dst surface %p.\n", psurfDst);
         return;
     }
 
     ppalDstDc = pdcDst->dclevel.ppal;
     ASSERT(ppalDstDc);
 
-    /* KB41464 details how to convert between mono and color */
-    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
-    {
-        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  ppalSrc,
-                                  &gpalMono,
-                                  pdcSrc->pdcattr->crBackgroundClr,
-                                  pdcDst->pdcattr->crBackgroundClr,
-                                  pdcDst->pdcattr->crForegroundClr);
-        }
-    }
-    else if (psurfSrc->SurfObj.iBitmapFormat == BMF_1BPP && !psurfSrc->hSecure)
-    {
-        // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-        EXLATEOBJ_vInitialize(pexlo,
-                              &gpalMono,
-                              ppalDst,
-                              0,
-                              pdcDst->pdcattr->crBackgroundClr,
-                              pdcDst->pdcattr->crForegroundClr);
-    }
-    else
-    {
-        EXLATEOBJ_vInitialize(pexlo, ppalSrc, ppalDst, 0, 0, 0);
-    }
-
-    PALETTE_ShareUnlockPalette(ppalDst);
-    PALETTE_ShareUnlockPalette(ppalSrc);
+    EXLATEOBJ_vInitialize(pexlo,
+                          ppalSrc,
+                          ppalDst,
+                          pdcSrc->pdcattr->crBackgroundClr,
+                          pdcDst->pdcattr->crBackgroundClr,
+                          pdcDst->pdcattr->crForegroundClr);
 }
 
 
@@ -699,68 +665,25 @@ EXLATEOBJ_vInitBrushXlate(
 
     EXLATEOBJ_vInitTrivial(pexlo);
 
-    if (psurfDst->ppal)
-    {
-        ppalDst = psurfDst->ppal;
-        GDIOBJ_IncrementShareCount(&ppalDst->BaseObject);
-    }
-    else
-        ppalDst = PALETTE_ShareLockPalette(pPrimarySurface->devinfo.hpalDefault);
+    ppalDst = psurfDst->ppal;
 
     if (!ppalDst)
     {
-        DPRINT1("No ppalDst!\n");
+        DPRINT1("No palette for dst surface %p.\n", psurfDst);
         return;
     }
 
     psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
     if (!psurfPattern)
     {
-        PALETTE_ShareUnlockPalette(ppalDst);
         return;
     }
 
-#if 0
-    if (psurfDst->SurfObj.iBitmapFormat == BMF_1BPP)
+    if (psurfPattern->ppal)
     {
-        if (psurfSrc->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  ppalSrc,
-                                  &gpalMono,
-                                  0,
-                                  crBackgroundClr,
-                                  crForegroundClr);
-        }
-    }
-    else
-#endif
-    if (psurfPattern->SurfObj.iBitmapFormat == BMF_1BPP &&
-        !(pbrush->flAttrs & GDIBRUSH_IS_DIB))
-    {
-        /* Special case: 1 bpp pattern, not a DIB brush. */
-        if (psurfDst->SurfObj.iBitmapFormat != BMF_1BPP)
-        {
-            // HACK!! FIXME: 1bpp DDBs should have gpalMono already!
-            EXLATEOBJ_vInitialize(pexlo,
-                                  &gpalMono,
-                                  ppalDst,
-                                  0,
-                                  crBackgroundClr,
-                                  crForegroundClr);
-        }
-    }
-    else
-    {
-        /* Default: use the patterns' palette */
-        if (psurfPattern->ppal)
-        {
-            EXLATEOBJ_vInitialize(pexlo, psurfPattern->ppal, ppalDst, 0, 0, 0);
-        }
+        EXLATEOBJ_vInitialize(pexlo, psurfPattern->ppal, ppalDst, 0, crBackgroundClr, crForegroundClr);
     }
 
-    PALETTE_ShareUnlockPalette(ppalDst);
     SURFACE_ShareUnlockSurface(psurfPattern);
 }
 

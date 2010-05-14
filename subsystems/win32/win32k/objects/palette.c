@@ -14,7 +14,7 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
-PALETTE gpalRGB, gpalBGR, gpalMono;
+PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565;
 
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
@@ -104,14 +104,34 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     gpalRGB.RedMask = RGB(0xFF, 0x00, 0x00);
     gpalRGB.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalRGB.BlueMask = RGB(0x00, 0x00, 0xFF);
+    gpalRGB.BaseObject.ulShareCount = 0;
+    gpalRGB.BaseObject.BaseFlags = 0 ;
 
     gpalBGR.Mode = PAL_BGR;
     gpalBGR.RedMask = RGB(0x00, 0x00, 0xFF);
     gpalBGR.GreenMask = RGB(0x00, 0xFF, 0x00);
     gpalBGR.BlueMask = RGB(0xFF, 0x00, 0x00);
+    gpalBGR.BaseObject.ulShareCount = 0;
+    gpalBGR.BaseObject.BaseFlags = 0 ;
+
+    gpalRGB555.Mode = PAL_RGB16_555 | PAL_BITFIELDS;
+    gpalRGB555.RedMask = 0x7C00;
+    gpalRGB555.GreenMask = 0x3E0;
+    gpalRGB555.BlueMask = 0x1F;
+    gpalRGB555.BaseObject.ulShareCount = 0;
+    gpalRGB555.BaseObject.BaseFlags = 0 ;
+
+    gpalRGB565.Mode = PAL_RGB16_565 | PAL_BITFIELDS;
+    gpalRGB565.RedMask = 0xF800;
+    gpalRGB565.GreenMask = 0x7E0;
+    gpalRGB565.BlueMask = 0x1F;
+    gpalRGB565.BaseObject.ulShareCount = 0;
+    gpalRGB565.BaseObject.BaseFlags = 0 ;
 
     memset(&gpalMono, 0, sizeof(PALETTE));
     gpalMono.Mode = PAL_MONOCHROME;
+    gpalMono.BaseObject.ulShareCount = 0;
+    gpalMono.BaseObject.BaseFlags = 0 ;
 
     return hpalette;
 }
@@ -169,7 +189,7 @@ PALETTE_AllocPalette(ULONG Mode,
         PalGDI->RedMask = Red;
         PalGDI->GreenMask = Green;
         PalGDI->BlueMask = Blue;
-        
+
         if (Red == 0x7c00 && Green == 0x3E0 && Blue == 0x1F)
             PalGDI->Mode |= PAL_RGB16_555;
         else if (Red == 0xF800 && Green == 0x7E0 && Blue == 0x1F)
