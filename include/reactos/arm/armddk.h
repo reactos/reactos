@@ -207,6 +207,12 @@ extern volatile struct _KSYSTEM_TIME KeTickCount;
 #define RESULT_POSITIVE 2
 
 DECLSPEC_IMPORT
+BOOLEAN
+__fastcall
+ExiTryToAcquireFastMutex(
+    IN OUT PFAST_MUTEX FastMutex);
+
+DECLSPEC_IMPORT
 VOID
 __fastcall
 KfReleaseSpinLock(

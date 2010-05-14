@@ -18,6 +18,8 @@ ULONG gDiskReadBuffer, gFileSysBuffer;
 BOOLEAN ArmHwDetectRan;
 PCONFIGURATION_COMPONENT_DATA RootNode;
 
+BOOLEAN AcpiPresent = FALSE;
+
 ULONG FirstLevelDcacheSize;
 ULONG FirstLevelDcacheFillSize;
 ULONG FirstLevelIcacheSize;

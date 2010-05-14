@@ -47,7 +47,9 @@ VOID BootMain(LPSTR CmdLine)
 		return;
 	}
 
+#ifdef _M_IX86
 	HalpInitializePciStubs();
 	HalpInitBusHandler();
+#endif
 	RunLoader();
 }

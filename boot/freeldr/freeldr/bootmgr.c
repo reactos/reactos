@@ -119,11 +119,13 @@ VOID RunLoader(VOID)
 		return;
 	}
 
+#ifdef _M_IX86
 	// Load additional SCSI driver (if any)
 	if (LoadBootDeviceDriver() != ESUCCESS)
 	{
 		UiMessageBoxCritical("Unable to load additional boot device driver");
 	}
+#endif
 
 	if (!IniFileInitialize())
 	{
