@@ -95,7 +95,7 @@ IntGdiCreateBitmap(
     {
         case 1:
             psurfBmp->ppal = &gpalMono;
-            gpalMono.BaseObject.ulShareCount++;
+            GDIOBJ_IncrementShareCount((POBJ)&gpalMono);
             break;
         case 4:
         case 8:
@@ -103,16 +103,15 @@ IntGdiCreateBitmap(
             break;
         case 15:
             psurfBmp->ppal = &gpalRGB555;
-            gpalRGB555.BaseObject.ulShareCount++;
+            GDIOBJ_IncrementShareCount((POBJ)&gpalRGB555);
             break;
         case 16:
             psurfBmp->ppal = &gpalRGB565;
-            gpalRGB565.BaseObject.ulShareCount++;
-            break;
+            GDIOBJ_IncrementShareCount((POBJ)&gpalRGB565);
         case 24:
         case 32:
             psurfBmp->ppal = &gpalRGB;
-            gpalRGB.BaseObject.ulShareCount++;
+            GDIOBJ_IncrementShareCount((POBJ)&gpalRGB);
             break;
         default:
             DPRINT1("Could not determine palette for bit depth %u.\n", BitsPixel);

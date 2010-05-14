@@ -113,6 +113,7 @@ GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
     ASSERT(cLocks >= 0);
     if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
     {
+        GDIOBJ_SetOwnership(hobj, PsGetCurrentProcess());
         GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
     }
     return cLocks;

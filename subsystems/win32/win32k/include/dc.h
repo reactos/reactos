@@ -152,52 +152,10 @@ typedef struct _DC
 
 /* Internal functions *********************************************************/
 
-#if 1
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
 #define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr ((POBJ)pDC)
-#else
-
-VOID NTAPI EngAcquireSemaphoreShared(IN HSEMAPHORE hsem);
-
-PDC
-FORCEINLINE
-DC_LockDc(HDC hdc)
-{
-    PDC pdc;
-    pdc = GDIOBJ_LockObj(hdc, GDILoObjType_LO_DC_TYPE);
-
-    /* Direct DC's need PDEV locking */
-    if(pdc && pdc->dctype == DCTYPE_DIRECT)
-    {
-        /* Acquire shared PDEV lock */
-        EngAcquireSemaphoreShared(pdc->ppdev->hsemDevLock);
-
-        /* Update Surface if needed */
-        if(pdc->dclevel.pSurface != pdc->ppdev->pSurface)
-        {
-            if(pdc->dclevel.pSurface) SURFACE_ShareUnlockSurface(pdc->dclevel.pSurface);
-            pdc->dclevel.pSurface = PDEVOBJ_pSurface(pdc->ppdev);
-        }
-    }
-    return pdc;
-}
-
-void
-FORCEINLINE
-DC_UnlockDc(PDC pdc)
-{
-    if(pdc->dctype == DCTYPE_DIRECT)
-    {
-        /* Release PDEV lock */
-        EngReleaseSemaphore(pdc->ppdev->hsemDevLock);
-    }
-
-    GDIOBJ_UnlockObjByPtr(&pdc->BaseObject);
-}
-#endif
-
 
 extern PDC defaultDCstate;
 

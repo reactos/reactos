@@ -115,14 +115,6 @@ DC_vInitDc(
     DCTYPE dctype,
     PPDEVOBJ ppdev)
 {
-#if 0
-    if (dctype == DCTYPE_DIRECT)
-    {
-        /* Lock ppdev */
-        EngAcquireSemaphoreShared(ppdev->hsemDevLock);
-    }
-#endif
-
     /* Setup some basic fields */
     pdc->dctype = dctype;
     pdc->ppdev = ppdev;
@@ -496,7 +488,7 @@ DC_vPrepareDCsForBlit(PDC pdc1,
     /* Lock them in good order */
     if(pdc2)
     {
-        if((ULONG_PTR)pdc1->BaseObject.hHmgr >= (ULONG_PTR)pdc2->BaseObject.hHmgr)
+        if((ULONG_PTR)pdc1->ppdev->hsemDevLock >= (ULONG_PTR)pdc2->ppdev->hsemDevLock)
         {
             pdcFirst = pdc1;
             prcFirst = &rc1;
