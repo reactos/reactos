@@ -5,6 +5,7 @@ Test_NtGdiDeleteObjectApp(PTESTINFO pti)
     HDC hdc;
     HBITMAP hbmp;
     HBRUSH hbrush;
+    HPEN hpen;
 
     /* Try to delete 0 */
     SetLastError(0);
@@ -23,7 +24,31 @@ Test_NtGdiDeleteObjectApp(PTESTINFO pti)
     TEST(NtGdiDeleteObjectApp(hdc) == 1);
     TEST(GetLastError() == 0);
     TEST(IsHandleValid(hdc) == 0);
-
+    
+    /* Delete a display DC */
+    SetLastError(0);
+    hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
+    ASSERT(IsHandleValid(hdc) == 1);
+    TEST((hpen=SelectObject(hdc, GetStockObject(WHITE_PEN))) != NULL);
+    SelectObject(hdc, hpen);
+    TEST(NtGdiDeleteObjectApp(hdc) != 0);
+    TEST(GetLastError() == 0);
+    TEST(IsHandleValid(hdc) == 1);
+    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
+    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
+    
+    /* Once more */
+    SetLastError(0);
+    hdc = GetDC(0);
+    ASSERT(IsHandleValid(hdc) == 1);
+    TEST(NtGdiDeleteObjectApp(hdc) != 0);
+    TEST(GetLastError() == 0);
+    TEST(IsHandleValid(hdc) == 1);
+    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
+    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
+    /* Make sure */
+    TEST(NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC) == 0);
+    
     /* Delete a display DC */
     SetLastError(0);
     hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
