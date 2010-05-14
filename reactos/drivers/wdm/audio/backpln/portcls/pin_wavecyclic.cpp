@@ -1213,7 +1213,6 @@ CPortPinWaveCyclic::Init(
         return Status;
     }
 
-    m_ServiceGroup->SupportDelayedService();
     m_Stream->SetState(KSSTATE_STOP);
     m_State = KSSTATE_STOP;
     m_CommonBufferOffset = 0;
@@ -1224,6 +1223,8 @@ CPortPinWaveCyclic::Init(
     m_Delay = Int32x32To64(10, -10000);
 
     Status = m_Stream->SetNotificationFreq(10, &m_FrameSize);
+    PC_ASSERT(NT_SUCCESS(Status));
+    PC_ASSERT(m_FrameSize);
 
     SilenceBuffer = AllocateItem(NonPagedPool, m_FrameSize, TAG_PORTCLASS);
     if (!SilenceBuffer)

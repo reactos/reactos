@@ -602,7 +602,6 @@ CPortPinDMus::Init(
             DPRINT("Failed to add pin to service group\n");
             return Status;
         }
-        m_ServiceGroup->SupportDelayedService();
     }
 
     Status = m_IrpQueue->Init(ConnectDetails, 0, 0, NULL);
