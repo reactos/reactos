@@ -250,7 +250,7 @@ RegDeleteKeyW(
 	IN HKEY hKey,
 	IN LPCWSTR lpSubKey)
 {
-	DPRINT1("FIXME!\n");
+	DPRINT1("FIXME: implement RegDeleteKeyW!\n");
 	return ERROR_SUCCESS;
 }
 
@@ -680,6 +680,15 @@ RegInitializeRegistry(VOID)
 		NULL,
 		L"Registry\\Machine\\SYSTEM\\ControlSet001",
 		&ControlSetKey);
+}
+
+VOID
+RegShutdownRegistry(VOID)
+{
+	/* FIXME: clean up the complete hive */
+
+	free(RootKey->Name);
+	free(RootKey);
 }
 
 /* EOF */

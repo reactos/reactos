@@ -173,7 +173,7 @@ int main (int argc, char *argv[])
 		return 1;
 	}
 
-	//RegShutdownRegistry ();
+	RegShutdownRegistry ();
 
 	printf ("  Done.\n");
 
