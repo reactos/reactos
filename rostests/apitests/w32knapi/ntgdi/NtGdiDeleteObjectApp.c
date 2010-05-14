@@ -49,26 +49,6 @@ Test_NtGdiDeleteObjectApp(PTESTINFO pti)
     /* Make sure */
     TEST(NtUserCallOneParam((DWORD_PTR)hdc, ONEPARAM_ROUTINE_RELEASEDC) == 0);
     
-    /* Delete a display DC */
-    SetLastError(0);
-    hdc = CreateDC("DISPLAY", NULL, NULL, NULL);
-    ASSERT(IsHandleValid(hdc) == 1);
-    TEST(NtGdiDeleteObjectApp(hdc) != 0);
-    TEST(GetLastError() == 0);
-    TEST(IsHandleValid(hdc) == 1);
-    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
-    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
-
-    /* Once more */
-    SetLastError(0);
-    hdc = GetDC(0);
-    ASSERT(IsHandleValid(hdc) == 1);
-    TEST(NtGdiDeleteObjectApp(hdc) != 0);
-    TEST(GetLastError() == 0);
-    TEST(IsHandleValid(hdc) == 1);
-    TEST(SelectObject(hdc, GetStockObject(WHITE_PEN)) == NULL);
-    TESTX(GetLastError() == ERROR_INVALID_PARAMETER, "GetLasterror returned 0x%08x\n", (unsigned int)GetLastError());
-
     /* Delete a brush */
     SetLastError(0);
     hbrush = CreateSolidBrush(0x123456);
