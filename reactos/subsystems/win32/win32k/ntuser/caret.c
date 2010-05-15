@@ -189,7 +189,7 @@ co_IntSetCaretPos(int X, int Y)
          ThreadQueue->CaretInfo->Pos.x = X;
          ThreadQueue->CaretInfo->Pos.y = Y;
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
-         IntSetTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+         IntSetTimer(UserGetWindowObject(ThreadQueue->CaretInfo->hWnd), IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TMRF_SYSTEM);
       }
       return TRUE;
    }
@@ -302,7 +302,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
       {
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
-      IntSetTimer(ThreadQueue->CaretInfo->hWnd, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+      IntSetTimer(UserGetWindowObject(ThreadQueue->CaretInfo->hWnd), IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TMRF_SYSTEM);
    }
 
    return TRUE;

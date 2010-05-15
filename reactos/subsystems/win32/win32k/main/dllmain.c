@@ -290,6 +290,8 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->TIF_flags |= TIF_INCLEANUP;
       DceFreeThreadDCE(Win32Thread);
       HOOK_DestroyThreadHooks(Thread);
+      /* Cleanup timers */
+      DestroyTimersForThread(Win32Thread);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */
       co_DestroyThreadWindows(Thread);
