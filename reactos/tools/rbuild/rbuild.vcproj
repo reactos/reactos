@@ -444,18 +444,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="codeblocks"
-				>
-				<File
-					RelativePath=".\backend\codeblocks\codeblocks.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\backend\codeblocks\codeblocks.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="dependencymap"
 				>
 				<File
