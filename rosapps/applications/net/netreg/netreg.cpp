@@ -8,7 +8,6 @@
  *   01-17-2005 arty -- initial
  */
 #include <windows.h>
-#include <winsock.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <map>
