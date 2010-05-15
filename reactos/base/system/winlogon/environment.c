@@ -31,15 +31,15 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
     HINSTANCE hShell32 = NULL;
     PFSHGETFOLDERPATHW pfSHGetFolderPathW = NULL;
     WCHAR szPath[MAX_PATH + 1];
+    WCHAR szExpandedPath[MAX_PATH + 1];
     LPCWSTR wstr;
     SIZE_T size;
-
     WCHAR szEnvKey[MAX_PATH];
     WCHAR szEnvValue[1024];
-
     SIZE_T length;
     LPWSTR eqptr, endptr;
 
+    /* Parse the environment variables and add them to the volatile environment key */
     if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 &&
         Session->Profile->pszEnvironment != NULL)
     {
@@ -80,7 +80,7 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
         }
     }
 
-
+    /* Load shell32.dll and call SHGetFolderPathW to get the users appdata folder path */
     hShell32 = LoadLibraryW(L"shell32.dll");
     if (hShell32 != NULL)
     {
@@ -94,12 +94,21 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
                                    0,
                                    szPath) == S_OK)
             {
+                /* FIXME: Expand %USERPROFILE% here. SHGetFolderPathW should do it for us. See Bug #5372.*/
+                TRACE("APPDATA path: %S\n", szPath);
+                ExpandEnvironmentStringsForUserW(Session->UserToken,
+                                                 szPath,
+                                                 szExpandedPath,
+                                                 MAX_PATH);
+
+                /* Add the appdata folder path to the users volatile environment key */
+                TRACE("APPDATA expanded path: %S\n", szExpandedPath);
                 RegSetValueExW(hKey,
                                L"APPDATA",
                                0,
                                REG_SZ,
-                               (LPBYTE)szPath,
-                               (wcslen(szPath) + 1) * sizeof(WCHAR));
+                               (LPBYTE)szExpandedPath,
+                               (wcslen(szExpandedPath) + 1) * sizeof(WCHAR));
             }
         }
 
