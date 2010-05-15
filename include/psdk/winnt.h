@@ -647,83 +647,89 @@ typedef DWORD FLONG;
 #define SECURITY_MANDATORY_LABEL_AUTHORITY  {0,0,0,0,0,16}
 
 typedef enum {
-    WinNullSid                                  = 0,
-    WinWorldSid                                 = 1,
-    WinLocalSid                                 = 2,
-    WinCreatorOwnerSid                          = 3,
-    WinCreatorGroupSid                          = 4,
-    WinCreatorOwnerServerSid                    = 5,
-    WinCreatorGroupServerSid                    = 6,
-    WinNtAuthoritySid                           = 7,
-    WinDialupSid                                = 8,
-    WinNetworkSid                               = 9,
-    WinBatchSid                                 = 10,
-    WinInteractiveSid                           = 11,
-    WinServiceSid                               = 12,
-    WinAnonymousSid                             = 13,
-    WinProxySid                                 = 14,
-    WinEnterpriseControllersSid                 = 15,
-    WinSelfSid                                  = 16,
-    WinAuthenticatedUserSid                     = 17,
-    WinRestrictedCodeSid                        = 18,
-    WinTerminalServerSid                        = 19,
-    WinRemoteLogonIdSid                         = 20,
-    WinLogonIdsSid                              = 21,
-    WinLocalSystemSid                           = 22,
-    WinLocalServiceSid                          = 23,
-    WinNetworkServiceSid                        = 24,
-    WinBuiltinDomainSid                         = 25,
-    WinBuiltinAdministratorsSid                 = 26,
-    WinBuiltinUsersSid                          = 27,
-    WinBuiltinGuestsSid                         = 28,
-    WinBuiltinPowerUsersSid                     = 29,
-    WinBuiltinAccountOperatorsSid               = 30,
-    WinBuiltinSystemOperatorsSid                = 31,
-    WinBuiltinPrintOperatorsSid                 = 32,
-    WinBuiltinBackupOperatorsSid                = 33,
-    WinBuiltinReplicatorSid                     = 34,
-    WinBuiltinPreWindows2000CompatibleAccessSid = 35,
-    WinBuiltinRemoteDesktopUsersSid             = 36,
-    WinBuiltinNetworkConfigurationOperatorsSid  = 37,
-    WinAccountAdministratorSid                  = 38,
-    WinAccountGuestSid                          = 39,
-    WinAccountKrbtgtSid                         = 40,
-    WinAccountDomainAdminsSid                   = 41,
-    WinAccountDomainUsersSid                    = 42,
-    WinAccountDomainGuestsSid                   = 43,
-    WinAccountComputersSid                      = 44,
-    WinAccountControllersSid                    = 45,
-    WinAccountCertAdminsSid                     = 46,
-    WinAccountSchemaAdminsSid                   = 47,
-    WinAccountEnterpriseAdminsSid               = 48,
-    WinAccountPolicyAdminsSid                   = 49,
-    WinAccountRasAndIasServersSid               = 50,
-    WinNTLMAuthenticationSid                    = 51,
-    WinDigestAuthenticationSid                  = 52,
-    WinSChannelAuthenticationSid                = 53,
-    WinThisOrganizationSid                      = 54,
-    WinOtherOrganizationSid                     = 55,
-    WinBuiltinIncomingForestTrustBuildersSid    = 56,
-    WinBuiltinPerfMonitoringUsersSid            = 57,
-    WinBuiltinPerfLoggingUsersSid               = 58,
-    WinBuiltinAuthorizationAccessSid            = 59,
-    WinBuiltinTerminalServerLicenseServersSid   = 60,
-    WinBuiltinDCOMUsersSid                      = 61,
-    WinBuiltinIUsersSid                         = 62,
-    WinIUserSid                                 = 63,
-    WinBuiltinCryptoOperatorsSid                = 64,
-    WinUntrustedLabelSid                        = 65,
-    WinLowLabelSid                              = 66,
-    WinMediumLabelSid                           = 67,
-    WinHighLabelSid                             = 68,
-    WinSystemLabelSid                           = 69,
-    WinWriteRestrictedCodeSid                   = 70,
-    WinCreatorOwnerRightsSid                    = 71,
-    WinCacheablePrincipalsGroupSid              = 72,
-    WinNonCacheablePrincipalsGroupSid           = 73,
-    WinEnterpriseReadonlyControllersSid         = 74,
-    WinAccountReadonlyControllersSid            = 75,
-    WinBuiltinEventLogReadersGroup              = 76
+  WinNullSid = 0,
+  WinWorldSid = 1,
+  WinLocalSid = 2,
+  WinCreatorOwnerSid = 3,
+  WinCreatorGroupSid = 4,
+  WinCreatorOwnerServerSid = 5,
+  WinCreatorGroupServerSid = 6,
+  WinNtAuthoritySid = 7,
+  WinDialupSid = 8,
+  WinNetworkSid = 9,
+  WinBatchSid = 10,
+  WinInteractiveSid = 11,
+  WinServiceSid = 12,
+  WinAnonymousSid = 13,
+  WinProxySid = 14,
+  WinEnterpriseControllersSid = 15,
+  WinSelfSid = 16,
+  WinAuthenticatedUserSid = 17,
+  WinRestrictedCodeSid = 18,
+  WinTerminalServerSid = 19,
+  WinRemoteLogonIdSid = 20,
+  WinLogonIdsSid = 21,
+  WinLocalSystemSid = 22,
+  WinLocalServiceSid = 23,
+  WinNetworkServiceSid = 24,
+  WinBuiltinDomainSid = 25,
+  WinBuiltinAdministratorsSid = 26,
+  WinBuiltinUsersSid = 27,
+  WinBuiltinGuestsSid = 28,
+  WinBuiltinPowerUsersSid = 29,
+  WinBuiltinAccountOperatorsSid = 30,
+  WinBuiltinSystemOperatorsSid = 31,
+  WinBuiltinPrintOperatorsSid = 32,
+  WinBuiltinBackupOperatorsSid = 33,
+  WinBuiltinReplicatorSid = 34,
+  WinBuiltinPreWindows2000CompatibleAccessSid = 35,
+  WinBuiltinRemoteDesktopUsersSid = 36,
+  WinBuiltinNetworkConfigurationOperatorsSid = 37,
+  WinAccountAdministratorSid = 38,
+  WinAccountGuestSid = 39,
+  WinAccountKrbtgtSid = 40,
+  WinAccountDomainAdminsSid = 41,
+  WinAccountDomainUsersSid = 42,
+  WinAccountDomainGuestsSid = 43,
+  WinAccountComputersSid = 44,
+  WinAccountControllersSid = 45,
+  WinAccountCertAdminsSid = 46,
+  WinAccountSchemaAdminsSid = 47,
+  WinAccountEnterpriseAdminsSid = 48,
+  WinAccountPolicyAdminsSid = 49,
+  WinAccountRasAndIasServersSid = 50,
+  WinNTLMAuthenticationSid = 51,
+  WinDigestAuthenticationSid = 52,
+  WinSChannelAuthenticationSid = 53,
+  WinThisOrganizationSid = 54,
+  WinOtherOrganizationSid = 55,
+  WinBuiltinIncomingForestTrustBuildersSid = 56,
+  WinBuiltinPerfMonitoringUsersSid = 57,
+  WinBuiltinPerfLoggingUsersSid = 58,
+  WinBuiltinAuthorizationAccessSid = 59,
+  WinBuiltinTerminalServerLicenseServersSid = 60,
+  WinBuiltinDCOMUsersSid = 61,
+  WinBuiltinIUsersSid = 62,
+  WinIUserSid = 63,
+  WinBuiltinCryptoOperatorsSid = 64,
+  WinUntrustedLabelSid = 65,
+  WinLowLabelSid = 66,
+  WinMediumLabelSid = 67,
+  WinHighLabelSid = 68,
+  WinSystemLabelSid = 69,
+  WinWriteRestrictedCodeSid = 70,
+  WinCreatorOwnerRightsSid = 71,
+  WinCacheablePrincipalsGroupSid = 72,
+  WinNonCacheablePrincipalsGroupSid = 73,
+  WinEnterpriseReadonlyControllersSid = 74,
+  WinAccountReadonlyControllersSid = 75,
+  WinBuiltinEventLogReadersGroup = 76,
+  WinNewEnterpriseReadonlyControllersSid = 77,
+  WinBuiltinCertSvcDComAccessGroup = 78,
+  WinMediumPlusLabelSid = 79,
+  WinLocalLogonSid = 80,
+  WinConsoleLogonSid = 81,
+  WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
 
 #define SE_CREATE_TOKEN_NAME	TEXT("SeCreateTokenPrivilege")
@@ -1919,184 +1925,203 @@ typedef struct _GUID {
 #define SYSTEM_MANDATORY_LABEL_ACE_TYPE         (0x11)
 #define ACCESS_MAX_MS_V5_ACE_TYPE               (0x11)
 /* end ntifs.h */
+
 typedef struct _GENERIC_MAPPING {
-	ACCESS_MASK GenericRead;
-	ACCESS_MASK GenericWrite;
-	ACCESS_MASK GenericExecute;
-	ACCESS_MASK GenericAll;
+  ACCESS_MASK GenericRead;
+  ACCESS_MASK GenericWrite;
+  ACCESS_MASK GenericExecute;
+  ACCESS_MASK GenericAll;
 } GENERIC_MAPPING, *PGENERIC_MAPPING;
+
 typedef struct _ACE_HEADER {
-	BYTE AceType;
-	BYTE AceFlags;
-	WORD AceSize;
+  BYTE AceType;
+  BYTE AceFlags;
+  WORD AceSize;
 } ACE_HEADER, *PACE_HEADER;
 
 typedef struct _ACCESS_ALLOWED_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } ACCESS_ALLOWED_ACE, *PACCESS_ALLOWED_ACE;
+
 typedef struct _ACCESS_DENIED_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } ACCESS_DENIED_ACE, *PACCESS_DENIED_ACE;
+
 typedef struct _SYSTEM_AUDIT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
-} SYSTEM_AUDIT_ACE;
-typedef SYSTEM_AUDIT_ACE *PSYSTEM_AUDIT_ACE;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
+} SYSTEM_AUDIT_ACE, *PSYSTEM_AUDIT_ACE;
+
 typedef struct _SYSTEM_ALARM_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } SYSTEM_ALARM_ACE,*PSYSTEM_ALARM_ACE;
+
 typedef struct _SYSTEM_MANDATORY_LABEL_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } SYSTEM_MANDATORY_LABEL_ACE, *PSYSTEM_MANDATORY_LABEL_ACE;
+
 #define SYSTEM_MANDATORY_LABEL_NO_WRITE_UP  0x1
 #define SYSTEM_MANDATORY_LABEL_NO_READ_UP   0x2
 #define SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP    0x4
 #define SYSTEM_MANDATORY_LABEL_VALID_MASK (SYSTEM_MANDATORY_LABEL_NO_WRITE_UP | SYSTEM_MANDATORY_LABEL_NO_READ_UP | SYSTEM_MANDATORY_LABEL_NO_EXECUTE_UP)
+
 typedef struct _ACCESS_ALLOWED_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } ACCESS_ALLOWED_OBJECT_ACE,*PACCESS_ALLOWED_OBJECT_ACE;
+
 typedef struct _ACCESS_DENIED_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } ACCESS_DENIED_OBJECT_ACE,*PACCESS_DENIED_OBJECT_ACE;
+
 typedef struct _SYSTEM_AUDIT_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } SYSTEM_AUDIT_OBJECT_ACE,*PSYSTEM_AUDIT_OBJECT_ACE;
+
 typedef struct _SYSTEM_ALARM_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } SYSTEM_ALARM_OBJECT_ACE,*PSYSTEM_ALARM_OBJECT_ACE;
+
 typedef struct _ACCESS_ALLOWED_CALLBACK_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } ACCESS_ALLOWED_CALLBACK_ACE, *PACCESS_ALLOWED_CALLBACK_ACE;
+
 typedef struct _ACCESS_DENIED_CALLBACK_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } ACCESS_DENIED_CALLBACK_ACE, *PACCESS_DENIED_CALLBACK_ACE;
+
 typedef struct _SYSTEM_AUDIT_CALLBACK_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } SYSTEM_AUDIT_CALLBACK_ACE, *PSYSTEM_AUDIT_CALLBACK_ACE;
+
 typedef struct _SYSTEM_ALARM_CALLBACK_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD SidStart;
 } SYSTEM_ALARM_CALLBACK_ACE, *PSYSTEM_ALARM_CALLBACK_ACE;
+
 typedef struct _ACCESS_ALLOWED_CALLBACK_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } ACCESS_ALLOWED_CALLBACK_OBJECT_ACE, *PACCESS_ALLOWED_CALLBACK_OBJECT_ACE;
+
 typedef struct _ACCESS_DENIED_CALLBACK_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } ACCESS_DENIED_CALLBACK_OBJECT_ACE, *PACCESS_DENIED_CALLBACK_OBJECT_ACE;
+
 typedef struct _SYSTEM_AUDIT_CALLBACK_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } SYSTEM_AUDIT_CALLBACK_OBJECT_ACE, *PSYSTEM_AUDIT_CALLBACK_OBJECT_ACE;
+
 typedef struct _SYSTEM_ALARM_CALLBACK_OBJECT_ACE {
-	ACE_HEADER Header;
-	ACCESS_MASK Mask;
-	DWORD Flags;
-	GUID ObjectType;
-	GUID InheritedObjectType;
-	DWORD SidStart;
+  ACE_HEADER Header;
+  ACCESS_MASK Mask;
+  DWORD Flags;
+  GUID ObjectType;
+  GUID InheritedObjectType;
+  DWORD SidStart;
 } SYSTEM_ALARM_CALLBACK_OBJECT_ACE, *PSYSTEM_ALARM_CALLBACK_OBJECT_ACE;
+
 typedef struct _ACL {
-	BYTE AclRevision;
-	BYTE Sbz1;
-	WORD AclSize;
-	WORD AceCount;
-	WORD Sbz2;
+  BYTE AclRevision;
+  BYTE Sbz1;
+  WORD AclSize;
+  WORD AceCount;
+  WORD Sbz2;
 } ACL,*PACL;
-typedef enum _ACL_INFORMATION_CLASS
-{
+
+typedef enum _ACL_INFORMATION_CLASS {
   AclRevisionInformation = 1,
   AclSizeInformation
 } ACL_INFORMATION_CLASS;
+
 typedef struct _ACL_REVISION_INFORMATION {
-	DWORD AclRevision;
+  DWORD AclRevision;
 } ACL_REVISION_INFORMATION, *PACL_REVISION_INFORMATION;
+
 typedef struct _ACL_SIZE_INFORMATION {
-	DWORD   AceCount;
-	DWORD   AclBytesInUse;
-	DWORD   AclBytesFree;
+  DWORD AceCount;
+  DWORD AclBytesInUse;
+  DWORD AclBytesFree;
 } ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
 
 #ifndef _LDT_ENTRY_DEFINED
 #define _LDT_ENTRY_DEFINED
-typedef struct _LDT_ENTRY
-{
-    USHORT LimitLow;
-    USHORT BaseLow;
-    union
-    {
-        struct
-        {
-            UCHAR BaseMid;
-            UCHAR Flags1;
-            UCHAR Flags2;
-            UCHAR BaseHi;
-        } Bytes;
-        struct
-        {
-            ULONG BaseMid:8;
-            ULONG Type:5;
-            ULONG Dpl:2;
-            ULONG Pres:1;
-            ULONG LimitHi:4;
-            ULONG Sys:1;
-            ULONG Reserved_0:1;
-            ULONG Default_Big:1;
-            ULONG Granularity:1;
-            ULONG BaseHi:8;
-        } Bits;
-    } HighWord;
+
+typedef struct _LDT_ENTRY {
+  WORD LimitLow;
+  WORD BaseLow;
+  union {
+    struct {
+      BYTE BaseMid;
+      BYTE Flags1;
+      BYTE Flags2;
+      BYTE BaseHi;
+    } Bytes;
+    struct {
+      DWORD BaseMid:8;
+      DWORD Type:5;
+      DWORD Dpl:2;
+      DWORD Pres:1;
+      DWORD LimitHi:4;
+      DWORD Sys:1;
+      DWORD Reserved_0:1;
+      DWORD Default_Big:1;
+      DWORD Granularity:1;
+      DWORD BaseHi:8;
+    } Bits;
+  } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
-#endif
+
+#endif /* _LDT_ENTRY_DEFINED */
 
 /* FIXME: add more machines */
 #if defined(_X86_) && !defined(__PowerPC__)
@@ -2117,42 +2142,43 @@ typedef struct _LDT_ENTRY
 #define EXCEPTION_EXECUTE_FAULT 8
 
 typedef struct _FLOATING_SAVE_AREA {
-	DWORD	ControlWord;
-	DWORD	StatusWord;
-	DWORD	TagWord;
-	DWORD	ErrorOffset;
-	DWORD	ErrorSelector;
-	DWORD	DataOffset;
-	DWORD	DataSelector;
-	BYTE	RegisterArea[80];
-	DWORD	Cr0NpxState;
+  DWORD ControlWord;
+  DWORD StatusWord;
+  DWORD TagWord;
+  DWORD ErrorOffset;
+  DWORD ErrorSelector;
+  DWORD DataOffset;
+  DWORD DataSelector;
+  BYTE RegisterArea[80];
+  DWORD Cr0NpxState;
 } FLOATING_SAVE_AREA, *PFLOATING_SAVE_AREA;
+
 typedef struct _CONTEXT {
-	DWORD	ContextFlags;
-	DWORD	Dr0;
-	DWORD	Dr1;
-	DWORD	Dr2;
-	DWORD	Dr3;
-	DWORD	Dr6;
-	DWORD	Dr7;
-	FLOATING_SAVE_AREA FloatSave;
-	DWORD	SegGs;
-	DWORD	SegFs;
-	DWORD	SegEs;
-	DWORD	SegDs;
-	DWORD	Edi;
-	DWORD	Esi;
-	DWORD	Ebx;
-	DWORD	Edx;
-	DWORD	Ecx;
-	DWORD	Eax;
-	DWORD	Ebp;
-	DWORD	Eip;
-	DWORD	SegCs;
-	DWORD	EFlags;
-	DWORD	Esp;
-	DWORD	SegSs;
-	BYTE	ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
+  DWORD ContextFlags;
+  DWORD Dr0;
+  DWORD Dr1;
+  DWORD Dr2;
+  DWORD Dr3;
+  DWORD Dr6;
+  DWORD Dr7;
+  FLOATING_SAVE_AREA FloatSave;
+  DWORD SegGs;
+  DWORD SegFs;
+  DWORD SegEs;
+  DWORD SegDs;
+  DWORD Edi;
+  DWORD Esi;
+  DWORD Ebx;
+  DWORD Edx;
+  DWORD Ecx;
+  DWORD Eax;
+  DWORD Ebp;
+  DWORD Eip;
+  DWORD SegCs;
+  DWORD EFlags;
+  DWORD Esp;
+  DWORD SegSs;
+  BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
 #elif defined(__x86_64__)
 
@@ -2892,40 +2918,38 @@ typedef CONTEXT *PCONTEXT,*LPCONTEXT;
 #define EXCEPTION_NONCONTINUABLE	1
 #define EXCEPTION_MAXIMUM_PARAMETERS 15
 
-    typedef struct _EXCEPTION_RECORD {
-      DWORD ExceptionCode;
-      DWORD ExceptionFlags;
-      struct _EXCEPTION_RECORD *ExceptionRecord;
-      PVOID ExceptionAddress;
-      DWORD NumberParameters;
-      ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-    } EXCEPTION_RECORD;
+typedef struct _EXCEPTION_RECORD {
+  DWORD ExceptionCode;
+  DWORD ExceptionFlags;
+  struct _EXCEPTION_RECORD *ExceptionRecord;
+  PVOID ExceptionAddress;
+  DWORD NumberParameters;
+  ULONG_PTR ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD, *PEXCEPTION_RECORD;
 
-    typedef EXCEPTION_RECORD *PEXCEPTION_RECORD;
+typedef struct _EXCEPTION_RECORD32 {
+  DWORD ExceptionCode;
+  DWORD ExceptionFlags;
+  DWORD ExceptionRecord;
+  DWORD ExceptionAddress;
+  DWORD NumberParameters;
+  DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD32,*PEXCEPTION_RECORD32;
 
-    typedef struct _EXCEPTION_RECORD32 {
-      DWORD ExceptionCode;
-      DWORD ExceptionFlags;
-      DWORD ExceptionRecord;
-      DWORD ExceptionAddress;
-      DWORD NumberParameters;
-      DWORD ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-    } EXCEPTION_RECORD32,*PEXCEPTION_RECORD32;
+typedef struct _EXCEPTION_RECORD64 {
+  DWORD ExceptionCode;
+  DWORD ExceptionFlags;
+  DWORD64 ExceptionRecord;
+  DWORD64 ExceptionAddress;
+  DWORD NumberParameters;
+  DWORD __unusedAlignment;
+  DWORD64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
+} EXCEPTION_RECORD64,*PEXCEPTION_RECORD64;
 
-    typedef struct _EXCEPTION_RECORD64 {
-      DWORD ExceptionCode;
-      DWORD ExceptionFlags;
-      DWORD64 ExceptionRecord;
-      DWORD64 ExceptionAddress;
-      DWORD NumberParameters;
-      DWORD __unusedAlignment;
-      DWORD64 ExceptionInformation[EXCEPTION_MAXIMUM_PARAMETERS];
-    } EXCEPTION_RECORD64,*PEXCEPTION_RECORD64;
-
-    typedef struct _EXCEPTION_POINTERS {
-      PEXCEPTION_RECORD ExceptionRecord;
-      PCONTEXT ContextRecord;
-    } EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
+typedef struct _EXCEPTION_POINTERS {
+  PEXCEPTION_RECORD ExceptionRecord;
+  PCONTEXT ContextRecord;
+} EXCEPTION_POINTERS,*PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
 
 #ifdef _M_PPC
 #define LARGE_INTEGER_ORDER(x) x HighPart; DWORD LowPart;
@@ -2960,151 +2984,174 @@ typedef struct _LUID {
 } LUID, *PLUID;
 
 #include <pshpack4.h>
-typedef struct _LUID_AND_ATTRIBUTES {
-	LUID   Luid;
-	DWORD  Attributes;
-} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
-#include <poppack.h>
 
+typedef struct _LUID_AND_ATTRIBUTES {
+  LUID Luid;
+  DWORD Attributes;
+} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
 typedef LUID_AND_ATTRIBUTES LUID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef LUID_AND_ATTRIBUTES_ARRAY *PLUID_AND_ATTRIBUTES_ARRAY;
+
+#include <poppack.h>
+
 typedef struct _PRIVILEGE_SET {
-	DWORD PrivilegeCount;
-	DWORD Control;
-	LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
+  DWORD PrivilegeCount;
+  DWORD Control;
+  LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
 } PRIVILEGE_SET,*PPRIVILEGE_SET;
+
 typedef struct _SECURITY_ATTRIBUTES {
 	DWORD nLength;
 	LPVOID lpSecurityDescriptor;
 	BOOL bInheritHandle;
 } SECURITY_ATTRIBUTES,*PSECURITY_ATTRIBUTES,*LPSECURITY_ATTRIBUTES;
+
 typedef enum _SECURITY_IMPERSONATION_LEVEL {
-	SecurityAnonymous,
-	SecurityIdentification,
-	SecurityImpersonation,
-	SecurityDelegation
+  SecurityAnonymous,
+  SecurityIdentification,
+  SecurityImpersonation,
+  SecurityDelegation
 } SECURITY_IMPERSONATION_LEVEL,*PSECURITY_IMPERSONATION_LEVEL;
+
 typedef BOOLEAN SECURITY_CONTEXT_TRACKING_MODE,*PSECURITY_CONTEXT_TRACKING_MODE;
+
 typedef struct _SECURITY_QUALITY_OF_SERVICE {
-	DWORD Length;
-	SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-	SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
-	BOOLEAN EffectiveOnly;
+  DWORD Length;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode;
+  BOOLEAN EffectiveOnly;
 } SECURITY_QUALITY_OF_SERVICE,*PSECURITY_QUALITY_OF_SERVICE;
+
 typedef PVOID PACCESS_TOKEN;
+
 typedef struct _SE_IMPERSONATION_STATE {
-	PACCESS_TOKEN Token;
-	BOOLEAN CopyOnOpen;
-	BOOLEAN EffectiveOnly;
-	SECURITY_IMPERSONATION_LEVEL Level;
+  PACCESS_TOKEN Token;
+  BOOLEAN CopyOnOpen;
+  BOOLEAN EffectiveOnly;
+  SECURITY_IMPERSONATION_LEVEL Level;
 } SE_IMPERSONATION_STATE,*PSE_IMPERSONATION_STATE;
+
 typedef struct _SID_IDENTIFIER_AUTHORITY {
-	BYTE Value[6];
+  BYTE Value[6];
 } SID_IDENTIFIER_AUTHORITY,*PSID_IDENTIFIER_AUTHORITY,*LPSID_IDENTIFIER_AUTHORITY;
+
 typedef PVOID PSID;
+
 typedef struct _SID {
-   BYTE  Revision;
-   BYTE  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   DWORD SubAuthority[ANYSIZE_ARRAY];
+  BYTE Revision;
+  BYTE SubAuthorityCount;
+  SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
+  DWORD SubAuthority[ANYSIZE_ARRAY];
 } SID, *PISID;
+
 #define SECURITY_MIN_SID_SIZE (sizeof(SID))
 #define SECURITY_MAX_SID_SIZE (FIELD_OFFSET(SID, SubAuthority) + SID_MAX_SUB_AUTHORITIES * sizeof(DWORD))
+
 typedef struct _SID_AND_ATTRIBUTES {
-	PSID Sid;
-	DWORD Attributes;
+  PSID Sid;
+  DWORD Attributes;
 } SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
 typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
 typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
+
 typedef struct _TOKEN_SOURCE {
-	CHAR SourceName[TOKEN_SOURCE_LENGTH];
-	LUID SourceIdentifier;
+  CHAR SourceName[TOKEN_SOURCE_LENGTH];
+  LUID SourceIdentifier;
 } TOKEN_SOURCE,*PTOKEN_SOURCE;
+
 typedef struct _TOKEN_CONTROL {
-	LUID TokenId;
-	LUID AuthenticationId;
-	LUID ModifiedId;
-	TOKEN_SOURCE TokenSource;
+  LUID TokenId;
+  LUID AuthenticationId;
+  LUID ModifiedId;
+  TOKEN_SOURCE TokenSource;
 } TOKEN_CONTROL,*PTOKEN_CONTROL;
+
 typedef struct _TOKEN_DEFAULT_DACL {
-	PACL DefaultDacl;
+  PACL DefaultDacl;
 } TOKEN_DEFAULT_DACL,*PTOKEN_DEFAULT_DACL;
+
 typedef struct _TOKEN_GROUPS {
-	DWORD GroupCount;
-	SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
+  DWORD GroupCount;
+  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY];
 } TOKEN_GROUPS,*PTOKEN_GROUPS,*LPTOKEN_GROUPS;
+
 typedef struct _TOKEN_GROUPS_AND_PRIVILEGES {
-	ULONG SidCount;
-	ULONG SidLength;
-	PSID_AND_ATTRIBUTES Sids;
-	ULONG RestrictedSidCount;
-	ULONG RestrictedSidLength;
-	PSID_AND_ATTRIBUTES RestrictedSids;
-	ULONG PrivilegeCount;
-	ULONG PrivilegeLength;
-	PLUID_AND_ATTRIBUTES Privileges;
-	LUID AuthenticationId;
+  DWORD SidCount;
+  DWORD SidLength;
+  PSID_AND_ATTRIBUTES Sids;
+  DWORD RestrictedSidCount;
+  DWORD RestrictedSidLength;
+  PSID_AND_ATTRIBUTES RestrictedSids;
+  DWORD PrivilegeCount;
+  DWORD PrivilegeLength;
+  PLUID_AND_ATTRIBUTES Privileges;
+  LUID AuthenticationId;
 } TOKEN_GROUPS_AND_PRIVILEGES, *PTOKEN_GROUPS_AND_PRIVILEGES;
+
 typedef struct _TOKEN_ORIGIN {
-	LUID OriginatingLogonSession;
+  LUID OriginatingLogonSession;
 } TOKEN_ORIGIN, *PTOKEN_ORIGIN;
+
 typedef struct _TOKEN_OWNER {
-	PSID Owner;
+  PSID Owner;
 } TOKEN_OWNER,*PTOKEN_OWNER;
+
 typedef struct _TOKEN_PRIMARY_GROUP {
-	PSID PrimaryGroup;
+  PSID PrimaryGroup;
 } TOKEN_PRIMARY_GROUP,*PTOKEN_PRIMARY_GROUP;
+
 typedef struct _TOKEN_PRIVILEGES {
-	DWORD PrivilegeCount;
-	LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
+  DWORD PrivilegeCount;
+  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY];
 } TOKEN_PRIVILEGES,*PTOKEN_PRIVILEGES,*LPTOKEN_PRIVILEGES;
+
 typedef enum tagTOKEN_TYPE {
 	TokenPrimary = 1,
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
 
-#include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
-	LUID TokenId;
-	LUID AuthenticationId;
-	LARGE_INTEGER ExpirationTime;
-	TOKEN_TYPE TokenType;
-	SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
-	DWORD DynamicCharged;
-	DWORD DynamicAvailable;
-	DWORD GroupCount;
-	DWORD PrivilegeCount;
-	LUID ModifiedId;
+  LUID TokenId;
+  LUID AuthenticationId;
+  LARGE_INTEGER ExpirationTime;
+  TOKEN_TYPE TokenType;
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+  DWORD DynamicCharged;
+  DWORD DynamicAvailable;
+  DWORD GroupCount;
+  DWORD PrivilegeCount;
+  LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
-#include <poppack.h>
 
 typedef struct _TOKEN_USER {
-	SID_AND_ATTRIBUTES User;
+  SID_AND_ATTRIBUTES User;
 } TOKEN_USER, *PTOKEN_USER;
+
 typedef DWORD SECURITY_INFORMATION,*PSECURITY_INFORMATION;
 typedef WORD SECURITY_DESCRIPTOR_CONTROL,*PSECURITY_DESCRIPTOR_CONTROL;
 
 #ifndef _SECURITY_ATTRIBUTES_
 #define _SECURITY_ATTRIBUTES_
 typedef struct _SECURITY_DESCRIPTOR {
-	BYTE Revision;
-	BYTE Sbz1;
-	SECURITY_DESCRIPTOR_CONTROL Control;
-	PSID Owner;
-	PSID Group;
-	PACL Sacl;
-	PACL Dacl;
+  BYTE Revision;
+  BYTE Sbz1;
+  SECURITY_DESCRIPTOR_CONTROL Control;
+  PSID Owner;
+  PSID Group;
+  PACL Sacl;
+  PACL Dacl;
 } SECURITY_DESCRIPTOR, *PISECURITY_DESCRIPTOR;
 typedef PVOID PSECURITY_DESCRIPTOR;
 #endif
+
 typedef struct _SECURITY_DESCRIPTOR_RELATIVE {
-    BYTE Revision;
-    BYTE Sbz1;
-    SECURITY_DESCRIPTOR_CONTROL Control;
-    DWORD Owner;
-    DWORD Group;
-    DWORD Sacl;
-    DWORD Dacl;
+  BYTE Revision;
+  BYTE Sbz1;
+  SECURITY_DESCRIPTOR_CONTROL Control;
+  DWORD Owner;
+  DWORD Group;
+  DWORD Sacl;
+  DWORD Dacl;
 } SECURITY_DESCRIPTOR_RELATIVE, *PISECURITY_DESCRIPTOR_RELATIVE;
 
 typedef enum _TOKEN_INFORMATION_CLASS {
@@ -3140,18 +3187,27 @@ typedef enum _TOKEN_INFORMATION_CLASS {
 } TOKEN_INFORMATION_CLASS;
 
 typedef enum _SID_NAME_USE {
-	SidTypeUser=1,SidTypeGroup,SidTypeDomain,SidTypeAlias,
-	SidTypeWellKnownGroup,SidTypeDeletedAccount,SidTypeInvalid,
-	SidTypeUnknown
+  SidTypeUser=1,
+  SidTypeGroup,
+  SidTypeDomain,
+  SidTypeAlias,
+  SidTypeWellKnownGroup,
+  SidTypeDeletedAccount,
+  SidTypeInvalid,
+  SidTypeUnknown,
+  SidTypeComputer,
+  SidTypeLabel
 } SID_NAME_USE,*PSID_NAME_USE;
+
 typedef struct _QUOTA_LIMITS {
-	SIZE_T PagedPoolLimit;
-	SIZE_T NonPagedPoolLimit;
-	SIZE_T MinimumWorkingSetSize;
-	SIZE_T MaximumWorkingSetSize;
-	SIZE_T PagefileLimit;
-	LARGE_INTEGER TimeLimit;
+  SIZE_T PagedPoolLimit;
+  SIZE_T NonPagedPoolLimit;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  SIZE_T PagefileLimit;
+  LARGE_INTEGER TimeLimit;
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
+
 typedef struct _IO_COUNTERS {
 	ULONGLONG  ReadOperationCount;
 	ULONGLONG  WriteOperationCount;
@@ -3248,21 +3304,24 @@ typedef struct _MESSAGE_RESOURCE_DATA {
 	DWORD NumberOfBlocks;
 	MESSAGE_RESOURCE_BLOCK Blocks[1];
 } MESSAGE_RESOURCE_DATA,*PMESSAGE_RESOURCE_DATA;
+
 typedef struct _LIST_ENTRY {
-	struct _LIST_ENTRY *Flink;
-	struct _LIST_ENTRY *Blink;
+  struct _LIST_ENTRY *Flink;
+  struct _LIST_ENTRY *Blink;
 } LIST_ENTRY, *PLIST_ENTRY, *RESTRICTED_POINTER PRLIST_ENTRY;
+
 typedef struct _LIST_ENTRY32 {
-	DWORD Flink;
-	DWORD Blink;
+  DWORD Flink;
+  DWORD Blink;
 } LIST_ENTRY32,*PLIST_ENTRY32;
+
 typedef struct _LIST_ENTRY64 {
-	ULONGLONG Flink;
-	ULONGLONG Blink;
+  ULONGLONG Flink;
+  ULONGLONG Blink;
 } LIST_ENTRY64,*PLIST_ENTRY64;
 
 typedef struct _SINGLE_LIST_ENTRY {
-	struct _SINGLE_LIST_ENTRY *Next;
+  struct _SINGLE_LIST_ENTRY *Next;
 } SINGLE_LIST_ENTRY,*PSINGLE_LIST_ENTRY;
 
 //
@@ -3431,6 +3490,12 @@ typedef LONG
 (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
     struct _EXCEPTION_POINTERS *ExceptionInfo
 );
+
+typedef struct _PROCESSOR_NUMBER {
+  WORD Group;
+  BYTE Number;
+  BYTE Reserved;
+} PROCESSOR_NUMBER, *PPROCESSOR_NUMBER;
 
 typedef struct _GROUP_AFFINITY {
   KAFFINITY Mask;
@@ -4179,42 +4244,42 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
 } SERVICE_ERROR_TYPE;
 
 typedef struct _NT_TIB {
-	struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
-	PVOID StackBase;
-	PVOID StackLimit;
-	PVOID SubSystemTib;
-	_ANONYMOUS_UNION union {
-		PVOID FiberData;
-		DWORD Version;
-	} DUMMYUNIONNAME;
-	PVOID ArbitraryUserPointer;
-	struct _NT_TIB *Self;
+  struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;
+  PVOID StackBase;
+  PVOID StackLimit;
+  PVOID SubSystemTib;
+  _ANONYMOUS_UNION union {
+    PVOID FiberData;
+    DWORD Version;
+  } DUMMYUNIONNAME;
+  PVOID ArbitraryUserPointer;
+  struct _NT_TIB *Self;
 } NT_TIB,*PNT_TIB;
 
 typedef struct _NT_TIB32 {
-	DWORD ExceptionList;
-	DWORD StackBase;
-	DWORD StackLimit;
-	DWORD SubSystemTib;
-	union {
-		DWORD FiberData;
-		DWORD Version;
-	};
-	DWORD ArbitraryUserPointer;
-	DWORD Self;
+  DWORD ExceptionList;
+  DWORD StackBase;
+  DWORD StackLimit;
+  DWORD SubSystemTib;
+  _ANONYMOUS_UNION union {
+    DWORD FiberData;
+    DWORD Version;
+  } DUMMYUNIONNAME;
+  DWORD ArbitraryUserPointer;
+  DWORD Self;
 } NT_TIB32,*PNT_TIB32;
 
 typedef struct _NT_TIB64 {
-	DWORD64 ExceptionList;
-	DWORD64 StackBase;
-	DWORD64 StackLimit;
-	DWORD64 SubSystemTib;
-	union {
-		DWORD64 FiberData;
-		DWORD Version;
-	};
-	DWORD64 ArbitraryUserPointer;
-	DWORD64 Self;
+  DWORD64 ExceptionList;
+  DWORD64 StackBase;
+  DWORD64 StackLimit;
+  DWORD64 SubSystemTib;
+  _ANONYMOUS_UNION union {
+    DWORD64 FiberData;
+    DWORD Version;
+  } DUMMYUNIONNAME;
+  DWORD64 ArbitraryUserPointer;
+  DWORD64 Self;
 } NT_TIB64,*PNT_TIB64;
 
 typedef struct _REPARSE_GUID_DATA_BUFFER {
@@ -4303,11 +4368,10 @@ typedef enum _JOBOBJECTINFOCLASS {
 	MaxJobObjectInfoClass
 } JOBOBJECTINFOCLASS;
 
-typedef struct _JOB_SET_ARRAY
-{
-    HANDLE JobHandle;
-    DWORD MemberLevel;
-    DWORD Flags;
+typedef struct _JOB_SET_ARRAY {
+  HANDLE JobHandle;
+  DWORD MemberLevel;
+  DWORD Flags;
 } JOB_SET_ARRAY, *PJOB_SET_ARRAY;
 
 typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
@@ -4592,8 +4656,8 @@ typedef struct _SYSTEM_POWER_INFORMATION {
 #if (_WIN32_WINNT >= 0x0500)
 #define _AUDIT_EVENT_TYPE_HACK 1
 typedef enum _AUDIT_EVENT_TYPE {
-    AuditEventObjectAccess,
-    AuditEventDirectoryServiceAccess
+  AuditEventObjectAccess,
+  AuditEventDirectoryServiceAccess
 } AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
 #endif
 
@@ -4842,9 +4906,9 @@ RtlSecureZeroMemory(IN PVOID Buffer,
 }
 
 typedef struct _OBJECT_TYPE_LIST {
-    WORD   Level;
-    WORD   Sbz;
-    GUID *ObjectType;
+  WORD Level;
+  WORD Sbz;
+  GUID *ObjectType;
 } OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 #if defined(__GNUC__)
