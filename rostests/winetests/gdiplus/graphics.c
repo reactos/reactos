@@ -2353,7 +2353,8 @@ static void test_GdipGetNearestColor(void)
     expect(Ok, status);
     expect(0xdeadbeef, color);
     GdipDeleteGraphics(graphics);
-    GdipDisposeImage((GpImage*)bitmap);
+    skip("skipping GdipDisposeImage, see bug 5395\n");
+    //GdipDisposeImage((GpImage*)bitmap);
 
     status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat64bppARGB, NULL, &bitmap);
     expect(Ok, status);
@@ -2363,7 +2364,8 @@ static void test_GdipGetNearestColor(void)
     expect(Ok, status);
     expect(0xdeadbeef, color);
     GdipDeleteGraphics(graphics);
-    GdipDisposeImage((GpImage*)bitmap);
+    skip("skipping GdipDisposeImage, see bug 5395\n");
+    //GdipDisposeImage((GpImage*)bitmap);
 
     status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat64bppPARGB, NULL, &bitmap);
     expect(Ok, status);
@@ -2373,7 +2375,8 @@ static void test_GdipGetNearestColor(void)
     expect(Ok, status);
     expect(0xdeadbeef, color);
     GdipDeleteGraphics(graphics);
-    GdipDisposeImage((GpImage*)bitmap);
+    skip("skipping GdipDisposeImage, see bug 5395\n");
+    //GdipDisposeImage((GpImage*)bitmap);
 
     status = GdipCreateBitmapFromScan0(10, 10, 10, PixelFormat16bppRGB565, NULL, &bitmap);
     expect(Ok, status);
