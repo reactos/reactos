@@ -24,9 +24,7 @@ typedef struct
     HANDLE Handle;                          // handle to audio device
     PFILE_OBJECT FileObject;                // file objecto to audio device
 
-    PIN_INFO * Pins;                        // array of PIN_INFO
-    ULONG PinDescriptorsCount;              // number of pin descriptors
-    KSPIN_DESCRIPTOR *PinDescriptors;        // pin descriptors array
+    //PIN_INFO * Pins;                        // array of PIN_INFO
 }KSAUDIO_DEVICE_ENTRY, *PKSAUDIO_DEVICE_ENTRY;
 
 typedef struct
@@ -61,20 +59,6 @@ typedef struct
 
     HANDLE hMixerPin;                                    // handle to mixer pin
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
-
-typedef struct
-{
-    PIO_WORKITEM WorkItem;
-    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-}FILTER_WORKER_CONTEXT, *PFILTER_WORKER_CONTEXT;
-
-typedef struct
-{
-    PIRP Irp;
-    IO_STATUS_BLOCK StatusBlock;
-}COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
-
-
 
 NTSTATUS
 SysAudioAllocateDeviceHeader(
