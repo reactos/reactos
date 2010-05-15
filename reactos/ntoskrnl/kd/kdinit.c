@@ -166,8 +166,8 @@ KdInitSystem(ULONG BootPhase,
         /* XXX Check for settings that we support */
         if (strstr(CommandLine, "BREAK")) KdpEarlyBreak = TRUE;
         if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
-        if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
-        if (strstr(CommandLine, "DEBUG"))
+        else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
+        else if (strstr(CommandLine, "DEBUG"))
         {
             /* Enable on the serial port */
             KdDebuggerEnabled = TRUE;
