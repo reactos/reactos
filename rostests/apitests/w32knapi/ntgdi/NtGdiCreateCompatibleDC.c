@@ -24,8 +24,6 @@ Test_NtGdiCreateCompatibleDC(PTESTINFO pti)
 	
 	TEST(NtGdiDeleteObjectApp(hDC) != 0);
 
-	TEST(NtGdiDeleteObjectApp(hDC) != 0);
-
 	return APISTATUS_NORMAL;
 }
 
