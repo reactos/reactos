@@ -105,19 +105,43 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       if (Window && WindowPrev)
       {
+         PWINDOW_OBJECT cWindow;
+         HWND *List, *phWnd;
          HANDLE OldTID = IntGetWndThreadId(WindowPrev);
          HANDLE NewTID = IntGetWndThreadId(Window);
 
          DPRINT1("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
          if (Window->Wnd->style & WS_MINIMIZE)
          {
-            DPRINT1("Widow was nminimized\n");
+            DPRINT("Widow was minimized\n");
          }
 
          if (OldTID != NewTID)
          {
-            co_IntSendMessageNoWait(hWndPrev, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
-            co_IntSendMessageNoWait(hWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
+            List = IntWinListChildren(UserGetWindowObject(IntGetDesktopWindow()));
+            if (List)
+            {
+               for (phWnd = List; *phWnd; ++phWnd)
+               {
+                  cWindow = UserGetWindowObject(*phWnd);
+
+                  if (cWindow && (IntGetWndThreadId(cWindow) == OldTID))
+                  {  // FALSE if the window is being deactivated,
+                     // ThreadId that owns the window being activated.
+                    co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, FALSE, (LPARAM)NewTID);
+                  }
+               }
+               for (phWnd = List; *phWnd; ++phWnd)
+               {
+                  cWindow = UserGetWindowObject(*phWnd);
+                  if (cWindow && (IntGetWndThreadId(cWindow) == NewTID))
+                  { // TRUE if the window is being activated,
+                    // ThreadId that owns the window being deactivated.
+                    co_IntSendMessageNoWait(*phWnd, WM_ACTIVATEAPP, TRUE, (LPARAM)OldTID);
+                  }
+               }
+               ExFreePool(List);
+            }
          }
          UserDerefObjectCo(WindowPrev); // Now allow the previous window to die.
       }
