@@ -223,7 +223,7 @@ CsrpFormatMessages(
     ANSI_STRING FormatA;
     PRTL_MESSAGE_RESOURCE_ENTRY MessageResource;
     PWSTR FormatString;
-    ULONG Size;
+    ULONG Size, ExceptionCode;
 
     /* Get the file name of the client process */
     CsrpGetClientFileName(&FileNameU, hProcess);
@@ -310,8 +310,10 @@ CsrpFormatMessages(
     /* Check if this is an exception message */
     if (Message->Status == STATUS_UNHANDLED_EXCEPTION)
     {
+        ExceptionCode = Parameters[0];
+
         /* Handle special cases */
-        if (Parameters[0] == STATUS_ACCESS_VIOLATION)
+        if (ExceptionCode == STATUS_ACCESS_VIOLATION)
         {
             Parameters[0] = Parameters[1];
             Parameters[1] = Parameters[3];
@@ -319,7 +321,7 @@ CsrpFormatMessages(
             else Parameters[2] = (ULONG_PTR)L"read";
             MessageResource = NULL;
         }
-        else if (Parameters[0] == STATUS_IN_PAGE_ERROR)
+        else if (ExceptionCode == STATUS_IN_PAGE_ERROR)
         {
             Parameters[0] = Parameters[1];
             Parameters[1] = Parameters[3];
@@ -339,7 +341,7 @@ CsrpFormatMessages(
             Status = RtlFindMessage(GetModuleHandleW(L"ntdll"),
                                     (ULONG_PTR)RT_MESSAGETABLE,
                                     LANG_NEUTRAL,
-                                    Parameters[0],
+                                    ExceptionCode,
                                     &MessageResource);
 
             if (NT_SUCCESS(Status))
@@ -356,6 +358,7 @@ CsrpFormatMessages(
                     RtlInitAnsiString(&FormatA, MessageResource->Text);
                     RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
                 }
+                FormatString = FormatU.Buffer;
             }
             else
             {
@@ -368,9 +371,8 @@ CsrpFormatMessages(
     }
 
     /* Calculate length of text buffer */
-    TextStringU->MaximumLength = wcslen(FormatString) * sizeof(WCHAR) +
-                                     SizeOfStrings + 42 * sizeof(WCHAR);
-    
+    TextStringU->MaximumLength = FormatU.Length + SizeOfStrings + 42 * sizeof(WCHAR);
+
     /* Allocate a buffer for the text */
     TextStringU->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
                                           HEAP_ZERO_MEMORY,

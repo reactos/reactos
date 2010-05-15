@@ -54,12 +54,10 @@ protected:
 
     LIST_ENTRY m_ServiceSinkHead;
 
-    BOOL m_Initialized;
-    BOOL m_TimerActive;
+    BOOL m_TimerInitialized;
     KTIMER m_Timer;
     KDPC m_Dpc;
-    KEVENT m_Event;
-    LONG m_ThreadActive;
+    KSPIN_LOCK m_Lock;
 
     friend VOID NTAPI IServiceGroupDpc(IN struct _KDPC  *Dpc, IN PVOID  DeferredContext, IN PVOID  SystemArgument1, IN PVOID  SystemArgument2);
 
@@ -105,9 +103,16 @@ CServiceGroup::QueryInterface(
 
 CServiceGroup::CServiceGroup(IUnknown * OuterUnknown)
 {
+    // initialize dpc
     KeInitializeDpc(&m_Dpc, IServiceGroupDpc, (PVOID)this);
+
+    // set highest importance
     KeSetImportanceDpc(&m_Dpc, HighImportance);
-    KeInitializeEvent(&m_Event, NotificationEvent, FALSE);
+
+    // initialize service group list lock
+    KeInitializeSpinLock(&m_Lock);
+
+    // initialize service group list
     InitializeListHead(&m_ServiceSinkHead);
 }
 
@@ -119,15 +124,34 @@ CServiceGroup::RequestService()
 
     DPRINT("CServiceGroup::RequestService() Dpc at Level %u\n", KeGetCurrentIrql());
 
-    if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+    if (m_TimerInitialized)
     {
-        KeInsertQueueDpc(&m_Dpc, NULL, NULL);
-        return;
-    }
+        LARGE_INTEGER DueTime;
 
-    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
-    KeInsertQueueDpc(&m_Dpc, NULL, NULL);
-    KeLowerIrql(OldIrql);
+        // no due time
+        DueTime.QuadPart = 0LL;
+
+        // delayed service requested
+        KeSetTimer(&m_Timer, DueTime, &m_Dpc);
+    }
+    else
+    {
+        // check curent irql
+        if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+        {
+            //insert dpc to queue
+            KeInsertQueueDpc(&m_Dpc, NULL, NULL);
+        }
+        else
+        {
+            // raise irql to dispatch level to make dpc fire immediately
+            KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+            // insert dpc to queue
+            KeInsertQueueDpc(&m_Dpc, NULL, NULL);
+            // lower irql to old level
+            KeLowerIrql(OldIrql);
+        }
+    }
 }
 
 //---------------------------------------------------------------
@@ -140,17 +164,32 @@ CServiceGroup::AddMember(
     IN PSERVICESINK pServiceSink)
 {
     PGROUP_ENTRY Entry;
+    KIRQL OldLevel;
 
+    // sanity check
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
+    // allocate service sink entry
     Entry = (PGROUP_ENTRY)AllocateItem(NonPagedPool, sizeof(GROUP_ENTRY), TAG_PORTCLASS);
     if (!Entry)
+    {
+        // out of memory
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
+    // initialize service sink entry
     Entry->pServiceSink = pServiceSink;
+    // increment reference count
     pServiceSink->AddRef();
 
+    // acquire service group list lock
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    // insert into service sink list
     InsertTailList(&m_ServiceSinkHead, &Entry->Entry);
+
+    // release service group list lock
+    KeReleaseSpinLock(&m_Lock, OldLevel);
 
     return STATUS_SUCCESS;
 }
@@ -162,22 +201,44 @@ CServiceGroup::RemoveMember(
 {
     PLIST_ENTRY CurEntry;
     PGROUP_ENTRY Entry;
+    KIRQL OldLevel;
 
+    // sanity check
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
+    // acquire service group list lock
+    KeAcquireSpinLock(&m_Lock, &OldLevel);
+
+    // grab first entry
     CurEntry = m_ServiceSinkHead.Flink;
+
+    // loop list until the passed entry is found
     while (CurEntry != &m_ServiceSinkHead)
     {
+        // grab entry
         Entry = CONTAINING_RECORD(CurEntry, GROUP_ENTRY, Entry);
+
+        // check if it matches the passed entry
         if (Entry->pServiceSink == pServiceSink)
         {
+            // remove entry from list
             RemoveEntryList(&Entry->Entry);
+
+            // release service sink reference
             pServiceSink->Release();
+
+            // free service sink entry
             FreeItem(Entry, TAG_PORTCLASS);
-            return;
+
+            // leave loop
+            break;
         }
+        // move to next entry
         CurEntry = CurEntry->Flink;
     }
+
+    // release service group list lock
+    KeReleaseSpinLock(&m_Lock, OldLevel);
 
 }
 
@@ -194,73 +255,40 @@ IServiceGroupDpc(
     PGROUP_ENTRY Entry;
     CServiceGroup * This = (CServiceGroup*)DeferredContext;
 
+    // acquire service group list lock
+    KeAcquireSpinLockAtDpcLevel(&This->m_Lock);
+
+    // grab first entry
     CurEntry = This->m_ServiceSinkHead.Flink;
+
+    // loop the list and call the attached service sink/group
     while (CurEntry != &This->m_ServiceSinkHead)
     {
+        //grab current entry
         Entry = (PGROUP_ENTRY)CONTAINING_RECORD(CurEntry, GROUP_ENTRY, Entry);
+
+        // call service sink/group
         Entry->pServiceSink->RequestService();
+
+        // move to next entry
         CurEntry = CurEntry->Flink;
     }
+
+    // release service group list lock
+    KeReleaseSpinLockFromDpcLevel(&This->m_Lock);
 }
 
-
-#if 0
-VOID
-NTAPI
-ServiceGroupThread(IN PVOID StartContext)
-{
-    NTSTATUS Status;
-    KWAIT_BLOCK WaitBlockArray[2];
-    PVOID WaitObjects[2];
-    CServiceGroup * This = (CServiceGroup*)StartContext;
-
-    // Set thread state
-    InterlockedIncrement(&This->m_ThreadActive);
-
-    // Setup the wait objects
-    WaitObjects[0] = &m_Timer;
-    WaitObjects[1] = &m_Event;
-
-    do
-    {
-        // Wait on our objects
-        Status = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, Executive, KernelMode, FALSE, NULL, WaitBlockArray);
-
-        switch(Status)
-        {
-            case STATUS_WAIT_0:
-                IServiceGroupDpc(&This->m_Dpc, (PVOID)This, NULL, NULL);
-                break;
-            case STATUS_WAIT_1:
-                PsTerminateSystemThread(STATUS_SUCCESS);
-                return;
-        }
-    }while(TRUE);
-}
-
-#endif
 VOID
 NTAPI
 CServiceGroup::SupportDelayedService()
 {
-    //NTSTATUS Status;
-    //HANDLE ThreadHandle;
-
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    if (m_Initialized)
-        return;
+    // initialize the timer
+    KeInitializeTimer(&m_Timer);
 
-    KeInitializeTimerEx(&m_Timer, NotificationTimer);
-
-#if 0
-    Status = PsCreateSystemThread(&ThreadHandle, THREAD_ALL_ACCESS, NULL, 0, NULL, ServiceGroupThread, (PVOID)This);
-    if (NT_SUCCESS(Status))
-    {
-        ZwClose(ThreadHandle);
-        m_Initialized = TRUE;
-    }
-#endif
+    // use the timer to perform service requests
+    m_TimerInitialized = TRUE;
 }
 
 VOID
@@ -270,17 +298,14 @@ CServiceGroup::RequestDelayedService(
 {
     LARGE_INTEGER DueTime;
 
+    // sanity check
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
+    PC_ASSERT(m_TimerInitialized);
 
     DueTime.QuadPart = ullDelay;
 
-    if (m_Initialized)
-    {
-        if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
-            KeSetTimer(&m_Timer, DueTime, &m_Dpc);
-        else
-            KeInsertQueueDpc(&m_Dpc, NULL, NULL);
-    }
+    // set the timer
+    KeSetTimer(&m_Timer, DueTime, &m_Dpc);
 }
 
 VOID
@@ -288,11 +313,10 @@ NTAPI
 CServiceGroup::CancelDelayedService()
 {
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
+    PC_ASSERT(m_TimerInitialized);
 
-    if (m_Initialized)
-    {
-        KeCancelTimer(&m_Timer);
-    }
+    // cancel the timer
+    KeCancelTimer(&m_Timer);
 }
 
 NTSTATUS
@@ -303,19 +327,31 @@ PcNewServiceGroup(
 {
     CServiceGroup * This;
     NTSTATUS Status;
+
     DPRINT("PcNewServiceGroup entered\n");
 
-    This = new(NonPagedPool, TAG_PORTCLASS)CServiceGroup(OuterUnknown);
-    if (!This)
-        return STATUS_INSUFFICIENT_RESOURCES;
+    //FIXME support aggregation
+    PC_ASSERT(OuterUnknown == NULL);
 
+    // allocate a service group object
+    This = new(NonPagedPool, TAG_PORTCLASS)CServiceGroup(OuterUnknown);
+
+    if (!This)
+    {
+        // out of memory
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    // request IServiceSink interface
     Status = This->QueryInterface(IID_IServiceSink, (PVOID*)OutServiceGroup);
 
     if (!NT_SUCCESS(Status))
     {
+        // failed to acquire service sink interface
         delete This;
         return Status;
     }
 
+    // done
     return Status;
 }

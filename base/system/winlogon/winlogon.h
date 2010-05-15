@@ -182,9 +182,7 @@ UpdatePerUserSystemParameters(DWORD dwUnknown,
 
 /* environment.c */
 BOOL
-CreateUserEnvironment(IN PWLSESSION Session,
-                      IN LPVOID *lpEnvironment,
-                      IN LPWSTR *lpFullEnv);
+CreateUserEnvironment(IN PWLSESSION Session);
 
 /* sas.c */
 BOOL

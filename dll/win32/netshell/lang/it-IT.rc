@@ -21,11 +21,10 @@ END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
-
 
 IDD_LAN_NETSTATUS DIALOGEX DISCARDABLE  0, 0, 200,180
 STYLE DS_SHELLFONT | WS_CHILD | WS_CAPTION
@@ -74,10 +73,10 @@ END
 
 IDD_LAN_NETSTATUSDETAILS DIALOGEX DISCARDABLE  0, 0, 200,200
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
-CAPTION "Network Connection Details"
+CAPTION "Dettagli della connessione di rete"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Network Connection &Details:", -1, 15, 9, 170, 12
+ LTEXT "Dettagli della connessione di &rete:", -1, 15, 9, 170, 12
  CONTROL "", IDC_DETAILS, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 15, 25, 170, 130
  PUSHBUTTON "&Close", IDC_CLOSE, 125, 165, 62, 14
 END
@@ -90,7 +89,7 @@ BEGIN
 	IDS_DEF_GATEWAY             "Default Gateway"
 	IDS_DHCP_SERVER             "DHCP Server"
 	IDS_LEASE_OBTAINED          "Indirizzo ottenuto"
-	IDS_LEASE_EXPIRES           "Indirizzo con scadenza"
+	IDS_LEASE_EXPIRES           "Scadenza indirizzo"
 	IDS_DNS_SERVERS             "DNS Servers"
 	IDS_WINS_SERVERS            "WINS Servers"
 	IDS_PROPERTY                "Proprietà"
@@ -116,6 +115,7 @@ BEGIN
 	IDS_NET_REPAIR              "Ripara"
 	IDS_NET_CREATELINK          "Crea collegamento"
 	IDS_NET_DELETE              "Cancella"
+	IDS_NET_RENAME              "Rinomina"
 	IDS_NET_PROPERTIES          "Proprietà"
 
 	IDS_FORMAT_BIT              "%u Bit/s"

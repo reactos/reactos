@@ -36,7 +36,7 @@ RtlMultiByteToUnicodeN(
         *ResultSize = Size * sizeof(WCHAR);
 
     WideString = (PUCHAR)UnicodeString;
-    for (i = 0; i <= Size; i++)
+    for (i = 0; i < Size; i++)
     {
         WideString[2 * i + 0] = (UCHAR)MbString[i];
         WideString[2 * i + 1] = 0;

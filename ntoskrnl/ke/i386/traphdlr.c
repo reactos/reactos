@@ -1206,7 +1206,7 @@ KiTrap0EHandler(IN PKTRAP_FRAME TrapFrame)
                            (PVOID)Cr2,
                            TrapFrame->SegCs & MODE_MASK,
                            TrapFrame);
-    if (Status == STATUS_SUCCESS) KiEoiHelper(TrapFrame);
+    if (NT_SUCCESS(Status)) KiEoiHelper(TrapFrame);
     
     /* Check for S-LIST fault */
     if (TrapFrame->Eip == (ULONG_PTR)ExpInterlockedPopEntrySListFault)

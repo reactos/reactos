@@ -61,6 +61,7 @@ typedef struct tagCSRSS_CONSOLE_VTBL
   BOOL (WINAPI *ChangeTitle)(PCSRSS_CONSOLE Console);
   VOID (WINAPI *CleanupConsole)(PCSRSS_CONSOLE Console);
   BOOL (WINAPI *ChangeIcon)(PCSRSS_CONSOLE Console, HICON hWindowIcon);
+  NTSTATUS (WINAPI *ResizeBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD Size);
 } CSRSS_CONSOLE_VTBL, *PCSRSS_CONSOLE_VTBL;
 
 typedef struct tagCSRSS_CONSOLE
@@ -137,6 +138,7 @@ CSR_API(CsrGetConsoleOutputCodePage);
 CSR_API(CsrSetConsoleOutputCodePage);
 CSR_API(CsrGetProcessList);
 CSR_API(CsrGenerateCtrlEvent);
+CSR_API(CsrSetScreenBufferSize);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
@@ -150,6 +152,8 @@ CSR_API(CsrGenerateCtrlEvent);
           (Console)->Vtbl->UpdateScreenInfo(Console, Buff)
 #define ConioChangeTitle(Console) (Console)->Vtbl->ChangeTitle(Console)
 #define ConioCleanupConsole(Console) (Console)->Vtbl->CleanupConsole(Console)
+#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
+#define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
 
 #define ConioRectHeight(Rect) \
     (((Rect)->top) > ((Rect)->bottom) ? 0 : ((Rect)->bottom) - ((Rect)->top) + 1)
@@ -164,7 +168,6 @@ CSR_API(CsrGenerateCtrlEvent);
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
-#define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
 
 /* alias.c */
 VOID IntDeleteAllAliases(struct tagALIAS_HEADER *RootHeader);

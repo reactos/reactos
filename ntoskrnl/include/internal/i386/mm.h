@@ -14,8 +14,10 @@ PULONG MmGetPageDirectory(VOID);
 #define PAGETABLE_MAP       (0xc0000000)
 #define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
 
+/* FIXME: These are different for PAE */
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC0300000
+#define PDE_TOP     0xC0300FFF
 #define PTE_TOP     0xC03FFFFF
 #define HYPER_SPACE 0xC0400000
 

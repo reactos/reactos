@@ -179,8 +179,11 @@ BOOL
 ROSGL_DeleteContext( GLRC *glrc )
 {
     /* unload icd */
-    if (glrc->icd != NULL)
+    if ((glrc->icd != NULL) && !(InterlockedDecrement((LONG*)&glrc->icd->refcount)))
+    {
+        /* This is the last context, remove the ICD */
         ROSGL_DeleteDCDataForICD( glrc->icd );
+    }
 
     /* remove from list */
     ROSGL_RemoveContext( glrc );
@@ -269,7 +272,7 @@ ROSGL_GetPrivateDCData( HDC hdc )
     data = OPENGL32_processdata.dcdata_list;
     while (data != NULL)
     {
-        if (data->hdc == hdc) /* found */
+        if ((data->hdc == hdc) || (WindowFromDC(data->hdc) == WindowFromDC(hdc))) /* found */
             break;
         data = data->next;
     }
@@ -413,7 +416,7 @@ ROSGL_ICDForHDC( HDC hdc )
                                                   NULL) != NULL)
             {
                 /* Too bad, somebody else was faster... */
-                OPENGL32_UnloadICD(drvdata);
+                DBGTRACE("Uh, Someone beat you to it!\n");
             }
         }
     }
@@ -685,6 +688,16 @@ rosglCreateLayerContext( HDC hdc, int layer )
         DBGPRINT( "Couldn't get ICD by HDC :-(" );
         /* FIXME: fallback? */
         return NULL;
+    }
+    
+    /* Don't forget to refcount it, icd will be released when last context is deleted */
+    InterlockedIncrement((LONG*)&icd->refcount);
+    
+    if(!rosglGetPixelFormat(hdc))
+    {
+        ROSGL_DeleteContext(glrc);
+	SetLastError(ERROR_INVALID_PIXEL_FORMAT);
+	return NULL;
     }
 
     /* create context */
@@ -989,6 +1002,12 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             glrc->is_current = FALSE;
             OPENGL32_threaddata->glrc = NULL;
         }
+        else if ((GetObjectType(hdc) != OBJ_DC) && (GetObjectType(hdc) != OBJ_MEMDC))
+	{
+	    DBGPRINT("Current context is NULL and requested HDC is invalid.\n");
+	    SetLastError(ERROR_INVALID_HANDLE);
+	    return FALSE;
+	}
     }
     else
     {

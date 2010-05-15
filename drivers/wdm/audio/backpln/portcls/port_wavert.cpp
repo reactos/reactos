@@ -329,7 +329,7 @@ CPortWaveRT::NewRegistryKey(
         DPRINT("IPortWaveRT_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
-    return PcNewRegistryKey(OutRegistryKey, OuterUnknown, RegistryKeyType, DesiredAccess, m_pDeviceObject, NULL /*FIXME*/, ObjectAttributes, CreateOptions, Disposition);
+    return PcNewRegistryKey(OutRegistryKey, OuterUnknown, RegistryKeyType, DesiredAccess, m_pDeviceObject, (ISubdevice*)this, ObjectAttributes, CreateOptions, Disposition);
 }
 //---------------------------------------------------------------
 // ISubdevice interface

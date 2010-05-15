@@ -472,11 +472,6 @@ rgenstat: $(RGENSTAT_TARGET)
 	$(ECHO_RGENSTAT)
 	$(Q)$(RGENSTAT_TARGET) apistatus.lst apistatus.xml
 
-.PHONY: cb
-cb: $(ROS_BUILDENGINE)
-	$(ECHO_RBUILD)
-	$(Q)$(ROS_BUILDENGINE) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) cb
-
 .PHONY: msbuild
 msbuild: $(ROS_BUILDENGINE)
 	$(ECHO_RBUILD)

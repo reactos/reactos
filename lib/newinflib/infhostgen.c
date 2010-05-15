@@ -189,6 +189,7 @@ InfHostOpenFile(PHINF InfHandle,
   if (FileLength != fread(FileBuffer, (size_t)1, (size_t)FileLength, File))
     {
       DPRINT1("fread() failed (errno %d)\n", errno);
+      FREE(FileBuffer);
       fclose(File);
       return -1;
     }

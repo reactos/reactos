@@ -315,9 +315,6 @@ static PIDLCPanelStruct* _ILGetCPanelPointer(LPCITEMIDLIST pidl)
     return NULL;
 }
 
- /**************************************************************************
- *		ISF_ControlPanel_fnEnumObjects
- */
 static BOOL SHELL_RegisterCPanelApp(IEnumIDList* list, LPCSTR path)
 {
     LPITEMIDLIST pidl;
@@ -1346,7 +1343,7 @@ static HRESULT WINAPI ICPanel_IContextMenu2_InvokeCommand(
         }
         else
         {
-           FIXME("\n");
+           FIXME("Couldn't retrieve pointer to cpl structure\n");
            return E_FAIL;
         }
         if (SUCCEEDED(IShellLink_Constructor(NULL, &IID_IShellLinkA, (LPVOID*)&isl)))

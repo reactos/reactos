@@ -2,13 +2,13 @@
 
 [Section]
 Name = Opera
-Version = 10.52
+Version = 10.53
 Licence = Freeware
 Description = The popular Opera Browser with many advanced features and including a Mail and BitTorrent client.
-Size = 12.0M
+Size = 12.4M
 Category = 5
 URLSite = http://www.opera.com/
-URLDownload = http://get4.opera.com/pub/opera/win/1052/int/Opera_1052_int_Setup.exe
+URLDownload = http://get4.opera.com/pub/opera/win/1053/int/Opera_1053_int_Setup.exe
 CDPath = none
 
 [Section.0407]

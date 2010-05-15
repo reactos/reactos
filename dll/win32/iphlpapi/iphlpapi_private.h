@@ -60,6 +60,15 @@
 #define TCP_REQUEST_QUERY_INFORMATION_INIT { { { 0 } } }
 #define TCP_REQUEST_SET_INFORMATION_INIT { { 0 } }
 
+/* FIXME: ROS headers suck */
+#ifndef GAA_FLAG_SKIP_UNICAST
+#define GAA_FLAG_SKIP_UNICAST      0x0001
+#endif
+
+#ifndef GAA_FLAG_SKIP_FRIENDLY_NAME
+#define GAA_FLAG_SKIP_FRIENDLY_NAME 0x0020
+#endif
+
 // As in the mib from RFC 1213
 
 typedef struct _IPRouteEntry {
@@ -138,6 +147,10 @@ typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
 				     PWCHAR NameServer,
 				     PVOID Data );
 void EnumNameServers( HANDLE RegHandle, PWCHAR Interface, PVOID Data, EnumNameServersFunc cb );
+NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
+                             char *name,
+                             DWORD index,
+                             IFInfo *ifInfo);
 
 #include <w32api.h>
 /* This is here until we switch to version 2.5 of the mingw headers */

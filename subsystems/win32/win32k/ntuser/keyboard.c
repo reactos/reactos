@@ -42,7 +42,9 @@
 /* Key States */
 #define KS_DOWN_MASK     0xc0
 #define KS_DOWN_BIT      0x80
-#define KS_LOCK_BIT    0x01
+#define KS_LOCK_BIT      0x01
+/* Scan Codes */
+#define SC_KEY_UP        0x8000
 /* lParam bits */
 #define LP_EXT_BIT       (1<<24)
 /* From kbdxx.c -- Key changes with numlock */
@@ -720,6 +722,11 @@ NtUserToUnicodeEx(
    DPRINT("Enter NtUserSetKeyboardState\n");
    UserEnterShared();//fixme: this syscall doesnt seem to need any locking...
 
+   /* Key up? */
+   if (wScanCode & SC_KEY_UP)
+   {
+      RETURN(0);
+   }
 
    if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
                                     lpKeyState,
@@ -729,8 +736,8 @@ NtUserToUnicodeEx(
       RETURN(0);
    }
    
-   /* Virtual code is correct and key is pressed currently? */
-   if (wVirtKey < 0x100 && KeyStateBuf[wVirtKey] & KS_DOWN_BIT)
+   /* Virtual code is correct? */
+   if (wVirtKey < 0x100)
    {
       OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
       if( !OutPwszBuff )
@@ -752,8 +759,6 @@ NtUserToUnicodeEx(
       MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
       ExFreePoolWithTag(OutPwszBuff, TAG_STRING);
    }
-   else
-      ret = 0;
 
    RETURN(ret);
 

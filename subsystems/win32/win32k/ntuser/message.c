@@ -880,23 +880,8 @@ CheckMessages:
       goto MsgExit;
    }
 
-   if (ThreadQueue->WakeMask & QS_TIMER)
-      if (PostTimerMessages(Window)) // If there are timers ready,
-         goto CheckMessages;       // go back and process them.
-
-   // LOL! Polling Timer Queue? How much time is spent doing this?
-   /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage( ThreadQueue,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                &Msg->Msg,
-                                 RemoveMessages);
-   if (Present)
-   {
-      Msg->FreeLParam = FALSE;
-      goto MessageFound;
-   }
+   if (PostTimerMessages(Window))
+      goto CheckMessages;
 
    if(Present)
    {

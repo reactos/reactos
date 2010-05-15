@@ -136,6 +136,14 @@ ULONG MmSessionViewSize;
 ULONG MmSessionPoolSize;
 ULONG MmSessionImageSize;
 
+/*
+ * These are the PTE addresses of the boundaries carved out above
+ */
+PMMPTE MiSessionImagePteStart;
+PMMPTE MiSessionImagePteEnd;
+PMMPTE MiSessionBasePte;
+PMMPTE MiSessionLastPte;
+
 //
 // The system view space, on the other hand, is where sections that are memory
 // mapped into "system space" end up.
@@ -151,7 +159,7 @@ ULONG MmSystemViewSize;
 // map paged pool PDEs into external processes when they fault on a paged pool
 // address.
 //
-PFN_NUMBER MmSystemPageDirectory;
+PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPTE MmSystemPagePtes;
 
 //
@@ -217,6 +225,11 @@ ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
 
+/* And these store the respective highest PTE/PDE address */
+PMMPTE MiHighestUserPte;
+PMMPDE MiHighestUserPde;
+
+/* These variables define the system cache address space */
 PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
@@ -1483,7 +1496,8 @@ MiBuildPagedPool(VOID)
     // Get the page frame number for the system page directory
     //
     PointerPte = MiAddressToPte(PDE_BASE);
-    MmSystemPageDirectory = PFN_FROM_PTE(PointerPte);
+    ASSERT(PD_COUNT == 1);
+    MmSystemPageDirectory[0] = PFN_FROM_PTE(PointerPte);
     
     //
     // Allocate a system PTE which will hold a copy of the page directory
@@ -1500,7 +1514,8 @@ MiBuildPagedPool(VOID)
     // way).
     //
     TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory;
+    ASSERT(PD_COUNT == 1);
+    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
     *PointerPte = TempPte;
@@ -1698,6 +1713,10 @@ MmArmInitSystem(IN ULONG Phase,
         MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
         MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
         
+        /* Highest PTE and PDE based on the addresses above */
+        MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
+        MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
+        
         //
         // Get the size of the boot loader's image allocations and then round
         // that region up to a PDE size, so that any PDEs we might create for
@@ -1706,8 +1725,8 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
         MmBootImageSize *= PAGE_SIZE;
-        MmBootImageSize = (MmBootImageSize + (4 * 1024 * 1024) - 1) & ~((4 * 1024 * 1024) - 1);
-        ASSERT((MmBootImageSize % (4 * 1024 * 1024)) == 0);
+        MmBootImageSize = (MmBootImageSize + PDE_MAPPED_VA - 1) & ~(PDE_MAPPED_VA - 1);
+        ASSERT((MmBootImageSize % PDE_MAPPED_VA) == 0);
         
         //
         // Set the size of session view, pool, and image
@@ -1770,7 +1789,12 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
                                     MmSystemViewSize);
-                                    
+
+        /* Compute the PTE addresses for all the addresses we carved out */
+        MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+        MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+        MiSessionBasePte = MiAddressToPte(MmSessionBase);
+        MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
                                     
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);

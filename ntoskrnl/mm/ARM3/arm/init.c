@@ -41,7 +41,7 @@ ULONG MmSessionPoolSize;
 ULONG MmSessionImageSize;
 PVOID MiSystemViewStart;
 ULONG MmSystemViewSize;
-PFN_NUMBER MmSystemPageDirectory;
+PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPTE MmSystemPagePtes;
 ULONG MmNumberOfSystemPtes;
 ULONG MxPfnAllocation;

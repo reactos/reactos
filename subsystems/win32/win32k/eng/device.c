@@ -116,7 +116,8 @@ EngpRegisterGraphicsDevice(
     // FIXME: initialize state flags
     pGraphicsDevice->StateFlags = 0;
 
-    /* Loop through the driver names */
+    /* Loop through the driver names
+     * This is a REG_MULTI_SZ string */
     for (; *pwsz; pwsz += wcslen(pwsz) + 1)
     {
         DPRINT1("trying driver: %ls\n", pwsz);
@@ -172,7 +173,7 @@ EngpRegisterGraphicsDevice(
     }
 
     /* Loop through all DEVMODEINFOs */
-    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0; 
+    for (pdminfo = pGraphicsDevice->pdevmodeInfo, i = 0;
          pdminfo;
          pdminfo = pdminfo->pdmiNext)
     {

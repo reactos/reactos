@@ -1072,7 +1072,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
-	 RemoveEntryList(&SentMessage->ListEntry);
+         RemoveEntryList(&SentMessage->ListEntry);
 
          /* remove the message from the dispatching list */
          if(SentMessage->DispatchingListEntry.Flink != NULL)
@@ -1086,9 +1086,19 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
             KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
          }
 
-         /* dereference our and the sender's message queue */
-         IntDereferenceMessageQueue(MessageQueue);
-         IntDereferenceMessageQueue(SentMessage->SenderQueue);
+         if (SentMessage->HasPackedLParam == TRUE)
+         {
+            if (SentMessage->Msg.lParam)
+               ExFreePool((PVOID)SentMessage->Msg.lParam);
+         }
+
+         /* Only if it is not a no wait message */
+         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         {
+            /* dereference our and the sender's message queue */
+            IntDereferenceMessageQueue(MessageQueue);
+            IntDereferenceMessageQueue(SentMessage->SenderQueue);
+         }
 
          /* free the message */
          ExFreePool(SentMessage);
@@ -1509,9 +1519,19 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      /* dereference our and the sender's message queue */
-      IntDereferenceMessageQueue(MessageQueue);
-      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
+
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
 
       /* free the message */
       ExFreePool(CurrentSentMessage);
@@ -1547,10 +1567,19 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      /* dereference our and the sender's message queue */
-      IntDereferenceMessageQueue(MessageQueue);
-      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
 
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
       /* free the message */
       ExFreePool(CurrentSentMessage);
    }

@@ -3086,16 +3086,29 @@ FlushConsoleInputBuffer(HANDLE hConsoleInput)
 /*--------------------------------------------------------------
  *     SetConsoleScreenBufferSize
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 SetConsoleScreenBufferSize(HANDLE hConsoleOutput,
                            COORD dwSize)
 {
-    DPRINT1("SetConsoleScreenBufferSize(0x%x, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, dwSize);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest;
+    NTSTATUS Status;
+
+    CsrRequest = MAKE_CSR_API(SET_SCREEN_BUFFER_SIZE, CSR_CONSOLE);
+    Request.Data.SetScreenBufferSize.OutputHandle = hConsoleOutput;
+    Request.Data.SetScreenBufferSize.Size = dwSize;
+
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /*--------------------------------------------------------------

@@ -5,13 +5,15 @@
 	<library>freeldr_startup</library>
 	<library>freeldr_base64k</library>
 	<library>freeldr_base</library>
+	<if property="ARCH" value="i386">
+		<library>mini_hal</library>
+	</if>
 	<library>freeldr_arch</library>
 	<library>setupldr_main</library>
 	<library>rossym</library>
 	<library>cmlib</library>
 	<library>rtl</library>
 	<library>libcntpr</library>
-	<library>mini_hal</library>
 	<group linkerset="ld">
 		<linkerflag>-nostartfiles</linkerflag>
 		<linkerflag>-nostdlib</linkerflag>

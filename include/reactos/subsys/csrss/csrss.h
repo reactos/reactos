@@ -472,6 +472,11 @@ typedef struct
   DWORD ProcessGroup;
 } CSRSS_GENERATE_CTRL_EVENT, *PCSRSS_GENERATE_CTRL_EVENT;
 
+typedef struct
+{
+  HANDLE OutputHandle;
+  COORD Size;
+} CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
 
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
@@ -551,6 +556,7 @@ typedef struct
 #define GET_CONSOLE_ALIASES_EXES_LENGTH (0x3D)
 #define GENERATE_CTRL_EVENT           (0x3E)
 #define CREATE_THREAD                 (0x3F)
+#define SET_SCREEN_BUFFER_SIZE        (0x40)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -624,6 +630,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_CONSOLE_ALIASES_EXES GetConsoleAliasesExes;
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
+        CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

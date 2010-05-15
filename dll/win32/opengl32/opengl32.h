@@ -191,6 +191,7 @@ extern GLPROCESSDATA OPENGL32_processdata;
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
 BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc );
+int APIENTRY rosglGetPixelFormat( HDC );
 BOOL APIENTRY IntUseFontBitmapsA( HDC hDC, DWORD first, DWORD count, DWORD listBase );
 BOOL APIENTRY IntUseFontBitmapsW( HDC hDC, DWORD first, DWORD count, DWORD listBase );
 BOOL APIENTRY IntUseFontOutlinesA( HDC hDC, DWORD first, DWORD count, DWORD listBase,

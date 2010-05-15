@@ -294,6 +294,52 @@ LayoutProc(
 		{
 			switch(LOWORD(wParam))
 			{
+				case IDC_EDIT_SCREEN_BUFFER_WIDTH:
+				case IDC_EDIT_SCREEN_BUFFER_HEIGHT:
+				case IDC_EDIT_WINDOW_SIZE_WIDTH:
+				case IDC_UPDOWN_WINDOW_SIZE_HEIGHT:
+				case IDC_EDIT_WINDOW_POS_LEFT:
+				case IDC_EDIT_WINDOW_POS_TOP:
+				{
+					if (HIWORD(wParam) == EN_KILLFOCUS)
+					{
+						DWORD wheight, wwidth;
+						DWORD sheight, swidth;
+						DWORD left, top;
+
+						wwidth = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, NULL, FALSE);
+						wheight = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, NULL, FALSE);
+						swidth = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_WIDTH, NULL, FALSE);
+						sheight = GetDlgItemInt(hwndDlg, IDC_EDIT_SCREEN_BUFFER_HEIGHT, NULL, FALSE);
+						left = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_LEFT, NULL, FALSE);
+						top = GetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_POS_TOP, NULL, FALSE);
+
+						swidth = max(swidth, 1);
+						sheight = max(sheight, 1);
+
+						/* automatically adjust window size when screen buffer decreases */
+						if (wwidth > swidth)
+						{
+							SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_WIDTH, swidth, TRUE);
+							wwidth = swidth;
+						}
+
+						if (wheight > sheight)
+						{
+							SetDlgItemInt(hwndDlg, IDC_EDIT_WINDOW_SIZE_HEIGHT, sheight, TRUE);
+							wheight = sheight;
+						}
+
+
+						pConInfo->ScreenBuffer = MAKELONG(swidth, sheight);
+						pConInfo->WindowSize = MAKELONG(wwidth, wheight);
+						pConInfo->WindowPosition = MAKELONG(left, top);
+
+						PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+					}
+					break;
+				}
+
 				case IDC_CHECK_SYSTEM_POS_WINDOW:
 				{
 					LONG res = SendMessage((HWND)lParam, BM_GETCHECK, 0, 0);

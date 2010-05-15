@@ -57,7 +57,7 @@ CreateTimer(VOID)
   {
       Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
-  } 
+  }
   return Ret;
 }
 
@@ -68,8 +68,8 @@ RemoveTimer(PTIMER pTmr)
 {
   if (pTmr)
   {
-     RemoveEntryList(&pTmr->ptmrList);
-     UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
+     /* Set the flag, it will be removed when ready */
+     pTmr->flags |= TMRF_DELETEPENDING;
      return TRUE;
   }
   return FALSE;
@@ -83,7 +83,7 @@ FindTimer(PWINDOW_OBJECT Window,
           BOOL Distroy)
 {
   PLIST_ENTRY pLE;
-  PTIMER pTmr = FirstpTmr;
+  PTIMER pTmr = FirstpTmr, RetTmr = NULL;
   KeEnterCriticalRegion();
   do
   {
@@ -96,8 +96,8 @@ FindTimer(PWINDOW_OBJECT Window,
        if (Distroy)
        {
           RemoveTimer(pTmr);
-          pTmr = (PTIMER)1; // We are here to remove the timer.
        }
+       RetTmr = pTmr;
        break;
     }
 
@@ -106,7 +106,7 @@ FindTimer(PWINDOW_OBJECT Window,
   } while (pTmr != FirstpTmr);
   KeLeaveCriticalRegion();
 
-  return pTmr;
+  return RetTmr;
 }
 
 PTIMER
@@ -162,15 +162,15 @@ ValidateTimerCallback(PTHREADINFO pti,
   return TRUE;
 }
 
-// Rename it to IntSetTimer after move.
 UINT_PTR FASTCALL
-InternalSetTimer( PWINDOW_OBJECT Window,
+IntSetTimer( PWINDOW_OBJECT Window,
                   UINT_PTR IDEvent,
                   UINT Elapse,
                   TIMERPROC TimerFunc,
                   INT Type)
 {
   PTIMER pTmr;
+  UINT Ret= IDEvent;
   LARGE_INTEGER DueTime;
   DueTime.QuadPart = (LONGLONG)(-10000000);
 
@@ -197,6 +197,24 @@ InternalSetTimer( PWINDOW_OBJECT Window,
      Elapse = 10;
   }
 
+  if ((Window == NULL) && (!(Type & TMRF_SYSTEM)))
+  {
+      IntLockWindowlessTimerBitmap();
+      IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
+
+      if (IDEvent == (UINT_PTR) -1)
+      {
+         IntUnlockWindowlessTimerBitmap();
+         DPRINT1("Unable to find a free window-less timer id\n");
+         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+         return 0;
+      }
+
+      HintIndex = ++IDEvent;
+      IntUnlockWindowlessTimerBitmap();
+      Ret = IDEvent;
+  }
+
   pTmr = FindTimer(Window, IDEvent, Type, FALSE);
   if (!pTmr)
   {
@@ -215,18 +233,23 @@ InternalSetTimer( PWINDOW_OBJECT Window,
      pTmr->pWnd    = Window;
      pTmr->cmsCountdown = Elapse;
      pTmr->cmsRate = Elapse;
-     pTmr->flags   = Type|TMRF_INIT; // Set timer to Init mode.
      pTmr->pfn     = TimerFunc;
      pTmr->nID     = IDEvent;
+     pTmr->flags   = Type|TMRF_INIT; // Set timer to Init mode.
+  }
 
-     InsertTailList(&FirstpTmr->ptmrList, &pTmr->ptmrList);
+  pTmr->cmsCountdown = Elapse;
+  pTmr->cmsRate = Elapse;
+  if (pTmr->flags & TMRF_DELETEPENDING)
+  {
+     pTmr->flags &= ~TMRF_DELETEPENDING;
   }
 
   // Start the timer thread!
-  KeSetTimer(MasterTimer, DueTime, NULL);
+  if (pTmr == FirstpTmr)
+     KeSetTimer(MasterTimer, DueTime, NULL);
 
-  if (!pTmr->nID) return 1;
-  return pTmr->nID;
+  return Ret;
 }
 
 //
@@ -248,7 +271,7 @@ StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
   // that calles Idle process so the screen savers will know to run......    
-  InternalSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
+  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
 }
 
 UINT_PTR
@@ -256,14 +279,14 @@ FASTCALL
 SystemTimerSet( PWINDOW_OBJECT Window,
                 UINT_PTR nIDEvent,
                 UINT uElapse,
-                TIMERPROC lpTimerFunc) 
+                TIMERPROC lpTimerFunc)
 {
   if (Window && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
   {
      SetLastWin32Error(ERROR_ACCESS_DENIED);
      return 0;
   }
-  return InternalSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
+  return IntSetTimer( Window, nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM);
 }
 
 BOOL
@@ -279,28 +302,23 @@ PostTimerMessages(PWINDOW_OBJECT Window)
 
   if (!pTmr) return FALSE;
 
-  if (Window && ((ULONG_PTR)Window != 1))
-  {
-     if (!Window->Wnd) return FALSE;
-  }
-
   pti = PsGetCurrentThreadWin32Thread();
   ThreadQueue = pti->MessageQueue;
 
   KeEnterCriticalRegion();
+
   do
   {
      if ( (pTmr->flags & TMRF_READY) &&
           (pTmr->pti == pti) &&
-          (pTmr->pWnd == Window))
+          ((pTmr->pWnd == Window) || (Window == NULL) ) )
         {
-           ASSERT((ULONG_PTR)Window != 1);
-           Msg.hwnd    = Window->hSelf;
+           Msg.hwnd    = (pTmr->pWnd) ? pTmr->pWnd->hSelf : 0;
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
            Msg.wParam  = (WPARAM) pTmr->nID;
            Msg.lParam  = (LPARAM) pTmr->pfn;
-           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_POSTMESSAGE);
 
+           MsqPostMessage(ThreadQueue, &Msg, FALSE, QS_TIMER);
            pTmr->flags &= ~TMRF_READY;
            ThreadQueue->WakeMask = ~QS_TIMER;
            Hit = TRUE;
@@ -309,6 +327,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
      pLE = pTmr->ptmrList.Flink;
      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
+
   KeLeaveCriticalRegion();
 
   return Hit;
@@ -330,7 +349,7 @@ ProcessTimers(VOID)
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
-  DueTime.QuadPart = (LONGLONG)(-10000000);
+  DueTime.QuadPart = (LONGLONG)(-1000000);
 
   do
   {
@@ -341,8 +360,10 @@ ProcessTimers(VOID)
        continue;
     }
 
-    if (pTmr->flags & TMRF_INIT)  
+    if (pTmr->flags & TMRF_INIT)
+    {
        pTmr->flags &= ~TMRF_INIT; // Skip this run.
+    }
     else
     {
        if (pTmr->cmsCountdown < 0)
@@ -363,16 +384,35 @@ ProcessTimers(VOID)
                 // Set thread message queue for this timer.
                 if (pTmr->pti->MessageQueue)
                 {  // Wakeup thread
-                   pTmr->pti->MessageQueue->WakeMask |= QS_TIMER;
-                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                   if (pTmr->pti->MessageQueue->WakeMask & QS_POSTMESSAGE)
+                      KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
                 }
              }
           }
-          pTmr->cmsCountdown = pTmr->cmsRate;
+          if (pTmr->flags & TMRF_DELETEPENDING)
+          {
+             DPRINT("Removing Timer %x from List\n", pTmr);
+
+             /* FIXME: Fix this!!!! */
+/*
+             if (!pTmr->pWnd)
+             {
+                DPRINT1("Clearing Bits for WindowLess Timer\n");
+                IntLockWindowlessTimerBitmap();
+                RtlSetBits(&WindowLessTimersBitMap, pTmr->nID, 1);
+                IntUnlockWindowlessTimerBitmap();
+             }
+*/
+             RemoveEntryList(&pTmr->ptmrList);
+             UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
+          }
+           else
+             pTmr->cmsCountdown = pTmr->cmsRate;
        }
        else
           pTmr->cmsCountdown -= Time - TimeLast;
     }
+
     pLE = pTmr->ptmrList.Flink;
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
@@ -391,7 +431,7 @@ ProcessTimers(VOID)
 //
 //
 UINT_PTR FASTCALL
-IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
+InternalSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
    PWINDOW_OBJECT Window;
    UINT_PTR Ret = 0;
@@ -477,17 +517,66 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       return 0;
    }
 
-
+if (Ret == 0) ASSERT(FALSE);
    return Ret;
+}
+
+BOOL FASTCALL
+DestroyTimersForThread(PTHREADINFO pti)
+{
+   PLIST_ENTRY pLE;
+   PTIMER pTmr = FirstpTmr;
+   BOOL TimersRemoved = FALSE;
+
+   if (FirstpTmr == NULL)
+      return FALSE;
+
+   KeEnterCriticalRegion();
+
+   do
+   {
+      if ((pTmr) && (pTmr->pti == pti))
+      {
+         pTmr->flags &= ~TMRF_READY;
+         pTmr->flags |= TMRF_DELETEPENDING;
+         TimersRemoved = TRUE;
+      }
+      pLE = pTmr->ptmrList.Flink;
+      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
+   } while (pTmr != FirstpTmr);
+
+   KeLeaveCriticalRegion();
+
+   return TimersRemoved;
 }
 
 
 BOOL FASTCALL
-IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
+IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer)
+{
+   PTIMER pTmr = NULL;
+   DPRINT("IntKillTimer Window %x id %p systemtimer %s\n",
+          Window, IDEvent, SystemTimer ? "TRUE" : "FALSE");
+
+   if (IDEvent == 0)
+      return FALSE;
+
+   pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0, TRUE);
+   return pTmr ? TRUE :  FALSE;
+}
+
+
+//
+//
+// Old Kill Timer
+//
+//
+BOOL FASTCALL
+InternalKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
    PTHREADINFO pti;
    PWINDOW_OBJECT Window = NULL;
-   
+
    DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
           Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
@@ -495,7 +584,7 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
    if (Wnd)
    {
       Window = UserGetWindowObject(Wnd);
-   
+
       if (! MsqKillTimer(pti->MessageQueue, Wnd,
                                 IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
       {
@@ -574,7 +663,7 @@ NtUserSetTimer
    DPRINT("Enter NtUserSetTimer\n");
    UserEnterExclusive();
 
-   RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE));
+   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, lpTimerFunc, 0));
 
 CLEANUP:
    DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
@@ -591,12 +680,15 @@ NtUserKillTimer
    UINT_PTR uIDEvent
 )
 {
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserKillTimer\n");
    UserEnterExclusive();
 
-   RETURN(IntKillTimer(hWnd, uIDEvent, FALSE));
+   Window = UserGetWindowObject(hWnd);
+
+   RETURN(IntKillTimer(Window, uIDEvent, FALSE));
 
 CLEANUP:
    DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
@@ -620,7 +712,7 @@ NtUserSetSystemTimer(
    UserEnterExclusive();
 
    // This is wrong, lpTimerFunc is NULL!
-   RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE));
+   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM));
 
 CLEANUP:
    DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
