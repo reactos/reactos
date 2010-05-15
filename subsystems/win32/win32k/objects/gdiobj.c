@@ -631,11 +631,22 @@ LockHandle:
             }
             else if (Object->ulShareCount != 0)
             {
+                NTSTATUS Status;
+                PEPROCESS OldProcess;
                 Object->BaseFlags |= BASEFLAG_READY_TO_DIE;
                 DPRINT("Object %p, ulShareCount = %d\n", Object->hHmgr, Object->ulShareCount);
-                //GDIDBG_TRACECALLER();
-                //GDIDBG_TRACESHARELOCKER(GDI_HANDLE_GET_INDEX(hObj));
-                (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
+                /* Set NULL owner. Do the work here to avoid race conditions */
+                Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
+                if (NT_SUCCESS(Status))
+                {
+                    PPROCESSINFO W32Process = (PPROCESSINFO)OldProcess->Win32Process;
+                    if (W32Process != NULL)
+                    {
+                        InterlockedDecrement(&W32Process->GDIHandleCount);
+                    }
+                    ObDereferenceObject(OldProcess);
+                }
+                (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, NULL);
                 /* Don't wait on shared locks */
                 return FALSE;
             }
@@ -1037,11 +1048,6 @@ GDIOBJ_LockObj(HGDIOBJ hObj, DWORD ExpectedType)
                 {
                     if (Object->Tid != Thread)
                     {
-                        GDIDBG_TRACELOOP(hObj, Object->Tid, Thread);
-                        GDIDBG_TRACECALLER();
-                        GDIDBG_TRACELOCKER(hObj);
-                        GDIDBG_TRACEALLOCATOR(hObj);
-
                         /* Unlock the handle table entry. */
                         (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, PrevProcId);
 
