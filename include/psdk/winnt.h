@@ -3110,6 +3110,7 @@ typedef enum tagTOKEN_TYPE {
 	TokenImpersonation
 } TOKEN_TYPE,*PTOKEN_TYPE;
 
+#include <pshpack4.h>
 typedef struct _TOKEN_STATISTICS {
   LUID TokenId;
   LUID AuthenticationId;
@@ -3122,6 +3123,7 @@ typedef struct _TOKEN_STATISTICS {
   DWORD PrivilegeCount;
   LUID ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
+#include <poppack.h>
 
 typedef struct _TOKEN_USER {
   SID_AND_ATTRIBUTES User;
