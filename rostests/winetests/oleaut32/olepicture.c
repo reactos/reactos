@@ -720,9 +720,11 @@ START_TEST(olepicture)
 	if (0) test_pic(pngimage, sizeof(pngimage));
 	test_empty_image();
 	test_empty_image_2();
-        test_apm();
+	skip("skipping test_apm, see bug 5396\n");
+        //test_apm();
         test_metafile();
-        test_enhmetafile();
+        skip("skipping test_enhmetafile, see bug 5396\n");
+        //test_enhmetafile();
 
 	test_Invoke();
         test_OleCreatePictureIndirect();
