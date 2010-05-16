@@ -187,7 +187,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 	   }
     }
 
-    if( !FCB->Recv.Content ) {
+    if( FCB->Recv.Content ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
     } else
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
