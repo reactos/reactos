@@ -3211,19 +3211,21 @@ typedef struct _QUOTA_LIMITS {
 } QUOTA_LIMITS,*PQUOTA_LIMITS;
 
 typedef struct _IO_COUNTERS {
-	ULONGLONG  ReadOperationCount;
-	ULONGLONG  WriteOperationCount;
-	ULONGLONG  OtherOperationCount;
-	ULONGLONG ReadTransferCount;
-	ULONGLONG WriteTransferCount;
-	ULONGLONG OtherTransferCount;
+  ULONGLONG ReadOperationCount;
+  ULONGLONG WriteOperationCount;
+  ULONGLONG OtherOperationCount;
+  ULONGLONG ReadTransferCount;
+  ULONGLONG WriteTransferCount;
+  ULONGLONG OtherTransferCount;
 } IO_COUNTERS, *PIO_COUNTERS;
+
 typedef struct _FILE_NOTIFY_INFORMATION {
-	DWORD NextEntryOffset;
-	DWORD Action;
-	DWORD FileNameLength;
-	WCHAR FileName[1];
+  DWORD NextEntryOffset;
+  DWORD Action;
+  DWORD FileNameLength;
+  WCHAR FileName[1];
 } FILE_NOTIFY_INFORMATION,*PFILE_NOTIFY_INFORMATION;
+
 typedef struct _TAPE_ERASE {
 	DWORD Type;
 	BOOLEAN Immediate;
@@ -3283,15 +3285,17 @@ typedef struct _TAPE_CREATE_PARTITION {
 	DWORD Count;
 	DWORD Size;
 } TAPE_CREATE_PARTITION,*PTAPE_CREATE_PARTITION;
+
 typedef struct _MEMORY_BASIC_INFORMATION {
-	PVOID BaseAddress;
-	PVOID AllocationBase;
-	DWORD AllocationProtect;
-	SIZE_T RegionSize;
-	DWORD State;
-	DWORD Protect;
-	DWORD Type;
+  PVOID BaseAddress;
+  PVOID AllocationBase;
+  DWORD AllocationProtect;
+  SIZE_T RegionSize;
+  DWORD State;
+  DWORD Protect;
+  DWORD Type;
 } MEMORY_BASIC_INFORMATION,*PMEMORY_BASIC_INFORMATION;
+
 typedef struct _MESSAGE_RESOURCE_ENTRY {
 	WORD Length;
 	WORD Flags;
@@ -4285,13 +4289,13 @@ typedef struct _NT_TIB64 {
 } NT_TIB64,*PNT_TIB64;
 
 typedef struct _REPARSE_GUID_DATA_BUFFER {
-	DWORD  ReparseTag;
-	WORD   ReparseDataLength;
-	WORD   Reserved;
-	GUID   ReparseGuid;
-	struct {
-		BYTE   DataBuffer[1];
-	} GenericReparseBuffer;
+  DWORD ReparseTag;
+  WORD ReparseDataLength;
+  WORD Reserved;
+  GUID ReparseGuid;
+  struct {
+    BYTE DataBuffer[1];
+  } GenericReparseBuffer;
 } REPARSE_GUID_DATA_BUFFER, *PREPARSE_GUID_DATA_BUFFER;
 
 typedef struct _REPARSE_POINT_INFORMATION {
@@ -4300,9 +4304,9 @@ typedef struct _REPARSE_POINT_INFORMATION {
 } REPARSE_POINT_INFORMATION, *PREPARSE_POINT_INFORMATION;
 
 typedef union _FILE_SEGMENT_ELEMENT {
-	PVOID64 Buffer;
-	ULONGLONG Alignment;
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
+  PVOID64 Buffer;
+  ULONGLONG Alignment;
+} FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT;
 
 /* JOBOBJECT_BASIC_LIMIT_INFORMATION.LimitFlags constants */
 #define JOB_OBJECT_LIMIT_WORKINGSET                 0x0001
@@ -4357,17 +4361,18 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 
 typedef enum _JOBOBJECTINFOCLASS {
-	JobObjectBasicAccountingInformation = 1,
-	JobObjectBasicLimitInformation,
-	JobObjectBasicProcessIdList,
-	JobObjectBasicUIRestrictions,
-	JobObjectSecurityLimitInformation,
-	JobObjectEndOfJobTimeInformation,
-	JobObjectAssociateCompletionPortInformation,
-	JobObjectBasicAndIoAccountingInformation,
-	JobObjectExtendedLimitInformation,
-	JobObjectJobSetInformation,
-	MaxJobObjectInfoClass
+  JobObjectBasicAccountingInformation = 1,
+  JobObjectBasicLimitInformation,
+  JobObjectBasicProcessIdList,
+  JobObjectBasicUIRestrictions,
+  JobObjectSecurityLimitInformation,
+  JobObjectEndOfJobTimeInformation,
+  JobObjectAssociateCompletionPortInformation,
+  JobObjectBasicAndIoAccountingInformation,
+  JobObjectExtendedLimitInformation,
+  JobObjectJobSetInformation,
+  JobObjectGroupInformation,
+  MaxJobObjectInfoClass
 } JOBOBJECTINFOCLASS;
 
 typedef struct _JOB_SET_ARRAY {
@@ -4377,70 +4382,71 @@ typedef struct _JOB_SET_ARRAY {
 } JOB_SET_ARRAY, *PJOB_SET_ARRAY;
 
 typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
-	LARGE_INTEGER TotalUserTime;
-	LARGE_INTEGER TotalKernelTime;
-	LARGE_INTEGER ThisPeriodTotalUserTime;
-	LARGE_INTEGER ThisPeriodTotalKernelTime;
-	DWORD TotalPageFaultCount;
-	DWORD TotalProcesses;
-	DWORD ActiveProcesses;
-	DWORD TotalTerminatedProcesses;
+  LARGE_INTEGER TotalUserTime;
+  LARGE_INTEGER TotalKernelTime;
+  LARGE_INTEGER ThisPeriodTotalUserTime;
+  LARGE_INTEGER ThisPeriodTotalKernelTime;
+  DWORD TotalPageFaultCount;
+  DWORD TotalProcesses;
+  DWORD ActiveProcesses;
+  DWORD TotalTerminatedProcesses;
 } JOBOBJECT_BASIC_ACCOUNTING_INFORMATION,*PJOBOBJECT_BASIC_ACCOUNTING_INFORMATION;
+
 typedef struct _JOBOBJECT_BASIC_LIMIT_INFORMATION {
-	LARGE_INTEGER PerProcessUserTimeLimit;
-	LARGE_INTEGER PerJobUserTimeLimit;
-	DWORD LimitFlags;
-	SIZE_T MinimumWorkingSetSize;
-	SIZE_T MaximumWorkingSetSize;
-	DWORD ActiveProcessLimit;
-	ULONG_PTR Affinity;
-	DWORD PriorityClass;
-	DWORD SchedulingClass;
+  LARGE_INTEGER PerProcessUserTimeLimit;
+  LARGE_INTEGER PerJobUserTimeLimit;
+  DWORD LimitFlags;
+  SIZE_T MinimumWorkingSetSize;
+  SIZE_T MaximumWorkingSetSize;
+  DWORD ActiveProcessLimit;
+  ULONG_PTR Affinity;
+  DWORD PriorityClass;
+  DWORD SchedulingClass;
 } JOBOBJECT_BASIC_LIMIT_INFORMATION,*PJOBOBJECT_BASIC_LIMIT_INFORMATION;
 
 typedef struct _JOBOBJECT_BASIC_PROCESS_ID_LIST {
-	DWORD NumberOfAssignedProcesses;
-	DWORD NumberOfProcessIdsInList;
-	ULONG_PTR ProcessIdList[1];
+  DWORD NumberOfAssignedProcesses;
+  DWORD NumberOfProcessIdsInList;
+  ULONG_PTR ProcessIdList[1];
 } JOBOBJECT_BASIC_PROCESS_ID_LIST, *PJOBOBJECT_BASIC_PROCESS_ID_LIST;
 
 typedef struct _JOBOBJECT_BASIC_UI_RESTRICTIONS {
-	DWORD UIRestrictionsClass;
+  DWORD UIRestrictionsClass;
 } JOBOBJECT_BASIC_UI_RESTRICTIONS,*PJOBOBJECT_BASIC_UI_RESTRICTIONS;
 
 typedef struct _JOBOBJECT_SECURITY_LIMIT_INFORMATION {
-	DWORD SecurityLimitFlags;
-	HANDLE JobToken;
-	PTOKEN_GROUPS SidsToDisable;
-	PTOKEN_PRIVILEGES PrivilegesToDelete;
-	PTOKEN_GROUPS RestrictedSids;
+  DWORD SecurityLimitFlags;
+  HANDLE JobToken;
+  PTOKEN_GROUPS SidsToDisable;
+  PTOKEN_PRIVILEGES PrivilegesToDelete;
+  PTOKEN_GROUPS RestrictedSids;
 } JOBOBJECT_SECURITY_LIMIT_INFORMATION,*PJOBOBJECT_SECURITY_LIMIT_INFORMATION;
 
 typedef struct _JOBOBJECT_END_OF_JOB_TIME_INFORMATION {
-	DWORD EndOfJobTimeAction;
+  DWORD EndOfJobTimeAction;
 } JOBOBJECT_END_OF_JOB_TIME_INFORMATION,*PJOBOBJECT_END_OF_JOB_TIME_INFORMATION;
 
 typedef struct _JOBOBJECT_ASSOCIATE_COMPLETION_PORT {
-	PVOID CompletionKey;
-	HANDLE CompletionPort;
+  PVOID CompletionKey;
+  HANDLE CompletionPort;
 } JOBOBJECT_ASSOCIATE_COMPLETION_PORT,*PJOBOBJECT_ASSOCIATE_COMPLETION_PORT;
 
 typedef struct _JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION {
-	JOBOBJECT_BASIC_ACCOUNTING_INFORMATION BasicInfo;
-	IO_COUNTERS IoInfo;
+  JOBOBJECT_BASIC_ACCOUNTING_INFORMATION BasicInfo;
+  IO_COUNTERS IoInfo;
 } JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION,*PJOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION;
 
 typedef struct _JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
-	JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
-	IO_COUNTERS IoInfo;
-	SIZE_T ProcessMemoryLimit;
-	SIZE_T JobMemoryLimit;
-	SIZE_T PeakProcessMemoryUsed;
-	SIZE_T PeakJobMemoryUsed;
+  JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+  IO_COUNTERS IoInfo;
+  SIZE_T ProcessMemoryLimit;
+  SIZE_T JobMemoryLimit;
+  SIZE_T PeakProcessMemoryUsed;
+  SIZE_T PeakJobMemoryUsed;
 } JOBOBJECT_EXTENDED_LIMIT_INFORMATION,*PJOBOBJECT_EXTENDED_LIMIT_INFORMATION;
 
 typedef struct _JOBOBJECT_JOBSET_INFORMATION {
-	DWORD MemberLevel;
+  DWORD MemberLevel;
 } JOBOBJECT_JOBSET_INFORMATION,*PJOBOBJECT_JOBSET_INFORMATION;
 
 /* Fixme: Making these defines conditional on WINVER will break ddk includes */
@@ -4452,46 +4458,49 @@ typedef struct _JOBOBJECT_JOBSET_INFORMATION {
 #define ES_CONTINUOUS                     0x80000000
 
 typedef enum _LATENCY_TIME {
-	LT_DONT_CARE,
-	LT_LOWEST_LATENCY
+  LT_DONT_CARE,
+  LT_LOWEST_LATENCY
 } LATENCY_TIME, *PLATENCY_TIME;
 
 typedef enum _SYSTEM_POWER_STATE {
-	PowerSystemUnspecified,
-	PowerSystemWorking,
-	PowerSystemSleeping1,
-	PowerSystemSleeping2,
-	PowerSystemSleeping3,
-	PowerSystemHibernate,
-	PowerSystemShutdown,
-	PowerSystemMaximum
+  PowerSystemUnspecified = 0,
+  PowerSystemWorking,
+  PowerSystemSleeping1,
+  PowerSystemSleeping2,
+  PowerSystemSleeping3,
+  PowerSystemHibernate,
+  PowerSystemShutdown,
+  PowerSystemMaximum
 } SYSTEM_POWER_STATE, *PSYSTEM_POWER_STATE;
+
 #define POWER_SYSTEM_MAXIMUM PowerSystemMaximum
 
 typedef enum {
-	PowerActionNone,
-	PowerActionReserved,
-	PowerActionSleep,
-	PowerActionHibernate,
-	PowerActionShutdown,
-	PowerActionShutdownReset,
-	PowerActionShutdownOff,
-	PowerActionWarmEject
+  PowerActionNone = 0,
+  PowerActionReserved,
+  PowerActionSleep,
+  PowerActionHibernate,
+  PowerActionShutdown,
+  PowerActionShutdownReset,
+  PowerActionShutdownOff,
+  PowerActionWarmEject
 } POWER_ACTION, *PPOWER_ACTION;
 
 typedef enum _DEVICE_POWER_STATE {
-	PowerDeviceUnspecified,
-	PowerDeviceD0,
-	PowerDeviceD1,
-	PowerDeviceD2,
-	PowerDeviceD3,
-	PowerDeviceMaximum
+  PowerDeviceUnspecified = 0,
+  PowerDeviceD0,
+  PowerDeviceD1,
+  PowerDeviceD2,
+  PowerDeviceD3,
+  PowerDeviceMaximum
 } DEVICE_POWER_STATE, *PDEVICE_POWER_STATE;
 
+#if (NTDDI_VERSION >= NTDDI_WINXP) || !defined(_BATCLASS_)
 typedef struct {
-	DWORD  Granularity;
-	DWORD  Capacity;
+  DWORD Granularity;
+  DWORD Capacity;
 } BATTERY_REPORTING_SCALE, *PBATTERY_REPORTING_SCALE;
+#endif
 
 typedef struct _POWER_ACTION_POLICY {
 	POWER_ACTION  Action;
@@ -4620,30 +4629,61 @@ typedef struct _PROCESSOR_POWER_INFORMATION {
 } PROCESSOR_POWER_INFORMATION, *PPROCESSOR_POWER_INFORMATION;
 
 typedef DWORD EXECUTION_STATE;
+
 typedef enum _POWER_INFORMATION_LEVEL {
-	SystemPowerPolicyAc,
-	SystemPowerPolicyDc,
-	VerifySystemPolicyAc,
-	VerifySystemPolicyDc,
-	SystemPowerCapabilities,
-	SystemBatteryState,
-	SystemPowerStateHandler,
-	ProcessorStateHandler,
-	SystemPowerPolicyCurrent,
-	AdministratorPowerPolicy,
-	SystemReserveHiberFile,
-	ProcessorInformation,
-	SystemPowerInformation,
-	ProcessorStateHandler2,
-	LastWakeTime,
-	LastSleepTime,
-	SystemExecutionState,
-	SystemPowerStateNotifyHandler,
-	ProcessorPowerPolicyAc,
-	ProcessorPowerPolicyDc,
-	VerifyProcessorPowerPolicyAc,
-	VerifyProcessorPowerPolicyDc,
-	ProcessorPowerPolicyCurrent
+  SystemPowerPolicyAc,
+  SystemPowerPolicyDc,
+  VerifySystemPolicyAc,
+  VerifySystemPolicyDc,
+  SystemPowerCapabilities,
+  SystemBatteryState,
+  SystemPowerStateHandler,
+  ProcessorStateHandler,
+  SystemPowerPolicyCurrent,
+  AdministratorPowerPolicy,
+  SystemReserveHiberFile,
+  ProcessorInformation,
+  SystemPowerInformation,
+  ProcessorStateHandler2,
+  LastWakeTime,
+  LastSleepTime,
+  SystemExecutionState,
+  SystemPowerStateNotifyHandler,
+  ProcessorPowerPolicyAc,
+  ProcessorPowerPolicyDc,
+  VerifyProcessorPowerPolicyAc,
+  VerifyProcessorPowerPolicyDc,
+  ProcessorPowerPolicyCurrent,
+  SystemPowerStateLogging,
+  SystemPowerLoggingEntry,
+  SetPowerSettingValue,
+  NotifyUserPowerSetting,
+  PowerInformationLevelUnused0,
+  PowerInformationLevelUnused1,
+  SystemVideoState,
+  TraceApplicationPowerMessage,
+  TraceApplicationPowerMessageEnd,
+  ProcessorPerfStates,
+  ProcessorIdleStates,
+  ProcessorCap,
+  SystemWakeSource,
+  SystemHiberFileInformation,
+  TraceServicePowerMessage,
+  ProcessorLoad,
+  PowerShutdownNotification,
+  MonitorCapabilities,
+  SessionPowerInit,
+  SessionDisplayState,
+  PowerRequestCreate,
+  PowerRequestAction,
+  GetPowerRequestList,
+  ProcessorInformationEx,
+  NotifyUserModeLegacyPowerEvent,
+  GroupPark,
+  ProcessorIdleDomains,
+  WakeTimerList,
+  SystemHiberFileSize,
+  PowerInformationLevelMaximum
 } POWER_INFORMATION_LEVEL;
 
 #if 1 /* (WIN32_WINNT >= 0x0500) */
@@ -4833,42 +4873,44 @@ RtlMultipleFreeHeap (
     );
 
 typedef enum _PROCESSOR_CACHE_TYPE {
-    CacheUnified,
-    CacheInstruction,
-    CacheData,
-    CacheTrace
+  CacheUnified,
+  CacheInstruction,
+  CacheData,
+  CacheTrace
 } PROCESSOR_CACHE_TYPE;
 
 typedef enum _LOGICAL_PROCESSOR_RELATIONSHIP {
-    RelationProcessorCore,
-    RelationNumaNode,
-    RelationCache,
-    RelationProcessorPackage
+  RelationProcessorCore,
+  RelationNumaNode,
+  RelationCache,
+  RelationProcessorPackage,
+  RelationGroup,
+  RelationAll = 0xffff
 } LOGICAL_PROCESSOR_RELATIONSHIP;
 
 #define CACHE_FULLY_ASSOCIATIVE 0xFF
 
 typedef struct _CACHE_DESCRIPTOR {
-    BYTE Level;
-    BYTE Associativity;
-    WORD LineSize;
-    DWORD Size;
-    PROCESSOR_CACHE_TYPE Type;
+  BYTE Level;
+  BYTE Associativity;
+  WORD LineSize;
+  DWORD Size;
+  PROCESSOR_CACHE_TYPE Type;
 } CACHE_DESCRIPTOR, *PCACHE_DESCRIPTOR;
 
 typedef struct _SYSTEM_LOGICAL_PROCESSOR_INFORMATION {
-    ULONG_PTR ProcessorMask;
-    LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
-    union {
-        struct {
-            BYTE Flags;
-        } ProcessorCore;
-        struct {
-        DWORD NodeNumber;
-        } NumaNode;
-        CACHE_DESCRIPTOR Cache;
-        ULONGLONG Reserved[2];
-    };
+  ULONG_PTR ProcessorMask;
+  LOGICAL_PROCESSOR_RELATIONSHIP Relationship;
+  _ANONYMOUS_UNION union {
+    struct {
+      BYTE Flags;
+    } ProcessorCore;
+    struct {
+      DWORD NodeNumber;
+    } NumaNode;
+    CACHE_DESCRIPTOR Cache;
+    ULONGLONG Reserved[2];
+  } DUMMYUNIONNAME;
 } SYSTEM_LOGICAL_PROCESSOR_INFORMATION, *PSYSTEM_LOGICAL_PROCESSOR_INFORMATION;
 
 NTSYSAPI
