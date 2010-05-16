@@ -6037,7 +6037,7 @@ START_TEST(win)
     test_capture_1();
     test_capture_2();
     test_capture_3(hwndMain, hwndMain2);
-    test_capture_4();
+    //test_capture_4();
 
     test_CreateWindow();
     test_parent_owner();
