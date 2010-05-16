@@ -1998,14 +1998,16 @@ AllocErr:
    else
       dwExStyle &= ~WS_EX_WINDOWEDGE;
 
+   Wnd->style = dwStyle & ~WS_VISIBLE;
+
    /* Correct the window style. */
-   if (!(dwStyle & WS_CHILD))
+   if ((Wnd->style & (WS_CHILD | WS_POPUP)) != WS_CHILD)
    {
-      dwStyle |= WS_CLIPSIBLINGS;
+      Wnd->style |= WS_CLIPSIBLINGS;
       DPRINT("3: Style is now %lx\n", dwStyle);
-      if (!(dwStyle & WS_POPUP))
+      if (!(Wnd->style & WS_POPUP))
       {
-         dwStyle |= WS_CAPTION;
+         Wnd->style |= WS_CAPTION;
          Window->state |= WINDOWOBJECT_NEED_SIZE;
          DPRINT("4: Style is now %lx\n", dwStyle);
       }
@@ -2066,7 +2068,6 @@ AllocErr:
    Size.cy = nHeight;
 
    Wnd->ExStyle = dwExStyle;
-   Wnd->style = dwStyle & ~WS_VISIBLE;
 
    /* call hook */
    Cs.lpCreateParams = lpParam;
@@ -2099,6 +2100,8 @@ AllocErr:
    y = Cs.y;
    nWidth = Cs.cx;
    nHeight = Cs.cy;
+
+   Cs.style = dwStyle;
 // FIXME: Need to set the Z order in the window link list if the hook callback changed it!
 //   hwndInsertAfter = CbtCreate.hwndInsertAfter;
 
@@ -2246,11 +2249,6 @@ AllocErr:
    /* FIXME: Initialize the window menu. */
 
    /* Send a NCCREATE message. */
-   Cs.cx = Size.cx;
-   Cs.cy = Size.cy;
-   Cs.x = Pos.x;
-   Cs.y = Pos.y;
-
    DPRINT("[win32k.window] IntCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
    DPRINT("IntCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, Size.cx, Size.cy);
    DPRINT("IntCreateWindowEx(): About to send NCCREATE message.\n");
