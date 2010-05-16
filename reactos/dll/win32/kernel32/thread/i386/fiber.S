@@ -24,7 +24,11 @@ _SwitchToFiber@4:
     mov [eax+FIBER_CONTEXT_ESI], esi
     mov [eax+FIBER_CONTEXT_EDI], edi
     mov [eax+FIBER_CONTEXT_EBP], ebp
-    
+
+    /* Save the return address */
+    mov ebx, [esp]
+    mov [eax+FIBER_CONTEXT_EIP], ebx
+
     /* Check if we're to save FPU State */
     cmp dword ptr [eax+FIBER_CONTEXT_FLAGS], CONTEXT_FULL | CONTEXT_FLOATING_POINT
     jnz NoFpuStateSave
@@ -115,7 +119,7 @@ NoFpuStateRestore:
     mov eax, [ecx+FIBER_FLS_DATA]
     mov [edx+TEB_FLS_DATA], eax
 
-    /* Return */
-    ret 4
-    
+    /* Jump to new fiber */
+    jmp [ecx+FIBER_CONTEXT_EIP]
+
 /* EOF */
