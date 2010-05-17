@@ -629,6 +629,12 @@ BOOL FindNext(HWND hWnd)
     LPCTSTR pszValueName;
     LPTSTR pszFoundSubKey, pszFoundValueName;
 
+    if (_tcslen(s_szFindWhat) == 0)
+    {
+        FindDialog(hWnd);
+        return TRUE;
+    }
+
     s_dwFlags = GetFindFlags();
 
     pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
@@ -678,7 +684,7 @@ BOOL FindNext(HWND hWnd)
         free(pszFoundValueName);
         SetFocus(g_pChildWnd->hListWnd);
     }
-    return TRUE;
+    return fSuccess;
 }
 
 static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -801,7 +807,9 @@ void FindDialog(HWND hWnd)
     if (DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_FIND),
         hWnd, FindDialogProc, 0) != 0)
     {
-        FindNext(hWnd);
+        if (FindNext(hWnd) == FALSE)
+			MessageBoxW(NULL,L"Finished searching through the registry\n", 
+			           L"Registry Editor", MB_ICONINFORMATION);
     }
 }
 
