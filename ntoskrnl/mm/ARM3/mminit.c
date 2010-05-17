@@ -314,13 +314,13 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
     //
     // Puerile piece of junk-grade carbonized horseshit puss sold to the lowest bidder
     //
-    ULONG Pde = ADDR_TO_PDE_OFFSET(AddressStart);
-    while (Pde <= ADDR_TO_PDE_OFFSET(AddressEnd))
+    ULONG Pde = MiGetPdeOffset(AddressStart);
+    while (Pde <= MiGetPdeOffset(AddressEnd))
     {
         //
         // This both odious and heinous
         //
-        extern ULONG MmGlobalKernelPageDirectory[1024];
+        extern ULONG MmGlobalKernelPageDirectory[];
         MmGlobalKernelPageDirectory[Pde] = ((PULONG)PDE_BASE)[Pde];
         Pde++;
     }
@@ -360,10 +360,10 @@ MiComputeColorInformation(VOID)
     if (!MmSecondaryColors)
     {
         /* Get L2 cache information */
-        L2Associativity = KeGetPcr()->SecondLevelCacheAssociativity;
+        L2Associativity = KiGetSecondLevelDCacheSize();
         
         /* The number of colors is the number of cache bytes by set/way */
-        MmSecondaryColors = KeGetPcr()->SecondLevelCacheSize;
+        MmSecondaryColors = KiGetSecondLevelDCacheSize();
         if (L2Associativity) MmSecondaryColors /= L2Associativity;
     }
     
@@ -681,7 +681,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 /* Yes we do, set it up */
                 Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
                 Pfn1->u4.PteFrame = StartupPdIndex;
-                Pfn1->PteAddress = PointerPde;
+                Pfn1->PteAddress = (PMMPTE)PointerPde;
                 Pfn1->u2.ShareCount++;
                 Pfn1->u3.e2.ReferenceCount = 1;
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -764,7 +764,7 @@ MiBuildPfnDatabaseZeroPage(VOID)
         /* Make it a bogus page to catch errors */
         PointerPde = MiAddressToPde(0xFFFFFFFF);
         Pfn1->u4.PteFrame = PFN_FROM_PTE(PointerPde);
-        Pfn1->PteAddress = PointerPde;
+        Pfn1->PteAddress = (PMMPTE)PointerPde;
         Pfn1->u2.ShareCount++;
         Pfn1->u3.e2.ReferenceCount = 0xFFF0;
         Pfn1->u3.e1.PageLocation = ActiveAndValid;
@@ -1404,8 +1404,10 @@ VOID
 NTAPI
 MiBuildPagedPool(VOID)
 {
-    PMMPTE PointerPte, PointerPde;
+    PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte = ValidKernelPte;
+    MMPDE TempPde = ValidKernelPde;
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
     ULONG Size, BitMapSize;
@@ -1506,10 +1508,10 @@ MiBuildPagedPool(VOID)
     // Allocate a page and map the first paged pool PDE
     //
     PageFrameIndex = MmAllocPage(MC_NPPOOL);
-    TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+    TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     ASSERT(PointerPde->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPde = TempPte;
+    ASSERT(TempPde.u.Hard.Valid == 1);
+    *PointerPde = TempPde;
 
     //
     // Release the PFN database lock
@@ -1521,7 +1523,7 @@ MiBuildPagedPool(VOID)
     // will be allocated to handle paged pool growth. This is where they'll have
     // to start.
     //
-    MmPagedPoolInfo.NextPdeForPagedPoolExpansion = PointerPde + 1;
+    MmPagedPoolInfo.NextPdeForPagedPoolExpansion = (PMMPTE)(PointerPde + 1);
 
     //
     // We keep track of each page via a bit, so check how big the bitmap will
