@@ -808,8 +808,13 @@ void FindDialog(HWND hWnd)
         hWnd, FindDialogProc, 0) != 0)
     {
         if (FindNext(hWnd) == FALSE)
-			MessageBoxW(NULL,L"Finished searching through the registry\n", 
-			           L"Registry Editor", MB_ICONINFORMATION);
+        {
+           TCHAR msg[128], caption[128];
+
+           LoadString(hInst, IDS_FINISHEDFIND, msg, sizeof(msg)/sizeof(TCHAR));
+           LoadString(hInst, IDS_APP_TITLE, caption, sizeof(caption)/sizeof(TCHAR));
+           MessageBox(0, msg, caption, MB_ICONINFORMATION);
+        }
     }
 }
 
