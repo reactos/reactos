@@ -2206,8 +2206,8 @@ DrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font)
 
   SelectObject(DC, GetStockObject(DC_PEN));
   SetDCPenColor(DC, GetSysColor(COLOR_3DFACE));
-  MoveToEx(DC, Rect->left, Rect->bottom, NULL);
-  LineTo(DC, Rect->right, Rect->bottom);
+  MoveToEx(DC, Rect->left, Rect->bottom - 1, NULL);
+  LineTo(DC, Rect->right, Rect->bottom - 1);
 
   if (0 == MenuInfo.MenuItemCount)
     {
