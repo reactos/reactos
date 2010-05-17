@@ -219,6 +219,13 @@ UsbMpFdoStartDevice(
 
 	DPRINT("Busnumber %d\n", DeviceExtension->SystemIoBusNumber);
 
+	Status = IoSetDeviceInterfaceState(&DeviceExtension->HcdInterfaceName, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("IoSetDeviceInterfaceState failed (0x%x)\n", Status);
+		return Status;
+	}
+
 	/* Init wrapper with this object */
 	return InitLinuxWrapper(DeviceObject);
 }

@@ -271,6 +271,13 @@ StartDevice(
 		return Status;
 	}
 
+	Status = IoSetDeviceInterfaceState(&DeviceExtension->HcdInterfaceName, TRUE);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+
 	return Status;
 }
 
