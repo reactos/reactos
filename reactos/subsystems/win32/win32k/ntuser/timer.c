@@ -368,7 +368,8 @@ ProcessTimers(VOID)
     {
        if (pTmr->cmsCountdown < 0)
        {
-          if (!(pTmr->flags & TMRF_READY))
+          ASSERT(pTmr->pti);
+          if ((!(pTmr->flags & TMRF_READY)) && (!(pTmr->pti->TIF_flags & TIF_INCLEANUP)))
           {
              if (pTmr->flags & TMRF_ONESHOT)
                 pTmr->flags |= TMRF_WAITING;
@@ -384,8 +385,8 @@ ProcessTimers(VOID)
                 // Set thread message queue for this timer.
                 if (pTmr->pti->MessageQueue)
                 {  // Wakeup thread
-                   if (pTmr->pti->MessageQueue->WakeMask & QS_POSTMESSAGE)
-                      KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
+                   ASSERT(pTmr->pti->MessageQueue->NewMessages != NULL);
+                   KeSetEvent(pTmr->pti->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
                 }
              }
           }
