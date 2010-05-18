@@ -102,5 +102,14 @@ RECTL_vMakeWellOrdered(RECTL *prcl)
     }
 }
 
+VOID 
+FASTCALL
+RECTL_vInflateRect(RECTL *rect, INT dx, INT dy)
+{
+    rect->left -= dx;
+    rect->top -= dy;
+    rect->right += dx;
+    rect->bottom += dy;
+}
 
 /* EOF */

@@ -1296,15 +1296,6 @@ IntCleanupMenus(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
    return TRUE;
 }
 
-VOID APIENTRY
-co_InflateRect(RECTL *rect, int dx, int dy)
-{
-    rect->left -= dx;
-    rect->top -= dy;
-    rect->right += dx;
-    rect->bottom += dy;
-}
-
 BOOLEAN APIENTRY
 intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
 {
@@ -1334,17 +1325,17 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
             if (HAS_THICKFRAME( dwStyle, dwExStyle ))
             {
                 /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXFRAME) and UserGetSystemMetrics(SM_CYFRAME) */
-                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
+                RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXFRAME), -UserGetSystemMetrics(SM_CYFRAME) );
             }
             else if (HAS_DLGFRAME( dwStyle, dwExStyle ))
             {
                 /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXDLGFRAME) and UserGetSystemMetrics(SM_CYDLGFRAME) */
-                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
+                RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXDLGFRAME), -UserGetSystemMetrics(SM_CYDLGFRAME));
             }
             else if (HAS_THINFRAME( dwStyle, dwExStyle))
             {
                 /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
-                co_InflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER) );
+                RECTL_vInflateRect( &bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER) );
             }
 
             /* We have additional border information if the window
@@ -1355,13 +1346,13 @@ intGetTitleBarInfo(PWINDOW_OBJECT pWindowObject, PTITLEBARINFO bti)
                 if (dwExStyle & WS_EX_CLIENTEDGE)
                 {
                     /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXEDGE) and UserGetSystemMetrics(SM_CYEDGE) */
-                    co_InflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
+                    RECTL_vInflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXEDGE), -UserGetSystemMetrics(SM_CYEDGE));
                 }
 
                 if (dwExStyle & WS_EX_STATICEDGE)
                 {
                     /* FIXME : Note this value should exists in pWindowObject for UserGetSystemMetrics(SM_CXBORDER) and UserGetSystemMetrics(SM_CYBORDER) */
-                    co_InflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
+                    RECTL_vInflateRect (&bti->rcTitleBar, -UserGetSystemMetrics(SM_CXBORDER), -UserGetSystemMetrics(SM_CYBORDER));
                 }
             }
         }
