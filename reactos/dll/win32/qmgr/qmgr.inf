@@ -12,5 +12,5 @@ HKCR,"AppID\BITS","AppID",,"%CLSID_BackgroundCopyQMgr%"
 HKCR,"AppID\%CLSID_BackgroundCopyQMgr%","LocalService",,"BITS"
 HKCR,"CLSID\%CLSID_BackgroundCopyManager%","AppID",,"%CLSID_BackgroundCopyQMgr%"
 
-;HKLM,"Software\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010000,"BITS"
+HKLM,"Software\Microsoft\Windows NT\CurrentVersion\SvcHost","netsvcs",0x00010008,"BITS"
 HKLM,"System\CurrentControlSet\Services\BITS\Parameters","ServiceDll",0x00020000,"qmgr.dll"
