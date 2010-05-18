@@ -423,7 +423,7 @@ CAPTION "찾기"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "취소(&C)",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "취소(&C)",IDCANCEL,93,29,45,14
     LTEXT           "레지스트리를 검색중...",IDC_STATIC,33,12,83,8
 END
 

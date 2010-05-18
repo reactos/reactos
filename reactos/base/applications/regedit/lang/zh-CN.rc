@@ -438,7 +438,7 @@ CAPTION "查找"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "取消(&C)",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "取消(&C)",IDCANCEL,93,29,45,14
     LTEXT           "正在搜索注册表...",IDC_STATIC,33,12,83,8
 END
 
