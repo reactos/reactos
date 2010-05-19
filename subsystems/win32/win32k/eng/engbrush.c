@@ -82,7 +82,12 @@ EBRUSHOBJ_vSetSolidBrushColor(EBRUSHOBJ *pebo, COLORREF crColor)
     pebo->ulRGBColor = crColor;
 
     /* Initialize an XLATEOBJ RGB -> surface */
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, pebo->ppalSurf, 0, 0, 0);
+    EXLATEOBJ_vInitialize(&exlo,
+                          &gpalRGB,
+                          pebo->ppalSurf,
+                          pebo->crCurrentBack,
+                          0,
+                          0);
 
     /* Translate the brush color to the target format */
     iSolidColor = XLATEOBJ_iXlate(&exlo.xlo, crColor);
