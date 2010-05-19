@@ -2112,7 +2112,7 @@ AllocErr:
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(Window->pti->rpdesk, &WorkArea);
+      UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;

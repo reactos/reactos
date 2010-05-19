@@ -419,35 +419,6 @@ IntValidateDesktopHandle(
    return Status;
 }
 
-VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect)
-{
-   RECTL *Ret;
-
-   ASSERT(Desktop);
-
-   Ret = &Desktop->WorkArea;
-   if((Ret->right == -1) && ScreenDeviceContext)
-   {
-      PDC dc;
-      SURFACE *psurf;
-      dc = DC_LockDc(ScreenDeviceContext);
-      /* FIXME - Handle dc == NULL!!!! */
-      psurf = dc->dclevel.pSurface;
-      if (psurf)
-      {
-         Ret->right = psurf->SurfObj.sizlBitmap.cx;
-         Ret->bottom = psurf->SurfObj.sizlBitmap.cy;
-      }
-      DC_UnlockDc(dc);
-   }
-
-   if(Rect)
-   {
-      *Rect = *Ret;
-   }
-}
-
 PDESKTOP FASTCALL
 IntGetActiveDesktop(VOID)
 {
@@ -1051,13 +1022,6 @@ NtUserCreateDesktop(
    RtlCopyMemory(DesktopObject->pDeskInfo->szDesktopName,
                  lpszDesktopName->Buffer,
                  lpszDesktopName->Length);
-
-   // init desktop area
-   DesktopObject->WorkArea.left = 0;
-   DesktopObject->WorkArea.top = 0;
-   DesktopObject->WorkArea.right = -1;
-   DesktopObject->WorkArea.bottom = -1;
-   IntGetDesktopWorkArea(DesktopObject, NULL);
 
    /* Initialize some local (to win32k) desktop state. */
    InitializeListHead(&DesktopObject->PtiList);

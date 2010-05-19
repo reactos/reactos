@@ -258,19 +258,17 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
    if (!Wnd->InternalPosInitialized)
    {
       RECTL WorkArea;
-      PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-      PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
       Parent = Window->spwndParent;
       if(Parent)
       {
          if(IntIsDesktopWindow(Parent))
-            IntGetDesktopWorkArea(Desktop, &WorkArea);
+             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
          else
             WorkArea = Parent->Wnd->rcClient;
       }
       else
-         IntGetDesktopWorkArea(Desktop, &WorkArea);
+         UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
 
       Wnd->InternalPos.NormalRect = Window->Wnd->rcWindow;
       IntGetWindowBorderMeasures(Window, &XInc, &YInc);
