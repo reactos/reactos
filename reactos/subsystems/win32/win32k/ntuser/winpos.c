@@ -1416,7 +1416,16 @@ co_WinPosSetWindowPos(
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
+   {
+      /* WM_WINDOWPOSCHANGED is sent even if SWP_NOSENDCHANGING is set
+         and always contains final window position.
+       */
+      WinPos.x = NewWindowRect.left;
+      WinPos.y = NewWindowRect.top;
+      WinPos.cx = NewWindowRect.right - NewWindowRect.left;
+      WinPos.cy = NewWindowRect.bottom - NewWindowRect.top;
       co_IntSendMessageNoWait(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+   }
 
    return TRUE;
 }
