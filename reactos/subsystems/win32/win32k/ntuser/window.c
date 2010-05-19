@@ -2219,21 +2219,15 @@ AllocErr:
       POINT MaxSize, MaxPos, MinTrack, MaxTrack;
 
       /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
-      co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack,
-                             &MaxTrack);
-      if (MaxSize.x < Size.cx)
-         Size.cx = MaxSize.x;
-      if (MaxSize.y < Size.cy)
-         Size.cy = MaxSize.y;
-      if (Size.cx < MinTrack.x )
-         Size.cx = MinTrack.x;
-      if (Size.cy < MinTrack.y )
-         Size.cy = MinTrack.y;
-      if (Size.cx < 0)
-         Size.cx = 0;
-      if (Size.cy < 0)
-         Size.cy = 0;
+      co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack, &MaxTrack);
+      if (Size.cx > MaxTrack.x) Size.cx = MaxTrack.x;
+      if (Size.cy > MaxTrack.y) Size.cy = MaxTrack.y;
+      if (Size.cx < MinTrack.x) Size.cx = MinTrack.x;
+      if (Size.cy < MinTrack.y) Size.cy = MinTrack.y;
    }
+
+   if (Size.cx < 0) Size.cx = 0;
+   if (Size.cy < 0) Size.cy = 0;
 
    Wnd->rcWindow.left = Pos.x;
    Wnd->rcWindow.top = Pos.y;
