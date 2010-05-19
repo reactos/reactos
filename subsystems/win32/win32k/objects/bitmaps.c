@@ -108,6 +108,7 @@ IntGdiCreateBitmap(
         case 16:
             psurfBmp->ppal = &gpalRGB565;
             GDIOBJ_IncrementShareCount((POBJ)&gpalRGB565);
+            break;
         case 24:
         case 32:
             psurfBmp->ppal = &gpalRGB;
