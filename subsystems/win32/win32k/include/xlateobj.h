@@ -45,7 +45,6 @@ DbgCmpXlate(XLATEOBJ *pxlo1, XLATEOBJ *pxlo2);
 
 VOID NTAPI EXLATEOBJ_vInitialize(PEXLATEOBJ pexlo, PALETTE *ppalSrc, PALETTE *ppalDst, ULONG, ULONG, ULONG);
 VOID NTAPI EXLATEOBJ_vInitXlateFromDCs(PEXLATEOBJ pexlo, PDC pdcSrc, PDC pdcDst);
-VOID NTAPI EXLATEOBJ_vInitBrushXlate(PEXLATEOBJ pexlo, BRUSH *pbrush, SURFACE *psurf, COLORREF crForegroundClr, COLORREF crBackgroundClr);
 VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(PEXLATEOBJ pexlo, PPALETTE ppalDst, ULONG Color0, ULONG Color1);
 VOID NTAPI EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo);
 

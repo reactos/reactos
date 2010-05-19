@@ -217,16 +217,18 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
 
     psurfPattern = SURFACE_ShareLockSurface(pebo->pbrush->hbmPattern);
     ASSERT(psurfPattern);
+    ASSERT(psurfPattern->ppal);
 
     /* FIXME: implement mask */
     psurfMask = NULL;
 
     /* Initialize XLATEOBJ for the brush */
-    EXLATEOBJ_vInitBrushXlate(&exlo,
-                              pebo->pbrush,
-                              pebo->psurfTrg,
-                              pebo->crCurrentText,
-                              pebo->crCurrentBack);
+    EXLATEOBJ_vInitialize(&exlo, 
+                          psurfPattern->ppal,
+                          pebo->psurfTrg->ppal,
+                          0,
+                          pebo->crCurrentBack,
+                          pebo->crCurrentText);
 
     /* Create the realization */
     bResult = pfnRealzizeBrush(&pebo->BrushObject,

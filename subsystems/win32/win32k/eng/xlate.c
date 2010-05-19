@@ -603,88 +603,24 @@ EXLATEOBJ_vInitXlateFromDCs(
     PDC pdcDst)
 {
     PSURFACE psurfDst, psurfSrc;
-    PPALETTE ppalSrc, ppalDst, ppalDstDc;
-
-    DPRINT("Enter EXLATEOBJ_vInitXlateFromDCs\n");
-
-    /* Do basic init */
-    EXLATEOBJ_vInitTrivial(pexlo);
 
     psurfDst = pdcDst->dclevel.pSurface;
     psurfSrc = pdcSrc->dclevel.pSurface;
 
+    /* Check for trivial color translation */
     if (psurfDst == psurfSrc)
     {
+        EXLATEOBJ_vInitTrivial(pexlo);
         return;
     }
 
-    ppalSrc = psurfSrc->ppal;
-
-    if(!ppalSrc)
-    {
-        DPRINT1("No palette for src surface %p.\n", psurfSrc);
-        return;
-    }
-
-    ppalDst = psurfDst->ppal;
-
-    if (!ppalDst)
-    {
-        DPRINT1("No palette for dst surface %p.\n", psurfDst);
-        return;
-    }
-
-    ppalDstDc = pdcDst->dclevel.ppal;
-    ASSERT(ppalDstDc);
-
+    /* Normal initialisation. No surface means DEFAULT_BITMAP */
     EXLATEOBJ_vInitialize(pexlo,
-                          ppalSrc,
-                          ppalDst,
+                          psurfSrc ? psurfSrc->ppal : &gpalMono,
+                          psurfDst ? psurfDst->ppal : &gpalMono,
                           pdcSrc->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crBackgroundClr,
                           pdcDst->pdcattr->crForegroundClr);
-}
-
-
-VOID
-NTAPI
-EXLATEOBJ_vInitBrushXlate(
-    PEXLATEOBJ pexlo,
-    BRUSH *pbrush,
-    SURFACE *psurfDst,
-    COLORREF crForegroundClr,
-    COLORREF crBackgroundClr)
-{
-    PPALETTE ppalDst;
-    SURFACE *psurfPattern;
-
-    ASSERT(pexlo);
-    ASSERT(pbrush);
-    ASSERT(psurfDst);
-    ASSERT(!(pbrush->flAttrs & (GDIBRUSH_IS_SOLID | GDIBRUSH_IS_NULL)));
-
-    EXLATEOBJ_vInitTrivial(pexlo);
-
-    ppalDst = psurfDst->ppal;
-
-    if (!ppalDst)
-    {
-        DPRINT1("No palette for dst surface %p.\n", psurfDst);
-        return;
-    }
-
-    psurfPattern = SURFACE_ShareLockSurface(pbrush->hbmPattern);
-    if (!psurfPattern)
-    {
-        return;
-    }
-
-    if (psurfPattern->ppal)
-    {
-        EXLATEOBJ_vInitialize(pexlo, psurfPattern->ppal, ppalDst, 0, crBackgroundClr, crForegroundClr);
-    }
-
-    SURFACE_ShareUnlockSurface(psurfPattern);
 }
 
 VOID
