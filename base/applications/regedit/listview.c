@@ -27,6 +27,7 @@
 
 int Image_String = 0;
 int Image_Bin = 0;
+INT iListViewSelect = -1;
 
 typedef struct tagLINE_INFO
 {
@@ -74,6 +75,29 @@ LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
         return NULL;
 
     return lineinfo->name;
+}
+
+VOID SetValueName(HWND hwndLV, LPCTSTR pszValueName)
+{
+    INT i, c;
+    LV_FINDINFO fi;
+
+    c = ListView_GetItemCount(hwndLV);
+    for(i = 0; i < c; i++)
+    {
+        ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
+    }
+    if (pszValueName == NULL)
+        i = 0;
+    else
+    {
+        fi.flags    = LVFI_STRING;
+        fi.psz      = pszValueName;
+        i = ListView_FindItem(hwndLV, -1, &fi);
+    }
+    ListView_SetItemState(hwndLV, i, LVIS_FOCUSED | LVIS_SELECTED,
+        LVIS_FOCUSED | LVIS_SELECTED);
+    iListViewSelect = i;
 }
 
 BOOL IsDefaultValue(HWND hwndLV, int i)
@@ -497,6 +521,7 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     DWORD val_count;
     HKEY hNewKey;
     LONG errCode;
+    INT i, c;
     BOOL AddedDefault = FALSE;
 
     if (!hwndLV) return FALSE;
@@ -552,7 +577,15 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     {
       AddEntryToList(hwndLV, _T(""), REG_SZ, NULL, 0, 0, FALSE);
     }
-    (void)ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
+    ListView_SortItems(hwndLV, CompareFunc, (WPARAM)hwndLV);
+    c = ListView_GetItemCount(hwndLV);
+    for(i = 0; i < c; i++)
+    {
+        ListView_SetItemState(hwndLV, i, 0, LVIS_FOCUSED | LVIS_SELECTED);
+    }
+    ListView_SetItemState(hwndLV, iListViewSelect,
+        LVIS_FOCUSED | LVIS_SELECTED,
+        LVIS_FOCUSED | LVIS_SELECTED);
     RegCloseKey(hNewKey);
     SendMessage(hwndLV, WM_SETREDRAW, TRUE, 0);
 

@@ -400,36 +400,120 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
    return(SwpFlags);
 }
 
+BOOL
+UserHasWindowEdge(DWORD Style, DWORD ExStyle)
+{
+   if (Style & WS_MINIMIZE)
+      return TRUE;
+   if (ExStyle & WS_EX_DLGMODALFRAME)
+      return TRUE;
+   if (ExStyle & WS_EX_STATICEDGE)
+      return FALSE;
+   if (Style & WS_THICKFRAME)
+      return TRUE;
+   Style &= WS_CAPTION;
+   if (Style == WS_DLGFRAME || Style == WS_CAPTION)
+      return TRUE;
+   return FALSE;
+}
+
+VOID
+UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
+{
+   DWORD Border = 0;
+
+   if (UserHasWindowEdge(Style, ExStyle))
+      Border += 2;
+   else if (ExStyle & WS_EX_STATICEDGE)
+      Border += 1;
+   if ((ExStyle & WS_EX_CLIENTEDGE) && WithClient)
+      Border += 2;
+   if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
+      Border ++;
+   Size->cx = Size->cy = Border;
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
+   {
+      Size->cx += UserGetSystemMetrics(SM_CXFRAME) - UserGetSystemMetrics(SM_CXDLGFRAME);
+      Size->cy += UserGetSystemMetrics(SM_CYFRAME) - UserGetSystemMetrics(SM_CYDLGFRAME);
+   }
+   Size->cx *= UserGetSystemMetrics(SM_CXBORDER);
+   Size->cy *= UserGetSystemMetrics(SM_CYBORDER);
+}
+
+BOOL WINAPI
+UserAdjustWindowRectEx(LPRECT lpRect,
+                       DWORD dwStyle,
+                       BOOL bMenu,
+                       DWORD dwExStyle)
+{
+   SIZE BorderSize;
+
+   if (bMenu)
+   {
+      lpRect->top -= UserGetSystemMetrics(SM_CYMENU);
+   }
+   if ((dwStyle & WS_CAPTION) == WS_CAPTION)
+   {
+      if (dwExStyle & WS_EX_TOOLWINDOW)
+         lpRect->top -= UserGetSystemMetrics(SM_CYSMCAPTION);
+      else
+         lpRect->top -= UserGetSystemMetrics(SM_CYCAPTION);
+   }
+   UserGetWindowBorders(dwStyle, dwExStyle, &BorderSize, TRUE);
+   RECTL_vInflateRect(
+      lpRect,
+      BorderSize.cx,
+      BorderSize.cy);
+
+   return TRUE;
+}
+
 static
 VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
-   UINT XInc, YInc;
-   RECTL WorkArea;
-   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
+    INT xinc, yinc;
+    LONG style = Window->Wnd->style;
+    LONG adjustedStyle;
+    LONG exstyle = Window->Wnd->ExStyle;
+    RECT rc;
 
-   IntGetDesktopWorkArea(Desktop, &WorkArea);
+    /* Compute default values */
 
-   /* Get default values. */
-   Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
-   Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
+    rc = Window->Wnd->rcWindow;
+    Info->ptReserved.x = rc.left;
+    Info->ptReserved.y = rc.top;
 
-   IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-   Info->ptMaxSize.x = WorkArea.right - WorkArea.left + 2 * XInc;
-   Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top + 2 * YInc;
-   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
-   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
+    if ((style & WS_CAPTION) == WS_CAPTION)
+        adjustedStyle = style & ~WS_BORDER; /* WS_CAPTION = WS_DLGFRAME | WS_BORDER */
+    else
+        adjustedStyle = style;
 
-   if (Window->Wnd->InternalPosInitialized)
-   {
-      Info->ptMaxPosition = Window->Wnd->InternalPos.MaxPos;
-   }
-   else
-   {
-      Info->ptMaxPosition.x = WorkArea.left - XInc;
-      Info->ptMaxPosition.y = WorkArea.top - YInc;
-   }
+    if(Window->Wnd->spwndParent)
+        IntGetClientRect(Window->spwndParent, &rc);
+    UserAdjustWindowRectEx(&rc, adjustedStyle, ((style & WS_POPUP) && Window->Wnd->IDMenu), exstyle);
+
+    xinc = -rc.left;
+    yinc = -rc.top;
+
+    Info->ptMaxSize.x = rc.right - rc.left;
+    Info->ptMaxSize.y = rc.bottom - rc.top;
+    if (style & (WS_DLGFRAME | WS_BORDER))
+    {
+        Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
+        Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
+    }
+    else
+    {
+        Info->ptMinTrackSize.x = 2 * xinc;
+        Info->ptMinTrackSize.y = 2 * yinc;
+    }
+    Info->ptMaxTrackSize.x = UserGetSystemMetrics(SM_CXMAXTRACK);
+    Info->ptMaxTrackSize.y = UserGetSystemMetrics(SM_CYMAXTRACK);
+    Info->ptMaxPosition.x = -xinc;
+    Info->ptMaxPosition.y = -yinc;
+
+    //if (!EMPTYPOINT(win->max_pos)) MinMax.ptMaxPosition = win->max_pos;
 }
 
 UINT FASTCALL

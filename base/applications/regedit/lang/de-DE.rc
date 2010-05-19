@@ -438,7 +438,7 @@ CAPTION "Suchen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "&Abbrechen",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "&Abbrechen",IDCANCEL,93,29,45,14
     LTEXT           "Durchsuche die Registry...",IDC_STATIC,33,12,85,8
 END
 

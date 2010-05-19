@@ -993,11 +993,11 @@ OpenConsoleW(LPCWSTR wsName,
     ULONG CsrRequest;
     NTSTATUS Status = STATUS_SUCCESS;
 
-    if (0 == _wcsicmp(wsName, L"CONIN$"))
+    if (wsName && 0 == _wcsicmp(wsName, L"CONIN$"))
     {
         CsrRequest = MAKE_CSR_API(GET_INPUT_HANDLE, CSR_NATIVE);
     }
-    else if (0 == _wcsicmp(wsName, L"CONOUT$"))
+    else if (wsName && 0 == _wcsicmp(wsName, L"CONOUT$"))
     {
         CsrRequest = MAKE_CSR_API(GET_OUTPUT_HANDLE, CSR_NATIVE);
     }

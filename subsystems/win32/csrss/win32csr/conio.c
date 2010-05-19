@@ -26,11 +26,14 @@
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
   WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
+#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+  MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
+
 #define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
   WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
-#define ConsoleAnsiCharToUnicodeChar(Console, sWChar, dChar) \
-  MultiByteToWideChar((Console)->OutputCodePage, 0, (dChar), 1, (sWChar), 1)
+#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+  MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 
 /* FUNCTIONS *****************************************************************/
@@ -616,7 +619,7 @@ CSR_API(CsrReadConsole)
           else
             {
               if(Request->Data.ReadConsoleRequest.Unicode)
-                UnicodeBuffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar; /* FIXME */
+                ConsoleInputAnsiCharToUnicodeChar(Console, &UnicodeBuffer[i], &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar);
               else
                 Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
             }

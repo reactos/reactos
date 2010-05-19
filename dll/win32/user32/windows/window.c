@@ -287,6 +287,18 @@ CreateWindowExA(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND WndParent;
+        PCLS pcls;
+
+        if(!(WndParent = ValidateHwnd(hWndParent)) ||
+           !(pcls = DesktopPtrToUser(WndParent->pcls)))
+            return 0;
+
+        if (pcls->fnid != FNID_MDICLIENT)
+        {
+            ERR("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+            return 0;
+        }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
@@ -399,6 +411,24 @@ CreateWindowExW(DWORD dwExStyle,
         POINT mPos[2];
         UINT id = 0;
         HWND top_child;
+        PWND WndParent;
+        PCLS pcls;
+
+        WndParent = ValidateHwnd(hWndParent);
+
+        if(!WndParent)
+            return 0;
+
+        pcls = DesktopPtrToUser(WndParent->pcls);
+
+        if(!pcls)
+            return 0;
+
+        if (pcls->fnid != FNID_MDICLIENT)
+        {
+            ERR("WS_EX_MDICHILD, but parent %p is not MDIClient\n", hWndParent);
+            return 0;
+        }
 
         /* lpParams of WM_[NC]CREATE is different for MDI children.
         * MDICREATESTRUCT members have the originally passed values.
