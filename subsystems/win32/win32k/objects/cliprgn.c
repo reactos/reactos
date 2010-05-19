@@ -37,7 +37,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
    }
    else
    {
-       hRgnVis = ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr ;
+       hRgnVis = Dc->prgnVis->BaseObject.hHmgr ;
    }
 
 
@@ -94,13 +94,13 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
   if (dc->prgnVis == NULL)
   {
     dc->prgnVis = IntSysCreateRectpRgn(0, 0, 0, 0);
-    GDIOBJ_CopyOwnership(hdc, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr);
+    GDIOBJ_CopyOwnership(hdc, dc->prgnVis->BaseObject.hHmgr);
   }
 
-  retval = NtGdiCombineRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
+  retval = NtGdiCombineRgn(dc->prgnVis->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
   {
-    NtGdiOffsetRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    IntGdiOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
   DC_UnlockDc(dc);

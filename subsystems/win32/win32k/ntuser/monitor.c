@@ -506,7 +506,7 @@ NtUserEnumDisplayMonitors(
          /* FIXME: setlasterror? */
          return -1;
       }
-      dcVisRgn = ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr;
+      dcVisRgn = dc->prgnVis->BaseObject.hHmgr;
       DC_UnlockDc(dc);
 
       regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);

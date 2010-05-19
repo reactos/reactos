@@ -1206,7 +1206,7 @@ UserScrollDC(
       {
          return FALSE;
       }
-      hrgnVisible = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;  // pDC->prgnRao?
+      hrgnVisible = pDC->prgnVis->BaseObject.hHmgr;  // pDC->prgnRao?
       DC_UnlockDc(pDC);
 
       /* Begin with the shifted and then clipped scroll rect */
