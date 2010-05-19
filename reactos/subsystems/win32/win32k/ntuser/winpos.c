@@ -466,21 +466,25 @@ UserAdjustWindowRectEx(LPRECT lpRect,
    return TRUE;
 }
 
-static
-VOID FASTCALL
-WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
+UINT FASTCALL
+co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
+                       POINT* MinTrack, POINT* MaxTrack)
 {
+   MINMAXINFO MinMax;
+   PMONITOR monitor;
     INT xinc, yinc;
     LONG style = Window->Wnd->style;
     LONG adjustedStyle;
     LONG exstyle = Window->Wnd->ExStyle;
     RECT rc;
 
+    ASSERT_REFS_CO(Window);
+
     /* Compute default values */
 
     rc = Window->Wnd->rcWindow;
-    Info->ptReserved.x = rc.left;
-    Info->ptReserved.y = rc.top;
+    MinMax.ptReserved.x = rc.left;
+    MinMax.ptReserved.y = rc.top;
 
     if ((style & WS_CAPTION) == WS_CAPTION)
         adjustedStyle = style & ~WS_BORDER; /* WS_CAPTION = WS_DLGFRAME | WS_BORDER */
@@ -494,37 +498,53 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
     xinc = -rc.left;
     yinc = -rc.top;
 
-    Info->ptMaxSize.x = rc.right - rc.left;
-    Info->ptMaxSize.y = rc.bottom - rc.top;
+    MinMax.ptMaxSize.x = rc.right - rc.left;
+    MinMax.ptMaxSize.y = rc.bottom - rc.top;
     if (style & (WS_DLGFRAME | WS_BORDER))
     {
-        Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
-        Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
+        MinMax.ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
+        MinMax.ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
     }
     else
     {
-        Info->ptMinTrackSize.x = 2 * xinc;
-        Info->ptMinTrackSize.y = 2 * yinc;
+        MinMax.ptMinTrackSize.x = 2 * xinc;
+        MinMax.ptMinTrackSize.y = 2 * yinc;
     }
-    Info->ptMaxTrackSize.x = UserGetSystemMetrics(SM_CXMAXTRACK);
-    Info->ptMaxTrackSize.y = UserGetSystemMetrics(SM_CYMAXTRACK);
-    Info->ptMaxPosition.x = -xinc;
-    Info->ptMaxPosition.y = -yinc;
+    MinMax.ptMaxTrackSize.x = UserGetSystemMetrics(SM_CXMAXTRACK);
+    MinMax.ptMaxTrackSize.y = UserGetSystemMetrics(SM_CYMAXTRACK);
+    MinMax.ptMaxPosition.x = -xinc;
+    MinMax.ptMaxPosition.y = -yinc;
 
     //if (!EMPTYPOINT(win->max_pos)) MinMax.ptMaxPosition = win->max_pos;
-}
-
-UINT FASTCALL
-co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
-                       POINT* MinTrack, POINT* MaxTrack)
-{
-   MINMAXINFO MinMax;
-
-   ASSERT_REFS_CO(Window);
-
-   WinPosFillMinMaxInfoStruct(Window, &MinMax);
 
    co_IntSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+
+    /* if the app didn't change the values, adapt them for the current monitor */
+    if ((monitor = IntGetPrimaryMonitor()))
+    {
+        RECT rc_work;
+
+        rc_work = monitor->rcMonitor;
+
+        if (style & WS_MAXIMIZEBOX)
+        {
+            if ((style & WS_CAPTION) == WS_CAPTION || !(style & (WS_CHILD | WS_POPUP)))
+                rc_work = monitor->rcWork;
+        }
+
+        if (MinMax.ptMaxSize.x == UserGetSystemMetrics(SM_CXSCREEN) + 2 * xinc &&
+            MinMax.ptMaxSize.y == UserGetSystemMetrics(SM_CYSCREEN) + 2 * yinc)
+        {
+            MinMax.ptMaxSize.x = (rc_work.right - rc_work.left) + 2 * xinc;
+            MinMax.ptMaxSize.y = (rc_work.bottom - rc_work.top) + 2 * yinc;
+        }
+        if (MinMax.ptMaxPosition.x == -xinc && MinMax.ptMaxPosition.y == -yinc)
+        {
+            MinMax.ptMaxPosition.x = rc_work.left - xinc;
+            MinMax.ptMaxPosition.y = rc_work.top - yinc;
+        }
+    }
+
 
    MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
                                  MinMax.ptMinTrackSize.x);
@@ -1827,15 +1847,9 @@ NtUserGetMinMaxInfo(
    WinPosInitInternalPos(Window, &Size,
                          &Wnd->rcWindow);
 
-   if(SendMessage)
-   {
-      co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
-                             &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
-   }
-   else
-   {
-      WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
-   }
+   co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
+                          &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
+
    Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
    if(!NT_SUCCESS(Status))
    {
