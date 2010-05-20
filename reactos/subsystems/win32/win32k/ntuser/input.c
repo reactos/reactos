@@ -868,14 +868,6 @@ RawInputThreadMain(PVOID StartContext)
   NTSTATUS Status;
   LARGE_INTEGER DueTime;
 
-  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
-  if (!MasterTimer)
-  {
-     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
-     return;
-  }
-  KeInitializeTimer(MasterTimer);
-
   DueTime.QuadPart = (LONGLONG)(-10000000);
 
   do
@@ -936,6 +928,15 @@ InitInputImpl(VOID)
    NTSTATUS Status;
 
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
+
+   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+   if (!MasterTimer)
+   {
+      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
+   }
+   KeInitializeTimer(MasterTimer);
 
    /* Initialize the default keyboard layout */
    if(!UserInitDefaultKeyboardLayout())
