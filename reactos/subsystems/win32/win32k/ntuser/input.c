@@ -1340,10 +1340,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
    /* All messages have to contain the cursor point. */
    pti = PsGetCurrentThreadWin32Thread();
    Msg.pt = gpsi->ptCursor;
-
-    DPRINT1("Kbd Hook msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-             Msg.message, vk_hook, Msg.lParam);
-
+   
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
    KbdHookData.flags = flags >> 8;
