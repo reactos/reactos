@@ -22,7 +22,7 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
-PKTIMER MasterTimer;
+PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
 static HANDLE MouseDeviceHandle;
@@ -868,6 +868,14 @@ RawInputThreadMain(PVOID StartContext)
   NTSTATUS Status;
   LARGE_INTEGER DueTime;
 
+  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+  if (!MasterTimer)
+  {
+     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+     return;
+  }
+  KeInitializeTimer(MasterTimer);
+
   DueTime.QuadPart = (LONGLONG)(-10000000);
 
   do
@@ -879,14 +887,6 @@ RawInputThreadMain(PVOID StartContext)
 
 
   Objects[0] = &InputThreadsStart;
-
-  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
-  if (!MasterTimer)
-  {
-     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
-     return;
-  }
-  KeInitializeTimer(MasterTimer);
   Objects[1] = MasterTimer;
 
   // This thread requires win32k!
