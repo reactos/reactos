@@ -54,10 +54,7 @@
  */
 
 #include "rosdhcp.h"
-#include <winsock2.h>
 #include "dhcpd.h"
-#include "privsep.h"
-#include "debug.h"
 
 #define	PERIOD 0x2e
 #define	hyphenchar(c) ((c) == 0x2d)
@@ -110,16 +107,9 @@ int              check_arp( struct interface_info *ip, struct client_lease *lp )
 
 time_t	scripttime;
 
-
-static VOID CALLBACK ServiceMain(DWORD argc, LPWSTR *argv);
 static WCHAR ServiceName[] = L"DHCP";
-static SERVICE_TABLE_ENTRYW ServiceTable[] =
-{
-    {ServiceName, ServiceMain},
-    {NULL, NULL}
-};
 
-SERVICE_STATUS_HANDLE ServiceStatusHandle;
+SERVICE_STATUS_HANDLE ServiceStatusHandle = 0;
 SERVICE_STATUS ServiceStatus;
 
 
@@ -192,7 +182,7 @@ ServiceControlHandler(DWORD dwControl,
 }
 
 
-static VOID CALLBACK
+VOID NTAPI
 ServiceMain(DWORD argc, LPWSTR *argv)
 {
     ServiceStatusHandle = RegisterServiceCtrlHandlerExW(ServiceName,
@@ -200,53 +190,49 @@ ServiceMain(DWORD argc, LPWSTR *argv)
                                                         NULL);
     if (!ServiceStatusHandle)
     {
+        DbgPrint("DHCPCSVC: Unable to register service control handler (%x)\n", GetLastError);
         return;
     }
 
     UpdateServiceStatus(SERVICE_START_PENDING);
 
+    ApiInit();
+    AdapterInit();
+
+    tzset();
+
+    memset(&sockaddr_broadcast, 0, sizeof(sockaddr_broadcast));
+    sockaddr_broadcast.sin_family = AF_INET;
+    sockaddr_broadcast.sin_port = htons(REMOTE_PORT);
+    sockaddr_broadcast.sin_addr.s_addr = INADDR_BROADCAST;
+    inaddr_any.s_addr = INADDR_ANY;
+    bootp_packet_handler = do_packet;
+
+    if (PipeInit() == INVALID_HANDLE_VALUE)
+    {
+        DbgPrint("DHCPCSVC: PipeInit() failed!\n");
+        AdapterStop();
+        ApiFree();
+        UpdateServiceStatus(SERVICE_STOPPED);
+    }
+
+    DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
+
     UpdateServiceStatus(SERVICE_RUNNING);
 
+    DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
+
+    DbgPrint("DHCPCSVC: DHCP service is starting up\n");
+
     dispatch();
-}
 
+    DbgPrint("DHCPCSVC: DHCP service is shutting down\n");
 
-int
-main(int argc, char *argv[])
-{
-        ApiInit();
-        AdapterInit();
-        PipeInit();
+    //AdapterStop();
+    //ApiFree();
+    /* FIXME: Close pipe and kill pipe thread */
 
-	tzset();
-
-	memset(&sockaddr_broadcast, 0, sizeof(sockaddr_broadcast));
-	sockaddr_broadcast.sin_family = AF_INET;
-	sockaddr_broadcast.sin_port = htons(REMOTE_PORT);
-	sockaddr_broadcast.sin_addr.s_addr = INADDR_BROADCAST;
-	inaddr_any.s_addr = INADDR_ANY;
-
-        DH_DbgPrint(MID_TRACE,("DHCP Service Started\n"));
-
-	bootp_packet_handler = do_packet;
-
-        DH_DbgPrint(MID_TRACE,("Going into dispatch()\n"));
-
-	StartServiceCtrlDispatcherW(ServiceTable);
-
-	/* not reached */
-	return (0);
-}
-
-void
-usage(void)
-{
-//	extern char	*__progname;
-
-//	fprintf(stderr, "usage: %s [-dqu] ", __progname);
-	fprintf(stderr, "usage: dhclient [-dqu] ");
-	fprintf(stderr, "[-c conffile] [-l leasefile] interface\n");
-	exit(1);
+    UpdateServiceStatus(SERVICE_STOPPED);
 }
 
 /*
@@ -1117,83 +1103,12 @@ void
 state_panic(void *ipp)
 {
 	struct interface_info *ip = ipp;
-	struct client_lease *loop = ip->client->active;
-	struct client_lease *lp;
-        time_t cur_time;
+	time_t cur_time;
+
+	time(&cur_time);
 
 	note("No DHCPOFFERS received.");
 
-        time(&cur_time);
-
-	/* We may not have an active lease, but we may have some
-	   predefined leases that we can try. */
-	if (!ip->client->active && ip->client->leases)
-		goto activate_next;
-
-	/* Run through the list of leases and see if one can be used. */
-	while (ip->client->active) {
-		if (ip->client->active->expiry > cur_time) {
-			note("Trying recorded lease %s",
-			    piaddr(ip->client->active->address));
-			/* Run the client script with the existing
-			   parameters. */
-			script_init("TIMEOUT",
-			    ip->client->active->medium);
-			script_write_params("new_", ip->client->active);
-			if (ip->client->alias)
-				script_write_params("alias_",
-				    ip->client->alias);
-
-			/* If the old lease is still good and doesn't
-			   yet need renewal, go into BOUND state and
-			   timeout at the renewal time. */
-                        if (cur_time <
-                            ip->client->active->renewal) {
-                            ip->client->state = S_BOUND;
-                            note("bound: renewal in %ld seconds.",
-                                 (long int)(ip->client->active->renewal -
-                                 cur_time));
-                            add_timeout(
-                                ip->client->active->renewal,
-                                state_bound, ip);
-                        } else {
-                            ip->client->state = S_BOUND;
-                            note("bound: immediate renewal.");
-                            state_bound(ip);
-                        }
-                        return;
-		}
-
-		/* If there are no other leases, give up. */
-		if (!ip->client->leases) {
-			ip->client->leases = ip->client->active;
-			ip->client->active = NULL;
-			break;
-		}
-
-activate_next:
-		/* Otherwise, put the active lease at the end of the
-		   lease list, and try another lease.. */
-		for (lp = ip->client->leases; lp->next; lp = lp->next)
-			;
-		lp->next = ip->client->active;
-		if (lp->next)
-			lp->next->next = NULL;
-		ip->client->active = ip->client->leases;
-		ip->client->leases = ip->client->leases->next;
-
-		/* If we already tried this lease, we've exhausted the
-		   set of leases, so we might as well give up for
-		   now. */
-		if (ip->client->active == loop)
-			break;
-		else if (!loop)
-			loop = ip->client->active;
-	}
-
-	/* No leases were available, or what was available didn't work, so
-	   tell the shell script that we failed to allocate an address,
-	   and try again later. */
 	note("No working leases in persistent database - sleeping.\n");
 	ip->client->state = S_INIT;
 	add_timeout(cur_time + ip->client->config->retry_interval, state_init,
@@ -1239,8 +1154,6 @@ send_request(void *ipp)
 	if (ip->client->state == S_REBOOTING &&
 	    !ip->client->medium &&
 	    ip->client->active->medium ) {
-		script_init("MEDIUM", ip->client->active->medium);
-
 		/* If the medium we chose won't fly, go to INIT state. */
                 /* XXX Nothing for now */
 
@@ -1709,41 +1622,6 @@ write_client_lease(struct interface_info *ip, struct client_lease *lease,
 }
 
 void
-script_init(char *reason, struct string_list *medium)
-{
-	size_t		 len, mediumlen = 0;
-	struct imsg_hdr	 hdr;
-	struct buf	*buf;
-	int		 errs;
-
-	if (medium != NULL && medium->string != NULL)
-		mediumlen = strlen(medium->string);
-
-	hdr.code = IMSG_SCRIPT_INIT;
-	hdr.len = sizeof(struct imsg_hdr) +
-	    sizeof(size_t) + mediumlen +
-	    sizeof(size_t) + strlen(reason);
-
-	if ((buf = buf_open(hdr.len)) == NULL)
-		return;
-
-	errs = 0;
-	errs += buf_add(buf, &hdr, sizeof(hdr));
-	errs += buf_add(buf, &mediumlen, sizeof(mediumlen));
-	if (mediumlen > 0)
-		errs += buf_add(buf, medium->string, mediumlen);
-	len = strlen(reason);
-	errs += buf_add(buf, &len, sizeof(len));
-	errs += buf_add(buf, reason, len);
-
-	if (errs)
-		error("buf_add: %d", WSAGetLastError());
-
-	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %d", WSAGetLastError());
-}
-
-void
 priv_script_init(struct interface_info *ip, char *reason, char *medium)
 {
 	if (ip) {
@@ -1887,58 +1765,6 @@ supersede:
 	snprintf(tbuf, sizeof(tbuf), "%d", (int)lease->expiry);
 	script_set_env(ip->client, prefix, "expiry", tbuf);
 #endif
-}
-
-void
-script_write_params(char *prefix, struct client_lease *lease)
-{
-	size_t		 fn_len = 0, sn_len = 0, pr_len = 0;
-	struct imsg_hdr	 hdr;
-	struct buf	*buf;
-	int		 errs, i;
-
-	if (lease->filename != NULL)
-		fn_len = strlen(lease->filename);
-	if (lease->server_name != NULL)
-		sn_len = strlen(lease->server_name);
-	if (prefix != NULL)
-		pr_len = strlen(prefix);
-
-	hdr.code = IMSG_SCRIPT_WRITE_PARAMS;
-	hdr.len = sizeof(hdr) + sizeof(struct client_lease) +
-	    sizeof(size_t) + fn_len + sizeof(size_t) + sn_len +
-	    sizeof(size_t) + pr_len;
-
-	for (i = 0; i < 256; i++)
-		hdr.len += sizeof(int) + lease->options[i].len;
-
-	scripttime = time(NULL);
-
-	if ((buf = buf_open(hdr.len)) == NULL)
-		return;
-
-	errs = 0;
-	errs += buf_add(buf, &hdr, sizeof(hdr));
-	errs += buf_add(buf, lease, sizeof(struct client_lease));
-	errs += buf_add(buf, &fn_len, sizeof(fn_len));
-	errs += buf_add(buf, lease->filename, fn_len);
-	errs += buf_add(buf, &sn_len, sizeof(sn_len));
-	errs += buf_add(buf, lease->server_name, sn_len);
-	errs += buf_add(buf, &pr_len, sizeof(pr_len));
-	errs += buf_add(buf, prefix, pr_len);
-
-	for (i = 0; i < 256; i++) {
-		errs += buf_add(buf, &lease->options[i].len,
-		    sizeof(lease->options[i].len));
-		errs += buf_add(buf, lease->options[i].data,
-		    lease->options[i].len);
-	}
-
-	if (errs)
-		error("buf_add: %d", WSAGetLastError());
-
-	if (buf_close(privfd, buf) == -1)
-		error("buf_close: %d", WSAGetLastError());
 }
 
 int

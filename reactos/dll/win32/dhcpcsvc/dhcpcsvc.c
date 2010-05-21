@@ -6,22 +6,63 @@
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */
 
-#include <winsock2.h>
-#include <dhcpcsdk.h>
-#include <time.h>
-#include <dhcp/rosdhcp_public.h>
+#include <rosdhcp.h>
 
 #define NDEBUG
 #include <debug.h>
 
-#define DHCP_TIMEOUT 1000
+static HANDLE PipeHandle = INVALID_HANDLE_VALUE;
 
 DWORD APIENTRY DhcpCApiInitialize(LPDWORD Version) {
-    *Version = 2;
-    return 0;
+    DWORD PipeMode;
+
+    /* Wait for the pipe to be available */
+    if (WaitNamedPipeW(DHCP_PIPE_NAME, NMPWAIT_USE_DEFAULT_WAIT))
+    {
+        /* It's available, let's try to open it */
+        PipeHandle = CreateFileW(DHCP_PIPE_NAME,
+                                 GENERIC_READ | GENERIC_WRITE,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 NULL,
+                                 OPEN_EXISTING,
+                                 0,
+                                 NULL);
+
+        /* Check if we succeeded in opening the pipe */
+        if (PipeHandle == INVALID_HANDLE_VALUE)
+        {
+            /* We didn't */
+            return GetLastError();
+        }
+        else
+        {
+            /* Change the pipe into message mode */
+            PipeMode = PIPE_READMODE_MESSAGE; 
+            if (!SetNamedPipeHandleState(PipeHandle, &PipeMode, NULL, NULL))
+            {
+                /* Mode change failed */
+                CloseHandle(PipeHandle);
+                PipeHandle = INVALID_HANDLE_VALUE;
+                return GetLastError();
+            }
+            else
+            {
+                /* We're good to go */
+                *Version = 2;
+                return NO_ERROR;
+            }
+        }
+    }
+    else
+    {
+        /* No good, we failed */
+        return GetLastError();
+    }
 }
 
 VOID APIENTRY DhcpCApiCleanup() {
+    CloseHandle(PipeHandle);
+    PipeHandle = INVALID_HANDLE_VALUE;
 }
 
 DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
@@ -33,12 +74,20 @@ DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqQueryHWInfo;
     Req.AdapterIndex = AdapterIndex;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return 0;
+    }
 
     if( !Reply.Reply ) return 0;
     else {
@@ -55,12 +104,20 @@ DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqLeaseIpAddress;
     Req.AdapterIndex = AdapterIndex;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return 0;
+    }
 
     return Reply.Reply;
 }
@@ -71,12 +128,20 @@ DWORD APIENTRY DhcpReleaseIpAddressLease( DWORD AdapterIndex ) {
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqReleaseIpAddress;
     Req.AdapterIndex = AdapterIndex;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return 0;
+    }
 
     return Reply.Reply;
 }
@@ -87,12 +152,20 @@ DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqRenewIpAddress;
     Req.AdapterIndex = AdapterIndex;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return 0;
+    }
 
     return Reply.Reply;
 }
@@ -105,14 +178,22 @@ DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqStaticRefreshParams;
     Req.AdapterIndex = AdapterIndex;
     Req.Body.StaticRefreshParams.IPAddress = Address;
     Req.Body.StaticRefreshParams.Netmask = Netmask;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
+    if (!Result)
+    {
+        /* Pipe transaction failed */
+        return 0;
+    }
 
     return Reply.Reply;
 }
@@ -153,7 +234,7 @@ DhcpNotifyConfigChange(LPWSTR ServerName,
                        DWORD SubnetMask,
                        int DhcpAction)
 {
-    DPRINT1("DhcpNotifyConfigChange not implemented yet\n");
+    DbgPrint("DHCPCSVC: DhcpNotifyConfigChange not implemented yet\n");
     return 0;
 }
 
@@ -192,12 +273,15 @@ DWORD APIENTRY DhcpRosGetAdapterInfo( DWORD AdapterIndex,
     DWORD BytesRead;
     BOOL Result;
 
+    ASSERT(PipeHandle != INVALID_HANDLE_VALUE);
+
     Req.Type = DhcpReqGetAdapterInfo;
     Req.AdapterIndex = AdapterIndex;
 
-    Result = CallNamedPipeW
-        ( DHCP_PIPE_NAME, &Req, sizeof(Req), &Reply, sizeof(Reply),
-          &BytesRead, DHCP_TIMEOUT );
+    Result = TransactNamedPipe(PipeHandle,
+                               &Req, sizeof(Req),
+                               &Reply, sizeof(Reply),
+                               &BytesRead, NULL);
 
     if ( 0 != Result && 0 != Reply.Reply ) {
         *DhcpEnabled = Reply.GetAdapterInfo.DhcpEnabled;

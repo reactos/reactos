@@ -43,5 +43,4 @@
 @ stub McastRenewAddress
 @ stub McastRequestAddress
 @ stdcall DhcpRosGetAdapterInfo(long ptr ptr ptr ptr)
-# The Windows DHCP client service is implemented in the DLL too
-#@ stub ServiceMain
+@ stdcall ServiceMain(long ptr)

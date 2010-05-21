@@ -28,6 +28,10 @@ VOID ApiUnlock() {
     LeaveCriticalSection( &ApiCriticalSection );
 }
 
+VOID ApiFree() {
+    DeleteCriticalSection( &ApiCriticalSection );
+}
+
 /* This represents the service portion of the DHCP client API */
 
 DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req ) {
