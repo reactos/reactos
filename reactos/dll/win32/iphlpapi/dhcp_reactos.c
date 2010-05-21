@@ -30,18 +30,14 @@ DWORD getDhcpInfoForAdapter(DWORD AdapterIndex,
     DWORD Status, Version = 0;
 
     Status = DhcpCApiInitialize(&Version);
-    if (Status == ERROR_NOT_READY)
+    if (Status != ERROR_SUCCESS)
     {
-        /* The DHCP server isn't running yet */
+        /* We assume that the DHCP service isn't running yet */
         *DhcpEnabled = FALSE;
         *DhcpServer = htonl(INADDR_NONE);
         *LeaseObtained = 0;
         *LeaseExpires = 0;
         return ERROR_SUCCESS;
-    }
-    else if (Status != ERROR_SUCCESS)
-    {
-        return Status;
     }
 
     Status = DhcpRosGetAdapterInfo(AdapterIndex, DhcpEnabled, DhcpServer,
