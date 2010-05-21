@@ -185,6 +185,7 @@ extern int get_page_size(void);
 
 /* registry functions */
 
+extern unsigned int get_prefix_cpu_mask(void);
 extern void init_registry(void);
 extern void flush_registry(void);
 

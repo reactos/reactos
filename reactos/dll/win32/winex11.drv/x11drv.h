@@ -66,8 +66,6 @@ typedef int Status;
 
 #define WINE_XDND_VERSION 4
 
-struct tagCURSORICONINFO;
-
 extern void CDECL wine_tsx11_lock(void);
 extern void CDECL wine_tsx11_unlock(void);
 
@@ -548,8 +546,6 @@ struct x11drv_thread_data
 {
     Display *display;
     XEvent  *current_event;        /* event currently being processed */
-    Cursor   cursor;               /* current cursor */
-    Window   cursor_window;        /* current window that contains the cursor */
     Window   grab_window;          /* window that currently grabs the mouse */
     HWND     last_focus;           /* last window that had focus */
     XIM      xim;                  /* input method */
@@ -717,7 +713,8 @@ enum x11drv_window_messages
     WM_X11DRV_ACQUIRE_SELECTION = 0x80001000,
     WM_X11DRV_SET_WIN_FORMAT,
     WM_X11DRV_SET_WIN_REGION,
-    WM_X11DRV_RESIZE_DESKTOP
+    WM_X11DRV_RESIZE_DESKTOP,
+    WM_X11DRV_SET_CURSOR
 };
 
 /* _NET_WM_STATE properties that we keep track of */
@@ -747,6 +744,7 @@ struct x11drv_win_data
     RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
     XIC         xic;            /* X input context */
+    HCURSOR     cursor;         /* current cursor */
     XWMHints   *wm_hints;       /* window manager hints */
     BOOL        managed : 1;    /* is window managed? */
     BOOL        mapped : 1;     /* is window mapped? (in either normal or iconic state) */
@@ -783,8 +781,8 @@ extern int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow);
 extern void X11DRV_Clipboard_Cleanup(void);
 extern void X11DRV_ResetSelectionOwner(void);
 extern void CDECL X11DRV_SetFocus( HWND hwnd );
-extern Cursor X11DRV_GetCursor( Display *display, struct tagCURSORICONINFO *ptr );
-extern void CDECL X11DRV_SetCursor( struct tagCURSORICONINFO *lpCursor );
+extern Cursor get_x11_cursor( HCURSOR handle );
+extern void set_window_cursor( HWND hwnd, HCURSOR handle );
 extern BOOL CDECL X11DRV_ClipCursor( LPCRECT clip );
 extern void X11DRV_InitKeyboard( Display *display );
 extern void X11DRV_send_keyboard_input( WORD wVk, WORD wScan, DWORD dwFlags, DWORD time,

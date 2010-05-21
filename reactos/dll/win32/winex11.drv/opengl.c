@@ -113,6 +113,7 @@ typedef struct wine_glcontext {
     BOOL do_escape;
     BOOL has_been_current;
     BOOL sharing;
+    DWORD tid;
     BOOL gl3_context;
     XVisualInfo *vis;
     WineGLPixelFormat *fmt;
@@ -296,15 +297,20 @@ static BOOL infoInitialized = FALSE;
 static BOOL X11DRV_WineGL_InitOpenglInfo(void)
 {
     int screen = DefaultScreen(gdi_display);
-    Window win = RootWindow(gdi_display, screen);
+    Window win = 0, root = 0;
     const char* str;
     XVisualInfo *vis;
     GLXContext ctx = NULL;
+    XSetWindowAttributes attr;
+    BOOL ret = FALSE;
     int attribList[] = {GLX_RGBA, GLX_DOUBLEBUFFER, None};
 
     if (infoInitialized)
         return TRUE;
     infoInitialized = TRUE;
+
+    attr.override_redirect = True;
+    attr.colormap = None;
 
     wine_tsx11_lock();
 
@@ -317,23 +323,26 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
         if (wine_get_fs() != old_fs)
         {
             wine_set_fs( old_fs );
-            wine_tsx11_unlock();
             ERR( "%%fs register corrupted, probably broken ATI driver, disabling OpenGL.\n" );
             ERR( "You need to set the \"UseFastTls\" option to \"2\" in your X config file.\n" );
-            return FALSE;
+            goto done;
         }
 #else
         ctx = pglXCreateContext(gdi_display, vis, None, GL_TRUE);
 #endif
     }
+    if (!ctx) goto done;
 
-    if (ctx) {
-        pglXMakeCurrent(gdi_display, win, ctx);
-    } else {
-        ERR(" couldn't initialize OpenGL, expect problems\n");
-        wine_tsx11_unlock();
-        return FALSE;
-    }
+    root = RootWindow( gdi_display, vis->screen );
+    if (vis->visual != DefaultVisual( gdi_display, vis->screen ))
+        attr.colormap = XCreateColormap( gdi_display, root, vis->visual, AllocNone );
+    if ((win = XCreateWindow( gdi_display, root, -1, -1, 1, 1, 0, vis->depth, InputOutput,
+                              vis->visual, CWOverrideRedirect | CWColormap, &attr )))
+        XMapWindow( gdi_display, win );
+    else
+        win = root;
+
+    pglXMakeCurrent(gdi_display, win, ctx);
 
     WineGLInfo.glVersion = (const char *) pglGetString(GL_VERSION);
     str = (const char *) pglGetString(GL_EXTENSIONS);
@@ -390,14 +399,19 @@ static BOOL X11DRV_WineGL_InitOpenglInfo(void)
         if(!strcmp(gl_renderer, "Software Rasterizer") || !strcmp(gl_renderer, "Mesa X11"))
             ERR_(winediag)("The Mesa OpenGL driver is using software rendering, most likely your OpenGL drivers haven't been installed correctly\n");
     }
+    ret = TRUE;
 
+done:
     if(vis) XFree(vis);
     if(ctx) {
         pglXMakeCurrent(gdi_display, None, NULL);    
         pglXDestroyContext(gdi_display, ctx);
     }
+    if (win != root) XDestroyWindow( gdi_display, win );
+    if (attr.colormap) XFreeColormap( gdi_display, attr.colormap );
     wine_tsx11_unlock();
-    return TRUE;
+    if (!ret) ERR(" couldn't initialize OpenGL, expect problems\n");
+    return ret;
 }
 
 void X11DRV_OpenGL_Cleanup(void)
@@ -890,7 +904,7 @@ static int get_render_type_from_fbconfig(Display *display, GLXFBConfig fbconfig)
             render_type = GLX_RGBA_UNSIGNED_FLOAT_TYPE_EXT;
             break;
         default:
-            ERR("Unknown render_type: %x\n", render_type);
+            ERR("Unknown render_type: %x\n", render_type_bit);
     }
     return render_type;
 }
@@ -992,6 +1006,21 @@ static WineGLPixelFormat *get_formats(Display *display, int *size_ret, int *onsc
                     onscreen_size++;
                 }
             } else if(run && !visinfo) {
+                int window_drawable=0;
+                pglXGetFBConfigAttrib(gdi_display, cfgs[i], GLX_DRAWABLE_TYPE, &window_drawable);
+
+                /* Recent Nvidia drivers and DRI drivers offer window drawable formats without a visual.
+                 * This are formats like 16-bit rgb on a 24-bit desktop. In order to support these formats
+                 * onscreen we would have to use glXCreateWindow instead of XCreateWindow. Further it will
+                 * likely make our child window opengl rendering more complicated since likely you can't use
+                 * XCopyArea on a GLX Window.
+                 * For now ignore fbconfigs which are window drawable but lack a visual. */
+                if(window_drawable & GLX_WINDOW_BIT)
+                {
+                    TRACE("Skipping FBCONFIG_ID 0x%x as an offscreen format because it is window_drawable\n", fmt_id);
+                    continue;
+                }
+
                 TRACE("Found offscreen format FBCONFIG_ID 0x%x corresponding to iPixelFormat %d at GLX index %d\n", fmt_id, size+1, i);
                 list[size].iPixelFormat = size+1; /* The index starts at 1 */
                 list[size].fbconfig = cfgs[i];
@@ -1034,7 +1063,7 @@ static WineGLPixelFormat* ConvertPixelFormatWGLtoGLX(Display *display, int iPixe
     if((iPixelFormat > 0) && (iPixelFormat <= size) &&
        (!list[iPixelFormat-1].offscreenOnly || AllowOffscreen)) {
         res = &list[iPixelFormat-1];
-        TRACE("Returning FBConfig=%p for iPixelFormat=%d\n", res->fbconfig, iPixelFormat);
+        TRACE("Returning fmt_id=%#x for iPixelFormat=%d\n", res->fmt_id, iPixelFormat);
     }
 
     if(AllowOffscreen)
@@ -1748,29 +1777,37 @@ HGLRC CDECL X11DRV_wglCreateContext(X11DRV_PDEVICE *physDev)
 BOOL CDECL X11DRV_wglDeleteContext(HGLRC hglrc)
 {
     Wine_GLContext *ctx = (Wine_GLContext *) hglrc;
-    BOOL ret = TRUE;
 
     TRACE("(%p)\n", hglrc);
 
     if (!has_opengl()) return 0;
 
-    wine_tsx11_lock();
-    /* A game (Half Life not to name it) deletes twice the same context,
-    * so make sure it is valid first */
-    if (is_valid_context( ctx ))
-    {
-        if (ctx->ctx) pglXDestroyContext(gdi_display, ctx->ctx);
-        free_context(ctx);
-    }
-    else
+    if (!is_valid_context(ctx))
     {
         WARN("Error deleting context !\n");
         SetLastError(ERROR_INVALID_HANDLE);
-        ret = FALSE;
+        return FALSE;
     }
-    wine_tsx11_unlock();
 
-    return ret;
+    /* WGL doesn't allow deletion of a context which is current in another thread */
+    if (ctx->tid != 0 && ctx->tid != GetCurrentThreadId())
+    {
+        TRACE("Cannot delete context=%p because it is current in another thread.\n", ctx);
+        return FALSE;
+    }
+
+    /* WGL makes a context not current if it is active before deletion. GLX waits until the context is not current. */
+    if (ctx == NtCurrentTeb()->glContext)
+        wglMakeCurrent(ctx->hdc, NULL);
+
+    if (ctx->ctx)
+    {
+        wine_tsx11_lock();
+        pglXDestroyContext(gdi_display, ctx->ctx);
+        wine_tsx11_unlock();
+    }
+
+    return TRUE;
 }
 
 /**
@@ -1842,16 +1879,26 @@ BOOL CDECL X11DRV_wglMakeCurrent(X11DRV_PDEVICE *physDev, HGLRC hglrc) {
     if (!has_opengl()) return FALSE;
 
     wine_tsx11_lock();
-    if (hglrc == NULL) {
+    if (hglrc == NULL)
+    {
+        Wine_GLContext *prev_ctx = NtCurrentTeb()->glContext;
+        if (prev_ctx) prev_ctx->tid = 0;
+
         ret = pglXMakeCurrent(gdi_display, None, NULL);
         NtCurrentTeb()->glContext = NULL;
-    } else if (ctx->fmt->iPixelFormat != physDev->current_pf) {
+    }
+    else if (ctx->fmt->iPixelFormat != physDev->current_pf)
+    {
         WARN( "mismatched pixel format hdc %p %u ctx %p %u\n",
               hdc, physDev->current_pf, ctx, ctx->fmt->iPixelFormat );
         SetLastError( ERROR_INVALID_PIXEL_FORMAT );
         ret = FALSE;
-    } else {
+    }
+    else
+    {
         Drawable drawable = get_glxdrawable(physDev);
+        Wine_GLContext *prev_ctx = NtCurrentTeb()->glContext;
+        if (prev_ctx) prev_ctx->tid = 0;
 
         /* The describe lines below are for debugging purposes only */
         if (TRACE_ON(wgl)) {
@@ -1866,6 +1913,7 @@ BOOL CDECL X11DRV_wglMakeCurrent(X11DRV_PDEVICE *physDev, HGLRC hglrc) {
         if(ret)
         {
             ctx->has_been_current = TRUE;
+            ctx->tid = GetCurrentThreadId();
             ctx->hdc = hdc;
             ctx->read_hdc = hdc;
             ctx->drawables[0] = drawable;
@@ -1898,18 +1946,28 @@ BOOL CDECL X11DRV_wglMakeContextCurrentARB(X11DRV_PDEVICE* pDrawDev, X11DRV_PDEV
     if (!has_opengl()) return 0;
 
     wine_tsx11_lock();
-    if (hglrc == NULL) {
+    if (hglrc == NULL)
+    {
+        Wine_GLContext *prev_ctx = NtCurrentTeb()->glContext;
+        if (prev_ctx) prev_ctx->tid = 0;
+
         ret = pglXMakeCurrent(gdi_display, None, NULL);
         NtCurrentTeb()->glContext = NULL;
-    } else {
+    }
+    else
+    {
         if (NULL == pglXMakeContextCurrent) {
             ret = FALSE;
         } else {
+            Wine_GLContext *prev_ctx = NtCurrentTeb()->glContext;
             Wine_GLContext *ctx = (Wine_GLContext *) hglrc;
             Drawable d_draw = get_glxdrawable(pDrawDev);
             Drawable d_read = get_glxdrawable(pReadDev);
 
+            if (prev_ctx) prev_ctx->tid = 0;
+
             ctx->has_been_current = TRUE;
+            ctx->tid = GetCurrentThreadId();
             ctx->hdc = pDrawDev->hdc;
             ctx->read_hdc = pReadDev->hdc;
             ctx->drawables[0] = d_draw;

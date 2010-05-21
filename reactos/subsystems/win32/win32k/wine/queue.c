@@ -1330,12 +1330,11 @@ static user_handle_t find_hardware_message_window( struct thread_input *input, s
 }
 
 /* queue a hardware message into a given thread input */
-static void queue_hardware_message( struct msg_queue *queue, struct message *msg,
+static void queue_hardware_message( struct thread_input *input, struct message *msg,
                                     struct hardware_msg_data *data )
 {
     user_handle_t win;
     PTHREADINFO thread;
-    struct thread_input *input = queue ? queue->input : foreground_input;
     unsigned int msg_code;
 
     last_input_time = EngGetTickCount();
@@ -1793,10 +1792,10 @@ DECL_HANDLER(send_message)
 DECL_HANDLER(send_hardware_message)
 {
     struct message *msg;
-    struct msg_queue *recv_queue = NULL;
     PETHREAD ethread = NULL;
     PTHREADINFO thread = NULL;
     struct hardware_msg_data *data;
+    struct thread_input *input = foreground_input;
     NTSTATUS status;
 
     if (req->id)
@@ -1809,13 +1808,13 @@ DECL_HANDLER(send_hardware_message)
             ObDereferenceObject(ethread);
             return;
         }
-    }
-
-    if (thread && !(recv_queue = thread->queue))
-    {
-        set_error( STATUS_INVALID_PARAMETER );
-        ObDereferenceObject(thread->peThread);
-        return;
+        if (!thread->queue)
+        {
+            set_error( STATUS_INVALID_PARAMETER );
+            ObDereferenceObject(ethread);
+            return;
+        }
+        input = thread->queue->input;
     }
 
     if (!(data = mem_alloc( sizeof(*data) )))
@@ -1839,11 +1838,16 @@ DECL_HANDLER(send_hardware_message)
         msg->result    = NULL;
         msg->data      = data;
         msg->data_size = sizeof(*data);
-        queue_hardware_message( recv_queue, msg, data );
+        queue_hardware_message( input, msg, data );
     }
     else ExFreePool( data );
 
-    if (thread) ObDereferenceObject(thread->peThread);
+    if (thread)
+    {
+        reply->cursor = input->cursor;
+        reply->count  = input->cursor_count;
+        ObDereferenceObject(thread->peThread);
+    }
 }
 
 /* post a quit message to the current queue */

@@ -329,7 +329,6 @@ static int get_window_attributes( Display *display, struct x11drv_win_data *data
     attr->override_redirect = !data->managed;
     attr->colormap          = X11DRV_PALETTE_PaletteXColormap;
     attr->save_under        = ((GetClassLongW( data->hwnd, GCL_STYLE ) & CS_SAVEBITS) != 0);
-    attr->cursor            = x11drv_thread_data()->cursor;
     attr->bit_gravity       = NorthWestGravity;
     attr->win_gravity       = StaticGravity;
     attr->backing_store     = NotUseful;
@@ -339,7 +338,7 @@ static int get_window_attributes( Display *display, struct x11drv_win_data *data
                                KeymapStateMask | StructureNotifyMask);
     if (data->managed) attr->event_mask |= PropertyChangeMask;
 
-    return (CWOverrideRedirect | CWSaveUnder | CWColormap | CWCursor |
+    return (CWOverrideRedirect | CWSaveUnder | CWColormap |
             CWEventMask | CWBitGravity | CWBackingStore);
 }
 
@@ -389,8 +388,6 @@ static Window create_client_window( Display *display, struct x11drv_win_data *da
 
     if (data->client_window)
     {
-        struct x11drv_thread_data *thread_data = x11drv_thread_data();
-        if (thread_data->cursor_window == data->client_window) thread_data->cursor_window = None;
         XDeleteContext( display, data->client_window, winContext );
         XDestroyWindow( display, data->client_window );
     }
@@ -801,8 +798,6 @@ static Window create_icon_window( Display *display, struct x11drv_win_data *data
 static void destroy_icon_window( Display *display, struct x11drv_win_data *data )
 {
     if (!data->icon_window) return;
-    if (x11drv_thread_data()->cursor_window == data->icon_window)
-        x11drv_thread_data()->cursor_window = None;
     wine_tsx11_lock();
     XDeleteContext( display, data->icon_window, winContext );
     XDestroyWindow( display, data->icon_window );
@@ -813,20 +808,98 @@ static void destroy_icon_window( Display *display, struct x11drv_win_data *data 
 
 
 /***********************************************************************
+ *              get_bitmap_argb
+ *
+ * Return the bitmap bits in ARGB format. Helper for setting icon hints.
+ */
+static unsigned long *get_bitmap_argb( HDC hdc, HBITMAP color, HBITMAP mask, unsigned int *size )
+{
+    BITMAP bm;
+    BITMAPINFO *info;
+    unsigned int *ptr, *bits = NULL;
+    unsigned char *mask_bits = NULL;
+    int i, j, has_alpha = 0;
+
+    if (!GetObjectW( color, sizeof(bm), &bm )) return NULL;
+    if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) return NULL;
+    info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    info->bmiHeader.biWidth = bm.bmWidth;
+    info->bmiHeader.biHeight = -bm.bmHeight;
+    info->bmiHeader.biPlanes = 1;
+    info->bmiHeader.biBitCount = 32;
+    info->bmiHeader.biCompression = BI_RGB;
+    info->bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
+    info->bmiHeader.biXPelsPerMeter = 0;
+    info->bmiHeader.biYPelsPerMeter = 0;
+    info->bmiHeader.biClrUsed = 0;
+    info->bmiHeader.biClrImportant = 0;
+    *size = bm.bmWidth * bm.bmHeight + 2;
+    if (!(bits = HeapAlloc( GetProcessHeap(), 0, *size * sizeof(long) ))) goto failed;
+    if (!GetDIBits( hdc, color, 0, bm.bmHeight, bits + 2, info, DIB_RGB_COLORS )) goto failed;
+
+    bits[0] = bm.bmWidth;
+    bits[1] = bm.bmHeight;
+
+    for (i = 0; i < bm.bmWidth * bm.bmHeight; i++)
+        if ((has_alpha = (bits[i + 2] & 0xff000000) != 0)) break;
+
+    if (!has_alpha)
+    {
+        unsigned int width_bytes = (bm.bmWidth + 31) / 32 * 4;
+        /* generate alpha channel from the mask */
+        info->bmiHeader.biBitCount = 1;
+        info->bmiHeader.biSizeImage = width_bytes * bm.bmHeight;
+        if (!(mask_bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage ))) goto failed;
+        if (!GetDIBits( hdc, mask, 0, bm.bmHeight, mask_bits, info, DIB_RGB_COLORS )) goto failed;
+        ptr = bits + 2;
+        for (i = 0; i < bm.bmHeight; i++)
+            for (j = 0; j < bm.bmWidth; j++, ptr++)
+                if (!((mask_bits[i * width_bytes + j / 8] << (j % 8)) & 0x80)) *ptr |= 0xff000000;
+        HeapFree( GetProcessHeap(), 0, mask_bits );
+    }
+    HeapFree( GetProcessHeap(), 0, info );
+
+    /* convert to array of longs */
+    if (bits && sizeof(long) > sizeof(int))
+        for (i = *size - 1; i >= 0; i--) ((unsigned long *)bits)[i] = bits[i];
+
+    return (unsigned long *)bits;
+
+failed:
+    HeapFree( GetProcessHeap(), 0, info );
+    HeapFree( GetProcessHeap(), 0, bits );
+    HeapFree( GetProcessHeap(), 0, mask_bits );
+    return NULL;
+}
+
+
+/***********************************************************************
  *              set_icon_hints
  *
  * Set the icon wm hints
  */
-static void set_icon_hints( Display *display, struct x11drv_win_data *data, HICON hIcon )
+static void set_icon_hints( Display *display, struct x11drv_win_data *data,
+                            HICON icon_big, HICON icon_small )
 {
     XWMHints *hints = data->wm_hints;
+
+    if (!icon_big)
+    {
+        icon_big = (HICON)SendMessageW( data->hwnd, WM_GETICON, ICON_BIG, 0 );
+        if (!icon_big) icon_big = (HICON)GetClassLongPtrW( data->hwnd, GCLP_HICON );
+    }
+    if (!icon_small)
+    {
+        icon_small = (HICON)SendMessageW( data->hwnd, WM_GETICON, ICON_SMALL, 0 );
+        if (!icon_small) icon_small = (HICON)GetClassLongPtrW( data->hwnd, GCLP_HICONSM );
+    }
 
     if (data->hWMIconBitmap) DeleteObject( data->hWMIconBitmap );
     if (data->hWMIconMask) DeleteObject( data->hWMIconMask);
     data->hWMIconBitmap = 0;
     data->hWMIconMask = 0;
 
-    if (!hIcon)
+    if (!icon_big)
     {
         if (!data->icon_window) create_icon_window( display, data );
         hints->icon_window = data->icon_window;
@@ -839,8 +912,10 @@ static void set_icon_hints( Display *display, struct x11drv_win_data *data, HICO
         BITMAP bm;
         ICONINFO ii;
         HDC hDC;
+        unsigned int size;
+        unsigned long *bits;
 
-        GetIconInfo(hIcon, &ii);
+        GetIconInfo(icon_big, &ii);
 
         GetObjectW(ii.hbmMask, sizeof(bm), &bm);
         rcMask.top    = 0;
@@ -849,47 +924,40 @@ static void set_icon_hints( Display *display, struct x11drv_win_data *data, HICO
         rcMask.bottom = bm.bmHeight;
 
         hDC = CreateCompatibleDC(0);
+        bits = get_bitmap_argb( hDC, ii.hbmColor, ii.hbmMask, &size );
+        if (GetIconInfo( icon_small, &ii ))
+        {
+            unsigned int size_small;
+            unsigned long *bits_small, *new;
+
+            if ((bits_small = get_bitmap_argb( hDC, ii.hbmColor, ii.hbmMask, &size_small )) &&
+                (bits_small[0] != bits[0] || bits_small[1] != bits[1]))  /* size must be different */
+            {
+                if ((new = HeapReAlloc( GetProcessHeap(), 0, bits,
+                                        (size + size_small) * sizeof(unsigned long) )))
+                {
+                    bits = new;
+                    memcpy( bits + size, bits_small, size_small * sizeof(unsigned long) );
+                    size += size_small;
+                }
+            }
+            HeapFree( GetProcessHeap(), 0, bits_small );
+            DeleteObject( ii.hbmColor );
+            DeleteObject( ii.hbmMask );
+        }
+        wine_tsx11_lock();
+        if (bits)
+            XChangeProperty( display, data->whole_window, x11drv_atom(_NET_WM_ICON),
+                             XA_CARDINAL, 32, PropModeReplace, (unsigned char *)bits, size );
+        else
+            XDeleteProperty( display, data->whole_window, x11drv_atom(_NET_WM_ICON) );
+        wine_tsx11_unlock();
+        HeapFree( GetProcessHeap(), 0, bits );
+
         hbmOrig = SelectObject(hDC, ii.hbmMask);
         InvertRect(hDC, &rcMask);
         SelectObject(hDC, ii.hbmColor);  /* force the color bitmap to x11drv mode too */
-
-        GetObjectW(ii.hbmColor, sizeof(bm), &bm);
-        if (bm.bmBitsPixel == 32)  /* FIXME: do this for other depths too */
-        {
-            BITMAPINFO info;
-            unsigned int size, *bits;
-
-            info.bmiHeader.biSize = sizeof(info);
-            info.bmiHeader.biWidth = bm.bmWidth;
-            info.bmiHeader.biHeight = -bm.bmHeight;
-            info.bmiHeader.biPlanes = 1;
-            info.bmiHeader.biBitCount = 32;
-            info.bmiHeader.biCompression = BI_RGB;
-            info.bmiHeader.biSizeImage = bm.bmWidth * bm.bmHeight * 4;
-            info.bmiHeader.biXPelsPerMeter = 0;
-            info.bmiHeader.biYPelsPerMeter = 0;
-            info.bmiHeader.biClrUsed = 0;
-            info.bmiHeader.biClrImportant = 0;
-            size = bm.bmWidth * bm.bmHeight + 2;
-            bits = HeapAlloc( GetProcessHeap(), 0, size * sizeof(long) );
-            if (bits && GetDIBits( hDC, ii.hbmColor, 0, bm.bmHeight, bits + 2, &info, DIB_RGB_COLORS ))
-            {
-                bits[0] = bm.bmWidth;
-                bits[1] = bm.bmHeight;
-                if (sizeof(long) > sizeof(int))  /* convert to array of longs */
-                {
-                    int i = size;
-                    while (--i >= 0) ((unsigned long *)bits)[i] = bits[i];
-                }
-                wine_tsx11_lock();
-                XChangeProperty( display, data->whole_window, x11drv_atom(_NET_WM_ICON),
-                                 XA_CARDINAL, 32, PropModeReplace, (unsigned char *)bits, size );
-                wine_tsx11_unlock();
-            }
-            HeapFree( GetProcessHeap(), 0, bits );
-        }
         SelectObject(hDC, hbmOrig);
-        DeleteDC(hDC);
 
         data->hWMIconBitmap = ii.hbmColor;
         data->hWMIconMask = ii.hbmMask;
@@ -898,6 +966,8 @@ static void set_icon_hints( Display *display, struct x11drv_win_data *data, HICO
         hints->icon_mask = X11DRV_get_pixmap(data->hWMIconMask);
         destroy_icon_window( display, data );
         hints->flags = (hints->flags & ~IconWindowHint) | IconPixmapHint | IconMaskHint;
+
+        DeleteDC(hDC);
     }
 }
 
@@ -984,6 +1054,7 @@ static void set_initial_wm_hints( Display *display, struct x11drv_win_data *data
     Atom dndVersion = WINE_XDND_VERSION;
     XClassHint *class_hints;
     char *process_name = get_process_name();
+    Cursor cursor;
 
     wine_tsx11_lock();
 
@@ -1016,15 +1087,16 @@ static void set_initial_wm_hints( Display *display, struct x11drv_win_data *data
     XChangeProperty( display, data->whole_window, x11drv_atom(XdndAware),
                      XA_ATOM, 32, PropModeReplace, (unsigned char*)&dndVersion, 1 );
 
+    if ((cursor = get_x11_cursor( data->cursor )))
+        XDefineCursor( gdi_display, data->whole_window, cursor );
+
     data->wm_hints = XAllocWMHints();
     wine_tsx11_unlock();
 
     if (data->wm_hints)
     {
-        HICON icon = (HICON)SendMessageW( data->hwnd, WM_GETICON, ICON_BIG, 0 );
-        if (!icon) icon = (HICON)GetClassLongPtrW( data->hwnd, GCLP_HICON );
         data->wm_hints->flags = 0;
-        set_icon_hints( display, data, icon );
+        set_icon_hints( display, data, 0, 0 );
     }
 }
 
@@ -1623,14 +1695,9 @@ done:
  */
 static void destroy_whole_window( Display *display, struct x11drv_win_data *data, BOOL already_destroyed )
 {
-    struct x11drv_thread_data *thread_data = x11drv_thread_data();
-
     if (!data->whole_window) return;
 
     TRACE( "win %p xwin %lx/%lx\n", data->hwnd, data->whole_window, data->client_window );
-    if (thread_data->cursor_window == data->whole_window ||
-        thread_data->cursor_window == data->client_window)
-        thread_data->cursor_window = None;
     wine_tsx11_lock();
     XDeleteContext( display, data->whole_window, winContext );
     XDeleteContext( display, data->client_window, winContext );
@@ -2349,7 +2416,6 @@ void CDECL X11DRV_SetWindowIcon( HWND hwnd, UINT type, HICON icon )
     Display *display = thread_display();
     struct x11drv_win_data *data;
 
-    if (type != ICON_BIG) return;  /* nothing to do here */
 
     if (!(data = X11DRV_get_win_data( hwnd ))) return;
     if (!data->whole_window) return;
@@ -2357,7 +2423,8 @@ void CDECL X11DRV_SetWindowIcon( HWND hwnd, UINT type, HICON icon )
 
     if (data->wm_hints)
     {
-        set_icon_hints( display, data, icon );
+        if (type == ICON_BIG) set_icon_hints( display, data, icon, 0 );
+        else set_icon_hints( display, data, 0, icon );
         wine_tsx11_lock();
         XSetWMHints( display, data->whole_window, data->wm_hints );
         wine_tsx11_unlock();
@@ -2426,6 +2493,9 @@ LRESULT CDECL X11DRV_WindowMessage( HWND hwnd, UINT msg, WPARAM wp, LPARAM lp )
         return 0;
     case WM_X11DRV_RESIZE_DESKTOP:
         X11DRV_resize_desktop( LOWORD(lp), HIWORD(lp) );
+        return 0;
+    case WM_X11DRV_SET_CURSOR:
+        set_window_cursor( hwnd, (HCURSOR)lp );
         return 0;
     default:
         FIXME( "got window msg %x hwnd %p wp %lx lp %lx\n", msg, hwnd, wp, lp );

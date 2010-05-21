@@ -28,6 +28,7 @@
 #include "wingdi.h"
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
+#include "winuser16.h"
 #include <winddi.h>
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
@@ -68,6 +69,7 @@ static const UINT button_up_flags[NB_BUTTONS] =
     MOUSEEVENTF_XUP
 };
 
+static HWND cursor_window;
 static BYTE TrackSysKey = 0; /* determine whether ALT key up will cause a WM_SYSKEYUP
                                 or a WM_KEYUP message */
 
@@ -193,6 +195,7 @@ void NTDRV_SendMouseInput( HWND hwnd, DWORD flags, DWORD x, DWORD y,
 
     /* get the window handle from cursor position */
     hwnd = SwmGetWindowFromPoint(pt.x, pt.y);
+    cursor_window = hwnd;
 
     if (flags & MOUSEEVENTF_MOVE)
     {
@@ -381,3 +384,148 @@ void NTDRV_SendKeyboardInput( WORD wVk, WORD wScan, DWORD event_flags, DWORD tim
 
     RosUserSetAsyncKeyboardState(key_state_table);
 }
+
+/***********************************************************************
+ *           get_bitmap_width_bytes
+ *
+ * Return number of bytes taken by a scanline of 16-bit aligned Windows DDB
+ * data.
+ * from user32/cursoricon.c:168
+ */
+static int get_bitmap_width_bytes( int width, int bpp )
+{
+    switch(bpp)
+    {
+    case 1:
+        return 2 * ((width+15) / 16);
+    case 4:
+        return 2 * ((width+3) / 4);
+    case 24:
+        width *= 3;
+        /* fall through */
+    case 8:
+        return width + (width & 1);
+    case 16:
+    case 15:
+        return width * 2;
+    case 32:
+        return width * 4;
+    default:
+        WARN("Unknown depth %d, please report.\n", bpp );
+    }
+    return -1;
+}
+
+VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
+{
+    INT height;
+    BITMAP bitmap;
+    PVOID pbits;
+    static const WORD ICON_HOTSPOT = 0x4242; /* From user32/cursoricon.c:128 */
+
+    //TRACE("%p => %dx%d, %d bpp\n", ciconinfo,
+    //      ciconinfo->nWidth, ciconinfo->nHeight, ciconinfo->bBitsPerPixel);
+
+    if ( (ciconinfo->ptHotSpot.x == ICON_HOTSPOT) &&
+         (ciconinfo->ptHotSpot.y == ICON_HOTSPOT) )
+    {
+      iconinfo->fIcon    = TRUE;
+      iconinfo->xHotspot = ciconinfo->nWidth / 2;
+      iconinfo->yHotspot = ciconinfo->nHeight / 2;
+    }
+    else
+    {
+      iconinfo->fIcon    = FALSE;
+      iconinfo->xHotspot = ciconinfo->ptHotSpot.x;
+      iconinfo->yHotspot = ciconinfo->ptHotSpot.y;
+    }
+
+    height = ciconinfo->nHeight;
+
+    if (ciconinfo->bBitsPerPixel > 1)
+    {
+        pbits = (char *)(ciconinfo + 1) + ciconinfo->nHeight * get_bitmap_width_bytes (ciconinfo->nWidth,1);
+
+        iconinfo->hbmColor = CreateBitmap( ciconinfo->nWidth, ciconinfo->nHeight,
+                                           ciconinfo->bPlanes, ciconinfo->bBitsPerPixel,
+                                           pbits);
+        if(GetObjectW(iconinfo->hbmColor, sizeof(bitmap), &bitmap))
+            RosGdiCreateBitmap(NULL, iconinfo->hbmColor, &bitmap, pbits);
+    }
+    else
+    {
+        iconinfo->hbmColor = 0;
+        height *= 2;
+    }
+
+    pbits = (char *)(ciconinfo + 1);
+
+    /* Create the mask bitmap */
+    iconinfo->hbmMask = CreateBitmap ( ciconinfo->nWidth, height,
+                                       1, 1, pbits);
+    if( GetObjectW(iconinfo->hbmMask, sizeof(bitmap), &bitmap))
+    {
+        RosGdiCreateBitmap(NULL, iconinfo->hbmMask, &bitmap, pbits);
+    }
+}
+
+/***********************************************************************
+ *		CreateCursorIcon (NTDRV.@)
+ */
+void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
+{
+    static const WORD ICON_HOTSPOT = 0x4242;
+    ICONINFO IconInfo;
+
+    /* ignore icons (FIXME: shouldn't use magic hotspot value) */
+    if (info->ptHotSpot.x == ICON_HOTSPOT && info->ptHotSpot.y == ICON_HOTSPOT) return;
+
+#if 0
+    if (lpCursor == NULL)
+    {
+        RosUserSetCursor(NULL);
+    }
+    else
+    {
+        /* Set the cursor */
+        RosUserSetCursor( &IconInfo );
+    }
+#endif
+
+    /* Create cursor bitmaps */
+    RosDrv_GetIconInfo( lpCursor, &IconInfo );
+
+    //cursor = create_cursor( gdi_display, info );
+    //if (cursor)
+    //{
+        //if (!cursor_context) cursor_context = XUniqueContext();
+        //XSaveContext( gdi_display, (XID)handle, cursor_context, (char *)cursor );
+        FIXME( "cursor %p %ux%u, planes %u, bpp %u -> xid %lx\n",
+               handle, info->nWidth, info->nHeight, info->bPlanes, info->bBitsPerPixel, /*cursor*/ 0);
+    //}
+}
+
+/***********************************************************************
+ *		DestroyCursorIcon (NTDRV.@)
+ */
+void CDECL RosDrv_DestroyCursorIcon( HCURSOR handle )
+{
+    //Cursor cursor;
+
+    FIXME( "%p xid %lx\n", handle, /*cursor*/ 0 );
+
+    /*if ((cursor = get_x11_cursor( handle )))
+    {
+        TRACE( "%p xid %lx\n", handle, cursor );
+        XFreeCursor( gdi_display, cursor );
+        XDeleteContext( gdi_display, (XID)handle, cursor_context );
+    }*/
+}
+
+void CDECL RosDrv_SetCursor( HCURSOR handle )
+{
+    //if (cursor_window) SendNotifyMessageW( cursor_window, WM_X11DRV_SET_CURSOR, 0, (LPARAM)handle );
+    FIXME("handle %x, cursor_window %x\n", handle, cursor_window);
+    RosUserSetCursor(NULL);
+}
+

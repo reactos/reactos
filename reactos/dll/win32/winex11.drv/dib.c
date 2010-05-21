@@ -208,7 +208,7 @@ int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
-        return sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) + colors *
+        return info->bmiHeader.biSize + masks * sizeof(DWORD) + colors *
                ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
     }
 }
@@ -970,7 +970,6 @@ static void X11DRV_DIB_GetImageBits_4( int lines, BYTE *dstbits,
 {
     DWORD x;
     int h, width = min(srcwidth, dstwidth);
-    BYTE *bits;
 
     if (lines < 0 )
     {
@@ -978,8 +977,6 @@ static void X11DRV_DIB_GetImageBits_4( int lines, BYTE *dstbits,
        dstbits = dstbits + ( linebytes * (lines-1) );
        linebytes = -linebytes;
     }
-
-    bits = dstbits;
 
     switch (bmpImage->depth) {
     case 1:
@@ -3184,7 +3181,6 @@ static void X11DRV_DIB_GetImageBits_32( X11DRV_PDEVICE *physDev, int lines, BYTE
 {
     DWORD x;
     int h, width = min(srcwidth, dstwidth);
-    BYTE *bits;
     const dib_conversions *convs = (bmpImage->byte_order == LSBFirst) ? &dib_normal : &dib_src_byteswap;
 
     if (lines < 0 )
@@ -3193,8 +3189,6 @@ static void X11DRV_DIB_GetImageBits_32( X11DRV_PDEVICE *physDev, int lines, BYTE
         dstbits = dstbits + ( linebytes * (lines-1) );
         linebytes = -linebytes;
     }
-
-    bits = dstbits;
 
     switch (bmpImage->depth)
     {

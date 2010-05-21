@@ -1581,11 +1581,11 @@ static Picture get_mask_pict( int alpha )
 
     if (!pixmap)
     {
-        const WineXRenderFormat *fmt = get_xrender_format( WXR_FORMAT_MONO );
+        const WineXRenderFormat *fmt = get_xrender_format( WXR_FORMAT_A8R8G8B8 );
         XRenderPictureAttributes pa;
 
         wine_tsx11_lock();
-        pixmap = XCreatePixmap( gdi_display, root_window, 1, 1, 1 );
+        pixmap = XCreatePixmap( gdi_display, root_window, 1, 1, 32 );
         pa.repeat = RepeatNormal;
         pict = pXRenderCreatePicture( gdi_display, pixmap, fmt->pict_format, CPRepeat, &pa );
         wine_tsx11_unlock();
@@ -1626,8 +1626,6 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
     AA_Type aa_type = AA_None;
     DIBSECTION bmp;
     unsigned int idx;
-    double cosEsc, sinEsc;
-    LOGFONTW lf;
     const WineXRenderFormat *dst_format = get_xrender_format_from_color_shifts(physDev->depth, physDev->color_shifts);
     Picture tile_pict = 0;
 
@@ -1678,16 +1676,6 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
         goto done_unlock;
     }
 
-    
-    GetObjectW(GetCurrentObject(physDev->hdc, OBJ_FONT), sizeof(lf), &lf);
-    if(lf.lfEscapement != 0) {
-        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
-        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
-    } else {
-        cosEsc = 1;
-        sinEsc = 0;
-    }
-
     if (flags & ETO_CLIPPED)
     {
         HRGN clip_region;
@@ -1731,7 +1719,7 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
     if(X11DRV_XRender_Installed)
     {
         XGlyphElt16 *elts = HeapAlloc(GetProcessHeap(), 0, sizeof(XGlyphElt16) * count);
-        INT offset = 0;
+        POINT offset = {0, 0};
         POINT desired, current;
         int render_op = PictOpOver;
         Picture pict = get_xrender_picture(physDev);
@@ -1769,9 +1757,15 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
             }
             else
             {
-                offset += lpDx[idx];
-                desired.x = physDev->dc_rect.left + x + offset * cosEsc;
-                desired.y = physDev->dc_rect.top  + y - offset * sinEsc;
+                if(flags & ETO_PDY)
+                {
+                    offset.x += lpDx[idx * 2];
+                    offset.y += lpDx[idx * 2 + 1];
+                }
+                else
+                    offset.x += lpDx[idx];
+                desired.x = physDev->dc_rect.left + x + offset.x;
+                desired.y = physDev->dc_rect.top  + y + offset.y;
             }
         }
         wine_tsx11_lock();
@@ -1785,7 +1779,7 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
         wine_tsx11_unlock();
         HeapFree(GetProcessHeap(), 0, elts);
     } else {
-        INT offset = 0, xoff = 0, yoff = 0;
+        POINT offset = {0, 0};
         wine_tsx11_lock();
 	XSetForeground( gdi_display, physDev->gc, textPixel );
 
@@ -1799,17 +1793,25 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
                 sharp_glyph_fn = SharpGlyphGray;
 
 	    for(idx = 0; idx < count; idx++) {
-	        sharp_glyph_fn(physDev, physDev->dc_rect.left + x + xoff,
-			       physDev->dc_rect.top + y + yoff,
+                sharp_glyph_fn(physDev,
+                               physDev->dc_rect.left + x + offset.x,
+                               physDev->dc_rect.top  + y + offset.y,
 			       formatEntry->bitmaps[wstr[idx]],
 			       &formatEntry->gis[wstr[idx]]);
-		if(lpDx) {
-		    offset += lpDx[idx];
-		    xoff = offset * cosEsc;
-		    yoff = offset * -sinEsc;
-		} else {
-		    xoff += formatEntry->gis[wstr[idx]].xOff;
-		    yoff += formatEntry->gis[wstr[idx]].yOff;
+                if(lpDx)
+                {
+                    if(flags & ETO_PDY)
+                    {
+                        offset.x += lpDx[idx * 2];
+                        offset.y += lpDx[idx * 2 + 1];
+                    }
+                    else
+                        offset.x += lpDx[idx];
+                }
+                else
+                {
+                    offset.x += formatEntry->gis[wstr[idx]].xOff;
+                    offset.y += formatEntry->gis[wstr[idx]].yOff;
 		}
 	    }
 	} else {
@@ -1831,13 +1833,21 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
 		    extents.right = cur.x - formatEntry->gis[wstr[idx]].x + formatEntry->gis[wstr[idx]].width;
 		if(extents.bottom < cur.y - formatEntry->gis[wstr[idx]].y + formatEntry->gis[wstr[idx]].height)
 		    extents.bottom = cur.y - formatEntry->gis[wstr[idx]].y + formatEntry->gis[wstr[idx]].height;
-		if(lpDx) {
-		    offset += lpDx[idx];
-		    cur.x = offset * cosEsc;
-		    cur.y = offset * -sinEsc;
-		} else {
-		    cur.x += formatEntry->gis[wstr[idx]].xOff;
-		    cur.y += formatEntry->gis[wstr[idx]].yOff;
+
+                if(lpDx)
+                {
+                    if(flags & ETO_PDY)
+                    {
+                        cur.x += lpDx[idx * 2];
+                        cur.y += lpDx[idx * 2 + 1];
+                    }
+                    else
+                        cur.x += lpDx[idx];
+                }
+                else
+                {
+                    cur.x += formatEntry->gis[wstr[idx]].xOff;
+                    cur.y += formatEntry->gis[wstr[idx]].yOff;
 		}
 	    }
 	    TRACE("glyph extents %d,%d - %d,%d drawable x,y %d,%d\n", extents.left, extents.top,
@@ -1901,21 +1911,28 @@ BOOL X11DRV_XRender_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flag
 	    image->green_mask = visual->green_mask;
 	    image->blue_mask = visual->blue_mask;
 
-	    offset = xoff = yoff = 0;
 	    for(idx = 0; idx < count; idx++) {
-	        SmoothGlyphGray(image, xoff + image_off_x - extents.left,
-				yoff + image_off_y - extents.top,
+	        SmoothGlyphGray(image,
+                                offset.x + image_off_x - extents.left,
+                                offset.y + image_off_y - extents.top,
 				formatEntry->bitmaps[wstr[idx]],
 				&formatEntry->gis[wstr[idx]],
 				physDev->textPixel);
-		if(lpDx) {
-		    offset += lpDx[idx];
-		    xoff = offset * cosEsc;
-		    yoff = offset * -sinEsc;
-		} else {
-		    xoff += formatEntry->gis[wstr[idx]].xOff;
-		    yoff += formatEntry->gis[wstr[idx]].yOff;
-		}
+                if(lpDx)
+                {
+                    if(flags & ETO_PDY)
+                    {
+                        offset.x += lpDx[idx * 2];
+                        offset.y += lpDx[idx * 2 + 1];
+                    }
+                    else
+                        offset.x += lpDx[idx];
+                }
+                else
+                {
+                    offset.x += formatEntry->gis[wstr[idx]].xOff;
+                    offset.y += formatEntry->gis[wstr[idx]].yOff;
+                }
 	    }
 	    XPutImage(gdi_display, physDev->drawable, physDev->gc, image, 0, 0,
 		      image_x, image_y, image_w, image_h);

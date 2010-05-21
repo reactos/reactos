@@ -3113,6 +3113,9 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
             y = rc.top + (rc.bottom - rc.top) / 2;
         }
 
+	if (!(es->flags & EF_FOCUSED))
+            SetFocus(es->hwndSelf);
+
 	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, 0, es->hwndSelf, NULL);
 	DestroyMenu(menu);
 }

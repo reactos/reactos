@@ -91,6 +91,8 @@ static const USER_DRIVER *load_driver(void)
         GET_USER_FUNC(ToUnicodeEx);
         GET_USER_FUNC(UnloadKeyboardLayout);
         GET_USER_FUNC(VkKeyScanEx);
+        GET_USER_FUNC(CreateCursorIcon);
+        GET_USER_FUNC(DestroyCursorIcon);
         GET_USER_FUNC(SetCursor);
         GET_USER_FUNC(GetCursorPos);
         GET_USER_FUNC(SetCursorPos);
@@ -222,7 +224,15 @@ static SHORT CDECL nulldrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return -1;
 }
 
-static void CDECL nulldrv_SetCursor( struct tagCURSORICONINFO *info )
+static void CDECL nulldrv_CreateCursorIcon( HCURSOR cursor, struct tagCURSORICONINFO *info )
+{
+}
+
+static void CDECL nulldrv_DestroyCursorIcon( HCURSOR cursor )
+{
+}
+
+static void CDECL nulldrv_SetCursor( HCURSOR cursor )
 {
 }
 
@@ -449,7 +459,9 @@ static USER_DRIVER null_driver =
     nulldrv_ToUnicodeEx,
     nulldrv_UnloadKeyboardLayout,
     nulldrv_VkKeyScanEx,
-    /* mouse functions */
+    /* cursor/icon functions */
+    nulldrv_CreateCursorIcon,
+    nulldrv_DestroyCursorIcon,
     nulldrv_SetCursor,
     nulldrv_GetCursorPos,
     nulldrv_SetCursorPos,
@@ -565,9 +577,19 @@ static SHORT CDECL loaderdrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return load_driver()->pVkKeyScanEx( ch, layout );
 }
 
-static void CDECL loaderdrv_SetCursor( struct tagCURSORICONINFO *info )
+static void CDECL loaderdrv_CreateCursorIcon( HCURSOR cursor, struct tagCURSORICONINFO *info )
 {
-    load_driver()->pSetCursor( info );
+    load_driver()->pCreateCursorIcon( cursor, info );
+}
+
+static void CDECL loaderdrv_DestroyCursorIcon( HCURSOR cursor )
+{
+    load_driver()->pDestroyCursorIcon( cursor );
+}
+
+static void CDECL loaderdrv_SetCursor( HCURSOR cursor )
+{
+    load_driver()->pSetCursor( cursor );
 }
 
 static BOOL CDECL loaderdrv_GetCursorPos( LPPOINT pt )
@@ -790,7 +812,9 @@ static USER_DRIVER lazy_load_driver =
     loaderdrv_ToUnicodeEx,
     loaderdrv_UnloadKeyboardLayout,
     loaderdrv_VkKeyScanEx,
-    /* mouse functions */
+    /* cursor/icon functions */
+    loaderdrv_CreateCursorIcon,
+    loaderdrv_DestroyCursorIcon,
     loaderdrv_SetCursor,
     loaderdrv_GetCursorPos,
     loaderdrv_SetCursorPos,

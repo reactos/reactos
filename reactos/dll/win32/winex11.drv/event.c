@@ -380,8 +380,8 @@ static int process_events( Display *display, Bool (*filter)(Display*, XEvent*,XP
             break;
         }
     }
-    XFlush( gdi_display );
     if (prev_event.type) call_event_handler( display, &prev_event );
+    XFlush( gdi_display );
     wine_tsx11_unlock();
     if (count) TRACE( "processed %d events\n", count );
     return count;

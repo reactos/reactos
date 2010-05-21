@@ -511,13 +511,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBOuterPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.left-1, InnerRect.bottom-1);
+        MoveToEx(hdc, InnerRect.left, InnerRect.bottom-1, NULL);
+        LineTo(hdc, InnerRect.right-1, InnerRect.bottom-1);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.right-1, InnerRect.top-1);
+        MoveToEx(hdc, InnerRect.right-1, InnerRect.top, NULL);
+        LineTo(hdc, InnerRect.right-1, InnerRect.bottom);
     }
 
     /* Draw the inner edge */
@@ -535,13 +535,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBInnerPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right-1-RBpenplus, InnerRect.bottom-2, NULL);
-        LineTo(hdc, InnerRect.left-1+LBpenplus, InnerRect.bottom-2);
+        MoveToEx(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2, NULL);
+        LineTo(hdc, InnerRect.right-1-RBpenplus, InnerRect.bottom-2);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-2, InnerRect.bottom-1-RBpenplus, NULL);
-        LineTo(hdc, InnerRect.right-2, InnerRect.top-1+RTpenplus);
+        MoveToEx(hdc, InnerRect.right-2, InnerRect.top+2-RBpenplus, NULL);
+        LineTo(hdc, InnerRect.right-2, InnerRect.bottom-2+RTpenplus);
     }
 
     if( ((uFlags & BF_MIDDLE) && retval) || (uFlags & BF_ADJUST) )

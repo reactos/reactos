@@ -367,7 +367,7 @@ static int X11DRV_XDND_DeconstructTextURIList(int property, void* data, int len)
     char *uri;
     WCHAR *path;
 
-    char *out = NULL;
+    WCHAR *out = NULL;
     int size = 0;
     int capacity = 4096;
 
@@ -375,7 +375,7 @@ static int X11DRV_XDND_DeconstructTextURIList(int property, void* data, int len)
     int start = 0;
     int end = 0;
 
-    out = HeapAlloc(GetProcessHeap(), 0, capacity);
+    out = HeapAlloc(GetProcessHeap(), 0, capacity * sizeof(WCHAR));
     if (out == NULL)
         return 0;
 
@@ -403,11 +403,11 @@ static int X11DRV_XDND_DeconstructTextURIList(int property, void* data, int len)
             if (pathSize > capacity-size)
             {
                 capacity = 2*capacity + pathSize;
-                out = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, out, capacity + 1);
+                out = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, out, (capacity + 1)*sizeof(WCHAR));
                 if (out == NULL)
                     goto done;
             }
-            WideCharToMultiByte(CP_ACP, 0, path, -1, &out[size], pathSize, 0, 0);
+            memcpy(&out[size], path, pathSize * sizeof(WCHAR));
             size += pathSize;
         done:
             HeapFree(GetProcessHeap(), 0, path);
@@ -421,17 +421,17 @@ static int X11DRV_XDND_DeconstructTextURIList(int property, void* data, int len)
     if (out && end >= len)
     {
         DROPFILES *dropFiles;
-        dropFiles = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DROPFILES) + size + 1);
+        dropFiles = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DROPFILES) + (size + 1)*sizeof(WCHAR));
         if (dropFiles)
         {
             dropFiles->pFiles = sizeof(DROPFILES);
             dropFiles->pt.x = XDNDxy.x;
             dropFiles->pt.y = XDNDxy.y;
             dropFiles->fNC = 0;
-            dropFiles->fWide = FALSE;
+            dropFiles->fWide = TRUE;
             out[size] = '\0';
-            memcpy(((char*)dropFiles) + dropFiles->pFiles, out, size + 1);
-            X11DRV_XDND_InsertXDNDData(property, CF_HDROP, dropFiles, sizeof(DROPFILES) + size + 1);
+            memcpy(((char*)dropFiles) + dropFiles->pFiles, out, (size + 1)*sizeof(WCHAR));
+            X11DRV_XDND_InsertXDNDData(property, CF_HDROP, dropFiles, sizeof(DROPFILES) + (size + 1)*sizeof(WCHAR));
             count = 1;
         }
     }
@@ -508,9 +508,9 @@ static void X11DRV_XDND_SendDropFiles(HWND hwnd)
             lpDrop->pt.y = XDNDxy.y;
 
             TRACE("Sending WM_DROPFILES: hWnd(0x%p) %p(%s)\n", hwnd,
-                ((char*)lpDrop) + lpDrop->pFiles, ((char*)lpDrop) + lpDrop->pFiles);
+                ((char*)lpDrop) + lpDrop->pFiles, debugstr_w((WCHAR*)(((char*)lpDrop) + lpDrop->pFiles)));
 
-            PostMessageA(hwnd, WM_DROPFILES, (WPARAM)lpDrop, 0L);
+            PostMessageW(hwnd, WM_DROPFILES, (WPARAM)lpDrop, 0L);
         }
     }
 

@@ -1691,6 +1691,12 @@ BOOL CDECL X11DRV_AlphaBlend( X11DRV_PDEVICE *physDevDst, INT xDst, INT yDst, IN
 
     if (!BITBLT_GetVisRectangles( physDevDst, physDevSrc, &dst, &src )) return TRUE;
 
+    TRACE( "format %x alpha %u rectdst=%d,%d %dx%d orgdst=%d,%d visdst=%s rectsrc=%d,%d %dx%d orgsrc=%d,%d vissrc=%s\n",
+           blendfn.AlphaFormat, blendfn.SourceConstantAlpha, dst.x, dst.y, dst.width, dst.height,
+           physDevDst->dc_rect.left, physDevDst->dc_rect.top, wine_dbgstr_rect( &dst.visrect ),
+           src.x, src.y, src.width, src.height,
+           physDevSrc->dc_rect.left, physDevSrc->dc_rect.top, wine_dbgstr_rect( &src.visrect ) );
+
     if (src.x < 0 || src.y < 0 || src.width < 0 || src.height < 0 ||
         src.width > physDevSrc->drawable_rect.right - physDevSrc->drawable_rect.left - src.x ||
         src.height > physDevSrc->drawable_rect.bottom - physDevSrc->drawable_rect.top - src.y)

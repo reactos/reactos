@@ -1810,7 +1810,6 @@ static HANDLE X11DRV_CLIPBOARD_ExportTextHtml(Display *display, Window requestor
     Atom rprop, LPWINE_CLIPDATA lpdata, LPDWORD lpBytes)
 {
     HANDLE hdata;
-    UINT datasize;
     LPCSTR data, field_value;
     UINT fragmentstart, fragmentend, htmlsize;
     HANDLE hhtmldata=NULL;
@@ -1825,8 +1824,6 @@ static HANDLE X11DRV_CLIPBOARD_ExportTextHtml(Display *display, Window requestor
     }
 
     hdata = lpdata->hData;
-
-    datasize = GlobalSize(hdata);
 
     data = GlobalLock(hdata);
     if (!data)
@@ -2415,14 +2412,13 @@ static HANDLE X11DRV_CLIPBOARD_SerializeMetafile(INT wformat, HANDLE hdata, LPDW
             h = GlobalAlloc(0, sizeof(METAFILEPICT));
             if (h)
             {
-                unsigned int wiresize, size;
+                unsigned int wiresize;
                 LPMETAFILEPICT lpmfp = GlobalLock(h);
 
                 memcpy(lpmfp, hdata, sizeof(METAFILEPICT));
                 wiresize = *lpcbytes - sizeof(METAFILEPICT);
                 lpmfp->hMF = SetMetaFileBitsEx(wiresize,
                     ((const BYTE *)hdata) + sizeof(METAFILEPICT));
-                size = GetMetaFileBitsEx(lpmfp->hMF, 0, NULL);
                 GlobalUnlock(h);
             }
         }

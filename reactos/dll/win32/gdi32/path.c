@@ -1423,27 +1423,13 @@ BOOL PATH_ExtTextOut(DC *dc, INT x, INT y, UINT flags, const RECT *lprc,
                      LPCWSTR str, UINT count, const INT *dx)
 {
     unsigned int idx;
-    double cosEsc, sinEsc;
-    LOGFONTW lf;
     HDC hdc = dc->hSelf;
-    INT offset = 0, xoff = 0, yoff = 0;
+    POINT offset = {0, 0};
 
     TRACE("%p, %d, %d, %08x, %s, %s, %d, %p)\n", hdc, x, y, flags,
 	  wine_dbgstr_rect(lprc), debugstr_wn(str, count), count, dx);
 
     if (!count) return TRUE;
-
-    GetObjectW(GetCurrentObject(hdc, OBJ_FONT), sizeof(lf), &lf);
-
-    if (lf.lfEscapement != 0)
-    {
-        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
-        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
-    } else
-    {
-        cosEsc = 1;
-        sinEsc = 0;
-    }
 
     for (idx = 0; idx < count; idx++)
     {
@@ -1463,21 +1449,25 @@ BOOL PATH_ExtTextOut(DC *dc, INT x, INT y, UINT flags, const RECT *lprc,
 
             GetGlyphOutlineW(hdc, str[idx], GGO_GLYPH_INDEX | GGO_NATIVE, &gm, dwSize, outline, &identity);
 
-            PATH_add_outline(dc, x + xoff, y + yoff, outline, dwSize);
+            PATH_add_outline(dc, x + offset.x, y + offset.y, outline, dwSize);
 
             HeapFree(GetProcessHeap(), 0, outline);
         }
 
         if (dx)
         {
-            offset += dx[idx];
-            xoff = offset * cosEsc;
-            yoff = offset * -sinEsc;
+            if(flags & ETO_PDY)
+            {
+                offset.x += dx[idx * 2];
+                offset.y += dx[idx * 2 + 1];
+            }
+            else
+                offset.x += dx[idx];
         }
         else
         {
-            xoff += gm.gmCellIncX;
-            yoff += gm.gmCellIncY;
+            offset.x += gm.gmCellIncX;
+            offset.y += gm.gmCellIncY;
         }
     }
     return TRUE;

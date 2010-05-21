@@ -674,7 +674,6 @@ HDC WINAPI CreateDCW( LPCWSTR driver, LPCWSTR device, LPCWSTR output,
 
 error:
     if (dc) free_dc_ptr( dc );
-    DRIVER_release_driver( funcs );
     return 0;
 }
 
@@ -759,10 +758,9 @@ HDC WINAPI CreateCompatibleDC( HDC hdc )
             physDev = origDC->physDev;
         }
         release_dc_ptr( origDC );
-        if (funcs) funcs = DRIVER_get_driver( funcs );
     }
 
-    if (!funcs && !(funcs = DRIVER_load_driver( displayW ))) return 0;
+    if (!funcs && !(funcs = DRIVER_get_display_driver())) return 0;
 
     if (!(dc = alloc_dc_ptr( funcs, OBJ_MEMDC ))) goto error;
 
@@ -790,7 +788,6 @@ HDC WINAPI CreateCompatibleDC( HDC hdc )
 
 error:
     if (dc) free_dc_ptr( dc );
-    DRIVER_release_driver( funcs );
     return 0;
 }
 
@@ -800,7 +797,6 @@ error:
  */
 BOOL WINAPI DeleteDC( HDC hdc )
 {
-    const DC_FUNCTIONS *funcs = NULL;
     DC * dc;
 
     TRACE("%p\n", hdc );
@@ -838,13 +834,11 @@ BOOL WINAPI DeleteDC( HDC hdc )
 	SelectObject( hdc, GetStockObject(WHITE_BRUSH) );
 	SelectObject( hdc, GetStockObject(SYSTEM_FONT) );
         SelectObject( hdc, GetStockObject(DEFAULT_BITMAP) );
-        funcs = dc->funcs;
         if (dc->funcs->pDeleteDC) dc->funcs->pDeleteDC(dc->physDev);
         dc->physDev = NULL;
     }
 
     free_dc_ptr( dc );
-    if (funcs) DRIVER_release_driver( funcs );  /* do that after releasing the GDI lock */
     return TRUE;
 }
 

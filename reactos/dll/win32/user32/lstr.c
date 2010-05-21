@@ -230,7 +230,7 @@ BOOL WINAPI OemToCharW( LPCSTR s, LPWSTR d )
  */
 LPSTR WINAPI CharLowerA(LPSTR str)
 {
-    if (!HIWORD(str))
+    if (IS_INTRESOURCE(str))
     {
         char ch = LOWORD(str);
         CharLowerBuffA( &ch, 1 );
@@ -256,7 +256,7 @@ LPSTR WINAPI CharLowerA(LPSTR str)
  */
 LPSTR WINAPI CharUpperA(LPSTR str)
 {
-    if (!HIWORD(str))
+    if (IS_INTRESOURCE(str))
     {
         char ch = LOWORD(str);
         CharUpperBuffA( &ch, 1 );
@@ -282,7 +282,7 @@ LPSTR WINAPI CharUpperA(LPSTR str)
  */
 LPWSTR WINAPI CharLowerW(LPWSTR x)
 {
-    if (HIWORD(x)) return strlwrW(x);
+    if (!IS_INTRESOURCE(x)) return strlwrW(x);
     else return (LPWSTR)((UINT_PTR)tolowerW(LOWORD(x)));
 }
 
@@ -292,7 +292,7 @@ LPWSTR WINAPI CharLowerW(LPWSTR x)
  */
 LPWSTR WINAPI CharUpperW(LPWSTR x)
 {
-    if (HIWORD(x)) return struprW(x);
+    if (!IS_INTRESOURCE(x)) return struprW(x);
     else return (LPWSTR)((UINT_PTR)toupperW(LOWORD(x)));
 }
 

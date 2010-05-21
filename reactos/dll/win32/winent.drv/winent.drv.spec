@@ -75,7 +75,9 @@
 @ cdecl ToUnicodeEx(long long ptr ptr long long long) RosDrv_ToUnicodeEx
 @ cdecl UnloadKeyboardLayout(long) RosDrv_UnloadKeyboardLayout
 @ cdecl VkKeyScanEx(long long) RosDrv_VkKeyScanEx
-@ cdecl SetCursor(ptr) RosDrv_SetCursor
+@ cdecl CreateCursorIcon(long ptr) RosDrv_CreateCursorIcon
+@ cdecl DestroyCursorIcon(long) RosDrv_DestroyCursorIcon
+@ cdecl SetCursor(long ptr) RosDrv_SetCursor
 @ cdecl GetCursorPos(ptr) RosDrv_GetCursorPos
 @ cdecl SetCursorPos(long long) RosDrv_SetCursorPos
 @ cdecl ClipCursor(ptr) RosDrv_ClipCursor

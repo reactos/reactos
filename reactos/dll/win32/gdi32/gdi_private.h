@@ -385,9 +385,8 @@ extern int DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, LONG *width,
                               LONG *height, WORD *planes, WORD *bpp, DWORD *compr, DWORD *size ) DECLSPEC_HIDDEN;
 
 /* driver.c */
+extern const DC_FUNCTIONS *DRIVER_get_display_driver(void) DECLSPEC_HIDDEN;
 extern const DC_FUNCTIONS *DRIVER_load_driver( LPCWSTR name ) DECLSPEC_HIDDEN;
-extern const DC_FUNCTIONS *DRIVER_get_driver( const DC_FUNCTIONS *funcs ) DECLSPEC_HIDDEN;
-extern void DRIVER_release_driver( const DC_FUNCTIONS *funcs ) DECLSPEC_HIDDEN;
 extern BOOL DRIVER_GetDriverName( LPCWSTR device, LPWSTR driver, DWORD size ) DECLSPEC_HIDDEN;
 
 /* enhmetafile.c */
