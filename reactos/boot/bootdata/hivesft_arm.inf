@@ -1128,6 +1128,6 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Controls Folder\Device\shellex\P
 
 ; SvcHost services
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost",,0x00000012
-HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost", "netsvcs",0x00010000,""
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\SvcHost", "netsvcs",0x00010000,"DHCP"
 
 ; EOF

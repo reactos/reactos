@@ -90,7 +90,6 @@ base\applications\wordpad\wordpad.exe                   1
 base\applications\write\write.exe                       1
 
 base\services\audiosrv\audiosrv.exe                 1
-base\services\dhcp\dhcp.exe                         1
 base\services\eventlog\eventlog.exe                 1
 base\services\rpcss\rpcss.exe                       1
 base\services\spoolsv\spoolsv.exe                   1

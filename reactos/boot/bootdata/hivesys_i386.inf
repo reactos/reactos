@@ -1037,12 +1037,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Attempts to obtain network settings automatically from an available DHCP server"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\dhcp.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
