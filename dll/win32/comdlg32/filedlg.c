@@ -176,7 +176,7 @@ static SIZE MemDialogSize = { 0, 0}; /* keep size of the (resizable) dialog */
 /* Internal functions used by the dialog */
 static LRESULT FILEDLG95_ResizeControls(HWND hwnd, WPARAM wParam, LPARAM lParam);
 static LRESULT FILEDLG95_FillControls(HWND hwnd, WPARAM wParam, LPARAM lParam);
-static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam);
+static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam);
 static LRESULT FILEDLG95_OnWMGetIShellBrowser(HWND hwnd);
 static BOOL    FILEDLG95_OnOpen(HWND hwnd);
 static LRESULT FILEDLG95_InitControls(HWND hwnd);
@@ -240,7 +240,7 @@ static BOOL GetFileName95(FileOpenDlgInfos *fodInfos)
 {
 
     LRESULT lRes;
-    LPCVOID template;
+    LPVOID template;
     HRSRC hRes;
     HANDLE hDlgTmpl = 0;
     HRESULT hr;
@@ -991,7 +991,7 @@ static LRESULT FILEDLG95_OnWMGetMMI( HWND hwnd, LPMINMAXINFO mmiptr)
  * vertically or horizontally to get out of the way. Only the "grip"
  * is moved in both directions to stay in the corner.
  */
-static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT FILEDLG95_OnWMSize(HWND hwnd, WPARAM wParam)
 {
     RECT rc, rcview;
     int chgx, chgy;
@@ -1223,11 +1223,11 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          return 0;
        }
     case WM_SIZE:
-      return FILEDLG95_OnWMSize(hwnd, wParam, lParam);
+      return FILEDLG95_OnWMSize(hwnd, wParam);
     case WM_GETMINMAXINFO:
       return FILEDLG95_OnWMGetMMI( hwnd, (LPMINMAXINFO)lParam);
     case WM_COMMAND:
-      return FILEDLG95_OnWMCommand(hwnd, wParam, lParam);
+      return FILEDLG95_OnWMCommand(hwnd, wParam);
     case WM_DRAWITEM:
       {
         switch(((LPDRAWITEMSTRUCT)lParam)->CtlID)
@@ -1733,7 +1733,7 @@ void FILEDLG95_Clean(HWND hwnd)
  *
  * WM_COMMAND message handler
  */
-static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam, LPARAM lParam)
+static LRESULT FILEDLG95_OnWMCommand(HWND hwnd, WPARAM wParam)
 {
   WORD wNotifyCode = HIWORD(wParam); /* notification code */
   WORD wID = LOWORD(wParam);         /* item, control, or accelerator identifier */
@@ -3799,7 +3799,7 @@ BOOL FD32_GetTemplate(PFD31_DATA lfs)
 /***********************************************************************
  *                              FD32_WMMeasureItem           [internal]
  */
-static LONG FD32_WMMeasureItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
+static LONG FD32_WMMeasureItem(LPARAM lParam)
 {
     LPMEASUREITEMSTRUCT lpmeasure;
 
@@ -3832,7 +3832,7 @@ static INT_PTR CALLBACK FD32_FileOpenDlgProc(HWND hWnd, UINT wMsg,
         return FD31_WMInitDialog(hWnd, wParam, lParam);
 
     case WM_MEASUREITEM:
-        return FD32_WMMeasureItem(hWnd, wParam, lParam);
+        return FD32_WMMeasureItem(lParam);
 
     case WM_DRAWITEM:
         return FD31_WMDrawItem(hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam);

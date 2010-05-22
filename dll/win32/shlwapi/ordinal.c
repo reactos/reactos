@@ -42,6 +42,7 @@
 #include "mmsystem.h"
 #include "objbase.h"
 #include "exdisp.h"
+#include "shdeprecated.h"
 #include "shlobj.h"
 #include "shlwapi.h"
 #include "shellapi.h"
@@ -309,24 +310,22 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
   BSTR property;
   IEnumFORMATETC* pIEnumFormatEtc = NULL;
   VARIANTARG var;
-  HRESULT hRet;
-  IWebBrowserApp* pBrowser = NULL;
+  HRESULT hr;
+  IWebBrowserApp* pBrowser;
 
   TRACE("(%p, %p)\n", lpBC, lpUnknown);
 
-  /* Get An IWebBrowserApp interface from  lpUnknown */
-  hRet = IUnknown_QueryService(lpUnknown, &IID_IWebBrowserApp, &IID_IWebBrowserApp, (PVOID)&pBrowser);
-  if (FAILED(hRet) || !pBrowser)
-    return E_NOINTERFACE;
+  hr = IUnknown_QueryService(lpUnknown, &IID_IWebBrowserApp, &IID_IWebBrowserApp, (void**)&pBrowser);
+  if (FAILED(hr))
+    return hr;
 
   V_VT(&var) = VT_EMPTY;
 
   /* The property we get is the browsers clipboard enumerator */
   property = SysAllocString(szProperty);
-  hRet = IWebBrowserApp_GetProperty(pBrowser, property, &var);
+  hr = IWebBrowserApp_GetProperty(pBrowser, property, &var);
   SysFreeString(property);
-  if (FAILED(hRet))
-    return hRet;
+  if (FAILED(hr)) goto exit;
 
   if (V_VT(&var) == VT_EMPTY)
   {
@@ -340,7 +339,10 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
 
     if (!RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\Current"
                      "Version\\Internet Settings\\Accepted Documents", &hDocs))
-      return E_FAIL;
+    {
+      hr = E_FAIL;
+      goto exit;
+    }
 
     /* Get count of values in key */
     while (!dwRet)
@@ -355,7 +357,11 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     /* Note: dwCount = number of items + 1; The extra item is the end node */
     format = formatList = HeapAlloc(GetProcessHeap(), 0, dwCount * sizeof(FORMATETC));
     if (!formatList)
-      return E_OUTOFMEMORY;
+    {
+      RegCloseKey(hDocs);
+      hr = E_OUTOFMEMORY;
+      goto exit;
+    }
 
     if (dwNumValues > 1)
     {
@@ -372,7 +378,12 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
         dwRet = RegEnumValueA(hDocs, dwCount, szKeyBuff, &dwKeySize, 0, &dwType,
                               (PBYTE)szValueBuff, &dwValueSize);
         if (!dwRet)
-          return E_FAIL;
+        {
+          HeapFree(GetProcessHeap(), 0, formatList);
+          RegCloseKey(hDocs);
+          hr = E_FAIL;
+          goto exit;
+        }
 
         format->cfFormat = RegisterClipboardFormatA(szValueBuff);
         format->ptd = NULL;
@@ -385,6 +396,8 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
       }
     }
 
+    RegCloseKey(hDocs);
+
     /* Terminate the (maybe empty) list, last entry has a cfFormat of 0 */
     format->cfFormat = 0;
     format->ptd = NULL;
@@ -393,22 +406,21 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
     format->tymed = -1;
 
     /* Create a clipboard enumerator */
-    hRet = CreateFormatEnumerator(dwNumValues, formatList, &pIEnumFormatEtc);
-
-    if (FAILED(hRet) || !pIEnumFormatEtc)
-      return hRet;
+    hr = CreateFormatEnumerator(dwNumValues, formatList, &pIEnumFormatEtc);
+    HeapFree(GetProcessHeap(), 0, formatList);
+    if (FAILED(hr)) goto exit;
 
     /* Set our enumerator as the browsers property */
     V_VT(&var) = VT_UNKNOWN;
     V_UNKNOWN(&var) = (IUnknown*)pIEnumFormatEtc;
 
     property = SysAllocString(szProperty);
-    hRet = IWebBrowserApp_PutProperty(pBrowser, property, var);
+    hr = IWebBrowserApp_PutProperty(pBrowser, property, var);
     SysFreeString(property);
-    if (FAILED(hRet))
+    if (FAILED(hr))
     {
        IEnumFORMATETC_Release(pIEnumFormatEtc);
-       goto RegisterDefaultAcceptHeaders_Exit;
+       goto exit;
     }
   }
 
@@ -422,28 +434,26 @@ HRESULT WINAPI RegisterDefaultAcceptHeaders(LPBC lpBC, IUnknown *lpUnknown)
 
     /* Get an IEnumFormatEtc interface from the variants value */
     pIEnumFormatEtc = NULL;
-    hRet = IUnknown_QueryInterface(pIUnknown, &IID_IEnumFORMATETC,
-                                   (PVOID)&pIEnumFormatEtc);
-    if (hRet == S_OK && pIEnumFormatEtc)
+    hr = IUnknown_QueryInterface(pIUnknown, &IID_IEnumFORMATETC, (void**)&pIEnumFormatEtc);
+    if (hr == S_OK && pIEnumFormatEtc)
     {
       /* Clone and register the enumerator */
-      hRet = IEnumFORMATETC_Clone(pIEnumFormatEtc, &pClone);
-      if (hRet == S_OK && pClone)
+      hr = IEnumFORMATETC_Clone(pIEnumFormatEtc, &pClone);
+      if (hr == S_OK && pClone)
       {
         RegisterFormatEnumerator(lpBC, pClone, 0);
 
         IEnumFORMATETC_Release(pClone);
       }
 
-      /* Release the IEnumFormatEtc interface */
       IEnumFORMATETC_Release(pIUnknown);
     }
     IUnknown_Release(V_UNKNOWN(&var));
   }
 
-RegisterDefaultAcceptHeaders_Exit:
+exit:
   IWebBrowserApp_Release(pBrowser);
-  return hRet;
+  return hr;
 }
 
 /*************************************************************************
@@ -500,7 +510,7 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
         return S_OK;
     }
 
-    /* Did not find a value in the registry or the user buffer is to small */
+    /* Did not find a value in the registry or the user buffer is too small */
     mylcid = GetUserDefaultLCID();
     retval = LcidToRfc1766W(mylcid, mystr, mystrlen);
     len = lstrlenW(mystr);
@@ -1201,7 +1211,7 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL f
 /*************************************************************************
  *	@	[SHLWAPI.169]
  *
- * Release an interface.
+ * Release an interface and zero a supplied pointer.
  *
  * PARAMS
  *  lpUnknown [I] Object to release
@@ -1209,19 +1219,16 @@ HRESULT WINAPI ConnectToConnectionPoint(IUnknown* lpUnkSink, REFIID riid, BOOL f
  * RETURNS
  *  Nothing.
  */
-DWORD WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
+void WINAPI IUnknown_AtomicRelease(IUnknown ** lpUnknown)
 {
-    IUnknown *temp;
+    TRACE("(%p)\n", lpUnknown);
 
-    TRACE("(%p)\n",lpUnknown);
-
-    if(!lpUnknown || !*((LPDWORD)lpUnknown)) return 0;
-    temp = *lpUnknown;
-    *lpUnknown = NULL;
+    if(!lpUnknown || !*lpUnknown) return;
 
     TRACE("doing Release\n");
 
-    return IUnknown_Release(temp);
+    IUnknown_Release(*lpUnknown);
+    *lpUnknown = NULL;
 }
 
 /*************************************************************************
@@ -1258,9 +1265,10 @@ LPCSTR WINAPI PathSkipLeadingSlashesA(LPCSTR lpszSrc)
  */
 BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
 {
-  LPVOID lpUnknown1, lpUnknown2;
+  IUnknown *lpUnknown1, *lpUnknown2;
+  BOOL ret;
 
-  TRACE("%p %p\n", lpInt1, lpInt2);
+  TRACE("(%p %p)\n", lpInt1, lpInt2);
 
   if (!lpInt1 || !lpInt2)
     return FALSE;
@@ -1268,16 +1276,21 @@ BOOL WINAPI SHIsSameObject(IUnknown* lpInt1, IUnknown* lpInt2)
   if (lpInt1 == lpInt2)
     return TRUE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt1, &IID_IUnknown, &lpUnknown1)))
+  if (IUnknown_QueryInterface(lpInt1, &IID_IUnknown, (void**)&lpUnknown1) != S_OK)
     return FALSE;
 
-  if (FAILED(IUnknown_QueryInterface(lpInt2, &IID_IUnknown, &lpUnknown2)))
+  if (IUnknown_QueryInterface(lpInt2, &IID_IUnknown, (void**)&lpUnknown2) != S_OK)
+  {
+    IUnknown_Release(lpUnknown1);
     return FALSE;
+  }
 
-  if (lpUnknown1 == lpUnknown2)
-    return TRUE;
+  ret = lpUnknown1 == lpUnknown2;
 
-  return FALSE;
+  IUnknown_Release(lpUnknown1);
+  IUnknown_Release(lpUnknown2);
+
+  return ret;
 }
 
 /*************************************************************************
@@ -1337,36 +1350,32 @@ HRESULT WINAPI IUnknown_GetWindow(IUnknown *lpUnknown, HWND *lphWnd)
 /*************************************************************************
  *      @	[SHLWAPI.173]
  *
- * Call a method on as as yet unidentified object.
+ * Call a SetOwner method of IShellService from specified object.
  *
  * PARAMS
- *  pUnk [I] Object supporting the unidentified interface,
- *  arg  [I] Argument for the call on the object.
+ *  iface [I] Object that supports IShellService
+ *  pUnk  [I] Argument for the SetOwner call
  *
  * RETURNS
- *  S_OK.
+ *  Corresponding return value from last call or E_FAIL for null input
  */
-HRESULT WINAPI IUnknown_SetOwner(IUnknown *pUnk, ULONG arg)
+HRESULT WINAPI IUnknown_SetOwner(IUnknown *iface, IUnknown *pUnk)
 {
-  static const GUID guid_173 = {
-    0x5836fb00, 0x8187, 0x11cf, { 0xa1,0x2b,0x00,0xaa,0x00,0x4a,0xe8,0x37 }
-  };
-  IMalloc *pUnk2;
+  IShellService *service;
+  HRESULT hr;
 
-  TRACE("(%p,%d)\n", pUnk, arg);
+  TRACE("(%p, %p)\n", iface, pUnk);
 
-  /* Note: arg may not be a ULONG and pUnk2 is for sure not an IMalloc -
-   *       We use this interface as its vtable entry is compatible with the
-   *       object in question.
-   * FIXME: Find out what this object is and where it should be defined.
-   */
-  if (pUnk &&
-      SUCCEEDED(IUnknown_QueryInterface(pUnk, &guid_173, (void**)&pUnk2)))
+  if (!iface) return E_FAIL;
+
+  hr = IUnknown_QueryInterface(iface, &IID_IShellService, (void**)&service);
+  if (hr == S_OK)
   {
-    IMalloc_Alloc(pUnk2, arg); /* Faked call!! */
-    IMalloc_Release(pUnk2);
+    hr = IShellService_SetOwner(service, pUnk);
+    IShellService_Release(service);
   }
-  return S_OK;
+
+  return hr;
 }
 
 /*************************************************************************
@@ -1473,7 +1482,6 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
   if (!lpUnknown)
     return E_FAIL;
 
-  /* Get an IServiceProvider interface from the object */
   hRet = IUnknown_QueryInterface(lpUnknown, &IID_IServiceProvider,
                                  (LPVOID*)&pService);
 
@@ -1486,10 +1494,90 @@ HRESULT WINAPI IUnknown_QueryService(IUnknown* lpUnknown, REFGUID sid, REFIID ri
 
     TRACE("(IServiceProvider*)%p returned (IUnknown*)%p\n", pService, *lppOut);
 
-    /* Release the IServiceProvider interface */
     IUnknown_Release(pService);
   }
   return hRet;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.484]
+ *
+ * Calls IOleCommandTarget::Exec() for specified service object.
+ *
+ * PARAMS
+ *  lpUnknown [I] Object to get an IServiceProvider interface from
+ *  service   [I] Service ID for IServiceProvider_QueryService() call
+ *  group     [I] Group ID for IOleCommandTarget::Exec() call
+ *  cmdId     [I] Command ID for IOleCommandTarget::Exec() call
+ *  cmdOpt    [I] Options flags for command
+ *  pIn       [I] Input arguments for command
+ *  pOut      [O] Output arguments for command
+ *
+ * RETURNS
+ *  Success: S_OK. lppOut contains an object providing the requested service
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *lpUnknown, REFIID service,
+    const GUID *group, DWORD cmdId, DWORD cmdOpt, VARIANT *pIn, VARIANT *pOut)
+{
+    IOleCommandTarget *target;
+    HRESULT hr;
+
+    TRACE("%p %s %s %d %08x %p %p\n", lpUnknown, debugstr_guid(service),
+        debugstr_guid(group), cmdId, cmdOpt, pIn, pOut);
+
+    hr = IUnknown_QueryService(lpUnknown, service, &IID_IOleCommandTarget, (void**)&target);
+    if (hr == S_OK)
+    {
+        hr = IOleCommandTarget_Exec(target, group, cmdId, cmdOpt, pIn, pOut);
+        IOleCommandTarget_Release(target);
+    }
+
+    TRACE("<-- hr=0x%08x\n", hr);
+
+    return hr;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.514]
+ *
+ * Calls IProfferService methods to proffer/revoke specified service.
+ *
+ * PARAMS
+ *  lpUnknown [I]  Object to get an IServiceProvider interface from
+ *  service   [I]  Service ID for IProfferService::Proffer/Revoke calls
+ *  pService  [I]  Service to proffer. If NULL ::Revoke is called
+ *  pCookie   [IO] Group ID for IOleCommandTarget::Exec() call
+ *
+ * RETURNS
+ *  Success: S_OK. IProffer method returns S_OK
+ *  Failure: An HRESULT error code
+ *
+ * NOTES
+ *  lpUnknown is expected to support the IServiceProvider interface.
+ */
+HRESULT WINAPI IUnknown_ProfferService(IUnknown *lpUnknown, REFGUID service, IServiceProvider *pService, DWORD *pCookie)
+{
+    IProfferService *proffer;
+    HRESULT hr;
+
+    TRACE("%p %s %p %p\n", lpUnknown, debugstr_guid(service), pService, pCookie);
+
+    hr = IUnknown_QueryService(lpUnknown, &IID_IProfferService, &IID_IProfferService, (void**)&proffer);
+    if (hr == S_OK)
+    {
+        if (pService)
+            hr = IProfferService_ProfferService(proffer, service, pService, pCookie);
+        else
+            hr = IProfferService_RevokeService(proffer, *pCookie);
+
+        IProfferService_Release(proffer);
+    }
+
+    return hr;
 }
 
 /*************************************************************************
@@ -1545,6 +1633,8 @@ HRESULT WINAPI IUnknown_UIActivateIO(IUnknown *unknown, BOOL activate, LPMSG msg
 BOOL WINAPI SHLoadMenuPopup(HINSTANCE hInst, LPCWSTR szName)
 {
   HMENU hMenu;
+
+  TRACE("%p %s\n", hInst, debugstr_w(szName));
 
   if ((hMenu = LoadMenuW(hInst, szName)))
   {
@@ -1629,6 +1719,9 @@ void WINAPI SHPropagateMessage(HWND hWnd, UINT uiMsgId, WPARAM wParam, LPARAM lP
 DWORD WINAPI SHRemoveAllSubMenus(HMENU hMenu)
 {
   int iItemCount = GetMenuItemCount(hMenu) - 1;
+
+  TRACE("%p\n", hMenu);
+
   while (iItemCount >= 0)
   {
     HMENU hSubMenu = GetSubMenu(hMenu, iItemCount);
@@ -1654,6 +1747,7 @@ DWORD WINAPI SHRemoveAllSubMenus(HMENU hMenu)
  */
 UINT WINAPI SHEnableMenuItem(HMENU hMenu, UINT wItemID, BOOL bEnable)
 {
+  TRACE("%p, %u, %d\n", hMenu, wItemID, bEnable);
   return EnableMenuItem(hMenu, wItemID, bEnable ? MF_ENABLED : MF_GRAYED);
 }
 
@@ -1672,6 +1766,7 @@ UINT WINAPI SHEnableMenuItem(HMENU hMenu, UINT wItemID, BOOL bEnable)
  */
 DWORD WINAPI SHCheckMenuItem(HMENU hMenu, UINT uID, BOOL bCheck)
 {
+  TRACE("%p, %u, %d\n", hMenu, uID, bCheck);
   return CheckMenuItem(hMenu, uID, bCheck ? MF_CHECKED : MF_UNCHECKED);
 }
 
@@ -1703,6 +1798,8 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj,
   DWORD dwEffect = DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_COPY;
   POINTL pt = { 0, 0 };
 
+  TRACE("%p %p 0x%08x %p %p\n", pDrop, pDataObj, grfKeyState, lpPt, pdwEffect);
+
   if (!lpPt)
     lpPt = &pt;
 
@@ -1711,7 +1808,7 @@ BOOL WINAPI SHSimulateDrop(IDropTarget *pDrop, IDataObject *pDataObj,
 
   IDropTarget_DragEnter(pDrop, pDataObj, grfKeyState, *lpPt, pdwEffect);
 
-  if (*pdwEffect)
+  if (*pdwEffect != DROPEFFECT_NONE)
     return IDropTarget_Drop(pDrop, pDataObj, grfKeyState, *lpPt, pdwEffect);
 
   IDropTarget_DragLeave(pDrop);
@@ -1803,7 +1900,7 @@ HRESULT WINAPI IUnknown_OnFocusOCS(IUnknown *lpUnknown, BOOL fGotFocus)
   IOleControlSite* lpCSite = NULL;
   HRESULT hRet = E_FAIL;
 
-  TRACE("(%p,%s)\n", lpUnknown, fGotFocus ? "TRUE" : "FALSE");
+  TRACE("(%p, %d)\n", lpUnknown, fGotFocus);
   if (lpUnknown)
   {
     hRet = IUnknown_QueryInterface(lpUnknown, &IID_IOleControlSite,
@@ -2061,12 +2158,10 @@ VOID WINAPI IUnknown_Set(IUnknown **lppDest, IUnknown *lpUnknown)
 {
   TRACE("(%p,%p)\n", lppDest, lpUnknown);
 
-  if (lppDest)
-    IUnknown_AtomicRelease(lppDest); /* Release existing interface */
+  IUnknown_AtomicRelease(lppDest);
 
   if (lpUnknown)
   {
-    /* Copy */
     IUnknown_AddRef(lpUnknown);
     *lppDest = lpUnknown;
   }
@@ -2256,12 +2351,6 @@ BOOL WINAPI FDSA_DeleteItem(FDSA_info *info, DWORD where)
     return TRUE;
 }
 
-
-typedef struct {
-    REFIID   refid;
-    DWORD    indx;
-} IFACE_INDEX_TBL;
-
 /*************************************************************************
  *      @	[SHLWAPI.219]
  *
@@ -2272,22 +2361,22 @@ typedef struct {
  *  Failure: E_POINTER or E_NOINTERFACE.
  */
 HRESULT WINAPI QISearch(
-	LPVOID w,           /* [in]   Table of interfaces */
-	IFACE_INDEX_TBL *x, /* [in]   Array of REFIIDs and indexes into the table */
+	void *base,         /* [in]   Table of interfaces */
+	const QITAB *table, /* [in]   Array of REFIIDs and indexes into the table */
 	REFIID riid,        /* [in]   REFIID to get interface for */
-	LPVOID *ppv)          /* [out]  Destination for interface pointer */
+	void **ppv)         /* [out]  Destination for interface pointer */
 {
 	HRESULT ret;
 	IUnknown *a_vtbl;
-	IFACE_INDEX_TBL *xmove;
+	const QITAB *xmove;
 
-	TRACE("(%p %p %s %p)\n", w,x,debugstr_guid(riid),ppv);
+	TRACE("(%p %p %s %p)\n", base, table, debugstr_guid(riid), ppv);
 	if (ppv) {
-	    xmove = x;
-	    while (xmove->refid) {
-		TRACE("trying (indx %d) %s\n", xmove->indx, debugstr_guid(xmove->refid));
-		if (IsEqualIID(riid, xmove->refid)) {
-		    a_vtbl = (IUnknown*)(xmove->indx + (LPBYTE)w);
+	    xmove = table;
+	    while (xmove->piid) {
+		TRACE("trying (offset %d) %s\n", xmove->dwOffset, debugstr_guid(xmove->piid));
+		if (IsEqualIID(riid, xmove->piid)) {
+		    a_vtbl = (IUnknown*)(xmove->dwOffset + (LPBYTE)base);
 		    TRACE("matched, returning (%p)\n", a_vtbl);
                     *ppv = a_vtbl;
 		    IUnknown_AddRef(a_vtbl);
@@ -2297,7 +2386,7 @@ HRESULT WINAPI QISearch(
 	    }
 
 	    if (IsEqualIID(riid, &IID_IUnknown)) {
-		a_vtbl = (IUnknown*)(x->indx + (LPBYTE)w);
+		a_vtbl = (IUnknown*)(table->dwOffset + (LPBYTE)base);
 		TRACE("returning first for IUnknown (%p)\n", a_vtbl);
                 *ppv = a_vtbl;
 		IUnknown_AddRef(a_vtbl);
@@ -2506,27 +2595,27 @@ HRESULT WINAPI IUnknown_GetSite(LPUNKNOWN lpUnknown, REFIID iid, PVOID *lppSite)
  *  dwExStyle  [I] Extra style flags
  *  dwStyle    [I] Style flags
  *  hMenu      [I] Window menu
- *  z          [I] Unknown
+ *  wnd_extra  [I] Window extra bytes value
  *
  * RETURNS
  *  Success: The window handle of the newly created window.
  *  Failure: 0.
  */
 HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z)
+                                  DWORD dwStyle, HMENU hMenu, LONG_PTR wnd_extra)
 {
   static const char szClass[] = "WorkerA";
   WNDCLASSA wc;
   HWND hWnd;
 
-  TRACE("(0x%08x,%p,0x%08x,0x%08x,%p,0x%08x)\n",
-         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  TRACE("(0x%08x, %p, 0x%08x, 0x%08x, %p, 0x%08lx)\n",
+         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, wnd_extra);
 
   /* Create Window class */
   wc.style         = 0;
   wc.lpfnWndProc   = DefWindowProcA;
   wc.cbClsExtra    = 0;
-  wc.cbWndExtra    = 4;
+  wc.cbWndExtra    = sizeof(LONG_PTR);
   wc.hInstance     = shlwapi_hInstance;
   wc.hIcon         = NULL;
   wc.hCursor       = LoadCursorA(NULL, (LPSTR)IDC_ARROW);
@@ -2534,19 +2623,17 @@ HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 
-  SHRegisterClassA(&wc); /* Register class */
-
-  /* FIXME: Set extra bits in dwExStyle */
+  SHRegisterClassA(&wc);
 
   hWnd = CreateWindowExA(dwExStyle, szClass, 0, dwStyle, 0, 0, 0, 0,
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
-    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, z);
+    SetWindowLongPtrW(hWnd, 0, wnd_extra);
 
-    if (wndProc)
-      SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
+    if (wndProc) SetWindowLongPtrA(hWnd, GWLP_WNDPROC, wndProc);
   }
+
   return hWnd;
 }
 
@@ -2729,7 +2816,7 @@ BOOL WINAPI GUIDFromStringA(LPCSTR idstr, CLSID *id)
  */
 BOOL WINAPI GUIDFromStringW(LPCWSTR idstr, CLSID *id)
 {
-    return SUCCEEDED(CLSIDFromString((LPOLESTR)idstr, id));
+    return SUCCEEDED(CLSIDFromString((LPCOLESTR)idstr, id));
 }
 
 /*************************************************************************
@@ -2804,18 +2891,21 @@ DWORD WINAPI WhichPlatform(void)
  * Unicode version of SHCreateWorkerWindowA.
  */
 HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle,
-                        DWORD dwStyle, HMENU hMenu, LONG z)
+                        DWORD dwStyle, HMENU hMenu, LONG msg_result)
 {
-  static const WCHAR szClass[] = { 'W', 'o', 'r', 'k', 'e', 'r', 'W', '\0' };
+  static const WCHAR szClass[] = { 'W', 'o', 'r', 'k', 'e', 'r', 'W', 0 };
   WNDCLASSW wc;
   HWND hWnd;
 
-  TRACE("(0x%08x,%p,0x%08x,0x%08x,%p,0x%08x)\n",
-         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  TRACE("(0x%08x, %p, 0x%08x, 0x%08x, %p, 0x%08x)\n",
+         wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
 
-  /* If our OS is natively ASCII, use the ASCII version */
-  if (!(GetVersion() & 0x80000000))  /* NT */
-    return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, z);
+  /* If our OS is natively ANSI, use the ANSI version */
+  if (GetVersion() & 0x80000000)  /* not NT */
+  {
+    TRACE("fallback to ANSI, ver 0x%08x\n", GetVersion());
+    return SHCreateWorkerWindowA(wndProc, hWndParent, dwExStyle, dwStyle, hMenu, msg_result);
+  }
 
   /* Create Window class */
   wc.style         = 0;
@@ -2829,19 +2919,17 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 
-  SHRegisterClassW(&wc); /* Register class */
-
-  /* FIXME: Set extra bits in dwExStyle */
+  SHRegisterClassW(&wc);
 
   hWnd = CreateWindowExW(dwExStyle, szClass, 0, dwStyle, 0, 0, 0, 0,
                          hWndParent, hMenu, shlwapi_hInstance, 0);
   if (hWnd)
   {
-    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, z);
+    SetWindowLongPtrW(hWnd, DWLP_MSGRESULT, msg_result);
 
-    if (wndProc)
-      SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
+    if (wndProc) SetWindowLongPtrW(hWnd, GWLP_WNDPROC, wndProc);
   }
+
   return hWnd;
 }
 
@@ -2861,7 +2949,8 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
  */
 HRESULT WINAPI SHInvokeDefaultCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl)
 {
-  return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
+    TRACE("%p %p %p\n", hWnd, lpFolder, lpApidl);
+    return SHInvokeCommand(hWnd, lpFolder, lpApidl, FALSE);
 }
 
 /*************************************************************************
@@ -3376,12 +3465,12 @@ UINT WINAPI SHDefExtractIconWrapW(LPCWSTR pszIconFile, int iIndex, UINT uFlags, 
 HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST lpApidl, BOOL bInvokeDefault)
 {
   IContextMenu *iContext;
-  HRESULT hRet = E_FAIL;
+  HRESULT hRet;
 
-  TRACE("(%p,%p,%p,%d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
+  TRACE("(%p, %p, %p, %d)\n", hWnd, lpFolder, lpApidl, bInvokeDefault);
 
   if (!lpFolder)
-    return hRet;
+    return E_FAIL;
 
   /* Get the context menu from the shell folder */
   hRet = IShellFolder_GetUIObjectOf(lpFolder, hWnd, 1, &lpApidl,
@@ -3401,7 +3490,7 @@ HRESULT WINAPI SHInvokeCommand(HWND hWnd, IShellFolder* lpFolder, LPCITEMIDLIST 
       if (SUCCEEDED(hQuery))
       {
         if (bInvokeDefault &&
-            (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != 0xFFFFFFFF)
+            (dwDefaultId = GetMenuDefaultItem(hMenu, 0, 0)) != (UINT)-1)
         {
           CMINVOKECOMMANDINFO cmIci;
           /* Invoke the default item */
@@ -3810,7 +3899,7 @@ DWORD WINAPI SHSendMessageBroadcastW(UINT uMsg, WPARAM wParam, LPARAM lParam)
  */
 HRESULT WINAPI CLSIDFromStringWrap(LPCWSTR idstr, CLSID *id)
 {
-    return CLSIDFromString((LPOLESTR)idstr, id);
+    return CLSIDFromString((LPCOLESTR)idstr, id);
 }
 
 /*************************************************************************
@@ -4171,18 +4260,24 @@ BOOL WINAPI SHIsLowMemoryMachine (DWORD x)
  */
 INT WINAPI GetMenuPosFromID(HMENU hMenu, UINT wID)
 {
- MENUITEMINFOW mi;
- INT nCount = GetMenuItemCount(hMenu), nIter = 0;
+    MENUITEMINFOW mi;
+    INT nCount = GetMenuItemCount(hMenu), nIter = 0;
 
- while (nIter < nCount)
- {
-   mi.cbSize = sizeof(mi);
-   mi.fMask = MIIM_ID;
-   if (GetMenuItemInfoW(hMenu, nIter, TRUE, &mi) && mi.wID == wID)
-     return nIter;
-   nIter++;
- }
- return -1;
+    TRACE("%p %u\n", hMenu, wID);
+
+    while (nIter < nCount)
+    {
+        mi.cbSize = sizeof(mi);
+        mi.fMask = MIIM_ID;
+        if (GetMenuItemInfoW(hMenu, nIter, TRUE, &mi) && mi.wID == wID)
+        {
+            TRACE("ret %d\n", nIter);
+            return nIter;
+        }
+        nIter++;
+    }
+
+    return -1;
 }
 
 /*************************************************************************
@@ -4192,6 +4287,7 @@ INT WINAPI GetMenuPosFromID(HMENU hMenu, UINT wID)
  */
 DWORD WINAPI SHMenuIndexFromID(HMENU hMenu, UINT uID)
 {
+    TRACE("%p %u\n", hMenu, uID);
     return GetMenuPosFromID(hMenu, uID);
 }
 
@@ -4270,10 +4366,10 @@ BOOL WINAPI SHSkipJunction(IBindCtx *pbc, const CLSID *pclsid)
 /***********************************************************************
  *		SHGetShellKey (SHLWAPI.@)
  */
-DWORD WINAPI SHGetShellKey(DWORD a, DWORD b, DWORD c)
+HKEY WINAPI SHGetShellKey(DWORD flags, LPCWSTR sub_key, BOOL create)
 {
-    FIXME("(%x, %x, %x): stub\n", a, b, c);
-    return 0x50;
+    FIXME("(0x%08x, %s, %d): stub\n", flags, debugstr_w(sub_key), create);
+    return (HKEY)0x50;
 }
 
 /***********************************************************************
@@ -4420,20 +4516,6 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
     LocalFree(pszTemp);
     return ret;
-}
-
-HRESULT WINAPI IUnknown_QueryServiceExec(IUnknown *unk, REFIID service, REFIID clsid,
-                                         DWORD x1, DWORD x2, DWORD x3, void **ppvOut)
-{
-    FIXME("%p %s %s %08x %08x %08x %p\n", unk,
-          debugstr_guid(service), debugstr_guid(clsid), x1, x2, x3, ppvOut);
-    return E_NOTIMPL;
-}
-
-HRESULT WINAPI IUnknown_ProfferService(IUnknown *unk, void *x0, void *x1, void *x2)
-{
-    FIXME("%p %p %p %p\n", unk, x0, x1, x2);
-    return E_NOTIMPL;
 }
 
 /***********************************************************************

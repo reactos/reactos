@@ -180,6 +180,10 @@ BOOL WINAPI
 UpdatePerUserSystemParameters(DWORD dwUnknown,
                               DWORD dwReserved);
 
+/* environment.c */
+BOOL
+CreateUserEnvironment(IN PWLSESSION Session);
+
 /* sas.c */
 BOOL
 SetDefaultLanguage(

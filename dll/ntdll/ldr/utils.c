@@ -1518,7 +1518,7 @@ LdrpGetOrLoadModule(PWCHAR SearchPath,
        if (!NT_SUCCESS(Status))
          {
            ULONG ErrorResponse;
-           ULONG_PTR ErrorParameter = (ULONG_PTR)&DllName;
+           ULONG_PTR ErrorParameter = (ULONG_PTR)&AnsiDllName;
 
            DPRINT1("failed to load %wZ\n", &DllName);
 

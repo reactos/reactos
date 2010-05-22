@@ -58,7 +58,6 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     GROUPBOX        "Інформація про версію",IDC_STATIC,6,3,210,73
     CONTROL         "Позначити як робочу станцію",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
-    CONTROL         "Позначити як робочу станцію",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
     LTEXT           "ReactOS будується як серверна ОС. Обрати прапорець, щоб змінити лише цей додаток.",IDC_STATIC,15,15,183,41
     PUSHBUTTON      "OK",IDOK,166,83,50,14
 END

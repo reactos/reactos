@@ -38,6 +38,7 @@
 #define NS_ERROR_FAILURE          ((nsresult)0x80004005L)
 #define NS_NOINTERFACE            ((nsresult)0x80004002L)
 #define NS_ERROR_NOT_IMPLEMENTED  ((nsresult)0x80004001L)
+#define NS_ERROR_NOT_AVAILABLE    ((nsresult)0x80040111L)
 #define NS_ERROR_INVALID_ARG      ((nsresult)0x80070057L) 
 #define NS_ERROR_UNEXPECTED       ((nsresult)0x8000ffffL)
 #define NS_ERROR_UNKNOWN_PROTOCOL ((nsresult)0x804b0012L)
@@ -171,6 +172,7 @@ void release_dispex(DispatchEx*);
 BOOL dispex_query_interface(DispatchEx*,REFIID,void**);
 HRESULT dispex_get_dprop_ref(DispatchEx*,const WCHAR*,BOOL,VARIANT**);
 HRESULT get_dispids(tid_t,DWORD*,DISPID**);
+HRESULT remove_prop(DispatchEx*,BSTR,VARIANT_BOOL*);
 
 typedef struct HTMLWindow HTMLWindow;
 typedef struct HTMLDocumentNode HTMLDocumentNode;
@@ -435,8 +437,6 @@ struct NSContainer {
     nsIURIContentListener *content_listener;
 
     HWND hwnd;
-
-    HWND reset_focus; /* hack */
 };
 
 typedef struct nsWineURI nsWineURI;
@@ -461,8 +461,15 @@ typedef struct {
     char *content_type;
     char *charset;
     PRUint32 response_status;
+    struct list response_headers;
     UINT url_scheme;
 } nsChannel;
+
+struct ResponseHeader {
+    struct list entry;
+    WCHAR *header;
+    WCHAR *data;
+};
 
 typedef struct {
     HRESULT (*qi)(HTMLDOMNode*,REFIID,void**);
@@ -836,7 +843,6 @@ void update_title(HTMLDocumentObj*);
 
 /* editor */
 void init_editor(HTMLDocument*);
-void set_ns_editmode(NSContainer*);
 void handle_edit_event(HTMLDocument*,nsIDOMEvent*);
 HRESULT editor_exec_copy(HTMLDocument*,DWORD,VARIANT*,VARIANT*);
 HRESULT editor_exec_cut(HTMLDocument*,DWORD,VARIANT*,VARIANT*);

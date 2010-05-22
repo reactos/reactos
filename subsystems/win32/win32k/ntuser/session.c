@@ -24,7 +24,7 @@
  * PROGRAMER:        Gunnar
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

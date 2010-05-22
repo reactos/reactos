@@ -250,7 +250,7 @@ static void append_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *s
     if (total != size)
     {
         TRACE( "setting value %s to %s\n", debugstr_w(value), debugstr_w(buffer) );
-        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ, (BYTE *)buffer, total );
+        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ, (BYTE *)buffer, total + sizeof(WCHAR) );
     }
  done:
     HeapFree( GetProcessHeap(), 0, buffer );

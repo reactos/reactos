@@ -413,8 +413,8 @@ PdoQueryResourceRequirements(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->ListSize = ListSize;
   ResourceList->InterfaceType = PCIBus;
-  ResourceList->BusNumber = 0;
-  ResourceList->SlotNumber = 0;
+  ResourceList->BusNumber = DeviceExtension->PciDevice->BusNumber;
+  ResourceList->SlotNumber = DeviceExtension->PciDevice->SlotNumber.u.AsULONG;
   ResourceList->AlternativeLists = 1;
 
   ResourceList->List[0].Version = 1;
@@ -717,7 +717,7 @@ PdoQueryResources(
   RtlZeroMemory(ResourceList, ListSize);
   ResourceList->Count = 1;
   ResourceList->List[0].InterfaceType = PCIBus;
-  ResourceList->List[0].BusNumber = 0;
+  ResourceList->List[0].BusNumber = DeviceExtension->PciDevice->BusNumber;
 
   PartialList = &ResourceList->List[0].PartialResourceList;
   PartialList->Version = 1;

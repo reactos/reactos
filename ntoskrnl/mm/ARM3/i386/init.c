@@ -151,6 +151,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
     ULONG OldCount;
+    KIRQL OldIrql;
 
     /* Check for kernel stack size that's too big */
     if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
@@ -338,7 +339,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedPoolStart -
                                     (MmNumberOfSystemPtes + 1) * PAGE_SIZE);
     MmNonPagedSystemStart = (PVOID)((ULONG_PTR)MmNonPagedSystemStart &
-                                    ~((4 * 1024 * 1024) - 1));
+                                    ~(PDE_MAPPED_VA - 1));
     
     //
     // Don't let it go below the minimum
@@ -386,7 +387,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MmPfnDatabase[0] = (PVOID)0xB0000000;
     MmPfnDatabase[1] = &MmPfnDatabase[0][MmHighestPhysicalPage];
-    ASSERT(((ULONG_PTR)MmPfnDatabase[0] & ((4 * 1024 * 1024) - 1)) == 0);
+    ASSERT(((ULONG_PTR)MmPfnDatabase[0] & (PDE_MAPPED_VA - 1)) == 0);
             
     //
     // Non paged pool comes after the PFN database
@@ -541,20 +542,25 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
     
-    //
-    // Get the PDE For hyperspace
-    //
+    /* Get the PDE For hyperspace */
     StartPde = MiAddressToPde(HYPER_SPACE);
     
-    //
-    // Allocate a page for it and create it
-    //
-    PageFrameIndex = MmAllocPage(MC_SYSTEM);
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Allocate a page for hyperspace and create it */
+    PageFrameIndex = MiRemoveAnyPage(0);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     ASSERT(StartPde->u.Hard.Valid == 0);
     ASSERT(TempPde.u.Hard.Valid == 1);
     *StartPde = TempPde;
+    
+    /* Flush the TLB */
+    KeFlushCurrentTb();
+    
+    /* Release the lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     
     //
     // Zero out the page table now

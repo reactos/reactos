@@ -1523,8 +1523,9 @@ VideoPortIsNoVesa(VOID)
        return FALSE;
    }
 
-   /* Check if NOVESA is present in the start options */
-   if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA"))
+   /* Check if NOVESA or BASEVIDEO is present in the start options */
+   if (wcsstr((PWCHAR)KeyInfo->Data, L"NOVESA") ||
+       wcsstr((PWCHAR)KeyInfo->Data, L"BASEVIDEO"))
    {
        VideoPortDebugPrint(Info, "VESA mode disabled\n");
        ExFreePool(KeyInfo);

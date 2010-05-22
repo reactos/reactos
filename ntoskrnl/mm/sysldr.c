@@ -39,10 +39,17 @@ ERESOURCE PsLoadedModuleResource;
 ULONG_PTR PsNtosImageBase;
 KMUTANT MmSystemLoadLock;
 
+PFN_NUMBER MmTotalSystemDriverPages;
+
 PVOID MmUnloadedDrivers;
 PVOID MmLastUnloadedDrivers;
-PVOID MmTriageActionTaken;
-PVOID KernelVerifier;
+
+BOOLEAN MmMakeLowMemory;
+BOOLEAN MmEnforceWriteProtection = TRUE;
+
+PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
+ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
+ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -188,120 +195,6 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     return Status;
 }
 
-NTSTATUS
-NTAPI
-MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
-{
-    SIZE_T i;
-
-    /* Check if there's no imports or if we're a boot driver */
-    if ((ImportList == (PVOID)-1) ||
-        (ImportList == (PVOID)-2) ||
-        (ImportList->Count == 0))
-    {
-        /* Then there's nothing to do */
-        return STATUS_SUCCESS;
-    }
-
-    /* Otherwise, FIXME */
-    DPRINT1("%u imports not dereferenced!\n", ImportList->Count);
-    for (i = 0; i < ImportList->Count; i++)
-    {
-        DPRINT1("%wZ <%wZ>\n", &ImportList->Entry[i]->FullDllName, &ImportList->Entry[i]->BaseDllName);
-    }
-    return STATUS_UNSUCCESSFUL;
-}
-
-VOID
-NTAPI
-MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
-{
-    PAGED_CODE();
-
-    /* Check if there's no imports or we're a boot driver or only one entry */
-    if ((LdrEntry->LoadedImports == (PVOID)-1) ||
-        (LdrEntry->LoadedImports == (PVOID)-2) ||
-        ((ULONG_PTR)LdrEntry->LoadedImports & 1))
-    {
-        /* Nothing to do */
-        return;
-    }
-
-    /* Otherwise, free the import list */
-    ExFreePool(LdrEntry->LoadedImports);
-}
-
-PVOID
-NTAPI
-MiFindExportedRoutineByName(IN PVOID DllBase,
-                            IN PANSI_STRING ExportName)
-{
-    PULONG NameTable;
-    PUSHORT OrdinalTable;
-    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
-    LONG Low = 0, Mid = 0, High, Ret;
-    USHORT Ordinal;
-    PVOID Function;
-    ULONG ExportSize;
-    PULONG ExportTable;
-    PAGED_CODE();
-
-    /* Get the export directory */
-    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
-                                                   TRUE,
-                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
-                                                   &ExportSize);
-    if (!ExportDirectory) return NULL;
-
-    /* Setup name tables */
-    NameTable = (PULONG)((ULONG_PTR)DllBase +
-                         ExportDirectory->AddressOfNames);
-    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
-                             ExportDirectory->AddressOfNameOrdinals);
-
-    /* Do a binary search */
-    High = ExportDirectory->NumberOfNames - 1;
-    while (High >= Low)
-    {
-        /* Get new middle value */
-        Mid = (Low + High) >> 1;
-
-        /* Compare name */
-        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
-        if (Ret < 0)
-        {
-            /* Update high */
-            High = Mid - 1;
-        }
-        else if (Ret > 0)
-        {
-            /* Update low */
-            Low = Mid + 1;
-        }
-        else
-        {
-            /* We got it */
-            break;
-        }
-    }
-
-    /* Check if we couldn't find it */
-    if (High < Low) return NULL;
-
-    /* Otherwise, this is the ordinal */
-    Ordinal = OrdinalTable[Mid];
-
-    /* Resolve the address and write it */
-    ExportTable = (PULONG)((ULONG_PTR)DllBase +
-                           ExportDirectory->AddressOfFunctions);
-    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
-
-    /* We found it! */
-    ASSERT(!(Function > (PVOID)ExportDirectory) &&
-           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
-    return Function;
-}
-
 PVOID
 NTAPI
 MiLocateExportName(IN PVOID DllBase,
@@ -440,6 +333,200 @@ MmCallDllInitialize(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+MiCallDllUnloadAndUnloadDll(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    NTSTATUS Status;
+    PMM_DLL_UNLOAD Func;
+    PAGED_CODE();
+
+    /* Get the unload routine */
+    Func = (PMM_DLL_UNLOAD)MiLocateExportName(LdrEntry->DllBase, "DllUnload");
+    if (!Func) return FALSE;
+
+    /* Call it and check for success */
+    Status = Func();
+    if (!NT_SUCCESS(Status)) return FALSE;
+
+    /* Lie about the load count so we can unload the image */
+    ASSERT(LdrEntry->LoadCount == 0);
+    LdrEntry->LoadCount = 1;
+
+    /* Unload it and return true */
+    MmUnloadSystemImage(LdrEntry);
+    return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MiDereferenceImports(IN PLOAD_IMPORTS ImportList)
+{
+    SIZE_T i;
+    LOAD_IMPORTS SingleEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PVOID CurrentImports;
+    PAGED_CODE();
+
+    /* Check if there's no imports or if we're a boot driver */
+    if ((ImportList == MM_SYSLDR_NO_IMPORTS) ||
+        (ImportList == MM_SYSLDR_BOOT_LOADED) ||
+        (ImportList->Count == 0))
+    {
+        /* Then there's nothing to do */
+        return STATUS_SUCCESS;
+    }
+    
+    /* Check for single-entry */
+    if ((ULONG_PTR)ImportList & MM_SYSLDR_SINGLE_ENTRY)
+    {
+        /* Set it up */
+        SingleEntry.Count = 1;
+        SingleEntry.Entry[0] = (PVOID)((ULONG_PTR)ImportList &~ MM_SYSLDR_SINGLE_ENTRY);
+        
+        /* Use this as the import list */
+        ImportList = &SingleEntry;
+    }
+
+    /* Loop the import list */
+    for (i = 0; (i < ImportList->Count) && (ImportList->Entry[i]); i++)
+    {
+        /* Get the entry */
+        LdrEntry = ImportList->Entry[i];
+        DPRINT1("%wZ <%wZ>\n", &LdrEntry->FullDllName, &LdrEntry->BaseDllName);
+        
+        /* Skip boot loaded images */
+        if (LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) continue;
+        
+        /* Dereference the entry */
+        ASSERT(LdrEntry->LoadCount >= 1);
+        if (!--LdrEntry->LoadCount)
+        {
+            /* Save the import data in case unload fails */
+            CurrentImports = LdrEntry->LoadedImports;
+            
+            /* This is the last entry */
+            LdrEntry->LoadedImports = MM_SYSLDR_NO_IMPORTS;
+            if (MiCallDllUnloadAndUnloadDll(LdrEntry))
+            {
+                /* Unloading worked, parse this DLL's imports too */
+                MiDereferenceImports(CurrentImports);
+                
+                /* Check if we had valid imports */
+                if ((CurrentImports != MM_SYSLDR_BOOT_LOADED) ||
+                    (CurrentImports != MM_SYSLDR_NO_IMPORTS) ||
+                    !((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+                {
+                    /* Free them */
+                    ExFreePool(CurrentImports);
+                }
+            }
+            else
+            {
+                /* Unload failed, restore imports */
+                LdrEntry->LoadedImports = CurrentImports;
+            }
+        }
+    }
+    
+    /* Done */
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiClearImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PAGED_CODE();
+
+    /* Check if there's no imports or we're a boot driver or only one entry */
+    if ((LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) ||
+        (LdrEntry->LoadedImports == MM_SYSLDR_NO_IMPORTS) ||
+        ((ULONG_PTR)LdrEntry->LoadedImports & MM_SYSLDR_SINGLE_ENTRY))
+    {
+        /* Nothing to do */
+        return;
+    }
+
+    /* Otherwise, free the import list */
+    ExFreePool(LdrEntry->LoadedImports);
+    LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
+}
+
+PVOID
+NTAPI
+MiFindExportedRoutineByName(IN PVOID DllBase,
+                            IN PANSI_STRING ExportName)
+{
+    PULONG NameTable;
+    PUSHORT OrdinalTable;
+    PIMAGE_EXPORT_DIRECTORY ExportDirectory;
+    LONG Low = 0, Mid = 0, High, Ret;
+    USHORT Ordinal;
+    PVOID Function;
+    ULONG ExportSize;
+    PULONG ExportTable;
+    PAGED_CODE();
+
+    /* Get the export directory */
+    ExportDirectory = RtlImageDirectoryEntryToData(DllBase,
+                                                   TRUE,
+                                                   IMAGE_DIRECTORY_ENTRY_EXPORT,
+                                                   &ExportSize);
+    if (!ExportDirectory) return NULL;
+
+    /* Setup name tables */
+    NameTable = (PULONG)((ULONG_PTR)DllBase +
+                         ExportDirectory->AddressOfNames);
+    OrdinalTable = (PUSHORT)((ULONG_PTR)DllBase +
+                             ExportDirectory->AddressOfNameOrdinals);
+
+    /* Do a binary search */
+    High = ExportDirectory->NumberOfNames - 1;
+    while (High >= Low)
+    {
+        /* Get new middle value */
+        Mid = (Low + High) >> 1;
+
+        /* Compare name */
+        Ret = strcmp(ExportName->Buffer, (PCHAR)DllBase + NameTable[Mid]);
+        if (Ret < 0)
+        {
+            /* Update high */
+            High = Mid - 1;
+        }
+        else if (Ret > 0)
+        {
+            /* Update low */
+            Low = Mid + 1;
+        }
+        else
+        {
+            /* We got it */
+            break;
+        }
+    }
+
+    /* Check if we couldn't find it */
+    if (High < Low) return NULL;
+
+    /* Otherwise, this is the ordinal */
+    Ordinal = OrdinalTable[Mid];
+
+    /* Validate the ordinal */
+    if (Ordinal >= ExportDirectory->NumberOfFunctions) return NULL;
+
+    /* Resolve the address and write it */
+    ExportTable = (PULONG)((ULONG_PTR)DllBase +
+                           ExportDirectory->AddressOfFunctions);
+    Function = (PVOID)((ULONG_PTR)DllBase + ExportTable[Ordinal]);
+
+    /* We found it! */
+    ASSERT(!(Function > (PVOID)ExportDirectory) &&
+           (Function < (PVOID)((ULONG_PTR)ExportDirectory + ExportSize)));
+    return Function;
+}
+
 VOID
 NTAPI
 MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
@@ -474,9 +561,9 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     ULONG_PTR OldBaseTop, Delta;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     PLIST_ENTRY NextEntry;
-    ULONG ImportSize;
+    ULONG ImportSize, i;
+    PULONG_PTR ImageThunk;
     PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
-    PULONG ImageThunk;
 
     /* Calculate the top and delta */
     OldBaseTop = (ULONG_PTR)OldBase + Size - 1;
@@ -491,8 +578,30 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         LdrEntry = CONTAINING_RECORD(NextEntry,
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
+#ifdef _WORKING_LINKER_
+        /* Get the IAT */
+        ImageThunk = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                  TRUE,
+                                                  IMAGE_DIRECTORY_ENTRY_IAT,
+                                                  &ImportSize);
+        if (!ImageThunk) continue;
 
+        /* Make sure we have an IAT */
+        DPRINT("[Mm0]: Updating thunks in: %wZ\n", &LdrEntry->BaseDllName);
+        for (i = 0; i < ImportSize; i++, ImageThunk++)
+        {
+            /* Check if it's within this module */
+            if ((*ImageThunk >= (ULONG_PTR)OldBase) && (*ImageThunk <= OldBaseTop))
+            {
+                /* Relocate it */
+                DPRINT("[Mm0]: Updating IAT at: %p. Old Entry: %p. New Entry: %p.\n",
+                        ImageThunk, *ImageThunk, *ImageThunk + Delta);
+                *ImageThunk += Delta;
+            }
+        }
+#else
         /* Get the import table */
+        i = ImportSize;
         ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
                                                         TRUE,
                                                         IMAGE_DIRECTORY_ENTRY_IMPORT,
@@ -525,6 +634,7 @@ MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             /* Go to the next import */
             ImportDescriptor++;
         }
+#endif
     }
 }
 
@@ -592,7 +702,7 @@ MiSnapThunk(IN PVOID DllBase,
         /* Get the hint and check if it's valid */
         Hint = NameImport->Hint;
         if ((Hint < ExportDirectory->NumberOfNames) &&
-            !(strcmp((PCHAR) NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
+            !(strcmp((PCHAR)NameImport->Name, (PCHAR)DllBase + NameTable[Hint])))
         {
             /* We have a match, get the ordinal number from here */
             Ordinal = OrdinalTable[Hint];
@@ -763,7 +873,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
                           NULL);
 
     /* Check if this driver was loaded at boot and didn't get imports parsed */
-    if (LdrEntry->LoadedImports == (PVOID)-1) goto Done;
+    if (LdrEntry->LoadedImports == MM_SYSLDR_BOOT_LOADED) goto Done;
 
     /* We should still be alive */
     ASSERT(LdrEntry->LoadCount != 0);
@@ -790,6 +900,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
     }
 
     /* FIXME: Free the driver */
+    DPRINT1("Leaking driver: %wZ\n", &LdrEntry->BaseDllName);
     //MmFreeSection(LdrEntry->DllBase);
 
     /* Check if we're linked in */
@@ -860,7 +971,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
            __FUNCTION__, ImageBase, ImageFileDirectory);
 
     /* Assume no imports */
-    *LoadImports = (PVOID)-2;
+    *LoadImports = MM_SYSLDR_NO_IMPORTS;
 
     /* Get the import descriptor */
     ImportDescriptor = RtlImageDirectoryEntryToData(ImageBase,
@@ -885,11 +996,12 @@ MiResolveImageReferences(IN PVOID ImageBase,
         LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
         LoadedImports = ExAllocatePoolWithTag(PagedPool,
                                               LoadedImportsSize,
-                                              TAG_LDR_WSTR);
+                                              'TDmM');
         if (LoadedImports)
         {
             /* Zero it */
             RtlZeroMemory(LoadedImports, LoadedImportsSize);
+            LoadedImports->Count = ImportCount;
         }
     }
     else
@@ -909,15 +1021,31 @@ MiResolveImageReferences(IN PVOID ImageBase,
         GdiLink = GdiLink |
                   !(_strnicmp(ImportName, "win32k", sizeof("win32k") - 1));
 
-        /* We can also allow dxapi */
+        /* We can also allow dxapi (for Windows compat, allow IRT and coverage )*/
         NormalLink = NormalLink |
                      ((_strnicmp(ImportName, "win32k", sizeof("win32k") - 1)) &&
-                      (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)));
+                      (_strnicmp(ImportName, "dxapi", sizeof("dxapi") - 1)) &&
+                      (_strnicmp(ImportName, "coverage", sizeof("coverage") - 1)) &&
+                      (_strnicmp(ImportName, "irt", sizeof("irt") - 1)));
 
         /* Check if this is a valid GDI driver */
         if ((GdiLink) && (NormalLink))
         {
             /* It's not, it's importing stuff it shouldn't be! */
+            MiDereferenceImports(LoadedImports);
+            if (LoadedImports) ExFreePool(LoadedImports);
+            return STATUS_PROCEDURE_NOT_FOUND;
+        }
+
+        /* Check for user-mode printer or video card drivers, which don't belong */
+        if (!(_strnicmp(ImportName, "ntdll", sizeof("ntdll") - 1)) ||
+            !(_strnicmp(ImportName, "winsrv", sizeof("winsrv") - 1)) ||
+            !(_strnicmp(ImportName, "advapi32", sizeof("advapi32") - 1)) ||
+            !(_strnicmp(ImportName, "kernel32", sizeof("kernel32") - 1)) ||
+            !(_strnicmp(ImportName, "user32", sizeof("user32") - 1)) ||
+            !(_strnicmp(ImportName, "gdi32", sizeof("gdi32") - 1)))
+        {
+            /* This is not kernel code */
             MiDereferenceImports(LoadedImports);
             if (LoadedImports) ExFreePool(LoadedImports);
             return STATUS_PROCEDURE_NOT_FOUND;
@@ -999,7 +1127,7 @@ CheckDllState:
                                     sizeof(UNICODE_NULL);
             DllName.Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                                    DllName.MaximumLength,
-                                                   TAG_LDR_WSTR);
+                                                   'TDmM');
             if (DllName.Buffer)
             {
                 /* Setup the base length and copy it */
@@ -1011,13 +1139,13 @@ CheckDllState:
                 /* Now add the import name and null-terminate it */
                 RtlAppendStringToString((PSTRING)&DllName,
                                         (PSTRING)&NameString);
-                DllName.Buffer[(DllName.MaximumLength - 1) /  sizeof(WCHAR)] = UNICODE_NULL;
+                DllName.Buffer[(DllName.MaximumLength - 1) / sizeof(WCHAR)] = UNICODE_NULL;
 
                 /* Load the image */
                 Status = MmLoadSystemImage(&DllName,
                                            NamePrefix,
                                            NULL,
-                                           0,
+                                           FALSE,
                                            (PVOID)&DllEntry,
                                            &DllBase);
                 if (NT_SUCCESS(Status))
@@ -1080,8 +1208,8 @@ CheckDllState:
             if (!(LdrEntry->Flags & LDRP_LOAD_IN_PROGRESS))
             {
                 /* Add the entry */
-                LoadedImports->Entry[LoadedImports->Count] = LdrEntry;
-                LoadedImports->Count++;
+                LoadedImports->Entry[ImportCount] = LdrEntry;
+                ImportCount++;
             }
         }
 
@@ -1150,7 +1278,8 @@ CheckDllState:
             if (LoadedImports->Entry[i])
             {
                 /* Got an entry, OR it with 1 in case it's the single entry */
-                ImportEntry = (PVOID)((ULONG_PTR)LoadedImports->Entry[i] | 1);
+                ImportEntry = (PVOID)((ULONG_PTR)LoadedImports->Entry[i] |
+                                      MM_SYSLDR_SINGLE_ENTRY);
                 ImportCount++;
             }
         }
@@ -1160,7 +1289,7 @@ CheckDllState:
         {
             /* Free the list and set it to no imports */
             ExFreePoolWithTag(LoadedImports, TAG_LDR_WSTR);
-            LoadedImports = (PVOID)-2;
+            LoadedImports = MM_SYSLDR_NO_IMPORTS;
         }
         else if (ImportCount == 1)
         {
@@ -1174,7 +1303,7 @@ CheckDllState:
             LoadedImportsSize = ImportCount * sizeof(PVOID) + sizeof(SIZE_T);
             NewImports = ExAllocatePoolWithTag(PagedPool,
                                                LoadedImportsSize,
-                                               TAG_LDR_WSTR);
+                                               'TDmM');
             if (NewImports)
             {
                 /* Set count */
@@ -1383,6 +1512,331 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
+NTSTATUS
+NTAPI
+MiBuildImportsForBootDrivers(VOID)
+{
+    PLIST_ENTRY NextEntry, NextEntry2;
+    PLDR_DATA_TABLE_ENTRY LdrEntry, KernelEntry, HalEntry, LdrEntry2, LastEntry;
+    PLDR_DATA_TABLE_ENTRY* EntryArray;
+    UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
+    UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"hal.dll");
+    PLOAD_IMPORTS LoadedImports;
+    ULONG LoadedImportsSize, ImportSize;
+    PULONG_PTR ImageThunk;
+    ULONG_PTR DllBase, DllEnd;
+    ULONG Modules = 0, i, j = 0;
+    PIMAGE_IMPORT_DESCRIPTOR ImportDescriptor;
+    
+    /* Initialize variables */
+    KernelEntry = HalEntry = LastEntry = NULL;
+
+    /* Loop the loaded module list... we are early enough that no lock is needed */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        /* Check if it's the kernel or HAL */
+        if (RtlEqualUnicodeString(&KernelName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            KernelEntry = LdrEntry;
+        }
+        else if (RtlEqualUnicodeString(&HalName, &LdrEntry->BaseDllName, TRUE))
+        {
+            /* Found it */
+            HalEntry = LdrEntry;
+        }
+        
+        /* Check if this is a driver DLL */
+        if (LdrEntry->Flags & LDRP_DRIVER_DEPENDENT_DLL)
+        {
+            /* Check if this is the HAL or kernel */
+            if ((LdrEntry == HalEntry) || (LdrEntry == KernelEntry))
+            {
+                /* Add a reference */
+                LdrEntry->LoadCount = 1;
+            }
+            else
+            {
+                /* No referencing needed */
+                LdrEntry->LoadCount = 0;
+            }
+        }
+        else
+        {
+            /* No referencing needed */
+            LdrEntry->LoadCount = 0;    
+        }
+        
+        /* Remember this came from the loader */
+        LdrEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
+
+        /* Keep looping */
+        NextEntry = NextEntry->Flink;
+        Modules++;
+    }
+    
+    /* We must have at least found the kernel and HAL */
+    if (!(HalEntry) || (!KernelEntry)) return STATUS_NOT_FOUND;
+    
+    /* Allocate the list */
+    EntryArray = ExAllocatePoolWithTag(PagedPool, Modules * sizeof(PVOID), 'TDmM');
+    if (!EntryArray) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Loop the loaded module list again */
+    NextEntry = PsLoadedModuleList.Flink;
+    while (NextEntry != &PsLoadedModuleList)
+    {
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+#ifdef _WORKING_LOADER_
+        /* Get its imports */
+        ImageThunk = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                  TRUE,
+                                                  IMAGE_DIRECTORY_ENTRY_IAT,
+                                                  &ImportSize);
+        if (!ImageThunk)                                                
+#else
+        /* Get its imports */
+        ImportDescriptor = RtlImageDirectoryEntryToData(LdrEntry->DllBase,
+                                                        TRUE,
+                                                        IMAGE_DIRECTORY_ENTRY_IMPORT,
+                                                        &ImportSize);
+        if (!ImportDescriptor)
+#endif
+        {
+            /* None present */
+            LdrEntry->LoadedImports = MM_SYSLDR_NO_IMPORTS;
+            NextEntry = NextEntry->Flink;
+            continue;
+        }
+        
+        /* Clear the list and count the number of IAT thunks */
+        RtlZeroMemory(EntryArray, Modules * sizeof(PVOID));
+#ifdef _WORKING_LOADER_
+        ImportSize /= sizeof(ULONG_PTR);
+        
+        /* Scan the thunks */
+        for (i = 0, DllBase = 0, DllEnd = 0; i < ImportSize; i++, ImageThunk++)
+#else
+        i = DllBase = DllEnd = 0;
+        while ((ImportDescriptor->Name) &&
+               (ImportDescriptor->OriginalFirstThunk))
+        {
+            /* Get the image thunk */
+            ImageThunk = (PVOID)((ULONG_PTR)LdrEntry->DllBase +
+                                 ImportDescriptor->FirstThunk);
+            while (*ImageThunk)
+#endif
+            {
+            /* Do we already have an address? */
+            if (DllBase)
+            {
+                /* Is the thunk in the same address? */
+                if ((*ImageThunk >= DllBase) && (*ImageThunk < DllEnd))
+                {
+                    /* Skip it, we already have a reference for it */
+                    ASSERT(EntryArray[j]);
+                    ImageThunk++;
+                    continue;
+                }
+            }
+            
+            /* Loop the loaded module list to locate this address owner */
+            j = 0;
+            NextEntry2 = PsLoadedModuleList.Flink;
+            while (NextEntry2 != &PsLoadedModuleList)
+            {
+                /* Get the entry */
+                LdrEntry2 = CONTAINING_RECORD(NextEntry2,
+                                              LDR_DATA_TABLE_ENTRY,
+                                              InLoadOrderLinks);
+                                              
+                /* Get the address range for this module */
+                DllBase = (ULONG_PTR)LdrEntry2->DllBase;
+                DllEnd = DllBase + LdrEntry2->SizeOfImage;
+                
+                /* Check if this IAT entry matches it */
+                if ((*ImageThunk >= DllBase) && (*ImageThunk < DllEnd))
+                {
+                    /* Save it */
+                    //DPRINT1("Found imported dll: %wZ\n", &LdrEntry2->BaseDllName);
+                    EntryArray[j] = LdrEntry2;
+                    break;
+                }
+                
+                /* Keep searching */
+                NextEntry2 = NextEntry2->Flink;
+                j++;
+            }
+            
+            /* Do we have a thunk outside the range? */
+            if ((*ImageThunk < DllBase) || (*ImageThunk >= DllEnd))
+            {
+                /* Could be 0... */
+                if (*ImageThunk)
+                {
+                    /* Should not be happening */
+                    DPRINT1("Broken IAT entry for %p at %p (%lx)\n",
+                            LdrEntry, ImageThunk, *ImageThunk);
+                    ASSERT(FALSE);
+                }
+                
+                /* Reset if we hit this */
+                DllBase = 0;
+            }
+#ifndef _WORKING_LOADER_
+            ImageThunk++;
+            }
+        
+            i++;
+            ImportDescriptor++;
+#endif
+        }
+        
+        /* Now scan how many imports we really have */
+        for (i = 0, ImportSize = 0; i < Modules; i++)
+        {
+            /* Skip HAL and kernel */
+            if ((EntryArray[i]) &&
+                (EntryArray[i] != HalEntry) &&
+                (EntryArray[i] != KernelEntry))
+            {
+                /* A valid reference */
+                LastEntry = EntryArray[i];
+                ImportSize++;
+            }
+        }
+        
+        /* Do we have any imports after all? */
+        if (!ImportSize)
+        {
+            /* No */
+            LdrEntry->LoadedImports = MM_SYSLDR_NO_IMPORTS;
+        }
+        else if (ImportSize == 1)
+        {
+            /* A single entry import */
+            LdrEntry->LoadedImports = (PVOID)((ULONG_PTR)LastEntry | MM_SYSLDR_SINGLE_ENTRY);
+            LastEntry->LoadCount++;
+        }
+        else
+        {
+            /* We need an import table */
+            LoadedImportsSize = ImportSize * sizeof(PVOID) + sizeof(SIZE_T);
+            LoadedImports = ExAllocatePoolWithTag(PagedPool,
+                                                  LoadedImportsSize,
+                                                  'TDmM');
+            ASSERT(LoadedImports);
+            
+            /* Save the count */
+            LoadedImports->Count = ImportSize;
+            
+            /* Now copy all imports */
+            for (i = 0, j = 0; i < Modules; i++)
+            {
+                /* Skip HAL and kernel */
+                if ((EntryArray[i]) &&
+                    (EntryArray[i] != HalEntry) &&
+                    (EntryArray[i] != KernelEntry))
+                {
+                    /* A valid reference */
+                    //DPRINT1("Found valid entry: %p\n", EntryArray[i]);
+                    LoadedImports->Entry[j] = EntryArray[i];
+                    EntryArray[i]->LoadCount++;
+                    j++;
+                }
+            }
+            
+            /* Should had as many entries as we expected */
+            ASSERT(j == ImportSize);
+            LdrEntry->LoadedImports = LoadedImports;
+        }
+        
+        /* Next */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* Free the initial array */
+    ExFreePool(EntryArray);
+    
+    /* FIXME: Might not need to keep the HAL/Kernel imports around */
+    
+    /* Kernel and HAL are loaded at boot */
+    KernelEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
+    HalEntry->LoadedImports = MM_SYSLDR_BOOT_LOADED;
+    
+    /* All worked well */
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    ULONG_PTR DllBase;
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_SECTION_HEADER SectionHeader;
+    ULONG Sections, Size;
+    
+    /* Get the kernel section header */
+    DllBase = (ULONG_PTR)LdrEntry->DllBase;
+    NtHeaders = RtlImageNtHeader((PVOID)DllBase);
+    SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
+
+    /* Loop all the sections */
+    Sections = NtHeaders->FileHeader.NumberOfSections;
+    while (Sections)
+    {
+        /* Grab the size of the section */
+        Size = max(SectionHeader->SizeOfRawData, SectionHeader->Misc.VirtualSize);
+        
+        /* Check for .RSRC section */
+        if (*(PULONG)SectionHeader->Name == 'rsr.')
+        {
+            /* Remember the PTEs so we can modify them later */
+            MiKernelResourceStartPte = MiAddressToPte(DllBase +
+                                                      SectionHeader->VirtualAddress);
+            MiKernelResourceEndPte = MiKernelResourceStartPte +
+                                     BYTES_TO_PAGES(SectionHeader->VirtualAddress + Size);
+        }
+        else if (*(PULONG)SectionHeader->Name == 'LOOP')
+        {
+            /* POOLCODE vs. POOLMI */
+            if (*(PULONG)&SectionHeader->Name[4] == 'EDOC')
+            {
+                /* Found Ex* Pool code */
+                ExPoolCodeStart = DllBase + SectionHeader->VirtualAddress;
+                ExPoolCodeEnd = ExPoolCodeStart + Size;
+            }
+            else if (*(PUSHORT)&SectionHeader->Name[4] == 'MI')
+            {
+                /* Found Mm* Pool code */
+                MmPoolCodeStart = DllBase + SectionHeader->VirtualAddress;
+                MmPoolCodeEnd = ExPoolCodeStart + Size;                
+            }
+        }
+        else if ((*(PULONG)SectionHeader->Name == 'YSIM') &&
+                 (*(PULONG)&SectionHeader->Name[4] == 'ETPS'))
+        {
+            /* Found MISYSPTE (Mm System PTE code)*/
+            MmPteCodeStart = DllBase + SectionHeader->VirtualAddress;
+            MmPteCodeEnd = ExPoolCodeStart + Size;
+        }
+        
+        /* Keep going */
+        Sections--;
+        SectionHeader++;
+    }
+}
+
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1403,6 +1857,9 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                  LDR_DATA_TABLE_ENTRY,
                                  InLoadOrderLinks);
     PsNtosImageBase = (ULONG_PTR)LdrEntry->DllBase;
+    
+    /* Locate resource section, pool code, and system pte code */
+    MiLocateKernelSections(LdrEntry);
 
     /* Loop the loader block */
     while (NextEntry != ListHead)
@@ -1416,7 +1873,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         if (!RtlImageNtHeader(LdrEntry->DllBase))
         {
             /* Skip this entry */
-            NextEntry= NextEntry->Flink;
+            NextEntry = NextEntry->Flink;
             continue;
         }
 
@@ -1459,10 +1916,439 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Build the import lists for the boot drivers */
-    //MiBuildImportsForBootDrivers();
+    MiBuildImportsForBootDrivers();
 
     /* We're done */
     return TRUE;
+}
+
+LOGICAL
+NTAPI
+MiUseLargeDriverPage(IN ULONG NumberOfPtes,
+                     IN OUT PVOID *ImageBaseAddress,
+                     IN PUNICODE_STRING BaseImageName,
+                     IN BOOLEAN BootDriver)
+{
+    PLIST_ENTRY NextEntry;
+    BOOLEAN DriverFound = FALSE;
+    PMI_LARGE_PAGE_DRIVER_ENTRY LargePageDriverEntry;
+    ASSERT(KeGetCurrentIrql () <= APC_LEVEL);
+    ASSERT(*ImageBaseAddress >= MmSystemRangeStart);
+
+#ifdef _X86_
+    if (!(KeFeatureBits & KF_LARGE_PAGE)) return FALSE;
+    if (!(__readcr4() & CR4_PSE)) return FALSE;
+#endif
+
+    /* Make sure there's enough system PTEs for a large page driver */
+    if (MmTotalFreeSystemPtes[SystemPteSpace] < (16 * (PDE_MAPPED_VA >> PAGE_SHIFT)))
+    {
+        return FALSE;
+    }
+
+    /* This happens if the registry key had a "*" (wildcard) in it */
+    if (MiLargePageAllDrivers == 0)
+    {
+        /* It didn't, so scan the list */
+        NextEntry = MiLargePageDriverList.Flink;
+        while (NextEntry != &MiLargePageDriverList)
+        {
+            /* Check if the driver name matches */
+            LargePageDriverEntry = CONTAINING_RECORD(NextEntry,
+                                                     MI_LARGE_PAGE_DRIVER_ENTRY,
+                                                     Links);
+            if (RtlEqualUnicodeString(BaseImageName,
+                                      &LargePageDriverEntry->BaseName,
+                                      TRUE))
+            {
+                /* Enable large pages for this driver */
+                DriverFound = TRUE;
+                break;
+            }
+
+            /* Keep trying */
+            NextEntry = NextEntry->Flink;
+        }
+        
+        /* If we didn't find the driver, it doesn't need large pages */
+        if (DriverFound == FALSE) return FALSE;
+    }
+ 
+    /* Nothing to do yet */
+    DPRINT1("Large pages not supported!\n");
+    return FALSE;
+}
+
+ULONG
+NTAPI
+MiComputeDriverProtection(IN BOOLEAN SessionSpace,
+                          IN ULONG SectionProtection)
+{
+    ULONG Protection = MM_ZERO_ACCESS;
+    
+    /* Check if the caller gave anything */
+    if (SectionProtection)
+    {
+        /* Always turn on execute access */
+        SectionProtection |= IMAGE_SCN_MEM_EXECUTE;
+        
+        /* Check if the registry setting is on or not */
+        if (!MmEnforceWriteProtection)
+        {
+            /* Turn on write access too */
+            SectionProtection |= (IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_EXECUTE);
+        }
+    }
+    
+    /* Convert to internal PTE flags */
+    if (SectionProtection & IMAGE_SCN_MEM_EXECUTE) Protection |= MM_EXECUTE;
+    if (SectionProtection & IMAGE_SCN_MEM_READ) Protection |= MM_READONLY;
+    
+    /* Check for write access */
+    if (SectionProtection & IMAGE_SCN_MEM_WRITE)
+    {
+        /* Session space is not supported */
+        if (SessionSpace)
+        {
+            DPRINT1("Session drivers not supported\n");
+            ASSERT(SessionSpace == FALSE);
+        }
+        else
+        {
+            /* Convert to internal PTE flag */
+            Protection = (Protection & MM_EXECUTE) ? MM_EXECUTE_READWRITE : MM_READWRITE;
+        }
+    }
+    
+    /* If there's no access at all by now, convert to internal no access flag */
+    if (Protection == MM_ZERO_ACCESS) Protection = MM_NOACCESS;
+    
+    /* Return the computed PTE protection */
+    return Protection;
+}
+
+VOID
+NTAPI
+MiSetSystemCodeProtection(IN PMMPTE FirstPte,
+                          IN PMMPTE LastPte,
+                          IN ULONG ProtectionMask)
+{
+    /* I'm afraid to introduce regressions at the moment... */
+    return;
+}
+
+VOID
+NTAPI
+MiWriteProtectSystemImage(IN PVOID ImageBase)
+{
+    PIMAGE_NT_HEADERS NtHeaders;
+    PIMAGE_SECTION_HEADER Section;
+    PFN_NUMBER DriverPages;
+    ULONG CurrentProtection, SectionProtection, CombinedProtection, ProtectionMask;
+    ULONG Sections, Size;
+    ULONG_PTR BaseAddress, CurrentAddress;
+    PMMPTE PointerPte, StartPte, LastPte, CurrentPte, ComboPte = NULL;
+    ULONG CurrentMask, CombinedMask = 0;
+    PAGED_CODE();
+    
+    /* No need to write protect physical memory-backed drivers (large pages) */
+    if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
+    
+    /* Get the image headers */
+    NtHeaders = RtlImageNtHeader(ImageBase);
+    if (!NtHeaders) return;
+    
+    /* Check if this is a session driver or not */
+    if (!MI_IS_SESSION_ADDRESS(ImageBase))
+    {
+        /* Don't touch NT4 drivers */
+        if (NtHeaders->OptionalHeader.MajorOperatingSystemVersion < 5) return;
+        if (NtHeaders->OptionalHeader.MajorImageVersion < 5) return;
+    }
+    else
+    {
+        /* Not supported */
+        DPRINT1("Session drivers not supported\n");
+        ASSERT(FALSE);
+    }
+    
+    /* These are the only protection masks we care about */
+    ProtectionMask = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ | IMAGE_SCN_MEM_EXECUTE;
+    
+    /* Calculate the number of pages this driver is occupying */
+    DriverPages = BYTES_TO_PAGES(NtHeaders->OptionalHeader.SizeOfImage);
+    
+    /* Get the number of sections and the first section header */
+    Sections = NtHeaders->FileHeader.NumberOfSections;
+    ASSERT(Sections != 0);
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
+
+    /* Loop all the sections */
+    CurrentAddress = (ULONG_PTR)ImageBase;
+    while (Sections)
+    {
+        /* Get the section size */
+        Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+        
+        /* Get its virtual address */
+        BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
+        if (BaseAddress < CurrentAddress)
+        {
+            /* Windows doesn't like these */
+            DPRINT1("Badly linked image!\n");
+            return;
+        }
+        
+        /* Remember the current address */
+        CurrentAddress = BaseAddress + Size - 1;
+        
+        /* Next */
+        Sections--;
+        Section++;
+    }
+    
+    /* Get the number of sections and the first section header */
+    Sections = NtHeaders->FileHeader.NumberOfSections;
+    ASSERT(Sections != 0);
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
+    
+    /* Set the address at the end to initialize the loop */
+    CurrentAddress = (ULONG_PTR)Section + Sections - 1;
+    CurrentProtection = IMAGE_SCN_MEM_WRITE | IMAGE_SCN_MEM_READ;
+    
+    /* Set the PTE points for the image, and loop its sections */
+    StartPte = MiAddressToPte(ImageBase);
+    LastPte = StartPte + DriverPages;
+    while (Sections)
+    {
+        /* Get the section size */
+        Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+        
+        /* Get its virtual address and PTE */
+        BaseAddress = (ULONG_PTR)ImageBase + Section->VirtualAddress;
+        PointerPte = MiAddressToPte(BaseAddress);
+        
+        /* Check if we were already protecting a run, and found a new run */
+        if ((ComboPte) && (PointerPte > ComboPte))
+        {
+            /* Compute protection */
+            CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
+            
+            /* Set it */
+            MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
+            
+            /* Check for overlap */
+            if (ComboPte == StartPte) StartPte++;
+            
+            /* One done, reset variables */
+            ComboPte = NULL;
+            CombinedProtection = 0;
+        }
+        
+        /* Break out when needed */
+        if (PointerPte >= LastPte) break;
+        
+        /* Get the requested protection from the image header */
+        SectionProtection = Section->Characteristics & ProtectionMask;
+        if (SectionProtection == CurrentProtection)
+        {
+            /* Same protection, so merge the request */
+            CurrentAddress = BaseAddress + Size - 1;
+        
+            /* Next */
+            Sections--;
+            Section++;
+            continue;
+        }
+        
+        /* This is now a new section, so close up the old one */
+        CurrentPte = MiAddressToPte(CurrentAddress);
+        
+        /* Check for overlap */
+        if (CurrentPte == PointerPte)
+        {
+            /* Skip the last PTE, since it overlaps with us */
+            CurrentPte--;
+    
+            /* And set the PTE we will merge with */
+            ASSERT((ComboPte == NULL) || (ComboPte == PointerPte));
+            ComboPte = PointerPte;
+            
+            /* Get the most flexible protection by merging both */
+            CombinedMask |= (SectionProtection | CurrentProtection);
+        }
+        
+        /* Loop any PTEs left */
+        if (CurrentPte >= StartPte)
+        {
+            /* Sanity check */
+            ASSERT(StartPte < LastPte);
+            
+            /* Make sure we don't overflow past the last PTE in the driver */
+            if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
+            ASSERT(CurrentPte >= StartPte);
+            
+            /* Compute the protection and set it */
+            CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
+            MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
+        }
+        
+        /* Set new state */
+        StartPte = PointerPte;
+        CurrentAddress = BaseAddress + Size - 1;
+        CurrentProtection = SectionProtection;
+        
+        /* Next */
+        Sections--;
+        Section++;
+    }
+    
+    /* Is there a leftover section to merge? */
+    if (ComboPte)
+    {
+        /* Compute and set the protection */
+        CombinedMask = MiComputeDriverProtection(FALSE, CombinedProtection);
+        MiSetSystemCodeProtection(ComboPte, ComboPte, CombinedMask);
+        
+        /* Handle overlap */
+        if (ComboPte == StartPte) StartPte++;
+    }
+    
+    /* Finally, handle the last section */
+    CurrentPte = MiPteToAddress(CurrentAddress);
+    if ((StartPte < LastPte) && (CurrentPte >= StartPte))
+    {
+        /* Handle overlap */
+        if (CurrentPte >= LastPte) CurrentPte = LastPte - 1;
+        ASSERT(CurrentPte >= StartPte);
+        
+        /* Compute and set the protection */
+        CurrentMask = MiComputeDriverProtection(FALSE, CurrentProtection);
+        MiSetSystemCodeProtection(StartPte, CurrentPte, CurrentMask);
+    }
+}
+
+VOID
+NTAPI
+MiSetPagingOfDriver(IN PMMPTE PointerPte,
+                    IN PMMPTE LastPte)
+{
+    PVOID ImageBase;
+    PETHREAD CurrentThread;
+    PFN_NUMBER PageCount = 0, PageFrameIndex;
+    PMMPFN Pfn1;
+    PAGED_CODE();
+    
+    /* Get the driver's base address */
+    ImageBase = MiPteToAddress(PointerPte);
+    ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(ImageBase) == FALSE);
+    
+    /* If this is a large page, it's stuck in physical memory */
+    if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
+
+    /* We should lock the system working set -- we don't have one yet, so just be consistent */
+    CurrentThread = PsGetCurrentThread();
+    KeEnterGuardedRegion();
+    ASSERT((CurrentThread->OwnsSystemWorkingSetExclusive == 0) &&
+           (CurrentThread->OwnsSystemWorkingSetShared == 0));
+    CurrentThread->OwnsSystemWorkingSetExclusive = 1;
+    
+    /* Loop the PTEs */
+    while (PointerPte <= LastPte)
+    {
+        /* Check for valid PTE */
+        if (PointerPte->u.Hard.Valid == 1)
+        {
+            PageFrameIndex = PFN_FROM_PTE(PointerPte);
+            Pfn1 = MiGetPfnEntry(PageFrameIndex);
+            ASSERT(Pfn1->u2.ShareCount == 1);
+            
+            /* No working sets in ReactOS yet */
+            PageCount++;
+        }
+        
+        ImageBase = (PVOID)((ULONG_PTR)ImageBase + PAGE_SIZE);
+        PointerPte++;
+    }
+    
+    /* Release the working set "lock" */
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    CurrentThread->OwnsSystemWorkingSetExclusive = 0;
+    KeLeaveGuardedRegion();
+    
+    /* Do we have any driver pages? */
+    if (PageCount)
+    {
+        /* Update counters */
+        InterlockedExchangeAdd((PLONG)&MmTotalSystemDriverPages, PageCount);
+    }
+}
+
+VOID
+NTAPI
+MiEnablePagingOfDriver(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    ULONG_PTR ImageBase;
+    PIMAGE_NT_HEADERS NtHeaders;
+    ULONG Sections, Alignment, Size;
+    PIMAGE_SECTION_HEADER Section;
+    PMMPTE PointerPte = NULL, LastPte = NULL;
+    if (MmDisablePagingExecutive) return;
+    
+    /* Get the driver base address and its NT header */
+    ImageBase = (ULONG_PTR)LdrEntry->DllBase;
+    NtHeaders = RtlImageNtHeader((PVOID)ImageBase);
+    if (!NtHeaders) return;
+    
+    /* Get the sections and their alignment */
+    Sections = NtHeaders->FileHeader.NumberOfSections;
+    Alignment = NtHeaders->OptionalHeader.SectionAlignment - 1;
+    
+    /* Loop each section */
+    Section = IMAGE_FIRST_SECTION(NtHeaders);
+    while (Sections)
+    {
+        /* Find PAGE or .edata */
+        if ((*(PULONG)Section->Name == 'EGAP') ||
+            (*(PULONG)Section->Name == 'ade.'))
+        {
+            /* Had we already done some work? */
+            if (!PointerPte)
+            {
+                /* Nope, setup the first PTE address */
+                PointerPte = MiAddressToPte(ROUND_TO_PAGES(ImageBase +
+                                                           Section->
+                                                           VirtualAddress));
+            }
+            
+            /* Compute the size */
+            Size = max(Section->SizeOfRawData, Section->Misc.VirtualSize);
+            
+            /* Find the last PTE that maps this section */
+            LastPte = MiAddressToPte(ImageBase +
+                                     Section->VirtualAddress +
+                                     Alignment +
+                                     Size -
+                                     PAGE_SIZE);
+        }
+        else
+        {
+            /* Had we found a section before? */
+            if (PointerPte)
+            {
+                /* Mark it as pageable */
+                MiSetPagingOfDriver(PointerPte, LastPte);
+                PointerPte = NULL;
+            }
+        }
+        
+        /* Keep searching */
+        Sections--;
+        Section++;
+    }
+    
+    /* Handle the straggler */
+    if (PointerPte) MiSetPagingOfDriver(PointerPte, LastPte);
 }
 
 BOOLEAN
@@ -1501,15 +2387,24 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_STANDARD_INFORMATION FileStandardInfo;
     KAPC_STATE ApcState;
+    PIMAGE_NT_HEADERS NtHeaders;
+    OBJECT_ATTRIBUTES ObjectAttributes;
     PAGED_CODE();
+    
+    /* Setup the object attributes */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
 
     /* Create a section for the DLL */
     Status = ZwCreateSection(&SectionHandle,
                              SECTION_MAP_EXECUTE,
-                             NULL,
+                             &ObjectAttributes,
                              NULL,
                              PAGE_EXECUTE,
-                             SEC_COMMIT,
+                             SEC_IMAGE,
                              ImageHandle);
     if (!NT_SUCCESS(Status)) return Status;
 
@@ -1541,17 +2436,35 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
                                     &FileStandardInfo,
                                     sizeof(FileStandardInfo),
                                     FileStandardInformation);
-    if ( NT_SUCCESS(Status) )
+    if (NT_SUCCESS(Status))
     {
         /* First, verify the checksum */
         if (!LdrVerifyMappedImageMatchesChecksum(ViewBase,
-                                                 FileStandardInfo.
-                                                 EndOfFile.LowPart,
+                                                 ViewSize,
                                                  FileStandardInfo.
                                                  EndOfFile.LowPart))
         {
             /* Set checksum failure */
             Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+            goto Fail;
+        }
+        
+        /* Make sure it's a real image */
+        NtHeaders = RtlImageNtHeader(ViewBase);
+        if (!NtHeaders)
+        {
+            /* Set checksum failure */
+            Status = STATUS_IMAGE_CHECKSUM_MISMATCH;
+            goto Fail;
+        }
+        
+        /* Make sure it's for the correct architecture */
+        if ((NtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_NATIVE) ||
+            (NtHeaders->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC))
+        {
+            /* Set protection failure */
+            Status = STATUS_INVALID_IMAGE_PROTECT;
+            goto Fail;
         }
 
         /* Check that it's a valid SMP image if we have more then one CPU */
@@ -1563,6 +2476,7 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     }
 
     /* Unmap the section, close the handle, and return status */
+Fail:
     ZwUnmapViewOfSection(NtCurrentProcess(), ViewBase);
     KeUnstackDetachProcess(&ApcState);
     ZwClose(SectionHandle);
@@ -1587,7 +2501,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     UNICODE_STRING BaseName, BaseDirectory, PrefixName, UnicodeTemp;
     PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
     ULONG EntrySize, DriverSize;
-    PLOAD_IMPORTS LoadedImports = (PVOID)-2;
+    PLOAD_IMPORTS LoadedImports = MM_SYSLDR_NO_IMPORTS;
     PCHAR MissingApiName, Buffer;
     PWCHAR MissingDriverName;
     HANDLE SectionHandle;
@@ -1611,7 +2525,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     }
 
     /* Allocate a buffer we'll use for names */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+    Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, 'nLmM');
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Check for a separator */
@@ -1655,6 +2569,14 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
 
     /* Check if we already have a name, use it instead */
     if (LoadedName) BaseName = *LoadedName;
+    
+    /* Check for loader snap debugging */
+    if (NtGlobalFlag & FLG_SHOW_LDR_SNAPS)
+    {
+        /* Print out standard string */
+        DPRINT1("MM:SYSLDR Loading %wZ (%wZ) %s\n",
+                &PrefixName, &BaseName, Flags ? "in session space" : "");
+    }
 
     /* Acquire the load lock */
 LoaderScan:
@@ -1750,7 +2672,7 @@ LoaderScan:
         Status = MmCheckSystemImage(FileHandle, FALSE);
         if ((Status == STATUS_IMAGE_CHECKSUM_MISMATCH) ||
             (Status == STATUS_IMAGE_MP_UP_MISMATCH) ||
-            (Status == STATUS_INVALID_IMAGE_FORMAT))
+            (Status == STATUS_INVALID_IMAGE_PROTECT))
         {
             /* Fail loading */
             goto Quickie;
@@ -1829,16 +2751,20 @@ LoaderScan:
         /* Check for success */
         if (NT_SUCCESS(Status))
         {
-            /* FIXME: Support large pages for drivers */
+            /* Support large pages for drivers */
+            MiUseLargeDriverPage(DriverSize / PAGE_SIZE,
+                                 &ModuleLoadBase,
+                                 &BaseName,
+                                 TRUE);
         }
 
         /* Dereference the section */
         ObDereferenceObject(Section);
         Section = NULL;
     }
-
-    /* Get the NT Header */
-    NtHeader = RtlImageNtHeader(ModuleLoadBase);
+    
+    /* Check for failure of the load earlier */
+    if (!NT_SUCCESS(Status)) goto Quickie;
 
     /* Relocate the driver */
     Status = LdrRelocateImageWithBias(ModuleLoadBase,
@@ -1848,6 +2774,10 @@ LoaderScan:
                                       STATUS_CONFLICTING_ADDRESSES,
                                       STATUS_INVALID_IMAGE_FORMAT);
     if (!NT_SUCCESS(Status)) goto Quickie;
+
+    
+    /* Get the NT Header */
+    NtHeader = RtlImageNtHeader(ModuleLoadBase);
 
     /* Calculate the size we'll need for the entry and allocate it */
     EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
@@ -1956,9 +2886,10 @@ LoaderScan:
     LdrEntry->Flags &= ~LDRP_LOAD_IN_PROGRESS;
     LdrEntry->LoadedImports = LoadedImports;
 
-    /* FIXME: Apply driver verifier */
+    /* FIXME: Call driver verifier's loader function */
 
-    /* FIXME: Write-protect the system image */
+    /* Write-protect the system image */
+    MiWriteProtectSystemImage(LdrEntry->DllBase);
 
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)
@@ -2012,17 +2943,15 @@ LoaderScan:
         LdrEntry->Flags |= LDRP_DEBUG_SYMBOLS_LOADED;
     }
 
-    /* FIXME: Page the driver */
+    /* Page the driver */
     ASSERT(Section == NULL);
+    MiEnablePagingOfDriver(LdrEntry);
 
     /* Return pointers */
     *ModuleObject = LdrEntry;
     *ImageBaseAddress = LdrEntry->DllBase;
 
 Quickie:
-    /* If we have a file handle, close it */
-    if (FileHandle) ZwClose(FileHandle);
-
     /* Check if we have the lock acquired */
     if (LockOwned)
     {
@@ -2032,12 +2961,99 @@ Quickie:
         LockOwned = FALSE;
     }
 
+    /* If we have a file handle, close it */
+    if (FileHandle) ZwClose(FileHandle);
+
     /* Check if we had a prefix */
     if (NamePrefix) ExFreePool(PrefixName.Buffer);
 
     /* Free the name buffer and return status */
     ExFreePoolWithTag(Buffer, TAG_LDR_WSTR);
     return Status;
+}
+
+PLDR_DATA_TABLE_ENTRY
+NTAPI
+MiLookupDataTableEntry(IN PVOID Address)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry, FoundEntry = NULL;
+    PLIST_ENTRY NextEntry;
+    PAGED_CODE();
+    
+    /* Loop entries */
+    NextEntry = PsLoadedModuleList.Flink;
+    do
+    {
+        /* Get the loader entry */
+        LdrEntry =  CONTAINING_RECORD(NextEntry,
+                                      LDR_DATA_TABLE_ENTRY,
+                                      InLoadOrderLinks);
+        
+        /* Check if the address matches */
+        if ((Address >= LdrEntry->DllBase) &&
+            (Address < (PVOID)((ULONG_PTR)LdrEntry->DllBase +
+                               LdrEntry->SizeOfImage)))
+        {
+            /* Found a match */
+            FoundEntry = LdrEntry;
+            break;
+        }
+        
+        /* Move on */
+        NextEntry = NextEntry->Flink;
+    } while(NextEntry != &PsLoadedModuleList);
+    
+    /* Return the entry */
+    return FoundEntry;
+}
+
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+/*
+ * @implemented
+ */
+PVOID
+NTAPI
+MmPageEntireDriver(IN PVOID AddressWithinSection)
+{
+    PMMPTE StartPte, EndPte;
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    PAGED_CODE();
+
+    /* Get the loader entry */
+    LdrEntry = MiLookupDataTableEntry(AddressWithinSection);
+    if (!LdrEntry) return NULL;
+
+    /* Check if paging of kernel mode is disabled or if the driver is mapped as an image */
+    if ((MmDisablePagingExecutive) || (LdrEntry->SectionPointer))
+    {
+        /* Don't do anything, just return the base address */
+        return LdrEntry->DllBase;
+    }
+
+    /* Wait for active DPCs to finish before we page out the driver */
+    KeFlushQueuedDpcs();
+
+    /* Get the PTE range for the whole driver image */
+    StartPte = MiAddressToPte((ULONG_PTR)LdrEntry->DllBase);
+    EndPte = MiAddressToPte((ULONG_PTR)LdrEntry->DllBase + LdrEntry->SizeOfImage);
+
+    /* Enable paging for the PTE range */
+    ASSERT(MI_IS_SESSION_IMAGE_ADDRESS(AddressWithinSection) == FALSE);
+    MiSetPagingOfDriver(StartPte, EndPte);
+
+    /* Return the base address */
+    return LdrEntry->DllBase;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+NTAPI
+MmResetDriverPaging(IN PVOID AddressWithinSection)
+{
+    UNIMPLEMENTED;
 }
 
 /*

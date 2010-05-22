@@ -13,6 +13,7 @@
 #define _CMLIB_DEBUG_ 1
 
 #ifdef CMLIB_HOST
+    #include <wine/unicode.h>
     #include <host/typedefs.h>
     #include <stdio.h>
     #include <string.h>

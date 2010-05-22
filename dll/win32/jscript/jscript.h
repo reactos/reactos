@@ -324,6 +324,7 @@ HRESULT regexp_match_next(script_ctx_t*,DispatchEx*,DWORD,const WCHAR*,DWORD,con
         DWORD*,DWORD*,match_result_t*);
 HRESULT regexp_match(script_ctx_t*,DispatchEx*,const WCHAR*,DWORD,BOOL,match_result_t**,DWORD*);
 HRESULT parse_regexp_flags(const WCHAR*,DWORD,DWORD*);
+HRESULT regexp_string_match(script_ctx_t*,DispatchEx*,BSTR,VARIANT*,jsexcept_t*);
 
 static inline VARIANT *get_arg(DISPPARAMS *dp, DWORD i)
 {

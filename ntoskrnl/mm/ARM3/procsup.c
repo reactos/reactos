@@ -153,7 +153,6 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         // Next PTE
         //
         PointerPte++;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
         
         //
         // Get a page
@@ -164,6 +163,8 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         // Write it
         //
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
         *PointerPte = TempPte;
     }
 
@@ -243,26 +244,21 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Acquire the PFN DB lock
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     //
     // Loop each stack page
     //
     while (LimitPte >= NewLimitPte)
     {
         //
-        // Sanity check
-        //
-        ASSERT(LimitPte->u.Hard.Valid == 0);
-        
-        //
         // Get a page
         //
         PageFrameIndex = MmAllocPage(MC_NPPOOL);
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         
-        //
-        // Write it
-        //
+        /* Write the valid PTE */
+        ASSERT(LimitPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
         *LimitPte-- = TempPte;
     }
     

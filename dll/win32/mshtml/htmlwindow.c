@@ -57,6 +57,26 @@ static void window_set_docnode(HTMLWindow *window, HTMLDocumentNode *doc_node)
         if(doc_node)
             htmldoc_addref(&doc_node->basedoc);
     }
+
+    if(doc_node && window->doc_obj->usermode == EDITMODE) {
+        nsIDOMNSHTMLDocument *nshtmldoc;
+        nsAString mode_str;
+        nsresult nsres;
+
+        static const PRUnichar onW[] = {'o','n',0};
+
+        nsres = nsIDOMHTMLDocument_QueryInterface(doc_node->nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nshtmldoc);
+        if(NS_SUCCEEDED(nsres)) {
+            nsAString_Init(&mode_str, onW);
+            nsres = nsIDOMNSHTMLDocument_SetDesignMode(nshtmldoc, &mode_str);
+            nsAString_Finish(&mode_str);
+            nsIDOMNSHTMLDocument_Release(nshtmldoc);
+            if(NS_FAILED(nsres))
+                ERR("SetDesignMode failed: %08x\n", nsres);
+        }else {
+            ERR("Could not get nsIDOMNSHTMLDocument interface: %08x\n", nsres);
+        }
+    }
 }
 
 nsIDOMWindow *get_nsdoc_window(nsIDOMDocument *nsdoc)

@@ -1194,6 +1194,16 @@ GpStatus WINGDIPAPI GdipGetPathGradientSurroundColorsWithCount(GpPathGradient
     return NotImplemented;
 }
 
+GpStatus WINGDIPAPI GdipGetPathGradientSurroundColorCount(GpPathGradient *brush, INT *count)
+{
+    TRACE("(%p, %p)\n", brush, count);
+
+    if (!brush || !count)
+       return InvalidParameter;
+
+    return NotImplemented;
+}
+
 GpStatus WINGDIPAPI GdipGetPathGradientWrapMode(GpPathGradient *brush,
     GpWrapMode *wrapmode)
 {
@@ -1559,7 +1569,7 @@ GpStatus WINGDIPAPI GdipSetPathGradientSigmaBlend(GpPathGradient *grad,
 }
 
 GpStatus WINGDIPAPI GdipSetPathGradientSurroundColorsWithCount(GpPathGradient
-    *grad, ARGB *argb, INT *count)
+    *grad, GDIPCONST ARGB *argb, INT *count)
 {
     static int calls;
 

@@ -97,7 +97,6 @@ HandleSysAudioFilterPinProperties(
     NTSTATUS Status;
     PKSAUDIO_DEVICE_ENTRY Entry;
     ULONG BytesReturned;
-    PKSP_PIN Pin;
 
     // in order to access pin properties of a sysaudio device
     // the caller must provide a KSP_PIN struct, where
@@ -110,8 +109,6 @@ HandleSysAudioFilterPinProperties(
         return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPROPERTY) + sizeof(ULONG));
     }
 
-    Pin = (PKSP_PIN)Property;
-
     Entry = GetListEntry(&DeviceExtension->KsAudioDeviceList, ((KSP_PIN*)Property)->Reserved);
     if (!Entry)
     {
@@ -119,64 +116,15 @@ HandleSysAudioFilterPinProperties(
         return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
     }
 
-    if (!Entry->Pins)
-    {
-        /* expected pins */
-        return SetIrpIoStatus(Irp, STATUS_UNSUCCESSFUL, 0);
-    }
-
-    if (Entry->PinDescriptorsCount <= Pin->PinId)
-    {
-        /* invalid pin id */
-        return SetIrpIoStatus(Irp, STATUS_INVALID_PARAMETER, 0);
-    }
-
-    if (Property->Id == KSPROPERTY_PIN_CTYPES)
-    {
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(ULONG))
-        {
-            /* too small buffer */
-            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(ULONG));
-        }
-        /* store result */
-        *((PULONG)Irp->UserBuffer) = Entry->PinDescriptorsCount;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(ULONG));
-    }
-    else if (Property->Id == KSPROPERTY_PIN_COMMUNICATION)
-    {
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSPIN_COMMUNICATION))
-        {
-            /* too small buffer */
-            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPIN_COMMUNICATION));
-        }
-        /* store result */
-        *((KSPIN_COMMUNICATION*)Irp->UserBuffer) = Entry->PinDescriptors[Pin->PinId].Communication;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(KSPIN_COMMUNICATION));
-
-    }
-    else if (Property->Id == KSPROPERTY_PIN_DATAFLOW)
-    {
-        if (IoStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(KSPIN_DATAFLOW))
-        {
-            /* too small buffer */
-            return SetIrpIoStatus(Irp, STATUS_BUFFER_TOO_SMALL, sizeof(KSPIN_DATAFLOW));
-        }
-        /* store result */
-        *((KSPIN_DATAFLOW*)Irp->UserBuffer) = Entry->PinDescriptors[Pin->PinId].DataFlow;
-        return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(KSPIN_DATAFLOW));
-    }
-    else
-    {
-        /* forward request to the filter implementing the property */
-        Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
+    /* forward request to the filter implementing the property */
+    Status = KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY,
                                              (PVOID)IoStack->Parameters.DeviceIoControl.Type3InputBuffer,
                                              IoStack->Parameters.DeviceIoControl.InputBufferLength,
                                              Irp->UserBuffer,
                                              IoStack->Parameters.DeviceIoControl.OutputBufferLength,
                                              &BytesReturned);
 
-        return SetIrpIoStatus(Irp, Status, BytesReturned);
-    }
+    return SetIrpIoStatus(Irp, Status, BytesReturned);
 }
 
 
@@ -328,7 +276,7 @@ GetPinInstanceCount(
     PinRequest.Property.Set = KSPROPSETID_Pin;
     PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
     PinRequest.Property.Id = KSPROPERTY_PIN_CINSTANCES;
-
+	ASSERT(Entry->FileObject);
     return KsSynchronousIoControlDevice(Entry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)PinInstances, sizeof(KSPIN_CINSTANCES), &BytesReturned);
 
 }

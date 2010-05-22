@@ -423,9 +423,9 @@ BEGIN
     CONTROL         "データ(&D)",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
     CONTROL         "完全に一致するものだけを検索(&W)",IDC_MATCHSTRING,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
+                    BS_AUTOCHECKBOX | WS_TABSTOP,83,32,109,13
     CONTROL         "大文字と小文字を区別する(&C)",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,83,48,90,12
+                    WS_TABSTOP,83,48,108,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
@@ -435,7 +435,7 @@ CAPTION "検索"
 FONT 9, "MS UI Gothic", 400, 0, 0x1
 BEGIN
     ICON            IDI_REGEDIT,IDC_STATIC,7,7,20,20
-    PUSHBUTTON      "キャンセル(&C)",IDCANCEL,93,29,45,14
+    DEFPUSHBUTTON   "キャンセル(&C)",IDCANCEL,93,29,45,14
     LTEXT           "レジストリの検索中...",IDC_STATIC,33,12,83,8
 END
 

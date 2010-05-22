@@ -28,7 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -174,8 +174,41 @@ MsqInsertSystemMessage(MSG* Msg)
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
    ULONG Prev;
-   EVENTMSG Event;
+   MSLLHOOKSTRUCT MouseHookData;
 
+   KeQueryTickCount(&LargeTickCount);
+   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
+
+   MouseHookData.pt.x = LOWORD(Msg->lParam);
+   MouseHookData.pt.y = HIWORD(Msg->lParam);
+   switch(Msg->message)
+   {
+        case WM_MOUSEWHEEL:
+           MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg->wParam));
+           break;
+        case WM_XBUTTONDOWN:
+        case WM_XBUTTONUP:
+        case WM_XBUTTONDBLCLK:
+        case WM_NCXBUTTONDOWN:
+        case WM_NCXBUTTONUP:
+        case WM_NCXBUTTONDBLCLK:
+           MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg->wParam));
+           break;
+        default:
+           MouseHookData.mouseData = 0;
+           break;
+     }
+     MouseHookData.flags = 0;
+     MouseHookData.time = Msg->time;
+     MouseHookData.dwExtraInfo = 0;
+     if( co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
+         return;
+
+   /*
+    * If we got WM_MOUSEMOVE and there are already messages in the
+    * system message queue, check if the last message is mouse move
+    * and if it is then just overwrite it.
+    */
    IntLockSystemMessageQueue(OldIrql);
 
    /*
@@ -188,22 +221,6 @@ MsqInsertSystemMessage(MSG* Msg)
       IntUnLockSystemMessageQueue(OldIrql);
       return;
    }
-
-   KeQueryTickCount(&LargeTickCount);
-   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-
-   Event.message = Msg->message;
-   Event.time    = Msg->time;
-   Event.hwnd    = Msg->hwnd;
-   Event.paramL  = Msg->pt.x;
-   Event.paramH  = Msg->pt.y;
-   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
-
-   /*
-    * If we got WM_MOUSEMOVE and there are already messages in the
-    * system message queue, check if the last message is mouse move
-    * and if it is then just overwrite it.
-    */
 
    if (Msg->message == WM_MOUSEMOVE && SystemMessageQueueCount)
    {
@@ -623,7 +640,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Windo
    {
       PUSER_MESSAGE UserMsg;
       MSG Msg;
-      BOOL ProcessMessage;
 
       ASSERT(SystemMessageQueueHead < SYSTEM_MESSAGE_QUEUE_SIZE);
       Msg = SystemMessageQueue[SystemMessageQueueHead];
@@ -631,48 +647,14 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Windo
          (SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
       IntUnLockSystemMessageQueue(OldIrql);
-      if (WM_MOUSEFIRST <= Msg.message && Msg.message <= WM_MOUSELAST)
-      {
-         MSLLHOOKSTRUCT MouseHookData;
 
-         MouseHookData.pt.x = LOWORD(Msg.lParam);
-         MouseHookData.pt.y = HIWORD(Msg.lParam);
-         switch(Msg.message)
-         {
-            case WM_MOUSEWHEEL:
-               MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg.wParam));
-               break;
-            case WM_XBUTTONDOWN:
-            case WM_XBUTTONUP:
-            case WM_XBUTTONDBLCLK:
-            case WM_NCXBUTTONDOWN:
-            case WM_NCXBUTTONUP:
-            case WM_NCXBUTTONDBLCLK:
-               MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg.wParam));
-               break;
-            default:
-               MouseHookData.mouseData = 0;
-               break;
-         }
-         MouseHookData.flags = 0;
-         MouseHookData.time = Msg.time;
-         MouseHookData.dwExtraInfo = 0;
-         ProcessMessage = (0 == co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION,
-                           Msg.message, (LPARAM) &MouseHookData));
-      }
-      else
-      {
-         ProcessMessage = TRUE;
-      }
-      if (ProcessMessage)
-      {
-         UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
-         /* What to do if out of memory? For now we just panic a bit in debug */
-         ASSERT(UserMsg);
-         UserMsg->FreeLParam = FALSE;
-         UserMsg->Msg = Msg;
-         InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
-      }
+      UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
+      /* What to do if out of memory? For now we just panic a bit in debug */
+      ASSERT(UserMsg);
+      UserMsg->FreeLParam = FALSE;
+      UserMsg->Msg = Msg;
+      InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
+
       IntLockSystemMessageQueue(OldIrql);
    }
    HardwareMessageQueueStamp++;
@@ -767,7 +749,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
-   EVENTMSG Event;
    BOOLEAN Entered = FALSE;
 
    DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
@@ -794,14 +775,6 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 
    KeQueryTickCount(&LargeTickCount);
    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
-
-   Event.message = Msg.message;
-   Event.hwnd    = Msg.hwnd;
-   Event.time    = Msg.time;
-   Event.paramL  = (Msg.wParam & 0xFF) | (HIWORD(Msg.lParam) << 8);
-   Event.paramH  = Msg.lParam & 0x7FFF;
-   if (HIWORD(Msg.lParam) & 0x0100) Event.paramH |= 0x8000;
-   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
 
    /* We can't get the Msg.pt point here since we don't know thread
       (and thus the window station) the message will end up in yet. */
@@ -996,7 +969,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
    /* remove the message from the dispatching list, so lock the sender's message queue */
    SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
-   if(!SenderReturned)
+   if (!SenderReturned)
    {
       /* only remove it from the dispatching list if not already removed by a timeout */
       RemoveEntryList(&Message->DispatchingListEntry);
@@ -1008,6 +981,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    if (Message->Result != NULL)
    {
       *Message->Result = Result;
+   }
+
+   if (Message->HasPackedLParam == TRUE)
+   {
+      if (Message->Msg.lParam)
+         ExFreePool((PVOID)Message->Msg.lParam);
    }
 
    /* Notify the sender. */
@@ -1037,9 +1016,12 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
 Notified:
 
-   /* dereference both sender and our queue */
-   IntDereferenceMessageQueue(MessageQueue);
-   IntDereferenceMessageQueue(Message->SenderQueue);
+   /* Only if it is not a no wait message */
+   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
+   {
+      IntDereferenceMessageQueue(Message->SenderQueue);
+      IntDereferenceMessageQueue(MessageQueue);
+   }
 
    /* free the message */
    ExFreePool(Message);
@@ -1090,7 +1072,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
-	 RemoveEntryList(&SentMessage->ListEntry);
+         RemoveEntryList(&SentMessage->ListEntry);
 
          /* remove the message from the dispatching list */
          if(SentMessage->DispatchingListEntry.Flink != NULL)
@@ -1104,9 +1086,19 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
             KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
          }
 
-         /* dereference our and the sender's message queue */
-         IntDereferenceMessageQueue(MessageQueue);
-         IntDereferenceMessageQueue(SentMessage->SenderQueue);
+         if (SentMessage->HasPackedLParam == TRUE)
+         {
+            if (SentMessage->Msg.lParam)
+               ExFreePool((PVOID)SentMessage->Msg.lParam);
+         }
+
+         /* Only if it is not a no wait message */
+         if (!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+         {
+            /* dereference our and the sender's message queue */
+            IntDereferenceMessageQueue(MessageQueue);
+            IntDereferenceMessageQueue(SentMessage->SenderQueue);
+         }
 
          /* free the message */
          ExFreePool(SentMessage);
@@ -1174,6 +1166,7 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
    IntReferenceMessageQueue(ThreadQueue);
    Message->CompletionCallback = NULL;
    Message->HookMessage = HookMessage;
+   Message->HasPackedLParam = FALSE;
 
    IntReferenceMessageQueue(MessageQueue);
 
@@ -1526,9 +1519,19 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      /* dereference our and the sender's message queue */
-      IntDereferenceMessageQueue(MessageQueue);
-      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
+
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
 
       /* free the message */
       ExFreePool(CurrentSentMessage);
@@ -1564,10 +1567,19 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
 
-      /* dereference our and the sender's message queue */
-      IntDereferenceMessageQueue(MessageQueue);
-      IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      if (CurrentSentMessage->HasPackedLParam == TRUE)
+      {
+         if (CurrentSentMessage->Msg.lParam)
+            ExFreePool((PVOID)CurrentSentMessage->Msg.lParam);
+      }
 
+      /* Only if it is not a no wait message */
+      if (!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT))
+      {
+         /* dereference our and the sender's message queue */
+         IntDereferenceMessageQueue(MessageQueue);
+         IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
+      }
       /* free the message */
       ExFreePool(CurrentSentMessage);
    }

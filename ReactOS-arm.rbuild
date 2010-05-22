@@ -74,6 +74,9 @@
 		<directory name="inflib">
 			<xi:include href="lib/inflib/inflib.rbuild" />
 		</directory>
+		<directory name="newinflib">
+			<xi:include href="lib/newinflib/inflib.rbuild" />
+		</directory>
 		<directory name="cmlib">
 			<xi:include href="lib/cmlib/cmlib.rbuild" />
 		</directory>

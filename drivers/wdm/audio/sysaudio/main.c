@@ -53,10 +53,10 @@ SysAudio_Shutdown(
 
         /* close audio device handle */
         ZwClose(DeviceEntry->Handle);
+
         /* free device string */
         RtlFreeUnicodeString(&DeviceEntry->DeviceName);
-        /* free pins */
-        ExFreePool(DeviceEntry->Pins);
+
         /* free audio device entry */
         ExFreePool(DeviceEntry);
     }

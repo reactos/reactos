@@ -1762,6 +1762,7 @@ StoreDNSSettings(
         pLast = pCur;
         pCur = pCur->Next;
     }
+    This->pCurrentConfig->AutoconfigActive = FALSE;
 }
 
 INT_PTR
@@ -2046,7 +2047,6 @@ TcpipAdvancedDnsDlg(
 
 VOID
 LaunchAdvancedTcpipSettings(
-    HWND hDlg,
     HWND hwndDlg,
     TcpipConfNotifyImpl * This)
 {
@@ -2069,14 +2069,14 @@ LaunchAdvancedTcpipSettings(
     pinfo.dwFlags = PSH_NOCONTEXTHELP | PSH_PROPTITLE | PSH_NOAPPLYNOW;
     pinfo.u3.phpage = hppages;
     pinfo.nPages = 3;
-    pinfo.hwndParent = hDlg;
+    pinfo.hwndParent = hwndDlg;
     pinfo.pszCaption = szBuffer;
 
     StoreTcpipBasicSettings(hwndDlg, This, FALSE);
     PropertySheetW(&pinfo);
 
     InitializeTcpipBasicDlgCtrls(hwndDlg, This->pCurrentConfig);
-    PropSheet_Changed(hDlg, hwndDlg); 
+    PropSheet_Changed(GetParent(hwndDlg), hwndDlg); 
 }
 
 INT_PTR
@@ -2328,6 +2328,8 @@ InitializeTcpipBasicDlgCtrls(
     else
     {
         SendDlgItemMessageW(hwndDlg, IDC_FIXEDDNS, BM_SETCHECK, BST_CHECKED, 0);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS1), TRUE);
+        EnableWindow(GetDlgItem(hwndDlg, IDC_DNS2), TRUE);
         if (pCurSettings->Ns)
         {
             SendDlgItemMessageW(hwndDlg, IDC_DNS1, IPM_SETADDRESS, 0, (LPARAM)pCurSettings->Ns->IpAddress);
@@ -2521,7 +2523,7 @@ TcpipBasicDlg(
                         }
                         break;
                     case IDC_ADVANCED:
-                        LaunchAdvancedTcpipSettings(GetParent(hwndDlg), hwndDlg, (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER));
+                        LaunchAdvancedTcpipSettings(hwndDlg, (TcpipConfNotifyImpl*)GetWindowLongPtr(hwndDlg, DWLP_USER));
                         break;
                 }
                 break;
@@ -3278,23 +3280,25 @@ INetCfgComponentControl_fnApplyRegistryChanges(
                 RegSetValueExW(hKey, L"DefaultGateway", 0, REG_MULTI_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
                 RegSetValueExW(hKey, L"DefaultGatewayMetric", 0, REG_MULTI_SZ, (LPBYTE)L"\0", sizeof(WCHAR) * 2);
             }
-
-            if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
-            {
-                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
-            }
-            else
-            {
-                pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
-                if(pStr)
-                {
-                    RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
-                    RegDeleteValueW(hKey, L"DhcpNameServer");
-                    CoTaskMemFree(pStr);
-                }
-            }
-            RegCloseKey(hKey);
         }
+
+        if (!pCurrentConfig->Ns || pCurrentConfig->AutoconfigActive)
+        {
+            RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)L"", 1 * sizeof(WCHAR));
+        }
+        else
+        {
+            pStr = CreateMultiSzString(pCurrentConfig->Ns, IPADDR, &dwSize, TRUE);
+            if(pStr)
+            {
+
+                RegSetValueExW(hKey, L"NameServer", 0, REG_SZ, (LPBYTE)pStr, dwSize);
+                RegDeleteValueW(hKey, L"DhcpNameServer");
+                CoTaskMemFree(pStr);
+            }
+        }
+
+        RegCloseKey(hKey);
     }
     return S_OK;
 }

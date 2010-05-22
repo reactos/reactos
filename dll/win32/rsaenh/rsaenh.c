@@ -3354,6 +3354,33 @@ BOOL WINAPI RSAENH_CPSetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
             setup_key(pCryptKey);
             return TRUE;
 
+        case KP_SALT:
+            switch (pCryptKey->aiAlgid) {
+                case CALG_RC2:
+                case CALG_RC4:
+                    if (!pbData)
+                    {
+                        SetLastError(ERROR_INVALID_PARAMETER);
+                        return FALSE;
+                    }
+                    /* MSDN: the base provider always sets eleven bytes of
+                     * salt value.
+                     */
+                    memcpy(pCryptKey->abKeyValue + pCryptKey->dwKeyLen,
+                           pbData, 11);
+                    pCryptKey->dwSaltLen = 11;
+                    setup_key(pCryptKey);
+                    /* Strange but true: salt length reset to 0 after setting
+                     * it via KP_SALT.
+                     */
+                    pCryptKey->dwSaltLen = 0;
+                    break;
+                default:
+                    SetLastError(NTE_BAD_KEY);
+                    return FALSE;
+            }
+            return TRUE;
+
         case KP_SALT_EX:
         {
             CRYPT_INTEGER_BLOB *blob = (CRYPT_INTEGER_BLOB *)pbData;
@@ -3486,8 +3513,16 @@ BOOL WINAPI RSAENH_CPGetKeyParam(HCRYPTPROV hProv, HCRYPTKEY hKey, DWORD dwParam
                               pCryptKey->dwBlockLen);
         
         case KP_SALT:
-            return copy_param(pbData, pdwDataLen, 
-                    &pCryptKey->abKeyValue[pCryptKey->dwKeyLen], pCryptKey->dwSaltLen);
+            switch (pCryptKey->aiAlgid) {
+                case CALG_RC2:
+                case CALG_RC4:
+                    return copy_param(pbData, pdwDataLen,
+                            &pCryptKey->abKeyValue[pCryptKey->dwKeyLen],
+                            pCryptKey->dwSaltLen);
+                default:
+                    SetLastError(NTE_BAD_KEY);
+                    return FALSE;
+            }
 
         case KP_PADDING:
             dwValue = PKCS5_PADDING;

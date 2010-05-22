@@ -3,23 +3,48 @@
 #define KeRosDumpStackFrames(Frames, Count) KdSystemDebugControl('DsoR', (PVOID)Frames, Count, NULL, 0, NULL, KernelMode)
 NTSYSAPI ULONG APIENTRY RtlWalkFrameChain(OUT PVOID *Callers, IN ULONG Count, IN ULONG Flags);
 
-static int leak_reported = 0;
-#define GDI_STACK_LEVELS 12
-static ULONG GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
-static ULONG GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+#define GDI_STACK_LEVELS 20
+static ULONG_PTR GDIHandleAllocator[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+static ULONG_PTR GDIHandleLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+static ULONG_PTR GDIHandleShareLocker[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
+static ULONG_PTR GDIHandleDeleter[GDI_HANDLE_COUNT][GDI_STACK_LEVELS+1];
 struct DbgOpenGDIHandle
 {
     ULONG idx;
     int count;
 };
-#define H 1024
-static struct DbgOpenGDIHandle h[H];
+#define MAX_BACKTRACES 1024
+static struct DbgOpenGDIHandle AllocatorTable[MAX_BACKTRACES];
+
+static
+BOOL
+CompareBacktraces(ULONG idx1, ULONG idx2)
+{
+    ULONG iLevel;
+
+    /* Loop all stack levels */
+    for (iLevel = 0; iLevel < GDI_STACK_LEVELS; iLevel++)
+    {
+        if (GDIHandleAllocator[idx1][iLevel]
+                != GDIHandleAllocator[idx2][iLevel])
+//        if (GDIHandleShareLocker[idx1][iLevel]
+//                != GDIHandleShareLocker[idx2][iLevel])
+        {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+#define IS_HANDLE_VALID(idx) \
+    ((GdiHandleTable->Entries[idx].Type & GDI_ENTRY_BASETYPE_MASK) != 0)
 
 void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 {
-    int i, n = 0, j, k, J;
+    static int leak_reported = 0;
+    int i, j, idx, nTraces = 0;
+    KIRQL OldIrql;
 
     if (leak_reported)
     {
@@ -30,68 +55,79 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
     leak_reported = 1;
     DPRINT1("reporting gdi handle abusers:\n");
 
-    /* step through GDI handle table and find out who our culprit is... */
-    for (i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++)
+    /* We've got serious business to do */
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+
+    /* Step through GDI handle table and find out who our culprit is... */
+    for (idx = RESERVE_ENTRIES_COUNT; idx < GDI_HANDLE_COUNT; idx++)
     {
-        for (j = 0; j < n; j++)
+        /* If the handle is free, continue */
+        if (!IS_HANDLE_VALID(idx)) continue;
+
+        /* Step through all previous backtraces */
+        for (j = 0; j < nTraces; j++)
         {
-next:
-            J = h[j].idx;
-            for (k = 0; k < GDI_STACK_LEVELS; k++)
+            /* Check if the backtrace matches */
+            if (CompareBacktraces(idx, AllocatorTable[j].idx))
             {
-                if (GDIHandleAllocator[i][k]
-                        != GDIHandleAllocator[J][k])
-                {
-                    if (++j == n)
-                        goto done;
-                    else
-                        goto next;
-                }
+                /* It matches, increment count and break out */
+                AllocatorTable[j].count++;
+                break;
             }
-            goto done;
         }
-done:
-        if (j < H)
+
+        /* Did we find a new backtrace? */
+        if (j == nTraces)
         {
-            if (j == n)
-            {
-                h[j].idx = i;
-                h[j].count = 1;
-                n = n + 1;
-            }
-            else
-                h[j].count++;
+            /* Break out, if we reached the maximum */
+            if (nTraces == MAX_BACKTRACES) break;
+
+            /* Initialize this entry */
+            AllocatorTable[j].idx = idx;
+            AllocatorTable[j].count = 1;
+            nTraces++;
         }
     }
+
     /* bubble sort time! weeeeee!! */
-    for (i = 0; i < n-1; i++)
+    for (i = 0; i < nTraces-1; i++)
     {
-        if (h[i].count < h[i+1].count)
+        if (AllocatorTable[i].count < AllocatorTable[i+1].count)
         {
-            struct DbgOpenGDIHandle t;
-            t = h[i+1];
-            h[i+1] = h[i];
+            struct DbgOpenGDIHandle temp;
+
+            temp = AllocatorTable[i+1];
+            AllocatorTable[i+1] = AllocatorTable[i];
             j = i;
-            while (j > 0 && h[j-1].count < t.count)
+            while (j > 0 && AllocatorTable[j-1].count < temp.count)
                 j--;
-            h[j] = t;
+            AllocatorTable[j] = temp;
         }
     }
-    /* print the worst offenders... */
-    DbgPrint("Worst GDI Handle leak offenders (out of %i unique locations):\n", n);
-    for (i = 0; i < n && h[i].count > 1; i++)
+
+    /* Print the worst offenders... */
+    DbgPrint("Worst GDI Handle leak offenders (out of %i unique locations):\n", nTraces);
+    for (i = 0; i < nTraces && AllocatorTable[i].count > 1; i++)
     {
         /* Print out the allocation count */
-        DbgPrint(" %i allocs: ", h[i].count);
+        DbgPrint(" %i allocs, type = 0x%lx:\n", 
+                 AllocatorTable[i].count, 
+                 GdiHandleTable->Entries[AllocatorTable[i].idx].Type);
 
         /* Dump the frames */
-        KeRosDumpStackFrames(GDIHandleAllocator[h[i].idx], GDI_STACK_LEVELS);
+        KeRosDumpStackFrames(GDIHandleAllocator[AllocatorTable[i].idx], GDI_STACK_LEVELS);
+        //KeRosDumpStackFrames(GDIHandleShareLocker[AllocatorTable[i].idx], GDI_STACK_LEVELS);
 
         /* Print new line for better readability */
         DbgPrint("\n");
     }
-    if (i < n && h[i].count == 1)
+
+    if (i < nTraces)
         DbgPrint("(list terminated - the remaining entries have 1 allocation only)\n");
+
+    KeLowerIrql(OldIrql);
+
+    ASSERT(FALSE);
 }
 
 ULONG
@@ -101,11 +137,13 @@ CaptureStackBackTace(PVOID* pFrames, ULONG nFramesToCapture)
 
     memset(pFrames, 0x00, (nFramesToCapture + 1) * sizeof(PVOID));
 
-    nFrameCount = RtlCaptureStackBackTrace(1, nFramesToCapture, pFrames, NULL);
+    nFrameCount = RtlWalkFrameChain(pFrames, nFramesToCapture, 0);
 
     if (nFrameCount < nFramesToCapture)
     {
-        nFrameCount += RtlWalkFrameChain(pFrames + nFrameCount, nFramesToCapture - nFrameCount, 1);
+        nFrameCount += RtlWalkFrameChain(pFrames + nFrameCount,
+                                         nFramesToCapture - nFrameCount,
+                                         1);
     }
 
     return nFrameCount;

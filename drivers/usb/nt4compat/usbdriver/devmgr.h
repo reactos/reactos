@@ -208,6 +208,12 @@ PUSB_DEV_MANAGER dev_mgr,
 PHCD hcd
 );
 
+VOID
+dev_mgr_deregister_hcd(
+PUSB_DEV_MANAGER dev_mgr,
+UCHAR hcd_id
+);
+
 NTSTATUS
 dev_mgr_dispatch(
 IN PUSB_DEV_MANAGER dev_mgr,

@@ -204,7 +204,7 @@ Display_SetString(HWND hwnd, LPARAM lParam)
 	pData = (DISPLAYDATA*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	_snwprintf(pData->szString, MAX_STRING, (WCHAR*)lParam);
 
-	// FIXME: redraw the window
+	InvalidateRect(hwnd, NULL, TRUE);
 
 	return 0;
 }

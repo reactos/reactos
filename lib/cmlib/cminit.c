@@ -21,7 +21,7 @@ CmCreateRootNode(
    SIZE_T NameSize;
 
    /* Allocate the cell */
-   NameSize = utf16_wcslen(Name) * sizeof(WCHAR);
+   NameSize = strlenW(Name) * sizeof(WCHAR);
    RootCellIndex = HvAllocateCell(Hive,
                                   FIELD_OFFSET(CM_KEY_NODE, Name) + NameSize,
                                   Stable,

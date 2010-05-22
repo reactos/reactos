@@ -279,8 +279,8 @@ static HRESULT WINAPI InputProcessorProfiles_AddLanguageProfile(
     if (!res)
     {
         DWORD zero = 0x0;
-        RegSetValueExW(fmtkey, desc, 0, REG_SZ, (LPBYTE)pchDesc, cchDesc * sizeof(WCHAR));
-        RegSetValueExW(fmtkey, icnf, 0, REG_SZ, (LPBYTE)pchIconFile, cchFile * sizeof(WCHAR));
+        RegSetValueExW(fmtkey, desc, 0, REG_SZ, (const BYTE*)pchDesc, cchDesc * sizeof(WCHAR));
+        RegSetValueExW(fmtkey, icnf, 0, REG_SZ, (const BYTE*)pchIconFile, cchFile * sizeof(WCHAR));
         RegSetValueExW(fmtkey, icni, 0, REG_DWORD, (LPBYTE)&uIconIndex, sizeof(DWORD));
         if (disposition == REG_CREATED_NEW_KEY)
             RegSetValueExW(fmtkey, szwEnable, 0, REG_DWORD, (LPBYTE)&zero, sizeof(DWORD));

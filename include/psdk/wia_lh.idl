@@ -1,0 +1,127 @@
+/*
+ * Copyright 2009 Damjan Jovanovic
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "wtypes.idl";
+import "objidl.idl";
+
+interface IEnumWIA_DEV_INFO;
+interface IWiaItem;
+interface IWiaEventCallback;
+
+cpp_quote("DEFINE_GUID(CLSID_WiaDevMgr, 0xa1f4e726,0x8cf1,0x11d1,0xbf,0x92,0x00,0x60,0x08,0x1e,0xd8,0x11);")
+
+[
+    object,
+    uuid(5eb2502a-8cf1-11d1-bf92-0060081ed811)
+]
+interface IWiaDevMgr : IUnknown
+{
+    HRESULT EnumDeviceInfo(
+        [in] LONG lFlag,
+        [retval, out] IEnumWIA_DEV_INFO **ppIEnum);
+
+    HRESULT CreateDevice(
+        [in] BSTR bstrDeviceID,
+        [out] IWiaItem **ppWiaItemRoot);
+
+    HRESULT SelectDeviceDlg(
+        [in] HWND hwndParent,
+        [in] LONG lDeviceType,
+        [in] LONG lFlags,
+        [in, out] BSTR *pbstrDeviceID,
+        [retval, out] IWiaItem **ppItemRoot);
+
+    HRESULT SelectDeviceDlgID(
+        [in] HWND hwndParent,
+        [in] LONG lDeviceType,
+        [in] LONG lFlags,
+        [retval, out] BSTR *pbstrDeviceID);
+
+    HRESULT GetImageDlg(
+        [in] HWND hwndParent,
+        [in] LONG lDeviceType,
+        [in] LONG lFlags,
+        [in] LONG lIntent,
+        [in] IWiaItem *pItemRoot,
+        [in] BSTR bstrFilename,
+        [in, out] GUID *pguidFormat);
+
+    HRESULT RegisterEventCallbackProgram(
+        [in] LONG lFlags,
+        [in] BSTR bstrDeviceID,
+        [in] const GUID *pEventGUID,
+        [in] BSTR bstrCommandline,
+        [in] BSTR bstrName,
+        [in] BSTR bstrDescription,
+        [in] BSTR bstrIcon);
+
+    HRESULT RegisterEventCallbackInterface(
+        [in] LONG lFlags,
+        [in] BSTR bstrDeviceID,
+        [in] const GUID *pEventGUID,
+        [unique, in] IWiaEventCallback *pIWiaEventCallback,
+        [out] IUnknown **pEventObject);
+
+    HRESULT RegisterEventCallbackCLSID(
+        [in] LONG lFlags,
+        [in] BSTR bstrDeviceID,
+        [in] const GUID *pEventGUID,
+        [unique, in] const GUID *pClsID,
+        [in] BSTR bstrName,
+        [in] BSTR bstrDescription,
+        [in] BSTR bstrIcon);
+
+    HRESULT AddDeviceDlg(
+        [in] HWND hwndParent,
+        [in] LONG lFlags);
+}
+
+[
+    object,
+    uuid(5e38b83c-8cf1-11d1-bf92-0060081ed811)
+]
+interface IEnumWIA_DEV_INFO : IUnknown
+{
+    /* fill in */
+}
+
+[
+    object,
+    uuid(4db1ad10-3391-11d2-9a33-00c04fa36145)
+]
+interface IWiaItem : IUnknown
+{
+    /* FIXME: fill in */
+}
+
+[
+    object,
+    uuid(ae6287b0-0084-11d2-973b-00a0c9068f2e)
+]
+interface IWiaEventCallback : IUnknown
+{
+    HRESULT ImageEventCallback(
+        [in] const GUID *pEventGUID,
+        [in] BSTR bstrEventDescription,
+        [in] BSTR bstrDeviceID,
+        [in] BSTR bstrDeviceDescription,
+        [in] DWORD dwDeviceType,
+        [in] BSTR bstrFullItemName,
+        [in,out] ULONG *pulEventType,
+        [in] ULONG ulReserved);
+}

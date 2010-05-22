@@ -92,7 +92,6 @@ static void activate_gecko(NSContainer *This)
 
     nsIBaseWindow_SetVisibility(This->window, TRUE);
     nsIBaseWindow_SetEnabled(This->window, TRUE);
-    nsIWebBrowserFocus_Activate(This->focus);
 }
 
 void update_doc(HTMLDocument *This, DWORD flags)
@@ -216,6 +215,10 @@ static LRESULT WINAPI serverwnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
         break;
     case WM_TIMER:
         return on_timer(This);
+    case WM_SETFOCUS:
+        TRACE("(%p) WM_SETFOCUS\n", This);
+        nsIWebBrowserFocus_Activate(This->nscontainer->focus);
+        break;
     case WM_MOUSEACTIVATE:
         return MA_ACTIVATE;
     }
@@ -664,6 +667,8 @@ static HRESULT WINAPI OleDocumentView_UIActivate(IOleDocumentView *iface, BOOL f
 
         This->doc_obj->ui_active = TRUE;
     }else {
+        This->doc_obj->focus = FALSE;
+        nsIWebBrowserFocus_Deactivate(This->doc_obj->nscontainer->focus);
         if(This->doc_obj->ui_active) {
             This->doc_obj->ui_active = FALSE;
             if(This->doc_obj->ip_window)
@@ -811,7 +816,7 @@ static HRESULT WINAPI ViewObject_SetAdvise(IViewObjectEx *iface, DWORD aspects, 
     TRACE("(%p)->(%d %d %p)\n", This, aspects, advf, pAdvSink);
 
     if(aspects != DVASPECT_CONTENT || advf != ADVF_PRIMEFIRST)
-        FIXME("unsuported arguments\n");
+        FIXME("unsupported arguments\n");
 
     if(This->doc_obj->view_sink)
         IAdviseSink_Release(This->doc_obj->view_sink);

@@ -15,139 +15,6 @@ const GUID KS_CATEGORY_TOPOLOGY                = {0xDDA54A40, 0x1E4C, 0x11D1, {0
 const GUID DMOCATEGORY_ACOUSTIC_ECHO_CANCEL    = {0xBF963D80L, 0xC559, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 
 NTSTATUS
-BuildPinDescriptor(
-    IN PKSAUDIO_DEVICE_ENTRY DeviceEntry,
-    IN ULONG Count)
-{
-    ULONG Index;
-    KSP_PIN PinRequest;
-    KSPIN_DATAFLOW DataFlow;
-    KSPIN_COMMUNICATION Communication;
-    ULONG NumWaveOutPin, NumWaveInPin;
-    NTSTATUS Status;
-    ULONG BytesReturned;
-
-    NumWaveInPin = 0;
-    NumWaveOutPin = 0;
-    for(Index = 0; Index < Count; Index++)
-    {
-        /* retrieve data flow */
-        PinRequest.PinId = Index;
-        PinRequest.Property.Set = KSPROPSETID_Pin;
-        PinRequest.Property.Flags = KSPROPERTY_TYPE_GET;
-
-        /* get dataflow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_DATAFLOW;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&DataFlow, sizeof(KSPIN_DATAFLOW), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->PinDescriptors[Index].DataFlow = DataFlow;
-        }
-
-        /* get irp flow direction */
-        PinRequest.Property.Id = KSPROPERTY_PIN_COMMUNICATION;
-        Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PinRequest, sizeof(KSP_PIN), (PVOID)&Communication, sizeof(KSPIN_COMMUNICATION), &BytesReturned);
-        if (NT_SUCCESS(Status))
-        {
-            DeviceEntry->PinDescriptors[Index].Communication = Communication;
-        }
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_IN)
-            NumWaveOutPin++;
-
-        if (Communication == KSPIN_COMMUNICATION_SINK && DataFlow == KSPIN_DATAFLOW_OUT)
-            NumWaveInPin++;
-
-        /* FIXME query for interface, dataformat etc */
-    }
-
-    DPRINT("Num Pins %u Num WaveIn Pins %u Name WaveOut Pins %u\n", DeviceEntry->PinDescriptorsCount, NumWaveInPin, NumWaveOutPin);
-    return STATUS_SUCCESS;
-}
-
-VOID
-QueryFilterRoutine(
-    IN PKSAUDIO_DEVICE_ENTRY DeviceEntry)
-{
-    KSPROPERTY PropertyRequest;
-    ULONG Count;
-    NTSTATUS Status;
-    ULONG BytesReturned;
-
-    DPRINT("Querying filter...\n");
-
-    PropertyRequest.Set = KSPROPSETID_Pin;
-    PropertyRequest.Flags = KSPROPERTY_TYPE_GET;
-    PropertyRequest.Id = KSPROPERTY_PIN_CTYPES;
-
-    /* query for num of pins */
-    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&PropertyRequest, sizeof(KSPROPERTY), (PVOID)&Count, sizeof(ULONG), &BytesReturned);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to query number of pins Status %x\n", Status);
-        return;
-    }
-
-    if (!Count)
-    {
-        DPRINT1("Filter has no pins!\n");
-        return;
-    }
-
-    /* allocate pin descriptor array */
-    DeviceEntry->PinDescriptors = ExAllocatePool(NonPagedPool, Count * sizeof(KSPIN_DESCRIPTOR));
-    if (!DeviceEntry->PinDescriptors)
-    {
-        /* no memory */
-        return;
-    }
-
-    /* zero array pin descriptor array */
-    RtlZeroMemory(DeviceEntry->PinDescriptors, Count * sizeof(KSPIN_DESCRIPTOR));
-
-    /* build the device descriptor */
-    Status = BuildPinDescriptor(DeviceEntry, Count);
-    if (!NT_SUCCESS(Status))
-        return;
-
-
-    /* allocate pin array */
-    DeviceEntry->Pins = ExAllocatePool(NonPagedPool, Count * sizeof(PIN_INFO));
-    if (!DeviceEntry->Pins)
-    {
-        /* no memory */
-        DPRINT1("Failed to allocate memory Pins %u Block %x\n", Count, Count * sizeof(PIN_INFO));
-        return;
-    }
-
-    /* clear array */
-    RtlZeroMemory(DeviceEntry->Pins, sizeof(PIN_INFO) * Count);
-    DeviceEntry->PinDescriptorsCount = Count;
-
-}
-
-VOID
-NTAPI
-FilterPinWorkerRoutine(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PVOID Context)
-{
-    PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-    PFILTER_WORKER_CONTEXT Ctx = (PFILTER_WORKER_CONTEXT)Context;
-
-    DeviceEntry = Ctx->DeviceEntry;
-
-    QueryFilterRoutine(DeviceEntry);
-
-    /* free work item */
-    IoFreeWorkItem(Ctx->WorkItem);
-    /* free work item context */
-    ExFreePool(Ctx);
-    return;
-
-}
-
-NTSTATUS
 OpenDevice(
     IN PUNICODE_STRING DeviceName,
     IN PHANDLE HandleOut,
@@ -199,8 +66,6 @@ InsertAudioDevice(
     IN PUNICODE_STRING DeviceName)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PFILTER_WORKER_CONTEXT Ctx = NULL;
-    PIO_WORKITEM WorkItem = NULL;
     PSYSAUDIODEVEXT DeviceExtension;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = NULL;
 
@@ -214,24 +79,6 @@ InsertAudioDevice(
 
     /* initialize audio device entry */
     RtlZeroMemory(DeviceEntry, sizeof(KSAUDIO_DEVICE_ENTRY));
-
-    /* allocate filter ctx */
-    Ctx = ExAllocatePool(NonPagedPool, sizeof(FILTER_WORKER_CONTEXT));
-    if (!Ctx)
-    {
-        /* no memory */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
-
-    /* allocate work item */
-    WorkItem = IoAllocateWorkItem(DeviceObject);
-    if (!WorkItem)
-    {
-        /* no memory */
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto cleanup;
-    }
 
     /* set device name */
     DeviceEntry->DeviceName.Length = 0;
@@ -255,9 +102,6 @@ InsertAudioDevice(
          goto cleanup;
      }
 
-    Ctx->DeviceEntry = DeviceEntry;
-    Ctx->WorkItem = WorkItem;
-
     /* fetch device extension */
     DeviceExtension = (PSYSAUDIODEVEXT)DeviceObject->DeviceExtension;
     /* insert new audio device */
@@ -265,16 +109,9 @@ InsertAudioDevice(
     InterlockedIncrement((PLONG)&DeviceExtension->NumberOfKsAudioDevices);
 
     DPRINT("Successfully opened audio device %u Device %S\n", DeviceExtension->NumberOfKsAudioDevices, DeviceEntry->DeviceName.Buffer);
-    IoQueueWorkItem(WorkItem, FilterPinWorkerRoutine, DelayedWorkQueue, (PVOID)Ctx);
     return Status;
 
 cleanup:
-    if (Ctx)
-        ExFreePool(Ctx);
-
-    if (WorkItem)
-        IoFreeWorkItem(WorkItem);
-
     if (DeviceEntry)
     {
         if (DeviceEntry->DeviceName.Buffer)

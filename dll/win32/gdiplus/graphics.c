@@ -173,6 +173,74 @@ static void transform_and_round_points(GpGraphics *graphics, POINT *pti,
     }
 }
 
+/* Draw non-premultiplied ARGB data to the given graphics object */
+static GpStatus alpha_blend_pixels(GpGraphics *graphics, INT dst_x, INT dst_y,
+    const BYTE *src, INT src_width, INT src_height, INT src_stride)
+{
+    if (graphics->image && graphics->image->type == ImageTypeBitmap)
+    {
+        GpBitmap *dst_bitmap = (GpBitmap*)graphics->image;
+        INT x, y;
+
+        for (x=0; x<src_width; x++)
+        {
+            for (y=0; y<src_height; y++)
+            {
+                ARGB dst_color, src_color;
+                GdipBitmapGetPixel(dst_bitmap, x+dst_x, y+dst_y, &dst_color);
+                src_color = ((ARGB*)(src + src_stride * y))[x];
+                GdipBitmapSetPixel(dst_bitmap, x+dst_x, y+dst_y, color_over(dst_color, src_color));
+            }
+        }
+
+        return Ok;
+    }
+    else
+    {
+        HDC hdc;
+        HBITMAP hbitmap, old_hbm=NULL;
+        BITMAPINFOHEADER bih;
+        BYTE *temp_bits;
+        BLENDFUNCTION bf;
+
+        hdc = CreateCompatibleDC(0);
+
+        bih.biSize = sizeof(BITMAPINFOHEADER);
+        bih.biWidth = src_width;
+        bih.biHeight = -src_height;
+        bih.biPlanes = 1;
+        bih.biBitCount = 32;
+        bih.biCompression = BI_RGB;
+        bih.biSizeImage = 0;
+        bih.biXPelsPerMeter = 0;
+        bih.biYPelsPerMeter = 0;
+        bih.biClrUsed = 0;
+        bih.biClrImportant = 0;
+
+        hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
+            (void**)&temp_bits, NULL, 0);
+
+        convert_32bppARGB_to_32bppPARGB(src_width, src_height, temp_bits,
+            4 * src_width, src, src_stride);
+
+        old_hbm = SelectObject(hdc, hbitmap);
+
+        bf.BlendOp = AC_SRC_OVER;
+        bf.BlendFlags = 0;
+        bf.SourceConstantAlpha = 255;
+        bf.AlphaFormat = AC_SRC_ALPHA;
+
+        GdiAlphaBlend(graphics->hdc, dst_x, dst_y, src_width, src_height,
+            hdc, 0, 0, src_width, src_height, bf);
+
+        SelectObject(hdc, old_hbm);
+        DeleteDC(hdc);
+        DeleteObject(hbitmap);
+
+        return Ok;
+    }
+}
+
 static ARGB blend_colors(ARGB start, ARGB end, REAL position)
 {
     ARGB result=0;
@@ -1273,10 +1341,10 @@ GpStatus WINGDIPAPI GdipCreateMetafileFromWmf(HMETAFILE hwmf, BOOL delete,
     (*metafile)->bounds.X = ((REAL) placeable->BoundingBox.Left) / ((REAL) placeable->Inch);
     (*metafile)->bounds.Y = ((REAL) placeable->BoundingBox.Top) / ((REAL) placeable->Inch);
     (*metafile)->bounds.Width = ((REAL) (placeable->BoundingBox.Right
-                    - placeable->BoundingBox.Left)) / ((REAL) placeable->Inch);
+                    - placeable->BoundingBox.Left));
     (*metafile)->bounds.Height = ((REAL) (placeable->BoundingBox.Bottom
-                   - placeable->BoundingBox.Top)) / ((REAL) placeable->Inch);
-    (*metafile)->unit = UnitInch;
+                   - placeable->BoundingBox.Top));
+    (*metafile)->unit = UnitPixel;
 
     if(delete)
         DeleteMetaFile(hwmf);
@@ -1866,15 +1934,15 @@ GpStatus WINGDIPAPI GdipDrawImagePointsI(GpGraphics *graphics, GpImage *image,
     return NotImplemented;
 }
 
-/* FIXME: partially implemented (only works for rectangular parallelograms) */
 GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image,
      GDIPCONST GpPointF *points, INT count, REAL srcx, REAL srcy, REAL srcwidth,
      REAL srcheight, GpUnit srcUnit, GDIPCONST GpImageAttributes* imageAttributes,
      DrawImageAbort callback, VOID * callbackData)
 {
-    GpPointF ptf[3];
-    POINT pti[3];
+    GpPointF ptf[4];
+    POINT pti[4];
     REAL dx, dy;
+    GpStatus stat;
 
     TRACE("(%p, %p, %p, %d, %f, %f, %f, %f, %d, %p, %p, %p)\n", graphics, image, points,
           count, srcx, srcy, srcwidth, srcheight, srcUnit, imageAttributes, callback,
@@ -1887,10 +1955,13 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
         debugstr_pointf(&points[2]));
 
     memcpy(ptf, points, 3 * sizeof(GpPointF));
-    transform_and_round_points(graphics, pti, ptf, 3);
+    ptf[3].X = ptf[2].X + ptf[1].X - ptf[0].X;
+    ptf[3].Y = ptf[2].Y + ptf[1].Y - ptf[0].Y;
+    transform_and_round_points(graphics, pti, ptf, 4);
 
     if (image->picture)
     {
+        /* FIXME: partially implemented (only works for rectangular parallelograms) */
         if(srcUnit == UnitInch)
             dx = dy = (REAL) INCH_HIMETRIC;
         else if(srcUnit == UnitPixel){
@@ -1914,10 +1985,8 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
     }
     else if (image->type == ImageTypeBitmap && ((GpBitmap*)image)->hbitmap)
     {
-        HDC hdc;
         GpBitmap* bitmap = (GpBitmap*)image;
-        int temp_hdc=0, temp_bitmap=0;
-        HBITMAP hbitmap, old_hbm=NULL;
+        int use_software=0;
 
         if (srcUnit == UnitInch)
             dx = dy = 96.0; /* FIXME: use the image resolution */
@@ -1926,83 +1995,233 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
         else
             return NotImplemented;
 
-        if (!(bitmap->format == PixelFormat16bppRGB555 ||
-              bitmap->format == PixelFormat24bppRGB ||
-              bitmap->format == PixelFormat32bppRGB ||
-              bitmap->format == PixelFormat32bppPARGB))
+        if (imageAttributes ||
+            (graphics->image && graphics->image->type == ImageTypeBitmap) ||
+            ptf[1].Y != ptf[0].Y || ptf[2].X != ptf[0].X)
+            use_software = 1;
+
+        if (use_software)
         {
-            BITMAPINFOHEADER bih;
-            BYTE *temp_bits;
-            PixelFormat dst_format;
+            RECT src_area, dst_area;
+            int i, x, y, stride;
+            GpMatrix *dst_to_src;
+            REAL m11, m12, m21, m22, mdx, mdy;
+            LPBYTE data;
 
-            /* we can't draw a bitmap of this format directly */
-            hdc = CreateCompatibleDC(0);
-            temp_hdc = 1;
-            temp_bitmap = 1;
+            src_area.left = srcx*dx;
+            src_area.top = srcy*dy;
+            src_area.right = (srcx+srcwidth)*dx;
+            src_area.bottom = (srcy+srcheight)*dy;
 
-            bih.biSize = sizeof(BITMAPINFOHEADER);
-            bih.biWidth = bitmap->width;
-            bih.biHeight = -bitmap->height;
-            bih.biPlanes = 1;
-            bih.biBitCount = 32;
-            bih.biCompression = BI_RGB;
-            bih.biSizeImage = 0;
-            bih.biXPelsPerMeter = 0;
-            bih.biYPelsPerMeter = 0;
-            bih.biClrUsed = 0;
-            bih.biClrImportant = 0;
+            dst_area.left = dst_area.right = pti[0].x;
+            dst_area.top = dst_area.bottom = pti[0].y;
+            for (i=1; i<4; i++)
+            {
+                if (dst_area.left > pti[i].x) dst_area.left = pti[i].x;
+                if (dst_area.right < pti[i].x) dst_area.right = pti[i].x;
+                if (dst_area.top > pti[i].y) dst_area.top = pti[i].y;
+                if (dst_area.bottom < pti[i].y) dst_area.bottom = pti[i].y;
+            }
 
-            hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
-                (void**)&temp_bits, NULL, 0);
+            m11 = (ptf[1].X - ptf[0].X) / srcwidth;
+            m21 = (ptf[2].X - ptf[0].X) / srcheight;
+            mdx = ptf[0].X - m11 * srcx - m21 * srcy;
+            m12 = (ptf[1].Y - ptf[0].Y) / srcwidth;
+            m22 = (ptf[2].Y - ptf[0].Y) / srcheight;
+            mdy = ptf[0].Y - m12 * srcx - m22 * srcy;
+
+            stat = GdipCreateMatrix2(m11, m12, m21, m22, mdx, mdy, &dst_to_src);
+            if (stat != Ok) return stat;
+
+            stat = GdipInvertMatrix(dst_to_src);
+            if (stat != Ok)
+            {
+                GdipDeleteMatrix(dst_to_src);
+                return stat;
+            }
+
+            data = GdipAlloc(sizeof(ARGB) * (dst_area.right - dst_area.left) * (dst_area.bottom - dst_area.top));
+            if (!data)
+            {
+                GdipDeleteMatrix(dst_to_src);
+                return OutOfMemory;
+            }
+
+            stride = sizeof(ARGB) * (dst_area.right - dst_area.left);
+
+            for (x=dst_area.left; x<dst_area.right; x++)
+            {
+                for (y=dst_area.top; y<dst_area.bottom; y++)
+                {
+                    GpPointF src_pointf;
+                    int src_x, src_y;
+                    ARGB *src_color;
+
+                    src_pointf.X = x;
+                    src_pointf.Y = y;
+
+                    GdipTransformMatrixPoints(dst_to_src, &src_pointf, 1);
+
+                    src_x = roundr(src_pointf.X);
+                    src_y = roundr(src_pointf.Y);
+
+                    src_color = (ARGB*)(data + stride * (y - dst_area.top) + sizeof(ARGB) * (x - dst_area.left));
+
+                    if (src_x < src_area.left || src_x >= src_area.right ||
+                        src_y < src_area.top || src_y >= src_area.bottom)
+                        /* FIXME: Use wrapmode */
+                        *src_color = 0;
+                    else
+                        GdipBitmapGetPixel(bitmap, src_x, src_y, src_color);
+                }
+            }
+
+            GdipDeleteMatrix(dst_to_src);
+
+            if (imageAttributes)
+            {
+                if (imageAttributes->colorkeys[ColorAdjustTypeBitmap].enabled ||
+                    imageAttributes->colorkeys[ColorAdjustTypeDefault].enabled)
+                {
+                    static int fixme;
+                    if (!fixme++)
+                        FIXME("Color keying not implemented\n");
+                }
+
+                if (imageAttributes->colorremaptables[ColorAdjustTypeBitmap].enabled ||
+                    imageAttributes->colorremaptables[ColorAdjustTypeDefault].enabled)
+                {
+                    const struct color_remap_table *table;
+
+                    if (imageAttributes->colorremaptables[ColorAdjustTypeBitmap].enabled)
+                        table = &imageAttributes->colorremaptables[ColorAdjustTypeBitmap];
+                    else
+                        table = &imageAttributes->colorremaptables[ColorAdjustTypeDefault];
+
+                    for (x=dst_area.left; x<dst_area.right; x++)
+                        for (y=dst_area.top; y<dst_area.bottom; y++)
+                        {
+                            ARGB *src_color;
+                            src_color = (ARGB*)(data + stride * (y - dst_area.top) + sizeof(ARGB) * (x - dst_area.left));
+                            for (i=0; i<table->mapsize; i++)
+                            {
+                                if (*src_color == table->colormap[i].oldColor.Argb)
+                                {
+                                    *src_color = table->colormap[i].newColor.Argb;
+                                    break;
+                                }
+                            }
+                        }
+                }
+
+                if (imageAttributes->colormatrices[ColorAdjustTypeBitmap].enabled ||
+                    imageAttributes->colormatrices[ColorAdjustTypeDefault].enabled)
+                {
+                    static int fixme;
+                    if (!fixme++)
+                        FIXME("Color transforms not implemented\n");
+                }
+
+                if (imageAttributes->gamma_enabled[ColorAdjustTypeBitmap] ||
+                    imageAttributes->gamma_enabled[ColorAdjustTypeDefault])
+                {
+                    static int fixme;
+                    if (!fixme++)
+                        FIXME("Gamma adjustment not implemented\n");
+                }
+            }
+
+            stat = alpha_blend_pixels(graphics, dst_area.left, dst_area.top,
+                data, dst_area.right - dst_area.left, dst_area.bottom - dst_area.top, stride);
+
+            GdipFree(data);
+
+            return stat;
+        }
+        else
+        {
+            HDC hdc;
+            int temp_hdc=0, temp_bitmap=0;
+            HBITMAP hbitmap, old_hbm=NULL;
+
+            if (!(bitmap->format == PixelFormat16bppRGB555 ||
+                  bitmap->format == PixelFormat24bppRGB ||
+                  bitmap->format == PixelFormat32bppRGB ||
+                  bitmap->format == PixelFormat32bppPARGB))
+            {
+                BITMAPINFOHEADER bih;
+                BYTE *temp_bits;
+                PixelFormat dst_format;
+
+                /* we can't draw a bitmap of this format directly */
+                hdc = CreateCompatibleDC(0);
+                temp_hdc = 1;
+                temp_bitmap = 1;
+
+                bih.biSize = sizeof(BITMAPINFOHEADER);
+                bih.biWidth = bitmap->width;
+                bih.biHeight = -bitmap->height;
+                bih.biPlanes = 1;
+                bih.biBitCount = 32;
+                bih.biCompression = BI_RGB;
+                bih.biSizeImage = 0;
+                bih.biXPelsPerMeter = 0;
+                bih.biYPelsPerMeter = 0;
+                bih.biClrUsed = 0;
+                bih.biClrImportant = 0;
+
+                hbitmap = CreateDIBSection(hdc, (BITMAPINFO*)&bih, DIB_RGB_COLORS,
+                    (void**)&temp_bits, NULL, 0);
+
+                if (bitmap->format & (PixelFormatAlpha|PixelFormatPAlpha))
+                    dst_format = PixelFormat32bppPARGB;
+                else
+                    dst_format = PixelFormat32bppRGB;
+
+                convert_pixels(bitmap->width, bitmap->height,
+                    bitmap->width*4, temp_bits, dst_format,
+                    bitmap->stride, bitmap->bits, bitmap->format, bitmap->image.palette_entries);
+            }
+            else
+            {
+                hbitmap = bitmap->hbitmap;
+                hdc = bitmap->hdc;
+                temp_hdc = (hdc == 0);
+            }
+
+            if (temp_hdc)
+            {
+                if (!hdc) hdc = CreateCompatibleDC(0);
+                old_hbm = SelectObject(hdc, hbitmap);
+            }
 
             if (bitmap->format & (PixelFormatAlpha|PixelFormatPAlpha))
-                dst_format = PixelFormat32bppPARGB;
+            {
+                BLENDFUNCTION bf;
+
+                bf.BlendOp = AC_SRC_OVER;
+                bf.BlendFlags = 0;
+                bf.SourceConstantAlpha = 255;
+                bf.AlphaFormat = AC_SRC_ALPHA;
+
+                GdiAlphaBlend(graphics->hdc, pti[0].x, pti[0].y, pti[1].x-pti[0].x, pti[2].y-pti[0].y,
+                    hdc, srcx*dx, srcy*dy, srcwidth*dx, srcheight*dy, bf);
+            }
             else
-                dst_format = PixelFormat32bppRGB;
+            {
+                StretchBlt(graphics->hdc, pti[0].x, pti[0].y, pti[1].x-pti[0].x, pti[2].y-pti[0].y,
+                    hdc, srcx*dx, srcy*dy, srcwidth*dx, srcheight*dy, SRCCOPY);
+            }
 
-            convert_pixels(bitmap->width, bitmap->height,
-                bitmap->width*4, temp_bits, dst_format,
-                bitmap->stride, bitmap->bits, bitmap->format, bitmap->image.palette_entries);
+            if (temp_hdc)
+            {
+                SelectObject(hdc, old_hbm);
+                DeleteDC(hdc);
+            }
+
+            if (temp_bitmap)
+                DeleteObject(hbitmap);
         }
-        else
-        {
-            hbitmap = bitmap->hbitmap;
-            hdc = bitmap->hdc;
-            temp_hdc = (hdc == 0);
-        }
-
-        if (temp_hdc)
-        {
-            if (!hdc) hdc = CreateCompatibleDC(0);
-            old_hbm = SelectObject(hdc, hbitmap);
-        }
-
-        if (bitmap->format & (PixelFormatAlpha|PixelFormatPAlpha))
-        {
-            BLENDFUNCTION bf;
-
-            bf.BlendOp = AC_SRC_OVER;
-            bf.BlendFlags = 0;
-            bf.SourceConstantAlpha = 255;
-            bf.AlphaFormat = AC_SRC_ALPHA;
-
-            GdiAlphaBlend(graphics->hdc, pti[0].x, pti[0].y, pti[1].x-pti[0].x, pti[2].y-pti[0].y,
-                hdc, srcx*dx, srcy*dy, srcwidth*dx, srcheight*dy, bf);
-        }
-        else
-        {
-            StretchBlt(graphics->hdc, pti[0].x, pti[0].y, pti[1].x-pti[0].x, pti[2].y-pti[0].y,
-                hdc, srcx*dx, srcy*dy, srcwidth*dx, srcheight*dy, SRCCOPY);
-        }
-
-        if (temp_hdc)
-        {
-            SelectObject(hdc, old_hbm);
-            DeleteDC(hdc);
-        }
-
-        if (temp_bitmap)
-            DeleteObject(hbitmap);
     }
     else
     {
@@ -2401,208 +2620,6 @@ GpStatus WINGDIPAPI GdipDrawRectanglesI(GpGraphics *graphics, GpPen *pen,
     GdipFree(rectsF);
 
     return ret;
-}
-
-GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string,
-    INT length, GDIPCONST GpFont *font, GDIPCONST RectF *rect,
-    GDIPCONST GpStringFormat *format, GDIPCONST GpBrush *brush)
-{
-    HRGN rgn = NULL;
-    HFONT gdifont;
-    LOGFONTW lfw;
-    TEXTMETRICW textmet;
-    GpPointF pt[3], rectcpy[4];
-    POINT corners[4];
-    WCHAR* stringdup;
-    REAL angle, ang_cos, ang_sin, rel_width, rel_height;
-    INT sum = 0, height = 0, offsety = 0, fit, fitcpy, save_state, i, j, lret, nwidth,
-        nheight, lineend;
-    SIZE size;
-    POINT drawbase;
-    UINT drawflags;
-    RECT drawcoord;
-
-    TRACE("(%p, %s, %i, %p, %s, %p, %p)\n", graphics, debugstr_wn(string, length),
-        length, font, debugstr_rectf(rect), format, brush);
-
-    if(!graphics || !string || !font || !brush || !rect)
-        return InvalidParameter;
-
-    if((brush->bt != BrushTypeSolidColor)){
-        FIXME("not implemented for given parameters\n");
-        return NotImplemented;
-    }
-
-    if(format){
-        TRACE("may be ignoring some format flags: attr %x\n", format->attr);
-
-        /* Should be no need to explicitly test for StringAlignmentNear as
-         * that is default behavior if no alignment is passed. */
-        if(format->vertalign != StringAlignmentNear){
-            RectF bounds;
-            GdipMeasureString(graphics, string, length, font, rect, format, &bounds, 0, 0);
-
-            if(format->vertalign == StringAlignmentCenter)
-                offsety = (rect->Height - bounds.Height) / 2;
-            else if(format->vertalign == StringAlignmentFar)
-                offsety = (rect->Height - bounds.Height);
-        }
-    }
-
-    if(length == -1) length = lstrlenW(string);
-
-    stringdup = GdipAlloc(length * sizeof(WCHAR));
-    if(!stringdup) return OutOfMemory;
-
-    save_state = SaveDC(graphics->hdc);
-    SetBkMode(graphics->hdc, TRANSPARENT);
-    SetTextColor(graphics->hdc, brush->lb.lbColor);
-
-    pt[0].X = 0.0;
-    pt[0].Y = 0.0;
-    pt[1].X = 1.0;
-    pt[1].Y = 0.0;
-    pt[2].X = 0.0;
-    pt[2].Y = 1.0;
-    GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, pt, 3);
-    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
-    ang_cos = cos(angle);
-    ang_sin = sin(angle);
-    rel_width = sqrt((pt[1].Y-pt[0].Y)*(pt[1].Y-pt[0].Y)+
-                     (pt[1].X-pt[0].X)*(pt[1].X-pt[0].X));
-    rel_height = sqrt((pt[2].Y-pt[0].Y)*(pt[2].Y-pt[0].Y)+
-                      (pt[2].X-pt[0].X)*(pt[2].X-pt[0].X));
-
-    rectcpy[3].X = rectcpy[0].X = rect->X;
-    rectcpy[1].Y = rectcpy[0].Y = rect->Y + offsety;
-    rectcpy[2].X = rectcpy[1].X = rect->X + rect->Width;
-    rectcpy[3].Y = rectcpy[2].Y = rect->Y + offsety + rect->Height;
-    transform_and_round_points(graphics, corners, rectcpy, 4);
-
-    if (roundr(rect->Width) == 0)
-        nwidth = INT_MAX;
-    else
-        nwidth = roundr(rel_width * rect->Width);
-
-    if (roundr(rect->Height) == 0)
-        nheight = INT_MAX;
-    else
-        nheight = roundr(rel_height * rect->Height);
-
-    if (roundr(rect->Width) != 0 && roundr(rect->Height) != 0)
-    {
-        /* FIXME: If only the width or only the height is 0, we should probably still clip */
-        rgn = CreatePolygonRgn(corners, 4, ALTERNATE);
-        SelectClipRgn(graphics->hdc, rgn);
-    }
-
-    /* Use gdi to find the font, then perform transformations on it (height,
-     * width, angle). */
-    SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
-    GetTextMetricsW(graphics->hdc, &textmet);
-    lfw = font->lfw;
-
-    lfw.lfHeight = roundr(((REAL)lfw.lfHeight) * rel_height);
-    lfw.lfWidth = roundr(textmet.tmAveCharWidth * rel_width);
-
-    lfw.lfEscapement = lfw.lfOrientation = roundr((angle / M_PI) * 1800.0);
-
-    gdifont = CreateFontIndirectW(&lfw);
-    DeleteObject(SelectObject(graphics->hdc, CreateFontIndirectW(&lfw)));
-
-    for(i = 0, j = 0; i < length; i++){
-        if(!isprintW(string[i]) && (string[i] != '\n'))
-            continue;
-
-        stringdup[j] = string[i];
-        j++;
-    }
-
-    length = j;
-
-    if (!format || format->align == StringAlignmentNear)
-    {
-        drawbase.x = corners[0].x;
-        drawbase.y = corners[0].y;
-        drawflags = DT_NOCLIP | DT_EXPANDTABS;
-    }
-    else if (format->align == StringAlignmentCenter)
-    {
-        drawbase.x = (corners[0].x + corners[1].x)/2;
-        drawbase.y = (corners[0].y + corners[1].y)/2;
-        drawflags = DT_NOCLIP | DT_EXPANDTABS | DT_CENTER;
-    }
-    else /* (format->align == StringAlignmentFar) */
-    {
-        drawbase.x = corners[1].x;
-        drawbase.y = corners[1].y;
-        drawflags = DT_NOCLIP | DT_EXPANDTABS | DT_RIGHT;
-    }
-
-    while(sum < length){
-        drawcoord.left = drawcoord.right = drawbase.x + roundr(ang_sin * (REAL) height);
-        drawcoord.top = drawcoord.bottom = drawbase.y + roundr(ang_cos * (REAL) height);
-
-        GetTextExtentExPointW(graphics->hdc, stringdup + sum, length - sum,
-                              nwidth, &fit, NULL, &size);
-        fitcpy = fit;
-
-        if(fit == 0){
-            DrawTextW(graphics->hdc, stringdup + sum, 1, &drawcoord, drawflags);
-            break;
-        }
-
-        for(lret = 0; lret < fit; lret++)
-            if(*(stringdup + sum + lret) == '\n')
-                break;
-
-        /* Line break code (may look strange, but it imitates windows). */
-        if(lret < fit)
-            lineend = fit = lret;    /* this is not an off-by-one error */
-        else if(fit < (length - sum)){
-            if(*(stringdup + sum + fit) == ' ')
-                while(*(stringdup + sum + fit) == ' ')
-                    fit++;
-            else
-                while(*(stringdup + sum + fit - 1) != ' '){
-                    fit--;
-
-                    if(*(stringdup + sum + fit) == '\t')
-                        break;
-
-                    if(fit == 0){
-                        fit = fitcpy;
-                        break;
-                    }
-                }
-            lineend = fit;
-            while(*(stringdup + sum + lineend - 1) == ' ' ||
-                  *(stringdup + sum + lineend - 1) == '\t')
-                lineend--;
-        }
-        else
-            lineend = fit;
-        DrawTextW(graphics->hdc, stringdup + sum, min(length - sum, lineend),
-                  &drawcoord, drawflags);
-
-        sum += fit + (lret < fitcpy ? 1 : 0);
-        height += size.cy;
-
-        if(height > nheight)
-            break;
-
-        /* Stop if this was a linewrap (but not if it was a linebreak). */
-        if((lret == fitcpy) && format && (format->attr & StringFormatFlagsNoWrap))
-            break;
-    }
-
-    GdipFree(stringdup);
-    DeleteObject(rgn);
-    DeleteObject(gdifont);
-
-    RestoreDC(graphics->hdc, save_state);
-
-    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipFillClosedCurve2(GpGraphics *graphics, GpBrush *brush,
@@ -3074,8 +3091,6 @@ GpStatus WINGDIPAPI GdipFillRegion(GpGraphics* graphics, GpBrush* brush,
 
 GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
 {
-    static int calls;
-
     TRACE("(%p,%u)\n", graphics, intention);
 
     if(!graphics)
@@ -3084,10 +3099,12 @@ GpStatus WINGDIPAPI GdipFlush(GpGraphics *graphics, GpFlushIntention intention)
     if(graphics->busy)
         return ObjectBusy;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    /* We have no internal operation queue, so there's no need to clear it. */
 
-    return NotImplemented;
+    if (graphics->hdc)
+        GdiFlush();
+
+    return Ok;
 }
 
 /*****************************************************************************
@@ -3465,61 +3482,37 @@ GpStatus WINGDIPAPI GdipIsVisibleRectI(GpGraphics *graphics, INT x, INT y, INT w
     return GdipIsVisibleRect(graphics, (REAL)x, (REAL)y, (REAL)width, (REAL)height, result);
 }
 
-GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
-        GDIPCONST WCHAR* string, INT length, GDIPCONST GpFont* font,
-        GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat *stringFormat,
-        INT regionCount, GpRegion** regions)
-{
-    FIXME("stub: %p %s %d %p %p %p %d %p\n", graphics, debugstr_w(string),
-            length, font, layoutRect, stringFormat, regionCount, regions);
+typedef GpStatus (*gdip_format_string_callback)(GpGraphics *graphics,
+    GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    INT lineno, const RectF *bounds, void *user_data);
 
-    if (!(graphics && string && font && layoutRect && stringFormat && regions))
-        return InvalidParameter;
-
-    return NotImplemented;
-}
-
-/* Find the smallest rectangle that bounds the text when it is printed in rect
- * according to the format options listed in format. If rect has 0 width and
- * height, then just find the smallest rectangle that bounds the text when it's
- * printed at location (rect->X, rect-Y). */
-GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
+static GpStatus gdip_format_string(GpGraphics *graphics,
     GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font,
-    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format, RectF *bounds,
-    INT *codepointsfitted, INT *linesfilled)
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    gdip_format_string_callback callback, void *user_data)
 {
-    HFONT oldfont;
     WCHAR* stringdup;
-    INT sum = 0, height = 0, fit, fitcpy, max_width = 0, i, j, lret, nwidth,
-        nheight, lineend;
+    INT sum = 0, height = 0, fit, fitcpy, i, j, lret, nwidth,
+        nheight, lineend, lineno = 0;
+    RectF bounds;
+    StringAlignment halign;
+    GpStatus stat = Ok;
     SIZE size;
-
-    TRACE("(%p, %s, %i, %p, %s, %p, %p, %p, %p)\n", graphics,
-        debugstr_wn(string, length), length, font, debugstr_rectf(rect), format,
-        bounds, codepointsfitted, linesfilled);
-
-    if(!graphics || !string || !font || !rect)
-        return InvalidParameter;
-
-    if(linesfilled) *linesfilled = 0;
-    if(codepointsfitted) *codepointsfitted = 0;
-
-    if(format)
-        TRACE("may be ignoring some format flags: attr %x\n", format->attr);
 
     if(length == -1) length = lstrlenW(string);
 
     stringdup = GdipAlloc((length + 1) * sizeof(WCHAR));
     if(!stringdup) return OutOfMemory;
 
-    oldfont = SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
     nwidth = roundr(rect->Width);
     nheight = roundr(rect->Height);
 
-    if((nwidth == 0) && (nheight == 0))
-        nwidth = nheight = INT_MAX;
+    if (nwidth == 0) nwidth = INT_MAX;
+    if (nheight == 0) nheight = INT_MAX;
 
     for(i = 0, j = 0; i < length; i++){
+        /* FIXME: This makes the indexes passed to callback inaccurate. */
         if(!isprintW(string[i]) && (string[i] != '\n'))
             continue;
 
@@ -3527,8 +3520,10 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
         j++;
     }
 
-    stringdup[j] = 0;
     length = j;
+
+    if (format) halign = format->align;
+    else halign = StringAlignmentNear;
 
     while(sum < length){
         GetTextExtentExPointW(graphics->hdc, stringdup + sum, length - sum,
@@ -3572,12 +3567,38 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
         GetTextExtentExPointW(graphics->hdc, stringdup + sum, lineend,
                               nwidth, &j, NULL, &size);
 
-        sum += fit + (lret < fitcpy ? 1 : 0);
-        if(codepointsfitted) *codepointsfitted = sum;
+        bounds.Width = size.cx;
 
+        if(height + size.cy > nheight)
+            bounds.Height = nheight - (height + size.cy);
+        else
+            bounds.Height = size.cy;
+
+        bounds.Y = rect->Y + height;
+
+        switch (halign)
+        {
+        case StringAlignmentNear:
+        default:
+            bounds.X = rect->X;
+            break;
+        case StringAlignmentCenter:
+            bounds.X = rect->X + (rect->Width/2) - (bounds.Width/2);
+            break;
+        case StringAlignmentFar:
+            bounds.X = rect->X + rect->Width - bounds.Width;
+            break;
+        }
+
+        stat = callback(graphics, stringdup, sum, lineend,
+            font, rect, format, lineno, &bounds, user_data);
+
+        if (stat != Ok)
+            break;
+
+        sum += fit + (lret < fitcpy ? 1 : 0);
         height += size.cy;
-        if(linesfilled) *linesfilled += size.cy;
-        max_width = max(max_width, size.cx);
+        lineno++;
 
         if(height > nheight)
             break;
@@ -3587,13 +3608,307 @@ GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
             break;
     }
 
+    GdipFree(stringdup);
+
+    return stat;
+}
+
+struct measure_ranges_args {
+    GpRegion **regions;
+};
+
+GpStatus measure_ranges_callback(GpGraphics *graphics,
+    GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    INT lineno, const RectF *bounds, void *user_data)
+{
+    int i;
+    GpStatus stat = Ok;
+    struct measure_ranges_args *args = user_data;
+
+    for (i=0; i<format->range_count; i++)
+    {
+        INT range_start = max(index, format->character_ranges[i].First);
+        INT range_end = min(index+length, format->character_ranges[i].First+format->character_ranges[i].Length);
+        if (range_start < range_end)
+        {
+            GpRectF range_rect;
+            SIZE range_size;
+
+            range_rect.Y = bounds->Y;
+            range_rect.Height = bounds->Height;
+
+            GetTextExtentExPointW(graphics->hdc, string + index, range_start - index,
+                                  INT_MAX, NULL, NULL, &range_size);
+            range_rect.X = bounds->X + range_size.cx;
+
+            GetTextExtentExPointW(graphics->hdc, string + index, range_end - index,
+                                  INT_MAX, NULL, NULL, &range_size);
+            range_rect.Width = (bounds->X + range_size.cx) - range_rect.X;
+
+            stat = GdipCombineRegionRect(args->regions[i], &range_rect, CombineModeUnion);
+            if (stat != Ok)
+                break;
+        }
+    }
+
+    return stat;
+}
+
+GpStatus WINGDIPAPI GdipMeasureCharacterRanges(GpGraphics* graphics,
+        GDIPCONST WCHAR* string, INT length, GDIPCONST GpFont* font,
+        GDIPCONST RectF* layoutRect, GDIPCONST GpStringFormat *stringFormat,
+        INT regionCount, GpRegion** regions)
+{
+    GpStatus stat;
+    int i;
+    HFONT oldfont;
+    struct measure_ranges_args args;
+
+    TRACE("(%p %s %d %p %s %p %d %p)\n", graphics, debugstr_w(string),
+            length, font, debugstr_rectf(layoutRect), stringFormat, regionCount, regions);
+
+    if (!(graphics && string && font && layoutRect && stringFormat && regions))
+        return InvalidParameter;
+
+    if (regionCount < stringFormat->range_count)
+        return InvalidParameter;
+
+    if (stringFormat->attr)
+        TRACE("may be ignoring some format flags: attr %x\n", stringFormat->attr);
+
+    oldfont = SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
+
+    for (i=0; i<stringFormat->range_count; i++)
+    {
+        stat = GdipSetEmpty(regions[i]);
+        if (stat != Ok)
+            return stat;
+    }
+
+    args.regions = regions;
+
+    stat = gdip_format_string(graphics, string, length, font, layoutRect, stringFormat,
+        measure_ranges_callback, &args);
+
+    DeleteObject(SelectObject(graphics->hdc, oldfont));
+
+    return stat;
+}
+
+struct measure_string_args {
+    RectF *bounds;
+    INT *codepointsfitted;
+    INT *linesfilled;
+};
+
+static GpStatus measure_string_callback(GpGraphics *graphics,
+    GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    INT lineno, const RectF *bounds, void *user_data)
+{
+    struct measure_string_args *args = user_data;
+
+    if (bounds->Width > args->bounds->Width)
+        args->bounds->Width = bounds->Width;
+
+    if (bounds->Height + bounds->Y > args->bounds->Height + args->bounds->Y)
+        args->bounds->Height = bounds->Height + bounds->Y - args->bounds->Y;
+
+    if (args->codepointsfitted)
+        *args->codepointsfitted = index + length;
+
+    if (args->linesfilled)
+        (*args->linesfilled)++;
+
+    return Ok;
+}
+
+/* Find the smallest rectangle that bounds the text when it is printed in rect
+ * according to the format options listed in format. If rect has 0 width and
+ * height, then just find the smallest rectangle that bounds the text when it's
+ * printed at location (rect->X, rect-Y). */
+GpStatus WINGDIPAPI GdipMeasureString(GpGraphics *graphics,
+    GDIPCONST WCHAR *string, INT length, GDIPCONST GpFont *font,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format, RectF *bounds,
+    INT *codepointsfitted, INT *linesfilled)
+{
+    HFONT oldfont;
+    struct measure_string_args args;
+
+    TRACE("(%p, %s, %i, %p, %s, %p, %p, %p, %p)\n", graphics,
+        debugstr_wn(string, length), length, font, debugstr_rectf(rect), format,
+        bounds, codepointsfitted, linesfilled);
+
+    if(!graphics || !string || !font || !rect || !bounds)
+        return InvalidParameter;
+
+    if(linesfilled) *linesfilled = 0;
+    if(codepointsfitted) *codepointsfitted = 0;
+
+    if(format)
+        TRACE("may be ignoring some format flags: attr %x\n", format->attr);
+
+    oldfont = SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
+
     bounds->X = rect->X;
     bounds->Y = rect->Y;
-    bounds->Width = (REAL)max_width;
-    bounds->Height = (REAL) min(height, nheight);
+    bounds->Width = 0.0;
+    bounds->Height = 0.0;
 
-    GdipFree(stringdup);
+    args.bounds = bounds;
+    args.codepointsfitted = codepointsfitted;
+    args.linesfilled = linesfilled;
+
+    gdip_format_string(graphics, string, length, font, rect, format,
+        measure_string_callback, &args);
+
     DeleteObject(SelectObject(graphics->hdc, oldfont));
+
+    return Ok;
+}
+
+struct draw_string_args {
+    POINT drawbase;
+    UINT drawflags;
+    REAL ang_cos, ang_sin;
+};
+
+static GpStatus draw_string_callback(GpGraphics *graphics,
+    GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
+    GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
+    INT lineno, const RectF *bounds, void *user_data)
+{
+    struct draw_string_args *args = user_data;
+    RECT drawcoord;
+
+    drawcoord.left = drawcoord.right = args->drawbase.x + roundr(args->ang_sin * bounds->Y);
+    drawcoord.top = drawcoord.bottom = args->drawbase.y + roundr(args->ang_cos * bounds->Y);
+
+    DrawTextW(graphics->hdc, string + index, length, &drawcoord, args->drawflags);
+
+    return Ok;
+}
+
+GpStatus WINGDIPAPI GdipDrawString(GpGraphics *graphics, GDIPCONST WCHAR *string,
+    INT length, GDIPCONST GpFont *font, GDIPCONST RectF *rect,
+    GDIPCONST GpStringFormat *format, GDIPCONST GpBrush *brush)
+{
+    HRGN rgn = NULL;
+    HFONT gdifont;
+    LOGFONTW lfw;
+    TEXTMETRICW textmet;
+    GpPointF pt[3], rectcpy[4];
+    POINT corners[4];
+    REAL angle, rel_width, rel_height;
+    INT offsety = 0, save_state;
+    struct draw_string_args args;
+    RectF scaled_rect;
+
+    TRACE("(%p, %s, %i, %p, %s, %p, %p)\n", graphics, debugstr_wn(string, length),
+        length, font, debugstr_rectf(rect), format, brush);
+
+    if(!graphics || !string || !font || !brush || !rect)
+        return InvalidParameter;
+
+    if((brush->bt != BrushTypeSolidColor)){
+        FIXME("not implemented for given parameters\n");
+        return NotImplemented;
+    }
+
+    if(format){
+        TRACE("may be ignoring some format flags: attr %x\n", format->attr);
+
+        /* Should be no need to explicitly test for StringAlignmentNear as
+         * that is default behavior if no alignment is passed. */
+        if(format->vertalign != StringAlignmentNear){
+            RectF bounds;
+            GdipMeasureString(graphics, string, length, font, rect, format, &bounds, 0, 0);
+
+            if(format->vertalign == StringAlignmentCenter)
+                offsety = (rect->Height - bounds.Height) / 2;
+            else if(format->vertalign == StringAlignmentFar)
+                offsety = (rect->Height - bounds.Height);
+        }
+    }
+
+    save_state = SaveDC(graphics->hdc);
+    SetBkMode(graphics->hdc, TRANSPARENT);
+    SetTextColor(graphics->hdc, brush->lb.lbColor);
+
+    pt[0].X = 0.0;
+    pt[0].Y = 0.0;
+    pt[1].X = 1.0;
+    pt[1].Y = 0.0;
+    pt[2].X = 0.0;
+    pt[2].Y = 1.0;
+    GdipTransformPoints(graphics, CoordinateSpaceDevice, CoordinateSpaceWorld, pt, 3);
+    angle = -gdiplus_atan2((pt[1].Y - pt[0].Y), (pt[1].X - pt[0].X));
+    args.ang_cos = cos(angle);
+    args.ang_sin = sin(angle);
+    rel_width = sqrt((pt[1].Y-pt[0].Y)*(pt[1].Y-pt[0].Y)+
+                     (pt[1].X-pt[0].X)*(pt[1].X-pt[0].X));
+    rel_height = sqrt((pt[2].Y-pt[0].Y)*(pt[2].Y-pt[0].Y)+
+                      (pt[2].X-pt[0].X)*(pt[2].X-pt[0].X));
+
+    rectcpy[3].X = rectcpy[0].X = rect->X;
+    rectcpy[1].Y = rectcpy[0].Y = rect->Y + offsety;
+    rectcpy[2].X = rectcpy[1].X = rect->X + rect->Width;
+    rectcpy[3].Y = rectcpy[2].Y = rect->Y + offsety + rect->Height;
+    transform_and_round_points(graphics, corners, rectcpy, 4);
+
+    scaled_rect.X = 0.0;
+    scaled_rect.Y = 0.0;
+    scaled_rect.Width = rel_width * rect->Width;
+    scaled_rect.Height = rel_height * rect->Height;
+
+    if (roundr(scaled_rect.Width) != 0 && roundr(scaled_rect.Height) != 0)
+    {
+        /* FIXME: If only the width or only the height is 0, we should probably still clip */
+        rgn = CreatePolygonRgn(corners, 4, ALTERNATE);
+        SelectClipRgn(graphics->hdc, rgn);
+    }
+
+    /* Use gdi to find the font, then perform transformations on it (height,
+     * width, angle). */
+    SelectObject(graphics->hdc, CreateFontIndirectW(&font->lfw));
+    GetTextMetricsW(graphics->hdc, &textmet);
+    lfw = font->lfw;
+
+    lfw.lfHeight = roundr(((REAL)lfw.lfHeight) * rel_height);
+    lfw.lfWidth = roundr(textmet.tmAveCharWidth * rel_width);
+
+    lfw.lfEscapement = lfw.lfOrientation = roundr((angle / M_PI) * 1800.0);
+
+    gdifont = CreateFontIndirectW(&lfw);
+    DeleteObject(SelectObject(graphics->hdc, CreateFontIndirectW(&lfw)));
+
+    if (!format || format->align == StringAlignmentNear)
+    {
+        args.drawbase.x = corners[0].x;
+        args.drawbase.y = corners[0].y;
+        args.drawflags = DT_NOCLIP | DT_EXPANDTABS;
+    }
+    else if (format->align == StringAlignmentCenter)
+    {
+        args.drawbase.x = (corners[0].x + corners[1].x)/2;
+        args.drawbase.y = (corners[0].y + corners[1].y)/2;
+        args.drawflags = DT_NOCLIP | DT_EXPANDTABS | DT_CENTER;
+    }
+    else /* (format->align == StringAlignmentFar) */
+    {
+        args.drawbase.x = corners[1].x;
+        args.drawbase.y = corners[1].y;
+        args.drawflags = DT_NOCLIP | DT_EXPANDTABS | DT_RIGHT;
+    }
+
+    gdip_format_string(graphics, string, length, font, &scaled_rect, format,
+        draw_string_callback, &args);
+
+    DeleteObject(rgn);
+    DeleteObject(gdifont);
+
+    RestoreDC(graphics->hdc, save_state);
 
     return Ok;
 }
@@ -4300,7 +4615,12 @@ GpStatus WINGDIPAPI GdipTransformPointsI(GpGraphics *graphics, GpCoordinateSpace
 
 HPALETTE WINGDIPAPI GdipCreateHalftonePalette(void)
 {
-    FIXME("\n");
+    static int calls;
+
+    TRACE("\n");
+
+    if (!calls++)
+      FIXME("stub\n");
 
     return NULL;
 }

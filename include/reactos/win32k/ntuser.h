@@ -514,7 +514,7 @@ typedef struct _WND
     HRGN hrgnClip;
     HRGN hrgnNewFrame;
     /* Window name. */
-    UNICODE_STRING strName;
+    LARGE_UNICODE_STRING strName;
     /* Size of the extra data associated with the window. */
     ULONG cbwndExtra;
     HWND hWndLastActive;
@@ -1472,28 +1472,9 @@ NtUserCreateLocalMemHandle(
 HWND
 NTAPI
 NtUserCreateWindowEx(
-  DWORD dwExStyle,
-  PUNICODE_STRING lpClassName,
-  PUNICODE_STRING lpWindowName,
-  DWORD dwStyle,
-  LONG x,
-  LONG y,
-  LONG nWidth,
-  LONG nHeight,
-  HWND hWndParent,
-  HMENU hMenu,
-  HINSTANCE hInstance,
-  LPVOID lpParam,
-  DWORD dwShowMode,
-  BOOL bUnicodeWindow,
-  DWORD dwUnknown);
-#if 0
-HWND
-NTAPI
-NtUserCreateWindowEx(
   DWORD dwExStyle, // |= 0x80000000 == Ansi used to set WNDS_ANSICREATOR
   PLARGE_STRING plstrClassName,
-  PLARGE_STRING plstrClsVesrion,
+  PLARGE_STRING plstrClsVersion,
   PLARGE_STRING plstrWindowName,
   DWORD dwStyle,
   int x,
@@ -1506,7 +1487,6 @@ NtUserCreateWindowEx(
   LPVOID lpParam,
   DWORD dwFlags,
   PVOID acbiBuffer);
-#endif
 
 HWINSTA
 NTAPI

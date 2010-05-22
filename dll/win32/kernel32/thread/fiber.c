@@ -146,9 +146,8 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     PFIBER pfCurFiber;
     NTSTATUS nErrCode;
     INITIAL_TEB usFiberInitialTeb;
-    CONTEXT ctxFiberContext;
     PVOID ActivationContextStack = NULL;
-    DPRINT1("Creating Fiber\n");
+    DPRINT("Creating Fiber\n");
 
 #ifdef SXS_SUPPORT_ENABLED
     /* Allocate the Activation Context Stack */
@@ -203,7 +202,7 @@ CreateFiberEx(SIZE_T dwStackCommitSize,
     }
 
     /* initialize the context for the fiber */
-    BasepInitializeContext(&ctxFiberContext,
+    BasepInitializeContext(&pfCurFiber->Context,
                            lpParameter,
                            lpStartAddress,
                            usFiberInitialTeb.StackBase,
@@ -253,10 +252,10 @@ WINAPI
 BaseFiberStartup(VOID)
 {
 #ifdef _M_IX86
-    PFIBER Fiber = GetFiberData();
+    PFIBER Fiber = GetCurrentFiber();
 
     /* Call the Thread Startup Routine */
-    DPRINT1("Starting Fiber\n");
+    DPRINT("Starting Fiber\n");
     BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
                       (LPVOID)Fiber->Context.Ebx);
 #else

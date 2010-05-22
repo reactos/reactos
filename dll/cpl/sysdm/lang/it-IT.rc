@@ -43,16 +43,6 @@ BEGIN
     PUSHBUTTON  "&Profili Hardware...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
 END
 
-IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "System Settings"
-FONT 8, "MS Shell Dlg", 0, 0, 0x1
-BEGIN
-    GROUPBOX        "Version Info",IDC_STATIC,6,3,210,73
-    CONTROL         "Report as Workstation",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
-    LTEXT           "ReactOS is built as a server OS and reports as such. Check this box to change this for applications only.",IDC_STATIC,15,15,183,41
-    PUSHBUTTON      "OK",IDOK,166,83,50,14
-END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
@@ -72,8 +62,20 @@ BEGIN
     LTEXT       "Le opzioni di Avvio e recupero informano il computer su come partire e cosa fare nel caso che un errore fermi il computer.", IDC_STATIC, 16, 144, 210, 19
     PUSHBUTTON  "Impostazioni", IDC_STAREC, 194, 162, 50, 14
 
+    PUSHBUTTON  "Impostazioni di sistema", IDC_SYSSETTINGS, 2, 192, 80, 15
     PUSHBUTTON  "Variabili di ambiente", IDC_ENVVAR, 84, 192, 80, 14
     PUSHBUTTON  "Registrazione errori", IDC_ERRORREPORT, 170, 192, 80, 14
+END
+
+IDD_SYSSETTINGS DIALOGEX 0, 0, 221, 106
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "System Settings"
+FONT 8, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "Informazioni sulla versione",IDC_STATIC,6,3,210,73
+    CONTROL         "Notifica come Workstation",IDC_REPORTASWORKSTATION,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,16,57,88,10
+    LTEXT           "ReactOS è compilato come server ed è notificato come tale. Non per questa applicazione.",IDC_STATIC,15,15,183,41
+    PUSHBUTTON      "OK",IDOK,166,83,50,14
 END
 
 
@@ -159,7 +161,7 @@ BEGIN
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12, ES_NUMBER
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondi", IDC_STATIC, 215, 70, 25, 8
-    LTEXT       "Per modificare le opzioni di avvio manualmenta , clicca Modifica.", IDC_STATIC, 14, 89, 187, 8
+    LTEXT       "Per modificare le opzioni di avvio manualmente, clicca Modifica.", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON  "&Modifica", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Blocco del sistema", IDC_STATIC, 7, 111, 238, 140
@@ -282,4 +284,5 @@ BEGIN
     IDS_USERPROFILE_TYPE "Tipo"
     IDS_USERPROFILE_STATUS "Stato"
     IDS_USERPROFILE_MODIFIED "Modificato"
+    IDS_DEVS "\nReactOS Team\n\nCoordinatore\n\nAleksey Bragin\n\nGruppo di sviluppo\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Engineers\n\nColin Finck\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nUlteriori ringraziamenti\n\na tutti i Contributers\nWine Team\n\n"
 END

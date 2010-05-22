@@ -36,7 +36,7 @@
  * CURICON_PROCESS structs starting at CurIcon->ProcessList.
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

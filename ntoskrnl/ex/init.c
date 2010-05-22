@@ -1612,7 +1612,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             else if (!strncmp(SafeBoot, "NETWORK", 7))
             {
                 /* With Networking */
-                InitSafeBootMode = 1;
+                InitSafeBootMode = 2;
                 SafeBoot += 7;
                 MessageCode = BOOTING_IN_SAFEMODE_NETWORK;
             }

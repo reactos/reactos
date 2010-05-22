@@ -62,7 +62,7 @@ static int wineXmlMatchCallback (char const * filename)
 
 static void *wineXmlOpenCallback (char const * filename)
 {
-    BSTR sFilename = bstr_from_xmlChar( (xmlChar*)filename);
+    BSTR sFilename = bstr_from_xmlChar( (const xmlChar*)filename);
     HANDLE hFile;
 
     TRACE("%s\n", debugstr_w(sFilename));

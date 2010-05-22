@@ -89,21 +89,6 @@
     ObpFreeCapturedAttributes
 
 //
-// Returns the size of a CM_RESOURCE_LIST
-//
-#define CM_RESOURCE_LIST_SIZE(ResList)                  \
-    (ResList->Count == 1) ?                             \
-        FIELD_OFFSET(                                   \
-            CM_RESOURCE_LIST,                           \
-            List[0].PartialResourceList.                \
-            PartialDescriptors[(ResList)->              \
-                               List[0].                 \
-                               PartialResourceList.     \
-                               Count])                  \
-        :                                               \
-        FIELD_OFFSET(CM_RESOURCE_LIST, List)
-
-//
 // Determines if the IRP is Synchronous
 //
 #define IsIrpSynchronous(Irp, FileObject)               \
@@ -505,6 +490,21 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
     //
     PVOID Context;
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
+
+//
+// Resource code
+//
+ULONG
+NTAPI
+IopCalculateResourceListSize(
+    IN PCM_RESOURCE_LIST ResourceList
+);
+
+NTSTATUS
+NTAPI
+IopAssignDeviceResources(
+    IN PDEVICE_NODE DeviceNode
+);
 
 //
 // PNP Routines

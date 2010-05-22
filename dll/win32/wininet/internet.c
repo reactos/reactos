@@ -102,8 +102,8 @@ static CRITICAL_SECTION_DEBUG WININET_cs_debug =
 static CRITICAL_SECTION WININET_cs = { &WININET_cs_debug, -1, 0, 0, 0, 0 };
 
 static object_header_t **WININET_Handles;
-static UINT WININET_dwNextHandle;
-static UINT WININET_dwMaxHandles;
+static UINT_PTR WININET_dwNextHandle;
+static UINT_PTR WININET_dwMaxHandles;
 
 typedef struct
 {
@@ -122,7 +122,7 @@ static const WCHAR szProxyEnable[] = { 'P','r','o','x','y','E','n','a','b','l','
 HINTERNET WININET_AllocHandle( object_header_t *info )
 {
     object_header_t **p;
-    UINT handle = 0, num;
+    UINT_PTR handle = 0, num;
 
     list_init( &info->children );
 
@@ -173,7 +173,7 @@ object_header_t *WININET_AddRef( object_header_t *info )
 object_header_t *WININET_GetObject( HINTERNET hinternet )
 {
     object_header_t *info = NULL;
-    UINT handle = (UINT) hinternet;
+    UINT_PTR handle = (UINT_PTR) hinternet;
 
     EnterCriticalSection( &WININET_cs );
 
@@ -183,7 +183,7 @@ object_header_t *WININET_GetObject( HINTERNET hinternet )
 
     LeaveCriticalSection( &WININET_cs );
 
-    TRACE("handle %d -> %p\n", handle, info);
+    TRACE("handle %ld -> %p\n", handle, info);
 
     return info;
 }
@@ -218,7 +218,7 @@ BOOL WININET_Release( object_header_t *info )
 BOOL WININET_FreeHandle( HINTERNET hinternet )
 {
     BOOL ret = FALSE;
-    UINT handle = (UINT) hinternet;
+    UINT_PTR handle = (UINT_PTR) hinternet;
     object_header_t *info = NULL, *child, *next;
 
     EnterCriticalSection( &WININET_cs );
@@ -229,7 +229,7 @@ BOOL WININET_FreeHandle( HINTERNET hinternet )
         if( WININET_Handles[handle] )
         {
             info = WININET_Handles[handle];
-            TRACE( "destroying handle %d for object %p\n", handle+1, info);
+            TRACE( "destroying handle %ld for object %p\n", handle+1, info);
             WININET_Handles[handle] = NULL;
             ret = TRUE;
         }
@@ -245,8 +245,8 @@ BOOL WININET_FreeHandle( HINTERNET hinternet )
         /* Free all children as native does */
         LIST_FOR_EACH_ENTRY_SAFE( child, next, &info->children, object_header_t, entry )
         {
-            TRACE( "freeing child handle %d for parent handle %d\n",
-                   (UINT)child->hInternet, handle+1);
+            TRACE( "freeing child handle %ld for parent handle %ld\n",
+                   (UINT_PTR)child->hInternet, handle+1);
             WININET_FreeHandle( child->hInternet );
         }
         WININET_Release( info );

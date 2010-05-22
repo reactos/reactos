@@ -26,7 +26,7 @@
  *        8/18/1999: Created
  */
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>

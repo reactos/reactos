@@ -26,11 +26,14 @@
 #define ConsoleInputUnicodeCharToAnsiChar(Console, dChar, sWChar) \
   WideCharToMultiByte((Console)->CodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
+#define ConsoleInputAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+  MultiByteToWideChar((Console)->CodePage, 0, (sChar), 1, (dWChar), 1)
+
 #define ConsoleUnicodeCharToAnsiChar(Console, dChar, sWChar) \
   WideCharToMultiByte((Console)->OutputCodePage, 0, (sWChar), 1, (dChar), 1, NULL, NULL)
 
-#define ConsoleAnsiCharToUnicodeChar(Console, sWChar, dChar) \
-  MultiByteToWideChar((Console)->OutputCodePage, 0, (dChar), 1, (sWChar), 1)
+#define ConsoleAnsiCharToUnicodeChar(Console, dWChar, sChar) \
+  MultiByteToWideChar((Console)->OutputCodePage, 0, (sChar), 1, (dWChar), 1)
 
 
 /* FUNCTIONS *****************************************************************/
@@ -616,7 +619,7 @@ CSR_API(CsrReadConsole)
           else
             {
               if(Request->Data.ReadConsoleRequest.Unicode)
-                UnicodeBuffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar; /* FIXME */
+                ConsoleInputAnsiCharToUnicodeChar(Console, &UnicodeBuffer[i], &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar);
               else
                 Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
             }
@@ -3116,6 +3119,35 @@ CSR_API(CsrGenerateCtrlEvent)
   ConioUnlockConsole(Console);
 
   return Status;
+}
+
+CSR_API(CsrSetScreenBufferSize)
+{
+    NTSTATUS Status;
+    PCSRSS_CONSOLE Console;
+    PCSRSS_SCREEN_BUFFER Buff;
+
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+    Status = ConioConsoleFromProcessData(ProcessData, &Console);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    Status = ConioLockScreenBuffer(ProcessData, Request->Data.SetScreenBufferSize.OutputHandle, &Buff, GENERIC_WRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        ConioUnlockConsole(Console);
+        return Status;
+    }
+
+    Status = ConioResizeBuffer(Console, Buff, Request->Data.SetScreenBufferSize.Size);
+    ConioUnlockScreenBuffer(Buff);
+    ConioUnlockConsole(Console);
+
+    return Status;
 }
 
 /* EOF */

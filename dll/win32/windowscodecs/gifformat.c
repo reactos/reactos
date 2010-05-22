@@ -40,6 +40,7 @@ typedef struct {
     LONG ref;
     BOOL initialized;
     GifFileType *gif;
+    CRITICAL_SECTION lock;
 } GifDecoder;
 
 typedef struct {
@@ -302,6 +303,8 @@ static ULONG WINAPI GifDecoder_Release(IWICBitmapDecoder *iface)
 
     if (ref == 0)
     {
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         DGifCloseFile(This->gif);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -341,9 +344,12 @@ static HRESULT WINAPI GifDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
 
     TRACE("(%p,%p,%x)\n", iface, pIStream, cacheOptions);
 
+    EnterCriticalSection(&This->lock);
+
     if (This->initialized || This->gif)
     {
         WARN("already initialized\n");
+        LeaveCriticalSection(&This->lock);
         return WINCODEC_ERR_WRONGSTATE;
     }
 
@@ -353,15 +359,25 @@ static HRESULT WINAPI GifDecoder_Initialize(IWICBitmapDecoder *iface, IStream *p
 
     /* read all data from the stream */
     This->gif = DGifOpen((void*)pIStream, _gif_inputfunc);
-    if (!This->gif) return E_FAIL;
+    if (!This->gif)
+    {
+        LeaveCriticalSection(&This->lock);
+        return E_FAIL;
+    }
 
     ret = DGifSlurp(This->gif);
-    if (ret == GIF_ERROR) return E_FAIL;
+    if (ret == GIF_ERROR)
+    {
+        LeaveCriticalSection(&This->lock);
+        return E_FAIL;
+    }
 
     /* make sure we don't use the stream after this method returns */
     This->gif->UserData = NULL;
 
     This->initialized = TRUE;
+
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -502,6 +518,8 @@ HRESULT GifDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
     This->ref = 1;
     This->initialized = FALSE;
     This->gif = NULL;
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": GifDecoder.lock");
 
     ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
     IUnknown_Release((IUnknown*)This);

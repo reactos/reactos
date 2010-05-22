@@ -270,6 +270,7 @@
 			<file>pnpmgr.c</file>
 			<file>pnpnotify.c</file>
 			<file>pnpreport.c</file>
+			<file>pnpres.c</file>
 			<file>pnproot.c</file>
 			<file>pnputil.c</file>
 		</directory>
@@ -394,6 +395,7 @@
 			<file>expool.c</file>
 			<file>hypermap.c</file>
 			<file>iosup.c</file>
+			<file>largepag.c</file>
 			<file>mdlsup.c</file>
 			<file>mminit.c</file>
 			<file>mmsup.c</file>

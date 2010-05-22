@@ -251,7 +251,7 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
             if (Interrupt->SynchronizeIrql > Interrupt->Irql)
             {
                 /* Raise to higher IRQL */
-                OldIrql = KfRaiseIrql(Interrupt->Irql);
+                OldIrql = KfRaiseIrql(Interrupt->SynchronizeIrql);
             }
         
             /* Acquire interrupt lock */

@@ -2,7 +2,8 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="wordpad" type="win32gui" installbase="system32" installname="wordpad.exe" allowwarnings="true">
 	<include base="wordpad">.</include>
-    <define name="__ROS_LONG64__" />
+	<include base="ReactOS">include/reactos/wine</include>
+	<define name="__ROS_LONG64__" />
 	<library>comdlg32</library>
 	<library>shell32</library>
 	<library>user32</library>

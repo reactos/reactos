@@ -398,18 +398,13 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize paged pool */
         MmInitializePagedPool();
         
-        /* Initialize working sets */
-        MiInitializeUserPfnBitmap();
-        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
-
-        /* Reload boot drivers */
-        MiReloadBootLoadedDrivers(LoaderBlock);
-
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
     }
     else if (Phase == 1)
     {
+        MiInitializeUserPfnBitmap();
+        MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
         MmInitializeRmapList();
         MmInitializePageOp();
         MmInitSectionImplementation();

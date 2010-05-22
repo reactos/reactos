@@ -166,20 +166,19 @@ KdInitSystem(ULONG BootPhase,
         /* XXX Check for settings that we support */
         if (strstr(CommandLine, "BREAK")) KdpEarlyBreak = TRUE;
         if (strstr(CommandLine, "NODEBUG")) KdDebuggerEnabled = FALSE;
-        if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
-        if (strstr(CommandLine, "DEBUG"))
+        else if (strstr(CommandLine, "CRASHDEBUG")) KdDebuggerEnabled = FALSE;
+        else if (strstr(CommandLine, "DEBUG"))
         {
             /* Enable on the serial port */
             KdDebuggerEnabled = TRUE;
+            KdDebuggerNotPresent = FALSE;
             KdpDebugMode.Serial = TRUE;
-        }
 
 #ifdef KDBG
-        /* Get the KDBG Settings and enable it */
-        KdDebuggerEnabled = TRUE;
-        KdDebuggerNotPresent = FALSE;
-        KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
+            /* Get the KDBG Settings */
+            KdbpGetCommandLineSettings(LoaderBlock->LoadOptions);
 #endif
+        }
 
         /* Get the port and baud rate */
         Port = strstr(CommandLine, "DEBUGPORT");

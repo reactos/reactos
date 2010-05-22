@@ -1260,6 +1260,170 @@ IsValidCodePage(UINT CodePage)
     return GetCPFileNameFromRegistry(CodePage, NULL, 0);
 }
 
+static const signed char 
+base64inv[] = 
+{
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
+    -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 62, -1, -1, -1, 63, 
+    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1, -1, 
+    -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14,
+    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1,
+    -1, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 
+    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, -1, -1, -1, -1, -1
+};
+
+static VOID Utf7Base64Decode(BYTE *pbDest, LPCSTR pszSrc, INT cchSrc)
+{
+    INT i, j, n;
+    BYTE b;
+
+    for(i = 0; i < cchSrc / 4 * 4; i += 4)
+    {
+        for(j = n = 0; j < 4; )
+        {
+            b = (BYTE) base64inv[(BYTE) *pszSrc++];
+            n |= (((INT) b) << ((3 - j) * 6));
+            j++;
+        }
+        for(j = 0; j < 3; j++)
+            *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+    }
+    for(j = n = 0; j < cchSrc % 4; )
+    {
+        b = (BYTE) base64inv[(BYTE) *pszSrc++];
+        n |= (((INT) b) << ((3 - j) * 6));
+        j++;
+    }
+    for(j = 0; j < ((cchSrc % 4) * 6 / 8); j++)
+        *pbDest++ = (BYTE) ((n >> (8 * (2 - j))) & 0xFF);
+}
+
+static VOID myswab(LPVOID pv, INT cw)
+{
+    LPBYTE pb = (LPBYTE) pv;
+    BYTE b;
+    while(cw > 0)
+    {
+        b = *pb;
+        *pb = pb[1];
+        pb[1] = b;
+        pb += 2;
+        cw--;
+    }
+}
+
+static INT Utf7ToWideCharSize(LPCSTR pszUtf7, INT cchUtf7)
+{
+    INT n, c, cch;
+    CHAR ch;
+    LPCSTR pch;
+
+    c = 0;
+    while(cchUtf7 > 0)
+    {
+        ch = *pszUtf7++;
+        if (ch == '+')
+        {
+            ch = *pszUtf7;
+            if (ch == '-')
+            {
+                c++;
+                pszUtf7++;
+                cchUtf7 -= 2;
+                continue;
+            }
+            cchUtf7--;
+            pch = pszUtf7;
+            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 && 
+                  base64inv[*pszUtf7] >= 0)
+            {
+                cchUtf7--;
+                pszUtf7++;
+            }
+            cch = pszUtf7 - pch;
+            n = (cch * 3) / 8;
+            c += n;
+            if (cchUtf7 > 0 && *pszUtf7 == '-')
+            {
+                pszUtf7++;
+                cchUtf7--;
+            }
+        }
+        else
+        {
+            c++;
+            cchUtf7--;
+        }
+    }
+
+    return c;
+}
+
+static INT Utf7ToWideChar(LPCSTR pszUtf7, INT cchUtf7, LPWSTR pszWide, INT cchWide)
+{
+    INT n, c, cch;
+    CHAR ch;
+    LPCSTR pch;
+    WORD *pwsz;
+
+    c = Utf7ToWideCharSize(pszUtf7, cchUtf7);
+    if (cchWide == 0)
+        return c;
+
+    if (cchWide < c)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    while(cchUtf7 > 0)
+    {
+        ch = *pszUtf7++;
+        if (ch == '+')
+        {
+            if (*pszUtf7 == '-')
+            {
+                *pszWide++ = L'+';
+                pszUtf7++;
+                cchUtf7 -= 2;
+                continue;
+            }
+            cchUtf7--;
+            pch = pszUtf7;
+            while(cchUtf7 > 0 && (BYTE) *pszUtf7 < 0x80 && 
+                  base64inv[*pszUtf7] >= 0)
+            {
+                cchUtf7--;
+                pszUtf7++;
+            }
+            cch = pszUtf7 - pch;
+            n = (cch * 3) / 8;
+            pwsz = (WORD *) HeapAlloc(GetProcessHeap(), 0, (n + 1) * sizeof(WORD));
+            if (pwsz == NULL)
+                return 0;
+            ZeroMemory(pwsz, n * sizeof(WORD));
+            Utf7Base64Decode((BYTE *) pwsz, pch, cch);
+            myswab(pwsz, n);
+            CopyMemory(pszWide, pwsz, n * sizeof(WORD));
+            HeapFree(GetProcessHeap(), 0, pwsz);
+            pszWide += n;
+            if (cchUtf7 > 0 && *pszUtf7 == '-')
+            {
+                pszUtf7++;
+                cchUtf7--;
+            }
+        }
+        else
+        {
+            *pszWide++ = (WCHAR) ch;
+            cchUtf7--;
+        }
+    }
+
+    return c;
+}
+
 /**
  * @name MultiByteToWideChar
  *
@@ -1325,8 +1489,13 @@ MultiByteToWideChar(UINT CodePage,
                                               WideCharCount);
 
         case CP_UTF7:
-            DPRINT1("MultiByteToWideChar for CP_UTF7 is not implemented!\n");
-            return 0;
+            if (Flags)
+            {
+                SetLastError(ERROR_INVALID_FLAGS);
+                return 0;
+            }
+            return Utf7ToWideChar(MultiByteString, MultiByteCount,
+                                  WideCharString, WideCharCount);
 
         case CP_SYMBOL:
             return IntMultiByteToWideCharSYMBOL(Flags,
@@ -1342,6 +1511,162 @@ MultiByteToWideChar(UINT CodePage,
                                             WideCharString,
                                             WideCharCount);
     }
+}
+
+static const char mustshift[] =
+{
+    0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1
+};
+
+static const char base64[] =
+"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+static INT WideCharToUtf7Size(LPCWSTR pszWide, INT cchWide)
+{
+    WCHAR wch;
+    INT c = 0;
+    BOOL fShift = FALSE;
+
+    while(cchWide > 0)
+    {
+        wch = *pszWide;
+        if (wch < 0x80 && !mustshift[wch])
+        {
+            c++;
+            cchWide--;
+            pszWide++;
+        }
+        else
+        {
+            if (wch == L'+')
+            {
+                c++;
+                c++;
+                cchWide--;
+                pszWide++;
+                continue;
+            }
+            if (!fShift)
+            {
+                c++;
+                fShift = TRUE;
+            }
+            pszWide++;
+            cchWide--;
+            c += 3;
+            if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
+            {
+                pszWide++;
+                cchWide--;
+                c += 3;
+                if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
+                {
+                    pszWide++;
+                    cchWide--;
+                    c += 2;
+                }
+            }
+            if (cchWide > 0 && *pszWide < 0x80 && !mustshift[*pszWide])
+            {
+                c++;
+                fShift = FALSE;
+            }
+        }
+    }
+    if (fShift)
+        c++;
+
+    return c;
+}
+
+static INT WideCharToUtf7(LPCWSTR pszWide, INT cchWide, LPSTR pszUtf7, INT cchUtf7)
+{
+    WCHAR wch;
+    INT c, n;
+    WCHAR wsz[3];
+    BOOL fShift = FALSE;
+
+    c = WideCharToUtf7Size(pszWide, cchWide);
+    if (cchUtf7 == 0)
+        return c;
+
+    if (cchUtf7 < c)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return 0;
+    }
+
+    while(cchWide > 0)
+    {
+        wch = *pszWide;
+        if (wch < 0x80 && !mustshift[wch])
+        {
+            *pszUtf7++ = (CHAR) wch;
+            cchWide--;
+            pszWide++;
+        }
+        else
+        {
+            if (wch == L'+')
+            {
+                *pszUtf7++ = '+';
+                *pszUtf7++ = '-';
+                cchWide--;
+                pszWide++;
+                continue;
+            }
+            if (!fShift)
+            {
+                *pszUtf7++ = '+';
+                fShift = TRUE;
+            }
+            wsz[0] = *pszWide++;
+            cchWide--;
+            n = 1;
+            if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
+            {
+                wsz[1] = *pszWide++;
+                cchWide--;
+                n++;
+                if (cchWide > 0 && (*pszWide >= 0x80 || mustshift[*pszWide]))
+                {
+                    wsz[2] = *pszWide++;
+                    cchWide--;
+                    n++;
+                }
+            }
+            *pszUtf7++ = base64[wsz[0] >> 10];
+            *pszUtf7++ = base64[(wsz[0] >> 4) & 0x3F];
+            *pszUtf7++ = base64[(wsz[0] << 2 | wsz[1] >> 14) & 0x3F];
+            if (n >= 2)
+            {
+                *pszUtf7++ = base64[(wsz[1] >> 8) & 0x3F];
+                *pszUtf7++ = base64[(wsz[1] >> 2) & 0x3F];
+                *pszUtf7++ = base64[(wsz[1] << 4 | wsz[2] >> 12) & 0x3F];
+                if (n >= 3)
+                {
+                    *pszUtf7++ = base64[(wsz[2] >> 6) & 0x3F];
+                    *pszUtf7++ = base64[wsz[2] & 0x3F];
+                }
+            }
+            if (cchWide > 0 && *pszWide < 0x80 && !mustshift[*pszWide])
+            {
+                *pszUtf7++ = '-';
+                fShift = FALSE;
+            }
+        }
+    }
+    if (fShift)
+        *pszUtf7 = '-';
+
+    return c;
 }
 
 /**
@@ -1423,8 +1748,18 @@ WideCharToMultiByte(UINT CodePage,
                                               UsedDefaultChar);
 
         case CP_UTF7:
-            DPRINT1("WideCharToMultiByte for CP_UTF7 is not implemented!\n");
-            return 0;
+            if (DefaultChar != NULL || UsedDefaultChar != NULL)
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+            }
+            if (Flags)
+            {
+                SetLastError(ERROR_INVALID_FLAGS);
+                return 0;
+            }
+            return WideCharToUtf7(WideCharString, WideCharCount,
+                                  MultiByteString, MultiByteCount);
 
         case CP_SYMBOL:
             if ((DefaultChar!=NULL) || (UsedDefaultChar!=NULL))

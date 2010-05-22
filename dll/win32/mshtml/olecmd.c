@@ -616,9 +616,6 @@ static HRESULT exec_editmode(HTMLDocument *This, DWORD cmdexecopt, VARIANT *in, 
             IDocHostUIHandler_HideUI(This->doc_obj->hostui);
     }
 
-    if(This->doc_obj->nscontainer)
-        set_ns_editmode(This->doc_obj->nscontainer);
-
     if(This->doc_obj->ui_active) {
         RECT rcBorderWidths;
 

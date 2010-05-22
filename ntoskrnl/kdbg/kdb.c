@@ -1697,7 +1697,7 @@ KdbpGetCommandLineSettings(
 
     while (p1 && (p2 = strchr(p1, ' ')))
     {
-        p2++;
+        p2 += 2;
 
         if (!_strnicmp(p2, "KDSERIAL", 8))
         {

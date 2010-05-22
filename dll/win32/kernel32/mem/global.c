@@ -380,44 +380,53 @@ GlobalLock(HGLOBAL hMem)
     /* Check if this was a simple allocated heap entry */
     if (!((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY))
     {
-        /* Then simply return the pointer */
-        return hMem;
+        /* Verify and return the pointer */
+        return IsBadReadPtr(hMem, 1) ? NULL : hMem;
     }
 
     /* Otherwise, lock the heap */
     RtlLockHeap(hProcessHeap);
 
-    /* Get the handle entry */
-    HandleEntry = BaseHeapGetEntry(hMem);
-    BASE_TRACE_HANDLE(HandleEntry, hMem);
+    _SEH2_TRY
+    {
+        /* Get the handle entry */
+        HandleEntry = BaseHeapGetEntry(hMem);
+        BASE_TRACE_HANDLE(HandleEntry, hMem);
 
-    /* Make sure it's valid */
-    if (!BaseHeapValidateEntry(HandleEntry))
-    {
-        /* It's not, fail */
-        BASE_TRACE_FAILURE();
-        SetLastError(ERROR_INVALID_HANDLE);
-        Ptr = NULL;
-    }
-    else
-    {
-        /* Otherwise, get the pointer */
-        Ptr = HandleEntry->Object;
-        if (Ptr)
+        /* Make sure it's valid */
+        if (!BaseHeapValidateEntry(HandleEntry))
         {
-            /* Increase the lock count, unless we've went too far */
-            if (HandleEntry->LockCount++ == GMEM_LOCKCOUNT)
-            {
-                /* In which case we simply unlock once */
-                HandleEntry->LockCount--;
-            }
+            /* It's not, fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+            Ptr = NULL;
         }
         else
         {
-            /* The handle is still there but the memory was already freed */
-            SetLastError(ERROR_DISCARDED);
+            /* Otherwise, get the pointer */
+            Ptr = HandleEntry->Object;
+            if (Ptr)
+            {
+                /* Increase the lock count, unless we've went too far */
+                if (HandleEntry->LockCount++ == GMEM_LOCKCOUNT)
+                {
+                    /* In which case we simply unlock once */
+                    HandleEntry->LockCount--;
+                }
+            }
+            else
+            {
+                /* The handle is still there but the memory was already freed */
+                SetLastError(ERROR_DISCARDED);
+            }
         }
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        Ptr = NULL;
+    }
+    _SEH2_END
 
     /* All done. Unlock the heap and return the pointer */
     RtlUnlockHeap(hProcessHeap);
@@ -702,65 +711,74 @@ GlobalSize(HGLOBAL hMem)
     /* Lock the heap */
     RtlLockHeap(hProcessHeap);
 
-    /* Check if this is a simple RTL Heap Managed block */
-    if (!((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY))
+    _SEH2_TRY
     {
-        /* Then we'll query RTL Heap */
-        RtlGetUserInfoHeap(hProcessHeap, Flags, hMem, &Handle, &Flags);
-        BASE_TRACE_PTR(Handle, hMem);
-
-        /*
-         * Check if RTL Heap didn't give us a handle or said that this heap
-         * isn't movable.
-         */
-        if (!(Handle) || !(Flags & BASE_HEAP_FLAG_MOVABLE))
+        /* Check if this is a simple RTL Heap Managed block */
+        if (!((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY))
         {
-            /* This implies we're not a handle heap, so use the generic call */
-            dwSize = RtlSizeHeap(hProcessHeap, HEAP_NO_SERIALIZE, hMem);
+            /* Then we'll query RTL Heap */
+            RtlGetUserInfoHeap(hProcessHeap, Flags, hMem, &Handle, &Flags);
+            BASE_TRACE_PTR(Handle, hMem);
+
+            /*
+             * Check if RTL Heap didn't give us a handle or said that this heap
+             * isn't movable.
+             */
+            if (!(Handle) || !(Flags & BASE_HEAP_FLAG_MOVABLE))
+            {
+                /* This implies we're not a handle heap, so use the generic call */
+                dwSize = RtlSizeHeap(hProcessHeap, HEAP_NO_SERIALIZE, hMem);
+            }
+            else
+            {
+                /* Otherwise we're a handle heap, so get the internal handle */
+                hMem = Handle;
+            }
         }
-        else
+
+        /* Make sure that this is an entry in our handle database */
+        if ((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY)
         {
-            /* Otherwise we're a handle heap, so get the internal handle */
-            hMem = Handle;
+            /* Get the entry */
+            HandleEntry = BaseHeapGetEntry(hMem);
+            BASE_TRACE_HANDLE(HandleEntry, hMem);
+
+            /* Make sure the handle is valid */
+            if (!BaseHeapValidateEntry(HandleEntry))
+            {
+                /* Fail */
+                BASE_TRACE_FAILURE();
+                SetLastError(ERROR_INVALID_HANDLE);
+            }
+            else if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSE)
+            {
+                /* We've reused this block, but we've saved the size for you */
+                dwSize = HandleEntry->OldSize;
+            }
+            else
+            {
+                /* Otherwise, query RTL about it */
+                dwSize = RtlSizeHeap(hProcessHeap,
+                                     HEAP_NO_SERIALIZE,
+                                     HandleEntry->Object);
+            }
         }
-    }
 
-    /* Make sure that this is an entry in our handle database */
-    if ((ULONG_PTR)hMem & BASE_HEAP_IS_HANDLE_ENTRY)
-    {
-        /* Get the entry */
-        HandleEntry = BaseHeapGetEntry(hMem);
-        BASE_TRACE_HANDLE(HandleEntry, hMem);
-
-        /* Make sure the handle is valid */
-        if (!BaseHeapValidateEntry(HandleEntry))
+        /* Check if by now, we still haven't gotten any useful size */
+        if (dwSize == MAXULONG_PTR)
         {
             /* Fail */
             BASE_TRACE_FAILURE();
             SetLastError(ERROR_INVALID_HANDLE);
-        }
-        else if (HandleEntry->Flags & BASE_HEAP_ENTRY_FLAG_REUSE)
-        {
-            /* We've reused this block, but we've saved the size for you */
-            dwSize = HandleEntry->OldSize;
-        }
-        else
-        {
-            /* Otherwise, query RTL about it */
-            dwSize = RtlSizeHeap(hProcessHeap,
-                                 HEAP_NO_SERIALIZE,
-                                 HandleEntry->Object);
+            dwSize = 0;
         }
     }
-
-    /* Check if by now, we still haven't gotten any useful size */
-    if (dwSize == MAXULONG_PTR)
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        /* Fail */
-        BASE_TRACE_FAILURE();
         SetLastError(ERROR_INVALID_HANDLE);
         dwSize = 0;
     }
+    _SEH2_END
 
     /* All done! Unlock heap and return the size */
     RtlUnlockHeap(hProcessHeap);
@@ -798,31 +816,40 @@ GlobalUnlock(HGLOBAL hMem)
     HandleEntry = BaseHeapGetEntry(hMem);
     BASE_TRACE_HANDLE(HandleEntry, hMem);
 
-    /* Make sure it's valid */
-    if (!BaseHeapValidateEntry(HandleEntry))
+    _SEH2_TRY
     {
-        /* It's not, fail */
-        BASE_TRACE_FAILURE();
-        SetLastError(ERROR_INVALID_HANDLE);
+        /* Make sure it's valid */
+        if (!BaseHeapValidateEntry(HandleEntry))
+        {
+            /* It's not, fail */
+            BASE_TRACE_FAILURE();
+            SetLastError(ERROR_INVALID_HANDLE);
+            RetVal = FALSE;
+        }
+        else
+        {
+            /* Otherwise, decrement lock count, unless we're already at 0*/
+            if (!HandleEntry->LockCount--)
+            {
+                /* In which case we simply lock it back and fail */
+                HandleEntry->LockCount++;
+                SetLastError(ERROR_NOT_LOCKED);
+                RetVal = FALSE;
+            }
+            else if (!HandleEntry->LockCount)
+            {
+                /* Nothing to unlock */
+                SetLastError(NO_ERROR);
+                RetVal = FALSE;
+            }
+        }
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
         RetVal = FALSE;
     }
-    else
-    {
-        /* Otherwise, decrement lock count, unless we're already at 0*/
-        if (!HandleEntry->LockCount--)
-        {
-            /* In which case we simply lock it back and fail */
-            HandleEntry->LockCount++;
-            SetLastError(ERROR_NOT_LOCKED);
-            RetVal = FALSE;
-        }
-        else if (!HandleEntry->LockCount)
-        {
-            /* Nothing to unlock */
-            SetLastError(NO_ERROR);
-            RetVal = FALSE;
-        }
-    }
+    _SEH2_END
 
     /* All done. Unlock the heap and return the pointer */
     RtlUnlockHeap(hProcessHeap);

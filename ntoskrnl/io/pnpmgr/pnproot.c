@@ -1069,6 +1069,11 @@ PnpRootPdoPnpControl(
         DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
         break;
 
+    case IRP_MN_REMOVE_DEVICE:
+        DPRINT1("IRP_MN_REMOVE_DEVICE is UNIMPLEMENTED!\n");
+        Status = STATUS_SUCCESS;
+        break;
+
     case IRP_MN_QUERY_ID: /* 0x13 */
       Status = PdoQueryId(DeviceObject, Irp, IrpSp);
       break;

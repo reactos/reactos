@@ -16,7 +16,7 @@ BEGIN
 	GROUPBOX "Beschreibung", -1, 9, 153, 230, 46, BS_GROUPBOX
 	LTEXT "Hier wird die Beschreibung des Elementes stehen....", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
 	CHECKBOX "&Symbol bei Verbindung im Infobereich anzeigen", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-        CHECKBOX "&Benachrichtigen, wenn diese Verbindung eingeschränkte oder\nkeine Konnektivität besitzt", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | WS_TABSTOP
+	CHECKBOX "&Benachrichtigen, wenn diese Verbindung eingeschränkte oder keine Konnektivität besitzt", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
@@ -54,16 +54,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Netzwerkunterstützung"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Verbindungsstatus", -1, 9, 8, 200, 88, BS_GROUPBOX
+	GROUPBOX "Verbindungsstatus", -1, 9, 8, 182, 88, BS_GROUPBOX
 	LTEXT "Adresstyp:", -1, 22, 20, 80, 8
 	LTEXT "IP-Adresse:", -1, 22, 34, 80, 8
 	LTEXT "Subnetzmaske:", -1, 22, 48, 80, 8
 	LTEXT "Standardgateway:", -1, 22, 62, 80, 8
 
-	RTEXT "Nicht verfügbar", IDC_DETAILSTYPE, 122, 20, 80, 8
-	RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
-	RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
-	RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+	RTEXT "Nicht verfügbar", IDC_DETAILSTYPE, 100, 20, 80, 8
+	RTEXT "000.000.000.000", IDC_DETAILSIP, 100, 34, 80, 8
+	RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 100, 48, 80, 8
+	RTEXT "", IDC_DETAILSGATEWAY, 100, 62, 80, 8
 
 	PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
 END

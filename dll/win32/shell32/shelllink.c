@@ -2672,6 +2672,9 @@ SH_ShellLinkDlgProc(
            case 14021:
                if (This->sIcoPath)
                     wcscpy(szBuffer, This->sIcoPath);
+               else
+                    wcscpy(szBuffer, This->sPath);
+
                IconIndex = This->iIcoNdx;
                if (PickIconDlg(hwndDlg, szBuffer, MAX_PATH, &IconIndex))
                {

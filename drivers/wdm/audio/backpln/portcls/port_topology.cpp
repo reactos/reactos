@@ -299,7 +299,7 @@ CPortTopology::NewRegistryKey(
                             RegistryKeyType,
                             DesiredAccess,
                             m_pDeviceObject,
-                            NULL,//FIXME
+                            (ISubdevice*)this,
                             ObjectAttributes,
                             CreateOptions,
                             Disposition);

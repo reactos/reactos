@@ -36,7 +36,7 @@
 #include "wine/unicode.h"
 #include "wine/list.h"
 
-extern HINSTANCE URLMON_hInstance;
+extern HINSTANCE hProxyDll DECLSPEC_HIDDEN;
 extern HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT ZoneMgrImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT StdURLMoniker_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
@@ -48,6 +48,7 @@ extern HRESULT GopherProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 extern HRESULT MimeFilter_Construct(IUnknown *pUnkOuter, LPVOID *ppobj);
 
+extern BOOL WINAPI URLMON_DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllRegisterServer(void) DECLSPEC_HIDDEN;
 extern HRESULT WINAPI URLMON_DllUnregisterServer(void) DECLSPEC_HIDDEN;

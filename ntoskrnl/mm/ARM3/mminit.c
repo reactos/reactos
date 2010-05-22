@@ -136,6 +136,14 @@ ULONG MmSessionViewSize;
 ULONG MmSessionPoolSize;
 ULONG MmSessionImageSize;
 
+/*
+ * These are the PTE addresses of the boundaries carved out above
+ */
+PMMPTE MiSessionImagePteStart;
+PMMPTE MiSessionImagePteEnd;
+PMMPTE MiSessionBasePte;
+PMMPTE MiSessionLastPte;
+
 //
 // The system view space, on the other hand, is where sections that are memory
 // mapped into "system space" end up.
@@ -151,7 +159,7 @@ ULONG MmSystemViewSize;
 // map paged pool PDEs into external processes when they fault on a paged pool
 // address.
 //
-PFN_NUMBER MmSystemPageDirectory;
+PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPTE MmSystemPagePtes;
 
 //
@@ -217,6 +225,11 @@ ULONG MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
 
+/* And these store the respective highest PTE/PDE address */
+PMMPTE MiHighestUserPte;
+PMMPDE MiHighestUserPde;
+
+/* These variables define the system cache address space */
 PVOID MmSystemCacheStart;
 PVOID MmSystemCacheEnd;
 MMSUPPORT MmSystemCacheWs;
@@ -300,6 +313,20 @@ PFN_NUMBER MmPlentyFreePages = 400;
 /* These values store the type of system this is (small, med, large) and if server */
 ULONG MmProductType;
 MM_SYSTEMSIZE MmSystemSize;
+
+/*
+ * These values store the cache working set minimums and maximums, in pages
+ *
+ * The minimum value is boosted on systems with more than 24MB of RAM, and cut
+ * down to only 32 pages on embedded (<24MB RAM) systems.
+ *
+ * An extra boost of 2MB is given on systems with more than 33MB of RAM.
+ */
+PFN_NUMBER MmSystemCacheWsMinimum = 288;
+PFN_NUMBER MmSystemCacheWsMaximum = 350;
+
+/* FIXME: Move to cache/working set code later */
+BOOLEAN MmLargeSystemCache;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -742,7 +769,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         else
         {
             /* Next PDE mapped address */
-            BaseAddress += PTE_COUNT * PAGE_SIZE;
+            BaseAddress += PDE_MAPPED_VA;
         }
         
         /* Next PTE */
@@ -1161,6 +1188,61 @@ MiInitializeMemoryEvents(VOID)
 
 VOID
 NTAPI
+MiAddHalIoMappings(VOID)
+{
+    PVOID BaseAddress;
+    PMMPTE PointerPde;
+    PMMPTE PointerPte;
+    ULONG i, j, PdeCount;
+    PFN_NUMBER PageFrameIndex;
+
+    /* HAL Heap address -- should be on a PDE boundary */
+    BaseAddress = (PVOID)0xFFC00000;
+    ASSERT(MiAddressToPteOffset(BaseAddress) == 0);
+
+    /* Check how many PDEs the heap has */
+    PointerPde = MiAddressToPde(BaseAddress);
+    PdeCount = PDE_COUNT - ADDR_TO_PDE_OFFSET(BaseAddress);
+    for (i = 0; i < PdeCount; i++)
+    {
+        /* Does the HAL own this mapping? */
+        if ((PointerPde->u.Hard.Valid == 1) &&
+            (PointerPde->u.Hard.LargePage == 0))
+        {
+            /* Get the PTE for it and scan each page */
+            PointerPte = MiAddressToPte(BaseAddress);
+            for (j = 0 ; j < PTE_COUNT; j++)
+            {
+                /* Does the HAL own this page? */
+                if (PointerPte->u.Hard.Valid == 1)
+                {
+                    /* Is the HAL using it for device or I/O mapped memory? */
+                    PageFrameIndex = PFN_FROM_PTE(PointerPte);
+                    if (!MiGetPfnEntry(PageFrameIndex))
+                    {
+                        /* FIXME: For PAT, we need to track I/O cache attributes for coherency */
+                        DPRINT1("HAL I/O Mapping at %p is unsafe\n", BaseAddress);
+                    }
+                }
+
+                /* Move to the next page */
+                BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PAGE_SIZE);
+                PointerPte++;
+            }
+        }
+        else
+        {
+            /* Move to the next address */
+            BaseAddress = (PVOID)((ULONG_PTR)BaseAddress + PDE_MAPPED_VA);
+        }
+
+        /* Move to the next PDE */
+        PointerPde++;
+    }
+}
+
+VOID
+NTAPI
 MmDumpArmPfnDatabase(VOID)
 {
     ULONG i;
@@ -1416,7 +1498,8 @@ MiBuildPagedPool(VOID)
     // Get the page frame number for the system page directory
     //
     PointerPte = MiAddressToPte(PDE_BASE);
-    MmSystemPageDirectory = PFN_FROM_PTE(PointerPte);
+    ASSERT(PD_COUNT == 1);
+    MmSystemPageDirectory[0] = PFN_FROM_PTE(PointerPte);
     
     //
     // Allocate a system PTE which will hold a copy of the page directory
@@ -1433,7 +1516,8 @@ MiBuildPagedPool(VOID)
     // way).
     //
     TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory;
+    ASSERT(PD_COUNT == 1);
+    TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
     *PointerPte = TempPte;
@@ -1631,6 +1715,10 @@ MmArmInitSystem(IN ULONG Phase,
         MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
         MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
         
+        /* Highest PTE and PDE based on the addresses above */
+        MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
+        MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
+        
         //
         // Get the size of the boot loader's image allocations and then round
         // that region up to a PDE size, so that any PDEs we might create for
@@ -1639,8 +1727,8 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MmBootImageSize = KeLoaderBlock->Extension->LoaderPagesSpanned;
         MmBootImageSize *= PAGE_SIZE;
-        MmBootImageSize = (MmBootImageSize + (4 * 1024 * 1024) - 1) & ~((4 * 1024 * 1024) - 1);
-        ASSERT((MmBootImageSize % (4 * 1024 * 1024)) == 0);
+        MmBootImageSize = (MmBootImageSize + PDE_MAPPED_VA - 1) & ~(PDE_MAPPED_VA - 1);
+        ASSERT((MmBootImageSize % PDE_MAPPED_VA) == 0);
         
         //
         // Set the size of session view, pool, and image
@@ -1703,7 +1791,12 @@ MmArmInitSystem(IN ULONG Phase,
         //
         MiSystemViewStart = (PVOID)((ULONG_PTR)MmSessionBase -
                                     MmSystemViewSize);
-                                    
+
+        /* Compute the PTE addresses for all the addresses we carved out */
+        MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
+        MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
+        MiSessionBasePte = MiAddressToPte(MmSessionBase);
+        MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
                                     
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
@@ -1815,11 +1908,26 @@ MmArmInitSystem(IN ULONG Phase,
             }
         }
         
-        //
-        // Size up paged pool and build the shadow system page directory
-        //
-        MiBuildPagedPool();
-        
+        /* Look for large page cache entries that need caching */
+        MiSyncCachedRanges();
+
+        /* Loop for HAL Heap I/O device mappings that need coherency tracking */
+        MiAddHalIoMappings();
+
+        /* Set the initial resident page count */
+        MmResidentAvailablePages = MmAvailablePages - 32;
+
+        /* Initialize large page structures on PAE/x64, and MmProcessList on x86 */
+        MiInitializeLargePageSupport();
+
+        /* Check if the registry says any drivers should be loaded with large pages */
+        MiInitializeDriverLargePageList();
+
+        /* Relocate the boot drivers into system PTE space and fixup their PFNs */
+        MiReloadBootLoadedDrivers(LoaderBlock);
+
+        /* FIXME: Call out into Driver Verifier for initialization  */
+
         /* Check how many pages the system has */
         if (MmNumberOfPhysicalPages <= (13 * _1MB))
         {
@@ -1828,13 +1936,22 @@ MmArmInitSystem(IN ULONG Phase,
         }
         else if (MmNumberOfPhysicalPages <= (19 * _1MB))
         {
-            /* Set small system */
+            /* Set small system and add 100 pages for the cache */
             MmSystemSize = MmSmallSystem;
+            MmSystemCacheWsMinimum += 100;
         }
         else
         {
-            /* Set medium system */
+            /* Set medium system and add 400 pages for the cache */
             MmSystemSize = MmMediumSystem;
+            MmSystemCacheWsMinimum += 400;
+        }
+        
+        /* Check for less than 24MB */
+        if (MmNumberOfPhysicalPages < ((24 * _1MB) / PAGE_SIZE))
+        {
+            /* No more than 32 pages */
+            MmSystemCacheWsMinimum = 32;
         }
 
         /* Check for more than 32MB */
@@ -1856,7 +1973,14 @@ MmArmInitSystem(IN ULONG Phase,
                 }
             }
         }
-
+        
+        /* Check for more than 33 MB */
+        if (MmNumberOfPhysicalPages > ((33 * _1MB) / PAGE_SIZE))
+        {
+            /* Add another 500 pages to the cache */
+            MmSystemCacheWsMinimum += 500;
+        }
+        
         /* Now setup the shared user data fields */
         ASSERT(SharedUserData->NumberOfPhysicalPages == 0);
         SharedUserData->NumberOfPhysicalPages = MmNumberOfPhysicalPages;
@@ -1890,6 +2014,20 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Update working set tuning parameters */
         MiAdjustWorkingSetManagerParameters(!MmProductType);
+
+        /* Finetune the page count by removing working set and NP expansion */
+        MmResidentAvailablePages -= MiExpansionPoolPagesInitialCharge;
+        MmResidentAvailablePages -= MmSystemCacheWsMinimum;
+        MmResidentAvailableAtInit = MmResidentAvailablePages;
+        if (MmResidentAvailablePages <= 0)
+        {
+            /* This should not happen */
+            DPRINT1("System cache working set too big\n");
+            return FALSE;
+        }
+        
+        /* Size up paged pool and build the shadow system page directory */
+        MiBuildPagedPool();
     }
     
     //

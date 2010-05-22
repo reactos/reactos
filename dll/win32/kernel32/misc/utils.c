@@ -364,7 +364,7 @@ BasepInitializeContext(IN PCONTEXT Context,
     }
     else if (ContextType == 2) /* For Fibers */
     {
-        //Context->Eip = (ULONG)BaseFiberStartup;
+        Context->Eip = (ULONG)BaseFiberStartup;
     }
     else                       /* For first thread in a Process */
     {

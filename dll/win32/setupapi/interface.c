@@ -399,7 +399,13 @@ InstallOneInterface(
         HeapFree(GetProcessHeap(), 0, Path);
     }
 
-    return SetupInstallFromInfSectionW(NULL, /* FIXME */ hInf, InterfaceSection, SPINST_REGISTRY, hKey, NULL, 0, NULL, NULL, NULL, NULL);
+    if (RegCreateKeyExW(hKey, L"Device Parameters", 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hRefKey, NULL) != ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+
+    return SetupInstallFromInfSectionW(NULL, /* FIXME */ hInf, InterfaceSection, SPINST_REGISTRY, hRefKey, NULL, 0, NULL, NULL, NULL, NULL);
 }
 
 /***********************************************************************

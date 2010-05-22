@@ -88,6 +88,7 @@ static const struct {
     {&CLSID_TF_InputProcessorProfiles, InputProcessorProfiles_Constructor},
     {&CLSID_TF_CategoryMgr, CategoryMgr_Constructor},
     {&CLSID_TF_LangBarMgr, LangBarMgr_Constructor},
+    {&CLSID_TF_DisplayAttributeMgr, DisplayAttributeMgr_Constructor},
     {NULL, NULL}
 };
 

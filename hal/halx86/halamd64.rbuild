@@ -13,7 +13,7 @@
 	<library>hal_generic</library>
 	<library>hal_generic_acpi</library>
 	<library>ntoskrnl</library>
-	<library>x86emu</library>
+	<!-- library>x86emu</library -->
 
 	<directory name="generic">
 		<file>spinlock.c</file>

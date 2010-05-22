@@ -56,3 +56,7 @@ RECTL_bIntersectRect(RECTL *prclDst, const RECTL *prcl1, const RECTL *prcl2);
 VOID
 FASTCALL
 RECTL_vMakeWellOrdered(RECTL *prcl);
+
+VOID 
+FASTCALL
+RECTL_vInflateRect(RECTL *rect, INT dx, INT dy);

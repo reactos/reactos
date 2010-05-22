@@ -945,6 +945,8 @@ ReportEventA(IN HANDLE hEventLog,
     ANSI_STRING *Strings;
     ANSI_STRING ComputerName;
     WORD i;
+    CHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwSize;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
           hEventLog, wType, wCategory, dwEventID, lpUserSid,
@@ -962,8 +964,9 @@ ReportEventA(IN HANDLE hEventLog,
     for (i = 0; i < wNumStrings; i++)
         RtlInitAnsiString(&Strings[i], lpStrings[i]);
 
-    /*FIXME: ComputerName */
-    RtlInitAnsiString(&ComputerName, "");
+    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameA(szComputerName, &dwSize);
+    RtlInitAnsiString(&ComputerName, szComputerName);
 
     RpcTryExcept
     {
@@ -1029,6 +1032,8 @@ ReportEventW(IN HANDLE hEventLog,
     UNICODE_STRING *Strings;
     UNICODE_STRING ComputerName;
     WORD i;
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwSize;
 
     TRACE("%p, %u, %u, %lu, %p, %u, %lu, %p, %p\n",
           hEventLog, wType, wCategory, dwEventID, lpUserSid,
@@ -1046,8 +1051,9 @@ ReportEventW(IN HANDLE hEventLog,
     for (i = 0; i < wNumStrings; i++)
         RtlInitUnicodeString(&Strings[i], lpStrings[i]);
 
-    /*FIXME: ComputerName */
-    RtlInitUnicodeString(&ComputerName, L"");
+    dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameW(szComputerName, &dwSize);
+    RtlInitUnicodeString(&ComputerName, szComputerName);
 
     RpcTryExcept
     {

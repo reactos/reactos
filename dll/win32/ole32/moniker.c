@@ -127,6 +127,7 @@ static BOOL start_rpcss(void)
     WCHAR cmd[MAX_PATH];
     static const WCHAR rpcss[] = {'\\','r','p','c','s','s','.','e','x','e',0};
     BOOL rslt;
+    void *redir;
 
     TRACE("\n");
 
@@ -135,7 +136,9 @@ static BOOL start_rpcss(void)
     GetSystemDirectoryW( cmd, MAX_PATH - sizeof(rpcss)/sizeof(WCHAR) );
     strcatW( cmd, rpcss );
 
+    Wow64DisableWow64FsRedirection( &redir );
     rslt = CreateProcessW( cmd, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi );
+    Wow64RevertWow64FsRedirection( redir );
 
     if (rslt)
     {

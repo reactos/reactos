@@ -885,9 +885,9 @@ NlsGetCacheUpdateCount(VOID)
     return 0;
 }
 
-BOOL
+BOOLEAN
 WINAPI
-Wow64EnableWow64FsRedirection (BOOL Wow64EnableWow64FsRedirection)
+Wow64EnableWow64FsRedirection (BOOLEAN Wow64EnableWow64FsRedirection)
 {
     STUB;
     return FALSE;

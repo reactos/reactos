@@ -1273,7 +1273,7 @@ static HRESULT OLEPictureImpl_LoadEnhMetafile(OLEPictureImpl *This,
 static HRESULT OLEPictureImpl_LoadAPM(OLEPictureImpl *This,
                                       const BYTE *data, ULONG size)
 {
-    APM_HEADER *header = (APM_HEADER *)data;
+    const APM_HEADER *header = (const APM_HEADER *)data;
     HMETAFILE hmf;
 
     if (size < sizeof(APM_HEADER))

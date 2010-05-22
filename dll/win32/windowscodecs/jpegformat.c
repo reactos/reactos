@@ -103,6 +103,7 @@ typedef struct {
     struct jpeg_source_mgr source_mgr;
     BYTE source_buffer[1024];
     BYTE *image_data;
+    CRITICAL_SECTION lock;
 } JpegDecoder;
 
 static inline JpegDecoder *decoder_from_decompress(j_decompress_ptr decompress)
@@ -156,6 +157,8 @@ static ULONG WINAPI JpegDecoder_Release(IWICBitmapDecoder *iface)
 
     if (ref == 0)
     {
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         if (This->cinfo_initialized) pjpeg_destroy_decompress(&This->cinfo);
         if (This->stream) IStream_Release(This->stream);
         HeapFree(GetProcessHeap(), 0, This->image_data);
@@ -225,7 +228,13 @@ static HRESULT WINAPI JpegDecoder_Initialize(IWICBitmapDecoder *iface, IStream *
     int ret;
     TRACE("(%p,%p,%u)\n", iface, pIStream, cacheOptions);
 
-    if (This->cinfo_initialized) return WINCODEC_ERR_WRONGSTATE;
+    EnterCriticalSection(&This->lock);
+
+    if (This->cinfo_initialized)
+    {
+        LeaveCriticalSection(&This->lock);
+        return WINCODEC_ERR_WRONGSTATE;
+    }
 
     This->cinfo.err = pjpeg_std_error(&This->jerr);
 
@@ -249,6 +258,7 @@ static HRESULT WINAPI JpegDecoder_Initialize(IWICBitmapDecoder *iface, IStream *
 
     if (ret != JPEG_HEADER_OK) {
         WARN("Jpeg image in stream has bad format, read header returned %d.\n",ret);
+        LeaveCriticalSection(&This->lock);
         return E_FAIL;
     }
 
@@ -260,10 +270,13 @@ static HRESULT WINAPI JpegDecoder_Initialize(IWICBitmapDecoder *iface, IStream *
     if (!pjpeg_start_decompress(&This->cinfo))
     {
         ERR("jpeg_start_decompress failed\n");
+        LeaveCriticalSection(&This->lock);
         return E_FAIL;
     }
 
     This->initialized = TRUE;
+
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }
@@ -448,10 +461,16 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
     max_row_needed = prc->Y + prc->Height;
     if (max_row_needed > This->cinfo.output_height) return E_INVALIDARG;
 
+    EnterCriticalSection(&This->lock);
+
     if (!This->image_data)
     {
         This->image_data = HeapAlloc(GetProcessHeap(), 0, data_size);
-        if (!This->image_data) return E_OUTOFMEMORY;
+        if (!This->image_data)
+        {
+            LeaveCriticalSection(&This->lock);
+            return E_OUTOFMEMORY;
+        }
     }
 
     while (max_row_needed > This->cinfo.output_scanline)
@@ -471,6 +490,7 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
         if (ret == 0)
         {
             ERR("read_scanlines failed\n");
+            LeaveCriticalSection(&This->lock);
             return E_FAIL;
         }
 
@@ -491,6 +511,8 @@ static HRESULT WINAPI JpegDecoder_Frame_CopyPixels(IWICBitmapFrameDecode *iface,
             }
         }
     }
+
+    LeaveCriticalSection(&This->lock);
 
     return copy_pixels(bpp, This->image_data,
         This->cinfo.output_width, This->cinfo.output_height, stride,
@@ -559,6 +581,8 @@ HRESULT JpegDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv)
     This->cinfo_initialized = FALSE;
     This->stream = NULL;
     This->image_data = NULL;
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": JpegDecoder.lock");
 
     ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
     IUnknown_Release((IUnknown*)This);

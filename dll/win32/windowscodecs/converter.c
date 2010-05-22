@@ -71,6 +71,7 @@ typedef struct FormatConverter {
     WICBitmapDitherType dither;
     double alpha_threshold;
     WICBitmapPaletteType palette_type;
+    CRITICAL_SECTION lock; /* must be held when initialized */
 } FormatConverter;
 
 static void make_grayscale_palette(WICColor *colors, UINT num_colors)
@@ -765,6 +766,8 @@ static ULONG WINAPI FormatConverter_Release(IWICFormatConverter *iface)
 
     if (ref == 0)
     {
+        This->lock.DebugInfo->Spare[0] = 0;
+        DeleteCriticalSection(&This->lock);
         if (This->source) IWICBitmapSource_Release(This->source);
         HeapFree(GetProcessHeap(), 0, This);
     }
@@ -841,38 +844,56 @@ static HRESULT WINAPI FormatConverter_Initialize(IWICFormatConverter *iface,
     const struct pixelformatinfo *srcinfo, *dstinfo;
     static INT fixme=0;
     GUID srcFormat;
-    HRESULT res;
+    HRESULT res=S_OK;
 
     TRACE("(%p,%p,%s,%u,%p,%0.1f,%u)\n", iface, pISource, debugstr_guid(dstFormat),
         dither, pIPalette, alphaThresholdPercent, paletteTranslate);
 
     if (pIPalette && !fixme++) FIXME("ignoring palette\n");
 
-    if (This->source) return WINCODEC_ERR_WRONGSTATE;
+    EnterCriticalSection(&This->lock);
+
+    if (This->source)
+    {
+        res = WINCODEC_ERR_WRONGSTATE;
+        goto end;
+    }
 
     res = IWICBitmapSource_GetPixelFormat(pISource, &srcFormat);
-    if (FAILED(res)) return res;
+    if (FAILED(res)) goto end;
 
     srcinfo = get_formatinfo(&srcFormat);
-    if (!srcinfo) return WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT;
+    if (!srcinfo)
+    {
+        res = WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT;
+        goto end;
+    }
 
     dstinfo = get_formatinfo(dstFormat);
-    if (!dstinfo) return WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT;
+    if (!dstinfo)
+    {
+        res = WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT;
+        goto end;
+    }
 
     if (dstinfo->copy_function)
     {
         IWICBitmapSource_AddRef(pISource);
-        This->source = pISource;
         This->src_format = srcinfo;
         This->dst_format = dstinfo;
         This->dither = dither;
         This->alpha_threshold = alphaThresholdPercent;
         This->palette_type = paletteTranslate;
+        This->source = pISource;
     }
     else
-        return WINCODEC_ERR_UNSUPPORTEDOPERATION;
+        res = WINCODEC_ERR_UNSUPPORTEDOPERATION;
 
-    return S_OK;
+end:
+
+    LeaveCriticalSection(&This->lock);
+
+    return res;
 }
 
 static HRESULT WINAPI FormatConverter_CanConvert(IWICFormatConverter *iface,
@@ -930,6 +951,8 @@ HRESULT FormatConverter_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** p
     This->lpVtbl = &FormatConverter_Vtbl;
     This->ref = 1;
     This->source = NULL;
+    InitializeCriticalSection(&This->lock);
+    This->lock.DebugInfo->Spare[0] = (DWORD_PTR)(__FILE__ ": FormatConverter.lock");
 
     ret = IUnknown_QueryInterface((IUnknown*)This, iid, ppv);
     IUnknown_Release((IUnknown*)This);

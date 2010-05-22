@@ -8,35 +8,35 @@ Description = The most popular and one of the best free Web Browsers out there.
 Size = 5.8M
 Category = 5
 URLSite = http://www.mozilla.com/en-US/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/en-US/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/en-US/Firefox%20Setup%202.0.0.20.exe
 CDPath = none
 
 [Section.0407]
 Description = Der populärste und einer der besten freien Webbrowser.
 Size = 5.5M
 URLSite = http://www.mozilla-europe.org/de/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/de/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/de/Firefox%20Setup%202.0.0.20.exe
 
 [Section.040a]
 Description = El más popular y uno de los mejores navegadores web gratuitos que hay.
 Size = 5.6M
 URLSite = http://www.mozilla-europe.org/es/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/es-ES/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/es-ES/Firefox%20Setup%202.0.0.20.exe
 
 [Section.0414]
 Description = Mest populære og best også gratis nettleserene der ute.
 Size = 5.6M
 URLSite = http://www.mozilla-europe.org/no/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/nb-NO/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/nb-NO/Firefox%20Setup%202.0.0.20.exe
 
 [Section.0415]
 Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek internetowych.
 Size = 6.3M
 URLSite = http://www.mozilla-europe.org/pl/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/pl/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/pl/Firefox%20Setup%202.0.0.20.exe
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
 Size = 6.4M
 URLSite = http://www.mozilla-europe.org/ru/
-URLDownload = http://mozilla.mirrors.easynews.com/mozilla/firefox/releases/2.0.0.20/win32/ru/Firefox%20Setup%202.0.0.20.exe
+URLDownload = http://194.71.11.70/pub/www/clients/mozilla.org/firefox/releases/2.0.0.20/win32/ru/Firefox%20Setup%202.0.0.20.exe

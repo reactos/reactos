@@ -1,4 +1,4 @@
-#include <w32k.h>
+#include <win32k.h>
 
 #define UNIMPLEMENTED DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ )
 

@@ -49,7 +49,7 @@
 #include "route.h"
 #include "wine/debug.h"
 #include "dhcpcsdk.h"
-#include "dhcp/rosdhcp_public.h"
+#include "dhcpcapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -63,6 +63,7 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+  DWORD Version;
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
@@ -1944,30 +1945,23 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  COMM_DHCP_REPLY Reply;
-  COMM_DHCP_REQ Request;
-  DWORD BytesRead;
+  DWORD Status, Version = 0;
 
-  Request.AdapterIndex = AdapterInfo->Index;
-  Request.Type = DhcpReqReleaseIpAddress;
-
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-
-  if (CallNamedPipe(DHCP_PIPE_NAME,
-                    &Request,
-                    sizeof(Request),
-                    &Reply,
-                    sizeof(Reply),
-                    &BytesRead,
-                    NMPWAIT_USE_DEFAULT_WAIT))
-  {
-      if (Reply.Reply)
-          return NO_ERROR;
-
+  if (!AdapterInfo || !AdapterInfo->Name)
       return ERROR_INVALID_PARAMETER;
-  }
 
-  return ERROR_PROC_NOT_FOUND;
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpReleaseIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 
@@ -1985,30 +1979,23 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  COMM_DHCP_REPLY Reply;
-  COMM_DHCP_REQ Request;
-  DWORD BytesRead;
+  DWORD Status, Version = 0;
 
-  Request.AdapterIndex = AdapterInfo->Index;
-  Request.Type = DhcpReqRenewIpAddress;
-
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-
-  if (CallNamedPipe(DHCP_PIPE_NAME,
-                    &Request,
-                    sizeof(Request),
-                    &Reply,
-                    sizeof(Reply),
-                    &BytesRead,
-                    NMPWAIT_USE_DEFAULT_WAIT))
-  {
-      if (Reply.Reply)
-          return NO_ERROR;
-
+  if (!AdapterInfo || !AdapterInfo->Name)
       return ERROR_INVALID_PARAMETER;
-  }
 
-  return ERROR_PROC_NOT_FOUND;
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpRenewIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 
@@ -2301,17 +2288,196 @@ PIP_ADAPTER_ORDER_MAP WINAPI GetAdapterOrderMap(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD WINAPI GetAdaptersAddresses(ULONG Family,ULONG Flags,PVOID Reserved,PIP_ADAPTER_ADDRESSES pAdapterAddresses,PULONG pOutBufLen)
 {
+    InterfaceIndexTable *indexTable;
+    IFInfo ifInfo;
+    int i;
+    ULONG ret, requiredSize = 0;
+    PIP_ADAPTER_ADDRESSES currentAddress;
+    PUCHAR currentLocation;
+    HANDLE tcpFile;
+
     if (!pOutBufLen) return ERROR_INVALID_PARAMETER;
-    if (!pAdapterAddresses || *pOutBufLen == 0)
-      return ERROR_BUFFER_OVERFLOW;
     if (Reserved) return ERROR_INVALID_PARAMETER;
 
-    FIXME(":stub\n");
-    return ERROR_NO_DATA;
+    indexTable = getNonLoopbackInterfaceIndexTable(); //I think we want non-loopback here
+    if (!indexTable)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ret = openTcpFile(&tcpFile);
+    if (!NT_SUCCESS(ret))
+        return ERROR_NO_DATA;
+
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            /* The whole struct */
+            requiredSize += sizeof(IP_ADAPTER_ADDRESSES);
+
+            /* Friendly name */
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+                requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1; //FIXME
+
+            /* Adapter name */
+            requiredSize += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+
+            /* Unicast address */
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+                requiredSize += sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+
+            /* FIXME: Implement dns suffix and description */
+            requiredSize += 2 * sizeof(WCHAR);
+
+            /* We're only going to implement what's required for XP SP0 */
+        }
+    }
+
+    if (*pOutBufLen < requiredSize)
+    {
+        *pOutBufLen = requiredSize;
+        closeTcpFile(tcpFile);
+        free(indexTable);
+        return ERROR_BUFFER_OVERFLOW;
+    }
+
+    RtlZeroMemory(pAdapterAddresses, requiredSize);
+
+    /* Let's set up the pointers */
+    currentAddress = pAdapterAddresses;
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            currentLocation = (PUCHAR)currentAddress + (ULONG_PTR)sizeof(IP_ADAPTER_ADDRESSES);
+
+            /* FIXME: Friendly name */
+            if (!(Flags & GAA_FLAG_SKIP_FRIENDLY_NAME))
+            {
+                currentAddress->FriendlyName = (PVOID)currentLocation;
+                currentLocation += sizeof(WCHAR);
+            }
+
+            /* Adapter name */
+            currentAddress->AdapterName = (PVOID)currentLocation;
+            currentLocation += strlen((char *)ifInfo.if_info.ent.if_descr) + 1;
+
+            /* Unicast address */
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+            {
+                currentAddress->FirstUnicastAddress = (PVOID)currentLocation;
+                currentLocation += sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+                currentAddress->FirstUnicastAddress->Address.lpSockaddr = (PVOID)currentLocation;
+                currentLocation += sizeof(struct sockaddr);
+            }
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+
+            /* FIXME: Implement dns suffix and description */
+            currentAddress->DnsSuffix = (PVOID)currentLocation;
+            currentLocation += sizeof(WCHAR);
+
+            currentAddress->Description = (PVOID)currentLocation;
+            currentLocation += sizeof(WCHAR);
+
+            currentAddress->Next = (PVOID)currentLocation;
+
+            /* We're only going to implement what's required for XP SP0 */
+
+            currentAddress = currentAddress->Next;
+        }
+    }
+
+    /* Terminate the last address correctly */
+    if (currentAddress)
+        currentAddress->Next = NULL;
+
+    /* Now again, for real this time */
+
+    currentAddress = pAdapterAddresses;
+    for (i = indexTable->numIndexes; i >= 0; i--)
+    {
+        if (NT_SUCCESS(getIPAddrEntryForIf(tcpFile,
+                                           NULL,
+                                           indexTable->indexes[i],
+                                           &ifInfo)))
+        {
+            /* Make sure we're not looping more than we hoped for */
+            ASSERT(currentAddress);
+
+            /* Alignment information */
+            currentAddress->Length = sizeof(IP_ADAPTER_ADDRESSES);
+            currentAddress->IfIndex = indexTable->indexes[i];
+
+            /* Adapter name */
+            strcpy(currentAddress->AdapterName, (char *)ifInfo.if_info.ent.if_descr);
+
+            if (!(Flags & GAA_FLAG_SKIP_UNICAST))
+            {
+                currentAddress->FirstUnicastAddress->Length = sizeof(IP_ADAPTER_UNICAST_ADDRESS);
+                currentAddress->FirstUnicastAddress->Flags = 0; //FIXME
+                currentAddress->FirstUnicastAddress->Next = NULL; //FIXME: Support more than one address per adapter
+                currentAddress->FirstUnicastAddress->Address.lpSockaddr->sa_family = AF_INET;
+                memcpy(currentAddress->FirstUnicastAddress->Address.lpSockaddr->sa_data,
+                       &ifInfo.ip_addr.iae_addr,
+                       sizeof(ifInfo.ip_addr.iae_addr));
+                currentAddress->FirstUnicastAddress->Address.iSockaddrLength = sizeof(ifInfo.ip_addr.iae_addr) + sizeof(USHORT);
+                currentAddress->FirstUnicastAddress->PrefixOrigin = IpPrefixOriginOther; //FIXME
+                currentAddress->FirstUnicastAddress->SuffixOrigin = IpPrefixOriginOther; //FIXME
+                currentAddress->FirstUnicastAddress->DadState = IpDadStatePreferred; //FIXME
+                currentAddress->FirstUnicastAddress->ValidLifetime = 0xFFFFFFFF; //FIXME
+                currentAddress->FirstUnicastAddress->PreferredLifetime = 0xFFFFFFFF; //FIXME
+                currentAddress->FirstUnicastAddress->LeaseLifetime = 0xFFFFFFFF; //FIXME
+            }
+
+            /* FIXME: Implement multicast, anycast, and dns server stuff */
+            currentAddress->FirstAnycastAddress = NULL;
+            currentAddress->FirstMulticastAddress = NULL;
+            currentAddress->FirstDnsServerAddress = NULL;
+
+            /* FIXME: Implement dns suffix, description, and friendly name */
+            currentAddress->DnsSuffix[0] = UNICODE_NULL;
+            currentAddress->Description[0] = UNICODE_NULL;
+            currentAddress->FriendlyName[0] = UNICODE_NULL;
+
+            /* Physical Address */
+            memcpy(currentAddress->PhysicalAddress, ifInfo.if_info.ent.if_physaddr, ifInfo.if_info.ent.if_physaddrlen);
+            currentAddress->PhysicalAddressLength = ifInfo.if_info.ent.if_physaddrlen;
+
+            /* Flags */
+            currentAddress->Flags = 0; //FIXME
+
+            /* MTU */
+            currentAddress->Mtu = ifInfo.if_info.ent.if_mtu;
+
+            /* Interface type */
+            currentAddress->IfType = ifInfo.if_info.ent.if_type;
+
+            /* Operational status */
+            currentAddress->OperStatus = ifInfo.if_info.ent.if_operstatus;
+
+            /* We're only going to implement what's required for XP SP0 */
+
+            /* Move to the next address */
+            currentAddress = currentAddress->Next;
+        }
+    }
+
+    closeTcpFile(tcpFile);
+    free(indexTable);
+
+    return NO_ERROR;
 }
 
 /*
