@@ -1,6 +1,6 @@
 /* FILE:        dll/cpl/intl/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2009-07-16
+ * UPDATED:     2010-05-22
  */
 
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
@@ -193,8 +193,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Pøizpùsobit místní nastavení"
     IDS_SPAIN "Španìlština (Španìlsko)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "Metrický"
+    IDS_IMPERIAL "Imperiální"
 END
 
 STRINGTABLE
