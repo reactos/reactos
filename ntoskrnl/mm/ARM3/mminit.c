@@ -1202,7 +1202,7 @@ MiAddHalIoMappings(VOID)
 
     /* Check how many PDEs the heap has */
     PointerPde = MiAddressToPde(BaseAddress);
-    PdeCount = PDE_COUNT - ADDR_TO_PDE_OFFSET(BaseAddress);
+    PdeCount = PDE_COUNT - MiGetPdeOffset(BaseAddress);
     for (i = 0; i < PdeCount; i++)
     {
         /* Does the HAL own this mapping? */
