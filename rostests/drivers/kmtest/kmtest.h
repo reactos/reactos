@@ -1,5 +1,5 @@
-#ifndef PNPTEST_H
-#define PNPTEST_H
+#ifndef KMTEST_H
+#define KMTEST_H
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -30,7 +30,7 @@ typedef struct
 extern tls_data glob_data;
 
 VOID StartTest();
-VOID FinishTest(LPSTR TestName);
+VOID FinishTest(HANDLE KeyHandle, LPWSTR TestName);
 void kmtest_set_location(const char* file, int line);
 
 #ifdef __GNUC__
@@ -51,4 +51,4 @@ PDEVICE_OBJECT AttachDeviceObject;
 PDEVICE_OBJECT MainDeviceObject;
 PDRIVER_OBJECT ThisDriverObject;
 
-#endif /* PNPTEST_H */
+#endif /* KMTEST_H */

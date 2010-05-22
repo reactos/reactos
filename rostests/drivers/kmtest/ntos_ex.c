@@ -27,7 +27,7 @@
 #include <ndk/ntndk.h>
 #include "kmtest.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include "debug.h"
 
 /* PRIVATE FUNCTIONS ***********************************************************/
@@ -44,9 +44,10 @@ TestTimerApcRoutine(IN PVOID TimerContext,
     (*ApcCount)++;
 }
 
+/* PUBLIC FUNCTIONS *************************************************************/
 
 VOID
-ExTimerTest()
+ExTimerTest(HANDLE KeyHandle)
 {
     UNICODE_STRING TimerName;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -167,13 +168,5 @@ ExTimerTest()
     Status = ZwClose(TimerHandle);
     ok(Status == STATUS_SUCCESS, "ZwClose failed with Status=0x%08lX", Status);
 
-    FinishTest("NTOSKRNL Executive Timer");
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID
-NtoskrnlExecutiveTests()
-{
-    ExTimerTest();
+    FinishTest(KeyHandle, L"ExTimerTest");
 }

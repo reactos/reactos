@@ -30,11 +30,10 @@
 #define NDEBUG
 #include "debug.h"
 
-/* PRIVATE FUNCTIONS ***********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-NTAPI
-KeStallTest()
+KeStallTest(HANDLE KeyHandle)
 {
     ULONG i;
     LARGE_INTEGER TimeStart, TimeFinish;
@@ -74,13 +73,5 @@ KeStallTest()
     KeQuerySystemTime(&TimeFinish);
     DPRINT1("Time elapsed: %d secs\n", (TimeFinish.QuadPart - TimeStart.QuadPart) / 10000000); // 30
 
-    FinishTest("NTOSKRNL KeStallmanExecution test");
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID
-NtoskrnlKeTests()
-{
-    KeStallTest();
+    FinishTest(KeyHandle, L"KeStallmanExecutionTest");
 }

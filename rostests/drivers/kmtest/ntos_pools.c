@@ -29,15 +29,15 @@
 #include <pseh/pseh2.h>
 #include "kmtest.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include "debug.h"
 
 #define TAG_POOLTEST 'tstP'
 
-/* PRIVATE FUNCTIONS ***********************************************************/
+/* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-PoolsTest()
+PoolsTest(HANDLE KeyHandle)
 {
     PVOID Ptr;
     ULONG AllocSize, i, AllocNumber;
@@ -124,11 +124,11 @@ PoolsTest()
     ExFreePoolWithTag(Allocs, TAG_POOLTEST);
 
 
-    FinishTest("NTOSKRNL Pools Tests");
+    FinishTest(KeyHandle, L"MmPoolAllocTest");
 }
 
 VOID
-PoolsCorruption()
+PoolsCorruption(HANDLE KeyHandle)
 {
     PULONG Ptr, TestPtr;
     ULONG AllocSize;
@@ -174,14 +174,5 @@ PoolsCorruption()
     // free the pool
     ExFreePoolWithTag(Ptr, TAG_POOLTEST);
 
-    FinishTest("NTOSKRNL Pool Corruption");
-}
-
-/* PUBLIC FUNCTIONS ***********************************************************/
-
-VOID
-NtoskrnlPoolsTest()
-{
-    PoolsTest();
-    //PoolsCorruption();
+    FinishTest(KeyHandle, L"MmPoolCorruptionTest");
 }

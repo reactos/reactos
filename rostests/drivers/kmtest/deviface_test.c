@@ -26,7 +26,7 @@
 #include <ndk/iotypes.h>
 #include "kmtest.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include "debug.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -52,26 +52,26 @@ VOID DeviceInterfaceTest_Func()
    PWSTR SymbolicLinkListPtr;
    GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
 
-   Status = IoGetDeviceInterfaces_Func(
+   Status = IoGetDeviceInterfaces(
       &Guid,
       NULL,
       0,
       &SymbolicLinkList);
 
+   ok(NT_SUCCESS(Status),
+         "IoGetDeviceInterfaces failed with status 0x%X\n",
+         (unsigned int)Status);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT(
-         "[PnP Test] IoGetDeviceInterfaces failed with status 0x%X\n",
-         Status);
       return;
    }
 
-   DPRINT("[PnP Test] IoGetDeviceInterfaces results:\n");
+   DPRINT("IoGetDeviceInterfaces results:\n");
    for (SymbolicLinkListPtr = SymbolicLinkList;
         SymbolicLinkListPtr[0] != 0 && SymbolicLinkListPtr[1] != 0;
         SymbolicLinkListPtr += wcslen(SymbolicLinkListPtr) + 1)
    {
-      DPRINT("[PnP Test] %S\n", SymbolicLinkListPtr);
+      DPRINT1("Symbolic Link: %S\n", SymbolicLinkListPtr);
    }
 
 #if 0
@@ -102,7 +102,7 @@ VOID DeviceInterfaceTest_Func()
    ExFreePool(SymbolicLinkList);
 }
 
-VOID RegisterDI_Test()
+VOID RegisterDI_Test(HANDLE KeyHandle)
 {
     GUID Guid = {0x378de44c, 0x56ef, 0x11d1, {0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd}};
     DEVICE_OBJECT DeviceObject;
@@ -110,6 +110,8 @@ VOID RegisterDI_Test()
     DEVICE_NODE DeviceNode;
     UNICODE_STRING SymbolicLinkName;
     NTSTATUS Status;
+
+    StartTest();
 
     RtlInitUnicodeString(&SymbolicLinkName, L"");
 
@@ -132,23 +134,8 @@ VOID RegisterDI_Test()
 
     ok(Status == STATUS_INVALID_DEVICE_REQUEST,
         "IoRegisterDeviceInterface returned 0x%08lX\n", Status);
-}
 
-VOID NtoskrnlIoDeviceInterface()
-{
-    StartTest();
-
-    // Test IoRegisterDeviceInterface() failures now
-    RegisterDI_Test();
-
-/*
-    DPRINT("Calling DeviceInterfaceTest_Func with native functions\n");
-    IoGetDeviceInterfaces_Func = IoGetDeviceInterfaces;
     DeviceInterfaceTest_Func();
-    DPRINT("Calling DeviceInterfaceTest_Func with ReactOS functions\n");
-    IoGetDeviceInterfaces_Func = ReactOS_IoGetDeviceInterfaces;
-    DeviceInterfaceTest_Func();
-*/
 
-    FinishTest("NTOSKRNL Io Device Interface Test");
+    FinishTest(KeyHandle, L"IoDeviceInterfaceTest");
 }

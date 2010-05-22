@@ -5,7 +5,6 @@
 	<library>hal</library>
 	<library>pseh</library>
 	<file>kmtest.c</file>
-	<file>deviface.c</file>
 	<file>deviface_test.c</file>
 	<file>drvobj_test.c</file>
 	<file>devobj_test.c</file>

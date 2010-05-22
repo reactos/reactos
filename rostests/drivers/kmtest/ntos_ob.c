@@ -26,7 +26,7 @@
 #include <ddk/ntifs.h>
 #include "kmtest.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include "debug.h"
 
 #include "ntndk.h"
@@ -487,7 +487,7 @@ ObtReferenceTests()
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
-NtoskrnlObTest()
+NtoskrnlObTest(HANDLE KeyHandle)
 {
     StartTest();
 
@@ -515,5 +515,5 @@ NtoskrnlObTest()
     ObtClose();
     DPRINT("Cleanup done\n");
 
-    FinishTest("NTOSKRNL Ob Manager");
+    FinishTest(KeyHandle, L"ObMgrTest");
 }

@@ -29,12 +29,10 @@
 #define NDEBUG
 #include "debug.h"
 
-VOID NtoskrnlIoDeviceInterface();
-
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
-VOID NtoskrnlIoMdlTest()
+VOID NtoskrnlIoMdlTest(HANDLE KeyHandle)
 {
     PMDL Mdl;
     PIRP Irp;
@@ -81,10 +79,10 @@ VOID NtoskrnlIoMdlTest()
     IoFreeIrp(Irp);
     ExFreePool(VirtualAddress);
 
-    FinishTest("NTOSKRNL Io Mdl");
+    FinishTest(KeyHandle, L"IoMdlTest");
 }
 
-VOID NtoskrnlIoIrpTest()
+VOID NtoskrnlIoIrpTest(HANDLE KeyHandle)
 {
     USHORT size;
     IRP *iorp;
@@ -166,12 +164,5 @@ VOID NtoskrnlIoIrpTest()
         IoFreeIrp(iorp);
     }
 
-    FinishTest("NTOSKRNL Io Irp");
-}
-
-VOID NtoskrnlIoTests()
-{
-    NtoskrnlIoMdlTest();
-    NtoskrnlIoDeviceInterface();
-    NtoskrnlIoIrpTest();
+    FinishTest(KeyHandle, L"IoIrpTest");
 }
