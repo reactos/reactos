@@ -2828,7 +2828,7 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     }
     else if (This->sArgs != NULL)
     {
-        args = This->sArgs;
+        args = strdupW( This->sArgs );
     }
 
     memset( &sei, 0, sizeof sei );
