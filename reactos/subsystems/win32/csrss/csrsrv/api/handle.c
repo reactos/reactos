@@ -148,6 +148,45 @@ CsrReleaseObject(
 
 NTSTATUS
 WINAPI
+CsrReleaseConsole(
+    PCSRSS_PROCESS_DATA ProcessData)
+{
+    ULONG HandleTableSize;
+    PCSRSS_HANDLE HandleTable;
+    PCSRSS_CONSOLE Console;
+    ULONG i;
+
+    /* Close all console handles and detach process from console */
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    HandleTableSize = ProcessData->HandleTableSize;
+    HandleTable = ProcessData->HandleTable;
+    Console = ProcessData->Console;
+    ProcessData->HandleTableSize = 0;
+    ProcessData->HandleTable = NULL;
+    ProcessData->Console = NULL;
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+
+    for (i = 0; i < HandleTableSize; i++)
+    {
+        if (HandleTable[i].Object != NULL)
+            CsrReleaseObjectByPointer(HandleTable[i].Object);
+    }
+    RtlFreeHeap(CsrssApiHeap, 0, HandleTable);
+
+    if (Console != NULL)
+    {
+        RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)&Console->Header.Lock);
+        RemoveEntryList(&ProcessData->ProcessEntry);
+        RtlLeaveCriticalSection((PRTL_CRITICAL_SECTION)&Console->Header.Lock);
+        CsrReleaseObjectByPointer(&Console->Header);
+        return STATUS_SUCCESS;
+    }
+
+    return STATUS_INVALID_PARAMETER;
+}
+
+NTSTATUS
+WINAPI
 CsrInsertObject(
     PCSRSS_PROCESS_DATA ProcessData,
     PHANDLE Handle,

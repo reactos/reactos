@@ -335,6 +335,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   Exports.CsrGetObjectProc = CsrGetObject;
   Exports.CsrReleaseObjectByPointerProc = CsrReleaseObjectByPointer;
   Exports.CsrReleaseObjectProc = CsrReleaseObject;
+  Exports.CsrReleaseConsoleProc = CsrReleaseConsole;
   Exports.CsrEnumProcessesProc = CsrEnumProcesses;
   if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
                     &HardErrorProc, &Exports, CsrssApiHeap))

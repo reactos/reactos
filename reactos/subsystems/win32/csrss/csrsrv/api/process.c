@@ -140,7 +140,6 @@ PCSRSS_PROCESS_DATA WINAPI CsrCreateProcessData(HANDLE ProcessId)
 NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
 {
   ULONG hash;
-  UINT c;
   PCSRSS_PROCESS_DATA pProcessData, *pPrevLink;
   HANDLE Process;
 
@@ -158,23 +157,7 @@ NTSTATUS WINAPI CsrFreeProcessData(HANDLE Pid)
     {
       DPRINT("CsrFreeProcessData pid: %d\n", Pid);
       Process = pProcessData->Process;
-      if (pProcessData->HandleTable)
-        {
-          for (c = 0; c < pProcessData->HandleTableSize; c++)
-            {
-              if (pProcessData->HandleTable[c].Object)
-                {
-                  CsrReleaseObjectByPointer(pProcessData->HandleTable[c].Object);
-                }
-            }
-          RtlFreeHeap(CsrssApiHeap, 0, pProcessData->HandleTable);
-        }
-      RtlDeleteCriticalSection(&pProcessData->HandleTableLock);
-      if (pProcessData->Console)
-        {
-          RemoveEntryList(&pProcessData->ProcessEntry);
-          CsrReleaseObjectByPointer((Object_t *) pProcessData->Console);
-        }
+      CsrReleaseConsole(pProcessData);
       if (pProcessData->CsrSectionViewBase)
         {
           NtUnmapViewOfSection(NtCurrentProcess(), pProcessData->CsrSectionViewBase);

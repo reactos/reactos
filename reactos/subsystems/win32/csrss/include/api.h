@@ -193,6 +193,7 @@ NTSTATUS WINAPI CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Ob
 NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 NTSTATUS WINAPI CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS WINAPI CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+NTSTATUS WINAPI CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData);
 NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
 
 //hack

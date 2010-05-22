@@ -167,6 +167,12 @@ Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 }
 
 NTSTATUS FASTCALL
+Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData)
+{
+  return (CsrExports.CsrReleaseConsoleProc)(ProcessData);
+}
+
+NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {

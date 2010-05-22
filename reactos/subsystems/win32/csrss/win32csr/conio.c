@@ -369,25 +369,10 @@ CSR_API(CsrAllocConsole)
 
 CSR_API(CsrFreeConsole)
 {
-  PCSRSS_CONSOLE Console;
-
-
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  if (ProcessData->Console == NULL)
-    {
-      return STATUS_INVALID_PARAMETER;
-    }
-
-  Console = ProcessData->Console;
-  ProcessData->Console = NULL;
-  RemoveEntryList(&ProcessData->ProcessEntry);
-  if (0 == InterlockedDecrement(&Console->Header.ReferenceCount))
-    {
-      ConioDeleteConsole((Object_t *) Console);
-    }
-  return STATUS_SUCCESS;
+  return Win32CsrReleaseConsole(ProcessData);
 }
 
 static VOID FASTCALL

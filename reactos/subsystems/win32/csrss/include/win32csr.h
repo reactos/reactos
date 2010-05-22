@@ -33,6 +33,7 @@ NTSTATUS FASTCALL Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
 NTSTATUS FASTCALL Win32CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                                         HANDLE Object);
+NTSTATUS FASTCALL Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData);
 NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                                         PVOID Context);
 
