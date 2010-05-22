@@ -42,6 +42,9 @@
 #define _1KB (1024)
 #define _1MB (1024 * _1KB)
 
+/* Area mapped by a PDE */
+#define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
+
 /* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
