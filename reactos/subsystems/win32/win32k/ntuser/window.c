@@ -1998,6 +1998,8 @@ AllocErr:
    else
       dwExStyle &= ~WS_EX_WINDOWEDGE;
 
+   dwExStyle &= ~WS_EX_SETANSICREATOR;
+
    Wnd->style = dwStyle & ~WS_VISIBLE;
 
    /* Correct the window style. */
