@@ -71,8 +71,8 @@ typedef struct _CSRSS_HANDLE
 
 typedef struct _CSRSS_PROCESS_DATA
 {
-  PCSRSS_CONSOLE Console;
-  PCSRSS_CONSOLE ParentConsole;
+  struct tagCSRSS_CONSOLE *Console;
+  struct tagCSRSS_CONSOLE *ParentConsole;
   BOOL bInheritHandles;
   RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;

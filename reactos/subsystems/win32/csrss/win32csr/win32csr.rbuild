@@ -22,6 +22,7 @@
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
 	<file>guiconsole.c</file>
+    <file>handle.c</file>
 	<file>harderror.c</file>
 	<file>tuiconsole.c</file>
 	<file>appswitch.c</file>

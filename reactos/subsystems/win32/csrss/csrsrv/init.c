@@ -18,10 +18,8 @@ HANDLE CsrHeap = (HANDLE) 0;
 HANDLE CsrObjectDirectory = (HANDLE) 0;
 UNICODE_STRING CsrDirectoryName;
 extern HANDLE CsrssApiHeap;
-static unsigned InitCompleteProcCount;
-static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
-static unsigned HardErrorProcCount;
-static CSRPLUGIN_HARDERROR_PROC *HardErrorProcs = NULL;
+static unsigned ServerProcCount;
+static CSRPLUGIN_SERVER_PROCS *ServerProcs = NULL;
 HANDLE hSbApiPort = (HANDLE) 0;
 HANDLE hBootstrapOk = (HANDLE) 0;
 HANDLE hSmApiPort = (HANDLE) 0;
@@ -124,58 +122,30 @@ InitializeVideoAddressSpace(VOID)
 
 
 static NTSTATUS FASTCALL
-CsrpAddInitCompleteProc(CSRPLUGIN_INIT_COMPLETE_PROC Proc)
+CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
 {
-  CSRPLUGIN_INIT_COMPLETE_PROC *NewProcs;
+  CSRPLUGIN_SERVER_PROCS *NewProcs;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
   NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
-                             (InitCompleteProcCount + 1)
-                             * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
+                             (ServerProcCount + 1)
+                             * sizeof(CSRPLUGIN_SERVER_PROCS));
   if (NULL == NewProcs)
     {
       return STATUS_NO_MEMORY;
     }
-  if (0 != InitCompleteProcCount)
+  if (0 != ServerProcCount)
     {
-      RtlCopyMemory(NewProcs, InitCompleteProcs,
-                    InitCompleteProcCount * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
-      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+      RtlCopyMemory(NewProcs, ServerProcs,
+                    ServerProcCount * sizeof(CSRPLUGIN_SERVER_PROCS));
+      RtlFreeHeap(CsrssApiHeap, 0, ServerProcs);
     }
-  NewProcs[InitCompleteProcCount] = Proc;
-  InitCompleteProcs = NewProcs;
-  InitCompleteProcCount++;
+  NewProcs[ServerProcCount] = *Procs;
+  ServerProcs = NewProcs;
+  ServerProcCount++;
 
   return STATUS_SUCCESS;
-}
-
-static NTSTATUS FASTCALL
-CsrpAddHardErrorProc(CSRPLUGIN_HARDERROR_PROC Proc)
-{
-    CSRPLUGIN_HARDERROR_PROC *NewProcs;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
-                               (HardErrorProcCount + 1)
-                               * sizeof(CSRPLUGIN_HARDERROR_PROC));
-    if (NULL == NewProcs)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    if (0 != HardErrorProcCount)
-    {
-        RtlCopyMemory(NewProcs, HardErrorProcs,
-            HardErrorProcCount * sizeof(CSRPLUGIN_HARDERROR_PROC));
-        RtlFreeHeap(CsrssApiHeap, 0, HardErrorProcs);
-    }
-
-    NewProcs[HardErrorProcCount] = Proc;
-    HardErrorProcs = NewProcs;
-    HardErrorProcCount++;
-
-    return STATUS_SUCCESS;
 }
 
 /**********************************************************************
@@ -190,13 +160,9 @@ CallInitComplete(void)
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
   Ok = TRUE;
-  if (0 != InitCompleteProcCount)
+  for (i = 0; i < ServerProcCount && Ok; i++)
     {
-      for (i = 0; i < InitCompleteProcCount && Ok; i++)
-        {
-          Ok = (*(InitCompleteProcs[i]))();
-        }
-      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+      Ok = (*ServerProcs[i].InitCompleteProc)();
     }
 
   return Ok;
@@ -212,16 +178,43 @@ CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
     Ok = TRUE;
-    if (0 != HardErrorProcCount)
+    for (i = 0; i < ServerProcCount && Ok; i++)
     {
-        for (i = 0; i < HardErrorProcCount && Ok; i++)
-        {
-            Ok = (*(HardErrorProcs[i]))(ProcessData, HardErrorMessage);
-        }
+        Ok = (*ServerProcs[i].HardErrorProc)(ProcessData, HardErrorMessage);
     }
 
     return Ok;
 }
+
+NTSTATUS
+CallProcessInherit(IN PCSRSS_PROCESS_DATA SourceProcessData,
+                   IN PCSRSS_PROCESS_DATA TargetProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    unsigned i;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
+        Status = (*ServerProcs[i].ProcessInheritProc)(SourceProcessData, TargetProcessData);
+
+    return Status;
+}
+
+NTSTATUS
+CallProcessDeleted(IN PCSRSS_PROCESS_DATA ProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    unsigned i;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
+        Status = (*ServerProcs[i].ProcessDeletedProc)(ProcessData);
+
+    return Status;
+}
+
 
 ULONG
 InitializeVideoAddressSpace(VOID);
@@ -313,9 +306,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   CSRPLUGIN_INITIALIZE_PROC InitProc;
   CSRSS_EXPORTED_FUNCS Exports;
   PCSRSS_API_DEFINITION ApiDefinitions;
-  PCSRSS_OBJECT_DEFINITION ObjectDefinitions;
-  CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
-  CSRPLUGIN_HARDERROR_PROC HardErrorProc;
+  CSRPLUGIN_SERVER_PROCS ServerProcs;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -331,14 +322,8 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
     {
       return Status;
     }
-  Exports.CsrInsertObjectProc = CsrInsertObject;
-  Exports.CsrGetObjectProc = CsrGetObject;
-  Exports.CsrReleaseObjectByPointerProc = CsrReleaseObjectByPointer;
-  Exports.CsrReleaseObjectProc = CsrReleaseObject;
-  Exports.CsrReleaseConsoleProc = CsrReleaseConsole;
   Exports.CsrEnumProcessesProc = CsrEnumProcesses;
-  if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
-                    &HardErrorProc, &Exports, CsrssApiHeap))
+  if (! (*InitProc)(&ApiDefinitions, &ServerProcs, &Exports, CsrssApiHeap))
     {
       return STATUS_UNSUCCESSFUL;
     }
@@ -348,17 +333,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
     {
       return Status;
     }
-  Status = CsrRegisterObjectDefinitions(ObjectDefinitions);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  if (NULL != InitCompleteProc)
-    {
-      Status = CsrpAddInitCompleteProc(InitCompleteProc);
-    }
-  if (HardErrorProc) Status = CsrpAddHardErrorProc(HardErrorProc);
-
+  Status = CsrpAddServerProcs(&ServerProcs);
   return Status;
 }
 
@@ -371,12 +346,6 @@ CSRSS_API_DEFINITION NativeDefinitions[] =
     CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
     CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
     CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
-    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetInputHandle),
-    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
-    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
-    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
-    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
-    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
     { 0, 0, NULL }
   };
 

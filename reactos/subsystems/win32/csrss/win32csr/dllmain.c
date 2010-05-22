@@ -24,6 +24,12 @@ static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
   {
+    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetInputHandle),
+    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
+    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
+    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
+    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
+    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
     CSRSS_DEFINE_API(WRITE_CONSOLE,                CsrWriteConsole),
     CSRSS_DEFINE_API(READ_CONSOLE,                 CsrReadConsole),
     CSRSS_DEFINE_API(ALLOC_CONSOLE,                CsrAllocConsole),
@@ -108,7 +114,7 @@ Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
                       DWORD Access,
                       BOOL Inheritable)
 {
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object, Access, Inheritable);
+  return CsrInsertObject(ProcessData, Handle, Object, Access, Inheritable);
 }
 
 NTSTATUS FASTCALL
@@ -117,7 +123,7 @@ Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  Object_t **Object,
                  DWORD Access)
 {
-  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
+  return CsrGetObject(ProcessData, Handle, Object, Access);
 }
 
 NTSTATUS FASTCALL
@@ -129,7 +135,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 {
   NTSTATUS Status;
 
-  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
+  Status = CsrGetObject(ProcessData, Handle, Object, Access);
   if (! NT_SUCCESS(Status))
     {
       return Status;
@@ -137,7 +143,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 
   if ((*Object)->Type != Type)
     {
-      (CsrExports.CsrReleaseObjectByPointerProc)(*Object);
+      CsrReleaseObjectByPointer(*Object);
       return STATUS_INVALID_HANDLE;
     }
 
@@ -150,26 +156,26 @@ VOID FASTCALL
 Win32CsrUnlockObject(Object_t *Object)
 {
   LeaveCriticalSection(&(Object->Lock));
-  (CsrExports.CsrReleaseObjectByPointerProc)(Object);
+  CsrReleaseObjectByPointer(Object);
 }
 
 NTSTATUS FASTCALL
 Win32CsrReleaseObjectByPointer(Object_t *Object)
 {
-  return (CsrExports.CsrReleaseObjectByPointerProc)(Object);
+  return CsrReleaseObjectByPointer(Object);
 }
 
 NTSTATUS FASTCALL
 Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                       HANDLE Object)
 {
-  return (CsrExports.CsrReleaseObjectProc)(ProcessData, Object);
+  return CsrReleaseObject(ProcessData, Object);
 }
 
 NTSTATUS FASTCALL
 Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData)
 {
-  return (CsrExports.CsrReleaseConsoleProc)(ProcessData);
+  return CsrReleaseConsole(ProcessData);
 }
 
 NTSTATUS FASTCALL
@@ -189,9 +195,7 @@ Win32CsrInitComplete(void)
 
 BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
-                       PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
-                       CSRPLUGIN_INIT_COMPLETE_PROC *InitComplete,
-                       CSRPLUGIN_HARDERROR_PROC *HardError,
+                       PCSRPLUGIN_SERVER_PROCS ServerProcs,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
@@ -203,11 +207,13 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
 
   PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();
+  CsrRegisterObjectDefinitions(Win32CsrObjectDefinitions);
 
   *ApiDefinitions = Win32CsrApiDefinitions;
-  *ObjectDefinitions = Win32CsrObjectDefinitions;
-  *InitComplete = Win32CsrInitComplete;
-  *HardError = Win32CsrHardError;
+  ServerProcs->InitCompleteProc = Win32CsrInitComplete;
+  ServerProcs->HardErrorProc = Win32CsrHardError;
+  ServerProcs->ProcessInheritProc = CsrDuplicateHandleTable;
+  ServerProcs->ProcessDeletedProc = CsrReleaseConsole;
 
   return TRUE;
 }
