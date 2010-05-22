@@ -1556,11 +1556,14 @@ try_again:
          * Doing so is illegal; drivers shouldn't touch entry points they
          * do not implement.
          */
-        ASSERT(DriverObject->MajorFunction[i] != NULL);
 
         /* Check if it did so anyway */
-		if (!DriverObject->MajorFunction[i])
+        if (!DriverObject->MajorFunction[i])
         {
+            /* Print a warning in the debug log */
+            DPRINT1("Driver <%wZ> set DriverObject->MajorFunction[%d] to NULL!\n",
+                    &DriverObject->DriverName, i);
+
             /* Fix it up */
             DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
         }
