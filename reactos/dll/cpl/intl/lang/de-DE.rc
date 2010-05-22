@@ -187,6 +187,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Regionale Einstellungen bearbeiten"
     IDS_SPAIN "Spanisch (Spanien)"
+    IDS_METRIC "Metrisch"
+    IDS_IMPERIAL "US-Maﬂe"
 END
 
 STRINGTABLE

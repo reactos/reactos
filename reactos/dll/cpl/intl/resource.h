@@ -74,5 +74,7 @@
 #define IDS_CPLDESCRIPTION                1001
 #define IDS_CUSTOMIZE_TITLE               1002
 #define IDS_SPAIN                         1003
+#define IDS_METRIC                        1004
+#define IDS_IMPERIAL                      1005
 
 /* EOF */

@@ -190,6 +190,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Opzioni internazionali e della lingua"
     IDS_SPAIN "Spanish (Spain)"
+    IDS_METRIC "Metric"
+    IDS_IMPERIAL "Imperial"
 END
 
 STRINGTABLE
