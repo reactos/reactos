@@ -34,17 +34,10 @@ EBRUSHOBJ_vInit(EBRUSHOBJ *pebo, PBRUSH pbrush, PDC pdc)
 
     pebo->psurfTrg = pdc->dclevel.pSurface;
     ASSERT(pebo->psurfTrg);
+    ASSERT(pebo->psurfTrg->ppal);
 
-    if (pebo->psurfTrg->ppal)
-    {
-        pebo->ppalSurf = pebo->psurfTrg->ppal;
-        GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);
-    }
-    else
-        pebo->ppalSurf = PALETTE_ShareLockPalette(pdc->ppdev->devinfo.hpalDefault);
-
-    if (!pebo->ppalSurf)
-        pebo->ppalSurf = &gpalRGB;
+    pebo->ppalSurf = pebo->psurfTrg->ppal;
+    GDIOBJ_IncrementShareCount(&pebo->ppalSurf->BaseObject);
 
     if (pbrush->flAttrs & GDIBRUSH_IS_NULL)
     {
@@ -116,8 +109,7 @@ EBRUSHOBJ_vCleanup(EBRUSHOBJ *pebo)
         pebo->BrushObject.pvRbrush = NULL;
     }
 
-    if (pebo->ppalSurf != &gpalRGB)
-        PALETTE_ShareUnlockPalette(pebo->ppalSurf);
+    PALETTE_ShareUnlockPalette(pebo->ppalSurf);
 }
 
 VOID
@@ -199,12 +191,8 @@ EBRUSHOBJ_bRealizeBrush(EBRUSHOBJ *pebo, BOOL bCallDriver)
     PPDEVOBJ ppdev = NULL;
     EXLATEOBJ exlo;
 
-    // FIXME: all EBRUSHOBJs need a surface, see EBRUSHOBJ_vInit
-    if (!pebo->psurfTrg)
-    {
-        DPRINT1("Pattern brush has no target surface!\n");
-        return FALSE;
-    }
+    /* All EBRUSHOBJs have a surface, see EBRUSHOBJ_vInit */
+    ASSERT(pebo->psurfTrg);
 
     ppdev = (PPDEVOBJ)pebo->psurfTrg->SurfObj.hdev;
 
