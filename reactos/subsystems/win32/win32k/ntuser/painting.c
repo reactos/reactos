@@ -1896,7 +1896,13 @@ BOOL UserDrawCaption(
       if (str)
          UserDrawCaptionText(hMemDc, str, &r, uFlags);
       else if (pWnd != NULL)
-         UserDrawCaptionText(hMemDc, &pWnd->Wnd->strName, &r, uFlags);
+      {
+         UNICODE_STRING ustr;
+         ustr.Buffer = pWnd->Wnd->strName.Buffer;
+         ustr.Length = pWnd->Wnd->strName.Length;
+         ustr.MaximumLength = pWnd->Wnd->strName.MaximumLength;
+         UserDrawCaptionText(hMemDc, &ustr, &r, uFlags);
+      }
    }
 
    if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,

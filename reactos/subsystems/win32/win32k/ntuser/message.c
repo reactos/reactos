@@ -171,7 +171,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
    NCCALCSIZE_PARAMS *PackedNcCalcsize;
    CREATESTRUCTW *UnpackedCs;
    CREATESTRUCTW *PackedCs;
-   PUNICODE_STRING WindowName;
+   PLARGE_STRING WindowName;
    PUNICODE_STRING ClassName;
    POOL_TYPE PoolType;
    UINT Size;
@@ -205,7 +205,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL Non
    else if (WM_CREATE == Msg || WM_NCCREATE == Msg)
    {
       UnpackedCs = (CREATESTRUCTW *) lParam;
-      WindowName = (PUNICODE_STRING) UnpackedCs->lpszName;
+      WindowName = (PLARGE_STRING) UnpackedCs->lpszName;
       ClassName = (PUNICODE_STRING) UnpackedCs->lpszClass;
       Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
       if (IS_ATOM(ClassName->Buffer))

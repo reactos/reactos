@@ -882,7 +882,8 @@ NtUserCreateDesktop(
    ULONG_PTR HeapSize = 4 * 1024 * 1024; /* FIXME */
    HWINSTA hWindowStation = NULL ;
    PUNICODE_STRING lpszDesktopName = NULL;
-   UNICODE_STRING ClassName, WindowName, MenuName;
+   UNICODE_STRING ClassName, MenuName;
+   LARGE_STRING WindowName;
    PWND pWnd = NULL;
    DECLARE_RETURN(HDESK);
 

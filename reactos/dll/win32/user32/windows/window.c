@@ -137,6 +137,34 @@ CloseWindow(HWND hWnd)
     return (BOOL)(hWnd);
 }
 
+VOID
+FORCEINLINE
+RtlInitLargeString(
+    OUT PLARGE_STRING plstr,
+    LPCVOID psz,
+    BOOL bUnicode)
+{
+    if(bUnicode)
+    {
+        RtlInitLargeUnicodeString((PLARGE_UNICODE_STRING)plstr, (PWSTR)psz, 0);
+    }
+    else
+    {
+        RtlInitLargeAnsiString((PLARGE_ANSI_STRING)plstr, (PSTR)psz, 0);
+    }
+}
+
+VOID
+NTAPI
+RtlFreeLargeString(
+    IN PLARGE_STRING LargeString)
+{
+    if (LargeString->Buffer)
+    {
+        RtlFreeHeap(GetProcessHeap(), 0, LargeString->Buffer);
+        RtlZeroMemory(LargeString, sizeof(LARGE_STRING));
+    }
+}
 
 HWND WINAPI
 User32CreateWindowEx(DWORD dwExStyle,
@@ -153,7 +181,8 @@ User32CreateWindowEx(DWORD dwExStyle,
                      LPVOID lpParam,
                      BOOL Unicode)
 {
-    UNICODE_STRING WindowName;
+    LARGE_STRING WindowName;
+    LARGE_STRING lstrClassName, *plstrClassName;
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
@@ -171,8 +200,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 
     if (IS_ATOM(lpClassName))
     {
-        RtlInitUnicodeString(&ClassName, NULL);
-        ClassName.Buffer = (LPWSTR)lpClassName;
+        plstrClassName = (PVOID)lpClassName;
     }
     else
     {
@@ -180,26 +208,49 @@ User32CreateWindowEx(DWORD dwExStyle,
             RtlInitUnicodeString(&ClassName, (PCWSTR)lpClassName);
         else
         {
-            if (!RtlCreateUnicodeStringFromAsciiz(&(ClassName), (PCSZ)lpClassName))
+            if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpClassName))
             {
                 SetLastError(ERROR_OUTOFMEMORY);
                 return (HWND)0;
             }
         }
+        
+        /* Copy it to a LARGE_STRING */
+        lstrClassName.Buffer = ClassName.Buffer;
+        lstrClassName.Length = ClassName.Length;
+        lstrClassName.MaximumLength = ClassName.MaximumLength;
+        plstrClassName = &lstrClassName;
     }
 
-    if (Unicode)
-        RtlInitUnicodeString(&WindowName, (PCWSTR)lpWindowName);
-    else
+    /* Initialize a LARGE_STRING */
+    RtlInitLargeString(&WindowName, lpWindowName, Unicode);
+
+    // HACK: The current implementation expects the Window name to be UNICODE
+    if (!Unicode)
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&WindowName, (PCSZ)lpWindowName))
+        NTSTATUS Status;
+        PSTR AnsiBuffer = WindowName.Buffer;
+        ULONG AnsiLength = WindowName.Length;
+        
+        WindowName.Length = 0;
+        WindowName.MaximumLength = AnsiLength * sizeof(WCHAR);
+        WindowName.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+                                            0,
+                                            WindowName.MaximumLength);
+        if (!WindowName.Buffer)
         {
-            if (!IS_ATOM(lpClassName))
-            {
-                RtlFreeUnicodeString(&ClassName);
-            }
             SetLastError(ERROR_OUTOFMEMORY);
-            return (HWND)0;
+            goto cleanup;
+        }
+
+        Status = RtlMultiByteToUnicodeN(WindowName.Buffer,
+                                        WindowName.MaximumLength,
+                                        &WindowName.Length,
+                                        AnsiBuffer,
+                                        AnsiLength);
+        if (!NT_SUCCESS(Status))
+        {
+            goto cleanup;
         }
     }
 
@@ -223,8 +274,11 @@ User32CreateWindowEx(DWORD dwExStyle,
         }
     }
 
+    if (!Unicode) dwExStyle |= WS_EX_SETANSICREATOR;
+
     Handle = NtUserCreateWindowEx(dwExStyle,
-                                  &ClassName,
+                                  plstrClassName,
+                                  NULL,
                                   &WindowName,
                                   dwStyle,
                                   x,
@@ -235,23 +289,23 @@ User32CreateWindowEx(DWORD dwExStyle,
                                   hMenu,
                                   hInstance,
                                   lpParam,
-                                  SW_SHOW,
-                                  Unicode,
-                                  0);
+                                  0,
+                                  NULL);
 
 #if 0
     DbgPrint("[window] NtUserCreateWindowEx() == %d\n", Handle);
 #endif
-
+cleanup:
     if(!Unicode)
     {
-        RtlFreeUnicodeString(&WindowName);
-
         if (!IS_ATOM(lpClassName))
         {
             RtlFreeUnicodeString(&ClassName);
         }
+        
+        RtlFreeLargeString(&WindowName);
     }
+
     return Handle;
 }
 
