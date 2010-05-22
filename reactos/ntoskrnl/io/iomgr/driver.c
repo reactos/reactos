@@ -1171,16 +1171,17 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
                                     0,
                                     (PVOID*)&DriverObject);
 
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
+      ExFreePool(ObjectName.Buffer);
+      return Status;
+   }
+
    /*
     * Free the buffer for driver object name
     */
    ExFreePool(ObjectName.Buffer);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
-      return Status;
-   }
 
    /* Check that driver is not already unloading */
    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
