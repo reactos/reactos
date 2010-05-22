@@ -186,7 +186,7 @@ User32CreateWindowEx(DWORD dwExStyle,
     UNICODE_STRING ClassName;
     WNDCLASSEXA wceA;
     WNDCLASSEXW wceW;
-    HWND Handle;
+    HWND Handle = NULL;
 
 #if 0
     DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
