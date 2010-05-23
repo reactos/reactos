@@ -130,6 +130,7 @@ BasepInitConsole(VOID)
     NTSTATUS Status;
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
+    LPCWSTR ExeName;
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
@@ -183,13 +184,17 @@ BasepInitConsole(VOID)
         }
     }
 
-    /* Initialize Console Ctrl Handler */
+    /* Initialize Console Ctrl Handler and input EXE name */
     ConsoleInitialized = TRUE;
     RtlInitializeCriticalSection(&ConsoleLock);
     NrAllocatedHandlers = 1;
     NrCtrlHandlers = 1;
     CtrlHandlers = InitialHandler;
     CtrlHandlers[0] = DefaultConsoleCtrlHandler;
+
+    ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
+    if (ExeName)
+        SetConsoleInputExeNameW(ExeName + 1);
     
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;

@@ -51,10 +51,9 @@ typedef struct
 
 typedef struct
 {
-  ULONG nMaxIds;
-   ULONG nProcessIdsCopied;
-   ULONG nProcessIdsTotal;
-   HANDLE ProcessId[0];
+    USHORT nMaxIds;
+    PDWORD ProcessId;
+    ULONG nProcessIdsTotal;
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
 typedef struct

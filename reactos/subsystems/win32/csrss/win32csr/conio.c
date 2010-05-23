@@ -2960,22 +2960,27 @@ CSR_API(CsrSetConsoleOutputCodePage)
 
 CSR_API(CsrGetProcessList)
 {
-  PHANDLE Buffer;
+  PDWORD Buffer;
   PCSRSS_CONSOLE Console;
   PCSRSS_PROCESS_DATA current;
   PLIST_ENTRY current_entry;
-  ULONG nItems, nCopied, Length;
+  ULONG nItems = 0;
   NTSTATUS Status;
+  ULONG_PTR Offset;
 
   DPRINT("CsrGetProcessList\n");
 
-  Buffer = Request->Data.GetProcessListRequest.ProcessId;
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-  nItems = nCopied = 0;
-  Request->Data.GetProcessListRequest.nProcessIdsCopied = 0;
-  Request->Data.GetProcessListRequest.nProcessIdsTotal = 0;
+  Buffer = Request->Data.GetProcessListRequest.ProcessId;
+  Offset = (PBYTE)Buffer - (PBYTE)ProcessData->CsrSectionViewBase;
+  if (Offset >= ProcessData->CsrSectionViewSize
+      || (Request->Data.GetProcessListRequest.nMaxIds * sizeof(DWORD)) > (ProcessData->CsrSectionViewSize - Offset)
+      || Offset & (sizeof(DWORD) - 1))
+  {
+    return STATUS_ACCESS_VIOLATION;
+  }
 
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
@@ -2983,31 +2988,20 @@ CSR_API(CsrGetProcessList)
     return Status;
   }
 
-  DPRINT1("Console_Api Ctrl-C\n");
-
   for(current_entry = Console->ProcessList.Flink;
       current_entry != &Console->ProcessList;
       current_entry = current_entry->Flink)
   {
     current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
-    if(++nItems < Request->Data.GetProcessListRequest.nMaxIds)
+    if(++nItems <= Request->Data.GetProcessListRequest.nMaxIds)
     {
-      *(Buffer++) = current->ProcessId;
-      nCopied++;
+      *Buffer++ = (DWORD)current->ProcessId;
     }
   }
 
   ConioUnlockConsole(Console);
 
-  Request->Data.GetProcessListRequest.nProcessIdsCopied = nCopied;
   Request->Data.GetProcessListRequest.nProcessIdsTotal = nItems;
-
-  Length = CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_PROCESS_LIST) + nCopied * sizeof(HANDLE);
-  if (Length > sizeof(CSR_API_MESSAGE))
-  {
-     Request->Header.u1.s1.TotalLength = Length;
-     Request->Header.u1.s1.DataLength = Length - sizeof(PORT_MESSAGE);
-  }
   return STATUS_SUCCESS;
 }
 

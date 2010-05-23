@@ -85,6 +85,8 @@ HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
 			     BOOL   bInheritHandle,
 			     DWORD  dwShareMode);
 
+BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
+
 PTEB GetTeb(VOID);
 
 HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
