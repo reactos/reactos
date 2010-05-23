@@ -123,7 +123,7 @@ int DIB_GetDIBImageBytes( int width, int height, int depth )
  */
 int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
 {
-    int colors, masks = 0;
+    unsigned int colors, size, masks = 0;
 
     if (info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
@@ -139,8 +139,8 @@ int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
         if (!colors && (info->bmiHeader.biBitCount <= 8))
             colors = 1 << info->bmiHeader.biBitCount;
         if (info->bmiHeader.biCompression == BI_BITFIELDS) masks = 3;
-        return info->bmiHeader.biSize + masks * sizeof(DWORD) + colors *
-               ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
+        size = max( info->bmiHeader.biSize, sizeof(BITMAPINFOHEADER) + masks * sizeof(DWORD) );
+        return size + colors * ((coloruse == DIB_RGB_COLORS) ? sizeof(RGBQUAD) : sizeof(WORD));
     }
 }
 

@@ -53,8 +53,6 @@ enum wine_internal_message
     WM_WINE_LAST_DRIVER_MSG = 0x80001fff
 };
 
-struct tagCURSORICONINFO;
-
 typedef struct tagUSER_DRIVER {
     /* keyboard functions */
     HKL    (CDECL *pActivateKeyboardLayout)(HKL, UINT);
@@ -70,7 +68,7 @@ typedef struct tagUSER_DRIVER {
     BOOL   (CDECL *pUnloadKeyboardLayout)(HKL);
     SHORT  (CDECL *pVkKeyScanEx)(WCHAR, HKL);
     /* cursor/icon functions */
-    void   (CDECL *pCreateCursorIcon)(HCURSOR,struct tagCURSORICONINFO *);
+    void   (CDECL *pCreateCursorIcon)(HCURSOR);
     void   (CDECL *pDestroyCursorIcon)(HCURSOR);
     void   (CDECL *pSetCursor)(HCURSOR);
     BOOL   (CDECL *pGetCursorPos)(LPPOINT);

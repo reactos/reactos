@@ -143,7 +143,7 @@ BOOL WINAPI DdePostAdvise(DWORD idInst, HSZ hszTopic, HSZ hszItem)
     return TRUE;
 
  theError:
-    if (atom) GlobalDeleteAtom(atom);
+    GlobalDeleteAtom(atom);
     return FALSE;
 }
 
@@ -392,8 +392,8 @@ static LRESULT CALLBACK WDML_ServerNameProc(HWND hwndServer, UINT iMsg, WPARAM w
 	hwndClient = (HWND)wParam;
 
 	pInstance = WDML_GetInstanceFromWnd(hwndServer);
-	TRACE("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
 	if (!pInstance) return 0;
+	TRACE("idInst=%d, threadID=0x%x\n", pInstance->instanceID, GetCurrentThreadId());
 
 	/* don't free DDEParams, since this is a broadcast */
 	UnpackDDElParam(WM_DDE_INITIATE, lParam, &uiLo, &uiHi);

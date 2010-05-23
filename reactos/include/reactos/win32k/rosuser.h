@@ -167,7 +167,7 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect);
 VOID NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);
 
-VOID NTAPI
+BOOL NTAPI
 SwmDefineCursor(HWND hWnd, HCURSOR hCursor);
 
 VOID NTAPI

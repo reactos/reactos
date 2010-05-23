@@ -781,7 +781,6 @@ extern int CDECL X11DRV_AcquireClipboard(HWND hWndClipWindow);
 extern void X11DRV_Clipboard_Cleanup(void);
 extern void X11DRV_ResetSelectionOwner(void);
 extern void CDECL X11DRV_SetFocus( HWND hwnd );
-extern Cursor get_x11_cursor( HCURSOR handle );
 extern void set_window_cursor( HWND hwnd, HCURSOR handle );
 extern BOOL CDECL X11DRV_ClipCursor( LPCRECT clip );
 extern void X11DRV_InitKeyboard( Display *display );

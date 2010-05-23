@@ -1035,7 +1035,7 @@ static WineGLPixelFormat *get_formats(Display *display, int *size_ret, int *onsc
         }
     }
 
-    if(cfgs != NULL) XFree(cfgs);
+    XFree(cfgs);
 
 done:
     if (size_ret) *size_ret = size;

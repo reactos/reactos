@@ -74,6 +74,27 @@ static BYTE TrackSysKey = 0; /* determine whether ALT key up will cause a WM_SYS
                                 or a WM_KEYUP message */
 
 /***********************************************************************
+ *		set_window_cursor
+ */
+void set_window_cursor( HWND hwnd, HCURSOR handle )
+{
+    struct ntdrv_win_data *data;
+
+    if (!(data = NTDRV_get_win_data( hwnd ))) return;
+
+    /* Try to set the cursor */
+    if (!SwmDefineCursor(hwnd, handle))
+    {
+        /* This cursor doesn't exist yet, create it */
+        DPRINT1("Cursor %p needs to be created!\n", handle);
+
+        //SwmDefineCursor(hwnd, handle);
+    }
+
+    data->cursor = handle;
+}
+
+/***********************************************************************
  *           get_key_state
  */
 static WORD get_key_state(BYTE* key_state_table)
@@ -98,7 +119,6 @@ static WORD get_key_state(BYTE* key_state_table)
     return ret;
 }
 
-
 /***********************************************************************
  *           queue_raw_mouse_message
  */
@@ -116,7 +136,8 @@ static void queue_raw_mouse_message( UINT message, HWND hwnd, DWORD x, DWORD y,
     hook.time        = time;
     hook.dwExtraInfo = extra_info;
 
-    if (HOOK_CallHooks( WH_MOUSE_LL, HC_ACTION, message, (LPARAM)&hook, TRUE )) return;
+    if (HOOK_CallHooks( WH_MOUSE_LL, HC_ACTION, message, (LPARAM)&hook, TRUE ))
+        message = 0;  /* ignore it */
 
     SERVER_START_REQ( send_hardware_message )
     {
@@ -136,34 +157,10 @@ static void queue_raw_mouse_message( UINT message, HWND hwnd, DWORD x, DWORD y,
 
     if (hwnd)
     {
-        // TODO: Add cursor change support
-        /*Cursor xcursor;
-        struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
-        if (data && cursor != data->cursor)
-        {
-            wine_tsx11_lock();
-            if ((xcursor = get_x11_cursor( cursor )))
-                XDefineCursor( gdi_display, data->whole_window, xcursor );
-            data->cursor = cursor;
-            wine_tsx11_unlock();
-        }*/
+        struct ntdrv_win_data *data = NTDRV_get_win_data( hwnd );
+        if (data && cursor != data->cursor) set_window_cursor( hwnd, cursor );
     }
 }
-
-/***********************************************************************
- *		set_window_cursor
- */
-void set_window_cursor( HWND hwnd, HCURSOR handle )
-{
-    struct ntdrv_win_data *data;
-
-    if (!(data = NTDRV_get_win_data( hwnd ))) return;
-
-    /* Set the cursor */
-    SwmDefineCursor(hwnd, handle);
-    data->cursor = handle;
-}
-
 
 /***********************************************************************
  *      NTDRV_SendMouseInput
@@ -502,6 +499,7 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
 /***********************************************************************
  *		CreateCursorIcon (NTDRV.@)
  */
+// TODO: Delete this function
 void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
 {
     static const WORD ICON_HOTSPOT = 0x4242;

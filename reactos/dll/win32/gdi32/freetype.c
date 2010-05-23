@@ -3319,25 +3319,6 @@ static LONG load_VDMX(GdiFont *font, LONG height)
 		ppem = 0;
 		TRACE("ppem not found for height %d\n", height);
 	    }
-	} else {
-	    ppem = -height;
-	    if(ppem < startsz || ppem > endsz)
-		goto end;
-
-	    for(i = 0; i < recs; i++) {
-		USHORT yPelHeight;
-		yPelHeight = GET_BE_WORD(vTable[i * 3]);
-
-		if(yPelHeight > ppem)
-		    break; /* failed */
-
-		if(yPelHeight == ppem) {
-		    font->yMax = GET_BE_WORD(vTable[(i * 3) + 1]);
-		    font->yMin = GET_BE_WORD(vTable[(i * 3) + 2]);
-                    TRACE("ppem %d found; yMax=%d  yMin=%d\n", ppem, font->yMax, font->yMin);
-		    break;
-		}
-	    }
 	}
 	end:
 	HeapFree(GetProcessHeap(), 0, vTable);
@@ -5126,19 +5107,22 @@ DWORD WineEngGetGlyphOutline(GdiFont *incoming_font, UINT glyph, UINT format,
             {
                 for ( x = 0; x < src_width / hmul; x++ )
                 {
+                    unsigned int alpha = (src[hmul * x + rgb_interval * 0] +
+                                          src[hmul * x + rgb_interval * 1] +
+                                          src[hmul * x + rgb_interval * 2]) / 3;
                     if ( rgb )
                     {
-                        dst[x] = ((unsigned int)src[hmul * x + rgb_interval * 0] << 16) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 1] <<  8) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 2] <<  0) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 1] << 24) ;
+                        dst[x] = ((src[hmul * x + rgb_interval * 0] * alpha / 255) << 16) |
+                                 ((src[hmul * x + rgb_interval * 1] * alpha / 255) <<  8) |
+                                 ((src[hmul * x + rgb_interval * 2] * alpha / 255) <<  0) |
+                                 (alpha << 24);
                     }
                     else
                     {
-                        dst[x] = ((unsigned int)src[hmul * x + rgb_interval * 2] << 16) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 1] <<  8) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 0] <<  0) |
-                                 ((unsigned int)src[hmul * x + rgb_interval * 1] << 24) ;
+                        dst[x] = ((src[hmul * x + rgb_interval * 2] * alpha / 255) << 16) |
+                                 ((src[hmul * x + rgb_interval * 1] * alpha / 255) <<  8) |
+                                 ((src[hmul * x + rgb_interval * 0] * alpha / 255) <<  0) |
+                                 (alpha << 24);
                     }
                 }
                 src += src_pitch * vmul;

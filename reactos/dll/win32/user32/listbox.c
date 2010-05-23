@@ -562,7 +562,7 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc, const RECT *rect,
         dis.itemData     = item->data;
         dis.rcItem       = *rect;
         TRACE("[%p]: drawitem %d (%s) action=%02x state=%02x rect=%s\n",
-              descr->self, index, item ? debugstr_w(item->str) : "", action,
+              descr->self, index, debugstr_w(item->str), action,
               dis.itemState, wine_dbgstr_rect(rect) );
         SendMessageW(descr->owner, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
     }

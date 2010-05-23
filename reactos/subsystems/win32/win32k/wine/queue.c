@@ -1815,9 +1815,11 @@ DECL_HANDLER(send_hardware_message)
             return;
         }
         input = thread->queue->input;
+        reply->cursor = input->cursor;
+        reply->count  = input->cursor_count;
     }
 
-    if (!(data = mem_alloc( sizeof(*data) )))
+    if (!req->msg || !(data = mem_alloc( sizeof(*data) )))
     {
         if (thread) ObDereferenceObject(thread->peThread);
         return;
@@ -1842,12 +1844,7 @@ DECL_HANDLER(send_hardware_message)
     }
     else ExFreePool( data );
 
-    if (thread)
-    {
-        reply->cursor = input->cursor;
-        reply->count  = input->cursor_count;
-        ObDereferenceObject(thread->peThread);
-    }
+    if (thread) ObDereferenceObject( thread->peThread );
 }
 
 /* post a quit message to the current queue */
@@ -2185,18 +2182,11 @@ DECL_HANDLER(get_thread_input)
         reply->menu_owner = input->menu_owner;
         reply->move_size  = input->move_size;
         reply->caret      = input->caret;
+        reply->cursor     = input->cursor;
+        reply->show_count = input->cursor_count;
         reply->rect       = input->caret_rect;
     }
-    else
-    {
-        reply->focus      = 0;
-        reply->capture    = 0;
-        reply->active     = 0;
-        reply->menu_owner = 0;
-        reply->move_size  = 0;
-        reply->caret      = 0;
-        reply->rect.left = reply->rect.top = reply->rect.right = reply->rect.bottom = 0;
-    }
+
     /* foreground window is active window of foreground thread */
     reply->foreground = foreground_input ? foreground_input->active : 0;
     if (thread) ObDereferenceObject(thread->peThread);

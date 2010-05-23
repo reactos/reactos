@@ -1704,19 +1704,20 @@ BOOL WINAPI ExtTextOutW( HDC hdc, INT x, INT y, UINT flags,
     {
         reordered_str = HeapAlloc(GetProcessHeap(), 0, count*sizeof(WCHAR));
 
-        BIDI_Reorder( str, count, GCP_REORDER,
+        BIDI_Reorder( hdc, str, count, GCP_REORDER,
                       ((flags&ETO_RTLREADING)!=0 || (GetTextAlign(hdc)&TA_RTLREADING)!=0)?
                       WINE_GCPW_FORCE_RTL:WINE_GCPW_FORCE_LTR,
-                      reordered_str, count, NULL );
+                      reordered_str, count, NULL, &glyphs );
     
         flags |= ETO_IGNORELANGUAGE;
+        if (glyphs)
+            flags |= ETO_GLYPH_INDEX;
     }
+    else if(flags & ETO_GLYPH_INDEX)
+        glyphs = reordered_str;
 
     TRACE("%p, %d, %d, %08x, %p, %s, %d, %p)\n", hdc, x, y, flags,
           lprect, debugstr_wn(str, count), count, lpDx);
-
-    if(flags & ETO_GLYPH_INDEX)
-        glyphs = reordered_str;
 
     if(lprect)
         TRACE("rect: %d,%d - %d,%d\n", lprect->left, lprect->top, lprect->right,
@@ -2872,8 +2873,8 @@ GetCharacterPlacementW(
 		}
 	} else
 	{
-            BIDI_Reorder( lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
-                          nSet, lpResults->lpOrder );
+            BIDI_Reorder(NULL, lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
+                          nSet, lpResults->lpOrder, NULL );
 	}
 
 	/* FIXME: Will use the placement chars */

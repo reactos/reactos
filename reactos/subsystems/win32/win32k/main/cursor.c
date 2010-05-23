@@ -165,15 +165,13 @@ RosUserCreateCursorIcon(ICONINFO* IconInfoUnsafe,
     pCursorIcon->hbmColor = IconInfoUnsafe->hbmColor;
 
     /* Acquire lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CursorIconsLock, TRUE);
+    USER_LockCursorIcons();
 
     /* Add it to the list */
     InsertTailList(&CursorIcons, &pCursorIcon->Entry);
 
     /* Release lock */
-    ExReleaseResourceLite(&CursorIconsLock);
-    KeLeaveCriticalRegion();
+    USER_UnlockCursorIcons();
 }
 
 VOID
@@ -185,8 +183,7 @@ RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
     PCURSORICONENTRY pCursorIcon;
 
     /* Acquire lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CursorIconsLock, TRUE);
+    USER_LockCursorIcons();
 
     /* Traverse the list to find our mapping */
     Current = CursorIcons.Flink;
@@ -214,8 +211,7 @@ RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
     }
 
     /* Release lock */
-    ExReleaseResourceLite(&CursorIconsLock);
-    KeLeaveCriticalRegion();
+    USER_UnlockCursorIcons();
 }
 
 VOID NTAPI
@@ -230,3 +226,16 @@ USER_InitCursorIcons()
         DPRINT1("Initializing cursor icons lock failed with Status 0x%08X\n", Status);
 }
 
+VOID USER_LockCursorIcons()
+{
+    /* Acquire lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CursorIconsLock, TRUE);
+}
+
+VOID USER_UnlockCursorIcons()
+{
+    /* Release lock */
+    ExReleaseResourceLite(&CursorIconsLock);
+    KeLeaveCriticalRegion();
+}

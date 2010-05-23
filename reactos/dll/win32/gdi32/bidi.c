@@ -292,46 +292,12 @@ static void resolveWhitespace(int baselevel, const WORD *pcls, BYTE *plevel, int
     SetDeferredRun(plevel, cchrun, ich, baselevel);
 }
 
-/* DISPLAY OPTIONS */
-/*-----------------------------------------------------------------------
-   Function:    mirror
-
-    Crudely implements rule L4 of the Unicode Bidirectional Algorithm
-    Demonstrate mirrored brackets, braces and parens
-
-
-    Input:    Array of levels
-            Count of characters
-
-    In/Out:    Array of characters (should be array of glyph ids)
-
-    Note;
-    A full implementation would need to substitute mirrored glyphs even
-    for characters that are not paired (e.g. integral sign).
------------------------------------------------------------------------*/
-static void mirror(LPWSTR pszInput, const BYTE* plevel, int cch)
-{
-    static int warn_once;
-    int i;
-
-    for (i = 0; i < cch; ++i)
-    {
-        if (!odd(plevel[i]))
-            continue;
-        /* This needs the data from http://www.unicode.org/Public/UNIDATA/BidiMirroring.txt */
-        if (!warn_once++)
-            FIXME("stub: mirroring of characters not yet implemented\n");
-        break;
-    }
-}
-
 /*------------------------------------------------------------------------
     Function: BidiLines
 
     Implements the Line-by-Line phases of the Unicode Bidi Algorithm
 
       Input:     Count of characters
-             flag whether to mirror
 
     Inp/Out: Input text
              Array of character directions
@@ -339,7 +305,7 @@ static void mirror(LPWSTR pszInput, const BYTE* plevel, int cch)
 
 ------------------------------------------------------------------------*/
 static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, WORD * pclsLine,
-                      BYTE * plevelLine, int cchPara, int fMirror, BOOL * pbrk)
+                      BYTE * plevelLine, int cchPara, BOOL * pbrk)
 {
     int cchLine = 0;
     int done = 0;
@@ -363,9 +329,6 @@ static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, WORD * 
         if (pszOutLine)
         {
             int i;
-            if (fMirror)
-                mirror(pszOutLine, plevelLine, cchLine);
-
             /* reorder each line in place */
             ScriptLayout(cchLine, plevelLine, run, NULL);
             for (i = 0; i < cchLine; i++)
@@ -386,20 +349,24 @@ static void BidiLines(int baselevel, LPWSTR pszOutLine, LPCWSTR pszLine, WORD * 
 
 /*************************************************************
  *    BIDI_Reorder
+ *
+ *     Returns TRUE if reordering was required and done.
  */
 BOOL BIDI_Reorder(
+                HDC hDC,        /*[in] Display DC */
                 LPCWSTR lpString,       /* [in] The string for which information is to be returned */
                 INT uCount,     /* [in] Number of WCHARs in string. */
                 DWORD dwFlags,  /* [in] GetCharacterPlacement compatible flags specifying how to process the string */
                 DWORD dwWineGCP_Flags,       /* [in] Wine internal flags - Force paragraph direction */
                 LPWSTR lpOutString, /* [out] Reordered string */
                 INT uCountOut,  /* [in] Size of output buffer */
-                UINT *lpOrder /* [out] Logical -> Visual order map */
+                UINT *lpOrder, /* [out] Logical -> Visual order map */
+                WORD **lpGlyphs /* [out] reordered, mirrored, shaped glyphs to display */
     )
 {
     WORD *chartype;
     BYTE *levels;
-    unsigned i, done;
+    unsigned i, done, glyph_i;
 
     int maxItems;
     int nItems;
@@ -407,6 +374,12 @@ BOOL BIDI_Reorder(
     SCRIPT_STATE State;
     SCRIPT_ITEM *pItems;
     HRESULT res;
+    SCRIPT_CACHE psc = NULL;
+    WORD *run_glyphs = NULL;
+    WORD *pwLogClust = NULL;
+    SCRIPT_VISATTR *psva = NULL;
+    DWORD cMaxGlyphs = 0;
+    BOOL  doGlyphs = TRUE;
 
     TRACE("%s, %d, 0x%08x lpOutString=%p, lpOrder=%p\n",
           debugstr_wn(lpString, uCount), uCount, dwFlags,
@@ -414,6 +387,8 @@ BOOL BIDI_Reorder(
 
     memset(&Control, 0, sizeof(Control));
     memset(&State, 0, sizeof(State));
+    if (lpGlyphs)
+        *lpGlyphs = NULL;
 
     if (!(dwFlags & GCP_REORDER))
     {
@@ -421,7 +396,7 @@ BOOL BIDI_Reorder(
         return FALSE;
     }
 
-    if (uCountOut < uCount)
+    if (lpOutString && uCountOut < uCount)
     {
         FIXME("lpOutString too small\n");
         return FALSE;
@@ -480,7 +455,43 @@ BOOL BIDI_Reorder(
         return FALSE;
     }
 
+    if (lpGlyphs)
+    {
+        cMaxGlyphs = 1.5 * uCount + 16;
+        run_glyphs = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * cMaxGlyphs);
+        if (!run_glyphs)
+        {
+            WARN("Out of memory\n");
+            HeapFree(GetProcessHeap(), 0, chartype);
+            HeapFree(GetProcessHeap(), 0, levels);
+            HeapFree(GetProcessHeap(), 0, pItems);
+            return FALSE;
+        }
+        pwLogClust = HeapAlloc(GetProcessHeap(),0,sizeof(WORD) * uCount);
+        if (!pwLogClust)
+        {
+            WARN("Out of memory\n");
+            HeapFree(GetProcessHeap(), 0, chartype);
+            HeapFree(GetProcessHeap(), 0, levels);
+            HeapFree(GetProcessHeap(), 0, pItems);
+            HeapFree(GetProcessHeap(), 0, run_glyphs);
+            return FALSE;
+        }
+        psva = HeapAlloc(GetProcessHeap(),0,sizeof(SCRIPT_VISATTR) * uCount);
+        if (!psva)
+        {
+            WARN("Out of memory\n");
+            HeapFree(GetProcessHeap(), 0, chartype);
+            HeapFree(GetProcessHeap(), 0, levels);
+            HeapFree(GetProcessHeap(), 0, pItems);
+            HeapFree(GetProcessHeap(), 0, run_glyphs);
+            HeapFree(GetProcessHeap(), 0, pwLogClust);
+            return FALSE;
+        }
+    }
+
     done = 0;
+    glyph_i = 0;
     while (done < uCount)
     {
         unsigned j;
@@ -532,19 +543,22 @@ BOOL BIDI_Reorder(
             res = ScriptItemize(lpString + done, i, maxItems, &Control, &State, pItems, &nItems);
         }
 
-        for (j = 0; j < nItems; j++)
+        if (lpOutString || lpOrder)
+            for (j = 0; j < nItems; j++)
+            {
+                int k;
+                for (k = pItems[j].iCharPos; k < pItems[j+1].iCharPos; k++)
+                    levels[k] = pItems[j].a.s.uBidiLevel;
+            }
+
+        if (lpOutString)
         {
-            int k;
-            for (k = pItems[j].iCharPos; k < pItems[j+1].iCharPos; k++)
-                levels[k] = pItems[j].a.s.uBidiLevel;
+            /* assign directional types again, but for WS, S this time */
+            classify(lpString + done, chartype, i);
+
+            BidiLines(State.uBidiLevel, lpOutString + done, lpString + done,
+                        chartype, levels, i, 0);
         }
-
-        /* assign directional types again, but for WS, S this time */
-        classify(lpString + done, chartype, i);
-
-        BidiLines(State.uBidiLevel, lpOutString ? lpOutString + done : NULL, lpString + done,
-                    chartype, levels, i, !(dwFlags & GCP_SYMSWAPOFF), 0);
-
 
         if (lpOrder)
         {
@@ -568,11 +582,77 @@ BOOL BIDI_Reorder(
                 for (k = lastgood; k < j; ++k)
                     lpOrder[done + k] = done + k;
         }
+
+        if (lpGlyphs && doGlyphs)
+        {
+            int j;
+            BYTE runOrder[maxItems];
+            int visOrder[maxItems];
+            SCRIPT_ITEM *curItem;
+
+            for (j = 0; j < nItems; j++)
+                runOrder[j] = pItems[j].a.s.uBidiLevel;
+
+            ScriptLayout(nItems, runOrder, NULL, visOrder);
+
+            for (j = 0; j < nItems; j++)
+            {
+                int k;
+                int cChars,cOutGlyphs;
+                curItem = &pItems[visOrder[j]];
+
+                cChars = pItems[visOrder[j]+1].iCharPos - curItem->iCharPos;
+
+                res = ScriptShape(hDC, &psc, lpString + done + curItem->iCharPos, cChars, cMaxGlyphs, &curItem->a, run_glyphs, pwLogClust, psva, &cOutGlyphs);
+                while (res == E_OUTOFMEMORY)
+                {
+                    cMaxGlyphs *= 2;
+                    run_glyphs = HeapReAlloc(GetProcessHeap(), 0, run_glyphs, sizeof(WORD) * cMaxGlyphs);
+                    if (!run_glyphs)
+                    {
+                        WARN("Out of memory\n");
+                        HeapFree(GetProcessHeap(), 0, chartype);
+                        HeapFree(GetProcessHeap(), 0, levels);
+                        HeapFree(GetProcessHeap(), 0, pItems);
+                        HeapFree(GetProcessHeap(), 0, psva);
+                        HeapFree(GetProcessHeap(), 0, pwLogClust);
+                        HeapFree(GetProcessHeap(), 0, *lpGlyphs);
+                        ScriptFreeCache(&psc);
+                        *lpGlyphs = NULL;
+                        return FALSE;
+                    }
+                    res = ScriptShape(hDC, &psc, lpString + done + curItem->iCharPos, cChars, cMaxGlyphs, &curItem->a, run_glyphs, pwLogClust, psva, &cOutGlyphs);
+                }
+                if (res && res != USP_E_SCRIPT_NOT_IN_FONT)
+                {
+                    FIXME("Unable to shape string (%x)\n",res);
+                    j = nItems;
+                    doGlyphs = FALSE;
+                    HeapFree(GetProcessHeap(), 0, *lpGlyphs);
+                    *lpGlyphs = NULL;
+                }
+                else
+                {
+                    if (*lpGlyphs)
+                        *lpGlyphs = HeapReAlloc(GetProcessHeap(), 0, *lpGlyphs, sizeof(WORD) * (glyph_i + cOutGlyphs));
+                   else
+                        *lpGlyphs = HeapAlloc(GetProcessHeap(), 0, sizeof(WORD) * (glyph_i + cOutGlyphs));
+                    for (k = 0; k < cOutGlyphs; k++)
+                        (*lpGlyphs)[glyph_i+k] = run_glyphs[k];
+                    glyph_i += cOutGlyphs;
+                }
+            }
+        }
+
         done += i;
     }
 
     HeapFree(GetProcessHeap(), 0, chartype);
     HeapFree(GetProcessHeap(), 0, levels);
     HeapFree(GetProcessHeap(), 0, pItems);
+    HeapFree(GetProcessHeap(), 0, run_glyphs);
+    HeapFree(GetProcessHeap(), 0, pwLogClust);
+    HeapFree(GetProcessHeap(), 0, psva);
+    ScriptFreeCache(&psc);
     return TRUE;
 }

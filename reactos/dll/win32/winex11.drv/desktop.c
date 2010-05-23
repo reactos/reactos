@@ -142,7 +142,7 @@ Window CDECL X11DRV_create_desktop( UINT width, UINT height )
     wine_tsx11_lock();
 
     /* Create window */
-    win_attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
+    win_attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | EnterWindowMask |
                           PointerMotionMask | ButtonPressMask | ButtonReleaseMask;
     win_attr.cursor = XCreateFontCursor( display, XC_top_left_arrow );
 

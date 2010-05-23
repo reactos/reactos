@@ -224,7 +224,7 @@ static SHORT CDECL nulldrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return -1;
 }
 
-static void CDECL nulldrv_CreateCursorIcon( HCURSOR cursor, struct tagCURSORICONINFO *info )
+static void CDECL nulldrv_CreateCursorIcon( HCURSOR cursor )
 {
 }
 
@@ -577,9 +577,9 @@ static SHORT CDECL loaderdrv_VkKeyScanEx( WCHAR ch, HKL layout )
     return load_driver()->pVkKeyScanEx( ch, layout );
 }
 
-static void CDECL loaderdrv_CreateCursorIcon( HCURSOR cursor, struct tagCURSORICONINFO *info )
+static void CDECL loaderdrv_CreateCursorIcon( HCURSOR cursor )
 {
-    load_driver()->pCreateCursorIcon( cursor, info );
+    load_driver()->pCreateCursorIcon( cursor );
 }
 
 static void CDECL loaderdrv_DestroyCursorIcon( HCURSOR cursor )

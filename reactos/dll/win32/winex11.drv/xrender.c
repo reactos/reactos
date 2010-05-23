@@ -182,6 +182,23 @@ MAKE_FUNCPTR(XRenderSetPictureClipRectangles)
 MAKE_FUNCPTR(XRenderSetPictureTransform)
 #endif
 MAKE_FUNCPTR(XRenderQueryExtension)
+
+#ifdef SONAME_LIBFONTCONFIG
+#include <fontconfig/fontconfig.h>
+MAKE_FUNCPTR(FcConfigSubstitute)
+MAKE_FUNCPTR(FcDefaultSubstitute)
+MAKE_FUNCPTR(FcFontMatch)
+MAKE_FUNCPTR(FcInit)
+MAKE_FUNCPTR(FcPatternCreate)
+MAKE_FUNCPTR(FcPatternDestroy)
+MAKE_FUNCPTR(FcPatternAddInteger)
+MAKE_FUNCPTR(FcPatternAddString)
+MAKE_FUNCPTR(FcPatternGetInteger)
+MAKE_FUNCPTR(FcPatternGetString)
+static void *fontconfig_handle;
+static BOOL fontconfig_installed;
+#endif
+
 #undef MAKE_FUNCPTR
 
 static CRITICAL_SECTION xrender_cs;
@@ -379,6 +396,26 @@ LOAD_OPTIONAL_FUNCPTR(XRenderSetPictureTransform)
         }
     }
 
+#ifdef SONAME_LIBFONTCONFIG
+    if ((fontconfig_handle = wine_dlopen(SONAME_LIBFONTCONFIG, RTLD_NOW, NULL, 0)))
+    {
+#define LOAD_FUNCPTR(f) if((p##f = wine_dlsym(fontconfig_handle, #f, NULL, 0)) == NULL){WARN("Can't find symbol %s\n", #f); goto sym_not_found;}
+        LOAD_FUNCPTR(FcConfigSubstitute);
+        LOAD_FUNCPTR(FcDefaultSubstitute);
+        LOAD_FUNCPTR(FcFontMatch);
+        LOAD_FUNCPTR(FcInit);
+        LOAD_FUNCPTR(FcPatternCreate);
+        LOAD_FUNCPTR(FcPatternDestroy);
+        LOAD_FUNCPTR(FcPatternAddInteger);
+        LOAD_FUNCPTR(FcPatternAddString);
+        LOAD_FUNCPTR(FcPatternGetInteger);
+        LOAD_FUNCPTR(FcPatternGetString);
+#undef LOAD_FUNCPTR
+        fontconfig_installed = pFcInit();
+    }
+    else TRACE( "cannot find the fontconfig library " SONAME_LIBFONTCONFIG "\n" );
+#endif
+
 sym_not_found:
     if(X11DRV_XRender_Installed || client_side_with_core)
     {
@@ -568,6 +605,32 @@ static Picture get_xrender_picture_source(X11DRV_PDEVICE *physDev, BOOL repeat)
     }
 
     return info->pict_src;
+}
+
+/* return a mask picture used to force alpha to 0 */
+static Picture get_no_alpha_mask(void)
+{
+    static Pixmap pixmap;
+    static Picture pict;
+
+    wine_tsx11_lock();
+    if (!pict)
+    {
+        const WineXRenderFormat *fmt = get_xrender_format( WXR_FORMAT_A8R8G8B8 );
+        XRenderPictureAttributes pa;
+        XRenderColor col;
+
+        pixmap = XCreatePixmap( gdi_display, root_window, 1, 1, 32 );
+        pa.repeat = RepeatNormal;
+        pa.component_alpha = True;
+        pict = pXRenderCreatePicture( gdi_display, pixmap, fmt->pict_format,
+                                      CPRepeat|CPComponentAlpha, &pa );
+        col.red = col.green = col.blue = 0xffff;
+        col.alpha = 0;
+        pXRenderFillRectangle( gdi_display, PictOpSrc, pict, &col, 0, 0, 1, 1 );
+    }
+    wine_tsx11_unlock();
+    return pict;
 }
 
 static BOOL fontcmp(LFANDSIZE *p1, LFANDSIZE *p2)
@@ -839,6 +902,63 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                     entry->aa_default = AA_None;
                 break;
         }
+
+#ifdef SONAME_LIBFONTCONFIG
+        if (fontconfig_installed)
+        {
+            FcPattern *match, *pattern = pFcPatternCreate();
+            FcResult result;
+            char family[LF_FACESIZE * 4];
+
+            WideCharToMultiByte( CP_UTF8, 0, plfsz->lf.lfFaceName, -1, family, sizeof(family), NULL, NULL );
+            pFcPatternAddString( pattern, FC_FAMILY, (FcChar8 *)family );
+            if (plfsz->lf.lfWeight != FW_DONTCARE)
+            {
+                int weight;
+                switch (plfsz->lf.lfWeight)
+                {
+                case FW_THIN:       weight = FC_WEIGHT_THIN; break;
+                case FW_EXTRALIGHT: weight = FC_WEIGHT_EXTRALIGHT; break;
+                case FW_LIGHT:      weight = FC_WEIGHT_LIGHT; break;
+                case FW_NORMAL:     weight = FC_WEIGHT_NORMAL; break;
+                case FW_MEDIUM:     weight = FC_WEIGHT_MEDIUM; break;
+                case FW_SEMIBOLD:   weight = FC_WEIGHT_SEMIBOLD; break;
+                case FW_BOLD:       weight = FC_WEIGHT_BOLD; break;
+                case FW_EXTRABOLD:  weight = FC_WEIGHT_EXTRABOLD; break;
+                case FW_HEAVY:      weight = FC_WEIGHT_HEAVY; break;
+                default:            weight = (plfsz->lf.lfWeight - 80) / 4; break;
+                }
+                pFcPatternAddInteger( pattern, FC_WEIGHT, weight );
+            }
+            pFcPatternAddInteger( pattern, FC_SLANT, plfsz->lf.lfItalic ? FC_SLANT_ITALIC : FC_SLANT_ROMAN );
+            pFcConfigSubstitute( NULL, pattern, FcMatchPattern );
+            pFcDefaultSubstitute( pattern );
+            if ((match = pFcFontMatch( NULL, pattern, &result )))
+            {
+                int rgba;
+
+                if (pFcPatternGetInteger( match, FC_RGBA, 0, &rgba ) == FcResultMatch)
+                {
+                    FcChar8 *file;
+                    if (pFcPatternGetString( match, FC_FILE, 0, &file ) != FcResultMatch) file = NULL;
+
+                    TRACE( "fontconfig returned rgba %u for font %s file %s\n",
+                         rgba, debugstr_w(plfsz->lf.lfFaceName), debugstr_a((char *)file) );
+
+                    switch (rgba)
+                    {
+                    case FC_RGBA_RGB:  entry->aa_default = AA_RGB; break;
+                    case FC_RGBA_BGR:  entry->aa_default = AA_BGR; break;
+                    case FC_RGBA_VRGB: entry->aa_default = AA_VRGB; break;
+                    case FC_RGBA_VBGR: entry->aa_default = AA_VBGR; break;
+                    case FC_RGBA_NONE: entry->aa_default = AA_None; break;
+                    }
+                }
+                pFcPatternDestroy( match );
+            }
+            pFcPatternDestroy( pattern );
+        }
+#endif  /* SONAME_LIBFONTCONFIG */
     }
     else
         entry->aa_default = AA_None;
@@ -2201,6 +2321,7 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
     }
     else /* color -> color (can be at different depths) or mono -> mono */
     {
+        if (physDevDst->depth == 32 && physDevSrc->depth < 32) mask_pict = get_no_alpha_mask();
         src_pict = get_xrender_picture_source( physDevSrc, use_repeat );
 
         wine_tsx11_lock();
@@ -2208,7 +2329,8 @@ BOOL X11DRV_XRender_GetSrcAreaStretch(X11DRV_PDEVICE *physDevSrc, X11DRV_PDEVICE
                                           pixmap, dst_format->pict_format,
                                           CPSubwindowMode|CPRepeat, &pa);
 
-        xrender_blit(PictOpSrc, src_pict, 0, dst_pict, x_src, y_src, 0, 0, xscale, yscale, width, height);
+        xrender_blit(PictOpSrc, src_pict, mask_pict, dst_pict,
+                     x_src, y_src, 0, 0, xscale, yscale, width, height);
 
         if(dst_pict) pXRenderFreePicture(gdi_display, dst_pict);
         wine_tsx11_unlock();

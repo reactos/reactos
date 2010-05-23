@@ -207,11 +207,22 @@ BOOL WINAPI DECLSPEC_HOTPATCH GetCursorPos( POINT *pt )
  */
 BOOL WINAPI GetCursorInfo( PCURSORINFO pci )
 {
+    BOOL ret;
+
     if (!pci) return 0;
-    pci->hCursor = LoadCursorW( 0, (LPCWSTR)IDC_ARROW );
-    pci->flags = CURSOR_SHOWING;
+
+    SERVER_START_REQ( get_thread_input )
+    {
+        req->tid = 0;
+        if ((ret = !wine_server_call( req )))
+        {
+            pci->hCursor = wine_server_ptr_handle( reply->cursor );
+            pci->flags = (reply->show_count >= 0) ? CURSOR_SHOWING : 0;
+        }
+    }
+    SERVER_END_REQ;
     GetCursorPos(&pci->ptScreenPos);
-    return 1;
+    return ret;
 }
 
 

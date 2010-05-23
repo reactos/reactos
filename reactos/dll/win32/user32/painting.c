@@ -909,6 +909,8 @@ HDC WINAPI GetDCEx( HWND hwnd, HRGN hrgnClip, DWORD flags )
 
     TRACE("hwnd %p, hrgnClip %p, flags %08x\n", hwnd, hrgnClip, flags);
 
+    if (!IsWindow(hwnd)) return 0;
+
     /* fixup flags */
 
     if (flags & (DCX_WINDOW | DCX_PARENTCLIP)) flags |= DCX_CACHE;
