@@ -41,4 +41,5 @@
 	<file>virtual.c</file>
 	<file>volume.c</file>
 	<file>testlist.c</file>
+	<file>resource.rc</file>
 </module>
