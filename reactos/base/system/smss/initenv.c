@@ -66,20 +66,27 @@ NTSTATUS
 SmSetEnvironmentVariables(VOID)
 {
     SYSTEM_BASIC_INFORMATION BasicInformation;
-
+    SYSTEM_PROCESSOR_INFORMATION ProcessorInformation;
     RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     UNICODE_STRING Identifier;
     UNICODE_STRING VendorIdentifier;
     WCHAR Buffer[256];
-
     UNICODE_STRING EnvironmentKeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE EnvironmentKey;
     UNICODE_STRING VariableName;
     PWSTR VariableData;
-
     NTSTATUS Status;
 
+    Status = NtQuerySystemInformation(SystemProcessorInformation,
+                                      &ProcessorInformation,
+                                      sizeof(SYSTEM_PROCESSOR_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to retrieve system processor information (Status %08lx)", Status);
+        return Status;
+    }
 
     Status = NtQuerySystemInformation(SystemBasicInformation,
                                       &BasicInformation,
@@ -149,17 +156,28 @@ SmSetEnvironmentVariables(VOID)
     RtlInitUnicodeString(&VariableName,
                          L"PROCESSOR_ARCHITECTURE");
 
-#ifdef _M_IX86
-    VariableData = L"x86";
-#elif _M_MD64
-    VariableData = L"AMD64";
-#elif _M_ARM
-    VariableData = L"ARM";
-#elif _M_PPC
-    VariableData = L"PPC";
-#else
-    #error "Unsupported Architecture!\n"
-#endif
+    switch (ProcessorInformation.ProcessorArchitecture)
+    {
+        case PROCESSOR_ARCHITECTURE_INTEL:
+            VariableData = L"x86";
+            break;
+
+        case PROCESSOR_ARCHITECTURE_PPC:
+            VariableData = L"PPC";
+            break;
+
+        case PROCESSOR_ARCHITECTURE_ARM:
+            VariableData = L"ARM";
+            break;
+
+        case PROCESSOR_ARCHITECTURE_AMD64:
+            VariableData = L"AMD64";
+            break;
+
+        default:
+            VariableData = L"Unknown";
+            break;
+    }
 
     Status = NtSetValueKey(EnvironmentKey,
                            &VariableName,
@@ -170,6 +188,42 @@ SmSetEnvironmentVariables(VOID)
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SM: Failed to set the PROCESSOR_ARCHITECTURE environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
+    /* Set the 'PROCESSOR_LEVEL' system environment variable */
+    RtlInitUnicodeString(&VariableName,
+                         L"PROCESSOR_LEVEL");
+
+    swprintf(Buffer, L"%lu", ProcessorInformation.ProcessorLevel);
+
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           Buffer,
+                           (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the PROCESSOR_LEVEL environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
+    /* Set the 'PROCESSOR_REVISION' system environment variable */
+    RtlInitUnicodeString(&VariableName,
+                         L"PROCESSOR_REVISION");
+
+    swprintf(Buffer, L"%04x", ProcessorInformation.ProcessorRevision);
+
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           Buffer,
+                           (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the PROCESSOR_REVISION environment variable (Status %08lx)", Status);
         goto done;
     }
 
