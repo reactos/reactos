@@ -7,6 +7,7 @@ typedef struct _SWM_WINDOW
     rectangle_t Window;
     struct region *Visible;
     BOOLEAN Hidden;
+    PCURSORICONENTRY Cursor;
 
     LIST_ENTRY Entry;
 } SWM_WINDOW, *PSWM_WINDOW;

@@ -804,9 +804,42 @@ BOOL
 NTAPI
 SwmDefineCursor(HWND hWnd, HCURSOR hCursor)
 {
-    /* TODO: Try to find this cursor */
-    UNIMPLEMENTED;
-    return FALSE;
+    PCURSORICONENTRY pCursorIcon;
+    PSWM_WINDOW pSwmWindow;
+
+    /* Acquire CI lock */
+    USER_LockCursorIcons();
+
+    /* Try to find this cursor */
+    pCursorIcon = USER_GetCursorIcon(hCursor);
+
+    /* Release CI lock */
+    USER_UnlockCursorIcons();
+
+    if (!pCursorIcon) return FALSE;
+
+    /* Acquire the SWM lock */
+    SwmAcquire();
+
+    /* Now find the window */
+    pSwmWindow = SwmFindByHwnd(hWnd);
+
+    /* Success is returned in this case */
+    if (!pSwmWindow)
+    {
+        /* Release the SWM lock */
+        SwmRelease();
+
+        return TRUE;
+    }
+
+    /* Set a cursor for this window */
+    pSwmWindow->Cursor = pCursorIcon;
+
+    /* Release the SWM lock */
+    SwmRelease();
+
+    return TRUE;
 }
 
 VOID

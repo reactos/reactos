@@ -73,6 +73,8 @@ static HWND cursor_window;
 static BYTE TrackSysKey = 0; /* determine whether ALT key up will cause a WM_SYSKEYUP
                                 or a WM_KEYUP message */
 
+VOID create_cursor( HANDLE handle );
+
 /***********************************************************************
  *		set_window_cursor
  */
@@ -82,11 +84,19 @@ void set_window_cursor( HWND hwnd, HCURSOR handle )
 
     if (!(data = NTDRV_get_win_data( hwnd ))) return;
 
+    if (!handle)
+    {
+        // FIXME: Special case for removing the cursor
+        FIXME("TODO: Cursor should be removed!\n");
+        data->cursor = handle;
+        return;
+    }
+
     /* Try to set the cursor */
     if (!SwmDefineCursor(hwnd, handle))
     {
         /* This cursor doesn't exist yet, create it */
-        DPRINT1("Cursor %p needs to be created!\n", handle);
+        create_cursor(handle);
 
         //SwmDefineCursor(hwnd, handle);
     }
@@ -497,6 +507,61 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
 }
 
 /***********************************************************************
+ *		create_cursor
+ *
+ * Create a client cursor from a Windows one.
+ */
+VOID create_cursor( HANDLE handle )
+{
+    HDC hdc;
+    ICONINFO info;
+    BITMAP bm;
+
+    //if (!handle) return get_empty_cursor();
+
+    if (!(hdc = CreateCompatibleDC( 0 ))) return;
+    if (!GetIconInfo( handle, &info ))
+    {
+        DeleteDC( hdc );
+        return;
+    }
+
+    GetObjectW( info.hbmMask, sizeof(bm), &bm );
+    if (!info.hbmColor) bm.bmHeight /= 2;
+
+    /* make sure hotspot is valid */
+    if (info.xHotspot >= bm.bmWidth || info.yHotspot >= bm.bmHeight)
+    {
+        info.xHotspot = bm.bmWidth / 2;
+        info.yHotspot = bm.bmHeight / 2;
+    }
+
+    if (info.hbmColor)
+    {
+        //cursor = create_xlib_cursor( hdc, &info, bm.bmWidth, bm.bmHeight );
+        FIXME("color\n");
+        //DeleteObject( info.hbmColor );
+    }
+    else
+    {
+        FIXME("bitmaps\n");
+        //XColor fg, bg;
+        //fg.red = fg.green = fg.blue = 0xffff;
+        //bg.red = bg.green = bg.blue = 0;
+        //cursor = create_cursor_from_bitmaps( info.hbmMask, info.hbmMask, bm.bmWidth, bm.bmHeight,
+        //                                     bm.bmHeight, 0, &fg, &bg, info.xHotspot, info.yHotspot );
+
+        FIXME("bmBits %p\n", bm.bmBits);
+        //RosGdiCreateBitmap(NULL, info.hbmMask, &bm, bm.bmBits);
+
+        RosUserSetCursor(&info);
+    }
+
+    //DeleteObject( info.hbmMask );
+    DeleteDC( hdc );
+}
+
+/***********************************************************************
  *		CreateCursorIcon (NTDRV.@)
  */
 // TODO: Delete this function
@@ -535,7 +600,7 @@ void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
  */
 void CDECL RosDrv_DestroyCursorIcon( HCURSOR handle )
 {
-    ICONINFO IconInfo;
+    ICONINFO IconInfo = {0};
 
     FIXME( "%p xid %lx\n", handle, /*cursor*/ 0 );
 
@@ -550,10 +615,10 @@ void CDECL RosDrv_DestroyCursorIcon( HCURSOR handle )
 
 void CDECL RosDrv_SetCursor( HCURSOR handle )
 {
-    if (cursor_window) SendNotifyMessageW( cursor_window, WM_NTDRV_SET_CURSOR, 0, (LPARAM)handle );
-    FIXME("handle %x, cursor_window %x\n", handle, cursor_window);
-
     // FIXME: Remove!
     RosUserSetCursor(NULL);
+
+    if (cursor_window) SendNotifyMessageW( cursor_window, WM_NTDRV_SET_CURSOR, 0, (LPARAM)handle );
+    FIXME("handle %x, cursor_window %x\n", handle, cursor_window);
 }
 

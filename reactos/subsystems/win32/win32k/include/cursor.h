@@ -34,3 +34,5 @@ extern SYSTEM_CURSORINFO CursorInfo;
 VOID NTAPI USER_InitCursorIcons();
 VOID USER_LockCursorIcons();
 VOID USER_UnlockCursorIcons();
+PCURSORICONENTRY NTAPI USER_GetCursorIcon(HCURSOR Handle);
+

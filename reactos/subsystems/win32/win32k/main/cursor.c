@@ -201,6 +201,9 @@ RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
             IconInfoUnsafe->hbmColor = pCursorIcon->hbmColor;
             IconInfoUnsafe->hbmMask = pCursorIcon->hbmMask;
 
+            // TODO: Go through all windows and remove this cursor from them!
+            DPRINT1("Hitting a TODO!\n");
+
             /* Free memory */
             ExFreePool(pCursorIcon);
             break;
@@ -212,6 +215,29 @@ RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
 
     /* Release lock */
     USER_UnlockCursorIcons();
+}
+
+PCURSORICONENTRY
+NTAPI
+USER_GetCursorIcon(HCURSOR Handle)
+{
+    PLIST_ENTRY Current;
+    PCURSORICONENTRY pCursorIcon;
+
+    /* Traverse the list to find our mapping */
+    Current = CursorIcons.Flink;
+    while(Current != &CursorIcons)
+    {
+        pCursorIcon = CONTAINING_RECORD(Current, CURSORICONENTRY, Entry);
+
+        /* Check if it's our entry */
+        if (pCursorIcon->hUser == Handle) return pCursorIcon;
+
+        /* Advance to the next pair */
+        Current = Current->Flink;
+    }
+
+    return NULL;
 }
 
 VOID NTAPI
