@@ -2070,7 +2070,10 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (NULL != NewWindow)
           {
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
-            ShowWindow(NewWindow, SW_SHOW);
+            if (wParam)
+              {
+                ShowWindow(NewWindow, SW_SHOW);
+              }
           }
         return (LRESULT) NewWindow;
       case PM_DESTROY_CONSOLE:
@@ -2250,7 +2253,7 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
 };
 
 NTSTATUS FASTCALL
-GuiInitConsole(PCSRSS_CONSOLE Console)
+GuiInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
 {
   HANDLE GraphicsStartupEvent;
   HANDLE ThreadHandle;
@@ -2317,7 +2320,7 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
      */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     /* create console */
-    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, Visible, (LPARAM) Console);
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);

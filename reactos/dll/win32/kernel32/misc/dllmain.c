@@ -150,6 +150,7 @@ BasepInitConsole(VOID)
     {
         /* Assume one is needed */
         Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
+        Request.Data.AllocConsoleRequest.Visible = TRUE;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -168,8 +169,9 @@ BasepInitConsole(VOID)
         else if (Parameters->ConsoleHandle == HANDLE_CREATE_NO_WINDOW)
         {
             /* We'll get the real one soon */
-            DPRINT1("NOT SUPPORTED: HANDLE_CREATE_NO_WINDOW\n");
+            DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
+            Request.Data.AllocConsoleRequest.Visible = FALSE;
         }
         else
         {

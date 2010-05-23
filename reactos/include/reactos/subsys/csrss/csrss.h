@@ -80,7 +80,8 @@ typedef struct
 typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
-   BOOL ConsoleNeeded;
+   BOOLEAN ConsoleNeeded;
+   BOOLEAN Visible;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;

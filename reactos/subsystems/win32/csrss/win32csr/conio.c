@@ -142,7 +142,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
 }
 
 static NTSTATUS WINAPI
-CsrInitConsole(PCSRSS_CONSOLE Console)
+CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
 {
   NTSTATUS Status;
   SECURITY_ATTRIBUTES SecurityAttributes;
@@ -210,7 +210,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
     }
   if (GuiMode)
     {
-      Status = GuiInitConsole(Console);
+      Status = GuiInitConsole(Console, Visible);
       if (! NT_SUCCESS(Status))
         {
           HeapFree(Win32CsrApiHeap,0, NewBuffer);
@@ -286,7 +286,7 @@ CSR_API(CsrAllocConsole)
         /* insert process data required for GUI initialization */
         InsertHeadList(&Console->ProcessList, &ProcessData->ProcessEntry);
         /* Initialize the Console */
-        Status = CsrInitConsole(Console);
+        Status = CsrInitConsole(Console, Request->Data.AllocConsoleRequest.Visible);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Console init failed\n");

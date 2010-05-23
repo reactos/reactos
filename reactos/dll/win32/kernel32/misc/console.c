@@ -1692,6 +1692,7 @@ AllocConsole(VOID)
 
     Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
     Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
+    Request.Data.AllocConsoleRequest.Visible = TRUE;
 
     CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
 
