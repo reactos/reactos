@@ -84,13 +84,6 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     { 0, 0, NULL }
   };
 
-static CSRSS_OBJECT_DEFINITION Win32CsrObjectDefinitions[] =
-  {
-    { CONIO_CONSOLE_MAGIC,       ConioDeleteConsole },
-    { CONIO_SCREEN_BUFFER_MAGIC, ConioDeleteScreenBuffer },
-    { 0,                         NULL }
-  };
-
 /* FUNCTIONS *****************************************************************/
 
 BOOL WINAPI
@@ -105,77 +98,6 @@ DllMain(HANDLE hDll,
     }
 
   return TRUE;
-}
-
-NTSTATUS FASTCALL
-Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-                      PHANDLE Handle,
-                      Object_t *Object,
-                      DWORD Access,
-                      BOOL Inheritable)
-{
-  return CsrInsertObject(ProcessData, Handle, Object, Access, Inheritable);
-}
-
-NTSTATUS FASTCALL
-Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
-                 HANDLE Handle,
-                 Object_t **Object,
-                 DWORD Access)
-{
-  return CsrGetObject(ProcessData, Handle, Object, Access);
-}
-
-NTSTATUS FASTCALL
-Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
-                   HANDLE Handle,
-                   Object_t **Object,
-                   DWORD Access,
-                   LONG Type)
-{
-  NTSTATUS Status;
-
-  Status = CsrGetObject(ProcessData, Handle, Object, Access);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  if ((*Object)->Type != Type)
-    {
-      CsrReleaseObjectByPointer(*Object);
-      return STATUS_INVALID_HANDLE;
-    }
-
-  EnterCriticalSection(&((*Object)->Lock));
-
-  return STATUS_SUCCESS;
-}
-
-VOID FASTCALL
-Win32CsrUnlockObject(Object_t *Object)
-{
-  LeaveCriticalSection(&(Object->Lock));
-  CsrReleaseObjectByPointer(Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrReleaseObjectByPointer(Object_t *Object)
-{
-  return CsrReleaseObjectByPointer(Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
-                      HANDLE Object)
-{
-  return CsrReleaseObject(ProcessData, Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData)
-{
-  return CsrReleaseConsole(ProcessData);
 }
 
 NTSTATUS FASTCALL
@@ -207,13 +129,12 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
 
   PrivateCsrssManualGuiCheck(0);
   CsrInitConsoleSupport();
-  CsrRegisterObjectDefinitions(Win32CsrObjectDefinitions);
 
   *ApiDefinitions = Win32CsrApiDefinitions;
   ServerProcs->InitCompleteProc = Win32CsrInitComplete;
   ServerProcs->HardErrorProc = Win32CsrHardError;
-  ServerProcs->ProcessInheritProc = CsrDuplicateHandleTable;
-  ServerProcs->ProcessDeletedProc = CsrReleaseConsole;
+  ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
+  ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
   return TRUE;
 }

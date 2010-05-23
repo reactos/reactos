@@ -16,8 +16,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static unsigned ObjectDefinitionsCount = 0;
-static PCSRSS_OBJECT_DEFINITION ObjectDefinitions = NULL;
+static unsigned ObjectDefinitionsCount = 2;
+static CSRSS_OBJECT_DEFINITION ObjectDefinitions[] =
+{
+    { CONIO_CONSOLE_MAGIC,       ConioDeleteConsole },
+    { CONIO_SCREEN_BUFFER_MAGIC, ConioDeleteScreenBuffer },
+};
 
 static
 BOOL
@@ -26,52 +30,9 @@ CsrIsConsoleHandle(HANDLE Handle)
     return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
 }
 
-
 NTSTATUS
 FASTCALL
-CsrRegisterObjectDefinitions(
-    PCSRSS_OBJECT_DEFINITION NewDefinitions)
-{
-    unsigned NewCount;
-    PCSRSS_OBJECT_DEFINITION Scan;
-    PCSRSS_OBJECT_DEFINITION New;
-
-    NewCount = 0;
-    for (Scan = NewDefinitions; 0 != Scan->Type; Scan++)
-    {
-        NewCount++;
-    }
-
-    New = RtlAllocateHeap(Win32CsrApiHeap,
-                          0,
-                          (ObjectDefinitionsCount + NewCount)
-                          * sizeof(CSRSS_OBJECT_DEFINITION));
-    if (NULL == New)
-    {
-        DPRINT1("Unable to allocate memory\n");
-        return STATUS_NO_MEMORY;
-    }
-
-    if (0 != ObjectDefinitionsCount)
-    {
-        RtlCopyMemory(New,
-                      ObjectDefinitions,
-                      ObjectDefinitionsCount * sizeof(CSRSS_OBJECT_DEFINITION));
-        RtlFreeHeap(Win32CsrApiHeap, 0, ObjectDefinitions);
-    }
-
-    RtlCopyMemory(New + ObjectDefinitionsCount,
-                  NewDefinitions,
-                  NewCount * sizeof(CSRSS_OBJECT_DEFINITION));
-    ObjectDefinitions = New;
-    ObjectDefinitionsCount += NewCount;
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-WINAPI
-CsrGetObject(
+Win32CsrGetObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle,
     Object_t **Object,
@@ -99,8 +60,8 @@ CsrGetObject(
 
 
 NTSTATUS
-WINAPI
-CsrReleaseObjectByPointer(
+FASTCALL
+Win32CsrReleaseObjectByPointer(
     Object_t *Object)
 {
     unsigned DefIndex;
@@ -123,10 +84,9 @@ CsrReleaseObjectByPointer(
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
-WINAPI
-CsrReleaseObject(
+FASTCALL
+Win32CsrReleaseObject(
     PCSRSS_PROCESS_DATA ProcessData,
     HANDLE Handle)
 {
@@ -143,12 +103,47 @@ CsrReleaseObject(
     ProcessData->HandleTable[h].Object = NULL;
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    return CsrReleaseObjectByPointer(Object);
+    return Win32CsrReleaseObjectByPointer(Object);
+}
+
+NTSTATUS
+FASTCALL
+Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
+                   HANDLE Handle,
+                   Object_t **Object,
+                   DWORD Access,
+                   LONG Type)
+{
+    NTSTATUS Status;
+
+    Status = Win32CsrGetObject(ProcessData, Handle, Object, Access);
+    if (! NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    if ((*Object)->Type != Type)
+    {
+        Win32CsrReleaseObjectByPointer(*Object);
+        return STATUS_INVALID_HANDLE;
+    }
+
+    EnterCriticalSection(&((*Object)->Lock));
+
+    return STATUS_SUCCESS;
+}
+
+VOID
+FASTCALL
+Win32CsrUnlockObject(Object_t *Object)
+{
+    LeaveCriticalSection(&(Object->Lock));
+    Win32CsrReleaseObjectByPointer(Object);
 }
 
 NTSTATUS
 WINAPI
-CsrReleaseConsole(
+Win32CsrReleaseConsole(
     PCSRSS_PROCESS_DATA ProcessData)
 {
     ULONG HandleTableSize;
@@ -169,16 +164,16 @@ CsrReleaseConsole(
     for (i = 0; i < HandleTableSize; i++)
     {
         if (HandleTable[i].Object != NULL)
-            CsrReleaseObjectByPointer(HandleTable[i].Object);
+            Win32CsrReleaseObjectByPointer(HandleTable[i].Object);
     }
     RtlFreeHeap(Win32CsrApiHeap, 0, HandleTable);
 
     if (Console != NULL)
     {
-        RtlEnterCriticalSection((PRTL_CRITICAL_SECTION)&Console->Header.Lock);
+        EnterCriticalSection(&Console->Header.Lock);
         RemoveEntryList(&ProcessData->ProcessEntry);
-        RtlLeaveCriticalSection((PRTL_CRITICAL_SECTION)&Console->Header.Lock);
-        CsrReleaseObjectByPointer(&Console->Header);
+        LeaveCriticalSection(&Console->Header.Lock);
+        Win32CsrReleaseObjectByPointer(&Console->Header);
         return STATUS_SUCCESS;
     }
 
@@ -186,8 +181,8 @@ CsrReleaseConsole(
 }
 
 NTSTATUS
-WINAPI
-CsrInsertObject(
+FASTCALL
+Win32CsrInsertObject(
     PCSRSS_PROCESS_DATA ProcessData,
     PHANDLE Handle,
     Object_t *Object,
@@ -195,7 +190,7 @@ CsrInsertObject(
     BOOL Inheritable)
 {
     ULONG i;
-    PVOID* Block;
+    PCSRSS_HANDLE Block;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
@@ -219,8 +214,8 @@ CsrInsertObject(
         RtlCopyMemory(Block,
                       ProcessData->HandleTable,
                       ProcessData->HandleTableSize * sizeof(CSRSS_HANDLE));
-        Block = _InterlockedExchangePointer((void* volatile)&ProcessData->HandleTable, Block);
-        RtlFreeHeap( Win32CsrApiHeap, 0, Block );
+        RtlFreeHeap(Win32CsrApiHeap, 0, ProcessData->HandleTable);
+        ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += 64;
     }
     ProcessData->HandleTable[i].Object = Object;
@@ -234,7 +229,7 @@ CsrInsertObject(
 
 NTSTATUS
 WINAPI
-CsrDuplicateHandleTable(
+Win32CsrDuplicateHandleTable(
     PCSRSS_PROCESS_DATA SourceProcessData,
     PCSRSS_PROCESS_DATA TargetProcessData)
 {
@@ -272,23 +267,6 @@ CsrDuplicateHandleTable(
     return(STATUS_SUCCESS);
 }
 
-NTSTATUS
-WINAPI
-CsrVerifyObject(
-    PCSRSS_PROCESS_DATA ProcessData,
-    HANDLE Handle)
-{
-    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
-
-    if (h >= ProcessData->HandleTableSize ||
-        ProcessData->HandleTable[h].Object == NULL)
-    {
-        return STATUS_INVALID_HANDLE;
-    }
-
-    return STATUS_SUCCESS;
-}
-
 CSR_API(CsrGetInputHandle)
 {
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
@@ -296,11 +274,11 @@ CSR_API(CsrGetInputHandle)
 
     if (ProcessData->Console)
     {
-        Request->Status = CsrInsertObject(ProcessData,
-                                          &Request->Data.GetInputHandleRequest.InputHandle,
-                                          (Object_t *)ProcessData->Console,
-                                          Request->Data.GetInputHandleRequest.Access,
-                                          Request->Data.GetInputHandleRequest.Inheritable);
+        Request->Status = Win32CsrInsertObject(ProcessData,
+                                               &Request->Data.GetInputHandleRequest.InputHandle,
+                                               &ProcessData->Console->Header,
+                                               Request->Data.GetInputHandleRequest.Access,
+                                               Request->Data.GetInputHandleRequest.Inheritable);
     }
     else
     {
@@ -318,11 +296,11 @@ CSR_API(CsrGetOutputHandle)
 
     if (ProcessData->Console)
     {
-        Request->Status = CsrInsertObject(ProcessData,
-                                          &Request->Data.GetOutputHandleRequest.OutputHandle,
-                                          &ProcessData->Console->ActiveBuffer->Header,
-                                          Request->Data.GetOutputHandleRequest.Access,
-                                          Request->Data.GetOutputHandleRequest.Inheritable);
+        Request->Status = Win32CsrInsertObject(ProcessData,
+                                               &Request->Data.GetOutputHandleRequest.OutputHandle,
+                                               &ProcessData->Console->ActiveBuffer->Header,
+                                               Request->Data.GetOutputHandleRequest.Access,
+                                               Request->Data.GetOutputHandleRequest.Inheritable);
     }
     else
     {
@@ -338,21 +316,28 @@ CSR_API(CsrCloseHandle)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-    return CsrReleaseObject(ProcessData, Request->Data.CloseHandleRequest.Handle);
+    return Win32CsrReleaseObject(ProcessData, Request->Data.CloseHandleRequest.Handle);
 }
 
 CSR_API(CsrVerifyHandle)
 {
+    ULONG_PTR Index;
+    NTSTATUS Status = STATUS_SUCCESS;
+
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-    Request->Status = CsrVerifyObject(ProcessData, Request->Data.VerifyHandleRequest.Handle);
-    if (!NT_SUCCESS(Request->Status))
+    Index = (ULONG_PTR)Request->Data.VerifyHandleRequest.Handle >> 2;
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    if (Index >= ProcessData->HandleTableSize ||
+        ProcessData->HandleTable[Index].Object == NULL)
     {
-        DPRINT("CsrVerifyObject failed, status=%x\n", Request->Status);
+        DPRINT("CsrVerifyObject failed\n");
+        Status = STATUS_INVALID_HANDLE;
     }
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    return Request->Status;
+    return Status;
 }
 
 CSR_API(CsrDuplicateHandle)
@@ -391,11 +376,11 @@ CSR_API(CsrDuplicateHandle)
         }
     }
     
-    Request->Status = CsrInsertObject(ProcessData,
-                                      &Request->Data.DuplicateHandleRequest.Handle,
-                                      Entry->Object,
-                                      DesiredAccess,
-                                      Request->Data.DuplicateHandleRequest.Inheritable);
+    Request->Status = Win32CsrInsertObject(ProcessData,
+                                           &Request->Data.DuplicateHandleRequest.Handle,
+                                           Entry->Object,
+                                           DesiredAccess,
+                                           Request->Data.DuplicateHandleRequest.Inheritable);
     if (NT_SUCCESS(Request->Status)
         && Request->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
     {

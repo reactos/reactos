@@ -48,6 +48,8 @@ typedef struct tagCSRSS_SCREEN_BUFFER
   USHORT Mode;
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
 
+typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
+
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
   VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
@@ -88,9 +90,19 @@ typedef struct tagCSRSS_CONSOLE
   struct tagALIAS_HEADER *Aliases;
 } CSRSS_CONSOLE;
 
+typedef struct ConsoleInput_t
+{
+  LIST_ENTRY ListEntry;
+  INPUT_RECORD InputEvent;
+  BOOLEAN Echoed;        // already been echoed or not
+  BOOLEAN Fake;          // synthesized, not a real event
+  BOOLEAN NotChar;       // message should not be used to return a character
+} ConsoleInput;
+
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(Object_t *Object);
 VOID WINAPI ConioDeleteScreenBuffer(Object_t *Buffer);
+VOID WINAPI CsrInitConsoleSupport(VOID);
 void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
 PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);

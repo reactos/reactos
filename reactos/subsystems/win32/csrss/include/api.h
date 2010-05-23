@@ -44,31 +44,6 @@ typedef enum _CSR_PROCESS_FLAGS
     CsrProcessIsConsoleApp = 0x800
 } CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
 
-typedef struct Object_tt
-{
-  LONG Type;
-  LONG ReferenceCount;
-  CRITICAL_SECTION Lock;
-} Object_t;
-
-typedef struct ConsoleInput_t
-{
-  LIST_ENTRY ListEntry;
-  INPUT_RECORD InputEvent;
-  BOOLEAN Echoed;        // already been echoed or not
-  BOOLEAN Fake;          // synthesized, not a real event
-  BOOLEAN NotChar;       // message should not be used to return a character
-} ConsoleInput;
-
-typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
-
-typedef struct _CSRSS_HANDLE
-{
-  Object_t *Object;
-  DWORD Access;
-  BOOL Inheritable;
-} CSRSS_HANDLE, *PCSRSS_HANDLE;
-
 typedef struct _CSRSS_PROCESS_DATA
 {
   struct tagCSRSS_CONSOLE *Console;
@@ -76,7 +51,7 @@ typedef struct _CSRSS_PROCESS_DATA
   BOOL bInheritHandles;
   RTL_CRITICAL_SECTION HandleTableLock;
   ULONG HandleTableSize;
-  PCSRSS_HANDLE HandleTable;
+  struct _CSRSS_HANDLE *HandleTable;
   HANDLE ProcessId;
   DWORD ProcessGroup;
   HANDLE Process;
@@ -109,14 +84,6 @@ typedef struct _CSR_THREAD
     ULONG ImpersonationCount;
 } CSR_THREAD, *PCSR_THREAD;
 
-typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
-
-typedef struct tagCSRSS_OBJECT_DEFINITION
-{
-  LONG Type;
-  CSR_CLEANUP_OBJECT_PROC CsrCleanupObjectProc;
-} CSRSS_OBJECT_DEFINITION, *PCSRSS_OBJECT_DEFINITION;
-
 typedef NTSTATUS (WINAPI *CSRSS_API_PROC)(PCSRSS_PROCESS_DATA ProcessData,
                                            PCSR_API_MESSAGE Request);
 
@@ -143,32 +110,24 @@ PCSR_API_MESSAGE Request)
 
 /* init.c */
 extern HANDLE hBootstrapOk;
+NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
 
 /* api/process.c */
 CSR_API(CsrConnectProcess);
 CSR_API(CsrCreateProcess);
 CSR_API(CsrTerminateProcess);
 CSR_API(CsrSrvCreateThread);
-
-/* print.c */
-VOID WINAPI DisplayString(LPCWSTR lpwString);
-VOID WINAPI PrintString (char* fmt, ...);
+CSR_API(CsrGetShutdownParameters);
+CSR_API(CsrSetShutdownParameters);
 
 /* api/wapi.c */
 NTSTATUS FASTCALL CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions);
 VOID FASTCALL CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                                 PCSR_API_MESSAGE Request);
-DWORD WINAPI ServerApiPortThread (PVOID PortHandle);
 DWORD WINAPI ServerSbApiPortThread (PVOID PortHandle);
-DWORD WINAPI Console_Api( PVOID unused );
-VOID
-NTAPI
-ClientConnectionThread(HANDLE ServerPort);
+VOID NTAPI ClientConnectionThread(HANDLE ServerPort);
 
 extern HANDLE CsrssApiHeap;
-
-/* api/conio.c */
-VOID WINAPI CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
 typedef NTSTATUS (WINAPI *CSRSS_ENUM_PROCESS_PROC)(PCSRSS_PROCESS_DATA ProcessData,
@@ -185,34 +144,10 @@ NTSTATUS NTAPI CsrLockProcessByClientId(IN HANDLE Pid, OUT PCSRSS_PROCESS_DATA *
 NTSTATUS NTAPI CsrCreateThread(IN PCSRSS_PROCESS_DATA CsrProcess, IN HANDLE hThread, IN PCLIENT_ID ClientId);
 NTSTATUS NTAPI CsrUnlockProcess(IN PCSRSS_PROCESS_DATA CsrProcess);
 
-/* api/handle.c */
-NTSTATUS FASTCALL CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions);
-NTSTATUS WINAPI CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object, DWORD Access, BOOL Inheritable );
-NTSTATUS WINAPI CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData, PCSRSS_PROCESS_DATA TargetProcessData);
-NTSTATUS WINAPI CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object, DWORD Access );
-NTSTATUS NTAPI CsrServerInitialization(ULONG ArgumentCount, PCHAR Arguments[]);
-NTSTATUS WINAPI CsrReleaseObjectByPointer(Object_t *Object);
-NTSTATUS WINAPI CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-NTSTATUS WINAPI CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData);
-NTSTATUS WINAPI CsrVerifyObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
-
 //hack
 VOID NTAPI CsrThreadRefcountZero(IN PCSR_THREAD CsrThread);
 
-CSR_API(CsrGetInputHandle);
-CSR_API(CsrGetOutputHandle);
-CSR_API(CsrCloseHandle);
-CSR_API(CsrVerifyHandle);
-CSR_API(CsrDuplicateHandle);
-CSR_API(CsrGetInputWaitHandle);
-
 /* api/user.c */
 CSR_API(CsrRegisterServicesProcess);
-CSR_API(CsrExitReactos);
-CSR_API(CsrGetShutdownParameters);
-CSR_API(CsrSetShutdownParameters);
-
-CSR_API(CsrSetLogonNotifyWindow);
-CSR_API(CsrRegisterLogonProcess);
 
 /* EOF */
