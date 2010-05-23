@@ -320,15 +320,10 @@ typedef struct
 {
   DWORD Access;
   BOOL Inheritable;
-  HANDLE InputHandle;
-} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE;
-
-typedef struct
-{
-  DWORD Access;
-  BOOL Inheritable;
-  HANDLE OutputHandle;
-} CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
+  HANDLE Handle;
+  DWORD ShareMode;
+} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE,
+  CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
 
 typedef struct
 {

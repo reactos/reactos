@@ -23,17 +23,26 @@ CsrIsConsoleHandle(HANDLE Handle)
     return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
 }
 
+static INT
+AdjustHandleCounts(PCSRSS_HANDLE Entry, INT Change)
+{
+    Object_t *Object = Entry->Object;
+    if (Entry->Access & GENERIC_READ)           Object->AccessRead += Change;
+    if (Entry->Access & GENERIC_WRITE)          Object->AccessWrite += Change;
+    if (!(Entry->ShareMode & FILE_SHARE_READ))  Object->ExclusiveRead += Change;
+    if (!(Entry->ShareMode & FILE_SHARE_WRITE)) Object->ExclusiveWrite += Change;
+    Object->HandleCount += Change;
+    return Object->HandleCount;
+}
+
 static VOID
 Win32CsrCreateHandleEntry(
-    PCSRSS_HANDLE Entry,
-    Object_t *Object,
-    DWORD Access,
-    BOOL Inheritable)
+    PCSRSS_HANDLE Entry)
 {
-    Entry->Object = Object;
-    Entry->Access = Access;
-    Entry->Inheritable = Inheritable;
-    _InterlockedIncrement(&Object->HandleCount);
+    Object_t *Object = Entry->Object;
+    EnterCriticalSection(&Object->Console->Lock);
+    AdjustHandleCounts(Entry, +1);
+    LeaveCriticalSection(&Object->Console->Lock);
 }
 
 static VOID
@@ -43,21 +52,21 @@ Win32CsrCloseHandleEntry(
     Object_t *Object = Entry->Object;
     if (Object != NULL)
     {
-        Entry->Object = NULL;
+        PCSRSS_CONSOLE Console = Object->Console;
+        EnterCriticalSection(&Console->Lock);
         /* If the last handle to a screen buffer is closed, delete it */
-        if (_InterlockedDecrement(&Object->HandleCount) == 0
+        if (AdjustHandleCounts(Entry, -1) == 0
             && Object->Type == CONIO_SCREEN_BUFFER_MAGIC)
         {
-            PCSRSS_CONSOLE Console = Object->Console;
             PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER)Object;
-            EnterCriticalSection(&Console->Lock);
             /* ...unless it's the only buffer left. Windows allows deletion
              * even of the last buffer, but having to deal with a lack of
              * any active buffer might be error-prone. */
             if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
                 ConioDeleteScreenBuffer(Buffer);
-            LeaveCriticalSection(&Console->Lock);
         }
+        LeaveCriticalSection(&Console->Lock);
+        Entry->Object = NULL;
     }
 }
 
@@ -163,7 +172,8 @@ Win32CsrInsertObject(
     PHANDLE Handle,
     Object_t *Object,
     DWORD Access,
-    BOOL Inheritable)
+    BOOL Inheritable,
+    DWORD ShareMode)
 {
     ULONG i;
     PCSRSS_HANDLE Block;
@@ -194,7 +204,11 @@ Win32CsrInsertObject(
         ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += 64;
     }
-    Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i], Object, Access, Inheritable);
+    ProcessData->HandleTable[i].Object      = Object;
+    ProcessData->HandleTable[i].Access      = Access;
+    ProcessData->HandleTable[i].Inheritable = Inheritable;
+    ProcessData->HandleTable[i].ShareMode   = ShareMode;
+    Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i]);
     *Handle = UlongToHandle((i << 2) | 0x3);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return(STATUS_SUCCESS);
@@ -232,62 +246,60 @@ Win32CsrDuplicateHandleTable(
         if (SourceProcessData->HandleTable[i].Object != NULL &&
             SourceProcessData->HandleTable[i].Inheritable)
         {
-            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i],
-                                       SourceProcessData->HandleTable[i].Object,
-                                       SourceProcessData->HandleTable[i].Access,
-                                       SourceProcessData->HandleTable[i].Inheritable);
+            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
+            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i]);
         }
     }
     RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
     return(STATUS_SUCCESS);
 }
 
-CSR_API(CsrGetInputHandle)
+CSR_API(CsrGetHandle)
 {
+    NTSTATUS Status = STATUS_SUCCESS;
+
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+    Request->Data.GetInputHandleRequest.Handle = INVALID_HANDLE_VALUE;
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (ProcessData->Console)
     {
-        Request->Status = Win32CsrInsertObject(ProcessData,
-                                               &Request->Data.GetInputHandleRequest.InputHandle,
-                                               &ProcessData->Console->Header,
-                                               Request->Data.GetInputHandleRequest.Access,
-                                               Request->Data.GetInputHandleRequest.Inheritable);
-    }
-    else
-    {
-        Request->Data.GetInputHandleRequest.InputHandle = INVALID_HANDLE_VALUE;
-        Request->Status = STATUS_SUCCESS;
-    }
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
+        DWORD DesiredAccess = Request->Data.GetInputHandleRequest.Access;
+        DWORD ShareMode = Request->Data.GetInputHandleRequest.ShareMode;
 
-    return Request->Status;
-}
+        PCSRSS_CONSOLE Console = ProcessData->Console;
+        Object_t *Object;
+        
+        EnterCriticalSection(&Console->Lock);
+        if (Request->Type == GET_OUTPUT_HANDLE)
+            Object = &Console->ActiveBuffer->Header;
+        else
+            Object = &Console->Header;
 
-CSR_API(CsrGetOutputHandle)
-{
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (ProcessData->Console)
-    {
-        Request->Status = Win32CsrInsertObject(ProcessData,
-                                               &Request->Data.GetOutputHandleRequest.OutputHandle,
-                                               &ProcessData->Console->ActiveBuffer->Header,
-                                               Request->Data.GetOutputHandleRequest.Access,
-                                               Request->Data.GetOutputHandleRequest.Inheritable);
-    }
-    else
-    {
-        Request->Data.GetOutputHandleRequest.OutputHandle = INVALID_HANDLE_VALUE;
-        Request->Status = STATUS_SUCCESS;
+        if (((DesiredAccess & GENERIC_READ)  && Object->ExclusiveRead  != 0) ||
+            ((DesiredAccess & GENERIC_WRITE) && Object->ExclusiveWrite != 0) ||
+            (!(ShareMode & FILE_SHARE_READ)  && Object->AccessRead     != 0) ||
+            (!(ShareMode & FILE_SHARE_WRITE) && Object->AccessWrite    != 0))
+        {
+            DPRINT1("Sharing violation\n");
+            Status = STATUS_SHARING_VIOLATION;
+        }
+        else
+        {
+            Status = Win32CsrInsertObject(ProcessData,
+                                          &Request->Data.GetInputHandleRequest.Handle,
+                                          Object,
+                                          DesiredAccess,
+                                          Request->Data.GetInputHandleRequest.Inheritable,
+                                          ShareMode);
+        }
+        LeaveCriticalSection(&Console->Lock);
     }
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    return Request->Status;
+    return Status;
 }
 
 CSR_API(CsrCloseHandle)
@@ -359,7 +371,8 @@ CSR_API(CsrDuplicateHandle)
                                            &Request->Data.DuplicateHandleRequest.Handle,
                                            Entry->Object,
                                            DesiredAccess,
-                                           Request->Data.DuplicateHandleRequest.Inheritable);
+                                           Request->Data.DuplicateHandleRequest.Inheritable,
+                                           Entry->ShareMode);
     if (NT_SUCCESS(Request->Status)
         && Request->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
     {

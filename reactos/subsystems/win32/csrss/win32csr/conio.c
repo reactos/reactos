@@ -317,7 +317,8 @@ CSR_API(CsrAllocConsole)
                                       &Request->Data.AllocConsoleRequest.InputHandle,
                                       &Console->Header,
                                       GENERIC_READ | GENERIC_WRITE,
-                                      TRUE);
+                                      TRUE,
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
         if (! NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -331,7 +332,8 @@ CSR_API(CsrAllocConsole)
                                       &Request->Data.AllocConsoleRequest.OutputHandle,
                                       &Console->ActiveBuffer->Header,
                                       GENERIC_READ | GENERIC_WRITE,
-                                      TRUE);
+                                      TRUE,
+                                      FILE_SHARE_READ | FILE_SHARE_WRITE);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to insert object\n");
@@ -1975,7 +1977,8 @@ CSR_API(CsrCreateScreenBuffer)
             &Request->Data.CreateScreenBufferRequest.OutputHandle,
             &Buff->Header,
             Request->Data.CreateScreenBufferRequest.Access,
-            Request->Data.CreateScreenBufferRequest.Inheritable);
+            Request->Data.CreateScreenBufferRequest.Inheritable,
+            Request->Data.CreateScreenBufferRequest.ShareMode);
         }
     }
   else

@@ -24,8 +24,8 @@ static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
   {
-    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetInputHandle),
-    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
+    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
+    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
     CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
     CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
     CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),

@@ -1022,6 +1022,7 @@ OpenConsoleW(LPCWSTR wsName,
     /* Structures for GET_INPUT_HANDLE and GET_OUTPUT_HANDLE requests are identical */
     Request.Data.GetInputHandleRequest.Access = dwDesiredAccess;
     Request.Data.GetInputHandleRequest.Inheritable = bInheritHandle;
+    Request.Data.GetInputHandleRequest.ShareMode = dwShareMode;
 
     Status = CsrClientCallServer(&Request,
                                  NULL,
@@ -1033,7 +1034,7 @@ OpenConsoleW(LPCWSTR wsName,
         return INVALID_HANDLE_VALUE;
     }
 
-    return Request.Data.GetInputHandleRequest.InputHandle;
+    return Request.Data.GetInputHandleRequest.Handle;
 }
 
 

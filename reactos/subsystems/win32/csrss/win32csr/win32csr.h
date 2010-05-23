@@ -18,6 +18,8 @@ typedef struct Object_tt
 {
   LONG Type;
   struct tagCSRSS_CONSOLE *Console;
+  LONG AccessRead, AccessWrite;
+  LONG ExclusiveRead, ExclusiveWrite;
   LONG HandleCount;
 } Object_t;
 
@@ -26,6 +28,7 @@ typedef struct _CSRSS_HANDLE
   Object_t *Object;
   DWORD Access;
   BOOL Inheritable;
+  DWORD ShareMode;
 } CSRSS_HANDLE, *PCSRSS_HANDLE;
 
 typedef VOID (WINAPI *CSR_CLEANUP_OBJECT_PROC)(Object_t *Object);
@@ -41,7 +44,8 @@ NTSTATUS FASTCALL Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
                                        PHANDLE Handle,
                                        Object_t *Object,
                                        DWORD Access,
-                                       BOOL Inheritable);
+                                       BOOL Inheritable,
+                                       DWORD ShareMode);
 NTSTATUS FASTCALL Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                                      HANDLE Handle,
                                      Object_t **Object,
@@ -53,8 +57,7 @@ NTSTATUS FASTCALL Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
 NTSTATUS WINAPI Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData);
 NTSTATUS WINAPI Win32CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
                                              PCSRSS_PROCESS_DATA TargetProcessData);
-CSR_API(CsrGetInputHandle);
-CSR_API(CsrGetOutputHandle);
+CSR_API(CsrGetHandle);
 CSR_API(CsrCloseHandle);
 CSR_API(CsrVerifyHandle);
 CSR_API(CsrDuplicateHandle);
