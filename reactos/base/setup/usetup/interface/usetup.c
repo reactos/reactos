@@ -829,7 +829,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 		while (ListEntry != NULL)
 		{
-			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
 			{
 				DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
 				SetCurrentListEntry(LanguageList, ListEntry);
@@ -843,7 +843,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 		while (ListEntry != NULL)
 		{
-			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
 			{
 				DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
 				SetCurrentListEntry(LayoutList, ListEntry);
