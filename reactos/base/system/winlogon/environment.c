@@ -19,25 +19,42 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 
 /* GLOBALS ******************************************************************/
 
-typedef HRESULT (WINAPI *PFSHGETFOLDERPATHW)(HWND, int, HANDLE, DWORD, LPWSTR);
-
 
 /* FUNCTIONS ****************************************************************/
 
 static VOID
 BuildVolatileEnvironment(IN PWLSESSION Session,
-                         IN HKEY hKey)
+                         IN HKEY hKeyCurrentUser)
 {
-    HINSTANCE hShell32 = NULL;
-    PFSHGETFOLDERPATHW pfSHGetFolderPathW = NULL;
     WCHAR szPath[MAX_PATH + 1];
-    WCHAR szExpandedPath[MAX_PATH + 1];
     LPCWSTR wstr;
     SIZE_T size;
     WCHAR szEnvKey[MAX_PATH];
     WCHAR szEnvValue[1024];
     SIZE_T length;
     LPWSTR eqptr, endptr;
+    DWORD dwDisp;
+    LONG lError;
+    HKEY hKeyVolatileEnv;
+    HKEY hKeyShellFolders;
+    DWORD dwType;
+    DWORD dwSize;
+
+    /* Create the 'Volatile Environment' key */
+    lError = RegCreateKeyExW(hKeyCurrentUser,
+                             L"Volatile Environment",
+                             0,
+                             NULL,
+                             REG_OPTION_VOLATILE,
+                             KEY_WRITE,
+                             NULL,
+                             &hKeyVolatileEnv,
+                             &dwDisp);
+    if (lError != ERROR_SUCCESS)
+    {
+        WARN("WL: RegCreateKeyExW() failed to create the volatile environment key (Error: %ld)\n", lError);
+        return;
+    }
 
     /* Parse the environment variables and add them to the volatile environment key */
     if (Session->Profile->dwType == WLX_PROFILE_TYPE_V2_0 &&
@@ -68,7 +85,7 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
                     eqptr++;
                 wcscpy(szEnvValue, eqptr);
 
-                RegSetValueExW(hKey,
+                RegSetValueExW(hKeyVolatileEnv,
                                szEnvKey,
                                0,
                                REG_SZ,
@@ -80,50 +97,44 @@ BuildVolatileEnvironment(IN PWLSESSION Session,
         }
     }
 
-    /* Load shell32.dll and call SHGetFolderPathW to get the users appdata folder path */
-    hShell32 = LoadLibraryW(L"shell32.dll");
-    if (hShell32 != NULL)
+    /* Set the 'APPDATA' environment variable */
+    lError = RegOpenKeyExW(hKeyCurrentUser,
+                           L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders",
+                           0,
+                           KEY_READ,
+                           &hKeyShellFolders);
+    if (lError == ERROR_SUCCESS)
     {
-        pfSHGetFolderPathW = (PFSHGETFOLDERPATHW)GetProcAddress(hShell32,
-                                                                "SHGetFolderPathW");
-        if (pfSHGetFolderPathW != NULL)
+        dwSize = (MAX_PATH + 1) * sizeof(WCHAR);
+        lError = RegQueryValueExW(hKeyShellFolders,
+                                  L"AppData",
+                                  NULL,
+                                  &dwType,
+                                  (LPBYTE)szPath,
+                                  &dwSize);
+        if (lError == ERROR_SUCCESS)
         {
-            if (pfSHGetFolderPathW(NULL,
-                                   CSIDL_APPDATA | CSIDL_FLAG_DONT_VERIFY,
-                                   Session->UserToken,
-                                   0,
-                                   szPath) == S_OK)
-            {
-                /* FIXME: Expand %USERPROFILE% here. SHGetFolderPathW should do it for us. See Bug #5372.*/
-                TRACE("APPDATA path: %S\n", szPath);
-                ExpandEnvironmentStringsForUserW(Session->UserToken,
-                                                 szPath,
-                                                 szExpandedPath,
-                                                 MAX_PATH);
-
-                /* Add the appdata folder path to the users volatile environment key */
-                TRACE("APPDATA expanded path: %S\n", szExpandedPath);
-                RegSetValueExW(hKey,
-                               L"APPDATA",
-                               0,
-                               REG_SZ,
-                               (LPBYTE)szExpandedPath,
-                               (wcslen(szExpandedPath) + 1) * sizeof(WCHAR));
-            }
+            TRACE("APPDATA path: %S\n", szPath);
+            RegSetValueExW(hKeyVolatileEnv,
+                           L"APPDATA",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szPath,
+                           (wcslen(szPath) + 1) * sizeof(WCHAR));
         }
 
-        FreeLibrary(hShell32);
+        RegCloseKey(hKeyShellFolders);
     }
+
+    RegCloseKey(hKeyVolatileEnv);
 }
 
 
 BOOL
 CreateUserEnvironment(IN PWLSESSION Session)
 {
-    HKEY hKey;
-    DWORD dwDisp;
-    LONG lError;
     HKEY hKeyCurrentUser;
+    LONG lError;
 
     TRACE("WL: CreateUserEnvironment called\n");
 
@@ -135,28 +146,8 @@ CreateUserEnvironment(IN PWLSESSION Session)
                                 &hKeyCurrentUser);
     if (lError == ERROR_SUCCESS)
     {
-        /* Create the 'Volatile Environment' key */
-        lError = RegCreateKeyExW(hKeyCurrentUser,
-                                 L"Volatile Environment",
-                                 0,
-                                 NULL,
-                                 REG_OPTION_VOLATILE,
-                                 KEY_WRITE,
-                                 NULL,
-                                 &hKey,
-                                 &dwDisp);
-        if (lError == ERROR_SUCCESS)
-        {
-            BuildVolatileEnvironment(Session,
-                                     hKey);
-
-            RegCloseKey(hKey);
-        }
-        else
-        {
-            WARN("WL: RegCreateKeyExW() failed (Error: %ld)\n", lError);
-        }
-
+        BuildVolatileEnvironment(Session,
+                                 hKeyCurrentUser);
         RegCloseKey(hKeyCurrentUser);
     }
 
