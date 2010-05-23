@@ -872,7 +872,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     Buff = Console->ActiveBuffer;
 
-    EnterCriticalSection(&Buff->Header.Lock);
+    EnterCriticalSection(&Buff->Header.Console->Lock);
 
     TopLine = rc->top / GuiData->CharHeight + Buff->ShowY;
     BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1 + Buff->ShowY;
@@ -971,7 +971,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
         }
     }
 
-    LeaveCriticalSection(&Buff->Header.Lock);
+    LeaveCriticalSection(&Buff->Header.Console->Lock);
 
     SelectObject(hDC,
                  OldFont);
@@ -1327,7 +1327,7 @@ GuiConsoleHandleClose(HWND hWnd)
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
-  EnterCriticalSection(&Console->Header.Lock);
+  EnterCriticalSection(&Console->Lock);
 
   current_entry = Console->ProcessList.Flink;
   while (current_entry != &Console->ProcessList)
@@ -1341,7 +1341,7 @@ GuiConsoleHandleClose(HWND hWnd)
       ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 
-  LeaveCriticalSection(&Console->Header.Lock);
+  LeaveCriticalSection(&Console->Lock);
 }
 
 static VOID FASTCALL
@@ -1809,7 +1809,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
   COORD BufSize;
   BOOL SizeChanged = FALSE;
 
-  EnterCriticalSection(&ActiveBuffer->Header.Lock);
+  EnterCriticalSection(&Console->Lock);
 
   /* apply text / background color */
   GuiData->ScreenText = pConInfo->ScreenText;
@@ -1844,7 +1844,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
       GuiData->WindowSizeLock = FALSE;
   }
 
-  LeaveCriticalSection(&ActiveBuffer->Header.Lock);
+  LeaveCriticalSection(&Console->Lock);
   InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
 

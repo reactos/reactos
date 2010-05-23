@@ -69,6 +69,8 @@ typedef struct tagCSRSS_CONSOLE_VTBL
 typedef struct tagCSRSS_CONSOLE
 {
   Object_t Header;                      /* Object header */
+  LONG ReferenceCount;
+  CRITICAL_SECTION Lock;
   PCSRSS_CONSOLE Prev, Next;            /* Next and Prev consoles in console wheel */
   HANDLE ActiveEvent;
   LIST_ENTRY InputEvents;               /* List head for input event queue */

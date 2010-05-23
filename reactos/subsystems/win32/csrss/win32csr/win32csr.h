@@ -17,8 +17,8 @@ extern HINSTANCE Win32CsrDllHandle;
 typedef struct Object_tt
 {
   LONG Type;
-  LONG ReferenceCount;
-  CRITICAL_SECTION Lock;
+  struct tagCSRSS_CONSOLE *Console;
+  LONG HandleCount;
 } Object_t;
 
 typedef struct _CSRSS_HANDLE
@@ -48,11 +48,6 @@ NTSTATUS FASTCALL Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                                      DWORD Access,
                                      long Type);
 VOID FASTCALL Win32CsrUnlockObject(Object_t *Object);
-NTSTATUS FASTCALL Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
-                                    HANDLE Handle,
-                                    Object_t **Object,
-                                    DWORD Access);
-NTSTATUS FASTCALL Win32CsrReleaseObjectByPointer(Object_t *Object);
 NTSTATUS FASTCALL Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
                                         HANDLE Object);
 NTSTATUS WINAPI Win32CsrReleaseConsole(PCSRSS_PROCESS_DATA ProcessData);

@@ -16,13 +16,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static unsigned ObjectDefinitionsCount = 2;
-static CSRSS_OBJECT_DEFINITION ObjectDefinitions[] =
-{
-    { CONIO_CONSOLE_MAGIC,       ConioDeleteConsole },
-    { CONIO_SCREEN_BUFFER_MAGIC, ConioDeleteScreenBuffer },
-};
-
 static
 BOOL
 CsrIsConsoleHandle(HANDLE Handle)
@@ -30,58 +23,40 @@ CsrIsConsoleHandle(HANDLE Handle)
     return ((ULONG_PTR)Handle & 0x10000003) == 0x3;
 }
 
-NTSTATUS
-FASTCALL
-Win32CsrGetObject(
-    PCSRSS_PROCESS_DATA ProcessData,
-    HANDLE Handle,
-    Object_t **Object,
-    DWORD Access )
+static VOID
+Win32CsrCreateHandleEntry(
+    PCSRSS_HANDLE Entry,
+    Object_t *Object,
+    DWORD Access,
+    BOOL Inheritable)
 {
-    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
-
-    DPRINT("CsrGetObject, Object: %x, %x, %x\n", 
-           Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
-
-    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
-            || (*Object = ProcessData->HandleTable[h].Object) == NULL
-            || ~ProcessData->HandleTable[h].Access & Access)
-    {
-        DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
-        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-        return STATUS_INVALID_HANDLE;
-    }
-    _InterlockedIncrement(&(*Object)->ReferenceCount);
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-    //   DbgPrint( "CsrGetObject returning\n" );
-    return STATUS_SUCCESS;
+    Entry->Object = Object;
+    Entry->Access = Access;
+    Entry->Inheritable = Inheritable;
+    _InterlockedIncrement(&Object->HandleCount);
 }
 
-
-NTSTATUS
-FASTCALL
-Win32CsrReleaseObjectByPointer(
-    Object_t *Object)
+static VOID
+Win32CsrCloseHandleEntry(
+    PCSRSS_HANDLE Entry)
 {
-    unsigned DefIndex;
-
-    /* dec ref count */
-    if (_InterlockedDecrement(&Object->ReferenceCount) == 0)
+    Object_t *Object = Entry->Object;
+    if (Object != NULL)
     {
-        for (DefIndex = 0; DefIndex < ObjectDefinitionsCount; DefIndex++)
+        Entry->Object = NULL;
+        /* If the last handle to a screen buffer is closed, delete it */
+        if (_InterlockedDecrement(&Object->HandleCount) == 0
+            && Object->Type == CONIO_SCREEN_BUFFER_MAGIC)
         {
-            if (Object->Type == ObjectDefinitions[DefIndex].Type)
-            {
-                (ObjectDefinitions[DefIndex].CsrCleanupObjectProc)(Object);
-                return STATUS_SUCCESS;
-            }
+            PCSRSS_CONSOLE Console = Object->Console;
+            EnterCriticalSection(&Console->Lock);
+            /* TODO: Should delete even the active buffer, but we're not yet ready
+             * to deal with the case where this results in no buffers left. */
+            if (Object != &Console->ActiveBuffer->Header)
+                ConioDeleteScreenBuffer(Object);
+            LeaveCriticalSection(&Console->Lock);
         }
-
-        DPRINT1("CSR: Error: releasing unknown object type 0x%x", Object->Type);
     }
-
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -100,10 +75,9 @@ Win32CsrReleaseObject(
         RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
-    ProcessData->HandleTable[h].Object = NULL;
+    Win32CsrCloseHandleEntry(&ProcessData->HandleTable[h]);
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
-    return Win32CsrReleaseObjectByPointer(Object);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -114,22 +88,25 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
                    DWORD Access,
                    LONG Type)
 {
-    NTSTATUS Status;
+    ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
-    Status = Win32CsrGetObject(ProcessData, Handle, Object, Access);
-    if (! NT_SUCCESS(Status))
-    {
-        return Status;
-    }
+    DPRINT("CsrGetObject, Object: %x, %x, %x\n", 
+           Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
-    if ((*Object)->Type != Type)
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+    if (!CsrIsConsoleHandle(Handle) || h >= ProcessData->HandleTableSize
+            || (*Object = ProcessData->HandleTable[h].Object) == NULL
+            || ~ProcessData->HandleTable[h].Access & Access
+            || (Type != 0 && (*Object)->Type != Type))
     {
-        Win32CsrReleaseObjectByPointer(*Object);
+        DPRINT1("CsrGetObject returning invalid handle (%x)\n", Handle);
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_HANDLE;
     }
+    _InterlockedIncrement(&(*Object)->Console->ReferenceCount);
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
-    EnterCriticalSection(&((*Object)->Lock));
-
+    EnterCriticalSection(&((*Object)->Console->Lock));
     return STATUS_SUCCESS;
 }
 
@@ -137,8 +114,11 @@ VOID
 FASTCALL
 Win32CsrUnlockObject(Object_t *Object)
 {
-    LeaveCriticalSection(&(Object->Lock));
-    Win32CsrReleaseObjectByPointer(Object);
+    PCSRSS_CONSOLE Console = Object->Console;
+    LeaveCriticalSection(&Console->Lock);
+    /* dec ref count */
+    if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
+        ConioDeleteConsole(&Console->Header);
 }
 
 NTSTATUS
@@ -153,27 +133,24 @@ Win32CsrReleaseConsole(
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
 
     for (i = 0; i < ProcessData->HandleTableSize; i++)
-    {
-        if (ProcessData->HandleTable[i].Object != NULL)
-            Win32CsrReleaseObjectByPointer(ProcessData->HandleTable[i].Object);
-    }
+        Win32CsrCloseHandleEntry(&ProcessData->HandleTable[i]);
     ProcessData->HandleTableSize = 0;
     RtlFreeHeap(Win32CsrApiHeap, 0, ProcessData->HandleTable);
     ProcessData->HandleTable = NULL;
 
     Console = ProcessData->Console;
-    ProcessData->Console = NULL;
-    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
     if (Console != NULL)
     {
-        EnterCriticalSection(&Console->Header.Lock);
+        ProcessData->Console = NULL;
+        EnterCriticalSection(&Console->Lock);
         RemoveEntryList(&ProcessData->ProcessEntry);
-        LeaveCriticalSection(&Console->Header.Lock);
-        Win32CsrReleaseObjectByPointer(&Console->Header);
+        LeaveCriticalSection(&Console->Lock);
+        if (_InterlockedDecrement(&Console->ReferenceCount) == 0)
+            ConioDeleteConsole(&Console->Header);
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_SUCCESS;
     }
-
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_INVALID_PARAMETER;
 }
 
@@ -215,11 +192,8 @@ Win32CsrInsertObject(
         ProcessData->HandleTable = Block;
         ProcessData->HandleTableSize += 64;
     }
-    ProcessData->HandleTable[i].Object = Object;
-    ProcessData->HandleTable[i].Access = Access;
-    ProcessData->HandleTable[i].Inheritable = Inheritable;
+    Win32CsrCreateHandleEntry(&ProcessData->HandleTable[i], Object, Access, Inheritable);
     *Handle = UlongToHandle((i << 2) | 0x3);
-    _InterlockedIncrement( &Object->ReferenceCount );
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return(STATUS_SUCCESS);
 }
@@ -256,8 +230,10 @@ Win32CsrDuplicateHandleTable(
         if (SourceProcessData->HandleTable[i].Object != NULL &&
             SourceProcessData->HandleTable[i].Inheritable)
         {
-            TargetProcessData->HandleTable[i] = SourceProcessData->HandleTable[i];
-            _InterlockedIncrement( &SourceProcessData->HandleTable[i].Object->ReferenceCount );
+            Win32CsrCreateHandleEntry(&TargetProcessData->HandleTable[i],
+                                       SourceProcessData->HandleTable[i].Object,
+                                       SourceProcessData->HandleTable[i].Access,
+                                       SourceProcessData->HandleTable[i].Inheritable);
         }
     }
     RtlLeaveCriticalSection(&SourceProcessData->HandleTableLock);
@@ -385,9 +361,7 @@ CSR_API(CsrDuplicateHandle)
     if (NT_SUCCESS(Request->Status)
         && Request->Data.DuplicateHandleRequest.Options & DUPLICATE_CLOSE_SOURCE)
     {
-        /* Close the original handle. This cannot drop the count to 0, since a new handle now exists */
-        _InterlockedDecrement(&Entry->Object->ReferenceCount);
-        Entry->Object = NULL;
+        Win32CsrCloseHandleEntry(Entry);
     }
 
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
