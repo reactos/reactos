@@ -1,5 +1,5 @@
 /*
- *      translated by Caemyr - Olaf Siejka (Jan, 2008)
+ *      translated by Caemyr - Olaf Siejka (Jan, 2008; May 2010)
  *      Use ReactOS forum PM or IRC to contact me
  *      http://www.reactos.org
  *      IRC: irc.freenode.net #reactos-pl;
@@ -195,8 +195,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Dostosuj Ustawienia regionalne"
     IDS_SPAIN "Hiszpañski (Hiszpania)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "Metryczne"
+    IDS_IMPERIAL "Imperialne"
 END
 
 STRINGTABLE
