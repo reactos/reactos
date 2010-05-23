@@ -41,15 +41,20 @@
 NTSTATUS FASTCALL
 ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console)
 {
-  PCSRSS_CONSOLE ProcessConsole = ProcessData->Console;
+  PCSRSS_CONSOLE ProcessConsole;
+
+  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
+  ProcessConsole = ProcessData->Console;
 
   if (!ProcessConsole)
     {
       *Console = NULL;
+      RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
       return STATUS_INVALID_HANDLE;
     }
 
   InterlockedIncrement(&ProcessConsole->Header.ReferenceCount);
+  RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
   EnterCriticalSection(&(ProcessConsole->Header.Lock));
   *Console = ProcessConsole;
 
@@ -247,9 +252,11 @@ CSR_API(CsrAllocConsole)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (ProcessData->Console)
     {
         DPRINT1("Process already has a console\n");
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_INVALID_PARAMETER;
     }
 
@@ -257,6 +264,7 @@ CSR_API(CsrAllocConsole)
     if (!Request->Data.AllocConsoleRequest.ConsoleNeeded)
     {
         DPRINT("No console needed\n");
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return STATUS_SUCCESS;
     }
 
@@ -270,6 +278,7 @@ CSR_API(CsrAllocConsole)
         if (NULL == Console)
         {
             DPRINT1("Not enough memory for console\n");
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return STATUS_NO_MEMORY;
         }
         /* initialize list head */
@@ -282,6 +291,7 @@ CSR_API(CsrAllocConsole)
         {
             DPRINT1("Console init failed\n");
             HeapFree(Win32CsrApiHeap, 0, Console);
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
     }
@@ -313,6 +323,7 @@ CSR_API(CsrAllocConsole)
             DPRINT1("Failed to insert object\n");
             ConioDeleteConsole((Object_t *) Console);
             ProcessData->Console = 0;
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
 
@@ -328,6 +339,7 @@ CSR_API(CsrAllocConsole)
             Win32CsrReleaseObject(ProcessData,
                                   Request->Data.AllocConsoleRequest.InputHandle);
             ProcessData->Console = 0;
+            RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
             return Status;
         }
     }
@@ -351,6 +363,7 @@ CSR_API(CsrAllocConsole)
                                   Request->Data.AllocConsoleRequest.InputHandle);
         }
         ProcessData->Console = 0;
+        RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
         return Status;
     }
 
@@ -364,6 +377,7 @@ CSR_API(CsrAllocConsole)
         InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
     }
 
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
     return STATUS_SUCCESS;
 }
 
@@ -1960,6 +1974,7 @@ CSR_API(CsrCreateScreenBuffer)
 
   DPRINT("CsrCreateScreenBuffer\n");
 
+  RtlEnterCriticalSection(&ProcessData->HandleTableLock);
   Status = ConioConsoleFromProcessData(ProcessData, &Console);
   if (! NT_SUCCESS(Status))
     {
@@ -2012,6 +2027,7 @@ CSR_API(CsrCreateScreenBuffer)
     }
 
   ConioUnlockConsole(Console);
+  RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
   return Status;
 }
 

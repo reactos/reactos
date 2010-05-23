@@ -146,27 +146,24 @@ WINAPI
 Win32CsrReleaseConsole(
     PCSRSS_PROCESS_DATA ProcessData)
 {
-    ULONG HandleTableSize;
-    PCSRSS_HANDLE HandleTable;
     PCSRSS_CONSOLE Console;
     ULONG i;
 
     /* Close all console handles and detach process from console */
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
-    HandleTableSize = ProcessData->HandleTableSize;
-    HandleTable = ProcessData->HandleTable;
-    Console = ProcessData->Console;
+
+    for (i = 0; i < ProcessData->HandleTableSize; i++)
+    {
+        if (ProcessData->HandleTable[i].Object != NULL)
+            Win32CsrReleaseObjectByPointer(ProcessData->HandleTable[i].Object);
+    }
     ProcessData->HandleTableSize = 0;
+    RtlFreeHeap(Win32CsrApiHeap, 0, ProcessData->HandleTable);
     ProcessData->HandleTable = NULL;
+
+    Console = ProcessData->Console;
     ProcessData->Console = NULL;
     RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
-
-    for (i = 0; i < HandleTableSize; i++)
-    {
-        if (HandleTable[i].Object != NULL)
-            Win32CsrReleaseObjectByPointer(HandleTable[i].Object);
-    }
-    RtlFreeHeap(Win32CsrApiHeap, 0, HandleTable);
 
     if (Console != NULL)
     {
@@ -272,6 +269,7 @@ CSR_API(CsrGetInputHandle)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (ProcessData->Console)
     {
         Request->Status = Win32CsrInsertObject(ProcessData,
@@ -285,6 +283,7 @@ CSR_API(CsrGetInputHandle)
         Request->Data.GetInputHandleRequest.InputHandle = INVALID_HANDLE_VALUE;
         Request->Status = STATUS_SUCCESS;
     }
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     return Request->Status;
 }
@@ -294,6 +293,7 @@ CSR_API(CsrGetOutputHandle)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
+    RtlEnterCriticalSection(&ProcessData->HandleTableLock);
     if (ProcessData->Console)
     {
         Request->Status = Win32CsrInsertObject(ProcessData,
@@ -307,6 +307,7 @@ CSR_API(CsrGetOutputHandle)
         Request->Data.GetOutputHandleRequest.OutputHandle = INVALID_HANDLE_VALUE;
         Request->Status = STATUS_SUCCESS;
     }
+    RtlLeaveCriticalSection(&ProcessData->HandleTableLock);
 
     return Request->Status;
 }
