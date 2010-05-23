@@ -440,7 +440,7 @@ NtUserCallTwoParam(
          RETURN( (DWORD_PTR)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
       case TWOPARAM_ROUTINE_SETCURSORPOS:
-         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2));
+         RETURN( (DWORD_PTR)UserSetCursorPos((int)Param1, (int)Param2, FALSE));
 
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",

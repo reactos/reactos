@@ -175,10 +175,12 @@ UserSetCursor(
     return hOldCursor;
 }
 
-BOOL UserSetCursorPos( INT x, INT y)
+BOOL UserSetCursorPos( INT x, INT y, BOOL CallHooks)
 {
     PWINDOW_OBJECT DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
+    LARGE_INTEGER LargeTickCount;
+    MSLLHOOKSTRUCT MouseHookData;
     HDC hDC;
     MSG Msg;
 
@@ -221,6 +223,9 @@ BOOL UserSetCursorPos( INT x, INT y)
     gpsi->ptCursor.x = x;
     gpsi->ptCursor.y = y;
 
+    KeQueryTickCount(&LargeTickCount);
+    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
+
     //Move the mouse pointer
     GreMovePointer(hDC, x, y);
 
@@ -229,8 +234,39 @@ BOOL UserSetCursorPos( INT x, INT y)
     Msg.wParam = CurInfo->ButtonsDown;
     Msg.lParam = MAKELPARAM(x, y);
     Msg.pt = gpsi->ptCursor;
-    MsqInsertSystemMessage(&Msg);
 
+    MouseHookData.pt.x = LOWORD(Msg.lParam);
+    MouseHookData.pt.y = HIWORD(Msg.lParam);
+    switch(Msg.message)
+    {
+        case WM_MOUSEWHEEL:
+            MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg.wParam));
+            break;
+        case WM_XBUTTONDOWN:
+        case WM_XBUTTONUP:
+        case WM_XBUTTONDBLCLK:
+        case WM_NCXBUTTONDOWN:
+        case WM_NCXBUTTONUP:
+        case WM_NCXBUTTONDBLCLK:
+             MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg.wParam));
+             break;
+        default:
+             MouseHookData.mouseData = 0;
+             break;
+     }
+
+    MouseHookData.flags = 0;
+    MouseHookData.time = Msg.time;
+    MouseHookData.dwExtraInfo = 0;
+
+    if (CallHooks)
+    {
+      /* If the hook procedure returned non zero, dont send the message */
+      if (co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg.message, (LPARAM) &MouseHookData))
+        return FALSE;
+    }
+
+    MsqInsertSystemMessage(&Msg);
     return TRUE;
 }
 
@@ -814,7 +850,7 @@ NtUserClipCursor(
         CurInfo->CursorClipInfo.Right = min(Rect.right, DesktopWindow->Wnd->rcWindow.right);
         CurInfo->CursorClipInfo.Bottom = min(Rect.bottom, DesktopWindow->Wnd->rcWindow.bottom);
 
-        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y);
+        UserSetCursorPos(gpsi->ptCursor.x, gpsi->ptCursor.y, FALSE);
 
         RETURN(TRUE);
     }
