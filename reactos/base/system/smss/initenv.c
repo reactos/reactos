@@ -29,7 +29,7 @@ SmCreateEnvironment(VOID)
 static NTSTATUS
 SmpSetEnvironmentVariable(IN PVOID Context,
                           IN PWSTR ValueName,
-                          IN PVOID ValueData)
+                          IN PWSTR ValueData)
 {
     UNICODE_STRING EnvVariable;
     UNICODE_STRING EnvValue;
@@ -37,7 +37,7 @@ SmpSetEnvironmentVariable(IN PVOID Context,
     RtlInitUnicodeString(&EnvVariable,
                          ValueName);
     RtlInitUnicodeString(&EnvValue,
-                         (PWSTR)ValueData);
+                         ValueData);
     return RtlSetEnvironmentVariable(Context,
                               &EnvVariable,
                               &EnvValue);
@@ -58,12 +58,93 @@ SmpEnvironmentQueryRoutine(IN PWSTR ValueName,
         return STATUS_SUCCESS;
 
     DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
-    return SmpSetEnvironmentVariable(Context,ValueName,ValueData);
+    return SmpSetEnvironmentVariable(Context,ValueName,(PWSTR)ValueData);
 }
 
 
 NTSTATUS
 SmSetEnvironmentVariables(VOID)
+{
+    PWSTR ProcessorArchitecture = L"";
+    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+    UNICODE_STRING Identifier;
+    UNICODE_STRING VendorIdentifier;
+    UNICODE_STRING ProcessorIdentifier;
+    WCHAR Buffer[256];
+    NTSTATUS Status;
+
+    /* Set the 'PROCESSOR_ARCHITECTURE' system environment variable */
+#ifdef _M_IX86
+    ProcessorArchitecture = L"x86";
+#elif _M_MD64
+    ProcessorArchitecture = L"AMD64";
+#elif _M_ARM
+    ProcessorArchitecture = L"ARM";
+#elif _M_PPC
+    ProcessorArchitecture = L"PPC";
+#else
+    #error "Unsupported Architecture!\n"
+#endif
+
+    RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+                          L"Session Manager\\Environment",
+                          L"PROCESSOR_ARCHITECTURE",
+                          REG_SZ,
+                          ProcessorArchitecture,
+                          (wcslen(ProcessorArchitecture) + 1) * sizeof(WCHAR));
+
+
+    /* Set the 'PROCESSOR_IDENTIFIER' system environment variable */
+    RtlInitUnicodeString(&Identifier, NULL);
+    RtlInitUnicodeString(&VendorIdentifier, NULL);
+
+    RtlZeroMemory(&QueryTable,
+                  sizeof(QueryTable));
+
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[0].Name = L"Identifier";
+    QueryTable[0].EntryContext = &Identifier;
+
+    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+    QueryTable[1].Name = L"VendorIdentifier";
+    QueryTable[1].EntryContext = &VendorIdentifier;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                    L"\\Registry\\Machine\\Hardware\\Description\\System\\CentralProcessor\\0",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+    if (NT_SUCCESS(Status))
+    {
+        DPRINT("SM: szIdentifier: %wZ\n", &Identifier);
+        DPRINT("SM: szVendorIdentifier: %wZ\n", &VendorIdentifier);
+
+        RtlInitEmptyUnicodeString(&ProcessorIdentifier, Buffer, 256 * sizeof(WCHAR));
+
+        RtlAppendUnicodeStringToString(&ProcessorIdentifier, &Identifier);
+        RtlAppendUnicodeToString(&ProcessorIdentifier, L", ");
+        RtlAppendUnicodeStringToString(&ProcessorIdentifier, &VendorIdentifier);
+
+        RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+                              L"Session Manager\\Environment",
+                              L"PROCESSOR_IDENTIFIER",
+                              REG_SZ,
+                              ProcessorIdentifier.Buffer,
+                              (wcslen(ProcessorIdentifier.Buffer) + 1) * sizeof(WCHAR));
+    }
+
+    RtlFreeUnicodeString(&Identifier);
+    RtlFreeUnicodeString(&VendorIdentifier);
+
+    return STATUS_SUCCESS;
+}
+
+
+/**********************************************************************
+ *  Set environment variables from registry
+ */
+NTSTATUS
+SmUpdateEnvironment(VOID)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[2];
     WCHAR ValueBuffer[MAX_PATH];
@@ -104,16 +185,6 @@ SmSetEnvironmentVariables(VOID)
                                     SmSystemEnvironment);
 
     return Status;
-}
-
-/**********************************************************************
- *  Set environment variables from registry
- */
-NTSTATUS
-SmUpdateEnvironment(VOID)
-{
-    /* TODO */
-    return STATUS_SUCCESS;
 }
 
 /* EOF */
