@@ -46,6 +46,7 @@ typedef struct tagCSRSS_SCREEN_BUFFER
   USHORT VirtualY;                 /* top row of buffer being displayed, reported to callers */
   CONSOLE_CURSOR_INFO CursorInfo;
   USHORT Mode;
+  LIST_ENTRY ListEntry;            /* entry in console's list of buffers */
 } CSRSS_SCREEN_BUFFER, *PCSRSS_SCREEN_BUFFER;
 
 typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
@@ -76,6 +77,7 @@ typedef struct tagCSRSS_CONSOLE
   LIST_ENTRY InputEvents;               /* List head for input event queue */
   WORD WaitingChars;
   WORD WaitingLines;                    /* number of chars and lines in input queue */
+  LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
   PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
   WORD Mode;                            /* Console mode flags */
   WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
@@ -103,7 +105,7 @@ typedef struct ConsoleInput_t
 
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(Object_t *Object);
-VOID WINAPI ConioDeleteScreenBuffer(Object_t *Buffer);
+VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
 VOID WINAPI CsrInitConsoleSupport(VOID);
 void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
 PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);

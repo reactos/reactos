@@ -49,11 +49,13 @@ Win32CsrCloseHandleEntry(
             && Object->Type == CONIO_SCREEN_BUFFER_MAGIC)
         {
             PCSRSS_CONSOLE Console = Object->Console;
+            PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER)Object;
             EnterCriticalSection(&Console->Lock);
-            /* TODO: Should delete even the active buffer, but we're not yet ready
-             * to deal with the case where this results in no buffers left. */
-            if (Object != &Console->ActiveBuffer->Header)
-                ConioDeleteScreenBuffer(Object);
+            /* ...unless it's the only buffer left. Windows allows deletion
+             * even of the last buffer, but having to deal with a lack of
+             * any active buffer might be error-prone. */
+            if (Buffer->ListEntry.Flink != Buffer->ListEntry.Blink)
+                ConioDeleteScreenBuffer(Buffer);
             LeaveCriticalSection(&Console->Lock);
         }
     }

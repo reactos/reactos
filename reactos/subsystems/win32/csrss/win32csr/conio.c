@@ -137,6 +137,7 @@ CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console,
   Buffer->CurrentX = 0;
   Buffer->CurrentY = 0;
 
+  InsertHeadList(&Console->BufferList, &Buffer->ListEntry);
   return STATUS_SUCCESS;
 }
 
@@ -162,6 +163,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console)
   Console->Header.Console = Console;
   Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
   Console->EarlyReturn = FALSE;
+  InitializeListHead(&Console->BufferList);
   Console->ActiveBuffer = NULL;
   InitializeListHead(&Console->InputEvents);
   Console->CodePage = GetOEMCP();
@@ -893,11 +895,24 @@ CSR_API(CsrWriteConsole)
 }
 
 VOID WINAPI
-ConioDeleteScreenBuffer(Object_t *Object)
+ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer)
 {
-  PCSRSS_SCREEN_BUFFER Buffer = (PCSRSS_SCREEN_BUFFER) Object;
-  HeapFree(Win32CsrApiHeap, 0, Buffer->Buffer);
-  HeapFree(Win32CsrApiHeap, 0, Buffer);
+    PCSRSS_CONSOLE Console = Buffer->Header.Console;
+
+    RemoveEntryList(&Buffer->ListEntry);
+    if (Buffer == Console->ActiveBuffer)
+    {
+        /* Deleted active buffer; switch to most recently created */
+        Console->ActiveBuffer = NULL;
+        if (!IsListEmpty(&Console->BufferList))
+        {
+            Console->ActiveBuffer = CONTAINING_RECORD(Console->BufferList.Flink, CSRSS_SCREEN_BUFFER, ListEntry);
+            ConioDrawConsole(Console);
+        }
+    }
+
+    HeapFree(Win32CsrApiHeap, 0, Buffer->Buffer);
+    HeapFree(Win32CsrApiHeap, 0, Buffer);
 }
 
 VOID FASTCALL
@@ -929,9 +944,11 @@ ConioDeleteConsole(Object_t *Object)
     }
 
   ConioCleanupConsole(Console);
-  ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
-
-  Console->ActiveBuffer = NULL;
+  ConioDeleteScreenBuffer(Console->ActiveBuffer);
+  if (!IsListEmpty(&Console->BufferList))
+    {
+      DPRINT1("BUG: screen buffer list not empty\n");
+    }
 
   CloseHandle(Console->ActiveEvent);
   DeleteCriticalSection(&Console->Lock);
@@ -1998,7 +2015,7 @@ CSR_API(CsrSetScreenBuffer)
   /* If old buffer has no handles, it's now unreferenced */
   if (Console->ActiveBuffer->Header.HandleCount == 0)
     {
-      ConioDeleteScreenBuffer((Object_t *) Console->ActiveBuffer);
+      ConioDeleteScreenBuffer(Console->ActiveBuffer);
     }
   /* tie console to new buffer */
   Console->ActiveBuffer = Buff;
