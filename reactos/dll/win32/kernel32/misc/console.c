@@ -3805,15 +3805,23 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
 /*--------------------------------------------------------------
  *     GetConsoleSelectionInfo
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
 {
-    DPRINT1("GetConsoleSelectionInfo(0x%x) UNIMPLEMENTED!\n", lpConsoleSelectionInfo);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest = MAKE_CSR_API(GET_CONSOLE_SELECTION_INFO, CSR_CONSOLE);
+    NTSTATUS Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+
+    *lpConsoleSelectionInfo = Request.Data.GetConsoleSelectionInfo.Info;
+    return TRUE;
 }
 
 

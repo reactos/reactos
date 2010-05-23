@@ -54,9 +54,9 @@ typedef struct tagCSRSS_CONSOLE *PCSRSS_CONSOLE;
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
   VOID (WINAPI *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
+  VOID (WINAPI *WriteStream)(PCSRSS_CONSOLE Console, SMALL_RECT *Block, LONG CursorStartX, LONG CursorStartY,
                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
-  VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
+  VOID (WINAPI *DrawRegion)(PCSRSS_CONSOLE Console, SMALL_RECT *Region);
   BOOL (WINAPI *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
   BOOL (WINAPI *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
                                 UINT OldCursorX, UINT OldCursorY);
@@ -92,6 +92,7 @@ typedef struct tagCSRSS_CONSOLE
   PCSRSS_CONSOLE_VTBL Vtbl;
   LIST_ENTRY ProcessList;
   struct tagALIAS_HEADER *Aliases;
+  CONSOLE_SELECTION_INFO Selection;
 } CSRSS_CONSOLE;
 
 typedef struct ConsoleInput_t
@@ -102,6 +103,13 @@ typedef struct ConsoleInput_t
   BOOLEAN Fake;          // synthesized, not a real event
   BOOLEAN NotChar;       // message should not be used to return a character
 } ConsoleInput;
+
+/* CONSOLE_SELECTION_INFO dwFlags values */
+#define CONSOLE_NO_SELECTION          0x0
+#define CONSOLE_SELECTION_IN_PROGRESS 0x1
+#define CONSOLE_SELECTION_NOT_EMPTY   0x2
+#define CONSOLE_MOUSE_SELECTION       0x4
+#define CONSOLE_MOUSE_DOWN            0x8
 
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(Object_t *Object);
@@ -155,6 +163,7 @@ CSR_API(CsrSetConsoleOutputCodePage);
 CSR_API(CsrGetProcessList);
 CSR_API(CsrGenerateCtrlEvent);
 CSR_API(CsrSetScreenBufferSize);
+CSR_API(CsrGetConsoleSelectionInfo);
 
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
@@ -172,9 +181,9 @@ CSR_API(CsrSetScreenBufferSize);
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
 
 #define ConioRectHeight(Rect) \
-    (((Rect)->top) > ((Rect)->bottom) ? 0 : ((Rect)->bottom) - ((Rect)->top) + 1)
+    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
 #define ConioRectWidth(Rect) \
-    (((Rect)->left) > ((Rect)->right) ? 0 : ((Rect)->right) - ((Rect)->left) + 1)
+    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 
 #define ConioLockConsole(ProcessData, Handle, Ptr, Access) \
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_CONSOLE_MAGIC)
