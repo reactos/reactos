@@ -64,6 +64,8 @@ RosGdiRoundRect                    7
 RosGdiSwapBuffers                  1
 RosGdiUnrealizePalette             1
 RosUserConnectCsrss                0
+RosUserCreateCursorIcon            2
+RosUserDestroyCursorIcon           2
 RosUserGetCursorPos                1
 RosUserSetCursorPos                2
 RosUserClipCursor                  1
@@ -86,6 +88,7 @@ RosUserMapVirtualKeyEx             4
 RosUserGetAsyncKeyState            1
 SwmAddWindow                       2
 SwmAddDesktopWindow                3
+SwmDefineCursor                    2
 SwmRemoveWindow                    1
 SwmSetForeground                   1
 SwmPosChanging                     2

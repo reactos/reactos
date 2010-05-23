@@ -16,6 +16,12 @@ enum ntdrv_escape_codes
     NTDRV_FLUSH_GL_DRAWABLE /* flush changes made to the gl drawable */
 };
 
+/* NT driver private messages, must be in the range 0x80001000..0x80001fff */
+enum ntdrv_window_messages
+{
+    WM_NTDRV_SET_CURSOR = 0x80001000
+};
+
 struct ntdrv_escape_set_drawable
 {
     enum ntdrv_escape_codes  code;         /* escape code (X11DRV_SET_DRAWABLE) */
@@ -35,6 +41,7 @@ struct ntdrv_win_data
     RECT        window_rect;    /* USER window rectangle relative to parent */
     RECT        whole_rect;     /* X window rectangle for the whole window relative to parent */
     RECT        client_rect;    /* client area relative to parent */
+    HCURSOR     cursor;         /* current cursor */
 };
 
 /* gdidrv.c */
@@ -55,6 +62,9 @@ BOOL
 FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
            const INT *lpDx );
+
+/* mouse.c */
+void set_window_cursor( HWND hwnd, HCURSOR handle );
 
 void NTDRV_SendMouseInput( HWND hwnd, DWORD flags, DWORD x, DWORD y,
                               DWORD data, DWORD time, DWORD extra_info, UINT injected_flags );

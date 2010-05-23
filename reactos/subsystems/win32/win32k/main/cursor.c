@@ -10,6 +10,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Cursor icons list */
+LIST_ENTRY CursorIcons;
+ERESOURCE CursorIconsLock;
+
 SYSTEM_CURSORINFO CursorInfo;
 
 extern PDEVOBJ PrimarySurface;
@@ -138,5 +142,91 @@ RosUserSetCursor( ICONINFO* IconInfoUnsafe )
         IconInfo.hbmColor = GDI_MapUserHandle(IconInfo.hbmColor);
         GreSetCursor(&IconInfo, &CursorInfo);
     }
+}
+
+VOID
+APIENTRY
+RosUserCreateCursorIcon(ICONINFO* IconInfoUnsafe,
+                        HCURSOR Handle)
+{
+    PCURSORICONENTRY pCursorIcon;
+
+    // FIXME: SEH!
+
+    /* Allocate an entry in the cursor icons list */
+    pCursorIcon = ExAllocatePool(PagedPool, sizeof(CURSORICONENTRY));
+    RtlZeroMemory(pCursorIcon, sizeof(CURSORICONENTRY));
+
+    /* Save the usermode handle and other fields */
+    pCursorIcon->hUser = Handle;
+    //pCursorIcon->hbmMask = GDI_MapUserHandle(IconInfoUnsafe->hbmMask);
+    //pCursorIcon->hbmColor = GDI_MapUserHandle(IconInfoUnsafe->hbmColor);
+    pCursorIcon->hbmMask = IconInfoUnsafe->hbmMask;
+    pCursorIcon->hbmColor = IconInfoUnsafe->hbmColor;
+
+    /* Acquire lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CursorIconsLock, TRUE);
+
+    /* Add it to the list */
+    InsertTailList(&CursorIcons, &pCursorIcon->Entry);
+
+    /* Release lock */
+    ExReleaseResourceLite(&CursorIconsLock);
+    KeLeaveCriticalRegion();
+}
+
+VOID
+APIENTRY
+RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
+                         HCURSOR Handle)
+{
+    PLIST_ENTRY Current;
+    PCURSORICONENTRY pCursorIcon;
+
+    /* Acquire lock */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CursorIconsLock, TRUE);
+
+    /* Traverse the list to find our mapping */
+    Current = CursorIcons.Flink;
+    while(Current != &CursorIcons)
+    {
+        pCursorIcon = CONTAINING_RECORD(Current, CURSORICONENTRY, Entry);
+
+        /* Check if it's our entry */
+        if (pCursorIcon->hUser == Handle)
+        {
+            /* Remove it from the list */
+            RemoveEntryList(Current);
+
+            /* Get handles back to the user for proper disposal */
+            IconInfoUnsafe->hbmColor = pCursorIcon->hbmColor;
+            IconInfoUnsafe->hbmMask = pCursorIcon->hbmMask;
+
+            /* Free memory */
+            ExFreePool(pCursorIcon);
+            break;
+        }
+
+        /* Advance to the next pair */
+        Current = Current->Flink;
+    }
+
+    /* Release lock */
+    ExReleaseResourceLite(&CursorIconsLock);
+    KeLeaveCriticalRegion();
+}
+
+VOID NTAPI
+USER_InitCursorIcons()
+{
+    NTSTATUS Status;
+
+    /* Initialize cursor icons list and a spinlock */
+    InitializeListHead(&CursorIcons);
+    Status = ExInitializeResourceLite(&CursorIconsLock);
+    if (!NT_SUCCESS(Status))
+        DPRINT1("Initializing cursor icons lock failed with Status 0x%08X\n", Status);
 }
 

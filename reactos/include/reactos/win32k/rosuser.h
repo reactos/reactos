@@ -37,17 +37,25 @@ RosUserGetMonitorInfo(
 );
 #endif
 
-BOOL NTAPI 
+BOOL NTAPI
 RosUserGetCursorPos( LPPOINT pt );
 
-BOOL NTAPI 
+BOOL NTAPI
 RosUserSetCursorPos( INT x, INT y );
 
-BOOL NTAPI 
+BOOL NTAPI
 RosUserClipCursor( LPCRECT clip );
 
-void NTAPI 
+void NTAPI
 RosUserSetCursor( ICONINFO* IconInfo );
+
+VOID APIENTRY
+RosUserCreateCursorIcon(ICONINFO* IconInfoUnsafe,
+                        HCURSOR Handle);
+
+VOID APIENTRY
+RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
+                         HCURSOR Handle);
 
 LONG
 APIENTRY
@@ -158,6 +166,9 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect);
 
 VOID NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);
+
+VOID NTAPI
+SwmDefineCursor(HWND hWnd, HCURSOR hCursor);
 
 VOID NTAPI
 SwmRemoveWindow(HWND hWnd);

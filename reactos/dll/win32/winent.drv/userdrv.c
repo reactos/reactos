@@ -761,8 +761,15 @@ LRESULT CDECL RosDrv_SysCommand( HWND hwnd, WPARAM wparam, LPARAM lparam )
 
 LRESULT CDECL RosDrv_WindowMessage( HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam )
 {
-    UNIMPLEMENTED;
-    return 0;
+    switch(msg)
+    {
+    case WM_NTDRV_SET_CURSOR:
+        set_window_cursor( hwnd, (HCURSOR)lparam );
+        return 0;
+    default:
+        FIXME( "got window msg %x hwnd %p wp %lx lp %lx\n", msg, hwnd, wparam, lparam );
+        return 0;
+    }
 }
 
 void CDECL RosDrv_WindowPosChanging( HWND hwnd, HWND insert_after, UINT swp_flags,

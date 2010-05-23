@@ -107,6 +107,7 @@ static void queue_raw_mouse_message( UINT message, HWND hwnd, DWORD x, DWORD y,
                                      BYTE* key_state_table)
 {
     MSLLHOOKSTRUCT hook;
+    HCURSOR cursor;
 
     hook.pt.x        = x;
     hook.pt.y        = y;
@@ -129,9 +130,38 @@ static void queue_raw_mouse_message( UINT message, HWND hwnd, DWORD x, DWORD y,
         req->time     = time;
         req->info     = extra_info;
         wine_server_call( req );
+        cursor = (reply->count >= 0) ? wine_server_ptr_handle(reply->cursor) : 0;
     }
     SERVER_END_REQ;
 
+    if (hwnd)
+    {
+        // TODO: Add cursor change support
+        /*Cursor xcursor;
+        struct x11drv_win_data *data = X11DRV_get_win_data( hwnd );
+        if (data && cursor != data->cursor)
+        {
+            wine_tsx11_lock();
+            if ((xcursor = get_x11_cursor( cursor )))
+                XDefineCursor( gdi_display, data->whole_window, xcursor );
+            data->cursor = cursor;
+            wine_tsx11_unlock();
+        }*/
+    }
+}
+
+/***********************************************************************
+ *		set_window_cursor
+ */
+void set_window_cursor( HWND hwnd, HCURSOR handle )
+{
+    struct ntdrv_win_data *data;
+
+    if (!(data = NTDRV_get_win_data( hwnd ))) return;
+
+    /* Set the cursor */
+    SwmDefineCursor(hwnd, handle);
+    data->cursor = handle;
 }
 
 
@@ -493,16 +523,13 @@ void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
 #endif
 
     /* Create cursor bitmaps */
-    RosDrv_GetIconInfo( lpCursor, &IconInfo );
+    RosDrv_GetIconInfo( info, &IconInfo );
 
-    //cursor = create_cursor( gdi_display, info );
-    //if (cursor)
-    //{
-        //if (!cursor_context) cursor_context = XUniqueContext();
-        //XSaveContext( gdi_display, (XID)handle, cursor_context, (char *)cursor );
-        FIXME( "cursor %p %ux%u, planes %u, bpp %u -> xid %lx\n",
+    /* Create the cursor icon */
+    RosUserCreateCursorIcon( &IconInfo, handle );
+
+    FIXME( "cursor %p %ux%u, planes %u, bpp %u -> xid %lx\n",
                handle, info->nWidth, info->nHeight, info->bPlanes, info->bBitsPerPixel, /*cursor*/ 0);
-    //}
 }
 
 /***********************************************************************
@@ -510,22 +537,25 @@ void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
  */
 void CDECL RosDrv_DestroyCursorIcon( HCURSOR handle )
 {
-    //Cursor cursor;
+    ICONINFO IconInfo;
 
     FIXME( "%p xid %lx\n", handle, /*cursor*/ 0 );
 
-    /*if ((cursor = get_x11_cursor( handle )))
-    {
-        TRACE( "%p xid %lx\n", handle, cursor );
-        XFreeCursor( gdi_display, cursor );
-        XDeleteContext( gdi_display, (XID)handle, cursor_context );
-    }*/
+    /* Destroy kernel mode part of the cursor icon */
+    RosUserDestroyCursorIcon( &IconInfo, handle );
+
+    /* Destroy usermode-created bitmaps */
+    // FIXME: Will it delete kernelmode bitmaps?!
+    if (IconInfo.hbmColor) DeleteObject( IconInfo.hbmColor );
+    if (IconInfo.hbmMask) DeleteObject( IconInfo.hbmMask );
 }
 
 void CDECL RosDrv_SetCursor( HCURSOR handle )
 {
-    //if (cursor_window) SendNotifyMessageW( cursor_window, WM_X11DRV_SET_CURSOR, 0, (LPARAM)handle );
+    if (cursor_window) SendNotifyMessageW( cursor_window, WM_NTDRV_SET_CURSOR, 0, (LPARAM)handle );
     FIXME("handle %x, cursor_window %x\n", handle, cursor_window);
+
+    // FIXME: Remove!
     RosUserSetCursor(NULL);
 }
 

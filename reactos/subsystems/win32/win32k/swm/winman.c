@@ -800,6 +800,11 @@ SwmGetWindowFromPoint(LONG x, LONG y)
     return 0;
 }
 
+VOID
+NTAPI
+SwmDefineCursor(HWND hWnd, HCURSOR hCursor)
+{
+}
 
 VOID
 NTAPI
