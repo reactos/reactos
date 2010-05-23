@@ -65,33 +65,116 @@ SmpEnvironmentQueryRoutine(IN PWSTR ValueName,
 NTSTATUS
 SmSetEnvironmentVariables(VOID)
 {
-    PWSTR ProcessorArchitecture = L"";
+    SYSTEM_BASIC_INFORMATION BasicInformation;
+
     RTL_QUERY_REGISTRY_TABLE QueryTable[3];
     UNICODE_STRING Identifier;
     UNICODE_STRING VendorIdentifier;
-    UNICODE_STRING ProcessorIdentifier;
     WCHAR Buffer[256];
+
+    UNICODE_STRING EnvironmentKeyName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE EnvironmentKey;
+    UNICODE_STRING VariableName;
+    PWSTR VariableData;
+
     NTSTATUS Status;
 
+
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &BasicInformation,
+                                      sizeof(SYSTEM_BASIC_INFORMATION),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to retrieve system basic information (Status %08lx)", Status);
+        return Status;
+    }
+
+    RtlInitUnicodeString(&EnvironmentKeyName,
+                         L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Environment");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &EnvironmentKeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Open the system environment key */
+    Status = NtOpenKey(&EnvironmentKey,
+                       GENERIC_WRITE,
+                       &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to open the environment key (Status %08lx)", Status);
+        return Status;
+    }
+
+    /* Set the 'NUMBER_OF_PROCESSORS' system environment variable */
+    RtlInitUnicodeString(&VariableName,
+                         L"NUMBER_OF_PROCESSORS");
+
+    swprintf(Buffer, L"%lu", BasicInformation.NumberOfProcessors);
+
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           Buffer,
+                           (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the NUMBER_OF_PROCESSORS environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
+    /* Set the 'OS' system environment variable */
+    RtlInitUnicodeString(&VariableName,
+                         L"OS");
+
+    VariableData = L"ReactOS";
+
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           VariableData,
+                           (wcslen(VariableData) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the OS environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
     /* Set the 'PROCESSOR_ARCHITECTURE' system environment variable */
+    RtlInitUnicodeString(&VariableName,
+                         L"PROCESSOR_ARCHITECTURE");
+
 #ifdef _M_IX86
-    ProcessorArchitecture = L"x86";
+    VariableData = L"x86";
 #elif _M_MD64
-    ProcessorArchitecture = L"AMD64";
+    VariableData = L"AMD64";
 #elif _M_ARM
-    ProcessorArchitecture = L"ARM";
+    VariableData = L"ARM";
 #elif _M_PPC
-    ProcessorArchitecture = L"PPC";
+    VariableData = L"PPC";
 #else
     #error "Unsupported Architecture!\n"
 #endif
 
-    RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
-                          L"Session Manager\\Environment",
-                          L"PROCESSOR_ARCHITECTURE",
-                          REG_SZ,
-                          ProcessorArchitecture,
-                          (wcslen(ProcessorArchitecture) + 1) * sizeof(WCHAR));
+    Status = NtSetValueKey(EnvironmentKey,
+                           &VariableName,
+                           0,
+                           REG_SZ,
+                           VariableData,
+                           (wcslen(VariableData) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SM: Failed to set the PROCESSOR_ARCHITECTURE environment variable (Status %08lx)", Status);
+        goto done;
+    }
+
+done:
+    NtClose(EnvironmentKey);
 
 
     /* Set the 'PROCESSOR_IDENTIFIER' system environment variable */
@@ -119,18 +202,14 @@ SmSetEnvironmentVariables(VOID)
         DPRINT("SM: szIdentifier: %wZ\n", &Identifier);
         DPRINT("SM: szVendorIdentifier: %wZ\n", &VendorIdentifier);
 
-        RtlInitEmptyUnicodeString(&ProcessorIdentifier, Buffer, 256 * sizeof(WCHAR));
-
-        RtlAppendUnicodeStringToString(&ProcessorIdentifier, &Identifier);
-        RtlAppendUnicodeToString(&ProcessorIdentifier, L", ");
-        RtlAppendUnicodeStringToString(&ProcessorIdentifier, &VendorIdentifier);
+        swprintf(Buffer, L"%wZ, %wZ", &Identifier, &VendorIdentifier);
 
         RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
                               L"Session Manager\\Environment",
                               L"PROCESSOR_IDENTIFIER",
                               REG_SZ,
-                              ProcessorIdentifier.Buffer,
-                              (wcslen(ProcessorIdentifier.Buffer) + 1) * sizeof(WCHAR));
+                              Buffer,
+                              (wcslen(Buffer) + 1) * sizeof(WCHAR));
     }
 
     RtlFreeUnicodeString(&Identifier);
