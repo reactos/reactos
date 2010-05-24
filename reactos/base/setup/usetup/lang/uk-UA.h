@@ -1479,6 +1479,12 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Перезавантажити комп'ютер"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Не вдалось встановити geo id.\n"
         "ENTER = Перезавантажити комп'ютер"

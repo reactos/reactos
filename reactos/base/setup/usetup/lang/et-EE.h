@@ -1469,6 +1469,12 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = Taask„ivita arvuti"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Geograafilist asukohta ei ännestunud seadistada.\n"
         "ENTER = Taask„ivita arvuti"

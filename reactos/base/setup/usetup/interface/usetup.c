@@ -31,6 +31,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* required free disk space in MB */
+#define MINIMUMDISKSIZE    350
+
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
@@ -1381,6 +1384,31 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
     return DISPLAY_SETTINGS_PAGE;
 }
 
+static BOOL IsDiskSizeValid(PPARTENTRY PartEntry)
+{
+    ULONGLONG m;
+    /*  check for unpartitioned space  */
+    m = PartEntry->UnpartitionedLength; 
+    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if( m > MINIMUMDISKSIZE) 
+    {
+        return TRUE;
+    }
+	
+    // check for partitioned space 
+    m = PartEntry->PartInfo[0].PartitionLength.QuadPart;
+    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if( m < MINIMUMDISKSIZE) 
+    {
+        /* partition is too small so ask for another partion */
+        DPRINT1("Partition too small");
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
+}
 
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
@@ -1434,9 +1462,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (AutoPartition)
             {
-                PPARTENTRY PartEntry = PartEntry = PartitionList->CurrentPartition;
+                PPARTENTRY PartEntry = PartitionList->CurrentPartition;
                 ULONG MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-
+                if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+                {
+                    MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                }
                 CreateNewPartition(PartitionList,
                                    MaxSize,
                                    TRUE);
@@ -1446,6 +1478,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
+            if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
+            }
             return(SELECT_FILE_SYSTEM_PAGE);
         }
     }
@@ -1489,6 +1526,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
+            if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
+            }
             if (PartitionList->CurrentPartition == NULL ||
                 PartitionList->CurrentPartition->Unpartitioned == TRUE)
             {

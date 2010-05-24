@@ -1478,6 +1478,12 @@ MUI_ERROR jaJPErrorEntries[] =
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }

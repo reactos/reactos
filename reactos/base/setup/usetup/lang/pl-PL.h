@@ -1481,6 +1481,12 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
         "ENTER = Restart komputera"

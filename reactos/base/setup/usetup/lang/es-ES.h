@@ -18,7 +18,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         6,
         8,
-        "Selecci¢n de idioma",
+        "Selecci¢n del idioma",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1471,6 +1471,12 @@ MUI_ERROR esESErrorEntries[] =
         //ERROR_ADDING_KBLAYOUTS,
         "Setup failed to add keyboard layouts to registry.\n"
         "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "No hay suficiente espacio disponible en la partici¢n seleccionada.\n"
+        "  * Presione una tecla para continuar.",
+        NULL
     },
     {
         //ERROR_UPDATE_GEOID,

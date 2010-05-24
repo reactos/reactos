@@ -1473,6 +1473,12 @@ MUI_ERROR itITErrorEntries[] =
         "INVIO = Riavviare il computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Lo spazio disponibile nella partizione selezionata Š insufficiente.\n"
+        "  * Premere un tasto qualsiasi per continuare.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
