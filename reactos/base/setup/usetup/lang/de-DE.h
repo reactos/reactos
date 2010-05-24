@@ -1477,7 +1477,13 @@ MUI_ERROR deDEErrorEntries[] =
         "Setup konnte den geografischen Standort nicht einstellen.\n"
         "ENTER = Computer neu starten"
     },
-{
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Nicht genug Speicherplatz auf der gewÑhlten Partition vorhanden.\n"
+        "  * Eine beliebige Taste zum Fortsetzen drÅcken.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
