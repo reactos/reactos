@@ -2674,6 +2674,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    PWND Wnd;
    HWND hWnd;
    PTHREADINFO ti;
+   MSG msg;
 
    ASSERT_REFS_CO(Window); // FIXME: temp hack?
 
@@ -2810,6 +2811,13 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
          }
       }
    }
+
+    /* Generate mouse move message for the next window */
+    msg.message = WM_MOUSEMOVE;
+    msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+    msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    msg.pt = gpsi->ptCursor;
+    MsqInsertSystemMessage(&msg);
 
    if (!IntIsWindow(Window->hSelf))
    {
