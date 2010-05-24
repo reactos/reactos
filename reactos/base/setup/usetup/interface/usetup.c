@@ -31,8 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-/* required free disk space in MB */
-#define MINIMUMDISKSIZE    350
 
 /* GLOBALS ******************************************************************/
 
@@ -83,6 +81,8 @@ static PGENERIC_LIST LayoutList = NULL;
 static PGENERIC_LIST LanguageList = NULL;
 
 static LANGID LanguageId = 0;
+
+static ULONG RequiredPartitionDiskSpace = ~0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -723,6 +723,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     UINT ErrorLine;
     ULONG ReturnSize;
     PGENERIC_LIST_ENTRY ListEntry;
+    INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -802,6 +803,22 @@ SetupStartPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_SIGNATURE_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+
+    /* Open 'DiskSpaceRequirements' section */
+    if (!SetupFindFirstLineW(SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
+    {
+        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    /* Get the 'FreeSysPartDiskSpace' value */
+    if (!SetupGetIntField(&Context, 1, &IntValue))
+    {
+        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    RequiredPartitionDiskSpace = (ULONG)IntValue;
 
     /* Start PnP thread */
     if (hPnpThread != INVALID_HANDLE_VALUE)
@@ -1390,7 +1407,7 @@ static BOOL IsDiskSizeValid(PPARTENTRY PartEntry)
     /*  check for unpartitioned space  */
     m = PartEntry->UnpartitionedLength; 
     m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if( m > MINIMUMDISKSIZE) 
+    if( m > RequiredPartitionDiskSpace)
     {
         return TRUE;
     }
@@ -1398,7 +1415,7 @@ static BOOL IsDiskSizeValid(PPARTENTRY PartEntry)
     // check for partitioned space 
     m = PartEntry->PartInfo[0].PartitionLength.QuadPart;
     m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-    if( m < MINIMUMDISKSIZE) 
+    if( m < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
         DPRINT1("Partition too small");

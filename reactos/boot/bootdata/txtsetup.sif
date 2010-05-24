@@ -11,6 +11,10 @@ Signature = "$ReactOS$"
 6 = Fonts
 7 = bin
 
+[DiskSpaceRequirements]
+; Required free system partition disk space in MB
+FreeSysPartDiskSpace=350
+
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
