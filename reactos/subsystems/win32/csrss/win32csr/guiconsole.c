@@ -113,7 +113,7 @@ static const COLORREF s_Colors[] =
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID FASTCALL
+static VOID
 GuiConsoleAppendMenuItems(HMENU hMenu,
                           const GUICONSOLE_MENUITEM *Items)
 {
@@ -168,7 +168,7 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
     }while(!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
 {
     HMENU hMenu;
@@ -182,14 +182,14 @@ GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
     }
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
 {
   *Console = (PCSRSS_CONSOLE) GetWindowLongPtrW(hWnd, GWL_USERDATA);
   *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle, PHKEY hResult, REGSAM samDesired)
 {
   HANDLE hProcessToken = NULL;
@@ -245,7 +245,7 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
     return TRUE;
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSubKey, REGSAM samDesired, BOOL bCreate)
 {
   WCHAR szProcessName[MAX_PATH];
@@ -491,7 +491,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
   RegCloseKey(hKey);
 }
 
-static void FASTCALL
+static void
 GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   DWORD dwNumSubKeys = 0;
@@ -593,7 +593,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
         }
    }
 }
-static VOID FASTCALL
+static VOID
 GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   /*
@@ -676,7 +676,7 @@ GuiConsoleInitScrollbar(PCSRSS_CONSOLE Console, HWND hwnd)
                SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 {
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Create->lpCreateParams;
@@ -797,7 +797,7 @@ SmallRectToRect(PCSRSS_CONSOLE Console, PRECT Rect, PSMALL_RECT SmallRect)
     Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ShowY) * GuiData->CharHeight;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleUpdateSelection(PCSRSS_CONSOLE Console, PCOORD coord)
 {
   RECT oldRect, newRect;
@@ -857,7 +857,7 @@ GuiConsoleUpdateSelection(PCSRSS_CONSOLE Console, PCOORD coord)
 }
 
 
-static VOID FASTCALL
+static VOID
 GuiConsolePaint(PCSRSS_CONSOLE Console,
                 PGUI_CONSOLE_DATA GuiData,
                 HDC hDC,
@@ -980,7 +980,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
                  OldFont);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
 {
     HDC hDC;
@@ -1035,7 +1035,7 @@ GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
     EndPaint(hWnd, &ps);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1065,7 +1065,7 @@ GuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
     InvalidateRect(Console->hWindow, &RegionRect, FALSE);
 }
 
-static VOID FASTCALL
+static VOID
 GuiInvalidateCell(PCSRSS_CONSOLE Console, UINT x, UINT y)
 {
     SMALL_RECT CellRect = { x, y, x, y };
@@ -1165,7 +1165,7 @@ GuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
     return TRUE;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleTimer(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1254,7 +1254,7 @@ GuiConsoleHandleTimer(HWND hWnd)
   }
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleClose(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1281,7 +1281,7 @@ GuiConsoleHandleClose(HWND hWnd)
   LeaveCriticalSection(&Console->Lock);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleNcDestroy(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1316,7 +1316,7 @@ PointToCoord(PCSRSS_CONSOLE Console, LPARAM lParam)
     return Coord;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1334,7 +1334,7 @@ GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
   GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1354,7 +1354,7 @@ GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
   ReleaseCapture();
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1372,7 +1372,7 @@ GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
   GuiConsoleUpdateSelection(Console, &c);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleRightMouseDown(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1467,7 +1467,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 
   CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
 }
-static LRESULT FASTCALL
+static LRESULT
 GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CONSOLE_DATA GuiData)
 {
     LRESULT Ret = TRUE;
@@ -1497,7 +1497,7 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CON
     return Ret;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
 {
   PCSRSS_CONSOLE Console;
@@ -1520,7 +1520,7 @@ GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
   minMaxInfo->ptMaxTrackSize.x = windx;
   minMaxInfo->ptMaxTrackSize.y = windy;
 }
-static VOID FASTCALL
+static VOID
 GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1576,6 +1576,7 @@ GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
      GuiData->WindowSizeLock = FALSE;
   }
 }
+
 VOID
 FASTCALL
 GuiConsoleHandleScrollbarMenu()
@@ -1694,7 +1695,7 @@ GuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
     return STATUS_SUCCESS;
 }
 
-static VOID FASTCALL
+static VOID
 GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
 {
   DWORD windx, windy;
@@ -2031,7 +2032,7 @@ GuiConsoleGuiThread(PVOID Data)
   return 1;
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiInit(VOID)
 {
   WNDCLASSEXW wc;

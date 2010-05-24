@@ -46,7 +46,7 @@ static LIST_ENTRY gCurIconList;
 
 SYSTEM_CURSORINFO gSysCursorInfo;
 
-BOOL FASTCALL
+BOOL
 InitCursorImpl()
 {
     ExInitializePagedLookasideList(&gProcessLookasideList,
@@ -70,7 +70,7 @@ InitCursorImpl()
     return TRUE;
 }
 
-PSYSTEM_CURSORINFO FASTCALL
+PSYSTEM_CURSORINFO
 IntGetSysCursorInfo()
 {
     return &gSysCursorInfo;
@@ -378,7 +378,7 @@ IntFindExistingCurIconObject(HMODULE hModule,
     return NULL;
 }
 
-PCURICON_OBJECT FASTCALL
+PCURICON_OBJECT
 IntCreateCurIconHandle()
 {
     PCURICON_OBJECT CurIcon;

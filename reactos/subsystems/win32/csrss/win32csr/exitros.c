@@ -197,7 +197,7 @@ EndNowDlgProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 
 typedef void (WINAPI *INITCOMMONCONTROLS_PROC)(void);
 
-static void FASTCALL
+static void
 CallInitCommonControls()
 {
   static BOOL Initialized = FALSE;
