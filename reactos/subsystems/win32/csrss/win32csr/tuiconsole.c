@@ -124,17 +124,17 @@ TuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
 }
 
 static void FASTCALL
-TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
+TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, SMALL_RECT *Region)
 {
   UINT SrcDelta, DestDelta;
   LONG i;
   PBYTE Src, SrcEnd;
 
-  Src = ConioCoordToPointer(Buff, Region->left, Region->top);
+  Src = ConioCoordToPointer(Buff, Region->Left, Region->Top);
   SrcDelta = Buff->MaxX * 2;
   SrcEnd = Buff->Buffer + Buff->MaxY * Buff->MaxX * 2;
   DestDelta = ConioRectWidth(Region) * 2;
-  for (i = Region->top; i <= Region->bottom; i++)
+  for (i = Region->Top; i <= Region->Bottom; i++)
     {
       memcpy(Dest, Src, DestDelta);
       Src += SrcDelta;
@@ -147,7 +147,7 @@ TuiCopyRect(char *Dest, PCSRSS_SCREEN_BUFFER Buff, RECT *Region)
 }
 
 static VOID WINAPI
-TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
+TuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
 {
   DWORD BytesReturned;
   PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
@@ -167,8 +167,8 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
       DPRINT1("HeapAlloc failed\n");
       return;
     }
-  ConsoleDraw->X = Region->left;
-  ConsoleDraw->Y = Region->top;
+  ConsoleDraw->X = Region->Left;
+  ConsoleDraw->Y = Region->Top;
   ConsoleDraw->SizeX = ConioRectWidth(Region);
   ConsoleDraw->SizeY = ConioRectHeight(Region);
   ConsoleDraw->CursorX = Buff->CurrentX;
@@ -188,7 +188,7 @@ TuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
 }
 
 static VOID WINAPI
-TuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
+TuiWriteStream(PCSRSS_CONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
   DWORD BytesWritten;
