@@ -3163,7 +3163,7 @@ FileCopyCallback(PVOID Context,
 
         case SPFILENOTIFY_STARTCOPY:
             /* Display copy message */
-            CONSOLE_SetStatusTextAutoFitX (45 , MUIGetString(STRING_COPYING), (PWSTR)Param1);
+            CONSOLE_SetStatusText(MUIGetString(STRING_COPYING), (PWSTR)Param1);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
 

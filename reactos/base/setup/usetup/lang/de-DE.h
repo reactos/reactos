@@ -1621,7 +1621,7 @@ MUI_STRING deDEStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup konnte die '%S'-Sektion\nin TXTSETUP.SIF nicht finden.\n"},
     {STRING_COPYING,
-     "\xB3 Kopiere Datei: %S"},
+     "   Kopiere Datei: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup kopiert Dateien..."},
     {STRING_REGHIVEUPDATE,

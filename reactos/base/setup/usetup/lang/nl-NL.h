@@ -1648,7 +1648,7 @@ MUI_STRING nlNLStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup kan de  '%S' sectie niet vinden\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kopieeren bestand: %S"},
+     "   Kopieeren bestand: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is bestand aan het kopieeren..."},
     {STRING_REGHIVEUPDATE,

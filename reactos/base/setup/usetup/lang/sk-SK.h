@@ -1631,7 +1631,7 @@ MUI_STRING skSKStrings[] =
     {STRING_TXTSETUPFAILED,
     "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kop¡ruje sa s£bor: %S"},
+     "   Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Inçtal tor kop¡ruje s£bory..."},
     {STRING_REGHIVEUPDATE,

@@ -1622,7 +1622,7 @@ MUI_STRING csCZStrings[] =
     {STRING_TXTSETUPFAILED,
     "Nepodaýilo se naj¡t sekci '%S' v souboru\n TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kop¡ruji soubor: %S"},
+     "   Kop¡ruji soubor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalace kop¡ruje soubory..."},
     {STRING_REGHIVEUPDATE,

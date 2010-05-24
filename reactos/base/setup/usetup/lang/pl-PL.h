@@ -1629,7 +1629,7 @@ MUI_STRING plPLStrings[] =
     {STRING_TXTSETUPFAILED,
     "Instalator nie byˆ w stanie odnale«† sekji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kopiowanie plik¢w: %S"},
+     "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalator kopiuje pliki..."},
     {STRING_REGHIVEUPDATE,

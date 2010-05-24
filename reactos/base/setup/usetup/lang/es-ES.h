@@ -1620,7 +1620,7 @@ MUI_STRING esESStrings[] =
     {STRING_TXTSETUPFAILED,
     "El instalador fall¢ al buscar la secci¢n\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copiando archivo: %S"},
+     "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
      "El instalador est  copiando archivos..."},
     {STRING_REGHIVEUPDATE,

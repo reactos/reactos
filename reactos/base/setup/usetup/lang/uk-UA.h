@@ -1626,7 +1626,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_TXTSETUPFAILED,
     "Встановлювач не змiг знайти секцiю '%S' \nв файлi TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Копiювання: %S"},
+     "   Копiювання: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Встановлювач копiює файли..."},
     {STRING_REGHIVEUPDATE,
