@@ -225,10 +225,10 @@ DC_vInitDc(
 	pdc->dcattr.ptlViewportOrg.y = 0;
 	pdc->dcattr.szlViewportExt.cx = 1;
 	pdc->dcattr.szlViewportExt.cy = 1;
-    pdc->dcattr.szlVirtualDevicePixel.cx = 0;
-    pdc->dcattr.szlVirtualDevicePixel.cy = 0;
-    pdc->dcattr.szlVirtualDeviceMm.cx = 0;
-    pdc->dcattr.szlVirtualDeviceMm.cy = 0;
+    pdc->dcattr.szlVirtualDevicePixel.cx = ppdev->gdiinfo.ulHorzRes;
+    pdc->dcattr.szlVirtualDevicePixel.cy = ppdev->gdiinfo.ulVertRes;
+    pdc->dcattr.szlVirtualDeviceMm.cx = ppdev->gdiinfo.ulHorzSize;
+    pdc->dcattr.szlVirtualDeviceMm.cy = ppdev->gdiinfo.ulVertSize;
     pdc->dcattr.szlVirtualDeviceSize.cx = 0;
     pdc->dcattr.szlVirtualDeviceSize.cy = 0;
 
