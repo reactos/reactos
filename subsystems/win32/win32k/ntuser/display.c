@@ -648,11 +648,8 @@ NtUserEnumDisplaySettings(
             cbExtra = lpDevMode->dmDriverExtra;
 
             ProbeForWrite(lpDevMode, cbSize + cbExtra, 1);
-            lpDevMode->dmPelsWidth = pdm->dmPelsWidth;
-            lpDevMode->dmPelsHeight = pdm->dmPelsHeight;
-            lpDevMode->dmBitsPerPel = pdm->dmBitsPerPel;
-            lpDevMode->dmDisplayFrequency = pdm->dmDisplayFrequency;
-            lpDevMode->dmDisplayFlags = pdm->dmDisplayFlags;
+            /* Output what we got */
+            RtlCopyMemory(lpDevMode, pdm, min(cbSize, pdm->dmSize));
 
             /* output private/extra driver data */
             if (cbExtra > 0 && pdm->dmDriverExtra > 0)
@@ -703,6 +700,8 @@ UserChangeDisplaySettings(
             return DISP_CHANGE_BADPARAM;
         }
     }
+    else if (pdm->dmSize < FIELD_OFFSET(DEVMODEW, dmFields))
+        return DISP_CHANGE_FAILED;
     else
         dm = *pdm;
 
