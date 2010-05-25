@@ -1,6 +1,6 @@
 /* FILE:        dll/win32/shell32/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:     2010-05-06
+ * UPDATED:     2010-05-25
  * THANKS TO:   navaraf, who translated major part of this file
  */
 
@@ -101,7 +101,7 @@ BEGIN
 	DEFPUSHBUTTON "&Ano", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "Ano &všem", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Ne", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Storno", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Storno", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END

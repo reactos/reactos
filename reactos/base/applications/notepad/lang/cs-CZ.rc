@@ -85,12 +85,12 @@ BEGIN
     END
     POPUP "&Nápovìda"
     BEGIN
-        MENUITEM "&Obsah",            CMD_HELP_CONTENTS
+        MENUITEM "O&bsah",            CMD_HELP_CONTENTS
         MENUITEM "&Najít...",         CMD_HELP_SEARCH
-        MENUITEM "&Pomoc k nápovìdì", CMD_HELP_ON_HELP
+        MENUITEM "Pomoc k ná&povìdì", CMD_HELP_ON_HELP
         MENUITEM SEPARATOR
-        MENUITEM "&O programu"        CMD_ABOUT
-        MENUITEM "Inf&o...",          CMD_ABOUT_WINE
+        MENUITEM "&O programu..."     CMD_ABOUT
+        MENUITEM "In&fo...",          CMD_ABOUT_WINE
     END
 END
 

@@ -1470,8 +1470,8 @@ MUI_ERROR etEEErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Valitud partitsioonil pole piisavalt ruumi.\n"
+        "  * Vajuta suvalist klahvi, et j„tkata.",
         NULL
     },
     {

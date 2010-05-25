@@ -1,3 +1,9 @@
+/* FILE:        applications/sndvol32/lang/cs-CZ.rc
+ * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * THANKS TO:   Denzil, who translated major part of this file
+ * UPDATED:     2010-05-25
+ */
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 IDM_MAINMENU MENU DISCARDABLE
@@ -5,7 +11,7 @@ BEGIN
     POPUP "&Nastavení"
     BEGIN
         MENUITEM "&Možnosti", IDC_PROPERTIES
-        MENUITEM "&Rozšíøené nastevení", IDC_ADVANCED_CONTROLS
+        MENUITEM "&Rozšíøené nastavení", IDC_ADVANCED_CONTROLS
         MENUITEM SEPARATOR
         MENUITEM "&Konec", IDC_EXIT
     END
@@ -35,9 +41,9 @@ BEGIN
   PUSHBUTTON "&Záznam", IDC_RECORDING, 13,61,47,8, BS_AUTORADIOBUTTON
   PUSHBUTTON "&Jiné:", IDC_OTHER, 13,80,42,8, BS_AUTORADIOBUTTON | WS_DISABLED
   COMBOBOX IDC_LINE, 55,80,155,50, CBS_DROPDOWNLIST | WS_TABSTOP | WS_DISABLED
-  LTEXT "Show the following volume controls:", IDC_LABELCONTROLS, 7, 109, 162, 8
+  LTEXT "Zobrazit tyto ovladaèe hlasitosti:", IDC_LABELCONTROLS, 7, 109, 162, 8
   CONTROL "", IDC_CONTROLS, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER | WS_TABSTOP | WS_BORDER, 7, 122, 211, 96
 
   PUSHBUTTON "OK", IDOK, 114,226,50,14
-  PUSHBUTTON "Zrušit", IDCANCEL, 168,226,50,14
+  PUSHBUTTON "Storno", IDCANCEL, 168,226,50,14
 END
