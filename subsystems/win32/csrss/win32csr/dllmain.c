@@ -24,6 +24,12 @@ static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
   {
+    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
+    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
+    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
+    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
+    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
+    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
     CSRSS_DEFINE_API(WRITE_CONSOLE,                CsrWriteConsole),
     CSRSS_DEFINE_API(READ_CONSOLE,                 CsrReadConsole),
     CSRSS_DEFINE_API(ALLOC_CONSOLE,                CsrAllocConsole),
@@ -75,14 +81,8 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GET_CONSOLE_ALIASES_EXES_LENGTH, CsrGetConsoleAliasesExesLength),
     CSRSS_DEFINE_API(GENERATE_CTRL_EVENT,          CsrGenerateCtrlEvent),
     CSRSS_DEFINE_API(SET_SCREEN_BUFFER_SIZE,       CsrSetScreenBufferSize),
+    CSRSS_DEFINE_API(GET_CONSOLE_SELECTION_INFO,   CsrGetConsoleSelectionInfo),
     { 0, 0, NULL }
-  };
-
-static CSRSS_OBJECT_DEFINITION Win32CsrObjectDefinitions[] =
-  {
-    { CONIO_CONSOLE_MAGIC,       ConioDeleteConsole },
-    { CONIO_SCREEN_BUFFER_MAGIC, ConioDeleteScreenBuffer },
-    { 0,                         NULL }
   };
 
 /* FUNCTIONS *****************************************************************/
@@ -102,71 +102,6 @@ DllMain(HANDLE hDll,
 }
 
 NTSTATUS FASTCALL
-Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-                      PHANDLE Handle,
-                      Object_t *Object,
-                      DWORD Access,
-                      BOOL Inheritable)
-{
-  return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object, Access, Inheritable);
-}
-
-NTSTATUS FASTCALL
-Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
-                 HANDLE Handle,
-                 Object_t **Object,
-                 DWORD Access)
-{
-  return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
-}
-
-NTSTATUS FASTCALL
-Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
-                   HANDLE Handle,
-                   Object_t **Object,
-                   DWORD Access,
-                   LONG Type)
-{
-  NTSTATUS Status;
-
-  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object, Access);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  if ((*Object)->Type != Type)
-    {
-      (CsrExports.CsrReleaseObjectByPointerProc)(*Object);
-      return STATUS_INVALID_HANDLE;
-    }
-
-  EnterCriticalSection(&((*Object)->Lock));
-
-  return STATUS_SUCCESS;
-}
-
-VOID FASTCALL
-Win32CsrUnlockObject(Object_t *Object)
-{
-  LeaveCriticalSection(&(Object->Lock));
-  (CsrExports.CsrReleaseObjectByPointerProc)(Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrReleaseObjectByPointer(Object_t *Object)
-{
-  return (CsrExports.CsrReleaseObjectByPointerProc)(Object);
-}
-
-NTSTATUS FASTCALL
-Win32CsrReleaseObject(PCSRSS_PROCESS_DATA ProcessData,
-                      HANDLE Object)
-{
-  return (CsrExports.CsrReleaseObjectProc)(ProcessData, Object);
-}
-
-NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {
@@ -183,9 +118,7 @@ Win32CsrInitComplete(void)
 
 BOOL WINAPI
 Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
-                       PCSRSS_OBJECT_DEFINITION *ObjectDefinitions,
-                       CSRPLUGIN_INIT_COMPLETE_PROC *InitComplete,
-                       CSRPLUGIN_HARDERROR_PROC *HardError,
+                       PCSRPLUGIN_SERVER_PROCS ServerProcs,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
@@ -199,9 +132,10 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
   CsrInitConsoleSupport();
 
   *ApiDefinitions = Win32CsrApiDefinitions;
-  *ObjectDefinitions = Win32CsrObjectDefinitions;
-  *InitComplete = Win32CsrInitComplete;
-  *HardError = Win32CsrHardError;
+  ServerProcs->InitCompleteProc = Win32CsrInitComplete;
+  ServerProcs->HardErrorProc = Win32CsrHardError;
+  ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
+  ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
   return TRUE;
 }

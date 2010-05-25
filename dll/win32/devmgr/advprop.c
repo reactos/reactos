@@ -165,26 +165,6 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                                  &DriverInfoData))
     {
         HSPFILEQ queueHandle;
-        DWORD HiVal, LoVal;
-        WCHAR szTime[25];
-
-        HiVal = (DriverInfoData.DriverVersion >> 32);
-        if (HiVal)
-        {
-            swprintf (szTime, L"%d.%d", HIWORD(HiVal), LOWORD(HiVal));
-            LoVal = (DriverInfoData.DriverVersion & 0xFFFFFFFF);
-            if (HIWORD(LoVal))
-            {
-                swprintf(&szTime[wcslen(szTime)], L".%d", HIWORD(LoVal));
-                if (LOWORD(LoVal))
-                {
-                    swprintf(&szTime[wcslen(szTime)], L".%d", LOWORD(LoVal));
-                }
-            }
-            SetDlgItemTextW(hwndDlg, IDC_FILEVERSION, szTime);
-        }
-        SetDlgItemText(hwndDlg, IDC_FILEPROVIDER, DriverInfoData.ProviderName);
-
 
         queueHandle = SetupOpenFileQueue();
         if (queueHandle != (HSPFILEQ)INVALID_HANDLE_VALUE)
@@ -225,12 +205,139 @@ UpdateDriverDetailsDlg(IN HWND hwndDlg,
                     (void)ListView_SetColumn(hDriversListView,
                                              0,
                                              &lvc);
+
+                    /* highlight the first item from list */
+                    if (ListView_GetSelectedCount(hDriversListView) != 0)
+                    {
+                        ListView_SetItemState(hDriversListView,
+                                              0,
+                                              LVIS_FOCUSED | LVIS_SELECTED,
+                                              LVIS_FOCUSED | LVIS_SELECTED);
+                    }
                 }
             }
 
             SetupCloseFileQueue(queueHandle);
         }
     }
+}
+
+
+static VOID
+UpdateDriverVersionInfoDetails(IN HWND hwndDlg,
+                               IN LPCWSTR lpszDriverPath)
+{
+    DWORD dwHandle;
+    DWORD dwVerInfoSize;
+    LPVOID lpData = NULL;
+    LPVOID lpInfo;
+    UINT uInfoLen;
+    DWORD dwLangId;
+    WCHAR szLangInfo[255];
+    WCHAR szLangPath[MAX_PATH];
+    LPWSTR lpCompanyName = NULL;
+    LPWSTR lpFileVersion = NULL;
+    LPWSTR lpLegalCopyright = NULL;
+    LPWSTR lpDigitalSigner = NULL;
+    UINT uBufLen;
+    WCHAR szNotAvailable[255];
+
+    /* extract version info from selected file */
+    dwVerInfoSize = GetFileVersionInfoSize(lpszDriverPath,
+                                           &dwHandle);
+    if (!dwVerInfoSize)
+        goto done;
+
+    lpData = HeapAlloc(GetProcessHeap(),
+                       HEAP_ZERO_MEMORY,
+                       dwVerInfoSize);
+    if (!lpData)
+        goto done;
+
+    if (!GetFileVersionInfo(lpszDriverPath,
+                            dwHandle,
+                            dwVerInfoSize,
+                            lpData))
+        goto done;
+
+    if (!VerQueryValue(lpData,
+                       L"\\VarFileInfo\\Translation",
+                       &lpInfo,
+                       &uInfoLen))
+        goto done;
+
+    dwLangId = *(LPDWORD)lpInfo;
+    swprintf(szLangInfo, L"\\StringFileInfo\\%04x%04x\\",
+             LOWORD(dwLangId), HIWORD(dwLangId));
+
+    /* read CompanyName */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"CompanyName");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpCompanyName,
+                  (PUINT)&uBufLen);
+
+    /* read FileVersion */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"FileVersion");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpFileVersion,
+                  (PUINT)&uBufLen);
+
+    /* read LegalTrademarks */
+    wcscpy(szLangPath, szLangInfo);
+    wcscat(szLangPath, L"LegalCopyright");
+
+    VerQueryValue(lpData,
+                  szLangPath,
+                  (void **)&lpLegalCopyright,
+                  (PUINT)&uBufLen);
+
+    /* TODO: read digital signer info */
+
+done:
+    if (!LoadString(hDllInstance,
+                    IDS_NOTAVAILABLE,
+                    szNotAvailable,
+                    sizeof(szNotAvailable) / sizeof(WCHAR)))
+    {
+        wcscpy(szNotAvailable, L"n/a");
+    }
+
+    /* update labels */
+    if (!lpCompanyName)
+        lpCompanyName = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILEPROVIDER,
+                   lpCompanyName);
+
+    if (!lpFileVersion)
+        lpFileVersion = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILEVERSION,
+                   lpFileVersion);
+
+    if (!lpLegalCopyright)
+        lpLegalCopyright = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_FILECOPYRIGHT,
+                   lpLegalCopyright);
+
+    if (!lpDigitalSigner)
+        lpDigitalSigner = szNotAvailable;
+    SetDlgItemText(hwndDlg,
+                   IDC_DIGITALSIGNER,
+                   lpDigitalSigner);
+
+    /* release version info */
+    if (lpData)
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpData);
 }
 
 
@@ -256,6 +363,7 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                 switch (LOWORD(wParam))
                 {
                     case IDOK:
+                    case IDCANCEL:
                     {
                         EndDialog(hwndDlg,
                                   IDOK);
@@ -301,6 +409,53 @@ DriverDetailsDlgProc(IN HWND hwndDlg,
                 }
 
                 Ret = TRUE;
+                break;
+            }
+
+            case WM_NOTIFY:
+            {
+                LPNMHDR pnmhdr = (LPNMHDR)lParam;
+
+                switch (pnmhdr->code)
+                {
+                case LVN_ITEMCHANGED:
+                    {
+                        LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
+                        HWND hDriversListView = GetDlgItem(hwndDlg,
+                                                           IDC_DRIVERFILES);
+
+                        if (ListView_GetSelectedCount(hDriversListView) == 0)
+                        {
+                            /* nothing is selected - empty the labels */
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILEPROVIDER,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILEVERSION,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_FILECOPYRIGHT,
+                                           NULL);
+                            SetDlgItemText(hwndDlg,
+                                           IDC_DIGITALSIGNER,
+                                           NULL);
+                        }
+                        else if (pnmv->uNewState != 0)
+                        {
+                            /* extract version info and update the labels */
+                            WCHAR szDriverPath[MAX_PATH];
+
+                            ListView_GetItemText(hDriversListView,
+                                                 pnmv->iItem,
+                                                 pnmv->iSubItem,
+                                                 szDriverPath,
+                                                 MAX_PATH);
+
+                            UpdateDriverVersionInfoDetails(hwndDlg,
+                                                           szDriverPath);
+                        }
+                    }
+                }
                 break;
             }
         }

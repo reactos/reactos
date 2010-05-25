@@ -8,6 +8,8 @@
 
 #include "iphlpapi_private.h"
 #include "dhcp.h"
+#include "dhcpcsdk.h"
+#include "dhcpcapi.h"
 #include <assert.h>
 
 #define NDEBUG
@@ -25,6 +27,23 @@ DWORD getDhcpInfoForAdapter(DWORD AdapterIndex,
                             time_t *LeaseObtained,
                             time_t *LeaseExpires)
 {
-    return DhcpRosGetAdapterInfo(AdapterIndex, DhcpEnabled, DhcpServer,
-                                 LeaseObtained, LeaseExpires);
+    DWORD Status, Version = 0;
+
+    Status = DhcpCApiInitialize(&Version);
+    if (Status != ERROR_SUCCESS)
+    {
+        /* We assume that the DHCP service isn't running yet */
+        *DhcpEnabled = FALSE;
+        *DhcpServer = htonl(INADDR_NONE);
+        *LeaseObtained = 0;
+        *LeaseExpires = 0;
+        return ERROR_SUCCESS;
+    }
+
+    Status = DhcpRosGetAdapterInfo(AdapterIndex, DhcpEnabled, DhcpServer,
+                                   LeaseObtained, LeaseExpires);
+
+    DhcpCApiCleanup();
+
+    return Status;
 }

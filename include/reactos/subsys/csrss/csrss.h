@@ -51,10 +51,9 @@ typedef struct
 
 typedef struct
 {
-  ULONG nMaxIds;
-   ULONG nProcessIdsCopied;
-   ULONG nProcessIdsTotal;
-   HANDLE ProcessId[0];
+    USHORT nMaxIds;
+    PDWORD ProcessId;
+    ULONG nProcessIdsTotal;
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
 typedef struct
@@ -80,7 +79,8 @@ typedef struct
 typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
-   BOOL ConsoleNeeded;
+   BOOLEAN ConsoleNeeded;
+   BOOLEAN Visible;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
@@ -320,15 +320,10 @@ typedef struct
 {
   DWORD Access;
   BOOL Inheritable;
-  HANDLE InputHandle;
-} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE;
-
-typedef struct
-{
-  DWORD Access;
-  BOOL Inheritable;
-  HANDLE OutputHandle;
-} CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
+  HANDLE Handle;
+  DWORD ShareMode;
+} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE,
+  CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
 
 typedef struct
 {
@@ -478,6 +473,11 @@ typedef struct
   COORD Size;
 } CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
 
+typedef struct
+{
+  CONSOLE_SELECTION_INFO Info;
+} CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
+
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
@@ -557,6 +557,7 @@ typedef struct
 #define GENERATE_CTRL_EVENT           (0x3E)
 #define CREATE_THREAD                 (0x3F)
 #define SET_SCREEN_BUFFER_SIZE        (0x40)
+#define GET_CONSOLE_SELECTION_INFO    (0x41)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -631,6 +632,7 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
+        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

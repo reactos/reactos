@@ -2,7 +2,7 @@
 	<importlibrary definition="iphlpapi.spec" />
 	<include base="iphlpapi">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
-        <include base="dhcp">include</include>
+        <include base="dhcpcsvc">include</include>
 	<include base="tdilib">.</include>
 	<library>wine</library>
 	<library>ntdll</library>

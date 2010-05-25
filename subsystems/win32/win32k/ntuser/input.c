@@ -22,7 +22,7 @@ extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 /* GLOBALS *******************************************************************/
 
 PTHREADINFO ptiRawInput;
-PKTIMER MasterTimer;
+PKTIMER MasterTimer = NULL;
 PATTACHINFO gpai = NULL;
 
 static HANDLE MouseDeviceHandle;
@@ -879,14 +879,6 @@ RawInputThreadMain(PVOID StartContext)
 
 
   Objects[0] = &InputThreadsStart;
-
-  MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
-  if (!MasterTimer)
-  {
-     DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
-     return;
-  }
-  KeInitializeTimer(MasterTimer);
   Objects[1] = MasterTimer;
 
   // This thread requires win32k!
@@ -936,6 +928,15 @@ InitInputImpl(VOID)
    NTSTATUS Status;
 
    KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
+
+   MasterTimer = ExAllocatePoolWithTag(NonPagedPool, sizeof(KTIMER), TAG_INPUT);
+   if (!MasterTimer)
+   {
+      DPRINT1("Win32K: Failed making Raw Input thread a win32 thread.\n");
+      ASSERT(FALSE);
+      return STATUS_UNSUCCESSFUL;
+   }
+   KeInitializeTimer(MasterTimer);
 
    /* Initialize the default keyboard layout */
    if(!UserInitDefaultKeyboardLayout())
@@ -1127,7 +1128,7 @@ IntMouseInput(MOUSEINPUT *mi)
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
-      UserSetCursorPos(MousePos.x, MousePos.y);
+      UserSetCursorPos(MousePos.x, MousePos.y, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {
@@ -1340,10 +1341,7 @@ IntKeyboardInput(KEYBDINPUT *ki)
    /* All messages have to contain the cursor point. */
    pti = PsGetCurrentThreadWin32Thread();
    Msg.pt = gpsi->ptCursor;
-
-    DPRINT1("Kbd Hook msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
-             Msg.message, vk_hook, Msg.lParam);
-
+   
    KbdHookData.vkCode = vk_hook;
    KbdHookData.scanCode = ki->wScan;
    KbdHookData.flags = flags >> 8;

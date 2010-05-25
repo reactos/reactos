@@ -110,7 +110,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          HANDLE OldTID = IntGetWndThreadId(WindowPrev);
          HANDLE NewTID = IntGetWndThreadId(Window);
 
-         DPRINT1("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
+         DPRINT("SendActiveMessage Old -> %x, New -> %x\n", OldTID, NewTID);
          if (Window->Wnd->style & WS_MINIMIZE)
          {
             DPRINT("Widow was minimized\n");

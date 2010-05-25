@@ -8,11 +8,9 @@
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 #include <dhcpcsdk.h>
-#include <stdio.h>
-#include <io.h>
-#include "stdint.h"
-#include "predec.h"
 #include <dhcp/rosdhcp_public.h>
+#include <stdio.h>
+#include <time.h>
 #include "debug.h"
 #define IFNAMSIZ MAX_INTERFACE_NAME_LEN
 #undef interface /* wine/objbase.h -- Grrr */
@@ -27,6 +25,10 @@
 #define DHCP_DEFAULT_LEASE_TIME 43200 /* 12 hours */
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"
 typedef void *VOIDPTR;
+typedef unsigned char u_int8_t;
+typedef unsigned short u_int16_t;
+typedef unsigned int u_int32_t;
+typedef char *caddr_t;
 
 #ifndef _SSIZE_T_DEFINED
 #define _SSIZE_T_DEFINED
@@ -51,6 +53,9 @@ typedef u_int32_t uintTIME;
 
 typedef void (*handler_t) PROTO ((struct packet *));
 
+struct iaddr;
+struct interface_info;
+
 typedef struct _DHCP_ADAPTER {
     LIST_ENTRY     ListEntry;
     MIB_IFROW      IfMib;
@@ -74,13 +79,14 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 void AdapterInit(VOID);
 BOOLEAN AdapterDiscover(VOID);
 void AdapterStop(VOID);
-HANDLE PipeInit(VOID);
 extern PDHCP_ADAPTER AdapterGetFirst();
 extern PDHCP_ADAPTER AdapterGetNext(PDHCP_ADAPTER);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern PDHCP_ADAPTER AdapterFindByHardwareAddress( u_int8_t haddr[16], u_int8_t hlen );
+extern HANDLE PipeInit();
 extern VOID ApiInit();
+extern VOID ApiFree();
 extern VOID ApiLock();
 extern VOID ApiUnlock();
 extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );

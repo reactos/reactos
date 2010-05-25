@@ -1483,6 +1483,12 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = Reçtart poŸ¡taŸa"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Inçtal tor nemohol nastaviœ geo id.\n"
         "ENTER = Reçtart poŸ¡taŸa"
@@ -1625,7 +1631,7 @@ MUI_STRING skSKStrings[] =
     {STRING_TXTSETUPFAILED,
     "Inçtal tor zlyhal pri h–adan¡ sekcie '%S'\nv s£bore TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kop¡ruje sa s£bor: %S"},
+     "   Kop¡ruje sa s£bor: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Inçtal tor kop¡ruje s£bory..."},
     {STRING_REGHIVEUPDATE,

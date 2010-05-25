@@ -1660,7 +1660,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, RECTL *rc, BOOL IncPos)
 PWND APIENTRY
 co_IntCreateWindowEx(DWORD dwExStyle,
                      PUNICODE_STRING ClassName,
-                     PUNICODE_STRING WindowName,
+                     PLARGE_STRING WindowName,
                      DWORD dwStyle,
                      LONG x,
                      LONG y,
@@ -1998,6 +1998,8 @@ AllocErr:
    else
       dwExStyle &= ~WS_EX_WINDOWEDGE;
 
+   dwExStyle &= ~WS_EX_SETANSICREATOR;
+
    Wnd->style = dwStyle & ~WS_VISIBLE;
 
    /* Correct the window style. */
@@ -2112,7 +2114,7 @@ AllocErr:
       PRTL_USER_PROCESS_PARAMETERS ProcessParams;
       BOOL CalculatedDefPosSize = FALSE;
 
-      IntGetDesktopWorkArea(Window->pti->rpdesk, &WorkArea);
+      UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
 
       rc = WorkArea;
       ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;
@@ -2219,21 +2221,15 @@ AllocErr:
       POINT MaxSize, MaxPos, MinTrack, MaxTrack;
 
       /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
-      co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack,
-                             &MaxTrack);
-      if (MaxSize.x < Size.cx)
-         Size.cx = MaxSize.x;
-      if (MaxSize.y < Size.cy)
-         Size.cy = MaxSize.y;
-      if (Size.cx < MinTrack.x )
-         Size.cx = MinTrack.x;
-      if (Size.cy < MinTrack.y )
-         Size.cy = MinTrack.y;
-      if (Size.cx < 0)
-         Size.cx = 0;
-      if (Size.cy < 0)
-         Size.cy = 0;
+      co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack, &MaxTrack);
+      if (Size.cx > MaxTrack.x) Size.cx = MaxTrack.x;
+      if (Size.cy > MaxTrack.y) Size.cy = MaxTrack.y;
+      if (Size.cx < MinTrack.x) Size.cx = MinTrack.x;
+      if (Size.cy < MinTrack.y) Size.cy = MinTrack.y;
    }
+
+   if (Size.cx < 0) Size.cx = 0;
+   if (Size.cy < 0) Size.cy = 0;
 
    Wnd->rcWindow.left = Pos.x;
    Wnd->rcWindow.top = Pos.y;
@@ -2491,106 +2487,166 @@ CLEANUP:
    END_CLEANUP;
 }
 
-HWND APIENTRY
-NtUserCreateWindowEx(DWORD dwExStyle,
-                     PUNICODE_STRING UnsafeClassName,
-                     PUNICODE_STRING UnsafeWindowName,
-                     DWORD dwStyle,
-                     LONG x,
-                     LONG y,
-                     LONG nWidth,
-                     LONG nHeight,
-                     HWND hWndParent,
-                     HMENU hMenu,
-                     HINSTANCE hInstance,
-                     LPVOID lpParam,
-                     DWORD dwShowMode,
-                     BOOL bUnicodeWindow,
-                     DWORD dwUnknown)
+NTSTATUS
+NTAPI
+ProbeAndCaptureLargeString(
+    OUT PLARGE_STRING plstrSafe,
+    IN PLARGE_STRING plstrUnsafe)
 {
-   NTSTATUS Status;
-   UNICODE_STRING WindowName;
-   UNICODE_STRING ClassName;
-   HWND NewWindow = NULL;
-   PWND pNewWindow;
-   DECLARE_RETURN(HWND);
+    LARGE_STRING lstrTemp;
+    PVOID pvBuffer = NULL;
 
-   DPRINT("Enter NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
-   UserEnterExclusive();
+    _SEH2_TRY
+    {
+        /* Probe and copy the string */
+        ProbeForRead(plstrUnsafe, sizeof(LARGE_STRING), sizeof(ULONG));
+        lstrTemp = *plstrUnsafe;
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Fail */
+        _SEH2_YIELD(return _SEH2_GetExceptionCode();)
+    }
+    _SEH2_END
 
-   /* Get the class name (string or atom) */
-   Status = MmCopyFromCaller(&ClassName, UnsafeClassName, sizeof(UNICODE_STRING));
-   if (! NT_SUCCESS(Status))
-   {
-      SetLastNtError(Status);
-      RETURN( NULL);
-   }
-   if (ClassName.Length != 0)
-   {
-      Status = IntSafeCopyUnicodeStringTerminateNULL(&ClassName, UnsafeClassName);
-      if (! NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN( NULL);
-      }
-   }
-   else if (! IS_ATOM(ClassName.Buffer))
-   {
-       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-       RETURN(NULL);
-   }
+    if (lstrTemp.Length != 0)
+    {
+        /* Allocate a buffer from paged pool */
+        pvBuffer = ExAllocatePoolWithTag(PagedPool, lstrTemp.Length, TAG_STRING);
+        if (!pvBuffer)
+        {
+            return STATUS_NO_MEMORY;
+        }
 
-   /* safely copy the window name */
-   if (NULL != UnsafeWindowName)
-   {
-      Status = IntSafeCopyUnicodeString(&WindowName, UnsafeWindowName);
-      if (! NT_SUCCESS(Status))
-      {
-         if (! IS_ATOM(ClassName.Buffer))
-         {
-            ExFreePoolWithTag(ClassName.Buffer, TAG_STRING);
-         }
-         SetLastNtError(Status);
-         RETURN( NULL);
-      }
-   }
-   else
-   {
-      RtlInitUnicodeString(&WindowName, NULL);
-   }
+        _SEH2_TRY
+        {
+            /* Probe and copy the buffer */
+            ProbeForRead(lstrTemp.Buffer, lstrTemp.Length, sizeof(WCHAR));
+            RtlCopyMemory(pvBuffer, lstrTemp.Buffer, lstrTemp.Length);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Cleanup and fail */
+            ExFreePool(pvBuffer);
+            _SEH2_YIELD(return _SEH2_GetExceptionCode();)
+        }
+        _SEH2_END
+    }
 
-   pNewWindow = co_IntCreateWindowEx( dwExStyle,
-                                     &ClassName,
-                                     &WindowName,
-                                      dwStyle,
-                                      x,
-                                      y,
-                                      nWidth,
-                                      nHeight,
-                                      hWndParent,
-                                      hMenu,
-                                      hInstance,
-                                      lpParam,
-                                      dwShowMode,
-                                      bUnicodeWindow);
+    /* Set the output string */
+    plstrSafe->Buffer = pvBuffer;
+    plstrSafe->Length = lstrTemp.Length;
+    plstrSafe->MaximumLength = lstrTemp.Length;
 
-   if (pNewWindow) NewWindow = UserHMGetHandle(pNewWindow);
+    return STATUS_SUCCESS;
+}
 
-   if (WindowName.Buffer)
-   {
-      ExFreePoolWithTag(WindowName.Buffer, TAG_STRING);
-   }
-   if (! IS_ATOM(ClassName.Buffer))
-   {
-      ExFreePoolWithTag(ClassName.Buffer, TAG_STRING);
-   }
+/**
+ * \todo Allow passing plstrClassName as ANSI.
+ */
+HWND
+NTAPI
+NtUserCreateWindowEx(
+    DWORD dwExStyle,
+    PLARGE_STRING plstrClassName,
+    PLARGE_STRING plstrClsVersion,
+    PLARGE_STRING plstrWindowName,
+    DWORD dwStyle,
+    int x,
+    int y,
+    int nWidth,
+    int nHeight,
+    HWND hWndParent,
+    HMENU hMenu,
+    HINSTANCE hInstance,
+    LPVOID lpParam,
+    DWORD dwFlags,
+    PVOID acbiBuffer)
+{
+    NTSTATUS Status;
+    LARGE_STRING lstrWindowName;
+    LARGE_STRING lstrClassName;
+    UNICODE_STRING ustrClassName;
+    HWND hwnd = NULL;
+    PWND pwnd;
 
-   RETURN( NewWindow);
+    DPRINT("Enter NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
+    UserEnterExclusive();
 
-CLEANUP:
-   DPRINT("Leave NtUserCreateWindowEx, ret=%i\n",_ret_);
+    lstrWindowName.Buffer = NULL;
+    lstrClassName.Buffer = NULL;
+
+    /* Check if we got a Window name */
+    if (plstrWindowName)
+    {
+        /* Copy the string to kernel mode */
+        Status = ProbeAndCaptureLargeString(&lstrWindowName, plstrWindowName);
+        if (!NT_SUCCESS(Status))
+        {
+            SetLastNtError(Status);
+            goto leave;
+        }
+        plstrWindowName = &lstrWindowName;
+    }
+
+    /* Check if the class is an atom */
+    if (IS_ATOM(plstrClassName))
+    {
+        /* It is, pass the atom in the UNICODE_STRING */
+        ustrClassName.Buffer = (PVOID)plstrClassName;
+        ustrClassName.Length = 0;
+        ustrClassName.MaximumLength = 0;
+    }
+    else
+    {
+        /* It's not, capture the class name */
+        Status = ProbeAndCaptureLargeString(&lstrClassName, plstrClassName);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Set last error, cleanup and return */
+            SetLastNtError(Status);
+            goto cleanup;
+        }
+
+        /* We pass it on as a UNICODE_STRING */
+        ustrClassName.Buffer = lstrClassName.Buffer;
+        ustrClassName.Length = lstrClassName.Length;
+        ustrClassName.MaximumLength = lstrClassName.MaximumLength;
+    }
+
+    /* Call the internal function */
+    pwnd = co_IntCreateWindowEx(dwExStyle,
+                                &ustrClassName,
+                                plstrWindowName,
+                                dwStyle,
+                                x,
+                                y,
+                                nWidth,
+                                nHeight,
+                                hWndParent,
+                                hMenu,
+                                hInstance,
+                                lpParam,
+                                SW_SHOW,
+                                !(dwExStyle & WS_EX_SETANSICREATOR));
+
+    hwnd = pwnd ? UserHMGetHandle(pwnd) : NULL;
+
+cleanup:
+    if (lstrWindowName.Buffer)
+    {
+        ExFreePoolWithTag(lstrWindowName.Buffer, TAG_STRING);
+    }
+    if (lstrClassName.Buffer)
+    {
+        ExFreePoolWithTag(lstrClassName.Buffer, TAG_STRING);
+    }
+
+leave:
+   DPRINT("Leave NtUserCreateWindowEx, hwnd=%i\n", hwnd);
    UserLeave();
-   END_CLEANUP;
+
+   return hwnd;
 }
 
 /*
@@ -2618,6 +2674,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    PWND Wnd;
    HWND hWnd;
    PTHREADINFO ti;
+   MSG msg;
 
    ASSERT_REFS_CO(Window); // FIXME: temp hack?
 
@@ -2755,6 +2812,13 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
       }
    }
 
+    /* Generate mouse move message for the next window */
+    msg.message = WM_MOUSEMOVE;
+    msg.wParam = IntGetSysCursorInfo()->ButtonsDown;
+    msg.lParam = MAKELPARAM(gpsi->ptCursor.x, gpsi->ptCursor.y);
+    msg.pt = gpsi->ptCursor;
+    MsqInsertSystemMessage(&msg);
+
    if (!IntIsWindow(Window->hSelf))
    {
       return TRUE;
@@ -2858,6 +2922,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
    BOOL CheckWindowName;
    HWND *List, *phWnd;
    HWND Ret = NULL;
+   UNICODE_STRING CurrentWindowName;
 
    ASSERT(Parent);
 
@@ -2885,13 +2950,20 @@ IntFindWindow(PWINDOW_OBJECT Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->Wnd->strName), TRUE)) &&
-               (!ClassAtom || Child->Wnd->pcls->atomClassName == ClassAtom))
+         if (!ClassAtom || Child->Wnd->pcls->atomClassName == ClassAtom)
          {
-            Ret = Child->hSelf;
-            break;
+             // HACK: use UNICODE_STRING instead of LARGE_STRING
+             CurrentWindowName.Buffer = Child->Wnd->strName.Buffer;
+             CurrentWindowName.Length = Child->Wnd->strName.Length;
+             CurrentWindowName.MaximumLength = Child->Wnd->strName.MaximumLength;
+             if(!CheckWindowName || 
+                (Child->Wnd->strName.Length < 0xFFFF &&
+                 !RtlCompareUnicodeString(WindowName, &CurrentWindowName, TRUE)))
+             {
+                Ret = Child->hSelf;
+                break;
+             }
          }
-
       }
       ExFreePool(List);
    }
@@ -3048,6 +3120,8 @@ NtUserFindWindowEx(HWND hwndParent,
              /* search children */
              while(*phWnd)
              {
+                 UNICODE_STRING ustr;
+
                 if(!(TopLevelWindow = UserGetWindowObject(*(phWnd++))))
                 {
                    continue;
@@ -3056,8 +3130,12 @@ NtUserFindWindowEx(HWND hwndParent,
                 /* Do not send WM_GETTEXT messages in the kernel mode version!
                    The user mode version however calls GetWindowText() which will
                    send WM_GETTEXT messages to windows belonging to its processes */
-                WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
-                                   &WindowName, &TopLevelWindow->Wnd->strName, TRUE);
+                ustr.Buffer = TopLevelWindow->Wnd->strName.Buffer;
+                ustr.Length = TopLevelWindow->Wnd->strName.Length;
+                ustr.MaximumLength = TopLevelWindow->Wnd->strName.MaximumLength;
+                WindowMatches = !CheckWindowName || 
+                                (TopLevelWindow->Wnd->strName.Length < 0xFFFF && 
+                                 !RtlCompareUnicodeString(&WindowName, &ustr, TRUE));
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
                                ClassAtom == TopLevelWindow->Wnd->pcls->atomClassName;
 

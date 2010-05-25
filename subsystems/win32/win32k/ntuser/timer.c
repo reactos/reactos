@@ -245,6 +245,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
      pTmr->flags &= ~TMRF_DELETEPENDING;
   }
 
+  ASSERT(MasterTimer != NULL);
   // Start the timer thread!
   if (pTmr == FirstpTmr)
      KeSetTimer(MasterTimer, DueTime, NULL);
@@ -419,6 +420,7 @@ ProcessTimers(VOID)
   } while (pTmr != FirstpTmr);
 
   // Restart the timer thread!
+  ASSERT(MasterTimer != NULL);
   KeSetTimer(MasterTimer, DueTime, NULL);
 
   TimeLast = Time;

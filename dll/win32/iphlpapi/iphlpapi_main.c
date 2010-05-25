@@ -49,7 +49,7 @@
 #include "route.h"
 #include "wine/debug.h"
 #include "dhcpcsdk.h"
-#include "dhcp/rosdhcp_public.h"
+#include "dhcpcapi.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
@@ -63,6 +63,7 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+  DWORD Version;
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
@@ -1944,30 +1945,23 @@ DWORD WINAPI GetUniDirectionalAdapterInfo(PIP_UNIDIRECTIONAL_ADAPTER_ADDRESS pIP
  */
 DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  COMM_DHCP_REPLY Reply;
-  COMM_DHCP_REQ Request;
-  DWORD BytesRead;
+  DWORD Status, Version = 0;
 
-  Request.AdapterIndex = AdapterInfo->Index;
-  Request.Type = DhcpReqReleaseIpAddress;
-
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-
-  if (CallNamedPipe(DHCP_PIPE_NAME,
-                    &Request,
-                    sizeof(Request),
-                    &Reply,
-                    sizeof(Reply),
-                    &BytesRead,
-                    NMPWAIT_USE_DEFAULT_WAIT))
-  {
-      if (Reply.Reply)
-          return NO_ERROR;
-
+  if (!AdapterInfo || !AdapterInfo->Name)
       return ERROR_INVALID_PARAMETER;
-  }
 
-  return ERROR_PROC_NOT_FOUND;
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpReleaseIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 
@@ -1985,30 +1979,23 @@ DWORD WINAPI IpReleaseAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
  */
 DWORD WINAPI IpRenewAddress(PIP_ADAPTER_INDEX_MAP AdapterInfo)
 {
-  COMM_DHCP_REPLY Reply;
-  COMM_DHCP_REQ Request;
-  DWORD BytesRead;
+  DWORD Status, Version = 0;
 
-  Request.AdapterIndex = AdapterInfo->Index;
-  Request.Type = DhcpReqRenewIpAddress;
-
-  TRACE("AdapterInfo %p\n", AdapterInfo);
-
-  if (CallNamedPipe(DHCP_PIPE_NAME,
-                    &Request,
-                    sizeof(Request),
-                    &Reply,
-                    sizeof(Reply),
-                    &BytesRead,
-                    NMPWAIT_USE_DEFAULT_WAIT))
-  {
-      if (Reply.Reply)
-          return NO_ERROR;
-
+  if (!AdapterInfo || !AdapterInfo->Name)
       return ERROR_INVALID_PARAMETER;
-  }
 
-  return ERROR_PROC_NOT_FOUND;
+  /* Maybe we should do this in DllMain */
+  if (DhcpCApiInitialize(&Version) != ERROR_SUCCESS)
+      return ERROR_PROC_NOT_FOUND;
+
+  if (DhcpRenewIpAddressLease(AdapterInfo->Index))
+      Status = ERROR_SUCCESS;
+  else
+      Status = ERROR_PROC_NOT_FOUND;
+
+  DhcpCApiCleanup();
+
+  return Status;
 }
 
 

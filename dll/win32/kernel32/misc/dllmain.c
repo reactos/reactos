@@ -130,6 +130,7 @@ BasepInitConsole(VOID)
     NTSTATUS Status;
     BOOLEAN NotConsole = FALSE;
     PRTL_USER_PROCESS_PARAMETERS Parameters = NtCurrentPeb()->ProcessParameters;
+    LPCWSTR ExeName;
 
     WCHAR lpTest[MAX_PATH];
     GetModuleFileNameW(NULL, lpTest, MAX_PATH);
@@ -150,6 +151,7 @@ BasepInitConsole(VOID)
     {
         /* Assume one is needed */
         Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
+        Request.Data.AllocConsoleRequest.Visible = TRUE;
 
         /* Handle the special flags given to us by BasepInitializeEnvironment */
         if (Parameters->ConsoleHandle == HANDLE_DETACHED_PROCESS)
@@ -168,8 +170,9 @@ BasepInitConsole(VOID)
         else if (Parameters->ConsoleHandle == HANDLE_CREATE_NO_WINDOW)
         {
             /* We'll get the real one soon */
-            DPRINT1("NOT SUPPORTED: HANDLE_CREATE_NO_WINDOW\n");
+            DPRINT("Creating new invisible console\n");
             Parameters->ConsoleHandle = NULL;
+            Request.Data.AllocConsoleRequest.Visible = FALSE;
         }
         else
         {
@@ -181,13 +184,17 @@ BasepInitConsole(VOID)
         }
     }
 
-    /* Initialize Console Ctrl Handler */
+    /* Initialize Console Ctrl Handler and input EXE name */
     ConsoleInitialized = TRUE;
     RtlInitializeCriticalSection(&ConsoleLock);
     NrAllocatedHandlers = 1;
     NrCtrlHandlers = 1;
     CtrlHandlers = InitialHandler;
     CtrlHandlers[0] = DefaultConsoleCtrlHandler;
+
+    ExeName = wcsrchr(Parameters->ImagePathName.Buffer, L'\\');
+    if (ExeName)
+        SetConsoleInputExeNameW(ExeName + 1);
     
     /* Now use the proper console handle */
     Request.Data.AllocConsoleRequest.Console = Parameters->ConsoleHandle;

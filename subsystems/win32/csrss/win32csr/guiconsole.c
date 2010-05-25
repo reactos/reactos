@@ -25,9 +25,6 @@ typedef struct GUI_CONSOLE_DATA_TAG
   BOOL CursorBlinkOn;
   BOOL ForceCursorOff;
   CRITICAL_SECTION Lock;
-  RECT Selection;
-  POINT SelectionStart;
-  BOOL MouseDown;
   HMODULE ConsoleLibrary;
   HANDLE hGuiInitEvent;
   WCHAR FontName[LF_FACESIZE];
@@ -116,7 +113,7 @@ static const COLORREF s_Colors[] =
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID FASTCALL
+static VOID
 GuiConsoleAppendMenuItems(HMENU hMenu,
                           const GUICONSOLE_MENUITEM *Items)
 {
@@ -171,7 +168,7 @@ GuiConsoleAppendMenuItems(HMENU hMenu,
     }while(!(Items[i].uID == 0 && Items[i].SubMenu == NULL && Items[i].wCmdID == 0));
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
 {
     HMENU hMenu;
@@ -185,14 +182,14 @@ GuiConsoleCreateSysMenu(PCSRSS_CONSOLE Console)
     }
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
 {
   *Console = (PCSRSS_CONSOLE) GetWindowLongPtrW(hWnd, GWL_USERDATA);
   *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle, PHKEY hResult, REGSAM samDesired)
 {
   HANDLE hProcessToken = NULL;
@@ -248,7 +245,7 @@ GuiConsoleOpenUserRegistryPathPerProcessId(DWORD ProcessId, PHANDLE hProcHandle,
     return TRUE;
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleOpenUserSettings(PGUI_CONSOLE_DATA GuiData, DWORD ProcessId, PHKEY hSubKey, REGSAM samDesired, BOOL bCreate)
 {
   WCHAR szProcessName[MAX_PATH];
@@ -494,7 +491,7 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
   RegCloseKey(hKey);
 }
 
-static void FASTCALL
+static void
 GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   DWORD dwNumSubKeys = 0;
@@ -596,7 +593,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
         }
    }
 }
-static VOID FASTCALL
+static VOID
 GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_SCREEN_BUFFER Buffer)
 {
   /*
@@ -679,7 +676,7 @@ GuiConsoleInitScrollbar(PCSRSS_CONSOLE Console, HWND hwnd)
                SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
 {
   PCSRSS_CONSOLE Console = (PCSRSS_CONSOLE) Create->lpCreateParams;
@@ -773,7 +770,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->CursorBlinkOn = TRUE;
   GuiData->ForceCursorOff = FALSE;
 
-  GuiData->Selection.left = -1;
   DPRINT("Console %p GuiData %p\n", Console, GuiData);
   Console->PrivateData = GuiData;
   SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
@@ -790,40 +786,46 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
 }
 
-static VOID FASTCALL
-GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
+static VOID
+SmallRectToRect(PCSRSS_CONSOLE Console, PRECT Rect, PSMALL_RECT SmallRect)
 {
-  RECT oldRect = GuiData->Selection;
+    PCSRSS_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
+    PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
+    Rect->left   = (SmallRect->Left       - Buffer->ShowX) * GuiData->CharWidth;
+    Rect->top    = (SmallRect->Top        - Buffer->ShowY) * GuiData->CharHeight;
+    Rect->right  = (SmallRect->Right  + 1 - Buffer->ShowX) * GuiData->CharWidth;
+    Rect->bottom = (SmallRect->Bottom + 1 - Buffer->ShowY) * GuiData->CharHeight;
+}
 
-  if(rc != NULL)
+static VOID
+GuiConsoleUpdateSelection(PCSRSS_CONSOLE Console, PCOORD coord)
+{
+  RECT oldRect, newRect;
+  HWND hWnd = Console->hWindow;
+
+  SmallRectToRect(Console, &oldRect, &Console->Selection.srSelection);
+
+  if(coord != NULL)
   {
-    RECT changeRect = *rc;
+    SMALL_RECT rc;
+    /* exchange left/top with right/bottom if required */
+    rc.Left   = min(Console->Selection.dwSelectionAnchor.X, coord->X);
+    rc.Top    = min(Console->Selection.dwSelectionAnchor.Y, coord->Y);
+    rc.Right  = max(Console->Selection.dwSelectionAnchor.X, coord->X);
+    rc.Bottom = max(Console->Selection.dwSelectionAnchor.Y, coord->Y);
 
-    GuiData->Selection = *rc;
+    SmallRectToRect(Console, &newRect, &rc);
 
-    changeRect.left *= GuiData->CharWidth;
-    changeRect.top *= GuiData->CharHeight;
-    changeRect.right *= GuiData->CharWidth;
-    changeRect.bottom *= GuiData->CharHeight;
-
-    if(rc->left != oldRect.left ||
-       rc->top != oldRect.top ||
-       rc->right != oldRect.right ||
-       rc->bottom != oldRect.bottom)
+    if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
     {
-      if(oldRect.left != -1)
+      if (memcmp(&rc, &Console->Selection.srSelection, sizeof(SMALL_RECT)) != 0)
       {
         HRGN rgn1, rgn2;
-
-        oldRect.left *= GuiData->CharWidth;
-        oldRect.top *= GuiData->CharHeight;
-        oldRect.right *= GuiData->CharWidth;
-        oldRect.bottom *= GuiData->CharHeight;
 
         /* calculate the region that needs to be updated */
         if((rgn1 = CreateRectRgnIndirect(&oldRect)))
         {
-          if((rgn2 = CreateRectRgnIndirect(&changeRect)))
+          if((rgn2 = CreateRectRgnIndirect(&newRect)))
           {
             if(CombineRgn(rgn1, rgn2, rgn1, RGN_XOR) != ERROR)
             {
@@ -835,26 +837,27 @@ GuiConsoleUpdateSelection(HWND hWnd, PRECT rc, PGUI_CONSOLE_DATA GuiData)
           DeleteObject(rgn1);
         }
       }
-      else
-      {
-        InvalidateRect(hWnd, &changeRect, FALSE);
-      }
     }
+    else
+    {
+      InvalidateRect(hWnd, &newRect, FALSE);
+    }
+    Console->Selection.dwFlags |= CONSOLE_SELECTION_NOT_EMPTY;
+    Console->Selection.srSelection = rc;
   }
-  else if(oldRect.left != -1)
+  else
   {
     /* clear the selection */
-    GuiData->Selection.left = -1;
-    oldRect.left *= GuiData->CharWidth;
-    oldRect.top *= GuiData->CharHeight;
-    oldRect.right *= GuiData->CharWidth;
-    oldRect.bottom *= GuiData->CharHeight;
-    InvalidateRect(hWnd, &oldRect, FALSE);
+    if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
+    {
+      InvalidateRect(hWnd, &oldRect, FALSE);
+    }
+    Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
   }
 }
 
 
-static VOID FASTCALL
+static VOID
 GuiConsolePaint(PCSRSS_CONSOLE Console,
                 PGUI_CONSOLE_DATA GuiData,
                 HDC hDC,
@@ -872,7 +875,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
     Buff = Console->ActiveBuffer;
 
-    EnterCriticalSection(&Buff->Header.Lock);
+    EnterCriticalSection(&Buff->Header.Console->Lock);
 
     TopLine = rc->top / GuiData->CharHeight + Buff->ShowY;
     BottomLine = (rc->bottom + (GuiData->CharHeight - 1)) / GuiData->CharHeight - 1 + Buff->ShowY;
@@ -971,13 +974,13 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
         }
     }
 
-    LeaveCriticalSection(&Buff->Header.Lock);
+    LeaveCriticalSection(&Buff->Header.Console->Lock);
 
     SelectObject(hDC,
                  OldFont);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
 {
     HDC hDC;
@@ -1005,14 +1008,10 @@ GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
                                 hDC,
                                 &ps.rcPaint);
 
-                if (GuiData->Selection.left != -1)
+                if (Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY)
                 {
-                    RECT rc = GuiData->Selection;
-
-                    rc.left *= GuiData->CharWidth;
-                    rc.top *= GuiData->CharHeight;
-                    rc.right *= GuiData->CharWidth;
-                    rc.bottom *= GuiData->CharHeight;
+                    RECT rc;
+                    SmallRectToRect(Console, &rc, &Console->Selection.srSelection);
 
                     /* invert the selection */
                     if (IntersectRect(&rc,
@@ -1036,7 +1035,7 @@ GuiConsoleHandlePaint(HWND hWnd, HDC hDCPaint)
     EndPaint(hWnd, &ps);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1052,51 +1051,29 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   if(msg == WM_CHAR || msg == WM_SYSKEYDOWN)
   {
     /* clear the selection */
-    GuiConsoleUpdateSelection(hWnd, NULL, GuiData);
+    GuiConsoleUpdateSelection(Console, NULL);
   }
 
   ConioProcessKey(&Message, Console, FALSE);
 }
 
-static VOID FASTCALL
-GuiIntDrawRegion(PCSRSS_SCREEN_BUFFER Buff, PGUI_CONSOLE_DATA GuiData, HWND Wnd, RECT *Region)
+static VOID WINAPI
+GuiDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT *Region)
 {
-  RECT RegionRect;
+    RECT RegionRect;
+    SmallRectToRect(Console, &RegionRect, Region);
+    InvalidateRect(Console->hWindow, &RegionRect, FALSE);
+}
 
-  RegionRect.left = (Region->left - Buff->ShowX) * GuiData->CharWidth;
-  RegionRect.top = (Region->top - Buff->ShowY) * GuiData->CharHeight;
-  RegionRect.right = (Region->right + 1 - Buff->ShowX) * GuiData->CharWidth;
-  RegionRect.bottom = (Region->bottom + 1 - Buff->ShowY) * GuiData->CharHeight;
-
-  InvalidateRect(Wnd, &RegionRect, FALSE);
+static VOID
+GuiInvalidateCell(PCSRSS_CONSOLE Console, UINT x, UINT y)
+{
+    SMALL_RECT CellRect = { x, y, x, y };
+    GuiDrawRegion(Console, &CellRect);
 }
 
 static VOID WINAPI
-GuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
-{
-  PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
-
-  if (NULL != Console->hWindow && NULL != GuiData)
-    {
-      GuiIntDrawRegion(Console->ActiveBuffer, GuiData, Console->hWindow, Region);
-    }
-}
-
-static VOID FASTCALL
-GuiInvalidateCell(PCSRSS_SCREEN_BUFFER Buff, PGUI_CONSOLE_DATA GuiData, HWND Wnd, UINT x, UINT y)
-{
-  RECT CellRect;
-
-  CellRect.left = x;
-  CellRect.top = y;
-  CellRect.right = x;
-  CellRect.bottom = y;
-
-  GuiIntDrawRegion(Buff, GuiData, Wnd, &CellRect);
-}
-
-static VOID WINAPI
-GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
+GuiWriteStream(PCSRSS_CONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
@@ -1114,26 +1091,7 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
       ScrollRect.left = 0;
       ScrollRect.top = 0;
       ScrollRect.right = Console->Size.X * GuiData->CharWidth;
-      ScrollRect.bottom = Region->top * GuiData->CharHeight;
-
-      if (GuiData->Selection.left != -1)
-      {
-          /* scroll the selection */
-          if (GuiData->Selection.top > ScrolledLines)
-          {
-              GuiData->Selection.top -= ScrolledLines;
-              GuiData->Selection.bottom -= ScrolledLines;
-          }
-          else if (GuiData->Selection.bottom < ScrolledLines)
-          {
-              GuiData->Selection.left = -1;
-          }
-          else
-          {
-              GuiData->Selection.top = 0;
-              GuiData->Selection.bottom -= ScrolledLines;
-          }
-      }
+      ScrollRect.bottom = Region->Top * GuiData->CharHeight;
 
       ScrollWindowEx(Console->hWindow,
                      0,
@@ -1145,21 +1103,21 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
                      SW_INVALIDATE);
     }
 
-  GuiIntDrawRegion(Buff, GuiData, Console->hWindow, Region);
+  GuiDrawRegion(Console, Region);
 
-  if (CursorStartX < Region->left || Region->right < CursorStartX
-      || CursorStartY < Region->top || Region->bottom < CursorStartY)
+  if (CursorStartX < Region->Left || Region->Right < CursorStartX
+      || CursorStartY < Region->Top || Region->Bottom < CursorStartY)
     {
-      GuiInvalidateCell(Buff, GuiData, Console->hWindow, CursorStartX, CursorStartY);
+      GuiInvalidateCell(Console, CursorStartX, CursorStartY);
     }
 
   CursorEndX = Buff->CurrentX;
   CursorEndY = Buff->CurrentY;
-  if ((CursorEndX < Region->left || Region->right < CursorEndX
-       || CursorEndY < Region->top || Region->bottom < CursorEndY)
+  if ((CursorEndX < Region->Left || Region->Right < CursorEndX
+       || CursorEndY < Region->Top || Region->Bottom < CursorEndY)
       && (CursorEndX != CursorStartX || CursorEndY != CursorStartY))
     {
-      GuiInvalidateCell(Buff, GuiData, Console->hWindow, CursorEndX, CursorEndY);
+      GuiInvalidateCell(Console, CursorEndX, CursorEndY);
     }
 
     // Set up the update timer (very short interval) - this is a "hack" for getting the OS to
@@ -1171,15 +1129,9 @@ GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG Cur
 static BOOL WINAPI
 GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
-  RECT UpdateRect;
-
   if (Console->ActiveBuffer == Buff)
     {
-      UpdateRect.left = Buff->CurrentX;
-      UpdateRect.top = Buff->CurrentY;
-      UpdateRect.right = UpdateRect.left;
-      UpdateRect.bottom = UpdateRect.top;
-      ConioDrawRegion(Console, &UpdateRect);
+      GuiInvalidateCell(Console, Buff->CurrentX, Buff->CurrentY);
     }
 
   return TRUE;
@@ -1188,22 +1140,12 @@ GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 static BOOL WINAPI
 GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
 {
-  RECT UpdateRect;
-
   if (Console->ActiveBuffer == Buff)
     {
       /* Redraw char at old position (removes cursor) */
-      UpdateRect.left = OldCursorX;
-      UpdateRect.top = OldCursorY;
-      UpdateRect.right = OldCursorX;
-      UpdateRect.bottom = OldCursorY;
-      ConioDrawRegion(Console, &UpdateRect);
+      GuiInvalidateCell(Console, OldCursorX, OldCursorY);
       /* Redraw char at new position (shows cursor) */
-      UpdateRect.left = Buff->CurrentX;
-      UpdateRect.top = Buff->CurrentY;
-      UpdateRect.right = UpdateRect.left;
-      UpdateRect.bottom = UpdateRect.top;
-      ConioDrawRegion(Console, &UpdateRect);
+      GuiInvalidateCell(Console, Buff->CurrentX, Buff->CurrentY);
     }
 
   return TRUE;
@@ -1223,24 +1165,19 @@ GuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
     return TRUE;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleTimer(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
   PCSRSS_SCREEN_BUFFER Buff;
-  RECT CursorRect;
 
   SetTimer(hWnd, CONGUI_UPDATE_TIMER, CURSOR_BLINK_TIME, NULL);
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
   Buff = Console->ActiveBuffer;
-  CursorRect.left = Buff->CurrentX;
-  CursorRect.top = Buff->CurrentY;
-  CursorRect.right = CursorRect.left;
-  CursorRect.bottom = CursorRect.top;
-  GuiDrawRegion(Console, &CursorRect);
+  GuiInvalidateCell(Console, Buff->CurrentX, Buff->CurrentY);
   GuiData->CursorBlinkOn = ! GuiData->CursorBlinkOn;
 
   if((GuiData->OldCursor.x != Buff->CurrentX) || (GuiData->OldCursor.y != Buff->CurrentY))
@@ -1317,7 +1254,7 @@ GuiConsoleHandleTimer(HWND hWnd)
   }
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleClose(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1327,7 +1264,7 @@ GuiConsoleHandleClose(HWND hWnd)
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
 
-  EnterCriticalSection(&Console->Header.Lock);
+  EnterCriticalSection(&Console->Lock);
 
   current_entry = Console->ProcessList.Flink;
   while (current_entry != &Console->ProcessList)
@@ -1341,10 +1278,10 @@ GuiConsoleHandleClose(HWND hWnd)
       ConioConsoleCtrlEvent(CTRL_CLOSE_EVENT, current);
     }
 
-  LeaveCriticalSection(&Console->Header.Lock);
+  LeaveCriticalSection(&Console->Lock);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleHandleNcDestroy(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1362,124 +1299,80 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 
-static VOID FASTCALL
+static COORD
+PointToCoord(PCSRSS_CONSOLE Console, LPARAM lParam)
+{
+    PCSRSS_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
+    PGUI_CONSOLE_DATA GuiData = Console->PrivateData;
+    COORD Coord;
+    Coord.X = Buffer->ShowX + ((short)LOWORD(lParam) / (int)GuiData->CharWidth);
+    Coord.Y = Buffer->ShowY + ((short)HIWORD(lParam) / (int)GuiData->CharHeight);
+
+    /* Clip coordinate to ensure it's inside buffer */
+    if (Coord.X < 0)                  Coord.X = 0;
+    else if (Coord.X >= Buffer->MaxX) Coord.X = Buffer->MaxX - 1;
+    if (Coord.Y < 0)                  Coord.Y = 0;
+    else if (Coord.Y >= Buffer->MaxY) Coord.Y = Buffer->MaxY - 1;
+    return Coord;
+}
+
+static VOID
 GuiConsoleLeftMouseDown(HWND hWnd, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  POINTS pt;
-  RECT rc;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
 
-  pt = MAKEPOINTS(lParam);
-
-  rc.left = pt.x / GuiData->CharWidth;
-  rc.top = pt.y / GuiData->CharHeight;
-  rc.right = rc.left + 1;
-  rc.bottom = rc.top + 1;
-
-  GuiData->SelectionStart.x = rc.left;
-  GuiData->SelectionStart.y = rc.top;
+  Console->Selection.dwSelectionAnchor = PointToCoord(Console, lParam);
 
   SetCapture(hWnd);
 
-  GuiData->MouseDown = TRUE;
+  Console->Selection.dwFlags |= CONSOLE_SELECTION_IN_PROGRESS | CONSOLE_MOUSE_SELECTION | CONSOLE_MOUSE_DOWN;
 
-  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+  GuiConsoleUpdateSelection(Console, &Console->Selection.dwSelectionAnchor);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleLeftMouseUp(HWND hWnd, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  RECT rc;
-  POINTS pt;
+  COORD c;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
-  if (GuiData->Selection.left == -1 || !GuiData->MouseDown) return;
+  if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) return;
 
-  pt = MAKEPOINTS(lParam);
+  c = PointToCoord(Console, lParam);
 
-  rc.left = GuiData->SelectionStart.x;
-  rc.top = GuiData->SelectionStart.y;
-  rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
-  rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
+  Console->Selection.dwFlags &= ~CONSOLE_MOUSE_DOWN;
 
-  /* exchange left/top with right/bottom if required */
-  if(rc.left >= rc.right)
-  {
-    LONG tmp;
-    tmp = rc.left;
-    rc.left = max(rc.right - 1, 0);
-    rc.right = tmp + 1;
-  }
-  if(rc.top >= rc.bottom)
-  {
-    LONG tmp;
-    tmp = rc.top;
-    rc.top = max(rc.bottom - 1, 0);
-    rc.bottom = tmp + 1;
-  }
-
-  GuiData->MouseDown = FALSE;
-
-  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+  GuiConsoleUpdateSelection(Console, &c);
 
   ReleaseCapture();
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleMouseMove(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  RECT rc;
-  POINTS pt;
+  COORD c;
 
   if (!(wParam & MK_LBUTTON)) return;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
-  if (Console == NULL || GuiData == NULL || !GuiData->MouseDown) return;
+  if (Console == NULL || GuiData == NULL) return;
+  if (!(Console->Selection.dwFlags & CONSOLE_MOUSE_DOWN)) return;
 
-  pt = MAKEPOINTS(lParam);
+  c = PointToCoord(Console, lParam); /* TODO: Scroll buffer to bring c into view */
 
-  rc.left = GuiData->SelectionStart.x;
-  rc.top = GuiData->SelectionStart.y;
-  rc.right = (pt.x >= 0 ? (pt.x / GuiData->CharWidth) + 1 : 0);
-  if (Console->Size.X < rc.right)
-  {
-    rc.right = Console->Size.X;
-  }
-  rc.bottom = (pt.y >= 0 ? (pt.y / GuiData->CharHeight) + 1 : 0);
-  if (Console->Size.Y < rc.bottom)
-  {
-    rc.bottom = Console->Size.Y;
-  }
-
-  /* exchange left/top with right/bottom if required */
-  if(rc.left >= rc.right)
-  {
-    LONG tmp;
-    tmp = rc.left;
-    rc.left = max(rc.right - 1, 0);
-    rc.right = tmp + 1;
-  }
-  if(rc.top >= rc.bottom)
-  {
-    LONG tmp;
-    tmp = rc.top;
-    rc.top = max(rc.bottom - 1, 0);
-    rc.bottom = tmp + 1;
-  }
-
-  GuiConsoleUpdateSelection(hWnd, &rc, GuiData);
+  GuiConsoleUpdateSelection(Console, &c);
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleRightMouseDown(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
@@ -1488,7 +1381,7 @@ GuiConsoleRightMouseDown(HWND hWnd)
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   if (Console == NULL || GuiData == NULL) return;
 
-  if (GuiData->Selection.left == -1)
+  if (!(Console->Selection.dwFlags & CONSOLE_SELECTION_NOT_EMPTY))
   {
     /* FIXME - paste text from clipboard */
   }
@@ -1496,7 +1389,7 @@ GuiConsoleRightMouseDown(HWND hWnd)
   {
     /* FIXME - copy selection to clipboard */
 
-    GuiConsoleUpdateSelection(hWnd, NULL, GuiData);
+    GuiConsoleUpdateSelection(Console, NULL);
   }
 
 }
@@ -1574,7 +1467,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 
   CPLFunc(hWnd, CPL_DBLCLK, (LPARAM)&SharedInfo, Defaults);
 }
-static LRESULT FASTCALL
+static LRESULT
 GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CONSOLE_DATA GuiData)
 {
     LRESULT Ret = TRUE;
@@ -1604,7 +1497,7 @@ GuiConsoleHandleSysMenuCommand(HWND hWnd, WPARAM wParam, LPARAM lParam, PGUI_CON
     return Ret;
 }
 
-static VOID FASTCALL
+static VOID
 GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
 {
   PCSRSS_CONSOLE Console;
@@ -1627,7 +1520,7 @@ GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
   minMaxInfo->ptMaxTrackSize.x = windx;
   minMaxInfo->ptMaxTrackSize.y = windy;
 }
-static VOID FASTCALL
+static VOID
 GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PCSRSS_CONSOLE Console;
@@ -1683,6 +1576,7 @@ GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
      GuiData->WindowSizeLock = FALSE;
   }
 }
+
 VOID
 FASTCALL
 GuiConsoleHandleScrollbarMenu()
@@ -1801,7 +1695,7 @@ GuiResizeBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer, COORD
     return STATUS_SUCCESS;
 }
 
-static VOID FASTCALL
+static VOID
 GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsoleInfo pConInfo)
 {
   DWORD windx, windy;
@@ -1809,7 +1703,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
   COORD BufSize;
   BOOL SizeChanged = FALSE;
 
-  EnterCriticalSection(&ActiveBuffer->Header.Lock);
+  EnterCriticalSection(&Console->Lock);
 
   /* apply text / background color */
   GuiData->ScreenText = pConInfo->ScreenText;
@@ -1844,7 +1738,7 @@ GuiApplyUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PConsole
       GuiData->WindowSizeLock = FALSE;
   }
 
-  LeaveCriticalSection(&ActiveBuffer->Header.Lock);
+  LeaveCriticalSection(&Console->Lock);
   InvalidateRect(pConInfo->hConsoleWindow, NULL, TRUE);
 }
 
@@ -2070,7 +1964,10 @@ GuiConsoleNotifyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (NULL != NewWindow)
           {
             SetWindowLongW(hWnd, GWL_USERDATA, GetWindowLongW(hWnd, GWL_USERDATA) + 1);
-            ShowWindow(NewWindow, SW_SHOW);
+            if (wParam)
+              {
+                ShowWindow(NewWindow, SW_SHOW);
+              }
           }
         return (LRESULT) NewWindow;
       case PM_DESTROY_CONSOLE:
@@ -2135,7 +2032,7 @@ GuiConsoleGuiThread(PVOID Data)
   return 1;
 }
 
-static BOOL FASTCALL
+static BOOL
 GuiInit(VOID)
 {
   WNDCLASSEXW wc;
@@ -2250,7 +2147,7 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
 };
 
 NTSTATUS FASTCALL
-GuiInitConsole(PCSRSS_CONSOLE Console)
+GuiInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
 {
   HANDLE GraphicsStartupEvent;
   HANDLE ThreadHandle;
@@ -2317,11 +2214,11 @@ GuiInitConsole(PCSRSS_CONSOLE Console)
      */
     GuiData->hGuiInitEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
     /* create console */
-    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
+    PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, Visible, (LPARAM) Console);
 
     /* wait untill initialization has finished */
     WaitForSingleObject(GuiData->hGuiInitEvent, INFINITE);
-    DPRINT1("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
+    DPRINT("received event Console %p GuiData %p X %d Y %d\n", Console, Console->PrivateData, Console->Size.X, Console->Size.Y);
     CloseHandle(GuiData->hGuiInitEvent);
     GuiData->hGuiInitEvent = NULL;
 

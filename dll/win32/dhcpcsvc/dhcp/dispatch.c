@@ -69,10 +69,8 @@ dispatch(void)
     time_t howlong, cur_time;
     struct timeval timeval;
 
-    if (!AdapterDiscover()) {
-         AdapterStop();
+    if (!AdapterDiscover())
          return;
-    }
 
     ApiLock();
 
@@ -151,7 +149,7 @@ dispatch(void)
         }
     } while (1);
 
-    ApiUnlock(); /* Not reached currently */
+    ApiUnlock();
 }
 
 void
@@ -182,7 +180,7 @@ got_one(struct protocol *l)
             warning("Interface %s no longer appears valid.",
                     ip->name);
             ip->dead = 1;
-            close(l->fd);
+            closesocket(l->fd);
             remove_protocol(l);
             adapter = AdapterFindInfo(ip);
             if (adapter) {

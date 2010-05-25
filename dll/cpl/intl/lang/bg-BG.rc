@@ -188,6 +188,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Нагласяване на местните настройки"
     IDS_SPAIN "Spanish (Spain)"
+    IDS_METRIC "Metric"
+    IDS_IMPERIAL "Imperial"
 END
 
 STRINGTABLE

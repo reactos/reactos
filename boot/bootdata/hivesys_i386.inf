@@ -901,13 +901,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00020000,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROCESSOR_ARCHITECTURE",0x00020000,"x86"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000000,".COM;.EXE;.BAT;.CMD"
 
 
 ; Known DLLs
@@ -1037,12 +1035,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Attempts to obtain network settings automatically from an available DHCP server"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\dhcp.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010

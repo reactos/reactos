@@ -171,38 +171,8 @@ MsqInitializeImpl(VOID)
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
 {
-   LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
    ULONG Prev;
-   MSLLHOOKSTRUCT MouseHookData;
-
-   KeQueryTickCount(&LargeTickCount);
-   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-
-   MouseHookData.pt.x = LOWORD(Msg->lParam);
-   MouseHookData.pt.y = HIWORD(Msg->lParam);
-   switch(Msg->message)
-   {
-        case WM_MOUSEWHEEL:
-           MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg->wParam));
-           break;
-        case WM_XBUTTONDOWN:
-        case WM_XBUTTONUP:
-        case WM_XBUTTONDBLCLK:
-        case WM_NCXBUTTONDOWN:
-        case WM_NCXBUTTONUP:
-        case WM_NCXBUTTONDBLCLK:
-           MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg->wParam));
-           break;
-        default:
-           MouseHookData.mouseData = 0;
-           break;
-     }
-     MouseHookData.flags = 0;
-     MouseHookData.time = Msg->time;
-     MouseHookData.dwExtraInfo = 0;
-     if( co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
-         return;
 
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the

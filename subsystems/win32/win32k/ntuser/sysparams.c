@@ -895,26 +895,24 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             }
             return (UINT_PTR)KEY_METRIC;
 
-        case SPI_GETWORKAREA: // FIXME: the workarea should be part of the MONITOR
+        case SPI_GETWORKAREA:
         {
-            PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP pdesktop = pti->rpdesk;
-            RECTL rclWorkarea;
+            PMONITOR pmonitor = IntGetPrimaryMonitor();
 
-            if(!pdesktop)
+            if(!pmonitor)
                 return 0;
 
-            IntGetDesktopWorkArea(pdesktop, &rclWorkarea);
-            return SpiGet(pvParam, &rclWorkarea, sizeof(RECTL), fl);
+            return SpiGet(pvParam, &pmonitor->rcWork, sizeof(RECTL), fl);
         }
 
-        case SPI_SETWORKAREA: // FIXME: the workarea should be part of the MONITOR
+        case SPI_SETWORKAREA:
         {
-            PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-            PDESKTOP pdesktop = pti->rpdesk;
+            /*FIXME: we should set the work area of the monitor 
+                     that contains the specified rectangle*/
+            PMONITOR pmonitor = IntGetPrimaryMonitor();
             RECT rcWorkArea;
 
-            if(!pdesktop)
+            if(!pmonitor)
                 return 0;
 
             if (!SpiSet(&rcWorkArea, pvParam, sizeof(RECTL), fl))
@@ -929,7 +927,7 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
                 rcWorkArea.bottom <= rcWorkArea.top)
                 return 0;
 
-            pdesktop->WorkArea = rcWorkArea;
+            pmonitor->rcWork = rcWorkArea;
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: what to do?

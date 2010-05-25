@@ -1473,9 +1473,15 @@ MUI_ERROR itITErrorEntries[] =
         "INVIO = Riavviare il computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Lo spazio disponibile nella partizione selezionata Š insufficiente.\n"
+        "  * Premere un tasto qualsiasi per continuare.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Setup non ha potuto impostare l'id geografico.\n"
+        "INVIO = Riavviare il computer"
     },
     {
         NULL,
@@ -1615,7 +1621,7 @@ MUI_STRING itITStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup non ha trovato la sezione '%S' \nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copia di: %S"},
+     "   Copia di: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Copia dei file in corso..."},
     {STRING_REGHIVEUPDATE,

@@ -18,7 +18,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         6,
         8,
-        "Selecci¢n de idioma",
+        "Selecci¢n del idioma",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1469,13 +1469,19 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido agregar los layouts de teclado al registro.\n"
+        "ENTER = Reiniciar el equipo"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "No hay suficiente espacio disponible en la partici¢n seleccionada.\n"
+        "  * Presione una tecla para continuar.",
+        NULL
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido configurar el ID geogr fico.\n"
+        "ENTER = Reiniciar el equipo"
     },
 {
         NULL,
@@ -1614,7 +1620,7 @@ MUI_STRING esESStrings[] =
     {STRING_TXTSETUPFAILED,
     "El instalador fall¢ al buscar la secci¢n\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copiando archivo: %S"},
+     "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
      "El instalador est  copiando archivos..."},
     {STRING_REGHIVEUPDATE,

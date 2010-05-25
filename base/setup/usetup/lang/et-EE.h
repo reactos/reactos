@@ -1469,6 +1469,12 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = Taask„ivita arvuti"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Geograafilist asukohta ei ännestunud seadistada.\n"
         "ENTER = Taask„ivita arvuti"
@@ -1609,9 +1615,9 @@ MUI_STRING etEEStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Taask„ivita arvuti"},
     {STRING_TXTSETUPFAILED,
-	"TXTSETUP.SIF failist ei leitud '%S' sektsiooni\n"},
+     "TXTSETUP.SIF failist ei leitud '%S' sektsiooni\n"},
     {STRING_COPYING,
-     "\xB3 Kopeerimine: %S"},
+     "   Kopeerimine: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Failide kopeerimine..."},
     {STRING_REGHIVEUPDATE,

@@ -4,9 +4,6 @@
 	<directory name="audiosrv">
 		<xi:include href="audiosrv/audiosrv.rbuild" />
 	</directory>
-	<directory name="dhcp">
-		<xi:include href="dhcp/dhcp.rbuild" />
-	</directory>
 	<directory name="eventlog">
 		<xi:include href="eventlog/eventlog.rbuild" />
 	</directory>

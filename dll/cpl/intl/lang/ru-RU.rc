@@ -186,6 +186,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "Настройка региональных параметров"
     IDS_SPAIN "Испанский (Испания)"
+    IDS_METRIC "Metric"
+    IDS_IMPERIAL "Imperial"
 END
 
 STRINGTABLE

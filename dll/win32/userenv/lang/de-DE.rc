@@ -34,7 +34,7 @@ BEGIN
     IDS_MYVIDEOS       "Eigene Dateien\\Eigene Videos"
     IDS_TEMPLATES      "Vorlagen"
     IDS_RECENT         "Recent"
-    IDS_SENDTO         "SendTo"
+    IDS_SENDTO         "Senden an"
     IDS_PRINTHOOD      "Druckumgebung"
     IDS_NETHOOD        "Netzwerkumgebung"
     IDS_LOCALSETTINGS  "Lokale Einstellungen"
