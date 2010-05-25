@@ -91,8 +91,8 @@ RegReadDisplaySettings(HKEY hkey, PDEVMODEW pdm)
 
     /* Read all present settings */
     READ(dmBitsPerPel, "DefaultSettings.BitsPerPel", DM_BITSPERPEL);
-    READ(dmPelsWidth, "DefaultSettings.XResolution", DM_YRESOLUTION); // DM_XRESOLUTION?
-    READ(dmPelsHeight, "DefaultSettings.YResolution", DM_YRESOLUTION);
+    READ(dmPelsWidth, "DefaultSettings.XResolution", DM_PELSWIDTH);
+    READ(dmPelsHeight, "DefaultSettings.YResolution", DM_PELSHEIGHT);
     READ(dmDisplayFlags, "DefaultSettings.Flags", DM_DISPLAYFLAGS);
     READ(dmDisplayFrequency, "DefaultSettings.VRefresh", DM_DISPLAYFREQUENCY);
     READ(dmPanningWidth, "DefaultSettings.XPanning", DM_PANNINGWIDTH);
@@ -569,8 +569,15 @@ UserEnumRegistryDisplaySettings(
     IN PUNICODE_STRING pustrDevice,
     OUT LPDEVMODEW pdm)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    HKEY hkey;
+    NTSTATUS Status = UserOpenDisplaySettingsKey(&hkey, pustrDevice, 0);
+    if(NT_SUCCESS(Status))
+    {
+        RegReadDisplaySettings(hkey, pdm);
+        ZwClose(hkey);
+        return STATUS_SUCCESS;
+    }
+    return Status ;
 }
 
 
