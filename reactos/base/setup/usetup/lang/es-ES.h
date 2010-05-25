@@ -1469,8 +1469,8 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido agregar los layouts de teclado al registro.\n"
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
@@ -1480,8 +1480,8 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido configurar el ID geogr fico.\n"
+        "ENTER = Reiniciar el equipo"
     },
 {
         NULL,

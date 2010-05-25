@@ -1480,8 +1480,8 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Setup non ha potuto impostare l'id geografico.\n"
+        "INVIO = Riavviare il computer"
     },
     {
         NULL,

@@ -1,7 +1,7 @@
 /* FILE:        setup/usetup/lang/cs-CZ.rc
  * TRANSLATOR:  Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * THANKS TO:   preston
- * UPDATED:     2008-06-05
+ * UPDATED:     2010-05-25
  */
 
 #pragma once
@@ -1481,8 +1481,14 @@ MUI_ERROR csCZErrorEntries[] =
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "Nepodaýilo se nastavit geo id.\n"
+        "ENTER = Restartovat poŸ¡taŸ"
+    },
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Na zvolen‚m odd¡lu nen¡ dost voln‚ho m¡sta.\n"
+        "  * PokraŸujte stisknut¡m libovoln‚ kl vesy.",
+        NULL
     },
     {
         NULL,
@@ -1662,7 +1668,7 @@ MUI_STRING csCZStrings[] =
     {STRING_HDDINFOUNK1,
     "%I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)."},
     {STRING_HDDINFOUNK2,
-    "   %c%c  Type %lu    %I64u %s"},
+    "   %c%c  Typ %lu    %I64u %s"},
     {STRING_HDINFOPARTDELETE,
     "na %I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) na %wZ."},
     {STRING_HDDINFOUNK3,
