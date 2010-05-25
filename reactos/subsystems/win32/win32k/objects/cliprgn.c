@@ -60,24 +60,28 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 
    NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);
 
-   if((CombinedRegion = RGNOBJAPI_Lock(Dc->rosdc.hGCClipRgn, NULL)))
-   {
-     if (Dc->rosdc.CombinedClip != NULL)
-        IntEngDeleteClipRegion(Dc->rosdc.CombinedClip);
+    if((CombinedRegion = RGNOBJAPI_Lock(Dc->rosdc.hGCClipRgn, NULL)))
+    {
+        CLIPOBJ *CombinedClip;
+      
+        CombinedClip = IntEngCreateClipRegion(CombinedRegion->rdh.nCount,
+                                              CombinedRegion->Buffer,
+                                              &CombinedRegion->rdh.rcBound);
 
-     Dc->rosdc.CombinedClip = IntEngCreateClipRegion(
-        CombinedRegion->rdh.nCount,
-        CombinedRegion->Buffer,
-        &CombinedRegion->rdh.rcBound);
+        RGNOBJAPI_Unlock(CombinedRegion);
 
-     RGNOBJAPI_Unlock(CombinedRegion);
-   }
+        if (!CombinedClip)
+        {
+            DPRINT1("IntEngCreateClipRegion() failed\n");
+            return ERROR;
+        }
 
-   if ( NULL == Dc->rosdc.CombinedClip )
-   {
-       DPRINT1("IntEngCreateClipRegion() failed\n");
-       return ERROR;
-   }
+        if (Dc->rosdc.CombinedClip != NULL)
+            IntEngDeleteClipRegion(Dc->rosdc.CombinedClip);
+
+        Dc->rosdc.CombinedClip = CombinedClip;
+    }
+
 
    return NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, -Dc->ptlDCOrig.x, -Dc->ptlDCOrig.y);
 }
@@ -607,9 +611,6 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
 
   IntGdiOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
 
-  if (pDC->rosdc.CombinedClip != NULL)
-     IntEngDeleteClipRegion(pDC->rosdc.CombinedClip);
-
   // pDC->co should be used. Example, CLIPOBJ_cEnumStart uses XCLIPOBJ to build
   // the rects from region objects rects in pClipRgn->Buffer. 
   // With pDC->co.pClipRgn->Buffer,
@@ -619,7 +620,13 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
                                ((PROSRGNDATA)pDC->prgnRao)->Buffer,
                                &pDC->erclClip);
 
-  pDC->rosdc.CombinedClip = co;
+  if (co)
+  {
+    if (pDC->rosdc.CombinedClip != NULL)
+     IntEngDeleteClipRegion(pDC->rosdc.CombinedClip);
+
+    pDC->rosdc.CombinedClip = co;
+  }
 
   return IntGdiOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 }
