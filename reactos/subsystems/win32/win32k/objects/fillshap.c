@@ -837,40 +837,36 @@ NtGdiRoundRect(
     return ret;
 }
 
-BOOL FASTCALL
-IntGdiGradientFill(
-    DC *dc,
+BOOL
+NTAPI
+GreGradientFill(
+    HDC hdc,
     PTRIVERTEX pVertex,
-    ULONG uVertex,
+    ULONG nVertex,
     PVOID pMesh,
-    ULONG uMesh,
+    ULONG nMesh,
     ULONG ulMode)
 {
+    PDC pdc;
     SURFACE *psurf;
-    PPALETTE PalDestGDI;
+    PPALETTE ppal;
     EXLATEOBJ exlo;
-    RECTL Extent;
-    POINTL DitherOrg;
+    RECTL rclExtent;
+    POINTL ptlDitherOrg;
     ULONG i;
-    BOOL Ret;
+    BOOL bRet;
     HPALETTE hDestPalette;
 
-    ASSERT(dc);
-    ASSERT(pVertex);
-    ASSERT(uVertex);
-    ASSERT(pMesh);
-    ASSERT(uMesh);
-
-    /* check parameters */
-    if (ulMode & GRADIENT_FILL_TRIANGLE)
+    /* Check parameters */
+    if (ulMode == GRADIENT_FILL_TRIANGLE)
     {
-        PGRADIENT_TRIANGLE tr = (PGRADIENT_TRIANGLE)pMesh;
+        PGRADIENT_TRIANGLE pTriangle = (PGRADIENT_TRIANGLE)pMesh;
 
-        for (i = 0; i < uMesh; i++, tr++)
+        for (i = 0; i < nMesh; i++, pTriangle++)
         {
-            if (tr->Vertex1 >= uVertex ||
-                    tr->Vertex2 >= uVertex ||
-                    tr->Vertex3 >= uVertex)
+            if (pTriangle->Vertex1 >= nVertex ||
+                pTriangle->Vertex2 >= nVertex ||
+                pTriangle->Vertex3 >= nVertex)
             {
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
                 return FALSE;
@@ -879,10 +875,10 @@ IntGdiGradientFill(
     }
     else
     {
-        PGRADIENT_RECT rc = (PGRADIENT_RECT)pMesh;
-        for (i = 0; i < uMesh; i++, rc++)
+        PGRADIENT_RECT pRect = (PGRADIENT_RECT)pMesh;
+        for (i = 0; i < nMesh; i++, pRect++)
         {
-            if (rc->UpperLeft >= uVertex || rc->LowerRight >= uVertex)
+            if (pRect->UpperLeft >= nVertex || pRect->LowerRight >= nVertex)
             {
                 SetLastWin32Error(ERROR_INVALID_PARAMETER);
                 return FALSE;
@@ -890,56 +886,76 @@ IntGdiGradientFill(
         }
     }
 
-    /* calculate extent */
-    Extent.left = Extent.right = pVertex->x;
-    Extent.top = Extent.bottom = pVertex->y;
-    for (i = 0; i < uVertex; i++)
+    /* Lock the output DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
     {
-        Extent.left = min(Extent.left, (pVertex + i)->x);
-        Extent.right = max(Extent.right, (pVertex + i)->x);
-        Extent.top = min(Extent.top, (pVertex + i)->y);
-        Extent.bottom = max(Extent.bottom, (pVertex + i)->y);
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
     }
-    IntLPtoDP(dc, (LPPOINT)&Extent, 2);
 
-    Extent.left   += dc->ptlDCOrig.x;
-    Extent.right  += dc->ptlDCOrig.x;
-    Extent.top    += dc->ptlDCOrig.y;
-    Extent.bottom += dc->ptlDCOrig.y;
+    if (pdc->dctype == DC_TYPE_INFO)
+    {
+        DC_UnlockDc(pdc);
+        /* Yes, Windows really returns TRUE in this case */
+        return TRUE;
+    }
 
-    DitherOrg.x = DitherOrg.y = 0;
-    IntLPtoDP(dc, (LPPOINT)&DitherOrg, 1);
+    psurf = pdc->dclevel.pSurface;
+    if (!psurf)
+    {
+        /* Memory DC with no surface selected */
+        DC_UnlockDc(pdc);
+        return TRUE; // CHECKME
+    }
 
-    DitherOrg.x += dc->ptlDCOrig.x;
-    DitherOrg.y += dc->ptlDCOrig.y;
+    /* calculate extent */
+    rclExtent.left = rclExtent.right = pVertex->x;
+    rclExtent.top = rclExtent.bottom = pVertex->y;
+    for (i = 0; i < nVertex; i++)
+    {
+        rclExtent.left = min(rclExtent.left, (pVertex + i)->x);
+        rclExtent.right = max(rclExtent.right, (pVertex + i)->x);
+        rclExtent.top = min(rclExtent.top, (pVertex + i)->y);
+        rclExtent.bottom = max(rclExtent.bottom, (pVertex + i)->y);
+    }
 
-    psurf = dc->dclevel.pSurface;
-    /* FIXME - psurf can be NULL!!! Don't assert but handle this case gracefully! */
-    ASSERT(psurf);
+    IntLPtoDP(pdc, (LPPOINT)&rclExtent, 2);
+    rclExtent.left   += pdc->ptlDCOrig.x;
+    rclExtent.right  += pdc->ptlDCOrig.x;
+    rclExtent.top    += pdc->ptlDCOrig.y;
+    rclExtent.bottom += pdc->ptlDCOrig.y;
+
+    ptlDitherOrg.x = ptlDitherOrg.y = 0;
+    IntLPtoDP(pdc, (LPPOINT)&ptlDitherOrg, 1);
+    ptlDitherOrg.x += pdc->ptlDCOrig.x;
+    ptlDitherOrg.y += pdc->ptlDCOrig.y;
 
     hDestPalette = psurf->hDIBPalette;
     if (!hDestPalette) hDestPalette = pPrimarySurface->devinfo.hpalDefault;
 
-    PalDestGDI = PALETTE_LockPalette(hDestPalette);
-    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, PalDestGDI, 0, 0, 0);
+    ppal = PALETTE_LockPalette(hDestPalette);
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0, 0);
 
-    Ret = IntEngGradientFill(&psurf->SurfObj,
-                             dc->rosdc.CombinedClip,
-                             &exlo.xlo,
-                             pVertex,
-                             uVertex,
-                             pMesh,
-                             uMesh,
-                             &Extent,
-                             &DitherOrg,
-                             ulMode);
+    ASSERT(pdc->rosdc.CombinedClip);
+
+    bRet = IntEngGradientFill(&psurf->SurfObj,
+                              pdc->rosdc.CombinedClip,
+                              &exlo.xlo,
+                              pVertex,
+                              nVertex,
+                              pMesh,
+                              nMesh,
+                              &rclExtent,
+                              &ptlDitherOrg,
+                              ulMode);
 
     EXLATEOBJ_vCleanup(&exlo);
 
-    if (PalDestGDI)
-        PALETTE_UnlockPalette(PalDestGDI);
+    if (ppal)
+        PALETTE_UnlockPalette(ppal);
 
-    return Ret;
+    return bRet;
 }
 
 BOOL
@@ -947,33 +963,19 @@ APIENTRY
 NtGdiGradientFill(
     HDC hdc,
     PTRIVERTEX pVertex,
-    ULONG uVertex,
+    ULONG nVertex,
     PVOID pMesh,
-    ULONG uMesh,
+    ULONG nMesh,
     ULONG ulMode)
 {
-    DC *dc;
-    BOOL Ret;
+    BOOL bRet;
     PTRIVERTEX SafeVertex;
     PVOID SafeMesh;
-    ULONG SizeMesh;
-    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG cbVertex, cbMesh;
 
-    dc = DC_LockDc(hdc);
-    if (!dc)
+    /* Validate parameters */
+    if (!pVertex || !nVertex || !pMesh || !nMesh)
     {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
-    }
-    if (dc->dctype == DC_TYPE_INFO)
-    {
-        DC_UnlockDc(dc);
-        /* Yes, Windows really returns TRUE in this case */
-        return TRUE;
-    }
-    if (!pVertex || !uVertex || !pMesh || !uMesh)
-    {
-        DC_UnlockDc(dc);
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
@@ -982,77 +984,55 @@ NtGdiGradientFill(
     {
         case GRADIENT_FILL_RECT_H:
         case GRADIENT_FILL_RECT_V:
-            SizeMesh = uMesh * sizeof(GRADIENT_RECT);
+            cbMesh = nMesh * sizeof(GRADIENT_RECT);
             break;
         case GRADIENT_FILL_TRIANGLE:
-            SizeMesh = uMesh * sizeof(TRIVERTEX);
+            cbMesh = nMesh * sizeof(GRADIENT_TRIANGLE);
             break;
         default:
-            DC_UnlockDc(dc);
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 
-    _SEH2_TRY
+    cbVertex = nVertex * sizeof(TRIVERTEX);
+    if (cbVertex + cbMesh <= cbVertex)
     {
-        ProbeForRead(pVertex,
-                     uVertex * sizeof(TRIVERTEX),
-                     1);
-        ProbeForRead(pMesh,
-                     SizeMesh,
-                     1);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DC_UnlockDc(dc);
-        SetLastWin32Error(Status);
+        /* Overflow */
         return FALSE;
     }
 
-    if (!(SafeVertex = ExAllocatePoolWithTag(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh, TAG_SHAPE)))
+    /* Allocate a kernel mode buffer */
+    SafeVertex = ExAllocatePoolWithTag(PagedPool, cbVertex + cbMesh, TAG_SHAPE);
+    if (!SafeVertex)
     {
-        DC_UnlockDc(dc);
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    SafeMesh = (PTRIVERTEX)(SafeVertex + uVertex);
+    SafeMesh = (PVOID)((ULONG_PTR)SafeVertex + cbVertex);
 
+    /* Copy the parameters to kernel mode */
     _SEH2_TRY
     {
-        /* pointers were already probed! */
-        RtlCopyMemory(SafeVertex,
-                      pVertex,
-                      uVertex * sizeof(TRIVERTEX));
-        RtlCopyMemory(SafeMesh,
-                      pMesh,
-                      SizeMesh);
+        ProbeForRead(pVertex, cbVertex, 1);
+        ProbeForRead(pMesh, cbMesh, 1);
+        RtlCopyMemory(SafeVertex, pVertex, cbVertex);
+        RtlCopyMemory(SafeMesh, pMesh, cbMesh);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Status = _SEH2_GetExceptionCode();
+        ExFreePoolWithTag(SafeVertex, TAG_SHAPE);
+        SetLastNtError(_SEH2_GetExceptionCode());
+        _SEH2_YIELD(return FALSE;)
     }
     _SEH2_END;
 
-    if (!NT_SUCCESS(Status))
-    {
-        DC_UnlockDc(dc);
-        ExFreePoolWithTag(SafeVertex, TAG_SHAPE);
-        SetLastNtError(Status);
-        return FALSE;
-    }
+    /* Call the internal function */
+    bRet = GreGradientFill(hdc, SafeVertex, nVertex, SafeMesh, nMesh, ulMode);
 
-    Ret = IntGdiGradientFill(dc, SafeVertex, uVertex, SafeMesh, uMesh, ulMode);
-
-    DC_UnlockDc(dc);
-    ExFreePool(SafeVertex);
-    return Ret;
+    /* Cleanup and return result */
+    ExFreePoolWithTag(SafeVertex, TAG_SHAPE);
+    return bRet;
 }
 
 BOOL APIENTRY
