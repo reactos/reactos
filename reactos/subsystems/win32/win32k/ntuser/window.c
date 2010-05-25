@@ -2228,9 +2228,6 @@ AllocErr:
       if (Size.cy < MinTrack.y) Size.cy = MinTrack.y;
    }
 
-   if (Size.cx < 0) Size.cx = 0;
-   if (Size.cy < 0) Size.cy = 0;
-
    Wnd->rcWindow.left = Pos.x;
    Wnd->rcWindow.top = Pos.y;
    Wnd->rcWindow.right = Pos.x + Size.cx;
