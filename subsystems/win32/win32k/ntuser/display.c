@@ -685,7 +685,7 @@ UserChangeDisplaySettings(
    DWORD flags,
    LPVOID lParam)
 {
-    DEVMODEW dmReg;
+    DEVMODEW dm;
     LONG lResult = DISP_CHANGE_SUCCESSFUL;
     HKEY hkey;
     NTSTATUS Status;
@@ -696,13 +696,21 @@ UserChangeDisplaySettings(
     if (!pdm)
     {
         /* Get the registry settings */
-        Status = UserEnumRegistryDisplaySettings(pustrDevice, &dmReg);
+        Status = UserEnumRegistryDisplaySettings(pustrDevice, &dm);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not load registry settings\n");
             return DISP_CHANGE_BADPARAM;
         }
-        pdm = &dmReg;
+    }
+    else
+        dm = *pdm;
+
+    /* Check params */
+    if ((dm.dmFields & (DM_PELSWIDTH | DM_PELSHEIGHT)) != (DM_PELSWIDTH | DM_PELSHEIGHT))
+    {
+        DPRINT1("devmode doesn't specify the resolution.\n");
+        return DISP_CHANGE_BADMODE;
     }
 
     /* Get the PDEV */
@@ -713,8 +721,14 @@ UserChangeDisplaySettings(
         return DISP_CHANGE_BADPARAM;
     }
 
+    /* Fixup values */
+    if((dm.dmFields & DM_BITSPERPEL) && (dm.dmBitsPerPel == 0))
+        dm.dmBitsPerPel = ppdev->pdmwDev->dmBitsPerPel;
+    if((dm.dmFields & DM_DISPLAYFREQUENCY) && (dm.dmDisplayFrequency == 0))
+        dm.dmDisplayFrequency = ppdev->pdmwDev->dmDisplayFrequency;
+
     /* Look for the requested DEVMODE */
-    pdm = PDEVOBJ_pdmMatchDevMode(ppdev, pdm);
+    pdm = PDEVOBJ_pdmMatchDevMode(ppdev, &dm);
     if (!pdm)
     {
         DPRINT1("Could not find a matching DEVMODE\n");
