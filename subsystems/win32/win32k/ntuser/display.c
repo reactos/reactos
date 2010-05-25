@@ -721,6 +721,12 @@ UserChangeDisplaySettings(
         lResult = DISP_CHANGE_BADMODE;
         goto leave;
     }
+    else if (flags & CDS_TEST)
+    {
+        /* It's possible, go ahead! */
+        lResult = DISP_CHANGE_SUCCESSFUL;
+        goto leave;
+    }
 
     /* Shall we update the registry? */
     if (flags & CDS_UPDATEREGISTRY)

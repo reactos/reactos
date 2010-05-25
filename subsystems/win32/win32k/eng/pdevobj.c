@@ -192,6 +192,7 @@ PDEVOBJ_pdmMatchDevMode(
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEW pdmCurrent;
     INT i;
+    DWORD dwFields;
 
     pGraphicsDevice = ppdev->pGraphicsDevice;
 
@@ -199,15 +200,25 @@ PDEVOBJ_pdmMatchDevMode(
     {
         pdmCurrent = pGraphicsDevice->pDevModeList[i].pdm;
 
-        /* Compare DEVMODE fields */
-        if (pdmCurrent->dmBitsPerPel == pdm->dmBitsPerPel &&
-            pdmCurrent->dmPelsWidth == pdm->dmPelsWidth &&
-            pdmCurrent->dmPelsHeight == pdm->dmPelsHeight &&
-            pdmCurrent->dmDisplayFrequency == pdm->dmDisplayFrequency)
-        {
-            /* Match! Return the DEVMODE */
-            return pdmCurrent;
-        }
+        /* Compare asked DEVMODE fields
+         * Only compare those that are valid in both DEVMODE structs */
+        dwFields = pdmCurrent->dmFields & pdm->dmFields ;
+        /* For now, we only need those */
+        if ((dwFields & DM_BITSPERPEL) &&
+                (pdmCurrent->dmBitsPerPel != pdm->dmBitsPerPel))
+            continue;
+        if ((dwFields & DM_PELSWIDTH) &&
+                (pdmCurrent->dmPelsWidth != pdm->dmPelsWidth))
+            continue;
+        if ((dwFields & DM_PELSHEIGHT) &&
+                (pdmCurrent->dmPelsHeight != pdm->dmPelsHeight))
+            continue;
+        if ((dwFields & DM_DISPLAYFREQUENCY) &&
+                (pdmCurrent->dmDisplayFrequency != pdm->dmDisplayFrequency))
+            continue;
+
+        /* Match! Return the DEVMODE */
+        return pdmCurrent;
     }
 
     /* Nothing found */
@@ -302,6 +313,7 @@ PDEVOBJ_vSwitchPdev(
     PPDEVOBJ ppdev2)
 {
     PDEVOBJ pdevTmp;
+    DWORD tmpStateFlags;
 
     /* Exchange data */
     pdevTmp = *ppdev;
@@ -334,7 +346,12 @@ PDEVOBJ_vSwitchPdev(
 
     /* Exchange DEVMODE */
     ppdev->pdmwDev = ppdev2->pdmwDev;
-    ppdev2->pdmwDev = pdevTmp.pdmwDev ;
+    ppdev2->pdmwDev = pdevTmp.pdmwDev;
+
+    /* Exchange state flags */
+    tmpStateFlags = ppdev->pGraphicsDevice->StateFlags;
+    ppdev->pGraphicsDevice->StateFlags = ppdev2->pGraphicsDevice->StateFlags;
+    ppdev2->pGraphicsDevice->StateFlags = tmpStateFlags;
 
     /* Notify each driver instance of its new HDEV association */
     ppdev->pfn.CompletePDEV(ppdev->dhpdev, (HDEV)ppdev);
@@ -471,6 +488,7 @@ EngpGetPDEV(
             if (!gppdevPrimary)
             {
                 gppdevPrimary = ppdev;
+                ppdev->pGraphicsDevice->StateFlags |= DISPLAY_DEVICE_PRIMARY_DEVICE;
             }
         }
     }
