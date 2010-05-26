@@ -292,6 +292,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       HOOK_DestroyThreadHooks(Thread);
       /* Cleanup timers */
       DestroyTimersForThread(Win32Thread);
+      KeSetEvent(Win32Thread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
       UnregisterThreadHotKeys(Thread);
       /* what if this co_ func crash in umode? what will clean us up then? */
       co_DestroyThreadWindows(Thread);

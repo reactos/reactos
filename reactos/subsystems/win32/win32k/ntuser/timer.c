@@ -216,7 +216,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
   }
 
   pTmr = FindTimer(Window, IDEvent, Type, FALSE);
-  if (!pTmr)
+  if ((!pTmr) || (pTmr->flags & TMRF_DELETEPENDING))
   {
      pTmr = CreateTimer();
      if (!pTmr) return 0;
@@ -240,10 +240,6 @@ IntSetTimer( PWINDOW_OBJECT Window,
 
   pTmr->cmsCountdown = Elapse;
   pTmr->cmsRate = Elapse;
-  if (pTmr->flags & TMRF_DELETEPENDING)
-  {
-     pTmr->flags &= ~TMRF_DELETEPENDING;
-  }
 
   ASSERT(MasterTimer != NULL);
   // Start the timer thread!
@@ -342,6 +338,7 @@ ProcessTimers(VOID)
   LONG Time;
   PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
+  LONG TimerCount = 0;
 
   if (!pTmr) return;
 
@@ -354,6 +351,7 @@ ProcessTimers(VOID)
 
   do
   {
+    TimerCount++;
     if (pTmr->flags & TMRF_WAITING)
     {
        pLE = pTmr->ptmrList.Flink;
@@ -426,6 +424,7 @@ ProcessTimers(VOID)
   TimeLast = Time;
 
   UserLeave();
+  DPRINT("TimerCount = %d\n", TimerCount);
 }
 
 //
@@ -525,6 +524,35 @@ if (Ret == 0) ASSERT(FALSE);
 }
 
 BOOL FASTCALL
+DestroyTimersForWindow(PTHREADINFO pti, PWINDOW_OBJECT Window)
+{
+   PLIST_ENTRY pLE;
+   PTIMER pTmr = FirstpTmr;
+   BOOL TimersRemoved = FALSE;
+
+   if ((FirstpTmr == NULL) || (Window == NULL))
+      return FALSE;
+
+   KeEnterCriticalRegion();
+
+   do
+   {
+      if ((pTmr) && (pTmr->pti == pti) && (pTmr->pWnd == Window))
+      {
+         pTmr->flags &= ~TMRF_READY;
+         pTmr->flags |= TMRF_DELETEPENDING;
+         TimersRemoved = TRUE;
+      }
+      pLE = pTmr->ptmrList.Flink;
+      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
+   } while (pTmr != FirstpTmr);
+
+   KeLeaveCriticalRegion();
+
+   return TimersRemoved;
+}
+
+BOOL FASTCALL
 DestroyTimersForThread(PTHREADINFO pti)
 {
    PLIST_ENTRY pLE;
@@ -553,7 +581,6 @@ DestroyTimersForThread(PTHREADINFO pti)
    return TimersRemoved;
 }
 
-
 BOOL FASTCALL
 IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer)
 {
@@ -567,7 +594,6 @@ IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer)
    pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0, TRUE);
    return pTmr ? TRUE :  FALSE;
 }
-
 
 //
 //

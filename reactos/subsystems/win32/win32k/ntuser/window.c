@@ -424,7 +424,7 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
       if(BelongsToThreadData)
          co_IntSendMessage(Window->hSelf, WM_NCDESTROY, 0, 0);
    }
-   MsqRemoveTimersWindow(ThreadData->MessageQueue, Window->hSelf);
+   DestroyTimersForWindow(ThreadData, Window);
    HOOK_DestroyThreadHooks(ThreadData->pEThread); // This is needed here too!
 
    /* flush the message queue */
