@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    I/O stream support (body).                                           */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2004, 2005, 2006 by                         */
+/*  Copyright 2000-2001, 2002, 2004, 2005, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -60,13 +60,12 @@
     FT_Error  error = FT_Err_Ok;
 
 
-    stream->pos = pos;
-
     if ( stream->read )
     {
       if ( stream->read( stream, pos, 0, 0 ) )
       {
-        FT_ERROR(( "FT_Stream_Seek: invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+        FT_ERROR(( "FT_Stream_Seek:"
+                   " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                    pos, stream->size ));
 
         error = FT_Err_Invalid_Stream_Operation;
@@ -75,11 +74,15 @@
     /* note that seeking to the first position after the file is valid */
     else if ( pos > stream->size )
     {
-      FT_ERROR(( "FT_Stream_Seek: invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+      FT_ERROR(( "FT_Stream_Seek:"
+                 " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                  pos, stream->size ));
 
       error = FT_Err_Invalid_Stream_Operation;
     }
+
+    if ( !error )
+      stream->pos = pos;
 
     return error;
   }
@@ -89,6 +92,9 @@
   FT_Stream_Skip( FT_Stream  stream,
                   FT_Long    distance )
   {
+    if ( distance < 0 )
+      return FT_Err_Invalid_Stream_Operation;
+
     return FT_Stream_Seek( stream, (FT_ULong)( stream->pos + distance ) );
   }
 
@@ -121,7 +127,8 @@
 
     if ( pos >= stream->size )
     {
-      FT_ERROR(( "FT_Stream_ReadAt: invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+      FT_ERROR(( "FT_Stream_ReadAt:"
+                 " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                  pos, stream->size ));
 
       return FT_Err_Invalid_Stream_Operation;
@@ -142,8 +149,8 @@
 
     if ( read_bytes < count )
     {
-      FT_ERROR(( "FT_Stream_ReadAt:" ));
-      FT_ERROR(( " invalid read; expected %lu bytes, got %lu\n",
+      FT_ERROR(( "FT_Stream_ReadAt:"
+                 " invalid read; expected %lu bytes, got %lu\n",
                  count, read_bytes ));
 
       error = FT_Err_Invalid_Stream_Operation;
@@ -208,7 +215,7 @@
   FT_Stream_ReleaseFrame( FT_Stream  stream,
                           FT_Byte**  pbytes )
   {
-    if ( stream->read )
+    if ( stream && stream->read )
     {
       FT_Memory  memory = stream->memory;
 
@@ -253,8 +260,8 @@
                                  stream->base, count );
       if ( read_bytes < count )
       {
-        FT_ERROR(( "FT_Stream_EnterFrame:" ));
-        FT_ERROR(( " invalid read; expected %lu bytes, got %lu\n",
+        FT_ERROR(( "FT_Stream_EnterFrame:"
+                   " invalid read; expected %lu bytes, got %lu\n",
                    count, read_bytes ));
 
         FT_FREE( stream->base );
@@ -270,8 +277,8 @@
       if ( stream->pos >= stream->size        ||
            stream->pos + count > stream->size )
       {
-        FT_ERROR(( "FT_Stream_EnterFrame:" ));
-        FT_ERROR(( " invalid i/o; pos = 0x%lx, count = %lu, size = 0x%lx\n",
+        FT_ERROR(( "FT_Stream_EnterFrame:"
+                   " invalid i/o; pos = 0x%lx, count = %lu, size = 0x%lx\n",
                    stream->pos, count, stream->size ));
 
         error = FT_Err_Invalid_Stream_Operation;
@@ -456,7 +463,8 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadChar: invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+    FT_ERROR(( "FT_Stream_ReadChar:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
     return 0;
@@ -502,8 +510,8 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadShort:" ));
-    FT_ERROR(( " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+    FT_ERROR(( "FT_Stream_ReadShort:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
     return 0;
@@ -549,8 +557,8 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadShortLE:" ));
-    FT_ERROR(( " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+    FT_ERROR(( "FT_Stream_ReadShortLE:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
     return 0;
@@ -596,8 +604,8 @@
 
   Fail:
     *error = FT_Err_Invalid_Stream_Operation;
-    FT_ERROR(( "FT_Stream_ReadOffset:" ));
-    FT_ERROR(( " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+    FT_ERROR(( "FT_Stream_ReadOffset:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
                stream->pos, stream->size ));
 
     return 0;
@@ -642,9 +650,10 @@
     return result;
 
   Fail:
-    FT_ERROR(( "FT_Stream_ReadLong: invalid i/o; pos = 0x%lx, size = 0x%lx\n",
-               stream->pos, stream->size ));
     *error = FT_Err_Invalid_Stream_Operation;
+    FT_ERROR(( "FT_Stream_ReadLong:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+               stream->pos, stream->size ));
 
     return 0;
   }
@@ -688,10 +697,10 @@
     return result;
 
   Fail:
-    FT_ERROR(( "FT_Stream_ReadLongLE:" ));
-    FT_ERROR(( " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
-               stream->pos, stream->size ));
     *error = FT_Err_Invalid_Stream_Operation;
+    FT_ERROR(( "FT_Stream_ReadLongLE:"
+               " invalid i/o; pos = 0x%lx, size = 0x%lx\n",
+               stream->pos, stream->size ));
 
     return 0;
   }
@@ -704,11 +713,12 @@
   {
     FT_Error  error;
     FT_Bool   frame_accessed = 0;
-    FT_Byte*  cursor = stream->cursor;
-
+    FT_Byte*  cursor;
 
     if ( !fields || !stream )
       return FT_Err_Invalid_Argument;
+
+    cursor = stream->cursor;
 
     error = FT_Err_Ok;
     do

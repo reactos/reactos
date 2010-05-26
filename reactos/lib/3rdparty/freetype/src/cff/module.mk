@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += CFF_DRIVER
 
 define CFF_DRIVER
-$(OPEN_DRIVER)cff_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, cff_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)cff       $(ECHO_DRIVER_DESC)OpenType fonts with extension *.otf$(ECHO_DRIVER_DONE)
 endef
 

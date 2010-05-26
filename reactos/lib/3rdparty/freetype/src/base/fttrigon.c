@@ -72,10 +72,10 @@
     val = ( val >= 0 ) ? val : -val;
 
     v1 = (FT_UInt32)val >> 16;
-    v2 = (FT_UInt32)val & 0xFFFFL;
+    v2 = (FT_UInt32)(val & 0xFFFFL);
 
-    k1 = FT_TRIG_SCALE >> 16;       /* constant */
-    k2 = FT_TRIG_SCALE & 0xFFFFL;   /* constant */
+    k1 = (FT_UInt32)FT_TRIG_SCALE >> 16;       /* constant */
+    k2 = (FT_UInt32)(FT_TRIG_SCALE & 0xFFFFL);   /* constant */
 
     hi   = k1 * v1;
     lo1  = k1 * v2 + k2 * v1;       /* can't overflow */
@@ -86,7 +86,7 @@
 
     hi  += lo1 >> 16;
     if ( lo1 < lo3 )
-      hi += 0x10000UL;
+      hi += (FT_UInt32)0x10000UL;
 
     val  = (FT_Fixed)hi;
 
@@ -433,7 +433,7 @@
 
       if ( shift > 0 )
       {
-        FT_Int32  half = 1L << ( shift - 1 );
+        FT_Int32  half = (FT_Int32)1L << ( shift - 1 );
 
 
         vec->x = ( v.x + half + FT_SIGN_LONG( v.x ) ) >> shift;

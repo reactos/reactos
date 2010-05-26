@@ -36,7 +36,7 @@
                  FT_Pointer  gquery,
                  FTC_Cache   cache );
 
-  FT_LOCAL( FT_ULong )
+  FT_LOCAL( FT_Offset )
   ftc_inode_weight( FTC_Node   inode,
                     FTC_Cache  cache );
 
@@ -50,7 +50,7 @@
                  FT_Pointer  gquery,
                  FTC_Cache   cache );
 
-  FT_LOCAL( FT_ULong )
+  FT_LOCAL( FT_Offset )
   ftc_snode_weight( FTC_Node   snode,
                     FTC_Cache  cache );
 

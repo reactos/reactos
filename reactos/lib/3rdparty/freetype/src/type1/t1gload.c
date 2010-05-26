@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,6 +18,7 @@
 
 #include <ft2build.h>
 #include "t1gload.h"
+#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_OUTLINE_H
@@ -62,6 +63,11 @@
     T1_Font   type1 = &face->type1;
     FT_Error  error = T1_Err_Ok;
 
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    FT_Incremental_InterfaceRec *inc =
+                      face->root.internal->incremental_interface;
+#endif
+
 
     decoder->font_matrix = type1->font_matrix;
     decoder->font_offset = type1->font_offset;
@@ -70,10 +76,9 @@
 
     /* For incremental fonts get the character data using the */
     /* callback function.                                     */
-    if ( face->root.internal->incremental_interface )
-      error = face->root.internal->incremental_interface->funcs->get_glyph_data(
-                face->root.internal->incremental_interface->object,
-                glyph_index, char_string );
+    if ( inc )
+      error = inc->funcs->get_glyph_data( inc->object,
+                                          glyph_index, char_string );
     else
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
@@ -92,21 +97,21 @@
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
-    if ( !error && face->root.internal->incremental_interface                 &&
-         face->root.internal->incremental_interface->funcs->get_glyph_metrics )
+    if ( !error && inc && inc->funcs->get_glyph_metrics )
     {
       FT_Incremental_MetricsRec  metrics;
 
 
-      metrics.bearing_x = decoder->builder.left_bearing.x;
-      metrics.bearing_y = decoder->builder.left_bearing.y;
-      metrics.advance   = decoder->builder.advance.x;
-      error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
-                face->root.internal->incremental_interface->object,
-                glyph_index, FALSE, &metrics );
-      decoder->builder.left_bearing.x = metrics.bearing_x;
-      decoder->builder.left_bearing.y = metrics.bearing_y;
-      decoder->builder.advance.x      = metrics.advance;
+      metrics.bearing_x = FIXED_TO_INT( decoder->builder.left_bearing.x );
+      metrics.bearing_y = FIXED_TO_INT( decoder->builder.left_bearing.y );
+      metrics.advance   = FIXED_TO_INT( decoder->builder.advance.x );
+
+      error = inc->funcs->get_glyph_metrics( inc->object,
+                                             glyph_index, FALSE, &metrics );
+
+      decoder->builder.left_bearing.x = INT_TO_FIXED( metrics.bearing_x );
+      decoder->builder.left_bearing.y = INT_TO_FIXED( metrics.bearing_y );
+      decoder->builder.advance.x      = INT_TO_FIXED( metrics.advance );
       decoder->builder.advance.y      = 0;
     }
 
@@ -203,6 +208,63 @@
 
 
   FT_LOCAL_DEF( FT_Error )
+  T1_Get_Advances( T1_Face    face,
+                   FT_UInt    first,
+                   FT_UInt    count,
+                   FT_ULong   load_flags,
+                   FT_Fixed*  advances )
+  {
+    T1_DecoderRec  decoder;
+    T1_Font        type1 = &face->type1;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
+    FT_UInt        nn;
+    FT_Error       error;
+
+
+    if ( load_flags & FT_LOAD_VERTICAL_LAYOUT )
+    {
+      for ( nn = 0; nn < count; nn++ )
+        advances[nn] = 0;
+
+      return T1_Err_Ok;
+    }
+
+    error = psaux->t1_decoder_funcs->init( &decoder,
+                                           (FT_Face)face,
+                                           0, /* size       */
+                                           0, /* glyph slot */
+                                           (FT_Byte**)type1->glyph_names,
+                                           face->blend,
+                                           0,
+                                           FT_RENDER_MODE_NORMAL,
+                                           T1_Parse_Glyph );
+    if ( error )
+      return error;
+
+    decoder.builder.metrics_only = 1;
+    decoder.builder.load_points  = 0;
+
+    decoder.num_subrs = type1->num_subrs;
+    decoder.subrs     = type1->subrs;
+    decoder.subrs_len = type1->subrs_len;
+
+    decoder.buildchar     = face->buildchar;
+    decoder.len_buildchar = face->len_buildchar;
+
+    for ( nn = 0; nn < count; nn++ )
+    {
+      error = T1_Parse_Glyph( &decoder, first + nn );
+      if ( !error )
+        advances[nn] = FIXED_TO_INT( decoder.builder.advance.x );
+      else
+        advances[nn] = 0;
+    }
+
+    return T1_Err_Ok;
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
   T1_Load_Glyph( T1_GlyphSlot  glyph,
                  T1_Size       size,
                  FT_UInt       glyph_index,
@@ -236,8 +298,16 @@
     if ( load_flags & FT_LOAD_NO_RECURSE )
       load_flags |= FT_LOAD_NO_SCALE | FT_LOAD_NO_HINTING;
 
-    glyph->x_scale = size->root.metrics.x_scale;
-    glyph->y_scale = size->root.metrics.y_scale;
+    if ( size )
+    {
+      glyph->x_scale = size->root.metrics.x_scale;
+      glyph->y_scale = size->root.metrics.y_scale;
+    }
+    else
+    {
+      glyph->x_scale = 0x10000L;
+      glyph->y_scale = 0x10000L;
+    }
 
     glyph->root.outline.n_points   = 0;
     glyph->root.outline.n_contours = 0;
@@ -303,11 +373,14 @@
         FT_Slot_Internal  internal = glyph->root.internal;
 
 
-        glyph->root.metrics.horiBearingX = decoder.builder.left_bearing.x;
-        glyph->root.metrics.horiAdvance  = decoder.builder.advance.x;
-        internal->glyph_matrix           = font_matrix;
-        internal->glyph_delta            = font_offset;
-        internal->glyph_transformed      = 1;
+        glyph->root.metrics.horiBearingX =
+          FIXED_TO_INT( decoder.builder.left_bearing.x );
+        glyph->root.metrics.horiAdvance  =
+          FIXED_TO_INT( decoder.builder.advance.x );
+
+        internal->glyph_matrix      = font_matrix;
+        internal->glyph_delta       = font_offset;
+        internal->glyph_transformed = 1;
       }
       else
       {
@@ -317,8 +390,10 @@
 
 
         /* copy the _unscaled_ advance width */
-        metrics->horiAdvance                    = decoder.builder.advance.x;
-        glyph->root.linearHoriAdvance           = decoder.builder.advance.x;
+        metrics->horiAdvance =
+          FIXED_TO_INT( decoder.builder.advance.x );
+        glyph->root.linearHoriAdvance =
+          FIXED_TO_INT( decoder.builder.advance.x );
         glyph->root.internal->glyph_transformed = 0;
 
         /* make up vertical ones */
@@ -371,8 +446,8 @@
             }
 
           /* Then scale the metrics */
-          metrics->horiAdvance  = FT_MulFix( metrics->horiAdvance,  x_scale );
-          metrics->vertAdvance  = FT_MulFix( metrics->vertAdvance,  y_scale );
+          metrics->horiAdvance = FT_MulFix( metrics->horiAdvance, x_scale );
+          metrics->vertAdvance = FT_MulFix( metrics->vertAdvance, y_scale );
         }
 
         /* compute the other metrics */

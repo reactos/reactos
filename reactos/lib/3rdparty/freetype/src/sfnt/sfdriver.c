@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -17,12 +17,14 @@
 
 
 #include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_SFNT_H
 #include FT_INTERNAL_OBJECTS_H
 
 #include "sfdriver.h"
 #include "ttload.h"
 #include "sfobjs.h"
+#include "sfntpic.h"
 
 #include "sferrors.h"
 
@@ -47,6 +49,15 @@
 #include FT_SERVICE_POSTSCRIPT_NAME_H
 #include FT_SERVICE_SFNT_H
 #include FT_SERVICE_TT_CMAP_H
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_sfdriver
 
 
  /*
@@ -103,27 +114,28 @@
   sfnt_table_info( TT_Face    face,
                    FT_UInt    idx,
                    FT_ULong  *tag,
+                   FT_ULong  *offset,
                    FT_ULong  *length )
   {
-    if ( !tag || !length )
+    if ( !tag || !offset || !length )
       return SFNT_Err_Invalid_Argument;
 
     if ( idx >= face->num_tables )
       return SFNT_Err_Table_Missing;
 
     *tag    = face->dir_tables[idx].Tag;
+    *offset = face->dir_tables[idx].Offset;
     *length = face->dir_tables[idx].Length;
 
     return SFNT_Err_Ok;
   }
 
 
-  static const FT_Service_SFNT_TableRec  sfnt_service_sfnt_table =
-  {
+  FT_DEFINE_SERVICE_SFNT_TABLEREC(sfnt_service_sfnt_table,
     (FT_SFNT_TableLoadFunc)tt_face_load_any,
     (FT_SFNT_TableGetFunc) get_sfnt_table,
     (FT_SFNT_TableInfoFunc)sfnt_table_info
-  };
+  )
 
 
 #ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
@@ -151,11 +163,43 @@
   }
 
 
-  static const FT_Service_GlyphDictRec  sfnt_service_glyph_dict =
+  static FT_UInt
+  sfnt_get_name_index( TT_Face     face,
+                       FT_String*  glyph_name )
   {
+    FT_Face   root = &face->root;
+    FT_UInt   i, max_gid = FT_UINT_MAX;
+
+
+    if ( root->num_glyphs < 0 )
+      return 0;
+    else if ( ( FT_ULong ) root->num_glyphs < FT_UINT_MAX )
+      max_gid = ( FT_UInt ) root->num_glyphs;
+    else
+      FT_TRACE0(( "Ignore glyph names for invalid GID 0x%08x - 0x%08x\n",
+         FT_UINT_MAX, root->num_glyphs ));
+
+    for ( i = 0; i < max_gid; i++ )
+    {
+      FT_String*  gname;
+      FT_Error    error = tt_face_get_ps_name( face, i, &gname );
+
+
+      if ( error )
+        continue;
+
+      if ( !ft_strcmp( glyph_name, gname ) )
+        return i;
+    }
+
+    return 0;
+  }
+
+
+  FT_DEFINE_SERVICE_GLYPHDICTREC(sfnt_service_glyph_dict,
     (FT_GlyphDict_GetNameFunc)  sfnt_get_glyph_name,
-    (FT_GlyphDict_NameIndexFunc)NULL
-  };
+    (FT_GlyphDict_NameIndexFunc)sfnt_get_name_index
+  )
 
 #endif /* TT_CONFIG_OPTION_POSTSCRIPT_NAMES */
 
@@ -275,19 +319,17 @@
     return result;
   }
 
-  static const FT_Service_PsFontNameRec  sfnt_service_ps_name =
-  {
+  FT_DEFINE_SERVICE_PSFONTNAMEREC(sfnt_service_ps_name,
     (FT_PsName_GetFunc)sfnt_get_ps_name
-  };
+  )
 
 
   /*
    *  TT CMAP INFO
    */
-  static const FT_Service_TTCMapsRec  tt_service_get_cmap_info =
-  {
+  FT_DEFINE_SERVICE_TTCMAPSREC(tt_service_get_cmap_info,
     (TT_CMap_Info_GetFunc)tt_get_cmap_info
-  };
+  )
 
 
 #ifdef TT_CONFIG_OPTION_BDF
@@ -328,11 +370,10 @@
   }
 
 
-  static const FT_Service_BDFRec  sfnt_service_bdf =
-  {
+  FT_DEFINE_SERVICE_BDFRec(sfnt_service_bdf,
     (FT_BDF_GetCharsetIdFunc) sfnt_get_charset_id,
-    (FT_BDF_GetPropertyFunc)  tt_face_find_bdf_prop,
-  };
+    (FT_BDF_GetPropertyFunc)  tt_face_find_bdf_prop
+  )
 
 #endif /* TT_CONFIG_OPTION_BDF */
 
@@ -341,29 +382,46 @@
    *  SERVICE LIST
    */
 
-  static const FT_ServiceDescRec  sfnt_services[] =
-  {
-    { FT_SERVICE_ID_SFNT_TABLE,           &sfnt_service_sfnt_table },
-    { FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &sfnt_service_ps_name },
-#ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
-    { FT_SERVICE_ID_GLYPH_DICT,           &sfnt_service_glyph_dict },
+#if defined TT_CONFIG_OPTION_POSTSCRIPT_NAMES && defined TT_CONFIG_OPTION_BDF
+  FT_DEFINE_SERVICEDESCREC5(sfnt_services,
+    FT_SERVICE_ID_SFNT_TABLE,           &FT_SFNT_SERVICE_SFNT_TABLE_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_SFNT_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_GLYPH_DICT,           &FT_SFNT_SERVICE_GLYPH_DICT_GET,
+    FT_SERVICE_ID_BDF,                  &FT_SFNT_SERVICE_BDF_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_TT_SERVICE_GET_CMAP_INFO_GET
+  )
+#elif defined TT_CONFIG_OPTION_POSTSCRIPT_NAMES
+  FT_DEFINE_SERVICEDESCREC4(sfnt_services,
+    FT_SERVICE_ID_SFNT_TABLE,           &FT_SFNT_SERVICE_SFNT_TABLE_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_SFNT_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_GLYPH_DICT,           &FT_SFNT_SERVICE_GLYPH_DICT_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_TT_SERVICE_GET_CMAP_INFO_GET
+  )
+#elif defined TT_CONFIG_OPTION_BDF
+  FT_DEFINE_SERVICEDESCREC4(sfnt_services,
+    FT_SERVICE_ID_SFNT_TABLE,           &FT_SFNT_SERVICE_SFNT_TABLE_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_SFNT_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_BDF,                  &FT_SFNT_SERVICE_BDF_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_TT_SERVICE_GET_CMAP_INFO_GET
+  )
+#else
+  FT_DEFINE_SERVICEDESCREC3(sfnt_services,
+    FT_SERVICE_ID_SFNT_TABLE,           &FT_SFNT_SERVICE_SFNT_TABLE_GET,
+    FT_SERVICE_ID_POSTSCRIPT_FONT_NAME, &FT_SFNT_SERVICE_PS_NAME_GET,
+    FT_SERVICE_ID_TT_CMAP,              &FT_TT_SERVICE_GET_CMAP_INFO_GET
+  )
 #endif
-#ifdef TT_CONFIG_OPTION_BDF
-    { FT_SERVICE_ID_BDF,                  &sfnt_service_bdf },
-#endif
-    { FT_SERVICE_ID_TT_CMAP,              &tt_service_get_cmap_info },
-
-    { NULL, NULL }
-  };
 
 
   FT_CALLBACK_DEF( FT_Module_Interface )
   sfnt_get_interface( FT_Module    module,
                       const char*  module_interface )
   {
+    FT_Library           library = module->library;
+    FT_UNUSED(library);
     FT_UNUSED( module );
 
-    return ft_service_list_lookup( sfnt_services, module_interface );
+    return ft_service_list_lookup( FT_SFNT_SERVICES_GET, module_interface );
   }
 
 
@@ -494,10 +552,18 @@
 
 #endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+#define PUT_EMBEDDED_BITMAPS(a) a 
+#else
+#define PUT_EMBEDDED_BITMAPS(a) 0 
+#endif
+#ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
+#define PUT_PS_NAMES(a) a 
+#else
+#define PUT_PS_NAMES(a) 0 
+#endif
 
-  static
-  const SFNT_Interface  sfnt_interface =
-  {
+  FT_DEFINE_SFNT_INTERFACE(sfnt_interface,
     tt_face_goto_table,
 
     sfnt_init_face,
@@ -507,10 +573,8 @@
 
     tt_face_load_any,
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    tt_face_load_sfnt_header_stub,
-    tt_face_load_directory_stub,
-#endif
+    tt_face_load_sfnt_header_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    tt_face_load_directory_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     tt_face_load_head,
     tt_face_load_hhea,
@@ -522,53 +586,32 @@
     tt_face_load_name,
     tt_face_free_name,
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    tt_face_load_hdmx_stub,
-    tt_face_free_hdmx_stub,
-#endif
+    tt_face_load_hdmx_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    tt_face_free_hdmx_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     tt_face_load_kern,
     tt_face_load_gasp,
     tt_face_load_pclt,
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
     /* see `ttload.h' */
-    tt_face_load_bhed,
-#else
-    0,
-#endif
+    PUT_EMBEDDED_BITMAPS(tt_face_load_bhed),
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    tt_face_set_sbit_strike_stub,
-    tt_face_load_sbit_stub,
+    tt_face_set_sbit_strike_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    tt_face_load_sbit_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
-    tt_find_sbit_image,
-    tt_load_sbit_metrics,
-#endif
+    tt_find_sbit_image, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    tt_load_sbit_metrics, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-    tt_face_load_sbit_image,
-#else
-    0,
-#endif
+    PUT_EMBEDDED_BITMAPS(tt_face_load_sbit_image),
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    tt_face_free_sbit_stub,
-#endif
+    tt_face_free_sbit_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
-#ifdef TT_CONFIG_OPTION_POSTSCRIPT_NAMES
     /* see `ttpost.h' */
-    tt_face_get_ps_name,
-    tt_face_free_ps_names,
-#else
-    0,
-    0,
-#endif
+    PUT_PS_NAMES(tt_face_get_ps_name),
+    PUT_PS_NAMES(tt_face_free_ps_names),
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    tt_face_load_charmap_stub,
-    tt_face_free_charmap_stub,
-#endif
+    tt_face_load_charmap_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
+    tt_face_free_charmap_stub, /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
     /* since version 2.1.8 */
 
@@ -579,27 +622,19 @@
     tt_face_load_font_dir,
     tt_face_load_hmtx,
 
-#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
     /* see `ttsbit.h' and `sfnt.h' */
-    tt_face_load_eblc,
-    tt_face_free_eblc,
+    PUT_EMBEDDED_BITMAPS(tt_face_load_eblc),
+    PUT_EMBEDDED_BITMAPS(tt_face_free_eblc),
 
-    tt_face_set_sbit_strike,
-    tt_face_load_strike_metrics,
-#else
-    0,
-    0,
-    0,
-    0,
-#endif
+    PUT_EMBEDDED_BITMAPS(tt_face_set_sbit_strike),
+    PUT_EMBEDDED_BITMAPS(tt_face_load_strike_metrics),
 
     tt_face_get_metrics
-  };
+  )
 
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Module_Class  sfnt_module_class =
-  {
+  FT_DEFINE_MODULE(sfnt_module_class,
+  
     0,  /* not a font driver or renderer */
     sizeof( FT_ModuleRec ),
 
@@ -607,12 +642,12 @@
     0x10000L,   /* driver version 1.0                     */
     0x20000L,   /* driver requires FreeType 2.0 or higher */
 
-    (const void*)&sfnt_interface,  /* module specific interface */
+    (const void*)&FT_SFNT_INTERFACE_GET,  /* module specific interface */
 
     (FT_Module_Constructor)0,
     (FT_Module_Destructor) 0,
     (FT_Module_Requester)  sfnt_get_interface
-  };
+  )
 
 
 /* END */

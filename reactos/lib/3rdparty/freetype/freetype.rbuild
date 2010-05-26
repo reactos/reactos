@@ -17,23 +17,26 @@
 	</if>
 	<directory name="src">
 		<directory name="base">
-			<file>ftsystem.c</file>
-			<file>ftinit.c</file>
-			<file>ftdebug.c</file>
-			<file>_ftbase_ros.c</file>
+			<file>ftbase.c</file>
 			<file>ftbbox.c</file>
-			<file>ftglyph.c</file>
 			<file>ftbdf.c</file>
 			<file>ftbitmap.c</file>
+			<file>ftdebug.c</file>
+			<file>ftgasp.c</file>
+			<file>ftglyph.c</file>
 			<file>ftgxval.c</file>
+			<file>ftinit.c</file>
+			<file>ftlcdfil.c</file>
 			<file>ftmm.c</file>
 			<file>ftotval.c</file>
 			<file>ftpatent.c</file>
 			<file>ftpfr.c</file>
 			<file>ftstroke.c</file>
 			<file>ftsynth.c</file>
+			<file>ftsystem.c</file>
 			<file>fttype1.c</file>
 			<file>ftwinfnt.c</file>
+			<file>ftxf86.c</file>
 		</directory>
 		<directory name="autofit">
 			<file>autofit.c</file>

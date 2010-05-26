@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (body).              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2007, 2008 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,7 @@
 #include FT_BITMAP_H
 #include FT_INTERNAL_OBJECTS_H
 
+#include "basepic.h"
 
   /*************************************************************************/
   /*                                                                       */
@@ -43,68 +44,6 @@
   /*                                                                       */
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_glyph
-
-
-  /*************************************************************************/
-  /*************************************************************************/
-  /****                                                                 ****/
-  /****   Convenience functions                                         ****/
-  /****                                                                 ****/
-  /*************************************************************************/
-  /*************************************************************************/
-
-
-  /* documentation is in ftglyph.h */
-
-  FT_EXPORT_DEF( void )
-  FT_Matrix_Multiply( const FT_Matrix*  a,
-                      FT_Matrix        *b )
-  {
-    FT_Fixed  xx, xy, yx, yy;
-
-
-    if ( !a || !b )
-      return;
-
-    xx = FT_MulFix( a->xx, b->xx ) + FT_MulFix( a->xy, b->yx );
-    xy = FT_MulFix( a->xx, b->xy ) + FT_MulFix( a->xy, b->yy );
-    yx = FT_MulFix( a->yx, b->xx ) + FT_MulFix( a->yy, b->yx );
-    yy = FT_MulFix( a->yx, b->xy ) + FT_MulFix( a->yy, b->yy );
-
-    b->xx = xx;  b->xy = xy;
-    b->yx = yx;  b->yy = yy;
-  }
-
-
-  /* documentation is in ftglyph.h */
-
-  FT_EXPORT_DEF( FT_Error )
-  FT_Matrix_Invert( FT_Matrix*  matrix )
-  {
-    FT_Pos  delta, xx, yy;
-
-
-    if ( !matrix )
-      return FT_Err_Invalid_Argument;
-
-    /* compute discriminant */
-    delta = FT_MulFix( matrix->xx, matrix->yy ) -
-            FT_MulFix( matrix->xy, matrix->yx );
-
-    if ( !delta )
-      return FT_Err_Invalid_Argument;  /* matrix can't be inverted */
-
-    matrix->xy = - FT_DivFix( matrix->xy, delta );
-    matrix->yx = - FT_DivFix( matrix->yx, delta );
-
-    xx = matrix->xx;
-    yy = matrix->yy;
-
-    matrix->xx = FT_DivFix( yy, delta );
-    matrix->yy = FT_DivFix( xx, delta );
-
-    return FT_Err_Ok;
-  }
 
 
   /*************************************************************************/
@@ -191,9 +130,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Glyph_Class  ft_bitmap_glyph_class =
-  {
+  FT_DEFINE_GLYPH(ft_bitmap_glyph_class,
     sizeof ( FT_BitmapGlyphRec ),
     FT_GLYPH_FORMAT_BITMAP,
 
@@ -203,7 +140,7 @@
     0,                          /* FT_Glyph_TransformFunc */
     ft_bitmap_glyph_bbox,
     0                           /* FT_Glyph_PrepareFunc   */
-  };
+  )
 
 
   /*************************************************************************/
@@ -317,9 +254,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Glyph_Class  ft_outline_glyph_class =
-  {
+  FT_DEFINE_GLYPH( ft_outline_glyph_class, 
     sizeof ( FT_OutlineGlyphRec ),
     FT_GLYPH_FORMAT_OUTLINE,
 
@@ -329,7 +264,7 @@
     ft_outline_glyph_transform,
     ft_outline_glyph_bbox,
     ft_outline_glyph_prepare
-  };
+  )
 
 
   /*************************************************************************/
@@ -376,10 +311,16 @@
     const FT_Glyph_Class*  clazz;
 
 
+    /* check arguments */
+    if ( !target )
+    {
+      error = FT_Err_Invalid_Argument;
+      goto Exit;
+    }
+
     *target = 0;
 
-    /* check arguments */
-    if ( !target || !source || !source->clazz )
+    if ( !source || !source->clazz )
     {
       error = FT_Err_Invalid_Argument;
       goto Exit;
@@ -429,11 +370,11 @@
 
     /* if it is a bitmap, that's easy :-) */
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
-      clazz = &ft_bitmap_glyph_class;
+      clazz = FT_BITMAP_GLYPH_CLASS_GET;
 
     /* it it is an outline too */
     else if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
-      clazz = &ft_outline_glyph_class;
+      clazz = FT_OUTLINE_GLYPH_CLASS_GET;
 
     else
     {
@@ -589,7 +530,7 @@
     clazz = glyph->clazz;
 
     /* when called with a bitmap glyph, do nothing and return successfully */
-    if ( clazz == &ft_bitmap_glyph_class )
+    if ( clazz == FT_BITMAP_GLYPH_CLASS_GET )
       goto Exit;
 
     if ( !clazz || !clazz->glyph_prepare )
@@ -602,7 +543,7 @@
     dummy.format   = clazz->glyph_format;
 
     /* create result bitmap glyph */
-    error = ft_new_glyph( glyph->library, &ft_bitmap_glyph_class,
+    error = ft_new_glyph( glyph->library, FT_BITMAP_GLYPH_CLASS_GET,
                           (FT_Glyph*)(void*)&bitmap );
     if ( error )
       goto Exit;

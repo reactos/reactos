@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,12 +50,16 @@
   /* read a glyph name and return the equivalent glyph index */
   static FT_Int
   t1_get_index( const char*  name,
-                FT_UInt      len,
+                FT_Offset    len,
                 void*        user_data )
   {
     T1_Font  type1 = (T1_Font)user_data;
     FT_Int   n;
 
+
+    /* PS string/name length must be < 16-bit */
+    if ( ( len - 0xFFFFU ) > 0 )
+      return 0;
 
     for ( n = 0; n < type1->num_glyphs; n++ )
     {
@@ -88,7 +92,12 @@
     FT_ULong  index2 = KERN_INDEX( pair2->index1, pair2->index2 );
 
 
-    return (int)( index1 - index2 );
+    if ( index1 > index2 )
+      return 1;
+    else if ( index1 < index2 )
+      return -1;
+    else
+      return 0;
   }
 
 

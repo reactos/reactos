@@ -8,7 +8,7 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2009 by                                    */
 /*  Albert Chin-A-Young.                                                   */
 /*                                                                         */
 /*  Based on code in src/gzip/ftgzip.c, Copyright 2004 by                  */
@@ -27,8 +27,7 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_LZW_H
-#include <string.h>
-#include <stdio.h>
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
 
 #include FT_MODULE_ERRORS_H
@@ -42,6 +41,10 @@
 
 
 #ifdef FT_CONFIG_OPTION_USE_LZW
+
+#ifdef FT_CONFIG_OPTION_PIC
+#error "lzw code does not support PIC yet"
+#endif 
 
 #include "ftzopen.h"
 

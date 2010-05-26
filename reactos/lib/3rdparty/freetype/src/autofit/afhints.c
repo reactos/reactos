@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (body).                                 */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2009 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,7 @@
     {
       FT_Int  old_max = axis->max_segments;
       FT_Int  new_max = old_max;
-      FT_Int  big_max = FT_INT_MAX / sizeof ( *segment );
+      FT_Int  big_max = (FT_Int)( FT_INT_MAX / sizeof ( *segment ) );
 
 
       if ( old_max >= big_max )
@@ -77,7 +77,7 @@
     {
       FT_Int  old_max = axis->max_edges;
       FT_Int  new_max = old_max;
-      FT_Int  big_max = FT_INT_MAX / sizeof ( *edge );
+      FT_Int  big_max = (FT_Int)( FT_INT_MAX / sizeof ( *edge ) );
 
 
       if ( old_max >= big_max )
@@ -127,7 +127,7 @@
 
 #ifdef AF_DEBUG
 
-#include <stdio.h>
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
   static const char*
   af_dir_str( AF_Direction  dir )
@@ -203,14 +203,14 @@
 
     if ( flags & AF_EDGE_ROUND )
     {
-      memcpy( temp + pos, "round", 5 );
+      ft_memcpy( temp + pos, "round", 5 );
       pos += 5;
     }
     if ( flags & AF_EDGE_SERIF )
     {
       if ( pos > 0 )
         temp[pos++] = ' ';
-      memcpy( temp + pos, "serif", 5 );
+      ft_memcpy( temp + pos, "serif", 5 );
       pos += 5;
     }
     if ( pos == 0 )
@@ -645,6 +645,7 @@
         FT_Int      contour_index = 0;
 
 
+        FT_UNUSED( first );
         for ( point = points; point < point_limit; point++, vec++, tag++ )
         {
           point->fx = (FT_Short)vec->x;
@@ -940,8 +941,8 @@
         }
 
         {
-          FT_UInt  min, max, mid;
-          FT_Pos   fpos;
+          FT_PtrDist  min, max, mid;
+          FT_Pos      fpos;
 
 
           /* find enclosing edges */
@@ -952,7 +953,7 @@
           /* for small edge counts, a linear search is better */
           if ( max <= 8 )
           {
-            FT_UInt  nn;
+            FT_PtrDist  nn;
 
             for ( nn = 0; nn < max; nn++ )
               if ( edges[nn].fpos >= u )

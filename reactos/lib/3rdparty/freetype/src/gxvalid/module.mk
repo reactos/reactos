@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += GXVALID_MODULE
 
 define GXVALID_MODULE
-$(OPEN_DRIVER)gxv_module_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Module_Class, gxv_module_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)gxvalid   $(ECHO_DRIVER_DESC)TrueTypeGX/AAT validation module$(ECHO_DRIVER_DONE)
 endef
 

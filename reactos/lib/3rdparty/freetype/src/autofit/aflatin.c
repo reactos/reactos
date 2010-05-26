@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for latin script (body).                */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008, 2009 by                  */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,6 +15,9 @@
 /*                                                                         */
 /***************************************************************************/
 
+
+#include <ft2build.h>
+#include FT_ADVANCES_H
 
 #include "aflatin.h"
 #include "aferrors.h"
@@ -146,7 +149,8 @@
 #define AF_LATIN_MAX_TEST_CHARACTERS  12
 
 
-  static const char* const  af_latin_blue_chars[AF_LATIN_MAX_BLUES] =
+  static const char af_latin_blue_chars[AF_LATIN_MAX_BLUES]
+                                       [AF_LATIN_MAX_TEST_CHARACTERS + 1] =
   {
     "THEZOCQS",
     "HEZLOCUS",
@@ -195,7 +199,8 @@
       for ( ; p < limit && *p; p++ )
       {
         FT_UInt     glyph_index;
-        FT_Int      best_point, best_y, best_first, best_last;
+        FT_Pos      best_y; /* same as points.y */
+        FT_Int      best_point, best_first, best_last;
         FT_Vector*  points;
         FT_Bool     round = 0;
 
@@ -328,7 +333,7 @@
          *  we couldn't find a single glyph to compute this blue zone,
          *  we will simply ignore it then
          */
-        AF_LOG(( "empty!\n" ));
+        AF_LOG(( "empty\n" ));
         continue;
       }
 
@@ -379,7 +384,7 @@
         blue->flags |= AF_LATIN_BLUE_TOP;
 
       /*
-       * The following flags is used later to adjust the y and x scales
+       * The following flag is used later to adjust the y and x scales
        * in order to optimize the pixel grid alignment of the top of small
        * letters.
        */
@@ -390,6 +395,52 @@
     }
 
     return;
+  }
+
+
+  FT_LOCAL_DEF( void )
+  af_latin_metrics_check_digits( AF_LatinMetrics  metrics,
+                                 FT_Face          face )
+  {
+    FT_UInt  i;
+    FT_Bool  started = 0, same_width = 1;
+
+
+    /* check whether all ASCII digits have the same advance width; */
+    /* digit `0' is 0x30 in all supported charmaps                 */
+    for ( i = 0x30; i <= 0x39; i++ )
+    {
+      FT_UInt   glyph_index;
+      FT_Fixed  advance, old_advance = 0;
+
+
+      glyph_index = FT_Get_Char_Index( face, i );
+      if ( glyph_index == 0 )
+        continue;
+
+      if ( FT_Get_Advance( face, glyph_index,
+                           FT_LOAD_NO_SCALE         |
+                           FT_LOAD_NO_HINTING       |
+                           FT_LOAD_IGNORE_TRANSFORM,
+                           &advance ) )
+        continue;
+
+      if ( started )
+      {
+        if ( advance != old_advance )
+        {
+          same_width = 0;
+          break;
+        }
+      }
+      else
+      {
+        old_advance = advance;
+        started     = 1;
+      }
+    }
+
+    metrics->root.digits_have_same_width = same_width;
   }
 
 
@@ -426,6 +477,7 @@
       /* For now, compute the standard width and height from the `o'. */
       af_latin_metrics_init_widths( metrics, face, 'o' );
       af_latin_metrics_init_blues( metrics, face );
+      af_latin_metrics_check_digits( metrics, face );
     }
 
     FT_Set_Charmap( face, oldmap );
@@ -1004,12 +1056,14 @@
 
       if ( !found )
       {
-        AF_Edge   edge;
+        AF_Edge  edge;
 
 
         /* insert a new edge in the list and */
         /* sort according to the position    */
-        error = af_axis_hints_new_edge( axis, seg->pos, seg->dir, memory, &edge );
+        error = af_axis_hints_new_edge( axis, seg->pos,
+                                        (AF_Direction)seg->dir,
+                                        memory, &edge );
         if ( error )
           goto Exit;
 
@@ -1565,7 +1619,7 @@
             /* not hinted, appear a lot bolder or thinner than the    */
             /* vertical stems.                                        */
 
-            FT_Int  delta;
+            FT_Pos  delta;
 
 
             dist = ( dist + 22 ) & ~63;
@@ -1649,7 +1703,7 @@
     AF_AxisHints  axis       = &hints->axis[dim];
     AF_Edge       edges      = axis->edges;
     AF_Edge       edge_limit = edges + axis->num_edges;
-    FT_Int        n_edges;
+    FT_PtrDist    n_edges;
     AF_Edge       edge;
     AF_Edge       anchor     = 0;
     FT_Int        has_serifs = 0;
@@ -2006,7 +2060,10 @@
           if ( before >= edges && before < edge   &&
                after < edge_limit && after > edge )
           {
-            edge->pos = before->pos +
+            if ( after->opos == before->opos )
+              edge->pos = before->pos;
+            else
+              edge->pos = before->pos +
                           FT_MulDiv( edge->opos - before->opos,
                                      after->pos - before->pos,
                                      after->opos - before->opos );
@@ -2122,33 +2179,37 @@
 
   static const AF_Script_UniRangeRec  af_latin_uniranges[] =
   {
-    { 0x0020, 0x007F },  /* Basic Latin (no control characters) */
-    { 0x00A0, 0x00FF },  /* Latin-1 Supplement (no control characters) */
-    { 0x0100, 0x017F },  /* Latin Extended-A */
-    { 0x0180, 0x024F },  /* Latin Extended-B */
-    { 0x0250, 0x02AF },  /* IPA Extensions */
-    { 0x02B0, 0x02FF },  /* Spacing Modifier Letters */
-    { 0x0300, 0x036F },  /* Combining Diacritical Marks */
-    { 0x0370, 0x03FF },  /* Greek and Coptic */
-    { 0x0400, 0x04FF },  /* Cyrillic */
-    { 0x0500, 0x052F },  /* Cyrillic Supplement */
-    { 0x1D00, 0x1D7F },  /* Phonetic Extensions */
-    { 0x1D80, 0x1DBF },  /* Phonetic Extensions Supplement */
-    { 0x1DC0, 0x1DFF },  /* Combining Diacritical Marks Supplement */
-    { 0x1E00, 0x1EFF },  /* Latin Extended Additional */
-    { 0x1F00, 0x1FFF },  /* Greek Extended */
-    { 0x2000, 0x206F },  /* General Punctuation */
-    { 0x2070, 0x209F },  /* Superscripts and Subscripts */
-    { 0x20A0, 0x20CF },  /* Currency Symbols */
-    { 0x2150, 0x218F },  /* Number Forms */
-    { 0x2460, 0x24FF },  /* Enclosed Alphanumerics */
-    { 0     , 0      }
+    AF_UNIRANGE_REC(  0x0020UL,  0x007FUL ),  /* Basic Latin (no control chars) */
+    AF_UNIRANGE_REC(  0x00A0UL,  0x00FFUL ),  /* Latin-1 Supplement (no control chars) */
+    AF_UNIRANGE_REC(  0x0100UL,  0x017FUL ),  /* Latin Extended-A */
+    AF_UNIRANGE_REC(  0x0180UL,  0x024FUL ),  /* Latin Extended-B */
+    AF_UNIRANGE_REC(  0x0250UL,  0x02AFUL ),  /* IPA Extensions */
+    AF_UNIRANGE_REC(  0x02B0UL,  0x02FFUL ),  /* Spacing Modifier Letters */
+    AF_UNIRANGE_REC(  0x0300UL,  0x036FUL ),  /* Combining Diacritical Marks */
+    AF_UNIRANGE_REC(  0x0370UL,  0x03FFUL ),  /* Greek and Coptic */
+    AF_UNIRANGE_REC(  0x0400UL,  0x04FFUL ),  /* Cyrillic */
+    AF_UNIRANGE_REC(  0x0500UL,  0x052FUL ),  /* Cyrillic Supplement */
+    AF_UNIRANGE_REC(  0x1D00UL,  0x1D7FUL ),  /* Phonetic Extensions */
+    AF_UNIRANGE_REC(  0x1D80UL,  0x1DBFUL ),  /* Phonetic Extensions Supplement */
+    AF_UNIRANGE_REC(  0x1DC0UL,  0x1DFFUL ),  /* Combining Diacritical Marks Supplement */
+    AF_UNIRANGE_REC(  0x1E00UL,  0x1EFFUL ),  /* Latin Extended Additional */
+    AF_UNIRANGE_REC(  0x1F00UL,  0x1FFFUL ),  /* Greek Extended */
+    AF_UNIRANGE_REC(  0x2000UL,  0x206FUL ),  /* General Punctuation */
+    AF_UNIRANGE_REC(  0x2070UL,  0x209FUL ),  /* Superscripts and Subscripts */
+    AF_UNIRANGE_REC(  0x20A0UL,  0x20CFUL ),  /* Currency Symbols */
+    AF_UNIRANGE_REC(  0x2150UL,  0x218FUL ),  /* Number Forms */
+    AF_UNIRANGE_REC(  0x2460UL,  0x24FFUL ),  /* Enclosed Alphanumerics */
+    AF_UNIRANGE_REC(  0x2C60UL,  0x2C7FUL ),  /* Latin Extended-C */
+    AF_UNIRANGE_REC(  0x2DE0UL,  0x2DFFUL ),  /* Cyrillic Extended-A */
+    AF_UNIRANGE_REC(  0xA640UL,  0xA69FUL ),  /* Cyrillic Extended-B */
+    AF_UNIRANGE_REC(  0xA720UL,  0xA7FFUL ),  /* Latin Extended-D */
+    AF_UNIRANGE_REC(  0xFB00UL,  0xFB06UL ),  /* Alphab. Present. Forms (Latin Ligs) */
+    AF_UNIRANGE_REC( 0x1D400UL, 0x1D7FFUL ),  /* Mathematical Alphanumeric Symbols */
+    AF_UNIRANGE_REC(       0UL,       0UL )
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_latin_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_latin_script_class,  
     AF_SCRIPT_LATIN,
     af_latin_uniranges,
 
@@ -2160,7 +2221,7 @@
 
     (AF_Script_InitHintsFunc)   af_latin_hints_init,
     (AF_Script_ApplyHintsFunc)  af_latin_hints_apply
-  };
+  )
 
 
 /* END */

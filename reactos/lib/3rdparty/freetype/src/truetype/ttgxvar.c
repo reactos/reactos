@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType GX Font Variation loader                                    */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006, 2007 by                                    */
+/*  Copyright 2004, 2005, 2006, 2007, 2008, 2009 by                        */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and George Williams.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,30 +16,31 @@
 /***************************************************************************/
 
 
-/***************************************************************************/
-/*                                                                         */
-/* Apple documents the `fvar', `gvar', `cvar', and `avar' tables at        */
-/*                                                                         */
-/*   http://developer.apple.com/fonts/TTRefMan/RM06/Chap6[fgca]var.html    */
-/*                                                                         */
-/* The documentation for `fvar' is inconsistent.  At one point it says     */
-/* that `countSizePairs' should be 3, at another point 2.  It should be 2. */
-/*                                                                         */
-/* The documentation for `gvar' is not intelligible; `cvar' refers you to  */
-/* `gvar' and is thus also incomprehensible.                               */
-/*                                                                         */
-/* The documentation for `avar' appears correct, but Apple has no fonts    */
-/* with an `avar' table, so it is hard to test.                            */
-/*                                                                         */
-/* Many thanks to John Jenkins (at Apple) in figuring this out.            */
-/*                                                                         */
-/*                                                                         */
-/* Apple's `kern' table has some references to tuple indices, but as there */
-/* is no indication where these indices are defined, nor how to            */
-/* interpolate the kerning values (different tuples have different         */
-/* classes) this issue is ignored.                                         */
-/*                                                                         */
-/***************************************************************************/
+  /*************************************************************************/
+  /*                                                                       */
+  /* Apple documents the `fvar', `gvar', `cvar', and `avar' tables at      */
+  /*                                                                       */
+  /*   http://developer.apple.com/fonts/TTRefMan/RM06/Chap6[fgca]var.html  */
+  /*                                                                       */
+  /* The documentation for `fvar' is inconsistent.  At one point it says   */
+  /* that `countSizePairs' should be 3, at another point 2.  It should     */
+  /* be 2.                                                                 */
+  /*                                                                       */
+  /* The documentation for `gvar' is not intelligible; `cvar' refers you   */
+  /* to `gvar' and is thus also incomprehensible.                          */
+  /*                                                                       */
+  /* The documentation for `avar' appears correct, but Apple has no fonts  */
+  /* with an `avar' table, so it is hard to test.                          */
+  /*                                                                       */
+  /* Many thanks to John Jenkins (at Apple) in figuring this out.          */
+  /*                                                                       */
+  /*                                                                       */
+  /* Apple's `kern' table has some references to tuple indices, but as     */
+  /* there is no indication where these indices are defined, nor how to    */
+  /* interpolate the kerning values (different tuples have different       */
+  /* classes) this issue is ignored.                                       */
+  /*                                                                       */
+  /*************************************************************************/
 
 
 #include <ft2build.h>
@@ -47,11 +48,9 @@
 #include FT_CONFIG_CONFIG_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_SFNT_H
-#include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_MULTIPLE_MASTERS_H
 
-#include "ttdriver.h"
 #include "ttpload.h"
 #include "ttgxvar.h"
 
@@ -158,6 +157,9 @@
         runcnt = runcnt & GX_PT_POINT_RUN_COUNT_MASK;
         first  = points[i++] = FT_GET_USHORT();
 
+        if ( runcnt < 1 )
+          goto Exit;
+
         /* first point not included in runcount */
         for ( j = 0; j < runcnt; ++j )
           points[i++] = (FT_UShort)( first += FT_GET_USHORT() );
@@ -166,11 +168,15 @@
       {
         first = points[i++] = FT_GET_BYTE();
 
+        if ( runcnt < 1 )
+          goto Exit;
+
         for ( j = 0; j < runcnt; ++j )
           points[i++] = (FT_UShort)( first += FT_GET_BYTE() );
       }
     }
 
+  Exit:
     return points;
   }
 
@@ -205,12 +211,12 @@
   /*                                                                       */
   static FT_Short*
   ft_var_readpackeddeltas( FT_Stream  stream,
-                           FT_Int     delta_cnt )
+                           FT_Offset  delta_cnt )
   {
     FT_Short  *deltas;
     FT_Int     runcnt;
-    FT_Int     i;
-    FT_Int     j;
+    FT_Offset  i;
+    FT_Offset  j;
     FT_Memory  memory = stream->memory;
     FT_Error   error = TT_Err_Ok;
 
@@ -337,7 +343,8 @@
   }
 
 
-  typedef struct  GX_GVar_Head_ {
+  typedef struct  GX_GVar_Head_
+  {
     FT_Long    version;
     FT_UShort  axisCount;
     FT_UShort  globalCoordCount;
@@ -564,7 +571,8 @@
   /*************************************************************************/
 
 
-  typedef struct  GX_FVar_Head_ {
+  typedef struct  GX_FVar_Head_
+  {
     FT_Long    version;
     FT_UShort  offsetToData;
     FT_UShort  countSizePairs;
@@ -576,7 +584,8 @@
   } GX_FVar_Head;
 
 
-  typedef struct  fvar_axis {
+  typedef struct  fvar_axis_
+  {
     FT_ULong   axisTag;
     FT_ULong   minValue;
     FT_ULong   defaultValue;
@@ -754,7 +763,7 @@
       }
 
       ns = mmvar->namedstyle;
-      for ( i = 0; i < fvar_head.instanceCount; ++i )
+      for ( i = 0; i < fvar_head.instanceCount; ++i, ++ns )
       {
         if ( FT_FRAME_ENTER( 4L + 4L * fvar_head.axisCount ) )
           goto Exit;
@@ -902,13 +911,15 @@
     }
     else
     {
-      for ( i = 0;
-            i < num_coords && blend->normalizedcoords[i] == coords[i];
-            ++i );
-        if ( i == num_coords )
-          manageCvt = mcvt_retain;
-        else
+      manageCvt = mcvt_retain;
+      for ( i = 0; i < num_coords; ++i )
+      {
+        if ( blend->normalizedcoords[i] != coords[i] )
+        {
           manageCvt = mcvt_load;
+          break;
+        }
+      }
 
       /* If we don't change the blend coords then we don't need to do  */
       /* anything to the cvt table.  It will be correct.  Otherwise we */
@@ -1127,7 +1138,7 @@
 
     if ( blend == NULL )
     {
-      FT_TRACE2(( "no blend specified!\n" ));
+      FT_TRACE2(( "tt_face_vary_cvt: no blend specified\n" ));
 
       error = TT_Err_Ok;
       goto Exit;
@@ -1135,7 +1146,7 @@
 
     if ( face->cvt == NULL )
     {
-      FT_TRACE2(( "no `cvt ' table!\n" ));
+      FT_TRACE2(( "tt_face_vary_cvt: no `cvt ' table\n" ));
 
       error = TT_Err_Ok;
       goto Exit;
@@ -1144,7 +1155,7 @@
     error = face->goto_table( face, TTAG_cvar, stream, &table_len );
     if ( error )
     {
-      FT_TRACE2(( "is missing!\n" ));
+      FT_TRACE2(( "is missing\n" ));
 
       error = TT_Err_Ok;
       goto Exit;
@@ -1159,7 +1170,7 @@
     table_start = FT_Stream_FTell( stream );
     if ( FT_GET_LONG() != 0x00010000L )
     {
-      FT_TRACE2(( "bad table version!\n" ));
+      FT_TRACE2(( "bad table version\n" ));
 
       error = TT_Err_Ok;
       goto FExit;

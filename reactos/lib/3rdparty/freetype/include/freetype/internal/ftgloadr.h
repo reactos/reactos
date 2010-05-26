@@ -67,11 +67,11 @@ FT_BEGIN_HEADER
 
   typedef struct  FT_GlyphLoadRec_
   {
-    FT_Outline   outline;       /* outline             */
-    FT_Vector*   extra_points;  /* extra points table  */
+    FT_Outline   outline;       /* outline                   */
+    FT_Vector*   extra_points;  /* extra points table        */
     FT_Vector*   extra_points2; /* second extra points table */
-    FT_UInt      num_subglyphs; /* number of subglyphs */
-    FT_SubGlyph  subglyphs;     /* subglyphs           */
+    FT_UInt      num_subglyphs; /* number of subglyphs       */
+    FT_SubGlyph  subglyphs;     /* subglyphs                 */
 
   } FT_GlyphLoadRec, *FT_GlyphLoad;
 
@@ -121,15 +121,15 @@ FT_BEGIN_HEADER
                               FT_UInt         n_contours );
 
 
-#define FT_GLYPHLOADER_CHECK_P( _loader, _count )                    \
-   ( (_count) == 0 || (int)((_loader)->base.outline.n_points    +    \
-                            (_loader)->current.outline.n_points +    \
-                            (_count)) <= (int)(_loader)->max_points )
+#define FT_GLYPHLOADER_CHECK_P( _loader, _count )                         \
+   ( (_count) == 0 || ((_loader)->base.outline.n_points    +              \
+                       (_loader)->current.outline.n_points +              \
+                       (unsigned long)(_count)) <= (_loader)->max_points )
 
-#define FT_GLYPHLOADER_CHECK_C( _loader, _count )                     \
-  ( (_count) == 0 || (int)((_loader)->base.outline.n_contours    +    \
-                           (_loader)->current.outline.n_contours +    \
-                           (_count)) <= (int)(_loader)->max_contours )
+#define FT_GLYPHLOADER_CHECK_C( _loader, _count )                          \
+  ( (_count) == 0 || ((_loader)->base.outline.n_contours    +              \
+                      (_loader)->current.outline.n_contours +              \
+                      (unsigned long)(_count)) <= (_loader)->max_contours )
 
 #define FT_GLYPHLOADER_CHECK_POINTS( _loader, _points,_contours )      \
   ( ( FT_GLYPHLOADER_CHECK_P( _loader, _points )   &&                  \

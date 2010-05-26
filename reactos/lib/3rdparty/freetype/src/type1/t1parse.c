@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (body).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -35,7 +35,6 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 
@@ -65,14 +64,16 @@
   /*************************************************************************/
 
 
+  /* see Adobe Technical Note 5040.Download_Fonts.pdf */
+
   static FT_Error
   read_pfb_tag( FT_Stream   stream,
                 FT_UShort  *atag,
-                FT_Long    *asize )
+                FT_ULong   *asize )
   {
     FT_Error   error;
     FT_UShort  tag;
-    FT_Long    size;
+    FT_ULong   size;
 
 
     *atag  = 0;
@@ -82,7 +83,7 @@
     {
       if ( tag == 0x8001U || tag == 0x8002U )
       {
-        if ( !FT_READ_LONG_LE( size ) )
+        if ( !FT_READ_ULONG_LE( size ) )
           *asize = size;
       }
 
@@ -100,22 +101,25 @@
   {
     FT_Error   error;
     FT_UShort  tag;
-    FT_Long    size;
+    FT_ULong   dummy;
 
 
     if ( FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
-    error = read_pfb_tag( stream, &tag, &size );
+    error = read_pfb_tag( stream, &tag, &dummy );
     if ( error )
       goto Exit;
 
+    /* We assume that the first segment in a PFB is always encoded as   */
+    /* text.  This might be wrong (and the specification doesn't insist */
+    /* on that), but we have never seen a counterexample.               */
     if ( tag != 0x8001U && FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
     if ( !FT_FRAME_ENTER( header_length ) )
     {
-      error = 0;
+      error = T1_Err_Ok;
 
       if ( ft_memcmp( stream->cursor, header_string, header_length ) != 0 )
         error = T1_Err_Unknown_File_Format;
@@ -136,7 +140,7 @@
   {
     FT_Error   error;
     FT_UShort  tag;
-    FT_Long    size;
+    FT_ULong   size;
 
 
     psaux->ps_parser_funcs->init( &parser->root, 0, 0, memory );
@@ -170,19 +174,19 @@
     /* Here a short summary of what is going on:                      */
     /*                                                                */
     /*   When creating a new Type 1 parser, we try to locate and load */
-    /*   the base dictionary if this is possible (i.e. for PFB        */
+    /*   the base dictionary if this is possible (i.e., for PFB       */
     /*   files).  Otherwise, we load the whole font into memory.      */
     /*                                                                */
     /*   When `loading' the base dictionary, we only setup pointers   */
     /*   in the case of a memory-based stream.  Otherwise, we         */
     /*   allocate and load the base dictionary in it.                 */
     /*                                                                */
-    /*   parser->in_pfb is set if we are in a binary (".pfb") font.   */
+    /*   parser->in_pfb is set if we are in a binary (`.pfb') font.   */
     /*   parser->in_memory is set if we have a memory stream.         */
     /*                                                                */
 
-    /* try to compute the size of the base dictionary;   */
-    /* look for a Postscript binary file tag, i.e 0x8001 */
+    /* try to compute the size of the base dictionary;     */
+    /* look for a Postscript binary file tag, i.e., 0x8001 */
     if ( FT_STREAM_SEEK( 0L ) )
       goto Exit;
 
@@ -217,7 +221,7 @@
     }
     else
     {
-      /* read segment in memory - this is clumsy, but so does the format */
+      /* read segment in memory -- this is clumsy, but so does the format */
       if ( FT_ALLOC( parser->base_dict, size )       ||
            FT_STREAM_READ( parser->base_dict, size ) )
         goto Exit;
@@ -260,7 +264,7 @@
     FT_Stream  stream = parser->stream;
     FT_Memory  memory = parser->root.memory;
     FT_Error   error  = T1_Err_Ok;
-    FT_Long    size;
+    FT_ULong   size;
 
 
     if ( parser->in_pfb )
@@ -293,13 +297,13 @@
       /* and allocate private dictionary buffer        */
       if ( parser->private_len == 0 )
       {
-        FT_ERROR(( "T1_Get_Private_Dict:" ));
-        FT_ERROR(( " invalid private dictionary section\n" ));
+        FT_ERROR(( "T1_Get_Private_Dict:"
+                   " invalid private dictionary section\n" ));
         error = T1_Err_Invalid_File_Format;
         goto Fail;
       }
 
-      if ( FT_STREAM_SEEK( start_pos )                             ||
+      if ( FT_STREAM_SEEK( start_pos )                           ||
            FT_ALLOC( parser->private_dict, parser->private_len ) )
         goto Fail;
 
@@ -349,8 +353,8 @@
         cur++;
         if ( cur >= limit )
         {
-          FT_ERROR(( "T1_Get_Private_Dict:" ));
-          FT_ERROR(( " could not find `eexec' keyword\n" ));
+          FT_ERROR(( "T1_Get_Private_Dict:"
+                     " could not find `eexec' keyword\n" ));
           error = T1_Err_Invalid_File_Format;
           goto Exit;
         }
@@ -403,13 +407,13 @@
         cur++;
       else
       {
-        FT_ERROR(( "T1_Get_Private_Dict:" ));
-        FT_ERROR(( " `eexec' not properly terminated\n" ));
+        FT_ERROR(( "T1_Get_Private_Dict:"
+                   " `eexec' not properly terminated\n" ));
         error = T1_Err_Invalid_File_Format;
         goto Exit;
       }
 
-      size = (FT_Long)( parser->base_len - ( cur - parser->base_dict ) );
+      size = parser->base_len - ( cur - parser->base_dict );
 
       if ( parser->in_memory )
       {

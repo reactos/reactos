@@ -27,7 +27,7 @@
 FT_BEGIN_HEADER
 
 
-  FT_EXPORT_VAR( const FT_Module_Class )  psnames_module_class;
+  FT_DECLARE_MODULE( psnames_module_class )
 
 
 FT_END_HEADER

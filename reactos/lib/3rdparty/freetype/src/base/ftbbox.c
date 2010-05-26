@@ -29,6 +29,7 @@
 #include FT_IMAGE_H
 #include FT_OUTLINE_H
 #include FT_INTERNAL_CALC_H
+#include FT_INTERNAL_OBJECTS_H
 
 
   typedef struct  TBBox_Rec_
@@ -559,6 +560,13 @@
     return 0;
   }
 
+FT_DEFINE_OUTLINE_FUNCS(bbox_interface,
+    (FT_Outline_MoveTo_Func) BBox_Move_To,
+    (FT_Outline_LineTo_Func) BBox_Move_To,
+    (FT_Outline_ConicTo_Func)BBox_Conic_To,
+    (FT_Outline_CubicTo_Func)BBox_Cubic_To,
+    0, 0
+  )
 
   /* documentation is in ftbbox.h */
 
@@ -628,18 +636,13 @@
       /* the two boxes are different, now walk over the outline to */
       /* get the Bezier arc extrema.                               */
 
-      static const FT_Outline_Funcs  bbox_interface =
-      {
-        (FT_Outline_MoveTo_Func) BBox_Move_To,
-        (FT_Outline_LineTo_Func) BBox_Move_To,
-        (FT_Outline_ConicTo_Func)BBox_Conic_To,
-        (FT_Outline_CubicTo_Func)BBox_Cubic_To,
-        0, 0
-      };
-
       FT_Error   error;
       TBBox_Rec  user;
 
+#ifdef FT_CONFIG_OPTION_PIC
+      FT_Outline_Funcs bbox_interface;
+      Init_Class_bbox_interface(&bbox_interface);
+#endif
 
       user.bbox = bbox;
 

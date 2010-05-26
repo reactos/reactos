@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2002, 2003, 2004, 2005, 2006 by
+# Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -21,7 +21,7 @@ fi
 
 if test -z "`$GNUMAKE -v 2>/dev/null | grep GNU`"; then
   if test -z "`$GNUMAKE -v 2>/dev/null | grep makepp`"; then
-    echo "GNU make (>= 3.79.1) or makepp (>= 1.19) is required to build FreeType2." >&2
+    echo "GNU make (>= 3.80) or makepp (>= 1.19) is required to build FreeType2." >&2
     echo "Please try" >&2
     echo "  \`GNUMAKE=<GNU make command name> $0'." >&2
     echo "or >&2"
@@ -67,12 +67,25 @@ ft2_dir=`(dirname "$0") 2>/dev/null                         ||
 abs_curr_dir=`pwd`
 abs_ft2_dir=`cd "$ft2_dir" && pwd`
 
+# `--srcdir=' option can override abs_ft2_dir
+
+if test $# -gt 0; then
+  for x in "$@"; do
+    case x"$x" in
+    x--srcdir=*)
+      abs_ft2_dir=`echo $x | sed 's/^--srcdir=//'` ;;
+    esac
+  done
+fi
+
 # build a dummy Makefile if we are not building in the source tree
 
 if test "$abs_curr_dir" != "$abs_ft2_dir"; then
   mkdir reference
-  echo "Copying \`modules.cfg'"
-  cp $abs_ft2_dir/modules.cfg $abs_curr_dir
+  if test ! -r $abs_curr_dir/modules.cfg; then
+    echo "Copying \`modules.cfg'"
+    cp $abs_ft2_dir/modules.cfg $abs_curr_dir
+  fi
   echo "Generating \`Makefile'"
   echo "TOP_DIR   := $abs_ft2_dir"               > Makefile
   echo "OBJ_DIR   := $abs_curr_dir"             >> Makefile
@@ -92,9 +105,16 @@ fi
 # call make
 
 CFG=
-for x in ${1+"$@"}; do
-  CFG="$CFG \"$x\""
-done
+# work around zsh bug which doesn't like `${1+"$@"}'
+case $# in
+0) ;;
+*) for x in "$@"; do
+     case x"$x" in
+     x--srcdir=* ) CFG="$CFG '$x'/builds/unix" ;;
+     *) CFG="$CFG '$x'" ;;
+     esac
+   done ;;
+esac
 CFG=$CFG $GNUMAKE setup unix
 
 # eof

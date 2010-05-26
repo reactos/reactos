@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by Roberto Alameda.       */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009               */
+/*  by Roberto Alameda.                                                    */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -19,7 +20,6 @@
 #include "t42parse.h"
 #include "t42error.h"
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_STREAM_H
 #include FT_LIST_H
 
 
@@ -70,7 +70,7 @@
 
     if ( !loader.charstrings.init )
     {
-      FT_ERROR(( "T42_Open_Face: no charstrings array in face!\n" ));
+      FT_ERROR(( "T42_Open_Face: no charstrings array in face\n" ));
       error = T42_Err_Invalid_File_Format;
     }
 
@@ -100,8 +100,8 @@
       /* The index is then stored in type1.encoding.char_index, and  */
       /* the name in type1.encoding.char_name                        */
 
-      min_char = +32000;
-      max_char = -32000;
+      min_char = 0;
+      max_char = 0;
 
       charcode = 0;
       for ( ; charcode < loader.encoding_table.max_elems; charcode++ )
@@ -127,13 +127,14 @@
               {
                 if ( charcode < min_char )
                   min_char = charcode;
-                if ( charcode > max_char )
-                  max_char = charcode;
+                if ( charcode >= max_char )
+                  max_char = charcode + 1;
               }
               break;
             }
           }
       }
+
       type1->encoding.code_first = min_char;
       type1->encoding.code_last  = max_char;
       type1->encoding.num_chars  = loader.num_chars;
@@ -188,7 +189,7 @@
       goto Exit;
 
     /* check the face index */
-    if ( face_index != 0 )
+    if ( face_index > 0 )
     {
       FT_ERROR(( "T42_Face_Init: invalid face index\n" ));
       error = T42_Err_Invalid_Argument;
@@ -202,7 +203,7 @@
 
     root->num_glyphs   = type1->num_glyphs;
     root->num_charmaps = 0;
-    root->face_index   = face_index;
+    root->face_index   = 0;
 
     root->face_flags = FT_FACE_FLAG_SCALABLE    |
                        FT_FACE_FLAG_HORIZONTAL  |
@@ -328,7 +329,7 @@
 
         charmap.face = root;
 
-        /* first of all, try to synthetize a Unicode charmap */
+        /* first of all, try to synthesize a Unicode charmap */
         charmap.platform_id = 3;
         charmap.encoding_id = 1;
         charmap.encoding    = FT_ENCODING_UNICODE;
@@ -392,50 +393,50 @@
     FT_Memory    memory;
 
 
-    if ( face )
-    {
-      type1  = &face->type1;
-      info   = &type1->font_info;
-      memory = face->root.memory;
+    if ( !face )
+      return;
 
-      /* delete internal ttf face prior to freeing face->ttf_data */
-      if ( face->ttf_face )
-        FT_Done_Face( face->ttf_face );
+    type1  = &face->type1;
+    info   = &type1->font_info;
+    memory = face->root.memory;
 
-      /* release font info strings */
-      FT_FREE( info->version );
-      FT_FREE( info->notice );
-      FT_FREE( info->full_name );
-      FT_FREE( info->family_name );
-      FT_FREE( info->weight );
+    /* delete internal ttf face prior to freeing face->ttf_data */
+    if ( face->ttf_face )
+      FT_Done_Face( face->ttf_face );
 
-      /* release top dictionary */
-      FT_FREE( type1->charstrings_len );
-      FT_FREE( type1->charstrings );
-      FT_FREE( type1->glyph_names );
+    /* release font info strings */
+    FT_FREE( info->version );
+    FT_FREE( info->notice );
+    FT_FREE( info->full_name );
+    FT_FREE( info->family_name );
+    FT_FREE( info->weight );
 
-      FT_FREE( type1->charstrings_block );
-      FT_FREE( type1->glyph_names_block );
+    /* release top dictionary */
+    FT_FREE( type1->charstrings_len );
+    FT_FREE( type1->charstrings );
+    FT_FREE( type1->glyph_names );
 
-      FT_FREE( type1->encoding.char_index );
-      FT_FREE( type1->encoding.char_name );
-      FT_FREE( type1->font_name );
+    FT_FREE( type1->charstrings_block );
+    FT_FREE( type1->glyph_names_block );
 
-      FT_FREE( face->ttf_data );
+    FT_FREE( type1->encoding.char_index );
+    FT_FREE( type1->encoding.char_name );
+    FT_FREE( type1->font_name );
+
+    FT_FREE( face->ttf_data );
 
 #if 0
-      /* release afm data if present */
-      if ( face->afm_data )
-        T1_Done_AFM( memory, (T1_AFM*)face->afm_data );
+    /* release afm data if present */
+    if ( face->afm_data )
+      T1_Done_AFM( memory, (T1_AFM*)face->afm_data );
 #endif
 
-      /* release unicode map, if any */
-      FT_FREE( face->unicode_map.maps );
-      face->unicode_map.num_maps = 0;
+    /* release unicode map, if any */
+    FT_FREE( face->unicode_map.maps );
+    face->unicode_map.num_maps = 0;
 
-      face->root.family_name = 0;
-      face->root.style_name  = 0;
-    }
+    face->root.family_name = 0;
+    face->root.style_name  = 0;
   }
 
 
@@ -519,7 +520,7 @@
 
     FT_Activate_Size( size->ttsize );
 
-    error = FT_Select_Size( face->ttf_face, strike_index );
+    error = FT_Select_Size( face->ttf_face, (FT_Int)strike_index );
     if ( !error )
       ( (FT_Size)size )->metrics = face->ttf_face->size->metrics;
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing BDF-specific strings (specification).     */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2006 by                                    */
+/*  Copyright 2002, 2003, 2004, 2006, 2009 by                              */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,38 +38,39 @@ FT_BEGIN_HEADER
   /*    bdf_fonts                                                          */
   /*                                                                       */
   /* <Title>                                                               */
-  /*    BDF Files                                                          */
+  /*    BDF and PCF Files                                                  */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    BDF specific API.                                                  */
+  /*    BDF and PCF specific API.                                          */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This section contains the declaration of BDF specific functions.   */
+  /*    This section contains the declaration of functions specific to BDF */
+  /*    and PCF fonts.                                                     */
   /*                                                                       */
   /*************************************************************************/
 
 
- /**********************************************************************
-  *
-  * @enum:
-  *    FT_PropertyType
-  *
-  * @description:
-  *    A list of BDF property types.
-  *
-  * @values:
-  *    BDF_PROPERTY_TYPE_NONE ::
-  *      Value 0 is used to indicate a missing property.
-  *
-  *    BDF_PROPERTY_TYPE_ATOM ::
-  *      Property is a string atom.
-  *
-  *    BDF_PROPERTY_TYPE_INTEGER ::
-  *      Property is a 32-bit signed integer.
-  *
-  *    BDF_PROPERTY_TYPE_CARDINAL ::
-  *      Property is a 32-bit unsigned integer.
-  */
+  /**********************************************************************
+   *
+   * @enum:
+   *    FT_PropertyType
+   *
+   * @description:
+   *    A list of BDF property types.
+   *
+   * @values:
+   *    BDF_PROPERTY_TYPE_NONE ::
+   *      Value~0 is used to indicate a missing property.
+   *
+   *    BDF_PROPERTY_TYPE_ATOM ::
+   *      Property is a string atom.
+   *
+   *    BDF_PROPERTY_TYPE_INTEGER ::
+   *      Property is a 32-bit signed integer.
+   *
+   *    BDF_PROPERTY_TYPE_CARDINAL ::
+   *      Property is a 32-bit unsigned integer.
+   */
   typedef enum  BDF_PropertyType_
   {
     BDF_PROPERTY_TYPE_NONE     = 0,
@@ -80,15 +81,15 @@ FT_BEGIN_HEADER
   } BDF_PropertyType;
 
 
- /**********************************************************************
-  *
-  * @type:
-  *    BDF_Property
-  *
-  * @description:
-  *    A handle to a @BDF_PropertyRec structure to model a given
-  *    BDF/PCF property.
-  */
+  /**********************************************************************
+   *
+   * @type:
+   *    BDF_Property
+   *
+   * @description:
+   *    A handle to a @BDF_PropertyRec structure to model a given
+   *    BDF/PCF property.
+   */
   typedef struct BDF_PropertyRec_*  BDF_Property;
 
 
@@ -132,7 +133,7 @@ FT_BEGIN_HEADER
   *    FT_Get_BDF_Charset_ID
   *
   * @description:
-  *    Retrieves a BDF font character set identity, according to
+  *    Retrieve a BDF font character set identity, according to
   *    the BDF specification.
   *
   * @input:
@@ -141,13 +142,13 @@ FT_BEGIN_HEADER
   *
   * @output:
   *    acharset_encoding ::
-  *       Charset encoding, as a C string, owned by the face.
+  *       Charset encoding, as a C~string, owned by the face.
   *
   *    acharset_registry ::
-  *       Charset registry, as a C string, owned by the face.
+  *       Charset registry, as a C~string, owned by the face.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   This function only works with BDF faces, returning an error otherwise.
@@ -164,7 +165,7 @@ FT_BEGIN_HEADER
   *    FT_Get_BDF_Property
   *
   * @description:
-  *    Retrieves a BDF property from a BDF or PCF font file.
+  *    Retrieve a BDF property from a BDF or PCF font file.
   *
   * @input:
   *    face :: A handle to the input face.
@@ -175,12 +176,20 @@ FT_BEGIN_HEADER
   *    aproperty :: The property.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   This function works with BDF _and_ PCF fonts.  It returns an error
   *   otherwise.  It also returns an error if the property is not in the
   *   font.
+  *
+  *   A `property' is a either key-value pair within the STARTPROPERTIES
+  *   ... ENDPROPERTIES block of a BDF font or a key-value pair from the
+  *   `info->props' array within a `FontRec' structure of a PCF font.
+  *
+  *   Integer properties are always stored as `signed' within PCF fonts;
+  *   consequently, @BDF_PROPERTY_TYPE_CARDINAL is a possible return value
+  *   for BDF fonts only.
   *
   *   In case of error, `aproperty->type' is always set to
   *   @BDF_PROPERTY_TYPE_NONE.

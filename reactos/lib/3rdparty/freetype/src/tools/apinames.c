@@ -10,7 +10,7 @@
  * accepted if you are using GCC for compilation (and probably by
  * other compilers too).
  *
- * Author: David Turner, 2005, 2006
+ * Author: David Turner, 2005, 2006, 2008
  *
  * This code is explicitly placed into the public domain.
  *
@@ -26,7 +26,7 @@
 
 #define  LINEBUFF_SIZE  1024
 
-typedef enum
+typedef enum  OutputFormat_
 {
   OUTPUT_LIST = 0,      /* output the list of names, one per line             */
   OUTPUT_WINDOWS_DEF,   /* output a Windows .DEF file for Visual C++ or Mingw */
@@ -44,7 +44,7 @@ panic( const char*  message )
 }
 
 
-typedef struct
+typedef struct  NameRec_
 {
   char*         name;
   unsigned int  hash;
@@ -191,7 +191,7 @@ names_dump( FILE*         out,
 
 /* states of the line parser */
 
-typedef enum
+typedef enum  State_
 {
   STATE_START = 0,  /* waiting for FT_EXPORT keyword and return type */
   STATE_TYPE        /* type was read, waiting for function name      */

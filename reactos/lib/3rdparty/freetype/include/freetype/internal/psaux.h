@@ -5,7 +5,7 @@
 /*    Auxiliary functions and data structures related to PostScript fonts  */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -197,6 +197,7 @@ FT_BEGIN_HEADER
   {
     T1_FIELD_LOCATION_CID_INFO,
     T1_FIELD_LOCATION_FONT_DICT,
+    T1_FIELD_LOCATION_FONT_EXTRA,
     T1_FIELD_LOCATION_FONT_INFO,
     T1_FIELD_LOCATION_PRIVATE,
     T1_FIELD_LOCATION_BBOX,
@@ -227,7 +228,11 @@ FT_BEGIN_HEADER
     FT_UInt             array_max;    /* maximal number of elements for */
                                       /* array                          */
     FT_UInt             count_offset; /* offset of element count for    */
-                                      /* arrays                         */
+                                      /* arrays; must not be zero if in */
+                                      /* use -- in other words, a       */
+                                      /* `num_FOO' element must not     */
+                                      /* start the used structure if we */
+                                      /* parse a `FOO' array            */
     FT_UInt             dict;         /* where we expect it             */
   } T1_FieldRec;
 
@@ -355,7 +360,7 @@ FT_BEGIN_HEADER
     FT_Error
     (*to_bytes)( PS_Parser  parser,
                  FT_Byte*   bytes,
-                 FT_Long    max_bytes,
+                 FT_Offset  max_bytes,
                  FT_Long*   pnum_bytes,
                  FT_Bool    delimiters );
 
@@ -528,13 +533,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    max_contours :: Maximal number of contours in builder outline.     */
   /*                                                                       */
-  /*    last         :: The last point position.                           */
-  /*                                                                       */
-  /*    scale_x      :: The horizontal scaling value (FUnits to            */
-  /*                    sub-pixels).                                       */
-  /*                                                                       */
-  /*    scale_y      :: The vertical scaling value (FUnits to sub-pixels). */
-  /*                                                                       */
   /*    pos_x        :: The horizontal translation (if composite glyph).   */
   /*                                                                       */
   /*    pos_y        :: The vertical translation (if composite glyph).     */
@@ -567,11 +565,6 @@ FT_BEGIN_HEADER
     FT_Outline*     base;
     FT_Outline*     current;
 
-    FT_Vector       last;
-
-    FT_Fixed        scale_x;
-    FT_Fixed        scale_y;
-
     FT_Pos          pos_x;
     FT_Pos          pos_y;
 
@@ -582,7 +575,6 @@ FT_BEGIN_HEADER
     T1_ParseState   parse_state;
     FT_Bool         load_points;
     FT_Bool         no_recurse;
-    FT_Bool         shift;
 
     FT_Bool         metrics_only;
 
@@ -697,8 +689,10 @@ FT_BEGIN_HEADER
     T1_Decoder_Callback  parse_callback;
     T1_Decoder_FuncsRec  funcs;
 
-    FT_Int*              buildchar;
+    FT_Long*             buildchar;
     FT_UInt              len_buildchar;
+
+    FT_Bool              seac;
 
   } T1_DecoderRec;
 
@@ -761,7 +755,7 @@ FT_BEGIN_HEADER
 
     FT_Int
     (*get_index)( const char*  name,
-                  FT_UInt      len,
+                  FT_Offset    len,
                   void*        user_data );
 
     void*         user_data;

@@ -18,10 +18,20 @@
 
 #include <ft2build.h>
 #include FT_SYNTHESIS_H
+#include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_OUTLINE_H
 #include FT_BITMAP_H
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_synth
 
   /*************************************************************************/
   /*************************************************************************/
@@ -68,36 +78,13 @@
   /*************************************************************************/
 
 
-  FT_EXPORT_DEF( FT_Error )
-  FT_GlyphSlot_Own_Bitmap( FT_GlyphSlot  slot )
-  {
-    if ( slot && slot->format == FT_GLYPH_FORMAT_BITMAP   &&
-         !( slot->internal->flags & FT_GLYPH_OWN_BITMAP ) )
-    {
-      FT_Bitmap  bitmap;
-      FT_Error   error;
-
-
-      FT_Bitmap_New( &bitmap );
-      error = FT_Bitmap_Copy( slot->library, &slot->bitmap, &bitmap );
-      if ( error )
-        return error;
-
-      slot->bitmap = bitmap;
-      slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
-    }
-
-    return FT_Err_Ok;
-  }
-
-
   /* documentation is in ftsynth.h */
 
   FT_EXPORT_DEF( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot )
   {
     FT_Library  library = slot->library;
-    FT_Face     face    = FT_SLOT_FACE( slot );
+    FT_Face     face    = slot->face;
     FT_Error    error;
     FT_Pos      xstr, ystr;
 
@@ -123,11 +110,24 @@
     }
     else if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
     {
-      xstr = FT_PIX_FLOOR( xstr );
+      /* round to full pixels */
+      xstr &= ~63;
       if ( xstr == 0 )
         xstr = 1 << 6;
-      ystr = FT_PIX_FLOOR( ystr );
+      ystr &= ~63;
 
+      /*
+       * XXX: overflow check for 16-bit system, for compatibility
+       *      with FT_GlyphSlot_Embolden() since freetype-2.1.10.
+       *      unfortunately, this function return no informations
+       *      about the cause of error.
+       */
+      if ( ( ystr >> 6 ) > FT_INT_MAX || ( ystr >> 6 ) < FT_INT_MIN )
+      {
+        FT_TRACE1(( "FT_GlyphSlot_Embolden:" ));
+        FT_TRACE1(( "too strong embolding parameter ystr=%d\n", ystr ));
+        return;
+      }
       error = FT_GlyphSlot_Own_Bitmap( slot );
       if ( error )
         return;
@@ -151,8 +151,9 @@
     slot->metrics.vertBearingY += ystr;
     slot->metrics.vertAdvance  += ystr;
 
+    /* XXX: 16-bit overflow case must be excluded before here */
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
-      slot->bitmap_top += ystr >> 6;
+      slot->bitmap_top += (FT_Int)( ystr >> 6 );
   }
 
 

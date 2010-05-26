@@ -46,20 +46,20 @@ FT_BEGIN_HEADER
   PS_Conv_StringDecode( FT_Byte**  cursor,
                         FT_Byte*   limit,
                         FT_Byte*   buffer,
-                        FT_UInt    n );
+                        FT_Offset  n );
 #endif
 
   FT_LOCAL( FT_UInt )
   PS_Conv_ASCIIHexDecode( FT_Byte**  cursor,
                           FT_Byte*   limit,
                           FT_Byte*   buffer,
-                          FT_UInt    n );
+                          FT_Offset  n );
 
   FT_LOCAL( FT_UInt )
   PS_Conv_EexecDecode( FT_Byte**   cursor,
                        FT_Byte*    limit,
                        FT_Byte*    buffer,
-                       FT_UInt     n,
+                       FT_Offset   n,
                        FT_UShort*  seed );
 
 

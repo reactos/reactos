@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID objects manager (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2008 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -193,61 +193,61 @@
   FT_LOCAL_DEF( void )
   cid_face_done( FT_Face  cidface )         /* CID_Face */
   {
-    CID_Face   face = (CID_Face)cidface;
-    FT_Memory  memory;
+    CID_Face      face = (CID_Face)cidface;
+    FT_Memory     memory;
+    CID_FaceInfo  cid;
+    PS_FontInfo   info;
 
 
-    if ( face )
+    if ( !face )
+      return;
+
+    cid    = &face->cid;
+    info   = &cid->font_info;
+    memory = cidface->memory;
+
+    /* release subrs */
+    if ( face->subrs )
     {
-      CID_FaceInfo  cid  = &face->cid;
-      PS_FontInfo   info = &cid->font_info;
+      FT_Int  n;
 
 
-      memory = cidface->memory;
-
-      /* release subrs */
-      if ( face->subrs )
+      for ( n = 0; n < cid->num_dicts; n++ )
       {
-        FT_Int  n;
+        CID_Subrs  subr = face->subrs + n;
 
 
-        for ( n = 0; n < cid->num_dicts; n++ )
+        if ( subr->code )
         {
-          CID_Subrs  subr = face->subrs + n;
-
-
-          if ( subr->code )
-          {
-            FT_FREE( subr->code[0] );
-            FT_FREE( subr->code );
-          }
+          FT_FREE( subr->code[0] );
+          FT_FREE( subr->code );
         }
-
-        FT_FREE( face->subrs );
       }
 
-      /* release FontInfo strings */
-      FT_FREE( info->version );
-      FT_FREE( info->notice );
-      FT_FREE( info->full_name );
-      FT_FREE( info->family_name );
-      FT_FREE( info->weight );
-
-      /* release font dictionaries */
-      FT_FREE( cid->font_dicts );
-      cid->num_dicts = 0;
-
-      /* release other strings */
-      FT_FREE( cid->cid_font_name );
-      FT_FREE( cid->registry );
-      FT_FREE( cid->ordering );
-
-      cidface->family_name = 0;
-      cidface->style_name  = 0;
-
-      FT_FREE( face->binary_data );
-      FT_FREE( face->cid_stream );
+      FT_FREE( face->subrs );
     }
+
+    /* release FontInfo strings */
+    FT_FREE( info->version );
+    FT_FREE( info->notice );
+    FT_FREE( info->full_name );
+    FT_FREE( info->family_name );
+    FT_FREE( info->weight );
+
+    /* release font dictionaries */
+    FT_FREE( cid->font_dicts );
+    cid->num_dicts = 0;
+
+    /* release other strings */
+    FT_FREE( cid->cid_font_name );
+    FT_FREE( cid->registry );
+    FT_FREE( cid->ordering );
+
+    cidface->family_name = 0;
+    cidface->style_name  = 0;
+
+    FT_FREE( face->binary_data );
+    FT_FREE( face->cid_stream );
   }
 
 
@@ -324,6 +324,7 @@
       goto Exit;
 
     /* check the face index */
+    /* XXX: handle CID fonts with more than a single face */
     if ( face_index != 0 )
     {
       FT_ERROR(( "cid_face_init: invalid face index\n" ));

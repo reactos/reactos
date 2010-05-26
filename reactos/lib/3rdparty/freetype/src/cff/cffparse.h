@@ -36,6 +36,7 @@ FT_BEGIN_HEADER
 
   typedef struct  CFF_ParserRec_
   {
+    FT_Library library;
     FT_Byte*   start;
     FT_Byte*   limit;
     FT_Byte*   cursor;
@@ -52,12 +53,44 @@ FT_BEGIN_HEADER
   FT_LOCAL( void )
   cff_parser_init( CFF_Parser  parser,
                    FT_UInt     code,
-                   void*       object );
+                   void*       object,
+                   FT_Library  library);
 
   FT_LOCAL( FT_Error )
   cff_parser_run( CFF_Parser  parser,
                   FT_Byte*    start,
                   FT_Byte*    limit );
+
+
+  enum
+  {
+    cff_kind_none = 0,
+    cff_kind_num,
+    cff_kind_fixed,
+    cff_kind_fixed_thousand,
+    cff_kind_string,
+    cff_kind_bool,
+    cff_kind_delta,
+    cff_kind_callback,
+
+    cff_kind_max  /* do not remove */
+  };
+
+
+  /* now generate handlers for the most simple fields */
+  typedef FT_Error  (*CFF_Field_Reader)( CFF_Parser  parser );
+
+  typedef struct  CFF_Field_Handler_
+  {
+    int               kind;
+    int               code;
+    FT_UInt           offset;
+    FT_Byte           size;
+    CFF_Field_Reader  reader;
+    FT_UInt           array_max;
+    FT_UInt           count_offset;
+
+  } CFF_Field_Handler;
 
 
 FT_END_HEADER

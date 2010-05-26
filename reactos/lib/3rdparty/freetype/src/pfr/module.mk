@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += PFR_DRIVER
 
 define PFR_DRIVER
-$(OPEN_DRIVER)pfr_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, pfr_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)pfr       $(ECHO_DRIVER_DESC)PFR/TrueDoc font files with extension *.pfr$(ECHO_DRIVER_DONE)
 endef
 

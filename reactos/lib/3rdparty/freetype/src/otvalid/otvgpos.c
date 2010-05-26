@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType GPOS table validation (body).                               */
 /*                                                                         */
-/*  Copyright 2002, 2004, 2005, 2006 by                                    */
+/*  Copyright 2002, 2004, 2005, 2006, 2007, 2008 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -124,8 +124,8 @@
     Array1     = FT_NEXT_USHORT( p );
     Array2     = FT_NEXT_USHORT( p );
 
-    otv_Coverage_validate( table + Coverage1, valid );
-    otv_Coverage_validate( table + Coverage2, valid );
+    otv_Coverage_validate( table + Coverage1, valid, -1 );
+    otv_Coverage_validate( table + Coverage2, valid, -1 );
 
     otv_MarkArray_validate( table + Array1, valid );
 
@@ -191,7 +191,7 @@
 #endif
 
     if ( format >= 0x100 )
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
 
     for ( count = 4; count > 0; count-- )
     {
@@ -209,7 +209,7 @@
     {
       if ( format & 1 )
       {
-        FT_UInt   table_size;
+        FT_PtrDist  table_size;
 
         OTV_OPTIONAL_TABLE( device );
 
@@ -294,7 +294,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -376,7 +376,7 @@
         Coverage    = FT_NEXT_USHORT( p );
         ValueFormat = FT_NEXT_USHORT( p );
 
-        otv_Coverage_validate( table + Coverage, valid );
+        otv_Coverage_validate( table + Coverage, valid, -1 );
         otv_ValueRecord_validate( p, ValueFormat, valid ); /* Value */
       }
       break;
@@ -395,7 +395,7 @@
 
         len_value = otv_value_length( ValueFormat );
 
-        otv_Coverage_validate( table + Coverage, valid );
+        otv_Coverage_validate( table + Coverage, valid, ValueCount );
 
         OTV_LIMIT_CHECK( ValueCount * len_value );
 
@@ -409,7 +409,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -498,7 +498,7 @@
 
         OTV_TRACE(( " (PairSetCount = %d)\n", PairSetCount ));
 
-        otv_Coverage_validate( table + Coverage, valid );
+        otv_Coverage_validate( table + Coverage, valid, -1 );
 
         OTV_LIMIT_CHECK( PairSetCount * 2 );
 
@@ -530,7 +530,7 @@
         len_value1 = otv_value_length( ValueFormat1 );
         len_value2 = otv_value_length( ValueFormat2 );
 
-        otv_Coverage_validate( table + Coverage, valid );
+        otv_Coverage_validate( table + Coverage, valid, -1 );
         otv_ClassDef_validate( table + ClassDef1, valid );
         otv_ClassDef_validate( table + ClassDef2, valid );
 
@@ -558,7 +558,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -605,7 +605,7 @@
 
         OTV_TRACE(( " (EntryExitCount = %d)\n", EntryExitCount ));
 
-        otv_Coverage_validate( table + Coverage, valid );
+        otv_Coverage_validate( table + Coverage, valid, EntryExitCount );
 
         OTV_LIMIT_CHECK( EntryExitCount * 4 );
 
@@ -629,7 +629,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -644,7 +644,10 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  /* sets valid->extra2 (0) */
+  /* UNDOCUMENTED (in OpenType 1.5):              */
+  /* BaseRecord tables can contain NULL pointers. */
+
+  /* sets valid->extra2 (1) */
 
   static void
   otv_MarkBasePos_validate( FT_Bytes       table,
@@ -664,13 +667,13 @@
     switch ( PosFormat )
     {
     case 1:
-      valid->extra2 = 0;
+      valid->extra2 = 1;
       OTV_NEST2( MarkBasePosFormat1, BaseArray );
       OTV_RUN( table, valid );
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -711,7 +714,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -752,7 +755,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -811,7 +814,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -872,7 +875,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -908,7 +911,8 @@
     {
     case 1:     /* ExtensionPosFormat1 */
       {
-        FT_UInt            ExtensionLookupType, ExtensionOffset;
+        FT_UInt            ExtensionLookupType;
+        FT_ULong           ExtensionOffset;
         OTV_Validate_Func  validate;
 
 
@@ -925,7 +929,7 @@
       break;
 
     default:
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
     }
 
     OTV_EXIT;
@@ -989,7 +993,7 @@
     OTV_LIMIT_CHECK( 10 );
 
     if ( FT_NEXT_ULONG( p ) != 0x10000UL )      /* Version */
-      FT_INVALID_DATA;
+      FT_INVALID_FORMAT;
 
     ScriptList  = FT_NEXT_USHORT( p );
     FeatureList = FT_NEXT_USHORT( p );

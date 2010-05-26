@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (specification).                               */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006 by                              */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009 by                  */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -84,7 +84,7 @@ FT_BEGIN_HEADER
    *     is too closed (this is useful to avoid unpleasant spikes
    *     in beveled rendering).
    */
-  typedef enum
+  typedef enum  FT_Stroker_LineJoin_
   {
     FT_STROKER_LINEJOIN_ROUND = 0,
     FT_STROKER_LINEJOIN_BEVEL,
@@ -115,7 +115,7 @@ FT_BEGIN_HEADER
    *     The end of lines is rendered as a square around the
    *     last point.
    */
-  typedef enum
+  typedef enum  FT_Stroker_LineCap_
   {
     FT_STROKER_LINECAP_BUTT = 0,
     FT_STROKER_LINECAP_ROUND,
@@ -149,7 +149,7 @@ FT_BEGIN_HEADER
    *   You can however use @FT_Outline_GetInsideBorder and
    *   @FT_Outline_GetOutsideBorder to get these.
    */
-  typedef enum
+  typedef enum  FT_StrokerBorder_
   {
     FT_STROKER_BORDER_LEFT = 0,
     FT_STROKER_BORDER_RIGHT
@@ -171,7 +171,7 @@ FT_BEGIN_HEADER
    *     The source outline handle.
    *
    * @return:
-   *   The border index.  @FT_STROKER_BORDER_LEFT for empty or invalid
+   *   The border index.  @FT_STROKER_BORDER_RIGHT for empty or invalid
    *   outlines.
    */
   FT_EXPORT( FT_StrokerBorder )
@@ -216,7 +216,7 @@ FT_BEGIN_HEADER
    *     A new stroker object handle.  NULL in case of error.
    *
    * @return:
-   *    FreeType error code.  0 means success.
+   *    FreeType error code.  0~means success.
    */
   FT_EXPORT( FT_Error )
   FT_Stroker_New( FT_Library   library,
@@ -249,7 +249,7 @@ FT_BEGIN_HEADER
    *     expressed as 16.16 fixed point value.
    *
    * @note:
-   *   The radius is expressed in the same units that the outline
+   *   The radius is expressed in the same units as the outline
    *   coordinates.
    */
   FT_EXPORT( void )
@@ -297,18 +297,18 @@ FT_BEGIN_HEADER
    *     The source outline.
    *
    *   opened ::
-   *     A boolean.  If 1, the outline is treated as an open path instead
+   *     A boolean.  If~1, the outline is treated as an open path instead
    *     of a closed one.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
-   *   If `opened' is 0 (the default), the outline is treated as a closed
-   *   path, and the stroker will generate two distinct `border' outlines.
+   *   If `opened' is~0 (the default), the outline is treated as a closed
+   *   path, and the stroker generates two distinct `border' outlines.
    *
-   *   If `opened' is 1, the outline is processed as an open path, and the
-   *   stroker will generate a single `stroke' outline.
+   *   If `opened' is~1, the outline is processed as an open path, and the
+   *   stroker generates a single `stroke' outline.
    *
    *   This function calls @FT_Stroker_Rewind automatically.
    */
@@ -334,10 +334,10 @@ FT_BEGIN_HEADER
    *     A pointer to the start vector.
    *
    *   open ::
-   *     A boolean.  If 1, the sub-path is treated as an open one.
+   *     A boolean.  If~1, the sub-path is treated as an open one.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   This function is useful when you need to stroke a path that is
@@ -362,11 +362,11 @@ FT_BEGIN_HEADER
    *     The target stroker handle.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   You should call this function after @FT_Stroker_BeginSubPath.
-   *   If the subpath was not `opened', this function will `draw' a
+   *   If the subpath was not `opened', this function `draws' a
    *   single line segment to the start position when needed.
    */
   FT_EXPORT( FT_Error )
@@ -390,7 +390,7 @@ FT_BEGIN_HEADER
    *     A pointer to the destination point.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   You should call this function between @FT_Stroker_BeginSubPath and
@@ -421,7 +421,7 @@ FT_BEGIN_HEADER
    *     A pointer to the destination point.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   You should call this function between @FT_Stroker_BeginSubPath and
@@ -456,7 +456,7 @@ FT_BEGIN_HEADER
    *     A pointer to the destination point.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   You should call this function between @FT_Stroker_BeginSubPath and
@@ -476,7 +476,7 @@ FT_BEGIN_HEADER
    *
    * @description:
    *   Call this function once you have finished parsing your paths
-   *   with the stroker.  It will return the number of points and
+   *   with the stroker.  It returns the number of points and
    *   contours necessary to export one of the `border' or `stroke'
    *   outlines generated by the stroker.
    *
@@ -495,7 +495,7 @@ FT_BEGIN_HEADER
    *     The number of contours.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    *
    * @note:
    *   When an outline, or a sub-path, is `closed', the stroker generates
@@ -525,8 +525,8 @@ FT_BEGIN_HEADER
    *   export the corresponding border to your own @FT_Outline
    *   structure.
    *
-   *   Note that this function will append the border points and
-   *   contours to your outline, but will not try to resize its
+   *   Note that this function appends the border points and
+   *   contours to your outline, but does not try to resize its
    *   arrays.
    *
    * @input:
@@ -583,7 +583,7 @@ FT_BEGIN_HEADER
    *     The number of contours.
    *
    * @return:
-   *   FreeType error code.  0 means success.
+   *   FreeType error code.  0~means success.
    */
   FT_EXPORT( FT_Error )
   FT_Stroker_GetCounts( FT_Stroker  stroker,
@@ -598,10 +598,10 @@ FT_BEGIN_HEADER
    *
    * @description:
    *   Call this function after @FT_Stroker_GetBorderCounts to
-   *   export the all borders to your own @FT_Outline structure.
+   *   export all borders to your own @FT_Outline structure.
    *
-   *   Note that this function will append the border points and
-   *   contours to your outline, but will not try to resize its
+   *   Note that this function appends the border points and
+   *   contours to your outline, but does not try to resize its
    *   arrays.
    *
    * @input:
@@ -649,11 +649,11 @@ FT_BEGIN_HEADER
    *     A stroker handle.
    *
    *   destroy ::
-   *     A Boolean.  If 1, the source glyph object is destroyed
+   *     A Boolean.  If~1, the source glyph object is destroyed
    *     on success.
    *
    * @return:
-   *    FreeType error code.  0 means success.
+   *    FreeType error code.  0~means success.
    *
    * @note:
    *   The source glyph is untouched in case of error.
@@ -682,15 +682,15 @@ FT_BEGIN_HEADER
    *     A stroker handle.
    *
    *   inside ::
-   *     A Boolean.  If 1, return the inside border, otherwise
+   *     A Boolean.  If~1, return the inside border, otherwise
    *     the outside border.
    *
    *   destroy ::
-   *     A Boolean.  If 1, the source glyph object is destroyed
+   *     A Boolean.  If~1, the source glyph object is destroyed
    *     on success.
    *
    * @return:
-   *    FreeType error code.  0 means success.
+   *    FreeType error code.  0~means success.
    *
    * @note:
    *   The source glyph is untouched in case of error.

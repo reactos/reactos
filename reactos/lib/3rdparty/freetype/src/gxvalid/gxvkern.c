@@ -256,7 +256,7 @@
   gxv_kern_subtable_fmt1_entry_validate(
     FT_Byte                         state,
     FT_UShort                       flags,
-    GXV_StateTable_GlyphOffsetDesc  glyphOffset,
+    GXV_StateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                        table,
     FT_Bytes                        limit,
     GXV_Validator                   valid )
@@ -268,7 +268,7 @@
     FT_UShort  kernValue;
 
     FT_UNUSED( state );
-    FT_UNUSED( glyphOffset );
+    FT_UNUSED( glyphOffset_p );
 
 
     push        = (FT_UShort)( ( flags >> 15 ) & 1      );

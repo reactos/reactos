@@ -5,7 +5,7 @@
 /*    FreeType synthesizing code for emboldening and slanting              */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2006 by                                     */
+/*  Copyright 2000-2001, 2003, 2006, 2008 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,7 +23,7 @@
   /*************************************************************************/
   /*************************************************************************/
   /*********                                                       *********/
-  /*********        WARNING, THIS IS ALPHA CODE, THIS API          *********/
+  /*********        WARNING, THIS IS ALPHA CODE!  THIS API         *********/
   /*********    IS DUE TO CHANGE UNTIL STRICTLY NOTIFIED BY THE    *********/
   /*********            FREETYPE DEVELOPMENT TEAM                  *********/
   /*********                                                       *********/
@@ -32,6 +32,13 @@
   /*************************************************************************/
   /*************************************************************************/
   /*************************************************************************/
+
+
+  /* Main reason for not lifting the functions in this module to a  */
+  /* `standard' API is that the used parameters for emboldening and */
+  /* slanting are not configurable.  Consider the functions as a    */
+  /* code resource which should be copied into the application and  */
+  /* adapted to the particular needs.                               */
 
 
 #ifndef __FTSYNTH_H__
@@ -50,20 +57,20 @@
 
 FT_BEGIN_HEADER
 
-  /* Make sure slot owns slot->bitmap. */
-  FT_EXPORT( FT_Error )
-  FT_GlyphSlot_Own_Bitmap( FT_GlyphSlot  slot );
-
-  /* Do not use this function directly!  Copy the code to */
-  /* your application and modify it to suit your need.    */
+  /* Embolden a glyph by a `reasonable' value (which is highly a matter of */
+  /* taste).  This function is actually a convenience function, providing  */
+  /* a wrapper for @FT_Outline_Embolden and @FT_Bitmap_Embolden.           */
+  /*                                                                       */
+  /* For emboldened outlines the metrics are estimates only; if you need   */
+  /* precise values you should call @FT_Outline_Get_CBox.                  */
   FT_EXPORT( void )
   FT_GlyphSlot_Embolden( FT_GlyphSlot  slot );
 
-
+  /* Slant an outline glyph to the right by about 12 degrees. */
   FT_EXPORT( void )
   FT_GlyphSlot_Oblique( FT_GlyphSlot  slot );
 
- /* */
+  /* */
 
 FT_END_HEADER
 

@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += TYPE1_DRIVER
 
 define TYPE1_DRIVER
-$(OPEN_DRIVER)t1_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, t1_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)type1     $(ECHO_DRIVER_DESC)Postscript font files with extension *.pfa or *.pfb$(ECHO_DRIVER_DONE)
 endef
 

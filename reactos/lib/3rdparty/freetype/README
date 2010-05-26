@@ -9,8 +9,8 @@
   is called `libttf'.  They are *not* compatible!
 
 
-  FreeType 2.3.5
-  ==============
+  FreeType 2.3.11
+  ===============
 
   Please   read   the  docs/CHANGES   file,   it  contains   IMPORTANT
   INFORMATION.
@@ -26,9 +26,9 @@
 
   and download one of the following files.
 
-    freetype-doc-2.3.5.tar.bz2
-    freetype-doc-2.3.5.tar.gz
-    ftdoc235.zip
+    freetype-doc-2.3.11.tar.bz2
+    freetype-doc-2.3.11.tar.gz
+    ftdoc2311.zip
 
 
   Bugs
@@ -51,7 +51,7 @@
 
 ----------------------------------------------------------------------
 
-Copyright 2006, 2007 by
+Copyright 2006, 2007, 2008, 2009 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This  file is  part of  the FreeType  project, and  may only  be used,

@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) psnames ;
 
   if $(FT2_MULTI)
   {
-    _sources = psmodule ;
+    _sources = psmodule pspic ;
   }
   else
   {
