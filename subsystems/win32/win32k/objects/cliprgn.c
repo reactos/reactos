@@ -52,21 +52,24 @@ CLIPPING_UpdateGCRegion(DC* Dc)
 
    if((CombinedRegion = RGNOBJAPI_Lock(Dc->rosdc.hGCClipRgn, NULL)))
    {
-     if (Dc->rosdc.CombinedClip != NULL)
-        IntEngDeleteClipRegion(Dc->rosdc.CombinedClip);
+     CLIPOBJ *CombinedClip;
 
-     Dc->rosdc.CombinedClip = IntEngCreateClipRegion(
-        CombinedRegion->rdh.nCount,
+     CombinedClip = IntEngCreateClipRegion(CombinedRegion->rdh.nCount,
         CombinedRegion->Buffer,
         &CombinedRegion->rdh.rcBound);
 
      RGNOBJAPI_Unlock(CombinedRegion);
-   }
 
-   if ( NULL == Dc->rosdc.CombinedClip )
-   {
+     if ( !CombinedClip )
+     {
        DPRINT1("IntEngCreateClipRegion() failed\n");
        return ERROR;
+     }
+
+     if(Dc->rosdc.CombinedClip != NULL)
+       IntEngDeleteClipRegion(Dc->rosdc.CombinedClip);
+
+      Dc->rosdc.CombinedClip = CombinedClip ;
    }
 
    return NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, -Dc->ptlDCOrig.x, -Dc->ptlDCOrig.y);
@@ -137,7 +140,7 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
     {
       PROSRGNDATA Rgn;
       RECTL rect;
-      if((Rgn = RGNOBJAPI_Lock(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NULL)))
+      if((Rgn = RGNOBJAPI_Lock(dc->prgnVis->BaseObject.hHmgr, NULL)))
       {
         REGION_GetRgnBox(Rgn, &rect);
         RGNOBJAPI_Unlock(Rgn);
@@ -185,13 +188,49 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    PROSRGNDATA Rgn;
    INT retval;
    PDC dc;
+   HRGN hRgnNew, hRgn = NULL;
 
    if (!(dc = DC_LockDc(hDC)))
    {
       return ERROR;
    }
 
-   if (!(Rgn = RGNOBJAPI_Lock(dc->rosdc.hGCClipRgn, NULL)))
+   /* FIXME! Rao and Vis only! */
+   if (dc->prgnAPI) // APIRGN
+   {
+      hRgn = ((PROSRGNDATA)dc->prgnAPI)->BaseObject.hHmgr;
+   }
+   else if (dc->dclevel.prgnMeta) // METARGN
+   {
+      hRgn = ((PROSRGNDATA)dc->dclevel.prgnMeta)->BaseObject.hHmgr;
+   }
+   else
+   {
+      hRgn = dc->rosdc.hClipRgn; // CLIPRGN
+   }
+
+   if (hRgn)
+   {
+      hRgnNew = IntSysCreateRectRgn( 0, 0, 0, 0 );
+
+      NtGdiCombineRgn(hRgnNew, dc->prgnVis->BaseObject.hHmgr, hRgn, RGN_AND);
+
+      if (!(Rgn = RGNOBJAPI_Lock(hRgnNew, NULL)))
+      {
+         DC_UnlockDc(dc);
+         return ERROR;
+      }
+
+      retval = REGION_GetRgnBox(Rgn, rc);
+
+      REGION_FreeRgnByHandle(hRgnNew);
+      RGNOBJAPI_Unlock(Rgn);
+
+      DC_UnlockDc(dc);
+      return retval;
+   }
+
+   if (!(Rgn = RGNOBJAPI_Lock(dc->prgnVis->BaseObject.hHmgr, NULL)))
    {
       DC_UnlockDc(dc);
       return ERROR;
@@ -269,7 +308,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->rosdc.hClipRgn)
       {
          dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->rosdc.hClipRgn, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NewRgn, RGN_DIFF);
+         NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->prgnVis->BaseObject.hHmgr, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
       else
@@ -444,7 +483,7 @@ IntGdiSetMetaRgn(PDC pDC)
   {
      if ( pDC->dclevel.prgnClip )
      {
-        TempRgn = IntSysCreateRectRgn(0,0,0,0);
+        TempRgn = IntSysCreateRectpRgn(0,0,0,0);
         if (TempRgn)
         {
            Ret = IntGdiCombineRgn( TempRgn,
@@ -510,56 +549,76 @@ NEW_CLIPPING_UpdateGCRegion(PDC pDC)
 {
   CLIPOBJ * co;
 
-  if (!pDC->prgnVis) return 0;
+  /* Must have VisRgn set to a valid state! */
+  if (!pDC->prgnVis) return ERROR;
 
   if (pDC->prgnAPI)
   {
      REGION_Delete(pDC->prgnAPI);
-     pDC->prgnAPI = IntSysCreateRectRgn(0,0,0,0);
+     pDC->prgnAPI = IntSysCreateRectpRgn(0,0,0,0);
   }
 
   if (pDC->prgnRao)
   {
      REGION_Delete(pDC->prgnRao);
-     pDC->prgnRao = IntSysCreateRectRgn(0,0,0,0);
+     pDC->prgnRao = IntSysCreateRectpRgn(0,0,0,0);
   }
 
   if (pDC->dclevel.prgnMeta && pDC->dclevel.prgnClip)
   {
      IntGdiCombineRgn( pDC->prgnAPI,
-              pDC->dclevel.prgnClip,
-              pDC->dclevel.prgnMeta,
-                            RGN_AND);
+                       pDC->dclevel.prgnClip,
+                       pDC->dclevel.prgnMeta,
+                       RGN_AND);
   }
   else
   {
      if (pDC->dclevel.prgnClip)
+     {
         IntGdiCombineRgn( pDC->prgnAPI,
-                 pDC->dclevel.prgnClip,
-                                  NULL,
-                              RGN_COPY);
+                          pDC->dclevel.prgnClip,
+                          NULL,
+                          RGN_COPY);
+     }
      else if (pDC->dclevel.prgnMeta)
+     {
         IntGdiCombineRgn( pDC->prgnAPI,
-                 pDC->dclevel.prgnMeta,
-                                  NULL,
-                              RGN_COPY);
+                          pDC->dclevel.prgnMeta,
+                          NULL,
+                          RGN_COPY);
+     }
   }
 
   IntGdiCombineRgn( pDC->prgnRao,
                     pDC->prgnVis,
                     pDC->prgnAPI,
-                         RGN_AND);
+                    RGN_AND);
 
-  RtlCopyMemory(&pDC->erclClip, &((PROSRGNDATA)pDC->prgnRao)->rdh.rcBound , sizeof(RECTL));
+  RtlCopyMemory(&pDC->erclClip,
+                &((PROSRGNDATA)pDC->prgnRao)->rdh.rcBound,
+                sizeof(RECTL));
+
   pDC->fs &= ~DC_FLAG_DIRTY_RAO;
 
-//  if (Dc->CombinedClip != NULL) IntEngDeleteClipRegion(Dc->CombinedClip);
+  IntGdiOffsetRgn(pDC->prgnRao, pDC->ptlDCOrig.x, pDC->ptlDCOrig.y);
+
+  // pDC->co should be used. Example, CLIPOBJ_cEnumStart uses XCLIPOBJ to build
+  // the rects from region objects rects in pClipRgn->Buffer.
+  // With pDC->co.pClipRgn->Buffer,
+  // pDC->co.pClipRgn = pDC->prgnRao ? pDC->prgnRao : pDC->prgnVis;
 
   co = IntEngCreateClipRegion( ((PROSRGNDATA)pDC->prgnRao)->rdh.nCount,
-                           ((PROSRGNDATA)pDC->prgnRao)->Buffer,
+                               ((PROSRGNDATA)pDC->prgnRao)->Buffer,
                                  &pDC->erclClip);
+  if (co)
+  {
+    if (pDC->rosdc.CombinedClip != NULL)
+      IntEngDeleteClipRegion(pDC->rosdc.CombinedClip);
 
-  return REGION_Complexity(pDC->prgnRao);
+    pDC->rosdc.CombinedClip = co;
+  }
+
+  return IntGdiOffsetRgn(pDC->prgnRao, -pDC->ptlDCOrig.x, -pDC->ptlDCOrig.y);
 }
 
 /* EOF */
