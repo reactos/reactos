@@ -232,7 +232,9 @@ static ULONGLONG NtfsReadAttribute(PNTFS_VOLUME_INFO Volume, PNTFS_ATTR_CONTEXT 
 
     AlreadyRead = 0;
 
-    if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
+    // FIXME: Cache seems to be non-working. Disable it for now
+    //if(Context->CacheRunOffset <= Offset && Offset < Context->CacheRunOffset + Context->CacheRunLength * Volume->ClusterSize)
+    if (0)
     {
         DataRun = Context->CacheRun;
         LastLCN = Context->CacheRunLastLCN;
