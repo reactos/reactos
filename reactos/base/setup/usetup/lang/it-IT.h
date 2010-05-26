@@ -94,7 +94,7 @@ static MUI_ENTRY itITWelcomePageEntries[] =
     {
         8, 
         19,
-        "\x07  Premere L per vedere i termini e condizioni della licenza",
+        "\x07  Premere L per vedere i termini e condizioni della licenza.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -158,7 +158,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         6, 
         12,
-        "Ci sono delle limitazioni:",
+        "Si applicano le seguenti limitazioni:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -358,7 +358,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6, 
         8,
-        "La lista inferiore mostra la configurazione della periferica corrente.",
+        "L'elenco che segue mostra le impostazioni correnti delle periferiche.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -382,7 +382,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         3,
         14,
-        "Nazionalit… tastiera:",
+        "Layout di tastiera:",
         TEXT_STYLE_NORMAL
     },
     {
@@ -393,7 +393,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     },
     {
         25, 
-        16, "Procedere con questa configurazione",
+        16, "Accettare queste impostazioni",
         TEXT_STYLE_NORMAL
     },
     {
@@ -423,7 +423,7 @@ static MUI_ENTRY itITDevicePageEntries[] =
     {
         6, 
         24,
-        "\"Procedere con questa configurazione\" e premere INVIO.",
+        "\"Accettare queste impostazioni\" e premere INVIO.",
         TEXT_STYLE_NORMAL
     },
     {

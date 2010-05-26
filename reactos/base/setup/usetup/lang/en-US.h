@@ -93,7 +93,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Press L to view the ReactOS Licensing Terms and Conditions",
+        "\x07  Press L to view the ReactOS Licensing Terms and Conditions.",
         TEXT_STYLE_NORMAL
     },
     {
