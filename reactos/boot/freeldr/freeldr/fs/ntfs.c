@@ -1,6 +1,7 @@
 /*
  *  FreeLoader NTFS support
  *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
+ *  Copyright (C) 2009-2010  Hervé Poussineau
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -37,6 +38,7 @@ typedef struct _NTFS_VOLUME_INFO
     /* FIXME: MFTContext is never freed. */
     PNTFS_ATTR_CONTEXT MFTContext;
     ULONG DeviceId;
+    PUCHAR TemporarySector;
 } NTFS_VOLUME_INFO;
 
 PNTFS_VOLUME_INFO NtfsVolumes[MAX_FDS];
@@ -147,10 +149,17 @@ static BOOLEAN NtfsDiskRead(PNTFS_VOLUME_INFO Volume, ULONGLONG Offset, ULONGLON
         ret = ArcSeek(Volume->DeviceId, &Position, SeekAbsolute);
         if (ret != ESUCCESS)
             return FALSE;
-        ReadLength = min(Length, Volume->BootSector.BytesPerSector - (Offset % Volume->BootSector.BytesPerSector));
-        ret = ArcRead(Volume->DeviceId, Buffer, ReadLength, &Count);
-        if (ret != ESUCCESS || Count != ReadLength)
+        ret = ArcRead(Volume->DeviceId, Volume->TemporarySector, Volume->BootSector.BytesPerSector, &Count);
+        if (ret != ESUCCESS || Count != Volume->BootSector.BytesPerSector)
             return FALSE;
+        ReadLength = min(Length, Volume->BootSector.BytesPerSector - (Offset % Volume->BootSector.BytesPerSector));
+
+        //
+        // Copy interesting data
+        //
+        RtlCopyMemory(Buffer,
+                      &Volume->TemporarySector[Offset % Volume->BootSector.BytesPerSector],
+                      ReadLength);
 
         //
         // Move to unfilled buffer part
@@ -792,6 +801,7 @@ LONG NtfsOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
         return ENOENT;
     }
 
+    FsSetDeviceSpecific(*FileId, FileHandle);
     return ESUCCESS;
 }
 
@@ -927,6 +937,18 @@ const DEVVTBL* NtfsMount(ULONG DeviceId)
     if (ret != ESUCCESS || Count != Volume->MftRecordSize)
     {
         FileSystemError("Failed to read the Master File Table record.");
+        MmHeapFree(Volume->MasterFileTable);
+        MmHeapFree(Volume);
+        return NULL;
+    }
+
+    //
+    // Keep room to read partial sectors
+    //
+    Volume->TemporarySector = MmHeapAlloc(Volume->BootSector.BytesPerSector);
+    if (!Volume->TemporarySector)
+    {
+        FileSystemError("Failed to allocate memory.");
         MmHeapFree(Volume->MasterFileTable);
         MmHeapFree(Volume);
         return NULL;
