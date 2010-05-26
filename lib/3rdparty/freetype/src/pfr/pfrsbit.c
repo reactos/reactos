@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR bitmap loader (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006 by                                          */
+/*  Copyright 2002, 2003, 2006, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -600,8 +600,8 @@
 
     /* get the bitmap metrics */
     {
-      FT_Long   xpos, ypos, advance;
-      FT_UInt   xsize, ysize, format;
+      FT_Long   xpos = 0, ypos = 0, advance = 0;
+      FT_UInt   xsize = 0, ysize = 0, format = 0;
       FT_Byte*  p;
 
 
@@ -630,18 +630,35 @@
                                        &xpos, &ypos,
                                        &xsize, &ysize,
                                        &advance, &format );
+
+      /*
+       * XXX: on 16bit system, we return an error for huge bitmap
+       *      which causes a size truncation, because truncated
+       *      size properties makes bitmap glyph broken.
+       */
+      if ( xpos > FT_INT_MAX || ( ypos + ysize ) > FT_INT_MAX )
+      {
+        FT_TRACE1(( "pfr_slot_load_bitmap:" ));
+        FT_TRACE1(( "huge bitmap glyph %dx%d over FT_GlyphSlot\n",
+                     xpos, ypos ));
+        error = PFR_Err_Invalid_Pixel_Size;
+      }
+
       if ( !error )
       {
         glyph->root.format = FT_GLYPH_FORMAT_BITMAP;
 
         /* Set up glyph bitmap and metrics */
+
+        /* XXX: needs casts to fit FT_Bitmap.{width|rows|pitch} */
         glyph->root.bitmap.width      = (FT_Int)xsize;
         glyph->root.bitmap.rows       = (FT_Int)ysize;
-        glyph->root.bitmap.pitch      = (FT_Long)( xsize + 7 ) >> 3;
+        glyph->root.bitmap.pitch      = (FT_Int)( xsize + 7 ) >> 3;
         glyph->root.bitmap.pixel_mode = FT_PIXEL_MODE_MONO;
 
-        glyph->root.metrics.width        = (FT_Long)xsize << 6;
-        glyph->root.metrics.height       = (FT_Long)ysize << 6;
+        /* XXX: needs casts to fit FT_Glyph_Metrics.{width|height} */
+        glyph->root.metrics.width        = (FT_Pos)xsize << 6;
+        glyph->root.metrics.height       = (FT_Pos)ysize << 6;
         glyph->root.metrics.horiBearingX = xpos << 6;
         glyph->root.metrics.horiBearingY = ypos << 6;
         glyph->root.metrics.horiAdvance  = FT_PIX_ROUND( ( advance >> 2 ) );
@@ -649,8 +666,9 @@
         glyph->root.metrics.vertBearingY = 0;
         glyph->root.metrics.vertAdvance  = size->root.metrics.height;
 
-        glyph->root.bitmap_left = xpos;
-        glyph->root.bitmap_top  = ypos + ysize;
+        /* XXX: needs casts fit FT_GlyphSlotRec.bitmap_{left|top} */
+        glyph->root.bitmap_left = (FT_Int)xpos;
+        glyph->root.bitmap_top  = (FT_Int)(ypos + ysize);
 
         /* Allocate and read bitmap data */
         {

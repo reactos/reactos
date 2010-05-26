@@ -20,6 +20,7 @@
 #include FT_INTERNAL_OBJECTS_H
 #include "pshrec.h"
 #include "pshalgo.h"
+#include "pshpic.h"
 
 
   /* the Postscript Hinter module structure */
@@ -92,30 +93,26 @@
   }
 
 
-  static
-  const PSHinter_Interface  pshinter_interface =
-  {
+  FT_DEFINE_PSHINTER_INTERFACE(pshinter_interface,
     pshinter_get_globals_funcs,
     pshinter_get_t1_funcs,
     pshinter_get_t2_funcs
-  };
+  )
 
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Module_Class  pshinter_module_class =
-  {
+  FT_DEFINE_MODULE(pshinter_module_class,
+
     0,
     sizeof ( PS_Hinter_ModuleRec ),
     "pshinter",
     0x10000L,
     0x20000L,
 
-    &pshinter_interface,            /* module-specific interface */
+    &FTPSHINTER_INTERFACE_GET,            /* module-specific interface */
 
     (FT_Module_Constructor)ps_hinter_init,
     (FT_Module_Destructor) ps_hinter_done,
     (FT_Module_Requester)  0        /* no additional interface for now */
-  };
-
+  )
 
 /* END */

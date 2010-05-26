@@ -8,7 +8,7 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2005, 2006, 2007 by David Turner.                            */
+/*  Copyright 2005, 2006, 2007, 2009 by David Turner.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -113,8 +113,8 @@
     {
       FT_Memory  memory = state->memory;
       FT_Error   error;
-      FT_UInt    old_size = state->stack_size;
-      FT_UInt    new_size = old_size;
+      FT_Offset  old_size = state->stack_size;
+      FT_Offset  new_size = old_size;
 
       new_size = new_size + ( new_size >> 1 ) + 4;
 
@@ -332,6 +332,9 @@
 
           while ( code >= 256U )
           {
+            if ( !state->prefix )
+              goto Eof;
+
             FTLZW_STACK_PUSH( state->suffix[code - 256] );
             code = state->prefix[code - 256];
           }

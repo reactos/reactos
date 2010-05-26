@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zutil.c,v 1.3 2006/04/29 07:31:16 wl Exp $ */
+/* @(#) $Id$ */
 
 #include "zutil.h"
 
@@ -49,7 +49,7 @@ void zmemzero(dest, len)
 }
 #endif
 
-#ifdef __TURBOC__
+#if defined( MSDOS ) && defined( __TURBOC__ ) && !defined( MY_ZCALLOC )
 #if (defined( __BORLANDC__) || !defined(SMALL_MEDIUM)) && !defined(__32BIT__)
 /* Small and medium model in Turbo C are for now limited to near allocation
  * with reduced MAX_WBITS and MAX_MEM_LEVEL
@@ -126,10 +126,10 @@ void  zcfree (voidpf opaque, voidpf ptr)
     Assert(0, "zcfree: ptr not found");
 }
 #endif
-#endif /* __TURBOC__ */
+#endif /* MSDOS && __TURBOC__ */
 
 
-#if defined(M_I86) && !defined(__32BIT__)
+#if defined(M_I86) && !defined(__32BIT__) && !defined( MY_ZCALLOC )
 /* Microsoft C in 16-bit mode */
 
 #  define MY_ZCALLOC

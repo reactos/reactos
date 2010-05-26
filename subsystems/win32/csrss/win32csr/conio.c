@@ -849,6 +849,15 @@ CSR_API(CsrWriteConsole)
     }
   Console = Buff->Header.Console;
 
+  if (Console->UnpauseEvent)
+    {
+      Status = NtDuplicateObject(GetCurrentProcess(), Console->UnpauseEvent,
+                                 ProcessData->Process, &Request->Data.WriteConsoleRequest.UnpauseEvent,
+                                 SYNCHRONIZE, 0, 0);
+      ConioUnlockScreenBuffer(Buff);
+      return NT_SUCCESS(Status) ? STATUS_PENDING : Status;
+    }
+
   if(Request->Data.WriteConsoleRequest.Unicode)
     {
       Length = WideCharToMultiByte(Console->OutputCodePage, 0,
@@ -953,6 +962,7 @@ ConioDeleteConsole(Object_t *Object)
     }
 
   CloseHandle(Console->ActiveEvent);
+  if (Console->UnpauseEvent) CloseHandle(Console->UnpauseEvent);
   DeleteCriticalSection(&Console->Lock);
   RtlFreeUnicodeString(&Console->Title);
   IntDeleteAllAliases(Console->Aliases);
@@ -967,12 +977,61 @@ CsrInitConsoleSupport(VOID)
   /* Should call LoadKeyboardLayout */
 }
 
+VOID FASTCALL
+ConioPause(PCSRSS_CONSOLE Console, UINT Flags)
+{
+    Console->PauseFlags |= Flags;
+    if (!Console->UnpauseEvent)
+        Console->UnpauseEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+}
+
+VOID FASTCALL
+ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags)
+{
+    Console->PauseFlags &= ~Flags;
+    if (Console->PauseFlags == 0 && Console->UnpauseEvent)
+    {
+        SetEvent(Console->UnpauseEvent);
+        CloseHandle(Console->UnpauseEvent);
+        Console->UnpauseEvent = NULL;
+    }
+}
+
 static VOID FASTCALL
 ConioProcessChar(PCSRSS_CONSOLE Console,
                  ConsoleInput *KeyEventRecord)
 {
   BOOL updown;
   ConsoleInput *TempInput;
+
+  if (KeyEventRecord->InputEvent.EventType == KEY_EVENT &&
+      KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown)
+    {
+      WORD vk = KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode;
+      if (!(Console->PauseFlags & PAUSED_FROM_KEYBOARD))
+        {
+          DWORD cks = KeyEventRecord->InputEvent.Event.KeyEvent.dwControlKeyState;
+          if (Console->Mode & ENABLE_LINE_INPUT &&
+              (vk == VK_PAUSE || (vk == 'S' && 
+                                  (cks & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) &&
+                                  !(cks & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)))))
+            {
+              ConioPause(Console, PAUSED_FROM_KEYBOARD);
+              HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
+              return;
+            }
+        }
+      else
+        {
+          if ((vk < VK_SHIFT || vk > VK_CAPITAL) && vk != VK_LWIN &&
+              vk != VK_RWIN && vk != VK_NUMLOCK && vk != VK_SCROLL)
+            {
+              ConioUnpause(Console, PAUSED_FROM_KEYBOARD);
+              HeapFree(Win32CsrApiHeap, 0, KeyEventRecord);
+              return;
+            }
+        }
+    }
 
   if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT)))
     {

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 parser (specification).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2008 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -64,10 +64,10 @@ FT_BEGIN_HEADER
     FT_Stream     stream;
 
     FT_Byte*      base_dict;
-    FT_Long       base_len;
+    FT_ULong      base_len;
 
     FT_Byte*      private_dict;
-    FT_Long       private_len;
+    FT_ULong      private_len;
 
     FT_Bool       in_pfb;
     FT_Bool       in_memory;

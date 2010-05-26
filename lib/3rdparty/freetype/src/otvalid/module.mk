@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += OTVALID_MODULE
 
 define OTVALID_MODULE
-$(OPEN_DRIVER)otv_module_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Module_Class, otv_module_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)otvalid   $(ECHO_DRIVER_DESC)OpenType validation module$(ECHO_DRIVER_DONE)
 endef
 

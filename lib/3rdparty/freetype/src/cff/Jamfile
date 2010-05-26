@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) cff ;
 
   if $(FT2_MULTI)
   {
-    _sources = cffdrivr cffgload cffload cffobjs cffparse cffcmap ;
+    _sources = cffdrivr cffgload cffload cffobjs cffparse cffcmap cffpic ;
   }
   else
   {

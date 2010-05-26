@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2005, 2007 by
+# Copyright 1996-2000, 2003, 2005, 2007, 2008 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -21,7 +21,7 @@
 usage: %s <output-file>
 
   This python script generates the glyph names tables defined in the
-  PSNames module.
+  `psnames' module.
 
   Its single argument is the name of the header file to be created.
 """
@@ -5011,7 +5011,7 @@ def dump_array( the_array, write, array_name ):
   """dumps a given encoding"""
 
   write( "  static const unsigned char  " + array_name +
-         "[" + repr( len( the_array ) ) + "] =\n" )
+         "[" + repr( len( the_array ) ) + "L] =\n" )
   write( "  {\n" )
 
   line  = ""
@@ -5067,7 +5067,7 @@ def main():
   write( "/*                                                                         */\n" )
   write( "/*    PostScript glyph names.                                              */\n" )
   write( "/*                                                                         */\n" )
-  write( "/*  Copyright 2005 by                                                      */\n" )
+  write( "/*  Copyright 2005, 2008 by                                                */\n" )
   write( "/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */\n" )
   write( "/*                                                                         */\n" )
   write( "/*  This file is part of the FreeType project, and may only be used,       */\n" )
@@ -5117,6 +5117,9 @@ def main():
    *  The lookup function to get the Unicode value for a given string
    *  is defined below the table.
    */
+
+#ifdef FT_CONFIG_OPTION_ADOBE_GLYPH_LIST
+
 """ )
 
   dump_array( dict_array, write, "ft_adobe_glyph_list" )
@@ -5218,6 +5221,8 @@ def main():
   NotFound:
     return 0;
   }
+
+#endif /* FT_CONFIG_OPTION_ADOBE_GLYPH_LIST */
 
 """ )
 

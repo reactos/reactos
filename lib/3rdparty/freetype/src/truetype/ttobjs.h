@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (specification).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -99,6 +99,10 @@ FT_BEGIN_HEADER
     FT_Short       delta_shift;
 
     FT_Byte        instruct_control;
+    /* According to Greg Hitchcock from Microsoft, the `scan_control'     */
+    /* variable as documented in the TrueType specification is a 32-bit   */
+    /* integer; the high-word part holds the SCANTYPE value, the low-word */
+    /* part the SCANCTRL value.  We separate it into two fields.          */
     FT_Bool        scan_control;
     FT_Int         scan_type;
 
@@ -192,43 +196,11 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
-  /* Subglyph loading record.  Used to load composite components.          */
-  /*                                                                       */
-  typedef struct  TT_SubglyphRec_
-  {
-    FT_Long          index;        /* subglyph index; initialized with -1 */
-    FT_Bool          is_scaled;    /* is the subglyph scaled?             */
-    FT_Bool          is_hinted;    /* should it be hinted?                */
-    FT_Bool          preserve_pps; /* preserve phantom points?            */
-
-    FT_Long          file_offset;
-
-    FT_BBox          bbox;
-    FT_Pos           left_bearing;
-    FT_Pos           advance;
-
-    TT_GlyphZoneRec  zone;
-
-    FT_Long          arg1;         /* first argument                      */
-    FT_Long          arg2;         /* second argument                     */
-
-    FT_UShort        element_flag; /* current load element flag           */
-
-    TT_Transform     transform;    /* transformation matrix               */
-
-    FT_Vector        pp1, pp2;     /* phantom points (horizontal)         */
-    FT_Vector        pp3, pp4;     /* phantom points (vertical)           */
-
-  } TT_SubGlyphRec, *TT_SubGlyph_Stack;
-
-
-  /*************************************************************************/
-  /*                                                                       */
   /* A note regarding non-squared pixels:                                  */
   /*                                                                       */
   /* (This text will probably go into some docs at some time; for now, it  */
-  /*  is kept here to explain some definitions in the TIns_Metrics         */
-  /*  record).                                                             */
+  /* is kept here to explain some definitions in the TT_Size_Metrics       */
+  /* record).                                                              */
   /*                                                                       */
   /* The CVT is a one-dimensional array containing values that control     */
   /* certain important characteristics in a font, like the height of all   */

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2002, 2003 by
+# Copyright 2002, 2003, 2008 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -32,7 +32,8 @@ T42_DRV_SRC := $(T42_DIR)/t42objs.c  \
 # Type42 driver headers
 #
 T42_DRV_H := $(T42_DRV_SRC:%.c=%.h) \
-             $(T42_DIR)/t42error.h
+             $(T42_DIR)/t42error.h  \
+             $(T42_DIR)/t42types.h
 
 
 # Type42 driver object(s)

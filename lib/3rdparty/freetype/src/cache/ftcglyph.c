@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Glyph Image (FT_Glyph) cache (body).                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 2000-2001, 2003, 2004, 2006, 2009 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,8 +20,6 @@
 #include FT_CACHE_H
 #include "ftcglyph.h"
 #include FT_ERRORS_H
-#include FT_INTERNAL_OBJECTS_H
-#include FT_INTERNAL_DEBUG_H
 
 #include "ftccback.h"
 #include "ftcerror.h"
@@ -73,8 +71,8 @@
     FT_UNUSED( cache );
 
 
-    return FT_BOOL(  gnode->family == gquery->family &&
-                     gnode->gindex == gquery->gindex );
+    return FT_BOOL( gnode->family == gquery->family &&
+                    gnode->gindex == gquery->gindex );
   }
 
 

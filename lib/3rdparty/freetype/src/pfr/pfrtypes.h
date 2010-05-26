@@ -200,7 +200,7 @@ FT_BEGIN_HEADER
     FT_Byte       flags;
     FT_Short      base_adj;
     FT_UInt       pair_size;
-    FT_UInt32     offset;
+    FT_Offset     offset;
     FT_UInt32     pair1;
     FT_UInt32     pair2;
 
@@ -252,7 +252,7 @@ FT_BEGIN_HEADER
     FT_UInt            blue_scale;
 
     FT_UInt            num_chars;
-    FT_UInt32          chars_offset;
+    FT_Offset          chars_offset;
     PFR_Char           chars;
 
     FT_UInt            num_kern_pairs;
@@ -260,7 +260,7 @@ FT_BEGIN_HEADER
     PFR_KernItem*      kern_items_tail;
 
     /* not part of the spec, but used during load */
-    FT_UInt32          bct_offset;
+    FT_Long            bct_offset;
     FT_Byte*           cursor;
 
   } PFR_PhyFontRec, *PFR_PhyFont;

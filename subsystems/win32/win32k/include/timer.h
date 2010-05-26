@@ -29,6 +29,7 @@ extern PKTIMER MasterTimer;
 
 NTSTATUS FASTCALL InitTimerImpl(VOID);
 BOOL FASTCALL DestroyTimersForThread(PTHREADINFO pti);
+BOOL FASTCALL DestroyTimersForWindow(PTHREADINFO pti, PWINDOW_OBJECT Window);
 BOOL FASTCALL IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer);
 UINT_PTR FASTCALL IntSetTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, INT Type);
 PTIMER FASTCALL FindSystemTimer(PMSG);

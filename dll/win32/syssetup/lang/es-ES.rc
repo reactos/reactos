@@ -254,7 +254,7 @@ BEGIN
     IDS_SYS_ENTERTAINMENT       "Entretenimiento"
     IDS_CMT_MPLAY32             "Ejecutar Reproductor multimedia"
     IDS_CMT_SNDVOL32            "Ejecutar Control de volumen"
-    IDS_CMT_SNDREC32            "Launch Sound Recorder"
+    IDS_CMT_SNDREC32            "Ejecutar Grabadora de sonidos"
 END
 
 STRINGTABLE
@@ -292,7 +292,7 @@ BEGIN
     IDS_SHORT_EVENTVIEW  "Visor de sucesos.lnk"
     IDS_SHORT_MSCONFIG   "Configuración del sistema.lnk"
     IDS_SHORT_SNDVOL32   "Control de volumen.lnk"
-    IDS_SHORT_SNDREC32   "Audiorecorder.lnk"
+    IDS_SHORT_SNDREC32   "Grabadora de sonidos.lnk"
     IDS_SHORT_DXDIAG     "Diagnóstico de ReactX.lnk"
     IDS_SHORT_PAINT      "Paint.lnk"
     IDS_SHORT_SPIDER     "Solitario Spider.lnk"

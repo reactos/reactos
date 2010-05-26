@@ -199,7 +199,7 @@
 	* src/base/ftmac.c (read_lwfn): Catch integer overflow.
 	* src/base/ftrfork.c (raccess_guess_darwin_hfsplus): Ditto.
 	* src/base/ftutil.c: Remove special code for FT_STRICT_ALIASING.
-	(ft_mem_alloc. ft_mem_realloc, ft_mem_qrealloc): Rewrite.
+	(ft_mem_alloc, ft_mem_realloc, ft_mem_qrealloc): Rewrite.
 
 
 	* include/freetype/ftstream.h (FT_FRAME_ENTER, FT_FRAME_EXIT,
@@ -2301,7 +2301,7 @@
 
 2005-09-19  David Somers  <dsomers@omz13.com>
 
-	* freetype2/src/sfnt/ttload.c (sfnt_dir_check): Modified to allow a
+	* src/sfnt/ttload.c (sfnt_dir_check): Modified to allow a
 	font to have no `head' table if tables `SING' and `META' are
 	present; this is to support `SING Glyphlet'.
 
@@ -2320,9 +2320,9 @@
 
 	  http://www.adobe.com/products/indesign/sing_gaiji.html
 
-	* freetype2/include/freetype/ttags.h (TTAG_SING, TTAG_META): New
-	macros for the OpenType tables `SING' and `META'.  These two tables
-	are used in SING Glyphlet Format fonts.
+	* include/freetype/ttags.h (TTAG_SING, TTAG_META): New macros for
+	the OpenType tables `SING' and `META'.  These two tables are used in
+	SING Glyphlet Format fonts.
 
 2005-09-09  Werner Lemberg  <wl@gnu.org>
 
@@ -2808,7 +2808,7 @@
 	  . loader->pp3.y and loader->pp4.y are in 26.6 format, not in font
 	    units.
 	  . As we use the glyph's cbox to calculate the top bearing now
-	    there iss no need to adjust `top'.
+	    there is no need to adjust `top'.
 
 2005-06-15  Werner Lemberg  <wl@gnu.org>
 
@@ -2821,7 +2821,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2005, 2006, 2007 by
+Copyright 2005, 2006, 2007, 2008 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

@@ -323,15 +323,15 @@
 
   static void
   gxv_just_pcTable_LookupValue_entry_validate( FT_UShort            glyph,
-                                               GXV_LookupValueDesc  value,
+                                               GXV_LookupValueCPtr  value_p,
                                                GXV_Validator        valid )
   {
     FT_UNUSED( glyph );
 
-    if ( value.u > GXV_JUST_DATA( pc_offset_max ) )
-      GXV_JUST_DATA( pc_offset_max ) = value.u;
-    if ( value.u < GXV_JUST_DATA( pc_offset_max ) )
-      GXV_JUST_DATA( pc_offset_min ) = value.u;
+    if ( value_p->u > GXV_JUST_DATA( pc_offset_max ) )
+      GXV_JUST_DATA( pc_offset_max ) = value_p->u;
+    if ( value_p->u < GXV_JUST_DATA( pc_offset_max ) )
+      GXV_JUST_DATA( pc_offset_min ) = value_p->u;
   }
 
 
@@ -384,7 +384,7 @@
   gxv_just_classTable_entry_validate(
     FT_Byte                         state,
     FT_UShort                       flags,
-    GXV_StateTable_GlyphOffsetDesc  glyphOffset,
+    GXV_StateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                        table,
     FT_Bytes                        limit,
     GXV_Validator                   valid )
@@ -395,7 +395,7 @@
     FT_UShort  currentClass;
 
     FT_UNUSED( state );
-    FT_UNUSED( glyphOffset );
+    FT_UNUSED( glyphOffset_p );
     FT_UNUSED( table );
     FT_UNUSED( limit );
     FT_UNUSED( valid );
@@ -449,15 +449,15 @@
 
   static void
   gxv_just_wdcTable_LookupValue_validate( FT_UShort            glyph,
-                                          GXV_LookupValueDesc  value,
+                                          GXV_LookupValueCPtr  value_p,
                                           GXV_Validator        valid )
   {
     FT_UNUSED( glyph );
 
-    if ( value.u > GXV_JUST_DATA( wdc_offset_max ) )
-      GXV_JUST_DATA( wdc_offset_max ) = value.u;
-    if ( value.u < GXV_JUST_DATA( wdc_offset_min ) )
-      GXV_JUST_DATA( wdc_offset_min ) = value.u;
+    if ( value_p->u > GXV_JUST_DATA( wdc_offset_max ) )
+      GXV_JUST_DATA( wdc_offset_max ) = value_p->u;
+    if ( value_p->u < GXV_JUST_DATA( wdc_offset_min ) )
+      GXV_JUST_DATA( wdc_offset_min ) = value_p->u;
   }
 
 
@@ -557,7 +557,7 @@
   {
     FT_Bytes           p     = table;
     FT_Bytes           limit = 0;
-    FT_UInt            table_size;
+    FT_Offset          table_size;
 
     GXV_ValidatorRec   validrec;
     GXV_Validator      valid = &validrec;

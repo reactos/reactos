@@ -83,10 +83,10 @@
 
   static void
   gxv_lcar_LookupValue_validate( FT_UShort            glyph,
-                                 GXV_LookupValueDesc  value,
+                                 GXV_LookupValueCPtr  value_p,
                                  GXV_Validator        valid )
   {
-    FT_Bytes   p     = valid->root->base + value.u;
+    FT_Bytes   p     = valid->root->base + value_p->u;
     FT_Bytes   limit = valid->root->limit;
     FT_UShort  count;
     FT_Short   partial;
@@ -146,7 +146,7 @@
 
   static GXV_LookupValueDesc
   gxv_lcar_LookupFmt4_transit( FT_UShort            relative_gindex,
-                               GXV_LookupValueDesc  base_value,
+                               GXV_LookupValueCPtr  base_value_p,
                                FT_Bytes             lookuptbl_limit,
                                GXV_Validator        valid )
   {
@@ -158,7 +158,7 @@
     FT_UNUSED( lookuptbl_limit );
 
     /* XXX: check range? */
-    offset = (FT_UShort)( base_value.u +
+    offset = (FT_UShort)( base_value_p->u +
                           relative_gindex * sizeof ( FT_UShort ) );
     p      = valid->root->base + offset;
     limit  = valid->root->limit;

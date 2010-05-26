@@ -844,6 +844,7 @@ GuiConsoleUpdateSelection(PCSRSS_CONSOLE Console, PCOORD coord)
     }
     Console->Selection.dwFlags |= CONSOLE_SELECTION_NOT_EMPTY;
     Console->Selection.srSelection = rc;
+    ConioPause(Console, PAUSED_FROM_SELECTION);
   }
   else
   {
@@ -853,6 +854,7 @@ GuiConsoleUpdateSelection(PCSRSS_CONSOLE Console, PCOORD coord)
       InvalidateRect(hWnd, &oldRect, FALSE);
     }
     Console->Selection.dwFlags = CONSOLE_NO_SELECTION;
+    ConioUnpause(Console, PAUSED_FROM_SELECTION);
   }
 }
 
@@ -1803,6 +1805,11 @@ GuiConsoleHandleScroll(HWND hwnd, UINT uMsg, WPARAM wParam)
 
   case SB_THUMBTRACK:
       sInfo.nPos = sInfo.nTrackPos;
+      ConioPause(Console, PAUSED_FROM_SCROLLBAR);
+      break;
+
+  case SB_THUMBPOSITION:
+      ConioUnpause(Console, PAUSED_FROM_SCROLLBAR);
       break;
 
   case SB_TOP:

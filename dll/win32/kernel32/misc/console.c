@@ -1467,6 +1467,12 @@ IntWriteConsole(HANDLE hConsoleOutput,
                                      max(sizeof(CSR_API_MESSAGE),
                                      CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE) + SizeBytes));
 
+        if (Status == STATUS_PENDING)
+        {
+            WaitForSingleObject(Request->Data.WriteConsoleRequest.UnpauseEvent, INFINITE);
+            CloseHandle(Request->Data.WriteConsoleRequest.UnpauseEvent);
+            continue;
+        }
         if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
         {
             RtlFreeHeap(RtlGetProcessHeap(), 0, Request);

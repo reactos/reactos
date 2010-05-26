@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType internal cache interface (specification).                   */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -91,7 +91,7 @@ FT_BEGIN_HEADER
                        FT_Pointer   query,
                        FTC_Cache    cache );
 
-  typedef FT_ULong
+  typedef FT_Offset
   (*FTC_Node_WeightFunc)( FTC_Node   node,
                           FTC_Cache  cache );
 
@@ -121,7 +121,7 @@ FT_BEGIN_HEADER
     FTC_Node_CompareFunc  node_remove_faceid;
     FTC_Node_FreeFunc     node_free;
 
-    FT_UInt               cache_size;
+    FT_Offset             cache_size;
     FTC_Cache_InitFunc    cache_init;
     FTC_Cache_DoneFunc    cache_done;
 
@@ -202,7 +202,7 @@ FT_BEGIN_HEADER
     FTC_Cache             _cache   = FTC_CACHE(cache);                   \
     FT_UInt32             _hash    = (FT_UInt32)(hash);                  \
     FTC_Node_CompareFunc  _nodcomp = (FTC_Node_CompareFunc)(nodecmp);    \
-    FT_UInt               _idx;                                          \
+    FT_UFast              _idx;                                          \
                                                                          \
                                                                          \
     error = 0;                                                           \
@@ -246,8 +246,7 @@ FT_BEGIN_HEADER
     error = FTC_Cache_NewNode( _cache, _hash, query, &_node );           \
                                                                          \
   _Ok:                                                                   \
-    _pnode = (FTC_Node*)(void*)&(node);                                  \
-    *_pnode = _node;                                                     \
+    node = _node;                                                        \
   FT_END_STMNT
 
 #else /* !FTC_INLINE */

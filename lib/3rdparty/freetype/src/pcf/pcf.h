@@ -72,8 +72,8 @@ FT_BEGIN_HEADER
     union
     {
       FT_String*  atom;
-      FT_Long     integer;
-      FT_ULong    cardinal;
+      FT_Long     l;
+      FT_ULong    ul;
 
     } value;
 

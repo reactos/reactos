@@ -1366,18 +1366,7 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFil
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
    PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
-   LARGE_INTEGER TimerExpiry;
-   PLARGE_INTEGER Timeout;
    NTSTATUS ret;
-
-   if (MsqGetFirstTimerExpiry(MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, &TimerExpiry))
-   {
-      Timeout = &TimerExpiry;
-   }
-   else
-   {
-      Timeout = NULL;
-   }
 
    IdlePing(); // Going to wait so send Idle ping.
 
@@ -1389,11 +1378,9 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFil
                                   Executive,
                                   UserMode,
                                   FALSE,
-                                  Timeout,
+                                  NULL,
                                   NULL);
-
    UserEnterCo();
-
    return ret;
 }
 

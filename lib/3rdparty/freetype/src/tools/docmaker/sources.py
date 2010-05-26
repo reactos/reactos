@@ -1,4 +1,4 @@
-#  Sources (c) 2002, 2003, 2004, 2006, 2007
+#  Sources (c) 2002, 2003, 2004, 2006, 2007, 2008, 2009
 #    David Turner <david@freetype.org>
 #
 #
@@ -18,10 +18,8 @@
 # the classes and methods found here only deal with text parsing
 # and basic documentation block extraction
 #
+
 import fileinput, re, sys, os, string
-
-
-
 
 
 
@@ -36,11 +34,10 @@ import fileinput, re, sys, os, string
 ##   note that the 'column' pattern must contain a group that will
 ##   be used to "unbox" the content of documentation comment blocks
 ##
-class SourceBlockFormat:
+class  SourceBlockFormat:
 
-    def __init__( self, id, start, column, end ):
+    def  __init__( self, id, start, column, end ):
         """create a block pattern, used to recognize special documentation blocks"""
-
         self.id     = id
         self.start  = re.compile( start, re.VERBOSE )
         self.column = re.compile( column, re.VERBOSE )
@@ -61,9 +58,9 @@ class SourceBlockFormat:
 #
 
 start = r'''
-  \s*       # any number of whitespace
-  /\*{2,}/  # followed by '/' and at least two asterisks then '/'
-  \s*$      # eventually followed by whitespace
+  \s*      # any number of whitespace
+  /\*{2,}/ # followed by '/' and at least two asterisks then '/'
+  \s*$     # probably followed by whitespace
 '''
 
 column = r'''
@@ -71,10 +68,11 @@ column = r'''
   /\*{1}   # followed by '/' and precisely one asterisk
   ([^*].*) # followed by anything (group 1)
   \*{1}/   # followed by one asterisk and a '/'
-  \s*$     # eventually followed by whitespace
+  \s*$     # probably followed by whitespace
 '''
 
 re_source_block_format1 = SourceBlockFormat( 1, start, column, start )
+
 
 #
 # format 2 documentation comment blocks look like the following:
@@ -91,27 +89,28 @@ re_source_block_format1 = SourceBlockFormat( 1, start, column, start )
 start = r'''
   \s*     # any number of whitespace
   /\*{2,} # followed by '/' and at least two asterisks
-  \s*$    # eventually followed by whitespace
+  \s*$    # probably followed by whitespace
 '''
 
 column = r'''
-  \s*         # any number of whitespace
-  \*{1}(?!/)  # followed by precisely one asterisk not followed by `/'
-  (.*)        # then anything (group1)
+  \s*        # any number of whitespace
+  \*{1}(?!/) # followed by precisely one asterisk not followed by `/'
+  (.*)       # then anything (group1)
 '''
 
 end = r'''
-  \s*     # any number of whitespace
-  \*+/    # followed by at least one asterisk, then '/'
+  \s*  # any number of whitespace
+  \*+/ # followed by at least one asterisk, then '/'
 '''
 
 re_source_block_format2 = SourceBlockFormat( 2, start, column, end )
+
 
 #
 # the list of supported documentation block formats, we could add new ones
 # relatively easily
 #
-re_source_block_formats = [ re_source_block_format1, re_source_block_format2 ]
+re_source_block_formats = [re_source_block_format1, re_source_block_format2]
 
 
 #
@@ -128,7 +127,7 @@ re_markup_tag2 = re.compile( r'''\s*@(\w*):''' )  # @xxxx: format
 # the list of supported markup tags, we could add new ones relatively
 # easily
 #
-re_markup_tags = [ re_markup_tag1, re_markup_tag2 ]
+re_markup_tags = [re_markup_tag1, re_markup_tag2]
 
 #
 # used to detect a cross-reference, after markup tags have been stripped
@@ -175,18 +174,19 @@ re_source_keywords = re.compile( '''\\b ( typedef   |
                                           \#else    |
                                           \#endif   ) \\b''', re.VERBOSE )
 
+
 ################################################################
 ##
 ##  SOURCE BLOCK CLASS
 ##
-##   A SourceProcessor is in charge or reading a C source file
+##   A SourceProcessor is in charge of reading a C source file
 ##   and decomposing it into a series of different "SourceBlocks".
 ##   each one of these blocks can be made of the following data:
 ##
 ##   - A documentation comment block that starts with "/**" and
 ##     whose exact format will be discussed later
 ##
-##   - normal sources lines, include comments
+##   - normal sources lines, including comments
 ##
 ##   the important fields in a text block are the following ones:
 ##
@@ -198,8 +198,9 @@ re_source_keywords = re.compile( '''\\b ( typedef   |
 ##                    (i.e. sources or ordinary comments with no starting
 ##                     markup tag)
 ##
-class SourceBlock:
-    def __init__( self, processor, filename, lineno, lines ):
+class  SourceBlock:
+
+    def  __init__( self, processor, filename, lineno, lines ):
         self.processor = processor
         self.filename  = filename
         self.lineno    = lineno
@@ -218,24 +219,22 @@ class SourceBlock:
         for line0 in self.lines:
             m = self.format.column.match( line0 )
             if m:
-                lines.append( m.group(1) )
+                lines.append( m.group( 1 ) )
 
         # now, look for a markup tag
         for l in lines:
-            l = string.strip(l)
-            if len(l) > 0:
+            l = string.strip( l )
+            if len( l ) > 0:
                 for tag in re_markup_tags:
                     if tag.match( l ):
                         self.content = lines
-                return
+                        return
 
-    def location( self ):
-        return "(" + self.filename + ":" + repr(self.lineno) + ")"
-
+    def  location( self ):
+        return "(" + self.filename + ":" + repr( self.lineno ) + ")"
 
     # debugging only - not used in normal operations
-    def dump( self ):
-
+    def  dump( self ):
         if self.content:
             print "{{{content start---"
             for l in self.content:
@@ -245,17 +244,18 @@ class SourceBlock:
 
         fmt = ""
         if self.format:
-            fmt = repr(self.format.id) + " "
+            fmt = repr( self.format.id ) + " "
 
         for line in self.lines:
             print line
+
 
 
 ################################################################
 ##
 ##  SOURCE PROCESSOR CLASS
 ##
-##   The SourceProcessor is in charge or reading a C source file
+##   The SourceProcessor is in charge of reading a C source file
 ##   and decomposing it into a series of different "SourceBlock"
 ##   objects.
 ##
@@ -267,7 +267,7 @@ class SourceBlock:
 ##   - normal sources lines, include comments
 ##
 ##
-class SourceProcessor:
+class  SourceProcessor:
 
     def  __init__( self ):
         """initialize a source processor"""
@@ -281,39 +281,33 @@ class SourceProcessor:
         self.blocks = []
         self.format = None
 
-
     def  parse_file( self, filename ):
-        """parse a C source file, and adds its blocks to the processor's list"""
-
+        """parse a C source file, and add its blocks to the processor's list"""
         self.reset()
 
         self.filename = filename
 
         fileinput.close()
-        self.format    = None
-        self.lineno    = 0
-        self.lines     = []
+        self.format = None
+        self.lineno = 0
+        self.lines  = []
 
         for line in fileinput.input( filename ):
-
-            # strip trailing newlines, important on Windows machines !!
-            if  line[-1] == '\012':
+            # strip trailing newlines, important on Windows machines!
+            if line[-1] == '\012':
                 line = line[0:-1]
 
             if self.format == None:
                 self.process_normal_line( line )
-
             else:
                 if self.format.end.match( line ):
-                    # that's a normal block end, add it to lines and
+                    # that's a normal block end, add it to 'lines' and
                     # create a new block
                     self.lines.append( line )
                     self.add_block_lines()
-
                 elif self.format.column.match( line ):
                     # that's a normal column line, add it to 'lines'
                     self.lines.append( line )
-
                 else:
                     # humm.. this is an unexpected block end,
                     # create a new block, but don't process the line
@@ -325,22 +319,18 @@ class SourceProcessor:
         # record the last lines
         self.add_block_lines()
 
-
-
-    def process_normal_line( self, line ):
-        """process a normal line and check if it's the start of a new block"""
+    def  process_normal_line( self, line ):
+        """process a normal line and check whether it is the start of a new block"""
         for f in re_source_block_formats:
-          if f.start.match( line ):
-            self.add_block_lines()
-            self.format = f
-            self.lineno = fileinput.filelineno()
+            if f.start.match( line ):
+                self.add_block_lines()
+                self.format = f
+                self.lineno = fileinput.filelineno()
 
         self.lines.append( line )
 
-
-
-    def add_block_lines( self ):
-        """add the current accumulated lines, and create a new block"""
+    def  add_block_lines( self ):
+        """add the current accumulated lines and create a new block"""
         if self.lines != []:
             block = SourceBlock( self, self.filename, self.lineno, self.lines )
 
@@ -348,9 +338,8 @@ class SourceProcessor:
             self.format = None
             self.lines  = []
 
-
     # debugging only, not used in normal operations
-    def dump( self ):
+    def  dump( self ):
         """print all blocks in a processor"""
         for b in self.blocks:
             b.dump()

@@ -67,18 +67,18 @@
 
   static void
   gxv_opbd_LookupValue_validate( FT_UShort            glyph,
-                                 GXV_LookupValueDesc  value,
+                                 GXV_LookupValueCPtr  value_p,
                                  GXV_Validator        valid )
   {
     /* offset in LookupTable is measured from the head of opbd table */
-    FT_Bytes   p     = valid->root->base + value.u;
+    FT_Bytes   p     = valid->root->base + value_p->u;
     FT_Bytes   limit = valid->root->limit;
     FT_Short   delta_value;
     int        i;
 
 
-    if ( value.u < GXV_OPBD_DATA( valueOffset_min ) )
-      GXV_OPBD_DATA( valueOffset_min ) = value.u;
+    if ( value_p->u < GXV_OPBD_DATA( valueOffset_min ) )
+      GXV_OPBD_DATA( valueOffset_min ) = value_p->u;
 
     for ( i = 0; i < 4; i++ )
     {
@@ -132,7 +132,7 @@
 
   static GXV_LookupValueDesc
   gxv_opbd_LookupFmt4_transit( FT_UShort            relative_gindex,
-                               GXV_LookupValueDesc  base_value,
+                               GXV_LookupValueCPtr  base_value_p,
                                FT_Bytes             lookuptbl_limit,
                                GXV_Validator        valid )
   {
@@ -142,7 +142,7 @@
     FT_UNUSED( valid );
 
     /* XXX: check range? */
-    value.u = (FT_UShort)( base_value.u +
+    value.u = (FT_UShort)( base_value_p->u +
                            relative_gindex * 4 * sizeof ( FT_Short ) );
 
     return value;

@@ -5,7 +5,7 @@
 /*    Basic Type1/Type2 type definitions and interface (specification      */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -58,7 +58,9 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    code_first :: The lowest valid character code in the encoding.     */
   /*                                                                       */
-  /*    code_last  :: The highest valid character code in the encoding.    */
+  /*    code_last  :: The highest valid character code in the encoding     */
+  /*                  + 1. When equal to code_first there are no valid     */
+  /*                  character codes.                                     */
   /*                                                                       */
   /*    char_index :: An array of corresponding glyph indices.             */
   /*                                                                       */
@@ -87,11 +89,24 @@ FT_BEGIN_HEADER
   } T1_EncodingType;
 
 
+  /* used to hold extra data of PS_FontInfoRec that
+   * cannot be stored in the publicly defined structure.
+   *
+   * Note these can't be blended with multiple-masters.
+   */
+  typedef struct  PS_FontExtraRec_
+  {
+    FT_UShort  fs_type;
+
+  } PS_FontExtraRec;
+
+
   typedef struct  T1_FontRec_
   {
-    PS_FontInfoRec   font_info;         /* font info dictionary */
-    PS_PrivateRec    private_dict;      /* private dictionary   */
-    FT_String*       font_name;         /* top-level dictionary */
+    PS_FontInfoRec   font_info;         /* font info dictionary   */
+    PS_FontExtraRec  font_extra;        /* font info extra fields */
+    PS_PrivateRec    private_dict;      /* private dictionary     */
+    FT_String*       font_name;         /* top-level dictionary   */
 
     T1_EncodingType  encoding_type;
     T1_EncodingRec   encoding;
@@ -217,7 +232,7 @@ FT_BEGIN_HEADER
     /* undocumented, optional: has the same meaning as len_buildchar */
     /* for Type 2 fonts; manipulated by othersubrs 19, 24, and 25    */
     FT_UInt          len_buildchar;
-    FT_Int*          buildchar;
+    FT_Long*         buildchar;
 
     /* since version 2.1 - interface to PostScript hinter */
     const void*     pshinter;
@@ -231,7 +246,10 @@ FT_BEGIN_HEADER
     void*            psnames;
     void*            psaux;
     CID_FaceInfoRec  cid;
+    PS_FontExtraRec  font_extra;
+#if 0
     void*            afm_data;
+#endif
     CID_Subrs        subrs;
 
     /* since version 2.1 - interface to PostScript hinter */

@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
-/* @(#) $Id: zconf.h,v 1.4 2007/06/01 06:56:17 wl Exp $ */
+/* @(#) $Id$ */
 
 #ifndef _ZCONF_H
 #define _ZCONF_H
@@ -59,6 +59,12 @@
 #if defined(__MSDOS__) && !defined(MSDOS)
 #  define MSDOS
 #endif
+
+/* WinCE doesn't have errno.h */
+#ifdef _WIN32_WCE
+#  define NO_ERRNO_H
+#endif
+
 
 /*
  * Compile with -DMAXSEG_64K if the alloc function cannot allocate more

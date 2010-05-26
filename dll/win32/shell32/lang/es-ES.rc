@@ -376,6 +376,16 @@ BEGIN
 	PUSHBUTTON "Cancelar", 14006, 226, 236, 50, 14
 END
 
+IDD_SH_FILE_COPY DIALOGEX 0, 0, 264, 45
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Copiando..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	PUSHBUTTON "Cancelar", 14002, 195, 14, 60, 16 
+	CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
+	LTEXT "Archivo", 14001,  8, 6, 169, 10
+END
+
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 294, 240
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "General"
@@ -755,5 +765,5 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Tamaño asignado por defecto"
 	IDS_COPY_OF                 "Copia de"
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	IDS_SHLEXEC_NOASSOC         "No hay ningún programa configurado en ReactOS para abrir este tipo de archivo."
 END

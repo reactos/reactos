@@ -196,6 +196,32 @@ FT_BEGIN_HEADER
 
   } FT_AutoHinter_ServiceRec, *FT_AutoHinter_Service;
 
+#ifndef FT_CONFIG_OPTION_PIC
+
+#define FT_DEFINE_AUTOHINTER_SERVICE(class_, reset_face_, get_global_hints_, \
+                                     done_global_hints_, load_glyph_)        \
+  FT_CALLBACK_TABLE_DEF                                                      \
+  const FT_AutoHinter_ServiceRec class_ =                                    \
+  {                                                                          \
+    reset_face_, get_global_hints_, done_global_hints_, load_glyph_          \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#define FT_DEFINE_AUTOHINTER_SERVICE(class_, reset_face_, get_global_hints_, \
+                                     done_global_hints_, load_glyph_)        \
+  void                                                                       \
+  FT_Init_Class_##class_( FT_Library library,                                \
+                          FT_AutoHinter_ServiceRec* clazz)                   \
+  {                                                                          \
+    FT_UNUSED(library);                                                      \
+    clazz->reset_face = reset_face_;                                         \
+    clazz->get_global_hints = get_global_hints_;                             \
+    clazz->done_global_hints = done_global_hints_;                           \
+    clazz->load_glyph = load_glyph_;                                         \
+  } 
+
+#endif /* FT_CONFIG_OPTION_PIC */ 
 
 FT_END_HEADER
 

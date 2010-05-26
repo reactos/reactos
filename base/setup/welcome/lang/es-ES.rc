@@ -9,7 +9,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Bienvenido"
     IDS_DEFAULTTOPICTITLE   "ReactOS"
-    IDS_DEFAULTTOPICDESC    "Bienvenido al Sistema Operativo React.\n\nHaz Click en una opcion a la izquierda."
+    IDS_DEFAULTTOPICDESC    "Bienvenido al Sistema Operativo React.\n\nHaz Click en una opción a la izquierda."
 //    IDS_CHECKTEXT           "Mostrar este dialogo otra vez"
 //    IDS_CLOSETEXT           "Salir"
 END

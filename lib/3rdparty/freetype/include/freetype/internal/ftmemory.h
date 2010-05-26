@@ -333,8 +333,8 @@ FT_BEGIN_HEADER
               FT_ULong     size,
               FT_Error    *p_error );
 
-#define FT_MEM_STRDUP( dst, str )                                     \
-          (dst) = ft_mem_strdup( memory, (const char*)(str), &error )
+#define FT_MEM_STRDUP( dst, str )                                            \
+          (dst) = (char*)ft_mem_strdup( memory, (const char*)(str), &error )
 
 #define FT_STRDUP( dst, str )                           \
           FT_MEM_SET_ERROR( FT_MEM_STRDUP( dst, str ) )

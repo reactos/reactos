@@ -94,30 +94,30 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_DEVICEID "Id. de instancia de dispositivo"
+    IDS_PROP_HARDWAREIDS "Identificadores de hardware"
+    IDS_PROP_COMPATIBLEIDS "Identificadores compatibles"
+    IDS_PROP_MATCHINGDEVICEID "Id. de dispositivo coincidente"
+    IDS_PROP_SERVICE "Servicio"
+    IDS_PROP_ENUMERATOR "Enumerador"
+    IDS_PROP_CAPABILITIES "Recursos"
+    IDS_PROP_DEVNODEFLAGS "Marcadores Devnode"
+    IDS_PROP_CONFIGFLAGS "Marcadores Config"
+    IDS_PROP_CSCONFIGFLAGS "Marcadores CSConfig"
+    IDS_PROP_EJECTIONRELATIONS "Relaciones de extracción"
+    IDS_PROP_REMOVALRELATIONS "Relaciones de eliminación"
+    IDS_PROP_BUSRELATIONS "Relaciones de bus"
+    IDS_PROP_DEVUPPERFILTERS "Filtros superiores de dispositivo"
+    IDS_PROP_DEVLOWERFILTERS "Filtros inferiores de dispositivo"
+    IDS_PROP_CLASSUPPERFILTERS "Filtros superiores de clase"
+    IDS_PROP_CLASSLOWERFILTERS "Filtros inferiores de clase"
+    IDS_PROP_CLASSINSTALLER "Instaladores de clase"
+    IDS_PROP_CLASSCOINSTALLER "Coinstaladores de clase"
+    IDS_PROP_DEVICECOINSTALLER "Coinstaladores de dispositivo"
+    IDS_PROP_FIRMWAREREVISION "Revisión de firmware"
+    IDS_PROP_CURRENTPOWERSTATE "Estado actual de energía"
+    IDS_PROP_POWERCAPABILITIES "Capacidad de energía"
+    IDS_PROP_POWERSTATEMAPPINGS "Asignaciones de estado de energía"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -200,7 +200,7 @@ END
 
 IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Detalles"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -213,7 +213,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Recursos"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -222,7 +222,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Administración de energía"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

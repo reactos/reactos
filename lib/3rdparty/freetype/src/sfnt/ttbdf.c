@@ -84,7 +84,7 @@
       FT_Byte*   p           = bdf->table;
       FT_UInt    version     = FT_NEXT_USHORT( p );
       FT_UInt    num_strikes = FT_NEXT_USHORT( p );
-      FT_UInt32  strings     = FT_NEXT_ULONG ( p );
+      FT_ULong   strings     = FT_NEXT_ULONG ( p );
       FT_UInt    count;
       FT_Byte*   strike;
 
@@ -141,13 +141,13 @@
                          const char*       property_name,
                          BDF_PropertyRec  *aprop )
   {
-    TT_BDF    bdf   = &face->bdf;
-    FT_Size   size  = FT_FACE(face)->size;
-    FT_Error  error = 0;
-    FT_Byte*  p;
-    FT_UInt   count;
-    FT_Byte*  strike;
-    FT_UInt   property_len;
+    TT_BDF     bdf   = &face->bdf;
+    FT_Size    size  = FT_FACE(face)->size;
+    FT_Error   error = 0;
+    FT_Byte*   p;
+    FT_UInt    count;
+    FT_Byte*   strike;
+    FT_Offset  property_len;
 
 
     aprop->type = BDF_PROPERTY_TYPE_NONE;

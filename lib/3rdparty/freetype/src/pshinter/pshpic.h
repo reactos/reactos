@@ -1,11 +1,11 @@
 /***************************************************************************/
 /*                                                                         */
-/*  ftbase.c                                                               */
+/*  pshpic.h                                                               */
 /*                                                                         */
-/*    Single object library component (body only).                         */
+/*    The FreeType position independent code services for pshinter module. */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*  Copyright 2009 by                                                      */
+/*  Oran Agra and Mickey Gabel.                                            */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -16,27 +16,38 @@
 /***************************************************************************/
 
 
-#include <ft2build.h>
+#ifndef __PSHPIC_H__
+#define __PSHPIC_H__
 
-#define  FT_MAKE_OPTION_SINGLE_OBJECT
+  
+FT_BEGIN_HEADER
 
-#define FT_MulFix FT_MulFix_wrong
-#include "ftcalc.c"
-#undef FT_MulFix
-#include "_ftmulfix_ros.c"
+#include FT_INTERNAL_PIC_H
 
-#include "ftdbgmem.c"
-#include "ftgloadr.c"
-#include "ftnames.c"
-#include "ftobjs.c"
-#include "ftoutln.c"
-#include "ftrfork.c"
-#include "ftstream.c"
-#include "fttrigon.c"
-#include "ftutil.c"
+#ifndef FT_CONFIG_OPTION_PIC
 
-#if defined( __APPLE__ ) && !defined ( DARWIN_NO_CARBON )
-#include <ftmac.c>
-#endif
+#define FTPSHINTER_INTERFACE_GET        pshinter_interface
+
+#else /* FT_CONFIG_OPTION_PIC */
+
+#include FT_INTERNAL_POSTSCRIPT_HINTS_H
+
+  typedef struct PSHinterPIC_
+  {
+    PSHinter_Interface pshinter_interface;
+  } PSHinterPIC;
+
+#define GET_PIC(lib)                    ((PSHinterPIC*)((lib)->pic_container.autofit))
+#define FTPSHINTER_INTERFACE_GET        (GET_PIC(library)->pshinter_interface)
+
+
+#endif /* FT_CONFIG_OPTION_PIC */
+
+ /* */
+
+FT_END_HEADER
+
+#endif /* __PSHPIC_H__ */
+
 
 /* END */

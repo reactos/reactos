@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Multiple Master font interface (specification).             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 1996-2001, 2003, 2004, 2006, 2009 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,7 +44,7 @@ FT_BEGIN_HEADER
   /*    setting design axis coordinates.                                   */
   /*                                                                       */
   /*    George Williams has extended this interface to make it work with   */
-  /*    both Type 1 Multiple Masters fonts and GX distortable (var)        */
+  /*    both Type~1 Multiple Masters fonts and GX distortable (var)        */
   /*    fonts.  Some of these routines only work with MM fonts, others     */
   /*    will work with both types.  They are similar enough that a         */
   /*    consistent interface makes sense.                                  */
@@ -91,12 +91,12 @@ FT_BEGIN_HEADER
   /*    This structure can't be used for GX var fonts.                     */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    num_axis    :: Number of axes.  Cannot exceed 4.                   */
+  /*    num_axis    :: Number of axes.  Cannot exceed~4.                   */
   /*                                                                       */
   /*    num_designs :: Number of designs; should be normally 2^num_axis    */
-  /*                   even though the Type 1 specification strangely      */
+  /*                   even though the Type~1 specification strangely      */
   /*                   allows for intermediate designs to be present. This */
-  /*                   number cannot exceed 16.                            */
+  /*                   number cannot exceed~16.                            */
   /*                                                                       */
   /*    axis        :: A table of axis descriptors.                        */
   /*                                                                       */
@@ -187,7 +187,7 @@ FT_BEGIN_HEADER
   /*    Some fields are specific to one format and not to the other.       */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    num_axis        :: The number of axes.  The maximum value is 4 for */
+  /*    num_axis        :: The number of axes.  The maximum value is~4 for */
   /*                       MM; no limit in GX.                             */
   /*                                                                       */
   /*    num_designs     :: The number of designs; should be normally       */
@@ -227,7 +227,7 @@ FT_BEGIN_HEADER
   /*    FT_Get_Multi_Master                                                */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieves the Multiple Master descriptor of a given font.          */
+  /*    Retrieve the Multiple Master descriptor of a given font.           */
   /*                                                                       */
   /*    This function can't be used with GX fonts.                         */
   /*                                                                       */
@@ -238,7 +238,7 @@ FT_BEGIN_HEADER
   /*    amaster :: The Multiple Masters descriptor.                        */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_Multi_Master( FT_Face           face,
@@ -251,18 +251,18 @@ FT_BEGIN_HEADER
   /*    FT_Get_MM_Var                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieves the Multiple Master/GX var descriptor of a given font.   */
+  /*    Retrieve the Multiple Master/GX var descriptor of a given font.    */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face    :: A handle to the source face.                            */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    amaster :: The Multiple Masters descriptor.                        */
+  /*    amaster :: The Multiple Masters/GX var descriptor.                 */
   /*               Allocates a data structure, which the user must free    */
   /*               (a single call to FT_FREE will do it).                  */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Get_MM_Var( FT_Face      face,
@@ -290,7 +290,7 @@ FT_BEGIN_HEADER
   /*    coords     :: An array of design coordinates.                      */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_MM_Design_Coordinates( FT_Face   face,
@@ -317,7 +317,7 @@ FT_BEGIN_HEADER
   /*    coords     :: An array of design coordinates.                      */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_Var_Design_Coordinates( FT_Face    face,
@@ -345,7 +345,7 @@ FT_BEGIN_HEADER
   /*                  between 0 and 1.0).                                  */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_MM_Blend_Coordinates( FT_Face    face,

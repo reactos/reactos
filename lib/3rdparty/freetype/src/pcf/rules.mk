@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 2000, 2001, 2003 by
+# Copyright (C) 2000, 2001, 2003, 2008 by
 # Francesco Zappa Nardelli
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,15 +35,14 @@ PCF_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(PCF_DIR))
 
 # pcf driver sources (i.e., C files)
 #
-PCF_DRV_SRC := $(PCF_DIR)/pcfread.c  \
-               $(PCF_DIR)/pcfdrivr.c \
+PCF_DRV_SRC := $(PCF_DIR)/pcfdrivr.c \
+               $(PCF_DIR)/pcfread.c  \
                $(PCF_DIR)/pcfutil.c
 
 # pcf driver headers
 #
-PCF_DRV_H := $(PCF_DIR)/pcf.h      \
-             $(PCF_DIR)/pcfdrivr.h \
-             $(PCF_DIR)/pcfutil.h  \
+PCF_DRV_H := $(PCF_DRV_SRC:%.c=%.h) \
+             $(PCF_DIR)/pcf.h       \
              $(PCF_DIR)/pcferror.h
 
 # pcf driver object(s)

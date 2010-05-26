@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -28,8 +28,9 @@
 FT_BEGIN_HEADER
 
 
-#define CFF_MAX_OPERANDS     48
-#define CFF_MAX_SUBRS_CALLS  32
+#define CFF_MAX_OPERANDS        48
+#define CFF_MAX_SUBRS_CALLS     32
+#define CFF_MAX_TRANS_ELEMENTS  32
 
 
   /*************************************************************************/
@@ -52,12 +53,6 @@ FT_BEGIN_HEADER
   /*    base          :: The base glyph outline.                           */
   /*                                                                       */
   /*    current       :: The current glyph outline.                        */
-  /*                                                                       */
-  /*    last          :: The last point position.                          */
-  /*                                                                       */
-  /*    scale_x       :: The horizontal scale (FUnits to sub-pixels).      */
-  /*                                                                       */
-  /*    scale_y       :: The vertical scale (FUnits to sub-pixels).        */
   /*                                                                       */
   /*    pos_x         :: The horizontal translation (if composite glyph).  */
   /*                                                                       */
@@ -91,11 +86,6 @@ FT_BEGIN_HEADER
     FT_GlyphLoader  loader;
     FT_Outline*     base;
     FT_Outline*     current;
-
-    FT_Vector       last;
-
-    FT_Fixed        scale_x;
-    FT_Fixed        scale_y;
 
     FT_Pos          pos_x;
     FT_Pos          pos_y;
@@ -146,9 +136,9 @@ FT_BEGIN_HEADER
     FT_Pos             nominal_width;
 
     FT_Bool            read_width;
+    FT_Bool            width_only;
     FT_Int             num_hints;
-    FT_Fixed*          buildchar;
-    FT_Int             len_buildchar;
+    FT_Fixed           buildchar[CFF_MAX_TRANS_ELEMENTS];
 
     FT_UInt            num_locals;
     FT_UInt            num_globals;
@@ -164,6 +154,8 @@ FT_BEGIN_HEADER
 
     FT_Render_Mode     hint_mode;
 
+    FT_Bool            seac;
+
   } CFF_Decoder;
 
 
@@ -177,6 +169,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   cff_decoder_prepare( CFF_Decoder*  decoder,
+                       CFF_Size      size,
                        FT_UInt       glyph_index );
 
 #if 0  /* unused until we support pure CFF fonts */

@@ -202,7 +202,7 @@ FT_BEGIN_HEADER
   *       The array itself must be allocated by a client.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   This function only works with TrueTypeGX fonts, returning an error
@@ -285,14 +285,14 @@ FT_BEGIN_HEADER
   *    FT_ClassicKern_Validate
   *
   * @description:
-  *    Validate classic (16bit format) kern table to assure that the offsets
+  *    Validate classic (16-bit format) kern table to assure that the offsets
   *    and indices are valid.  The idea is that a higher-level library which
   *    actually does the text layout can access those tables without error
   *    checking (which can be quite time consuming).
   *
   *    The `kern' table validator in @FT_TrueTypeGX_Validate deals with both
-  *    the new 32bit format and the classic 16bit format, while
-  *    FT_ClassicKern_Validate only supports the classic 16bit format.
+  *    the new 32-bit format and the classic 16-bit format, while
+  *    FT_ClassicKern_Validate only supports the classic 16-bit format.
   *
   * @input:
   *    face ::
@@ -307,7 +307,7 @@ FT_BEGIN_HEADER
   *       A pointer to the kern table.
   *
   * @return:
-  *   FreeType error code.  0 means success.
+  *   FreeType error code.  0~means success.
   *
   * @note:
   *   After use, the application should deallocate the buffers pointed to by

@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += AUTOFIT_MODULE
 
 define AUTOFIT_MODULE
-$(OPEN_DRIVER)autofit_module_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Module_Class, autofit_module_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)autofit   $(ECHO_DRIVER_DESC)automatic hinting module$(ECHO_DRIVER_DONE)
 endef
 

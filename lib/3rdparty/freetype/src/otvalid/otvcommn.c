@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType common tables validation (body).                            */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2007 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,10 +39,12 @@
 
   FT_LOCAL_DEF( void )
   otv_Coverage_validate( FT_Bytes       table,
-                         OTV_Validator  valid )
+                         OTV_Validator  valid,
+                         FT_Int         expected_count )
   {
     FT_Bytes  p = table;
     FT_UInt   CoverageFormat;
+    FT_UInt   total = 0;
 
 
     OTV_NAME_ENTER( "Coverage" );
@@ -57,6 +59,7 @@
     case 1:     /* CoverageFormat1 */
       {
         FT_UInt  GlyphCount;
+        FT_UInt  i;
 
 
         GlyphCount = FT_NEXT_USHORT( p );
@@ -64,13 +67,25 @@
         OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
 
         OTV_LIMIT_CHECK( GlyphCount * 2 );        /* GlyphArray */
+
+        for ( i = 0; i < GlyphCount; ++i )
+        {
+          FT_UInt  gid;
+
+
+          gid = FT_NEXT_USHORT( p );
+          if ( gid >= valid->glyph_count )
+            FT_INVALID_GLYPH_ID;
+        }
+
+        total = GlyphCount;
       }
       break;
 
     case 2:     /* CoverageFormat2 */
       {
         FT_UInt  n, RangeCount;
-        FT_UInt  Start, End, StartCoverageIndex, total = 0, last = 0;
+        FT_UInt  Start, End, StartCoverageIndex, last = 0;
 
 
         RangeCount = FT_NEXT_USHORT( p );
@@ -89,6 +104,9 @@
           if ( Start > End || StartCoverageIndex != total )
             FT_INVALID_DATA;
 
+          if ( End >= valid->glyph_count )
+            FT_INVALID_GLYPH_ID;
+
           if ( n > 0 && Start <= last )
             FT_INVALID_DATA;
 
@@ -102,8 +120,11 @@
       FT_INVALID_FORMAT;
     }
 
-    /* no need to check glyph indices used as input to coverage tables */
-    /* since even invalid glyph indices return a meaningful result     */
+    /* Generally, a coverage table offset has an associated count field.  */
+    /* The number of glyphs in the table should match this field.  If     */
+    /* there is no associated count, a value of -1 tells us not to check. */
+    if ( expected_count != -1 && (FT_UInt)expected_count != total )
+      FT_INVALID_DATA;
 
     OTV_EXIT;
   }
@@ -215,18 +236,21 @@
     {
     case 1:     /* ClassDefFormat1 */
       {
+        FT_UInt  StartGlyph;
         FT_UInt  GlyphCount;
 
 
-        p += 2;         /* skip StartGlyph */
+        OTV_LIMIT_CHECK( 4 );
 
-        OTV_LIMIT_CHECK( 2 );
-
+        StartGlyph = FT_NEXT_USHORT( p );
         GlyphCount = FT_NEXT_USHORT( p );
 
         OTV_TRACE(( " (GlyphCount = %d)\n", GlyphCount ));
 
         OTV_LIMIT_CHECK( GlyphCount * 2 );    /* ClassValueArray */
+
+        if ( StartGlyph + GlyphCount - 1 >= valid->glyph_count )
+          FT_INVALID_GLYPH_ID;
       }
       break;
 
@@ -251,6 +275,9 @@
 
           if ( Start > End || ( n > 0 && Start <= last ) )
             FT_INVALID_DATA;
+
+          if ( End >= valid->glyph_count )
+            FT_INVALID_GLYPH_ID;
 
           last = End;
         }
@@ -291,7 +318,10 @@
     EndSize     = FT_NEXT_USHORT( p );
     DeltaFormat = FT_NEXT_USHORT( p );
 
-    if ( DeltaFormat < 1 || DeltaFormat > 3 || EndSize < StartSize )
+    if ( DeltaFormat < 1 || DeltaFormat > 3 )
+      FT_INVALID_FORMAT;
+
+    if ( EndSize < StartSize )
       FT_INVALID_DATA;
 
     count = EndSize - StartSize + 1;
@@ -330,7 +360,7 @@
 
     OTV_TRACE(( " (type %d)\n", LookupType ));
 
-    if ( LookupType == 0 || LookupType >= valid->type_count )
+    if ( LookupType == 0 || LookupType > valid->type_count )
       FT_INVALID_DATA;
 
     validate = valid->type_funcs[LookupType - 1];
@@ -657,7 +687,7 @@
 
     OTV_TRACE(( " (Count = %d)\n", Count ));
 
-    otv_Coverage_validate( table + Coverage, valid );
+    otv_Coverage_validate( table + Coverage, valid, Count );
 
     OTV_LIMIT_CHECK( Count * 2 );
 
@@ -729,6 +759,7 @@
       FT_INVALID_DATA;
 
     OTV_LIMIT_CHECK( ( Count1 - 1 ) * 2 + Count2 * 4 );
+    p += ( Count1 - 1 ) * 2;
 
     for ( ; Count2 > 0; Count2-- )
     {
@@ -824,7 +855,7 @@
 
     OTV_TRACE(( " (ClassSetCount = %d)\n", ClassSetCount ));
 
-    otv_Coverage_validate( table + Coverage, valid );
+    otv_Coverage_validate( table + Coverage, valid, -1 );
     otv_ClassDef_validate( table + ClassDef, valid );
 
     OTV_LIMIT_CHECK( ClassSetCount * 2 );
@@ -872,7 +903,7 @@
     OTV_LIMIT_CHECK( GlyphCount * 2 + Count * 4 );
 
     for ( count1 = GlyphCount; count1 > 0; count1-- )
-      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid );
+      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid, -1 );
 
     for ( ; Count > 0; Count-- )
     {
@@ -913,7 +944,7 @@
 
     OTV_TRACE(( " (ChainClassSetCount = %d)\n", ChainClassSetCount ));
 
-    otv_Coverage_validate( table + Coverage, valid );
+    otv_Coverage_validate( table + Coverage, valid, -1 );
 
     otv_ClassDef_validate( table + BacktrackClassDef,  valid );
     otv_ClassDef_validate( table + InputClassDef, valid );
@@ -963,7 +994,7 @@
     OTV_LIMIT_CHECK( BacktrackGlyphCount * 2 + 2 );
 
     for ( ; BacktrackGlyphCount > 0; BacktrackGlyphCount-- )
-      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid );
+      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid, -1 );
 
     InputGlyphCount = FT_NEXT_USHORT( p );
 
@@ -972,7 +1003,7 @@
     OTV_LIMIT_CHECK( InputGlyphCount * 2 + 2 );
 
     for ( count1 = InputGlyphCount; count1 > 0; count1-- )
-      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid );
+      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid, -1 );
 
     LookaheadGlyphCount = FT_NEXT_USHORT( p );
 
@@ -981,7 +1012,7 @@
     OTV_LIMIT_CHECK( LookaheadGlyphCount * 2 + 2 );
 
     for ( ; LookaheadGlyphCount > 0; LookaheadGlyphCount-- )
-      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid );
+      otv_Coverage_validate( table + FT_NEXT_USHORT( p ), valid, -1 );
 
     count2 = FT_NEXT_USHORT( p );
 
