@@ -168,10 +168,10 @@
   check_table_dir( SFNT_Header  sfnt,
                    FT_Stream    stream )
   {
-    FT_Error  error;
-    FT_UInt   nn, valid_entries = 0;
-    FT_UInt   has_head = 0, has_sing = 0, has_meta = 0;
-    FT_ULong  offset = sfnt->offset + 12;
+    FT_Error   error;
+    FT_UShort  nn, valid_entries = 0;
+    FT_UInt    has_head = 0, has_sing = 0, has_meta = 0;
+    FT_ULong   offset = sfnt->offset + 12;
 
     static const FT_Frame_Field  table_dir_entry_fields[] =
     {

@@ -28,8 +28,9 @@
 FT_BEGIN_HEADER
 
 
-#define CFF_MAX_OPERANDS     48
-#define CFF_MAX_SUBRS_CALLS  32
+#define CFF_MAX_OPERANDS        48
+#define CFF_MAX_SUBRS_CALLS     32
+#define CFF_MAX_TRANS_ELEMENTS  32
 
 
   /*************************************************************************/
@@ -137,8 +138,7 @@ FT_BEGIN_HEADER
     FT_Bool            read_width;
     FT_Bool            width_only;
     FT_Int             num_hints;
-    FT_Fixed*          buildchar;
-    FT_Int             len_buildchar;
+    FT_Fixed           buildchar[CFF_MAX_TRANS_ELEMENTS];
 
     FT_UInt            num_locals;
     FT_UInt            num_globals;

@@ -5,7 +5,8 @@
 /*    FreeType glyph image formats and default raster interface            */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -51,10 +52,9 @@ FT_BEGIN_HEADER
   /*    FT_Pos                                                             */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    The type FT_Pos is a 32-bit integer used to store vectorial        */
-  /*    coordinates.  Depending on the context, these can represent        */
-  /*    distances in integer font units, or 16.16, or 26.6 fixed float     */
-  /*    pixel coordinates.                                                 */
+  /*    The type FT_Pos is used to store vectorial coordinates.  Depending */
+  /*    on the context, these can represent distances in integer font      */
+  /*    units, or 16.16, or 26.6 fixed float pixel coordinates.            */
   /*                                                                       */
   typedef signed long  FT_Pos;
 
@@ -98,6 +98,20 @@ FT_BEGIN_HEADER
   /*    xMax :: The horizontal maximum (right-most).                       */
   /*                                                                       */
   /*    yMax :: The vertical maximum (top-most).                           */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    The bounding box is specified with the coordinates of the lower    */
+  /*    left and the upper right corner.  In PostScript, those values are  */
+  /*    often called (llx,lly) and (urx,ury), respectively.                */
+  /*                                                                       */
+  /*    If `yMin' is negative, this value gives the glyph's descender.     */
+  /*    Otherwise, the glyph doesn't descend below the baseline.           */
+  /*    Similarly, if `ymax' is positive, this value gives the glyph's     */
+  /*    ascender.                                                          */
+  /*                                                                       */
+  /*    `xMin' gives the horizontal distance from the glyph's origin to    */
+  /*    the left edge of the glyph's bounding box.  If `xMin' is negative, */
+  /*    the glyph extends to the left of the origin.                       */
   /*                                                                       */
   typedef struct  FT_BBox_
   {
@@ -253,6 +267,9 @@ FT_BEGIN_HEADER
   /*                    a `down' flow, and negative when it has an `up'    */
   /*                    flow.  In all cases, the pitch is an offset to add */
   /*                    to a bitmap pointer in order to go down one row.   */
+  /*                                                                       */
+  /*                    For the B/W rasterizer, `pitch' is always an even  */
+  /*                    number.                                            */
   /*                                                                       */
   /*    buffer       :: A typeless pointer to the bitmap buffer.  This     */
   /*                    value should be aligned on 32-bit boundaries in    */
@@ -563,8 +580,8 @@ FT_BEGIN_HEADER
   /*    FT_Outline_ConicToFunc                                             */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A function pointer type use to describe the signature of a `conic  */
-  /*    to' function during outline walking/decomposition.                 */
+  /*    A function pointer type used to describe the signature of a `conic */
+  /*    to' function during outline walking or decomposition.              */
   /*                                                                       */
   /*    A `conic to' is emitted to indicate a second-order Bézier arc in   */
   /*    the outline.                                                       */
@@ -596,7 +613,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A function pointer type used to describe the signature of a `cubic */
-  /*    to' function during outline walking/decomposition.                 */
+  /*    to' function during outline walking or decomposition.              */
   /*                                                                       */
   /*    A `cubic to' is emitted to indicate a third-order Bézier arc.      */
   /*                                                                       */
@@ -629,8 +646,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A structure to hold various function pointers used during outline  */
-  /*    decomposition in order to emit segments, conic, and cubic Béziers, */
-  /*    as well as `move to' and `close to' operations.                    */
+  /*    decomposition in order to emit segments, conic, and cubic Béziers. */
   /*                                                                       */
   /* <Fields>                                                              */
   /*    move_to  :: The `move to' emitter.                                 */
@@ -657,7 +673,7 @@ FT_BEGIN_HEADER
   /*      y' = (x << shift) - delta                                        */
   /*    }                                                                  */
   /*                                                                       */
-  /*    Set the value of `shift' and `delta' to~0 to get the original      */
+  /*    Set the values of `shift' and `delta' to~0 to get the original     */
   /*    point coordinates.                                                 */
   /*                                                                       */
   typedef struct  FT_Outline_Funcs_

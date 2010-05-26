@@ -1,3 +1,461 @@
+2010-02-13  Werner Lemberg  <wl@gnu.org>
+
+	* Version 2.3.12 released.
+	==========================
+
+
+	Tag sources with `VER-2-3-12'.
+
+	* docs/CHANGES: Updated.
+
+	* docs/VERSION.DLL: Update documentation and bump version number to
+	2.3.12.
+
+	* README, Jamfile (RefDoc),
+	builds/win32/vc2005/freetype.vcproj, builds/win32/vc2005/index.html,
+	builds/win32/vc2008/freetype.vcproj, builds/win32/vc2008/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj,
+	builds/win32/visualc/index.html, builds/win32/visualce/freetype.dsp,
+	builds/win32/visualce/freetype.vcproj,
+	builds/win32/visualce/index.html,
+	builds/wince/vc2005-ce/freetype.vcproj,
+	builds/wince/vc2005-ce/index.html,
+	builds/wince/vc2008-ce/freetype.vcproj,
+	builds/wince/vc2008-ce/index.html: s/2.3.11/2.3.12/, s/2311/2312/.
+
+	* include/freetype/freetype.h (FREETYPE_PATCH): Set to 12.
+
+	* builds/unix/configure.raw (version_info): Set to 10:0:4.
+
+2010-02-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Improve autotool version checking to work with beta releases.
+
+	* autogen.sh (check_tool_version): Improve the extraction of version
+	number from "tool --version" output.  Some beta releases of
+	autotools have extra strings before version number.
+
+2010-02-12  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix overallocating bug in FT_Outline_New_Internal().
+
+	* src/base/ftoutln.c (FT_Outline_New_Internal): The length of
+	FT_Outline->points[] should be numPoints, not 2 * numPoints.
+	Found by Paul Messmer, see
+	http://lists.gnu.org/archive/html/freetype-devel/2010-02/msg00003.html
+
+2010-02-10  Ken Sharp  <ken.sharp@artifex.com>
+
+	Really fix Savannah bug #28678 (part 2).
+
+	Since we consider `sbw' for the horizontal direction only, we still have
+	to synthesize vertical metrics if the user wants to use the vertical
+	writing direction.
+
+	* src/cff/cffgload.c (cff_slot_load), src/cid/cidgload.c
+	(cid_slot_load_glyph), src/type1/t1gload.c (T1_Load_Glyph):
+	Synthesize vertical metrics (only) if FT_LOAD_VERTICAL_LAYOUT is
+	set.
+
+2010-02-10  Ken Sharp  <ken.sharp@artifex.com>
+
+	Really fix Savannah bug #28678 (part 1).
+
+	After long discussion, we now consider the character width vector
+	(wx,wy) returned by the `sbw' Type 1 operator as being part of *one*
+	direction only.  For example, if you are using the horizontal
+	writing direction, you get the horizontal and vertical components of
+	the advance width for this direction.  Note that OpenType and CFF fonts
+	don't have such a vertical component; instead, the GPOS table can be
+	used to generate two-dimensional advance widths (but this isn't
+	handled by FreeType).
+
+	* include/freetype/ftincrem.h (FT_Incremental_MetricsRec): Add
+	`advance_v' field to hold the vertical component of the advance
+	value.
+
+	* src/truetype/ttgload.c (tt_get_metrics), src/cff/cffgload.c
+	(cff_slot_load), src/type1/t1gload.c
+	(T1_Parse_Glyph_And_Get_Char_String), src/cid/cidgload.c
+	(cid_load_glyph): Use it.
+
+2010-02-08  Werner Lemberg  <wl@gnu.org>
+
+	* devel/ftoption.h [FT_CONFIG_OPTION_PIC]: Define.
+
+2010-02-04  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Prevent NULL pointer dereference passed to FT_Module_Requester.
+
+	* src/sfnt/sfdriver.c (sfnt_get_interface): Don't use `module'.
+	* src/psnames/psmodule.c (psnames_get_interface): Ditto.
+
+	* src/cff/cffdrivr.c (cff_get_interface): Check NULL `driver'.
+	* src/truetype/ttdriver.c (tt_get_interface): Ditto.
+
+2010-01-29  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Fix memory leaks in previous patch.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face): Don't overwrite the strings
+	allocated for face->root.family_name and style_name.
+
+2010-01-29  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	New parameters for FT_Open_Face() to ignore preferred family names.
+
+	Preferred family names should be used for legacy systems that
+	can hold only a few faces (<= 4) for a family name. Suggested by
+	Andreas Heinrich.
+	http://lists.gnu.org/archive/html/freetype/2010-01/msg00001.html
+
+	* include/freetype/ftsnames.h (FT_PARAM_TAG_IGNORE_PREFERRED_FAMILY,
+	FT_PARAM_TAG_IGNORE_PREFERRED_SUBFAMILY): Define.
+
+	* src/sfnt/sfobjs.h (sfnt_load_face): Check the arguments and
+	ignore preferred family and subfamily names if requested.
+
+2010-01-27  Ken Sharp  <ken.sharp@artifex.com>
+
+	Fix Savannah bug #28678.
+
+	* src/cff/cffgload.c (cff_slot_load), src/cid/cidgload.c
+	(cid_load_glyph): Handle vertical metrics correctly.
+
+	* src/type1/t1gload.c (T1_Parse_Glyph_And_Get_Char_String): Handle
+	vertical metrics correctly.
+	(T1_Load_Glyph): Don't synthesize vertical metrics.
+
+2010-01-14  Werner Lemberg  <wl@gnu.org>
+
+	Make FT_Set_Transform work if no renderer is available.
+
+	* src/base/ftobjs.c (FT_Load_Glyph): Apply `standard' transformation
+	if no renderer is compiled into the library.
+
+2010-01-14  Werner Lemberg  <wl@gnu.org>
+
+	Fix compilation warning.
+
+	* src/base/ftbase.h: s/LOCAL_DEF/LOCAL/.
+	* src/base/ftobjc.s: Include ftbase.h conditionally.
+
+2010-01-11  Kwang Yul Seo  <skyul@company100.net>
+
+	Provide inline assembly code for RVCT compiler.
+	This is Savannah patch #7059.
+
+	* include/freetype/config/ftconfig.h (FT_MULFIX_ASSEMBLER,
+	FT_MulFix_arm) [__CC_ARM || __ARM_CC]: Define.
+
+2010-01-08  Ken Sharp  <ken.sharp@artifex.com>
+
+	Fix Savannah bug #28521.
+
+	Issue #28226 involved a work-around for a font which used the
+	`setcurrentpoint' operator in an invalid way; this operator is only
+	supposed to be used with the result of OtherSubrs, and the font used
+	it directly.  The supplied patch removed the block of code which
+	checked this usage entirely.
+
+	This turns out to be a Bad Thing.  If `setcurrentpoint' is being
+	used correctly it should reset the flex flag in the decoder.  If we
+	don't do this then the flag never gets reset and we omit any further
+	contours from the glyph (at least until we close the path or
+	similar).
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings)
+	<op_setcurrentpoint>: Handle `flex_state' correctly.
+
+2010-01-05  Werner Lemberg  <wl@gnu.org>
+
+	Apply reports from clang static analyzer.
+
+	* src/lzw/ftlzw.c (ft_lzw_file_init), src/base/ftstroke.c
+	(FT_Stroker_ParseOutline), src/base/ftsynth.c
+	(FT_GlyphSlot_Embolden): Remove dead code.
+
+	* src/base/ftpatent.c (_tt_check_patents_in_table): Initialize
+	`offset_i' and `length_i'.
+
+2010-01-05  Ralph Giles  <giles@ghostscript.com>
+
+	Enable the incremental font interface by default.
+
+	Ghostscript requires the incremental font interface for handling
+	some Postscript documents.  It is moving to using FreeType as its
+	primary renderer; supporting this in the default build makes it
+	Ghostscript to be linked against the system FreeType when one is
+	available.
+
+	* include/freetype/config/ftoption.h (FT_CONFIG_OPTION_INCREMENTAL):
+	Uncomment.
+
+2010-01-05  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #28395.
+
+	* src/truetype/ttdriver.c (Load_Glyph), src/type1/t1gload.c
+	(T1_Loada_Glyph): Don't check `num_glyphs' if incremental interface
+	is used.
+
+2010-01-05  Ken Sharp  <ken.sharp@artifex.com>
+
+	Make Type 1 `seac' operator work with incremental interface.
+	This fixes Savannah bug #28480.
+
+	* src/psaux/t1decode.c (t1operator_seac): Don't check `glyph_names'
+	if incremental interface is used.
+
+2010-01-04  Ken Sharp  <ken.sharp@artifex.com>
+
+	Make incremental interface work with TrueType fonts.
+	This fixes Savannah bug #28478.
+
+	* src/truetype/ttgload.c (load_truetype_glyph): Don't check
+	`glyf_offset' if incremental interface is used.
+
+2009-12-31  Lars Abrahamsson  <wonko@opera.com>
+
+	Make compilation with FT_CONFIG_OPTION_PIC work again.
+
+	* src/base/ftglyph.c (FT_Glyph_To_Bitmap) [FT_CONFIG_OPTION_PIC]:
+	Declare `library' for FT_BITMAP_GLYPH_CLASS_GET.
+
+	* src/base/ftinit.c (ft_destroy_default_module_classes,
+	ft_create_default_module_classes): Use proper casts (needed for C++
+	compilation).
+
+	* src/sfnt/ttcmap.c (tt_cmap13_class_rec): Use FT_DEFINE_TT_CMAP.
+
+2009-12-22  Marc Kleine-Budde  <mkl@pengutronix.de>
+
+	Make freetype-config aware of $SYSROOT.
+	This is Savannah patch #7040.
+
+	* builds/unix/freetype-config.in: Decorate with ${SYSROOT} where
+	appropriate.
+
+2009-12-20  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warning.
+	Reported by Sean.
+
+	* src/base/ftdbgmem.c [!FT_DEBUG_MEMORY]: ANSI C doesn't like empty
+	source files; however, some compilers warn about an unused variable
+	declaration.  This is now replaced with a typedef.
+
+2009-12-18  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #28320.
+
+	There exist corrupt, subsetted fonts (embedded in PDF files) which
+	contain a private dict that ends with an unterminated floating point
+	number (no operator following).  We now ignore this error (as
+	acrobat does).
+
+	* src/cff/cffparse.c (cff_parser_run): Don't emit a syntax error for
+	unterminated floating point numbers.
+
+2009-12-16  Werner Lemberg  <wl@gnu.org>
+
+	Really fix compiler warnings.
+	Reported by Sean.
+
+	* src/truetype/ttgxvar.c (GX_PT_POINTS_ARE_WORDS,
+	GX_PT_POINT_RUN_COUNT_MASK): Convert enum values to macros.
+
+2009-12-16  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
+
+	Improve configure.raw to copy some options from CFLAGS to LDFLAGS.
+	The linker of Mac OS X 10.6 is sensitive to the architecture.  If
+	the architectures are specified explicitly for the C compiler, the
+	linker requires the architecture specifications too.
+
+	* builds/unix/configure.raw: Replace `-isysroot' option parser by
+	more generic argument parser.
+
+2009-12-15  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warnings.
+	Reported by Sean.
+
+	* src/truetype/ttgxvar.c (ft_var_readpackeddeltas): Fix counter data
+	type.
+
+2009-12-14  Ken Sharp  <ken.sharp@artifex.com>
+
+	Ignore invalid `setcurrentpoint' operations in Type 1 fonts.
+	This fixes Savannah bug #28226.
+
+	At least two wild PostScript files of unknown provenance contain
+	Type 1 fonts, apparently converted from TrueType fonts in earlier
+	PDF versions of the files, which use the `setcurrentpoint' operator
+	inappropriately.
+
+	FreeType currently throws an error in this case, but Ghostscript and
+	Adobe Distiller both accept the fonts and ignore the problem.  This
+	commit #ifdefs out the check so PostScript interpreters using
+	FreeType can render these files.
+
+	The specification says `setcurrentpoint' should only be used to set
+	the point after a `Subr' call, but these fonts use it to set the
+	initial point to (0,0).  Unnecessarily so, as they correctly use an
+	`hsbw' operation which implicitly sets the initial point.
+
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings)
+	<op_setcurrentpoint>: Comment out code.
+
+2009-12-14  Bram Tassyns  <bramt@enfocus.be>
+
+	Fix parsing of /CIDFontVersion.
+	This fixes Savannah bug #28287.
+
+	* src/cid/cidtoken.h: `cid_version' in CID_FaceInfoRec (in
+	t1tables.h) is of type FT_Fixed.
+
+2009-12-14  Werner Lemberg  <wl@gnu.org>
+
+	Trace glyph index in CID module.
+	Suggested in Savannah patch #7023.
+
+	* src/cid/cidgload.c (cid_load_glyph): Add tracing message.
+
+2009-12-03  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warnings.
+
+	* src/truetype/ttgload.c (tt_get_metrics): Put `Exit' label into the
+	proper preprocessor conditional.
+	* src/pfr/pfrobjs.c (pfr_slot_load): Pacify gcc.
+
+2009-11-25  John Tytgat  <John.Tytgat@esko.com>
+
+	Better handling of start of `eexec' section.
+	This fixes Savannah bug #28090.
+
+	* src/type1/t1parse.c (T1_Get_Private_Dict): Skip all whitespace
+	characters before start of `eexec' section.
+
+2009-11-20  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #27742.
+
+	* src/base/ftstroke.c (ft_stroker_outside): Avoid silent division by
+	zero, using a threshold for `theta'.
+
+2009-11-20  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #28036.
+
+	* src/type1/t1afm.c (t1_get_index): Fix comparison.
+
+2009-11-16  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warnings.
+	Reported by Kevin Blenkinsopp <arqon@promode.org>.
+
+	* src/sfnt/ttload.c (check_table_dir): Use proper data type.
+
+2009-11-15  Werner Lemberg  <wl@gnu.org>
+
+	Really fix FreeDesktop bug #21197.
+	This also fixes Savannah bug #28021.
+
+	* src/autofit/aflatin.c (af_latin_metrics_check_digits),
+	src/autofit/aflatin2.c (af_latin2_metrics_check_digits): Fix loop.
+
+2009-11-15  Werner Lemberg  <wl@gnu.org>
+
+	Add tracing messages for advance values.
+
+	* src/base/ftobjs.c (FT_Load_Glyph), src/truetype/ttgload.c
+	(TT_Get_HMetrics, TT_Get_VMetrics): Do it.
+
+2009-11-08  Werner Lemberg  <wl@gnu.org>
+
+	Fix compiler warning.
+	Reported by Jeremy Manson <jeremy.manson@gmail.com>.
+
+	* src/truetype/ttgload.c (load_truetype_glyph): Initialize `error'.
+
+2009-11-04  Werner Lemberg  <wl@gnu.org>
+
+	Remove compiler warning.
+	Reported by Sean McBride <sean@rogue-research.com>.
+
+	* src/tools/apinames.c (read_header_file)<STATE_TYPE>: Use a cast to
+	`int', as specified in the printf(3) man page.
+
+2009-11-04  Werner Lemberg  <wl@gnu.org>
+
+	Fix Savannah bug #27921.
+
+	* src/cff/cffobjs.c (cff_face_init), src/cid/cidobjs.c
+	(cid_face_init), src/type1/t1afm.c (T1_Read_Metrics),
+	src/type1/t1objs.c (T1_Face_Init): Don't use unsigned constant
+	values for rounding if the argument can be negative.
+
+2009-11-03  Bram Tassyns  <bramt@enfocus.be>
+
+	Add basic support for Type1 charstrings in CFF.
+	This fixes Savannah bug #27922.
+
+	* src/cff/cffgload.c (CFF_Operator, cff_argument_counts): Handle
+	`seac', `sbw', and `setcurrentpoint' opcodes.
+	(cff_compute_bias): Add parameter to indicate the charstring type.
+	Update all callers.
+	(cff_operator_seac): Add parameter for side bearing.
+	(cff_decoder_parse_charstrings): Updated for more Type1 support.
+
+2009-11-03  Werner Lemberg  <wl@gnu.org>
+
+	Return correct `linearHoriAdvance' value for embedded TT bitmaps too.
+	Reported by Jeremy Manson <jeremy.manson@gmail.com>.
+
+	src/truetype/ttgload.c (load_truetype_glyph): Add parameter to
+	quickly load the glyph header only.
+	Update all callers.
+	(tt_loader_init): Add parameter to quickly load the `glyf' table
+	only.
+	Update all callers.
+	(TT_Load_Glyph): Compute linear advance values for embedded bitmap
+	glyphs too.
+
+2009-11-03  Werner Lemberg  <wl@gnu.org>
+
+	Improve code readability.
+
+	* src/ttgload.c (load_truetype_glyph): Move metrics calculation
+	to...
+	(tt_get_metrics): This new function.
+
+2009-10-26  Bram Tassyns  <bramt@enfocus.be>
+
+	Fix Savannah bug #27811.
+
+	* src/truetype/ttxgvar.c (ft_var_readpackeddeltas): Fix
+	signed/unsigned mismatch.
+
+2009-10-19  Ning Dong  <flintning@163.com>
+
+	Fix handling of `get' and `put' CFF instructions.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings) <cff_op_get,
+	cff_op_put>: Appendix B of Adobe Technote #5177 limits the number of
+	elements for the `get' and `put' operators to 32.
+	* src/cff/cffgload.h (CFF_MAX_TRANS_ELEMENTS): Define.
+	(CFF_Decoder): Use it for `buildchar' and remove `len_buildchar'.
+
+2009-10-18  Werner Lemberg  <wl@gnu.org>
+
+	Fix handling of `dup' CFF instruction.
+	Problem and solution reported by Ning Dong <flintning@163.com>.
+
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings) <cff_op_dup>:
+	Increase `args' by 2, not 1.
+
 2009-10-10  Werner Lemberg  <wl@gnu.org>
 
 	* Version 2.3.11 released.
@@ -67,13 +525,13 @@
 2009-09-27  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
 	[cache] Fix Savannah bug #27441, clean up Redhat bugzilla #513582.
-	Tricky casts in FTC_{CACHE,GCACHE,MRULIST}_LOOKUP_CMP() are removed. 
+	Tricky casts in FTC_{CACHE,GCACHE,MRULIST}_LOOKUP_CMP() are removed.
 	Now these functions should be called with FTC_Node or FTC_MruNode
 	variable, and the caller should cast them to appropriate pointers to
 	concrete data.  These tricky casts can GCC-4.4 optimizer (-O2)
 	confused and the crashing binaries are generated.
 
-	* src/cache/ftcmru.h (FTC_MRULIST_LOOKUP_CMP): Drop tricky cast. 
+	* src/cache/ftcmru.h (FTC_MRULIST_LOOKUP_CMP): Drop tricky cast.
 	Now the 4th argument `node' of this function should be typed as
 	FTC_MruNode.
 
@@ -624,7 +1082,7 @@
 
 	* include/freetype/internal/tttypes.h: The type
 	of TT_BDF->string_size is extended from FT_UInt32
-	to FT_ULong, because BDF specification does not 
+	to FT_ULong, because BDF specification does not
 	restrict the length of string.
 	* src/sfnt/ttbdf.c: The scratch variable `strings'
 	to load TT_BDF->string_size is matched with
@@ -796,7 +1254,7 @@
 	and `rem' are changed to TCoord, because their values
 	are set with explicit casts to TCoord.  When ras.area
 	is updated by the differential values including
-	`delta', they are explicitly casted to TArea, because
+	`delta', they are explicitly cast to TArea, because
 	the type of `delta' is not TArea but TCoord.
 	(gray_render_line): The type of `mod' is extended
 	from int to TCoord, because (TCoord)dy is added to mod.
@@ -971,8 +1429,8 @@
 
 	* src/base/fttrigon.c (ft_trig_downscale): The FT_Fixed
 	variable `val' and unsigned long constant FT_TRIG_SCALE
-	are casted to FT_UInt32, when calculates FT_UInt32.
-	(FT_Vector_Rotate): The long constant 1L is casted to
+	are cast to FT_UInt32, when calculates FT_UInt32.
+	(FT_Vector_Rotate): The long constant 1L is cast to
 	FT_Int32 to calculate FT_Int32 `half'.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
@@ -1015,7 +1473,7 @@
 	`code' is matched to PCF_Encoding->enc.
 	(pcf_cmap_char_next): The type of `charcode' is matched
 	to PCF_Encoding->enc.  When *acharcode is set by charcode,
-	an overflow is checked and casted to unsigned 32-bit
+	an overflow is checked and cast to unsigned 32-bit
 	integer.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
@@ -1046,7 +1504,7 @@
 	(bdf_cmap_char_next): The type of `charcode' is
 	matched with BDF_encoding_el->enc.  When *acharcode
 	is set by charcode, an overflow is checked and
-	casted to unsigned 32-bit integer.
+	cast to unsigned 32-bit integer.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -1174,7 +1632,7 @@
 
 	* afmparse.c (afm_parser_read_vals): To call
 	AFM_ParserRec.get_index, the length of token
-	`len' is casted to size_t.
+	`len' is cast to size_t.
 
 2009-07-31  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
 
@@ -1304,7 +1762,7 @@
 
 	* src/gzip/ftgzip.c (zcalloc, zcfree): Disable all
 	zcalloc() & zfree() by zlib in zutil.c, those in
-	ftgzip.c by FT2 are enabled by default.  To use 
+	ftgzip.c by FT2 are enabled by default.  To use
 	zlib zcalloc() & zfree(), define USE_ZLIB_ZCALLOC.
 	See discussion:
 	http://lists.gnu.org/archive/html/freetype-devel/2009-02/msg00000.html
@@ -1494,7 +1952,7 @@
 	the check for too large glyph.  Replace the pair of `pitch' and
 	`height' by the pair of `width' and `height'.  `pitch' cannot
 	be greater than `height'.  The required is checking the product
-	`pitch' * `height' <= FT_ULONG_MAX, but we use cheap checks for 
+	`pitch' * `height' <= FT_ULONG_MAX, but we use cheap checks for
 	the realistic case only.
 
 2009-07-09  suzuki toshiya  <mpsuzuki@hiroshima-u.ac.jp>
@@ -1610,7 +2068,7 @@
 	Improve configure.raw for cross-building on exe-suffixed systems.
 
 	* builds/unix/configure.raw: Fix a bug in sed script to extract
-	native suffix for binary executables, patch by Peter Breitenlohner. 
+	native suffix for binary executables, patch by Peter Breitenlohner.
 	http://lists.gnu.org/archive/html/freetype-devel/2009-04/msg00036.html
 
 2009-06-26  Werner Lemberg  <wl@gnu.org>
@@ -1949,7 +2407,7 @@
 2009-04-21  Karl Berry  <karl@gnu.org>
 
 	Fix AC_CHECK_FT2.
-    
+
 	* builds/unix/freetype2.m4: Only check PATH for freetype-config if
 	we did not already find it from a prefix option.
 
@@ -1957,7 +2415,7 @@
 
 	Add #error to modules and files that do not support PIC yet.
 
-	When FT_CONFIG_OPTION_PIC is defined the following files will 
+	When FT_CONFIG_OPTION_PIC is defined the following files will
 	create #error:
 	* src/bdf/bdfdrivr.h
 	* src/cache/ftcmanag.c
@@ -1977,15 +2435,15 @@
 
 	Position Independent Code (PIC) support in autofit module.
 
-	* include/freetype/internal/autohint.h add macros to init 
+	* include/freetype/internal/autohint.h add macros to init
 	instances of FT_AutoHinter_ServiceRec.
 
-	* src/autofit/afmodule.h declare autofit_module_class 
-	using macros from ftmodapi.h, 
+	* src/autofit/afmodule.h declare autofit_module_class
+	using macros from ftmodapi.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/autofit/afmodule.c when FT_CONFIG_OPTION_PIC is defined 
-	af_autofitter_service and autofit_module_class structs 
+	* src/autofit/afmodule.c when FT_CONFIG_OPTION_PIC is defined
+	af_autofitter_service and autofit_module_class structs
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
 	And macros will be used from afpic.h in order to access them.
@@ -1993,54 +2451,54 @@
 	* src/autofit/aftypes.h add macros to init and declare
 	instances of AF_ScriptClassRec.
 
-	* src/autofit/afcjk.h declare af_cjk_script_class 
-	using macros from aftypes.h, 
+	* src/autofit/afcjk.h declare af_cjk_script_class
+	using macros from aftypes.h,
 	when FT_CONFIG_OPTION_PIC is defined init function will be declared.
-	* src/autofit/afcjk.c when FT_CONFIG_OPTION_PIC is defined 
-	af_cjk_script_class struct will have function to init it instead of 
+	* src/autofit/afcjk.c when FT_CONFIG_OPTION_PIC is defined
+	af_cjk_script_class struct will have function to init it instead of
 	being allocated in the global scope.
 
-	* src/autofit/afdummy.h declare af_dummy_script_class 
-	using macros from aftypes.h, 
+	* src/autofit/afdummy.h declare af_dummy_script_class
+	using macros from aftypes.h,
 	when FT_CONFIG_OPTION_PIC is defined init function will be declared.
-	* src/autofit/afdummy.c when FT_CONFIG_OPTION_PIC is defined 
-	af_dummy_script_class struct will have function to init it instead of 
+	* src/autofit/afdummy.c when FT_CONFIG_OPTION_PIC is defined
+	af_dummy_script_class struct will have function to init it instead of
 	being allocated in the global scope.
 
-	* src/autofit/afindic.h declare af_indic_script_class 
-	using macros from aftypes.h, 
+	* src/autofit/afindic.h declare af_indic_script_class
+	using macros from aftypes.h,
 	when FT_CONFIG_OPTION_PIC is defined init function will be declared.
-	* src/autofit/afindic.c when FT_CONFIG_OPTION_PIC is defined 
-	af_indic_script_class struct will have function to init it instead of 
+	* src/autofit/afindic.c when FT_CONFIG_OPTION_PIC is defined
+	af_indic_script_class struct will have function to init it instead of
 	being allocated in the global scope.
 
-	* src/autofit/aflatin.h declare af_latin_script_class 
-	using macros from aftypes.h, 
+	* src/autofit/aflatin.h declare af_latin_script_class
+	using macros from aftypes.h,
 	when FT_CONFIG_OPTION_PIC is defined init function will be declared.
-	* src/autofit/aflatin.c when FT_CONFIG_OPTION_PIC is defined 
-	af_latin_script_class struct will have function to init it instead of 
+	* src/autofit/aflatin.c when FT_CONFIG_OPTION_PIC is defined
+	af_latin_script_class struct will have function to init it instead of
 	being allocated in the global scope.
-	Change af_latin_blue_chars to be PIC-compatible by being a two 
+	Change af_latin_blue_chars to be PIC-compatible by being a two
 	dimentional array rather than array of pointers.
 
 
-	* src/autofit/aflatin2.h declare af_latin2_script_class 
-	using macros from aftypes.h, 
+	* src/autofit/aflatin2.h declare af_latin2_script_class
+	using macros from aftypes.h,
 	when FT_CONFIG_OPTION_PIC is defined init function will be declared.
-	* src/autofit/aflatin2.c when FT_CONFIG_OPTION_PIC is defined 
-	af_latin2_script_class struct will have function to init it instead of 
+	* src/autofit/aflatin2.c when FT_CONFIG_OPTION_PIC is defined
+	af_latin2_script_class struct will have function to init it instead of
 	being allocated in the global scope.
-	Change af_latin2_blue_chars to be PIC-compatible by being a two 
+	Change af_latin2_blue_chars to be PIC-compatible by being a two
 	dimentional array rather than array of pointers.
 
-	* src/autofit/afglobal.c when FT_CONFIG_OPTION_PIC is defined 
+	* src/autofit/afglobal.c when FT_CONFIG_OPTION_PIC is defined
 	af_script_classes array initialization was moved to afpic.c and
 	is later refered using macros defeined in afpic.h.
 
 	New Files:
 	* src/autofit/afpic.h declare struct to hold PIC globals for autofit
 	module and macros to access them.
-	* src/autofit/afpic.c implement functions to allocate, destroy and 
+	* src/autofit/afpic.c implement functions to allocate, destroy and
 	initialize PIC globals for autofit module.
 
 	* src/autofit/autofit.c add new file to build: afpic.c.
@@ -2050,15 +2508,15 @@
 
 	Position Independent Code (PIC) support in pshinter module.
 
-	* include/freetype/internal/pshints.h add macros to init 
+	* include/freetype/internal/pshints.h add macros to init
 	instances of PSHinter_Interface.
 
-	* src/pshinter/pshmod.h declare pshinter_module_class 
-	using macros from ftmodapi.h, 
+	* src/pshinter/pshmod.h declare pshinter_module_class
+	using macros from ftmodapi.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/pshinter/pshmod.c when FT_CONFIG_OPTION_PIC is defined 
-	pshinter_interface and pshinter_module_class structs 
+	* src/pshinter/pshmod.c when FT_CONFIG_OPTION_PIC is defined
+	pshinter_interface and pshinter_module_class structs
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
 	And macros will be used from pshpic.h in order to access them.
@@ -2066,7 +2524,7 @@
 	New Files:
 	* src/pshinter/pshpic.h declare struct to hold PIC globals for pshinter
 	module and macros to access them.
-	* src/pshinter/pshpic.c implement functions to allocate, destroy and 
+	* src/pshinter/pshpic.c implement functions to allocate, destroy and
 	initialize PIC globals for pshinter module.
 
 	* src/pshinter/pshinter.c add new file to build: pshpic.c.
@@ -2076,15 +2534,15 @@
 
 	Position Independent Code (PIC) support in psnames module.
 
-	* include/freetype/internal/services/svpscmap.h add macros to init 
+	* include/freetype/internal/services/svpscmap.h add macros to init
 	instances of FT_Service_PsCMapsRec.
 
-	* src/psnames/psmodule.h declare psnames_module_class 
-	using macros from ftmodapi.h, 
+	* src/psnames/psmodule.h declare psnames_module_class
+	using macros from ftmodapi.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/psnames/psmodule.c when FT_CONFIG_OPTION_PIC is defined 
-	pscmaps_interface and pscmaps_services structs 
+	* src/psnames/psmodule.c when FT_CONFIG_OPTION_PIC is defined
+	pscmaps_interface and pscmaps_services structs
 	and psnames_module_class array
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
@@ -2093,7 +2551,7 @@
 	New Files:
 	* src/psnames/pspic.h declare struct to hold PIC globals for psnames
 	module and macros to access them.
-	* src/psnames/pspic.c implement functions to allocate, destroy and 
+	* src/psnames/pspic.c implement functions to allocate, destroy and
 	initialize PIC globals for psnames module.
 
 	* src/psnames/psnames.c add new file to build: pspic.c.
@@ -2103,29 +2561,29 @@
 
 	Position Independent Code (PIC) support in raster renderer.
 
-	* src/raster/ftrend1.h declare ft_raster1_renderer_class 
-	and ft_raster5_renderer_class 
-	using macros from ftrender.h, 
+	* src/raster/ftrend1.h declare ft_raster1_renderer_class
+	and ft_raster5_renderer_class
+	using macros from ftrender.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/smooth/ftrend1.c when FT_CONFIG_OPTION_PIC is defined 
+	* src/smooth/ftrend1.c when FT_CONFIG_OPTION_PIC is defined
 	ft_raster1_renderer_class and ft_raster5_renderer_class structs
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
-	Macros will be used from rastpic.h in order to access 
+	Macros will be used from rastpic.h in order to access
 	ft_standard_raster from the pic_container (allocated in ftraster.c).
-	In ft_raster1_render when PIC is enabled, the last letter of 
+	In ft_raster1_render when PIC is enabled, the last letter of
 	module_name is used to verfy the renderer class rather than the
 	class pointer.
 
-	* src/raster/ftraster.c when FT_CONFIG_OPTION_PIC is defined 
+	* src/raster/ftraster.c when FT_CONFIG_OPTION_PIC is defined
 	ft_standard_raster struct will have function to init it
 	instead of being allocated in the global scope.
 
 	New Files:
 	* src/raster/rastpic.h declare struct to hold PIC globals for raster
 	renderer and macros to access them.
-	* src/raster/rastpic.c implement functions to allocate, destroy and 
+	* src/raster/rastpic.c implement functions to allocate, destroy and
 	initialize PIC globals for raster renderer.
 
 	* src/raster/raster.c add new file to build: rastpic.c.
@@ -2135,35 +2593,35 @@
 
 	Position Independent Code (PIC) support in smooth renderer.
 
-	* src/smooth/ftsmooth.h declare ft_smooth_renderer_class, 
-	ft_smooth_lcd_renderer_class and ft_smooth_lcd_v_renderer_class 
-	using macros from ftrender.h, 
+	* src/smooth/ftsmooth.h declare ft_smooth_renderer_class,
+	ft_smooth_lcd_renderer_class and ft_smooth_lcd_v_renderer_class
+	using macros from ftrender.h,
 	when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/smooth/ftsmooth.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
-	ft_smooth_renderer_class, ft_smooth_lcd_renderer_class 
-	and ft_smooth_lcd_v_renderer_class 
+	* src/smooth/ftsmooth.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
+	ft_smooth_renderer_class, ft_smooth_lcd_renderer_class
+	and ft_smooth_lcd_v_renderer_class
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
-	And macros will be used from ftspic.h in order to access 
+	And macros will be used from ftspic.h in order to access
 	ft_grays_raster from the pic_container (allocated in ftgrays.c).
 
 	* src/smooth/ftgrays.h include FT_CONFIG_CONFIG_H
-	* src/smooth/ftgrays.c when FT_CONFIG_OPTION_PIC is NOT defined 
-	func_interface was moved from gray_convert_glyph_inner function 
+	* src/smooth/ftgrays.c when FT_CONFIG_OPTION_PIC is NOT defined
+	func_interface was moved from gray_convert_glyph_inner function
 	to the global scope.
-	When FT_CONFIG_OPTION_PIC is defined 
+	When FT_CONFIG_OPTION_PIC is defined
 	func_interface and ft_grays_raster structs
 	will have functions to init them
 	instead of being allocated in the global scope.
-	And func_interface will be allocated on the stack of 
+	And func_interface will be allocated on the stack of
 	gray_convert_glyph_inner.
 
 	New Files:
 	* src/smooth/ftspic.h declare struct to hold PIC globals for smooth
 	renderer and macros to access them.
-	* src/smooth/ftspic.c implement functions to allocate, destroy and 
+	* src/smooth/ftspic.c implement functions to allocate, destroy and
 	initialize PIC globals for smooth renderer.
 
 	* src/smooth/smooth.c add new file to build: ftspic.c.
@@ -2173,17 +2631,17 @@
 
 	Position Independent Code (PIC) support in cff driver.
 
-	* include/freetype/internal/services/svcid.h add macros to init 
+	* include/freetype/internal/services/svcid.h add macros to init
 	instances of FT_Service_CIDRec.
-	* include/freetype/internal/services/svpsinfo.h add macros to init 
+	* include/freetype/internal/services/svpsinfo.h add macros to init
 	instances of FT_Service_PsInfoRec.
 
 	* src/cff/cffcmap.h declare cff_cmap_encoding_class_rec
 	and cff_cmap_unicode_class_rec using macros from
 	ftobjs.h, when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/cff/cffcmap.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
+	* src/cff/cffcmap.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
 	cff_cmap_encoding_class_rec and cff_cmap_unicode_class_rec
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
@@ -2191,10 +2649,10 @@
 	* src/cff/cffdrivr.h declare cff_driver_class using macros from
 	ftdriver.h, when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/cff/cffdrivr.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
+	* src/cff/cffdrivr.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
 	cff_service_glyph_dict, cff_service_ps_info, cff_service_ps_name
-	cff_service_get_cmap_info, cff_service_cid_info, cff_driver_class, 
+	cff_service_get_cmap_info, cff_service_cid_info, cff_driver_class,
 	and cff_services array
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
@@ -2206,8 +2664,8 @@
 	* src/cff/cffobjs.c Use macros from cffpic.h in order to access the
 	structs allocated in cffcmap.c
 
-	* src/cff/parser.c when FT_CONFIG_OPTION_PIC is defined 
-	implement functions to create and destroy cff_field_handlers array 
+	* src/cff/parser.c when FT_CONFIG_OPTION_PIC is defined
+	implement functions to create and destroy cff_field_handlers array
 	instead of being allocated in the global scope.
 	And macros will be used from cffpic.h in order to access it
 	from the pic_container.
@@ -2215,7 +2673,7 @@
 	New Files:
 	* src/cff/cffpic.h declare struct to hold PIC globals for cff
 	driver and macros to access them.
-	* src/cff/cffpic.c implement functions to allocate, destroy and 
+	* src/cff/cffpic.c implement functions to allocate, destroy and
 	initialize PIC globals for cff driver.
 
 	* src/cff/cff.c add new file to build: cffpic.c.
@@ -2225,38 +2683,38 @@
 
 	Position Independent Code (PIC) support in sfnt driver.
 
-	* include/freetype/internal/services/svbdf.h add macros to init 
+	* include/freetype/internal/services/svbdf.h add macros to init
 	instances of FT_Service_BDFRec.
-	* include/freetype/internal/services/svgldict.h add macros to init 
+	* include/freetype/internal/services/svgldict.h add macros to init
 	instances of FT_Service_GlyphDictRec.
-	* include/freetype/internal/services/svpostnm.h add macros to init 
+	* include/freetype/internal/services/svpostnm.h add macros to init
 	instances of FT_Service_PsFontNameRec.
-	* include/freetype/internal/services/svsfnt.h add macros to init 
+	* include/freetype/internal/services/svsfnt.h add macros to init
 	instances of FT_Service_SFNT_TableRec.
-	* include/freetype/internal/services/svttcmap.h add macros to init 
+	* include/freetype/internal/services/svttcmap.h add macros to init
 	instances of FT_Service_TTCMapsRec.
-	* include/freetype/internal/sfnt.h add macros to init 
+	* include/freetype/internal/sfnt.h add macros to init
 	instances of SFNT_Interface.
 
 	* src/sfnt/sfdriver.h declare sfnt_module_class using macros from
 	ftmodapi.h, when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/sfnt/sfdriver.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
+	* src/sfnt/sfdriver.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
 	sfnt_service_sfnt_table, sfnt_service_glyph_dict, sfnt_service_ps_name
-	tt_service_get_cmap_info, sfnt_service_bdf, sfnt_interface, 
+	tt_service_get_cmap_info, sfnt_service_bdf, sfnt_interface,
 	sfnt_module_class, and sfnt_services array
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
 	And macros will be used from sfntpic.h in order to access them
 	from the pic_container.
 
-	* src/sfnt/ttcmap.h add macros to init 
+	* src/sfnt/ttcmap.h add macros to init
 	instances of TT_CMap_ClassRec.
-	* src/sfnt/ttcmap.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
+	* src/sfnt/ttcmap.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
 	tt_cmap0_class_rec, tt_cmap2_class_rec, tt_cmap4_class_rec
-	tt_cmap6_class_rec, tt_cmap8_class_rec, tt_cmap10_class_rec, 
+	tt_cmap6_class_rec, tt_cmap8_class_rec, tt_cmap10_class_rec,
 	tt_cmap12_class_rec, tt_cmap14_class_rec and tt_cmap_classes array
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
@@ -2268,9 +2726,9 @@
 	New Files:
 	* src/sfnt/sfntpic.h declare struct to hold PIC globals for sfnt
 	driver and macros to access them.
-	* src/sfnt/sfntpic.c implement functions to allocate, destroy and 
+	* src/sfnt/sfntpic.c implement functions to allocate, destroy and
 	initialize PIC globals for sfnt driver.
-	* src/sfnt/ttcmapc.h describing the content of 
+	* src/sfnt/ttcmapc.h describing the content of
 	tt_cmap_classes allocated in ttcmap.c
 
 	* src/sfnt/sfnt.c add new file to build: sfntpic.c.
@@ -2280,30 +2738,30 @@
 
 	Position Independent Code (PIC) support in truetype driver.
 
-	* include/freetype/internal/services/svmm.h add macros to init 
+	* include/freetype/internal/services/svmm.h add macros to init
 	instances of FT_Service_MultiMastersRec.
-	* include/freetype/internal/services/svttglyf.h add macros to init 
+	* include/freetype/internal/services/svttglyf.h add macros to init
 	instances of FT_Service_TTGlyfRec.
 
 	* src/truetype/ttdriver.h declare tt_driver_class using macros from
 	ftdriver.h, when FT_CONFIG_OPTION_PIC is defined create and destroy
 	functions will be declared.
-	* src/truetype/ttdriver.c when FT_CONFIG_OPTION_PIC is defined 
-	the following structs: 
+	* src/truetype/ttdriver.c when FT_CONFIG_OPTION_PIC is defined
+	the following structs:
 	tt_service_gx_multi_masters, tt_service_truetype_glyf, tt_driver_class
-	and tt_services array, 
+	and tt_services array,
 	will have functions to init or create and destroy them
 	instead of being allocated in the global scope.
 	And macros will be used from ttpic.h in order to access them
 	from the pic_container.
 	* src/truetype/ttobjs.c change trick_names array to be
-	PIC-compatible by being a two dimentional array rather than array 
+	PIC-compatible by being a two dimentional array rather than array
 	of pointers.
 
 	New Files:
 	* src/truetype/ttpic.h declare struct to hold PIC globals for truetype
 	driver and macros to access them.
-	* src/truetype/ttpic.c implement functions to allocate, destroy and 
+	* src/truetype/ttpic.c implement functions to allocate, destroy and
 	initialize PIC globals for truetype driver.
 
 	* src/truetype/truetype.c add new file to build: ttpic.c.
@@ -2314,50 +2772,50 @@
 	Position Independent Code (PIC) support and infrastructure in base.
 
 	* include/freetype/config/ftoption.h add FT_CONFIG_OPTION_PIC
-	* include/freetype/internal/ftobjs.h Add pic_container member to 
+	* include/freetype/internal/ftobjs.h Add pic_container member to
 	FT_LibraryRec.
 	Add macros to declare and init instances of FT_CMap_ClassRec.
 	Add macros to init instances of FT_Outline_Funcs and FT_Raster_Funcs.
-	Add macros to declare, allocate and initialize modules 
+	Add macros to declare, allocate and initialize modules
 	(FT_Module_Class).
-	Add macros to declare, allocate and initialize renderers 
+	Add macros to declare, allocate and initialize renderers
 	(FT_Renderer_Class).
 	Add macro to init instances of FT_Glyph_Class.
-	Add macros to declare, allocate and initialize drivers 
+	Add macros to declare, allocate and initialize drivers
 	(FT_Driver_ClassRec).
-	* include/freetype/internal/ftpic.h new file to declare the 
+	* include/freetype/internal/ftpic.h new file to declare the
 	FT_PIC_Container struct and the functions to allocate and detroy it.
-	* include/freetype/internal/ftserv.h add macros to allocate and 
+	* include/freetype/internal/ftserv.h add macros to allocate and
 	destory arrays of FT_ServiceDescRec.
-	* include/freetype/internal/internal.h define macro to include 
+	* include/freetype/internal/internal.h define macro to include
 	ftpic.h.
 
 	New Files:
-	* src/base/ftpic.c implement functions to allocate and destory the 
+	* src/base/ftpic.c implement functions to allocate and destory the
 	global pic_container.
-	* src/base/basepic.h declare struct to hold PIC globals for base and 
+	* src/base/basepic.h declare struct to hold PIC globals for base and
 	macros to access them.
-	* src/base/basepic.c implement functions to allocate, destroy and 
+	* src/base/basepic.c implement functions to allocate, destroy and
 	initialize PIC globals for base.
 
-	* src/base/ftinit.c when FT_CONFIG_OPTION_PIC is defined implement 
-	functions that allocate and destroy ft_default_modules according to 
+	* src/base/ftinit.c when FT_CONFIG_OPTION_PIC is defined implement
+	functions that allocate and destroy ft_default_modules according to
 	FT_CONFIG_MODULES_H in the pic_container instead of the global scope
 	and use macro from basepic.h to access it.
-	* src/base/ftobjs.c add calls to the functions that allocate and 
-	destroy the global pic_container when the library is created and 
+	* src/base/ftobjs.c add calls to the functions that allocate and
+	destroy the global pic_container when the library is created and
 	destroyed.
 
-	* src/base/jamfile add new files to FT2_MULTI build: 
+	* src/base/jamfile add new files to FT2_MULTI build:
 	ftpic.c and basepic.c.
-	* src/base/ftbase.c add new files to build: 
+	* src/base/ftbase.c add new files to build:
 	ftpic.c and basepic.c.
 
-	* src/base/ftglyph.c when FT_CONFIG_OPTION_PIC is defined 
+	* src/base/ftglyph.c when FT_CONFIG_OPTION_PIC is defined
 	ft_bitmap_glyph_class and ft_outline_glyph_class will be allocated
 	in the pic_container instead of the global scope and use macros from
  	basepic.h to access them.
-	* src/base/ftbbox.c allocate bbox_interface stract on the stack 
+	* src/base/ftbbox.c allocate bbox_interface stract on the stack
 	instead of the global scope when FT_CONFIG_OPTION_PIC is defined.
 	* src/base/ftstroke.c access ft_outline_glyph_class allocated in
 	ftglyph.c via macros from basepic.h
@@ -2367,7 +2825,7 @@
 	Preparing changes in cff parser later needed for PIC version.
 
 	* src/cff/cffload.c, src/cff/cffload.h, src/cff/cffobjs.c,
-	src/cff/cffparse.c, src/cff/cffparse.h: Add library pointer to 
+	src/cff/cffparse.c, src/cff/cffparse.h: Add library pointer to
 	'CFF_ParserRec' set by `cff_parser_init'.
 	Route library pointer from 'cff_face_init' to 'cff_subfont_load'
 	for `cff_parser_init'.
@@ -6442,8 +6900,8 @@
 
 2006-12-08  Vladimir Volovich  <vvv@vsu.ru>
 
-	* src/tools/apinames (State): Remove final comma in structure -- xlc
-	v5 under AIX 4.3 doesn't like this.
+	* src/tools/apinames.c (State): Remove final comma in structure --
+	xlc v5 under AIX 4.3 doesn't like this.
 
 2006-12-07  David Turner  <david@freetype.org>
 
@@ -7474,7 +7932,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2006, 2007, 2008, 2009 by
+Copyright 2006, 2007, 2008, 2009, 2010 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

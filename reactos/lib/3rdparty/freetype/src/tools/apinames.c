@@ -10,7 +10,7 @@
  * accepted if you are using GCC for compilation (and probably by
  * other compilers too).
  *
- * Author: David Turner, 2005, 2006, 2008
+ * Author: David Turner, 2005, 2006, 2008, 2009
  *
  * This code is explicitly placed into the public domain.
  *
@@ -265,7 +265,7 @@ read_header_file( FILE*  file, int  verbose )
           if ( p > name )
           {
             if ( verbose )
-              fprintf( stderr, ">>> %.*s\n", p-name, name );
+              fprintf( stderr, ">>> %.*s\n", (int)(p - name), name );
 
             names_add( name, p );
           }

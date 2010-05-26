@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR bitmap loader (body).                                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006 by                                          */
+/*  Copyright 2002, 2003, 2006, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -600,8 +600,8 @@
 
     /* get the bitmap metrics */
     {
-      FT_Long   xpos, ypos, advance;
-      FT_UInt   xsize, ysize, format;
+      FT_Long   xpos = 0, ypos = 0, advance = 0;
+      FT_UInt   xsize = 0, ysize = 0, format = 0;
       FT_Byte*  p;
 
 

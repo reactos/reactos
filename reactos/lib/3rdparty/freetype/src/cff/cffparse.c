@@ -745,8 +745,10 @@
           p++;
           for (;;)
           {
+            /* An unterminated floating point number at the */
+            /* end of a dictionary is invalid but harmless. */
             if ( p >= limit )
-              goto Syntax_Error;
+              goto Exit;
             v = p[0] >> 4;
             if ( v == 15 )
               break;

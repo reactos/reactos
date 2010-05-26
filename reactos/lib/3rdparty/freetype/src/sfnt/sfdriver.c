@@ -417,8 +417,6 @@
   sfnt_get_interface( FT_Module    module,
                       const char*  module_interface )
   {
-    FT_Library           library = module->library;
-    FT_UNUSED(library);
     FT_UNUSED( module );
 
     return ft_service_list_lookup( FT_SFNT_SERVICES_GET, module_interface );

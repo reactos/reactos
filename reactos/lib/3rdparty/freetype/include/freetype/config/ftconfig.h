@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,6 @@
   /* This ANSI version should stay in `include/freetype/config'.           */
   /*                                                                       */
   /*************************************************************************/
-
 
 #ifndef __FTCONFIG_H__
 #define __FTCONFIG_H__
@@ -306,9 +305,38 @@ FT_BEGIN_HEADER
   /* Provide assembler fragments for performance-critical functions. */
   /* These must be defined `static __inline__' with GCC.             */
 
+#if defined( __CC_ARM ) || defined( __ARMCC__ )  /* RVCT */
+#define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
+
+  /* documentation is in freetype.h */
+
+  static __inline FT_Int32
+  FT_MulFix_arm( FT_Int32  a,
+                 FT_Int32  b )
+  {
+    register FT_Int32  t, t2;
+
+
+    __asm
+    {
+      smull t2, t,  b,  a           /* (lo=t2,hi=t) = a*b */
+      mov   a,  t,  asr #31         /* a   = (hi >> 31) */
+      add   a,  a,  #0x8000         /* a  += 0x8000 */
+      adds  t2, t2, a               /* t2 += a */
+      adc   t,  t,  #0              /* t  += carry */
+      mov   a,  t2, lsr #16         /* a   = t2 >> 16 */
+      orr   a,  a,  t,  lsl #16     /* a  |= t << 16 */
+    }
+    return a;
+  }
+
+#endif /* __CC_ARM || __ARMCC__ */
+
+
 #ifdef __GNUC__
 
-#if defined( __arm__ ) && !defined( __thumb__ )
+#if defined( __arm__ ) && !defined( __thumb__ )    && \
+    !( defined( __CC_ARM ) || defined( __ARMCC__ ) )
 #define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
 
   /* documentation is in freetype.h */
@@ -333,7 +361,7 @@ FT_BEGIN_HEADER
     return a;
   }
 
-#endif /* __arm__ && !__thumb__ */
+#endif /* __arm__ && !__thumb__ && !( __CC_ARM || __ARMCC__ ) */
 
 #if defined( i386 )
 #define FT_MULFIX_ASSEMBLER  FT_MulFix_i386

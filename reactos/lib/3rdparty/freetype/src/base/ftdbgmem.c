@@ -989,7 +989,7 @@
 #else  /* !FT_DEBUG_MEMORY */
 
   /* ANSI C doesn't like empty source files */
-  static const FT_Byte  _debug_mem_dummy = 0;
+  typedef int  _debug_mem_dummy;
 
 #endif /* !FT_DEBUG_MEMORY */
 

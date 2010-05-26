@@ -71,8 +71,8 @@
     FT_UNUSED( cache );
 
 
-    return FT_BOOL(  gnode->family == gquery->family &&
-                     gnode->gindex == gquery->gindex );
+    return FT_BOOL( gnode->family == gquery->family &&
+                    gnode->gindex == gquery->gindex );
   }
 
 

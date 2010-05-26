@@ -372,7 +372,7 @@
     if ( slot->format == FT_GLYPH_FORMAT_BITMAP )
       clazz = FT_BITMAP_GLYPH_CLASS_GET;
 
-    /* it it is an outline too */
+    /* if it is an outline */
     else if ( slot->format == FT_GLYPH_FORMAT_OUTLINE )
       clazz = FT_OUTLINE_GLYPH_CLASS_GET;
 
@@ -514,6 +514,10 @@
     FT_BitmapGlyph            bitmap = NULL;
 
     const FT_Glyph_Class*     clazz;
+
+#ifdef FT_CONFIG_OPTION_PIC
+    FT_Library                library = FT_GLYPH( glyph )->library;
+#endif
 
 
     /* check argument */

@@ -2574,10 +2574,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF
-  const TT_CMap_ClassRec  tt_cmap13_class_rec =
-  {
-    {
+  FT_DEFINE_TT_CMAP(tt_cmap13_class_rec,
       sizeof ( TT_CMap13Rec ),
 
       (FT_CMap_InitFunc)     tt_cmap13_init,
@@ -2586,11 +2583,11 @@
       (FT_CMap_CharNextFunc) tt_cmap13_char_next,
 
       NULL, NULL, NULL, NULL, NULL
-    },
+    ,
     13,
     (TT_CMap_ValidateFunc)   tt_cmap13_validate,
     (TT_CMap_Info_GetFunc)   tt_cmap13_get_info
-  };
+  )
 
 #endif /* TT_CONFIG_CMAP_FORMAT_13 */
 

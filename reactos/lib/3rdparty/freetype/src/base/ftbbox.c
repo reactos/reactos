@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType bbox computation (body).                                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004, 2006 by                               */
+/*  Copyright 1996-2001, 2002, 2004, 2006, 2010 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -140,7 +140,7 @@
   /*                                                                       */
   /* <Description>                                                         */
   /*    This function is used as a `conic_to' emitter during               */
-  /*    FT_Raster_Decompose().  It checks a conic Bezier curve with the    */
+  /*    FT_Outline_Decompose().  It checks a conic Bezier curve with the   */
   /*    current bounding box, and computes its extrema if necessary to     */
   /*    update it.                                                         */
   /*                                                                       */
@@ -507,7 +507,7 @@
   /*                                                                       */
   /* <Description>                                                         */
   /*    This function is used as a `cubic_to' emitter during               */
-  /*    FT_Raster_Decompose().  It checks a cubic Bezier curve with the    */
+  /*    FT_Outline_Decompose().  It checks a cubic Bezier curve with the   */
   /*    current bounding box, and computes its extrema if necessary to     */
   /*    update it.                                                         */
   /*                                                                       */

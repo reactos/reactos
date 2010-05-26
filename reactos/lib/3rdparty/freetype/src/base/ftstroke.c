@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType path stroker (body).                                        */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009 by                  */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2008, 2009, 2010 by            */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -979,7 +979,8 @@
       thcos = FT_Cos( theta );
       sigma = FT_MulFix( stroker->miter_limit, thcos );
 
-      if ( sigma >= 0x10000L )
+      /* FT_Sin(x) = 0 for x <= 57 */
+      if ( sigma >= 0x10000L || ft_pos_abs( theta ) <= 57 )
         miter = FALSE;
 
       if ( miter )  /* this is a miter (broken angle) */
@@ -1360,7 +1361,7 @@
         phi1    = (angle_mid + angle_in ) / 2;
         phi2    = (angle_mid + angle_out ) / 2;
         length1 = FT_DivFix( stroker->radius, FT_Cos( theta1 ) );
-        length2 = FT_DivFix( stroker->radius, FT_Cos(theta2) );
+        length2 = FT_DivFix( stroker->radius, FT_Cos( theta2 ) );
 
         for ( side = 0; side <= 1; side++ )
         {
@@ -1735,13 +1736,10 @@
         }
         else
         {
-          /* if both first and last points are conic,         */
-          /* start at their middle and record its position    */
-          /* for closure                                      */
+          /* if both first and last points are conic, */
+          /* start at their middle                    */
           v_start.x = ( v_start.x + v_last.x ) / 2;
           v_start.y = ( v_start.y + v_last.y ) / 2;
-
-          v_last = v_start;
         }
         point--;
         tags--;

@@ -657,10 +657,11 @@
           cffface->num_glyphs = cff->charstrings_index.count;
 
         /* set global bbox, as well as EM size */
-        cffface->bbox.xMin =   dict->font_bbox.xMin             >> 16;
-        cffface->bbox.yMin =   dict->font_bbox.yMin             >> 16;
-        cffface->bbox.xMax = ( dict->font_bbox.xMax + 0xFFFFU ) >> 16;
-        cffface->bbox.yMax = ( dict->font_bbox.yMax + 0xFFFFU ) >> 16;
+        cffface->bbox.xMin =   dict->font_bbox.xMin            >> 16;
+        cffface->bbox.yMin =   dict->font_bbox.yMin            >> 16;
+        /* no `U' suffix here to 0xFFFF! */
+        cffface->bbox.xMax = ( dict->font_bbox.xMax + 0xFFFF ) >> 16;
+        cffface->bbox.yMax = ( dict->font_bbox.yMax + 0xFFFF ) >> 16;
 
         cffface->units_per_EM = (FT_UShort)( dict->units_per_em );
 

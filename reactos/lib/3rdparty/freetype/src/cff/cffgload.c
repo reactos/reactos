@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,   */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -113,6 +114,9 @@
     cff_op_closepath,
     cff_op_callothersubr,
     cff_op_pop,
+    cff_op_seac,
+    cff_op_sbw,
+    cff_op_setcurrentpoint,
 
     /* do not remove */
     cff_op_max
@@ -201,7 +205,10 @@
     2, /* hsbw */
     0,
     0,
-    0
+    0,
+    5, /* seac */
+    4, /* sbw */
+    2  /* setcurrentpoint */
   };
 
 
@@ -319,17 +326,23 @@
   /*    subroutines.                                                       */
   /*                                                                       */
   /* <Input>                                                               */
-  /*    num_subrs :: The number of glyph subroutines.                      */
+  /*    in_charstring_type :: The `CharstringType' value of the top DICT   */
+  /*                          dictionary.                                  */
+  /*                                                                       */
+  /*    num_subrs          :: The number of glyph subroutines.             */
   /*                                                                       */
   /* <Return>                                                              */
   /*    The bias value.                                                    */
   static FT_Int
-  cff_compute_bias( FT_UInt  num_subrs )
+  cff_compute_bias( FT_Int   in_charstring_type,
+                    FT_UInt  num_subrs )
   {
     FT_Int  result;
 
 
-    if ( num_subrs < 1240 )
+    if ( in_charstring_type == 1 )
+      result = 0;
+    else if ( num_subrs < 1240 )
       result = 107;
     else if ( num_subrs < 33900U )
       result = 1131;
@@ -380,9 +393,12 @@
     cff_builder_init( &decoder->builder, face, size, slot, hinting );
 
     /* initialize Type2 decoder */
+    decoder->cff          = cff;
     decoder->num_globals  = cff->num_global_subrs;
     decoder->globals      = cff->global_subrs;
-    decoder->globals_bias = cff_compute_bias( decoder->num_globals );
+    decoder->globals_bias = cff_compute_bias(
+                              cff->top_font.font_dict.charstring_type,
+                              decoder->num_globals );
 
     decoder->hint_mode    = hint_mode;
   }
@@ -434,7 +450,9 @@
 
     decoder->num_locals    = sub->num_local_subrs;
     decoder->locals        = sub->local_subrs;
-    decoder->locals_bias   = cff_compute_bias( decoder->num_locals );
+    decoder->locals_bias   = cff_compute_bias(
+                               decoder->cff->top_font.font_dict.charstring_type,
+                               decoder->num_locals );
 
     decoder->glyph_width   = sub->private_dict.default_width;
     decoder->nominal_width = sub->private_dict.nominal_width;
@@ -677,7 +695,7 @@
       data.length  = length;
 
       face->root.internal->incremental_interface->funcs->free_glyph_data(
-        face->root.internal->incremental_interface->object,&data );
+        face->root.internal->incremental_interface->object, &data );
     }
     else
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
@@ -693,6 +711,7 @@
 
   static FT_Error
   cff_operator_seac( CFF_Decoder*  decoder,
+                     FT_Pos        asb,
                      FT_Pos        adx,
                      FT_Pos        ady,
                      FT_Int        bchar,
@@ -705,6 +724,7 @@
     FT_Vector     left_bearing, advance;
     FT_Byte*      charstring;
     FT_ULong      charstring_len;
+    FT_Pos        glyph_width;
 
 
     if ( decoder->seac )
@@ -712,6 +732,9 @@
       FT_ERROR(( "cff_operator_seac: invalid nested seac\n" ));
       return CFF_Err_Syntax_Error;
     }
+
+    adx += decoder->builder.left_bearing.x;
+    ady += decoder->builder.left_bearing.y;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
     /* Incremental fonts don't necessarily have valid charsets.        */
@@ -795,16 +818,17 @@
       cff_free_glyph_data( face, &charstring, charstring_len );
     }
 
-    /* Save the left bearing and width of the base character */
-    /* as they will be erased by the next load.              */
+    /* Save the left bearing, advance and glyph width of the base */
+    /* character as they will be erased by the next load.         */
 
     left_bearing = builder->left_bearing;
     advance      = builder->advance;
+    glyph_width  = decoder->glyph_width;
 
     builder->left_bearing.x = 0;
     builder->left_bearing.y = 0;
 
-    builder->pos_x = adx;
+    builder->pos_x = adx - asb;
     builder->pos_y = ady;
 
     /* Now load `achar' on top of the base outline. */
@@ -824,10 +848,11 @@
       cff_free_glyph_data( face, &charstring, charstring_len );
     }
 
-    /* Restore the left side bearing and advance width */
-    /* of the base character.                          */
+    /* Restore the left side bearing, advance and glyph width */
+    /* of the base character.                                 */
     builder->left_bearing = left_bearing;
     builder->advance      = advance;
+    decoder->glyph_width  = glyph_width;
 
     builder->pos_x = 0;
     builder->pos_y = 0;
@@ -869,6 +894,8 @@
     FT_Pos             x, y;
     FT_Fixed           seed;
     FT_Fixed*          stack;
+    FT_Int             charstring_type =
+                         decoder->cff->top_font.font_dict.charstring_type;
 
     T2_Hints_Funcs     hinter;
 
@@ -958,7 +985,8 @@
                 ( (FT_Int32)ip[2] <<  8 ) |
                             ip[3];
           ip    += 4;
-          shift  = 0;
+          if ( charstring_type == 2 )
+            shift = 0;
         }
         if ( decoder->top - stack >= CFF_MAX_OPERANDS )
           goto Stack_Overflow;
@@ -1032,6 +1060,12 @@
             case 0:
               op = cff_op_dotsection;
               break;
+            case 1: /* this is actually the Type1 vstem3 operator */
+              op = cff_op_vstem;
+              break;
+            case 2: /* this is actually the Type1 hstem3 operator */
+              op = cff_op_hstem;
+              break;
             case 3:
               op = cff_op_and;
               break;
@@ -1040,6 +1074,12 @@
               break;
             case 5:
               op = cff_op_not;
+              break;
+            case 6:
+              op = cff_op_seac;
+              break;
+            case 7:
+              op = cff_op_sbw;
               break;
             case 8:
               op = cff_op_store;
@@ -1103,6 +1143,9 @@
               break;
             case 30:
               op = cff_op_roll;
+              break;
+            case 33:
+              op = cff_op_setcurrentpoint;
               break;
             case 34:
               op = cff_op_hflex;
@@ -1171,7 +1214,7 @@
           op = cff_op_hvcurveto;
           break;
         default:
-          ;
+          break;
         }
 
         if ( op == cff_op_unknown )
@@ -1886,6 +1929,21 @@
           }
           break;
 
+        case cff_op_seac:
+            FT_TRACE4(( " seac\n" ));
+
+            error = cff_operator_seac( decoder,
+                                       args[0], args[1], args[2],
+                                       (FT_Int)( args[3] >> 16 ),
+                                       (FT_Int)( args[4] >> 16 ) );
+
+            /* add current outline to the glyph slot */
+            FT_GlyphLoader_Add( builder->loader );
+
+            /* return now! */
+            FT_TRACE4(( "\n" ));
+            return error;
+
         case cff_op_endchar:
           FT_TRACE4(( " endchar\n" ));
 
@@ -1895,10 +1953,8 @@
             /* Save glyph width so that the subglyphs don't overwrite it. */
             FT_Pos  glyph_width = decoder->glyph_width;
 
-
             error = cff_operator_seac( decoder,
-                                       args[-4],
-                                       args[-3],
+                                       0L, args[-4], args[-3],
                                        (FT_Int)( args[-2] >> 16 ),
                                        (FT_Int)( args[-1] >> 16 ) );
 
@@ -2106,7 +2162,7 @@
           FT_TRACE4(( " dup\n" ));
 
           args[1] = args[0];
-          args++;
+          args += 2;
           break;
 
         case cff_op_put:
@@ -2117,7 +2173,7 @@
 
             FT_TRACE4(( " put\n" ));
 
-            if ( idx >= 0 && idx < decoder->len_buildchar )
+            if ( idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS )
               decoder->buildchar[idx] = val;
           }
           break;
@@ -2130,7 +2186,7 @@
 
             FT_TRACE4(( " get\n" ));
 
-            if ( idx >= 0 && idx < decoder->len_buildchar )
+            if ( idx >= 0 && idx < CFF_MAX_TRANS_ELEMENTS )
               val = decoder->buildchar[idx];
 
             args[0] = val;
@@ -2170,10 +2226,42 @@
 
           FT_TRACE4(( " hsbw (invalid op)\n" ));
 
-          decoder->glyph_width = decoder->nominal_width +
-                                   (args[1] >> 16);
-          x    = args[0];
-          y    = 0;
+          decoder->glyph_width = decoder->nominal_width + ( args[1] >> 16 );
+
+          decoder->builder.left_bearing.x = args[0];
+          decoder->builder.left_bearing.y = 0;
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y;
+          args = stack;
+          break;
+
+        case cff_op_sbw:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " sbw (invalid op)\n" ));
+
+          decoder->glyph_width = decoder->nominal_width + ( args[2] >> 16 );
+
+          decoder->builder.left_bearing.x = args[0];
+          decoder->builder.left_bearing.y = args[1];
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y + args[1];
+          args = stack;
+          break;
+
+        case cff_op_setcurrentpoint:
+          /* this is an invalid Type 2 operator; however, there        */
+          /* exist fonts which are incorrectly converted from probably */
+          /* Type 1 to CFF, and some parsers seem to accept it         */
+
+          FT_TRACE4(( " setcurrentpoint (invalid op)\n" ));
+
+          x    = decoder->builder.pos_x + args[0];
+          y    = decoder->builder.pos_y + args[1];
           args = stack;
           break;
 
@@ -2184,8 +2272,10 @@
 
           FT_TRACE4(( " callothersubr (invalid op)\n" ));
 
-          /* don't modify stack; handle the subr as `unknown' so that */
-          /* following `pop' operands use the arguments on stack      */
+          /* subsequent `pop' operands should add the arguments,       */
+          /* this is the implementation described for `unknown' other  */
+          /* subroutines in the Type1 spec.                            */
+          args -= 2 + ( args[-2] >> 16 );
           break;
 
         case cff_op_pop:
@@ -2674,23 +2764,25 @@
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
-    if ( !error                                                              &&
-         face->root.internal->incremental_interface                          &&
+    if ( !error                                                               &&
+         face->root.internal->incremental_interface                           &&
          face->root.internal->incremental_interface->funcs->get_glyph_metrics )
     {
       FT_Incremental_MetricsRec  metrics;
 
 
       metrics.bearing_x = decoder.builder.left_bearing.x;
-      metrics.bearing_y = decoder.builder.left_bearing.y;
+      metrics.bearing_y = 0;
       metrics.advance   = decoder.builder.advance.x;
+      metrics.advance_v = decoder.builder.advance.y;
+
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
                 glyph_index, FALSE, &metrics );
+
       decoder.builder.left_bearing.x = metrics.bearing_x;
-      decoder.builder.left_bearing.y = metrics.bearing_y;
       decoder.builder.advance.x      = metrics.advance;
-      decoder.builder.advance.y      = 0;
+      decoder.builder.advance.y      = metrics.advance_v;
     }
 
 #endif /* FT_CONFIG_OPTION_INCREMENTAL */
@@ -2827,9 +2919,12 @@
         if ( has_vertical_info )
           metrics->vertBearingX = metrics->horiBearingX -
                                     metrics->horiAdvance / 2;
-        else
-          ft_synthesize_vertical_metrics( metrics,
-                                          metrics->vertAdvance );
+        else 
+        {
+          if ( load_flags & FT_LOAD_VERTICAL_LAYOUT )
+            ft_synthesize_vertical_metrics( metrics,
+                                            metrics->vertAdvance );
+        }
       }
     }
 

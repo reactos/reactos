@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009    */
+/*            2010 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -211,7 +212,12 @@
 
     /* `glyph_names' is set to 0 for CID fonts which do not */
     /* include an encoding.  How can we deal with these?    */
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
+    if ( decoder->glyph_names == 0                   &&
+         !face->root.internal->incremental_interface )
+#else
     if ( decoder->glyph_names == 0 )
+#endif /* FT_CONFIG_OPTION_INCREMENTAL */
     {
       FT_ERROR(( "t1operator_seac:"
                  " glyph names table not available in this font\n" ));
@@ -1453,12 +1459,20 @@
         case op_setcurrentpoint:
           FT_TRACE4(( " setcurrentpoint" ));
 
-          /* From the T1 specs, section 6.4:                        */
+          /* From the T1 specification, section 6.4:                */
           /*                                                        */
           /*   The setcurrentpoint command is used only in          */
           /*   conjunction with results from OtherSubrs procedures. */
 
-          /* known_othersubr_result_cnt != 0 is already handled above */
+          /* known_othersubr_result_cnt != 0 is already handled     */
+          /* above.                                                 */
+
+          /* Note, however, that both Ghostscript and Adobe         */
+          /* Distiller handle this situation by silently ignoring   */
+          /* the inappropriate `setcurrentpoint' instruction.  So   */
+          /* we do the same.                                        */
+#if 0
+
           if ( decoder->flex_state != 1 )
           {
             FT_ERROR(( "t1_decoder_parse_charstrings:"
@@ -1466,6 +1480,7 @@
             goto Syntax_Error;
           }
           else
+#endif
             decoder->flex_state = 0;
           break;
 

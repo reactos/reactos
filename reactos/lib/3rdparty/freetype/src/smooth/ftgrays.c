@@ -1426,7 +1426,7 @@
   /*                                                                       */
   /* <Description>                                                         */
   /*    Walk over an outline's structure to decompose it into individual   */
-  /*    segments and Bzier arcs.  This function is also able to emit      */
+  /*    segments and Bézier arcs.  This function is also able to emit      */
   /*    `move to' and `close to' operations to indicate the start and end  */
   /*    of new contours in the outline.                                    */
   /*                                                                       */

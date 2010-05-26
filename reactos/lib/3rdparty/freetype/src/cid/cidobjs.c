@@ -413,10 +413,11 @@
       cidface->num_fixed_sizes = 0;
       cidface->available_sizes = 0;
 
-      cidface->bbox.xMin =   cid->font_bbox.xMin             >> 16;
-      cidface->bbox.yMin =   cid->font_bbox.yMin             >> 16;
-      cidface->bbox.xMax = ( cid->font_bbox.xMax + 0xFFFFU ) >> 16;
-      cidface->bbox.yMax = ( cid->font_bbox.yMax + 0xFFFFU ) >> 16;
+      cidface->bbox.xMin =   cid->font_bbox.xMin            >> 16;
+      cidface->bbox.yMin =   cid->font_bbox.yMin            >> 16;
+      /* no `U' suffix here to 0xFFFF! */
+      cidface->bbox.xMax = ( cid->font_bbox.xMax + 0xFFFF ) >> 16;
+      cidface->bbox.yMax = ( cid->font_bbox.yMax + 0xFFFF ) >> 16;
 
       if ( !cidface->units_per_EM )
         cidface->units_per_EM = 1000;

@@ -402,16 +402,16 @@
   af_latin_metrics_check_digits( AF_LatinMetrics  metrics,
                                  FT_Face          face )
   {
-    FT_UInt  i;
-    FT_Bool  started = 0, same_width = 1;
+    FT_UInt   i;
+    FT_Bool   started = 0, same_width = 1;
+    FT_Fixed  advance, old_advance = 0;
 
 
     /* check whether all ASCII digits have the same advance width; */
     /* digit `0' is 0x30 in all supported charmaps                 */
     for ( i = 0x30; i <= 0x39; i++ )
     {
-      FT_UInt   glyph_index;
-      FT_Fixed  advance, old_advance = 0;
+      FT_UInt  glyph_index;
 
 
       glyph_index = FT_Get_Char_Index( face, i );

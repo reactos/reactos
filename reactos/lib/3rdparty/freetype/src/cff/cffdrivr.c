@@ -621,13 +621,14 @@
   {
     FT_Module            sfnt;
     FT_Module_Interface  result;
-    FT_Library           library = driver->library;
-    FT_UNUSED(library);
 
 
     result = ft_service_list_lookup( FT_CFF_SERVICES_GET, module_interface );
     if ( result != NULL )
       return  result;
+
+    if ( !driver )
+      return NULL;
 
     /* we pass our request to the `sfnt' module */
     sfnt = FT_Get_Module( driver->library, "sfnt" );

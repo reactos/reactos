@@ -94,11 +94,8 @@
 #define ALL_POINTS  (FT_UShort*)( -1 )
 
 
-  enum
-  {
-    GX_PT_POINTS_ARE_WORDS     = 0x80,
-    GX_PT_POINT_RUN_COUNT_MASK = 0x7F
-  };
+#define GX_PT_POINTS_ARE_WORDS      0x80
+#define GX_PT_POINT_RUN_COUNT_MASK  0x7F
 
 
   /*************************************************************************/
@@ -214,9 +211,9 @@
                            FT_Offset  delta_cnt )
   {
     FT_Short  *deltas;
-    FT_Int     runcnt;
+    FT_UInt    runcnt;
     FT_Offset  i;
-    FT_Offset  j;
+    FT_UInt    j;
     FT_Memory  memory = stream->memory;
     FT_Error   error = TT_Err_Ok;
 

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright 2005, 2006, 2007, 2008, 2009 by
+# Copyright 2005, 2006, 2007, 2008, 2009, 2010 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -95,10 +95,11 @@ compare_to_minimum_version ()
 check_tool_version ()
 {
   field=$5
+  # assume the output of "[TOOL] --version" is "toolname (GNU toolname foo bar) version"
   if test "$field"x = x; then
-    field=4  # default to 4 for all GNU autotools
+    field=3  # default to 3 for all GNU autotools, after filtering enclosed string
   fi
-  version=`$1 --version | head -1 | cut -d ' ' -f $field`
+  version=`$1 --version | head -1 | sed 's/([^)]*)/()/g' | cut -d ' ' -f $field`
   version_check=`compare_to_minimum_version $version $4`
   if test "$version_check"x = 0x; then
     echo "ERROR: Your version of the \`$2' tool is too old."
