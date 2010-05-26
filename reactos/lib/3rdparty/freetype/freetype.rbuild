@@ -10,11 +10,6 @@
 	<if property="NSWPAT" value="1">
 		<define name="TT_CONFIG_OPTION_BYTECODE_INTERPRETER" />
 	</if>
-	<if property="ARCH" value="i386">
-		<directory name="i386">
-			<file>setjmplongjmp.s</file>
-		</directory>
-	</if>
 	<directory name="src">
 		<directory name="base">
 			<file>ftbase.c</file>
