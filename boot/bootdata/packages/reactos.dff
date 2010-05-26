@@ -818,7 +818,3 @@ modules\rostests\winetests\xmllite\xmllite_winetest.exe                    7   o
 
 
 modules\wallpaper\Angelus_02_ROSWP.bmp                                     4   optional
-
-modules\drivers\video\cirrus\cirrus.inf					6  optional
-modules\drivers\video\cirrus\cirrus.dll					1  optional
-modules\drivers\video\cirrus\cirrus.sys					2  optional
