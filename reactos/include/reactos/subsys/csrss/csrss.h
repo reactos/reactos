@@ -62,6 +62,7 @@ typedef struct
    BOOL Unicode;
    ULONG NrCharactersToWrite;
    ULONG NrCharactersWritten;
+   HANDLE UnpauseEvent;
    BYTE Buffer[0];
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 

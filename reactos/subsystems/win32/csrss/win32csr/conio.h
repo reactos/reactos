@@ -93,6 +93,8 @@ typedef struct tagCSRSS_CONSOLE
   LIST_ENTRY ProcessList;
   struct tagALIAS_HEADER *Aliases;
   CONSOLE_SELECTION_INFO Selection;
+  BYTE PauseFlags;
+  HANDLE UnpauseEvent;
 } CSRSS_CONSOLE;
 
 typedef struct ConsoleInput_t
@@ -111,10 +113,17 @@ typedef struct ConsoleInput_t
 #define CONSOLE_MOUSE_SELECTION       0x4
 #define CONSOLE_MOUSE_DOWN            0x8
 
+/* PauseFlags values (internal only) */
+#define PAUSED_FROM_KEYBOARD  0x1
+#define PAUSED_FROM_SCROLLBAR 0x2
+#define PAUSED_FROM_SELECTION 0x4
+
 NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
 VOID WINAPI ConioDeleteConsole(Object_t *Object);
 VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
 VOID WINAPI CsrInitConsoleSupport(VOID);
+VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
+VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
 void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
 PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
 VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
