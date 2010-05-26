@@ -955,6 +955,8 @@ GreGradientFill(
     if (ppal)
         PALETTE_UnlockPalette(ppal);
 
+    DC_UnlockDc(pdc);
+
     return bRet;
 }
 
