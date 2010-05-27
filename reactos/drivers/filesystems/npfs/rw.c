@@ -331,7 +331,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
     if ((Ccb->OtherSide == NULL) && (Ccb->ReadDataAvailable == 0))
     {
-        if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
+        if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
         {
             DPRINT("File pipe broken\n");
             Status = STATUS_PIPE_BROKEN;

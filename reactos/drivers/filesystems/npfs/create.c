@@ -619,7 +619,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             ExAcquireFastMutex(&OtherSide->DataListLock);
             ExAcquireFastMutex(&Ccb->DataListLock);
         }
-        //OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+        OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
         OtherSide->OtherSide = NULL;
         /*
         * Signaling the write event. If is possible that an other
@@ -743,8 +743,12 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     }
 
     /* Disconnect the pipes */
-    if (Ccb->OtherSide) Ccb->OtherSide->OtherSide = NULL;
-    if (Ccb) Ccb->OtherSide = NULL;
+    if (Ccb->OtherSide)
+    {
+        Ccb->OtherSide->PipeState = FILE_PIPE_CLOSING_STATE;
+        Ccb->OtherSide->OtherSide = NULL;
+        Ccb->OtherSide = NULL;
+    }
 
     ASSERT(Ccb->PipeState == FILE_PIPE_CLOSING_STATE);
 
