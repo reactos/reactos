@@ -67,7 +67,7 @@ startPaintingL(HDC hdc, short x, short y, int fg, int bg)
     lastY = y;
     switch (activeTool)
     {
-        case 1:
+        case TOOL_FREESEL:
             ShowWindow(hSelection, SW_HIDE);
             if (ptStack != NULL)
                 HeapFree(GetProcessHeap(), 0, ptStack);
@@ -76,39 +76,39 @@ startPaintingL(HDC hdc, short x, short y, int fg, int bg)
             ptStack[0].x = x;
             ptStack[0].y = y;
             break;
-        case 10:
-        case 11:
-        case 13:
-        case 15:
-        case 16:
+        case TOOL_TEXT:
+        case TOOL_LINE:
+        case TOOL_RECT:
+        case TOOL_ELLIPSE:
+        case TOOL_RRECT:
             newReversible();
             break;
-        case 2:
+        case TOOL_RECTSEL:
             newReversible();
             ShowWindow(hSelection, SW_HIDE);
             rectSel_src[2] = rectSel_src[3] = 0;
             break;
-        case 3:
+        case TOOL_RUBBER:
             newReversible();
             Erase(hdc, x, y, x, y, bg, rubberRadius);
             break;
-        case 4:
+        case TOOL_FILL:
             newReversible();
             Fill(hdc, x, y, fg);
             break;
-        case 7:
+        case TOOL_PEN:
             newReversible();
             SetPixel(hdc, x, y, fg);
             break;
-        case 8:
+        case TOOL_BRUSH:
             newReversible();
             Brush(hdc, x, y, x, y, fg, brushStyle);
             break;
-        case 9:
+        case TOOL_AIRBRUSH:
             newReversible();
             Airbrush(hdc, x, y, fg, airBrushWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP == 0)
@@ -117,7 +117,7 @@ startPaintingL(HDC hdc, short x, short y, int fg, int bg)
                 pointSP++;
             }
             break;
-        case 14:
+        case TOOL_SHAPE:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
@@ -136,7 +136,7 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
-        case 1:
+        case TOOL_FREESEL:
             if (ptSP == 0)
                 newReversible();
             ptSP++;
@@ -147,7 +147,7 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             resetToU1();
             Poly(hdc, ptStack, ptSP + 1, 0, 0, 2, 0, FALSE);
             break;
-        case 2:
+        case TOOL_RECTSEL:
         {
             short tempX;
             short tempY;
@@ -161,25 +161,25 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             RectSel(hdc, startX, startY, tempX, tempY);
             break;
         }
-        case 3:
+        case TOOL_RUBBER:
             Erase(hdc, lastX, lastY, x, y, bg, rubberRadius);
             break;
-        case 7:
+        case TOOL_PEN:
             Line(hdc, lastX, lastY, x, y, fg, 1);
             break;
-        case 8:
+        case TOOL_BRUSH:
             Brush(hdc, lastX, lastY, x, y, fg, brushStyle);
             break;
-        case 9:
+        case TOOL_AIRBRUSH:
             Airbrush(hdc, x, y, fg, airBrushWidth);
             break;
-        case 11:
+        case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -197,13 +197,13 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
                     break;
             }
             break;
-        case 13:
+        case TOOL_RECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
-        case 14:
+        case TOOL_SHAPE:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -213,13 +213,13 @@ whilePaintingL(HDC hdc, short x, short y, int fg, int bg)
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, fg, bg, lineWidth, shapeStyle, FALSE);
             break;
-        case 15:
+        case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
-        case 16:
+        case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
@@ -236,7 +236,7 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
-        case 1:
+        case TOOL_FREESEL:
         {
             POINT *ptStackCopy;
             int i;
@@ -286,7 +286,7 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             ptStack = NULL;
             break;
         }
-        case 2:
+        case TOOL_RECTSEL:
             resetToU1();
             if ((rectSel_src[2] != 0) && (rectSel_src[3] != 0))
             {
@@ -306,31 +306,31 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
                 ShowWindow(hSelection, SW_SHOW);
             }
             break;
-        case 3:
+        case TOOL_RUBBER:
             Erase(hdc, lastX, lastY, x, y, bg, rubberRadius);
             break;
-        case 7:
+        case TOOL_PEN:
             Line(hdc, lastX, lastY, x, y, fg, 1);
             SetPixel(hdc, x, y, fg);
             break;
-        case 11:
+        case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, fg, lineWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             pointSP++;
             if (pointSP == 4)
                 pointSP = 0;
             break;
-        case 13:
+        case TOOL_RECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
-        case 14:
+        case TOOL_SHAPE:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -354,13 +354,13 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
             if (pointSP == 255)
                 pointSP--;
             break;
-        case 15:
+        case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, fg, bg, lineWidth, shapeStyle);
             break;
-        case 16:
+        case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
@@ -378,35 +378,35 @@ startPaintingR(HDC hdc, short x, short y, int fg, int bg)
     lastY = y;
     switch (activeTool)
     {
-        case 1:
-        case 10:
-        case 11:
-        case 13:
-        case 15:
-        case 16:
+        case TOOL_FREESEL:
+        case TOOL_TEXT:
+        case TOOL_LINE:
+        case TOOL_RECT:
+        case TOOL_ELLIPSE:
+        case TOOL_RRECT:
             newReversible();
             break;
-        case 3:
+        case TOOL_RUBBER:
             newReversible();
             Replace(hdc, x, y, x, y, fg, bg, rubberRadius);
             break;
-        case 4:
+        case TOOL_FILL:
             newReversible();
             Fill(hdc, x, y, bg);
             break;
-        case 7:
+        case TOOL_PEN:
             newReversible();
             SetPixel(hdc, x, y, bg);
             break;
-        case 8:
+        case TOOL_BRUSH:
             newReversible();
             Brush(hdc, x, y, x, y, bg, brushStyle);
             break;
-        case 9:
+        case TOOL_AIRBRUSH:
             newReversible();
             Airbrush(hdc, x, y, bg, airBrushWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP == 0)
@@ -415,7 +415,7 @@ startPaintingR(HDC hdc, short x, short y, int fg, int bg)
                 pointSP++;
             }
             break;
-        case 14:
+        case TOOL_SHAPE:
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
             if (pointSP + 1 >= 2)
@@ -434,25 +434,25 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
-        case 3:
+        case TOOL_RUBBER:
             Replace(hdc, lastX, lastY, x, y, fg, bg, rubberRadius);
             break;
-        case 7:
+        case TOOL_PEN:
             Line(hdc, lastX, lastY, x, y, bg, 1);
             break;
-        case 8:
+        case TOOL_BRUSH:
             Brush(hdc, lastX, lastY, x, y, bg, brushStyle);
             break;
-        case 9:
+        case TOOL_AIRBRUSH:
             Airbrush(hdc, x, y, bg, airBrushWidth);
             break;
-        case 11:
+        case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, bg, lineWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -470,13 +470,13 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
                     break;
             }
             break;
-        case 13:
+        case TOOL_RECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
-        case 14:
+        case TOOL_SHAPE:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -486,13 +486,13 @@ whilePaintingR(HDC hdc, short x, short y, int fg, int bg)
             if (pointSP + 1 >= 2)
                 Poly(hdc, pointStack, pointSP + 1, bg, fg, lineWidth, shapeStyle, FALSE);
             break;
-        case 15:
+        case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
-        case 16:
+        case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
@@ -509,31 +509,31 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
 {
     switch (activeTool)
     {
-        case 3:
+        case TOOL_RUBBER:
             Replace(hdc, lastX, lastY, x, y, fg, bg, rubberRadius);
             break;
-        case 7:
+        case TOOL_PEN:
             Line(hdc, lastX, lastY, x, y, bg, 1);
             SetPixel(hdc, x, y, bg);
             break;
-        case 11:
+        case TOOL_LINE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 roundTo8Directions(startX, startY, &x, &y);
             Line(hdc, startX, startY, x, y, bg, lineWidth);
             break;
-        case 12:
+        case TOOL_BEZIER:
             pointSP++;
             if (pointSP == 4)
                 pointSP = 0;
             break;
-        case 13:
+        case TOOL_RECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Rect(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
-        case 14:
+        case TOOL_SHAPE:
             resetToU1();
             pointStack[pointSP].x = x;
             pointStack[pointSP].y = y;
@@ -557,13 +557,13 @@ endPaintingR(HDC hdc, short x, short y, int fg, int bg)
             if (pointSP == 255)
                 pointSP--;
             break;
-        case 15:
+        case TOOL_ELLIPSE:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);
             Ellp(hdc, startX, startY, x, y, bg, fg, lineWidth, shapeStyle);
             break;
-        case 16:
+        case TOOL_RRECT:
             resetToU1();
             if (GetAsyncKeyState(VK_SHIFT) < 0)
                 regularize(startX, startY, &x, &y);

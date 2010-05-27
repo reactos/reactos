@@ -98,6 +98,24 @@
 #define ID_ELLIPSE  614
 #define ID_RRECT    615
 
+//the following 16 numbers need to be in order, increasing by 1
+#define TOOL_FREESEL  1
+#define TOOL_RECTSEL  2
+#define TOOL_RUBBER   3
+#define TOOL_FILL     4
+#define TOOL_COLOR    5
+#define TOOL_ZOOM     6
+#define TOOL_PEN      7
+#define TOOL_BRUSH    8
+#define TOOL_AIRBRUSH 9
+#define TOOL_TEXT     10
+#define TOOL_LINE     11
+#define TOOL_BEZIER   12
+#define TOOL_RECT     13
+#define TOOL_SHAPE    14
+#define TOOL_ELLIPSE  15
+#define TOOL_RRECT    16
+
 #define ID_ACCELERATORS 800
 
 #define IDD_MIRRORROTATE        700

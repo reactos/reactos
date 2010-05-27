@@ -50,7 +50,7 @@ short lastY;
 int lineWidth = 1;
 int shapeStyle = 0;
 int brushStyle = 0;
-int activeTool = 7;
+int activeTool = TOOL_PEN;
 int airBrushWidth = 5;
 int rubberRadius = 4;
 int transpBg = 0;
