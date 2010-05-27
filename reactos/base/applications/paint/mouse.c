@@ -279,6 +279,9 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
                 Poly(hdc, ptStack, ptSP + 1, bg, bg, 1, 2, TRUE);
                 newReversible();
 
+                MaskBlt(hDrawingDC, rectSel_src[0], rectSel_src[1], rectSel_src[2], rectSel_src[3], hSelDC, 0,
+                        0, hSelMask, 0, 0, MAKEROP4(SRCCOPY, SRCAND));
+
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
             }
@@ -301,6 +304,9 @@ endPaintingL(HDC hdc, short x, short y, int fg, int bg)
                 Rect(hdc, rectSel_src[0], rectSel_src[1], rectSel_src[0] + rectSel_src[2],
                      rectSel_src[1] + rectSel_src[3], bgColor, bgColor, 0, TRUE);
                 newReversible();
+
+                BitBlt(hDrawingDC, rectSel_src[0], rectSel_src[1], rectSel_src[2], rectSel_src[3], hSelDC, 0,
+                       0, SRCCOPY);
 
                 placeSelWin();
                 ShowWindow(hSelection, SW_SHOW);
