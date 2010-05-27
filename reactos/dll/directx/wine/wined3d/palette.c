@@ -74,7 +74,8 @@ static ULONG  WINAPI IWineD3DPaletteImpl_Release(IWineD3DPalette *iface) {
 }
 
 /* Not called from the vtable */
-DWORD IWineD3DPaletteImpl_Size(DWORD dwFlags) {
+static DWORD IWineD3DPaletteImpl_Size(DWORD dwFlags)
+{
     switch (dwFlags & SIZE_BITS) {
         case WINEDDPCAPS_1BIT: return 2;
         case WINEDDPCAPS_2BIT: return 4;
@@ -183,7 +184,7 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_GetParent(IWineD3DPalette *iface, IUn
     return WINED3D_OK;
 }
 
-const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
+static const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
 {
     /*** IUnknown ***/
     IWineD3DPaletteImpl_QueryInterface,
@@ -195,3 +196,33 @@ const IWineD3DPaletteVtbl IWineD3DPalette_Vtbl =
     IWineD3DPaletteImpl_GetCaps,
     IWineD3DPaletteImpl_SetEntries
 };
+
+HRESULT wined3d_palette_init(IWineD3DPaletteImpl *palette, IWineD3DDeviceImpl *device,
+        DWORD flags, const PALETTEENTRY *entries, IUnknown *parent)
+{
+    HRESULT hr;
+
+    palette->lpVtbl = &IWineD3DPalette_Vtbl;
+    palette->ref = 1;
+    palette->parent = parent;
+    palette->device = device;
+    palette->Flags = flags;
+
+    palette->palNumEntries = IWineD3DPaletteImpl_Size(flags);
+    palette->hpal = CreatePalette((const LOGPALETTE *)&palette->palVersion);
+    if (!palette->hpal)
+    {
+        WARN("Failed to create palette.\n");
+        return E_FAIL;
+    }
+
+    hr = IWineD3DPalette_SetEntries((IWineD3DPalette *)palette, 0, 0, IWineD3DPaletteImpl_Size(flags), entries);
+    if (FAILED(hr))
+    {
+        WARN("Failed to set palette entries, hr %#x.\n", hr);
+        DeleteObject(palette->hpal);
+        return hr;
+    }
+
+    return WINED3D_OK;
+}

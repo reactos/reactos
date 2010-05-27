@@ -85,7 +85,7 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetFrontBufferData(IWineD3DSwapChain *i
         MapWindowPoints(This->win_handle, NULL, &start, 1);
     }
 
-    IWineD3DSurface_BltFast(pDestSurface, start.x, start.y, This->frontBuffer, NULL, 0);
+    IWineD3DSurface_BltFast(pDestSurface, start.x, start.y, (IWineD3DSurface *)This->front_buffer, NULL, 0);
     return WINED3D_OK;
 }
 
@@ -106,12 +106,13 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetBackBuffer(IWineD3DSwapChain *iface,
      * used (there This->backBuffer is always NULL). We need this because this function has
      * to be called from IWineD3DStateBlockImpl_InitStartupStateBlock to get the default
      * scissorrect dimensions. */
-    if( !This->backBuffer ) {
+    if (!This->back_buffers)
+    {
         *ppBackBuffer = NULL;
         return WINED3DERR_INVALIDCALL;
     }
 
-    *ppBackBuffer = This->backBuffer[iBackBuffer];
+    *ppBackBuffer = (IWineD3DSurface *)This->back_buffers[iBackBuffer];
     TRACE("(%p) : BackBuf %d Type %d  returning %p\n", This, iBackBuffer, Type, *ppBackBuffer);
 
     /* Note inc ref on returned surface */
@@ -145,15 +146,14 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetDisplayMode(IWineD3DSwapChain *iface
     return hr;
 }
 
-HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetDevice(IWineD3DSwapChain *iface, IWineD3DDevice**ppDevice) {
+HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetDevice(IWineD3DSwapChain *iface, IWineD3DDevice **device)
+{
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
 
-    *ppDevice = (IWineD3DDevice *)This->device;
+    *device = (IWineD3DDevice *)This->device;
+    IWineD3DDevice_AddRef(*device);
 
-    /* Note  Calling this method will increase the internal reference count
-    on the IDirect3DDevice9 interface. */
-    IWineD3DDevice_AddRef(*ppDevice);
-    TRACE("(%p) : returning %p\n", This, *ppDevice);
+    TRACE("(%p) : returning %p\n", This, *device);
     return WINED3D_OK;
 }
 
@@ -171,9 +171,9 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_SetGammaRamp(IWineD3DSwapChain *iface, 
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
     HDC hDC;
     TRACE("(%p) : pRamp@%p flags(%d)\n", This, pRamp, Flags);
-    hDC = GetDC(This->win_handle);
+    hDC = GetDC(This->device_window);
     SetDeviceGammaRamp(hDC, (LPVOID)pRamp);
-    ReleaseDC(This->win_handle, hDC);
+    ReleaseDC(This->device_window, hDC);
     return WINED3D_OK;
 
 }
@@ -183,9 +183,9 @@ HRESULT WINAPI IWineD3DBaseSwapChainImpl_GetGammaRamp(IWineD3DSwapChain *iface, 
     IWineD3DSwapChainImpl *This = (IWineD3DSwapChainImpl *)iface;
     HDC hDC;
     TRACE("(%p) : pRamp@%p\n", This, pRamp);
-    hDC = GetDC(This->win_handle);
+    hDC = GetDC(This->device_window);
     GetDeviceGammaRamp(hDC, pRamp);
-    ReleaseDC(This->win_handle, hDC);
+    ReleaseDC(This->device_window, hDC);
     return WINED3D_OK;
 
 }

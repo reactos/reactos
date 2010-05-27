@@ -1754,6 +1754,7 @@ typedef enum wined3d_gl_extension
     ARB_SHADER_OBJECTS,
     ARB_SHADER_TEXTURE_LOD,
     ARB_SHADING_LANGUAGE_100,
+    ARB_SHADOW,
     ARB_SYNC,
     ARB_TEXTURE_BORDER_CLAMP,
     ARB_TEXTURE_COMPRESSION,
@@ -1782,6 +1783,7 @@ typedef enum wined3d_gl_extension
     EXT_BLEND_EQUATION_SEPARATE,
     EXT_BLEND_FUNC_SEPARATE,
     EXT_BLEND_MINMAX,
+    EXT_DRAW_BUFFERS2,
     EXT_FOG_COORD,
     EXT_FRAMEBUFFER_BLIT,
     EXT_FRAMEBUFFER_MULTISAMPLE,
@@ -1829,7 +1831,6 @@ typedef enum wined3d_gl_extension
     SGIS_GENERATE_MIPMAP,
     SGI_VIDEO_SYNC,
     /* WGL extensions */
-    WGL_ARB_PBUFFER,
     WGL_ARB_PIXEL_FORMAT,
     WGL_WINE_PIXEL_FORMAT_PASSTHROUGH,
     /* Internally used */
@@ -2404,6 +2405,14 @@ typedef unsigned int GLhandleARB;
 #define GL_SHADING_LANGUAGE_VERSION_ARB                     0x8b8c
 #endif
 
+/* GL_ARB_shadow */
+#ifndef GL_ARB_shadow
+#define GL_ARB_shadow 1
+#define GL_TEXTURE_COMPARE_MODE_ARB                         0x884c
+#define GL_TEXTURE_COMPARE_FUNC_ARB                         0x884d
+#define GL_COMPARE_R_TO_TEXTURE_ARB                         0x884e
+#endif
+
 /* GL_ARB_sync */
 #ifndef GL_ARB_sync
 #define GL_ARB_sync 1
@@ -2958,6 +2967,15 @@ typedef void (WINE_GLAPI *PGLFNBLENDEQUATIONSEPARATEEXTPROC)(GLenum modeRGB, GLe
 #endif
 typedef void (WINE_GLAPI *PGLFNBLENDFUNCSEPARATEEXTPROC)(GLenum sfactorRGB, GLenum dfactorRGB,
         GLenum sfactorAlpha, GLenum dfactorAlpha);
+
+/* GL_EXT_draw_buffers2 */
+typedef GLvoid (WINE_GLAPI *PGLFNCOLORMASKINDEXEDEXTPROC)(GLuint buffer_idx, GLboolean r, GLboolean g,
+        GLboolean b, GLboolean a);
+typedef GLvoid (WINE_GLAPI *PGLFNGETBOOLEANINDEXEDVEXTPROC)(GLenum param, GLuint index, GLboolean *value);
+typedef GLvoid (WINE_GLAPI *PGLFNGETINTEGERINDEXEDVEXTPROC)(GLenum param, GLuint index, GLint *value);
+typedef GLvoid (WINE_GLAPI *PGLFNENABLEINDEXEDEXTPROC)(GLenum target, GLuint index);
+typedef GLvoid (WINE_GLAPI *PGLFNDISABLEINDEXEDEXTPROC)(GLenum target, GLuint index);
+typedef GLboolean (WINE_GLAPI *PGLFNISENABLEDINDEXEDEXTPROC)(GLenum target, GLuint index);
 
 /* GL_EXT_fog_coord */
 #ifndef GL_EXT_fog_coord
@@ -3680,26 +3698,6 @@ typedef const char *(WINAPI *WINED3D_PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hdc);
 #define WGL_SAMPLES_ARB                                     0x2042
 #endif
 
-/* WGL_ARB_pbuffer */
-#ifndef WGL_ARB_pbuffer
-#define WGL_ARB_pbuffer 1
-#define WGL_DRAW_TO_PBUFFER_ARB                             0x202d
-#define WGL_MAX_PBUFFER_PIXELS_ARB                          0x202e
-#define WGL_MAX_PBUFFER_WIDTH_ARB                           0x202f
-#define WGL_MAX_PBUFFER_HEIGHT_ARB                          0x2030
-#define WGL_PBUFFER_LARGEST_ARB                             0x2033
-#define WGL_PBUFFER_WIDTH_ARB                               0x2034
-#define WGL_PBUFFER_HEIGHT_ARB                              0x2035
-#define WGL_PBUFFER_LOST_ARB                                0x2036
-#endif
-DECLARE_HANDLE(HPBUFFERARB);
-typedef HPBUFFERARB (WINAPI *WINED3D_PFNWGLCREATEPBUFFERARBPROC)(HDC hDC, int iPixelFormat,
-        int iWidth, int iHeight, const int *piAttribList);
-typedef HDC (WINAPI *WINED3D_PFNWGLGETPBUFFERDCARBPROC)(HPBUFFERARB hPbuffer);
-typedef int (WINAPI *WINED3D_PFNWGLRELEASEPBUFFERDCARBPROC)(HPBUFFERARB hPbuffer, HDC hDC);
-typedef BOOL (WINAPI *WINED3D_PFNWGLDESTROYPBUFFERARBPROC)(HPBUFFERARB hPbuffer);
-typedef BOOL (WINAPI *WINED3D_PFNWGLQUERYPBUFFERARBPROC)(HPBUFFERARB hPbuffer, int iAttribute, int *piValue);
-
 /* WGL_ARB_pixel_format */
 #ifndef WGL_ARB_pixel_format
 #define WGL_ARB_pixel_format 1
@@ -3930,7 +3928,7 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
             glUniform3iARB,                             ARB_SHADER_OBJECTS,             NULL) \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM4IARBPROC, \
             glUniform4iARB,                             ARB_SHADER_OBJECTS,             NULL) \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1IARBPROC, \
+    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1FARBPROC, \
             glUniform1fARB,                             ARB_SHADER_OBJECTS,             NULL) \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM2FARBPROC, \
             glUniform2fARB,                             ARB_SHADER_OBJECTS,             NULL) \
@@ -4199,6 +4197,19 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
     /* GL_EXT_blend_func_separate */ \
     USE_GL_FUNC(PGLFNBLENDEQUATIONSEPARATEEXTPROC, \
             glBlendEquationSeparateEXT,                 EXT_BLEND_EQUATION_SEPARATE,    NULL) \
+    /* GL_EXT_draw_buffers2 */ \
+    USE_GL_FUNC(PGLFNCOLORMASKINDEXEDEXTPROC, \
+            glColorMaskIndexedEXT,                      EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(PGLFNGETBOOLEANINDEXEDVEXTPROC, \
+            glGetBooleanIndexedvEXT,                    EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(PGLFNGETINTEGERINDEXEDVEXTPROC, \
+            glGetIntegerIndexedvEXT,                    EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(PGLFNENABLEINDEXEDEXTPROC, \
+            glEnableIndexedEXT,                         EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(PGLFNDISABLEINDEXEDEXTPROC, \
+            glDisableIndexedEXT,                        EXT_DRAW_BUFFERS2,              NULL) \
+    USE_GL_FUNC(PGLFNISENABLEDINDEXEDEXTPROC, \
+            glIsEnabledIndexedEXT,                      EXT_DRAW_BUFFERS2,              NULL) \
     /* GL_EXT_fog_coord */ \
     USE_GL_FUNC(PGLFNGLFOGCOORDFEXTPROC, \
             glFogCoordfEXT,                             EXT_FOG_COORD,                  NULL) \
@@ -4489,11 +4500,6 @@ typedef BOOL (WINAPI *WINED3D_PFNWGLSETPIXELFORMATWINE)(HDC hdc, int iPixelForma
     USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBIVARBPROC,    wglGetPixelFormatAttribivARB,   0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLGETPIXELFORMATATTRIBFVARBPROC,    wglGetPixelFormatAttribfvARB,   0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLCHOOSEPIXELFORMATARBPROC,         wglChoosePixelFormatARB,        0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLCREATEPBUFFERARBPROC,             wglCreatePbufferARB,            0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLGETPBUFFERDCARBPROC,              wglGetPbufferDCARB,             0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLRELEASEPBUFFERDCARBPROC,          wglReleasePbufferDCARB,         0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLDESTROYPBUFFERARBPROC,            wglDestroyPbufferARB,           0, NULL) \
-    USE_GL_FUNC(WINED3D_PFNWGLQUERYPBUFFERARBPROC,              wglQueryPbufferARB,             0, NULL) \
     USE_GL_FUNC(WINED3D_PFNWGLSETPIXELFORMATWINE,               wglSetPixelFormatWINE,          0, NULL)
 
 #endif /* __WINE_WINED3D_GL */

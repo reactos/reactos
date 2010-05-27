@@ -294,7 +294,6 @@ IDirect3DMaterialImpl_GetMaterial(IDirect3DMaterial3 *iface,
     /* Copies the material structure */
     EnterCriticalSection(&ddraw_cs);
     dwSize = lpMat->dwSize;
-    memset(lpMat, 0, dwSize);
     memcpy(lpMat, &This->mat, dwSize);
     LeaveCriticalSection(&ddraw_cs);
 

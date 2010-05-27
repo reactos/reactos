@@ -72,30 +72,31 @@ wined3d_settings_t wined3d_settings =
     PCI_DEVICE_NONE,/* PCI Device ID */
     0,              /* The default of memory is set in FillGLCaps */
     NULL,           /* No wine logo by default */
-    FALSE           /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
+    FALSE,          /* Disable multisampling for now due to Nvidia driver bugs which happens for some users */
+    FALSE,          /* No strict draw ordering. */
 };
 
-IWineD3D* WINAPI WineDirect3DCreate(UINT dxVersion, IUnknown *parent) {
-    IWineD3DImpl* object;
+IWineD3D * WINAPI WineDirect3DCreate(UINT version, IUnknown *parent)
+{
+    IWineD3DImpl *object;
+    HRESULT hr;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DImpl));
-    object->lpVtbl = &IWineD3D_Vtbl;
-    object->dxVersion = dxVersion;
-    object->ref = 1;
-    object->parent = parent;
-
-    if (!InitAdapters(object))
+    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*object));
+    if (!object)
     {
-        WARN("Failed to initialize direct3d adapters, Direct3D will not be available\n");
-        if (dxVersion > 7)
-        {
-            ERR("Direct3D%d is not available without opengl\n", dxVersion);
-            HeapFree(GetProcessHeap(), 0, object);
-            return NULL;
-        }
+        ERR("Failed to allocate wined3d object memory.\n");
+        return NULL;
     }
 
-    TRACE("Created WineD3D object @ %p for d3d%d support\n", object, dxVersion);
+    hr = wined3d_init(object, version, parent);
+    if (FAILED(hr))
+    {
+        WARN("Failed to initialize wined3d object, hr %#x.\n", hr);
+        HeapFree(GetProcessHeap(), 0, object);
+        return NULL;
+    }
+
+    TRACE("Created wined3d object %p for d3d%d support.\n", object, version);
 
     return (IWineD3D *)object;
 }
@@ -120,7 +121,7 @@ static void CDECL wined3d_do_nothing(void)
 {
 }
 
-static BOOL wined3d_init(HINSTANCE hInstDLL)
+static BOOL wined3d_dll_init(HINSTANCE hInstDLL)
 {
     DWORD wined3d_context_tls_idx;
     HMODULE mod;
@@ -236,11 +237,6 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
                 TRACE("Using the backbuffer for offscreen rendering\n");
                 wined3d_settings.offscreen_rendering_mode = ORM_BACKBUFFER;
             }
-            else if (!strcmp(buffer,"pbuffer"))
-            {
-                TRACE("Using PBuffers for offscreen rendering\n");
-                wined3d_settings.offscreen_rendering_mode = ORM_PBUFFER;
-            }
             else if (!strcmp(buffer,"fbo"))
             {
                 TRACE("Using FBOs for offscreen rendering\n");
@@ -324,6 +320,12 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
                 wined3d_settings.allow_multisampling = TRUE;
             }
         }
+        if (!get_config_key(hkey, appkey, "StrictDrawOrdering", buffer, size)
+                && !strcmp(buffer,"enabled"))
+        {
+            TRACE("Enforcing strict draw ordering.\n");
+            wined3d_settings.strict_draw_ordering = TRUE;
+        }
     }
     if (wined3d_settings.vs_mode == VS_HW)
         TRACE("Allow HW vertex shaders\n");
@@ -338,7 +340,7 @@ static BOOL wined3d_init(HINSTANCE hInstDLL)
     return TRUE;
 }
 
-static BOOL wined3d_destroy(HINSTANCE hInstDLL)
+static BOOL wined3d_dll_destroy(HINSTANCE hInstDLL)
 {
     DWORD wined3d_context_tls_idx = context_get_tls_idx();
     unsigned int i;
@@ -478,10 +480,10 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpv)
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
-            return wined3d_init(hInstDLL);
+            return wined3d_dll_init(hInstDLL);
 
         case DLL_PROCESS_DETACH:
-            return wined3d_destroy(hInstDLL);
+            return wined3d_dll_destroy(hInstDLL);
 
         case DLL_THREAD_DETACH:
         {
