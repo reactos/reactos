@@ -331,11 +331,8 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 
     if ((Ccb->OtherSide == NULL) && (Ccb->ReadDataAvailable == 0))
     {
-        if (Ccb->PipeState == FILE_PIPE_CLOSING_STATE)
-        {
-            DPRINT("File pipe broken\n");
+        if (Ccb->PipeState == FILE_PIPE_CONNECTED_STATE)
             Status = STATUS_PIPE_BROKEN;
-        }
         else if (Ccb->PipeState == FILE_PIPE_LISTENING_STATE)
             Status = STATUS_PIPE_LISTENING;
         else if (Ccb->PipeState == FILE_PIPE_DISCONNECTED_STATE)
@@ -443,7 +440,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
                 {
                     break;
                 }
-                if ((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) && (Ccb->ReadDataAvailable == 0))
+                if (((Ccb->PipeState != FILE_PIPE_CONNECTED_STATE) || (!Ccb->OtherSide)) && (Ccb->ReadDataAvailable == 0))
                 {
                     DPRINT("PipeState: %x\n", Ccb->PipeState);
                     Status = STATUS_PIPE_BROKEN;
@@ -800,13 +797,13 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     {
         if ((ReaderCcb->WriteQuotaAvailable == 0))
         {
-            KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
-            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
                 Status = STATUS_PIPE_BROKEN;
                 ExReleaseFastMutex(&ReaderCcb->DataListLock);
                 goto done;
             }
+            KeSetEvent(&ReaderCcb->ReadEvent, IO_NO_INCREMENT, FALSE);
             ExReleaseFastMutex(&ReaderCcb->DataListLock);
 
             DPRINT("Write Waiting for buffer space (%S)\n", Fcb->PipeName.Buffer);
@@ -830,20 +827,15 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
             * It's possible that the event was signaled because the
             * other side of pipe was closed.
             */
-            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            if (Ccb->PipeState != FILE_PIPE_CONNECTED_STATE || !Ccb->OtherSide)
             {
                 DPRINT("PipeState: %x\n", Ccb->PipeState);
                 Status = STATUS_PIPE_BROKEN;
                 goto done;
             }
             /* Check that the pipe has not been closed */
-            if (ReaderCcb->PipeState != FILE_PIPE_CONNECTED_STATE)
+            if (ReaderCcb->PipeState != FILE_PIPE_CONNECTED_STATE || !ReaderCcb->OtherSide)
             {
-                /* If the other side is valid, fire event */
-                if (Ccb)
-                {
-                    KeResetEvent(&Ccb->WriteEvent);
-                }
                 Status = STATUS_PIPE_BROKEN;
                 goto done;
             }
