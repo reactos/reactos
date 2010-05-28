@@ -634,25 +634,37 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
 
   if (DeviceNode->ResourceList)
   {
-      WCHAR NameBuff[256];
+      PWCHAR DeviceName = NULL;
       UNICODE_STRING NameU;
       UNICODE_STRING Suffix;
-      ULONG OldLength;
+      ULONG OldLength = 0;
 
       ASSERT(DeviceNode->ResourceListTranslated);
 
-      NameU.Buffer = NameBuff;
-      NameU.Length = 0;
-      NameU.MaximumLength = 256 * sizeof(WCHAR);
-
       Status = IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
                                    DevicePropertyPhysicalDeviceObjectName,
-                                   NameU.MaximumLength,
-                                   NameU.Buffer,
+                                   0,
+                                   NULL,
                                    &OldLength);
-      ASSERT(Status == STATUS_SUCCESS);
+     if ((OldLength != 0) && (Status == STATUS_BUFFER_TOO_SMALL))
+     {
+        DeviceName = ExAllocatePool(NonPagedPool, OldLength);
+        ASSERT(DeviceName);
 
-      NameU.Length = (USHORT)OldLength;
+        IoGetDeviceProperty(DeviceNode->PhysicalDeviceObject,
+                            DevicePropertyPhysicalDeviceObjectName,
+                            OldLength,
+                            DeviceName,
+                            &OldLength);
+                            
+        RtlInitUnicodeString(&NameU, DeviceName);
+     }
+     else
+     {
+        /* Some failure */
+        ASSERT(!NT_SUCCESS(Status));
+        return Status;
+     }
 
       RtlInitUnicodeString(&Suffix, L".Raw");
       RtlAppendUnicodeStringToString(&NameU, &Suffix);
@@ -682,6 +694,8 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                              DeviceNode->ResourceListTranslated,
                              IopCalculateResourceListSize(DeviceNode->ResourceListTranslated));
       ZwClose(PnpMgrLevel2);
+      ASSERT(DeviceName);
+      ExFreePool(DeviceName);
       if (!NT_SUCCESS(Status))
           return Status;
   }
