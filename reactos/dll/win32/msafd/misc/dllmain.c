@@ -384,20 +384,17 @@ DWORD MsafdReturnWithErrno(NTSTATUS Status,
                            DWORD Received,
                            LPDWORD ReturnedBytes)
 {
-    if (Errno)
-    {
-        *Errno = TranslateNtStatusError(Status);
+    *Errno = TranslateNtStatusError(Status);
 
-        if (ReturnedBytes)
-        {
-            if (!*Errno)
-                *ReturnedBytes = Received;
-            else
-                *ReturnedBytes = 0;
-        }
+    if (ReturnedBytes)
+    {
+        if (!*Errno)
+            *ReturnedBytes = Received;
+        else
+            *ReturnedBytes = 0;
     }
 
-    return Status ? SOCKET_ERROR : 0;
+    return *Errno ? SOCKET_ERROR : 0;
 }
 
 /*
