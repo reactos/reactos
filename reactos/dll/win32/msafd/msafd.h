@@ -409,6 +409,8 @@ PSOCKET_INFORMATION GetSocketStructure(
 	SOCKET Handle
 );
 
+INT TranslateNtStatusError( NTSTATUS Status );
+
 VOID DeleteSocketStructure( SOCKET Handle );
 
 int GetSocketInformation(

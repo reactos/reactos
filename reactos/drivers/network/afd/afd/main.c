@@ -314,6 +314,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         
 	/* A datagram socket is always sendable */
 	FCB->PollState |= AFD_EVENT_SEND;
+        FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
 
@@ -377,6 +378,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     FCB->State = SOCKET_STATE_CLOSED;
     FCB->PollState = AFD_EVENT_CLOSE;
+    FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS; //I think we can return success here
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     InFlightRequest[0] = &FCB->ListenIrp;
@@ -542,6 +544,7 @@ AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
         ExFreePool( ConnectionReturnInfo );
 
         FCB->PollState |= AFD_EVENT_DISCONNECT;
+        FCB->PollStatus[FD_CLOSE_BIT] = STATUS_SUCCESS;
         PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
         Status = STATUS_INVALID_PARAMETER;

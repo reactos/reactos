@@ -325,7 +325,9 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     EnumReq->PollEvents = FCB->PollState;
-    RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
+    RtlCopyMemory( EnumReq->EventStatus,
+                   FCB->PollStatus,
+                   sizeof(EnumReq->EventStatus) );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
 				   0 );
