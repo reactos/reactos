@@ -17,13 +17,15 @@
 
 PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
+ULONG SidInTokenCalls = 0;
 
 extern ULONG ExpInitializationPhase;
 extern ERESOURCE SepSubjectContextLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BOOLEAN INIT_FUNCTION
+static BOOLEAN
+INIT_FUNCTION
 SepInitExports(VOID)
 {
     SepExports.SeCreateTokenPrivilege = SeCreateTokenPrivilege;
@@ -118,6 +120,7 @@ NTAPI
 SepInitializationPhase1(VOID)
 {
     NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Insert the system token into the tree */
@@ -279,8 +282,6 @@ SeDefaultObjectMethod(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
-ULONG SidInTokenCalls = 0;
-
 static BOOLEAN
 SepSidInToken(PACCESS_TOKEN _Token,
               PSID Sid)
@@ -292,7 +293,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
 
     SidInTokenCalls++;
     if (!(SidInTokenCalls % 10000)) DPRINT1("SidInToken Calls: %d\n", SidInTokenCalls);
-    
+
     if (Token->UserAndGroupCount == 0)
     {
         return FALSE;
@@ -340,7 +341,8 @@ SepTokenIsOwner(PACCESS_TOKEN Token,
     return SepSidInToken(Token, Sid);
 }
 
-VOID NTAPI
+VOID
+NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
 {
@@ -351,13 +353,15 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     {
         *DesiredAccess |= READ_CONTROL;
     }
+
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
     }
 }
 
-VOID NTAPI
+VOID
+NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess)
 {
@@ -367,10 +371,12 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     {
         *DesiredAccess |= WRITE_OWNER;
     }
+
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= WRITE_DAC;
     }
+
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
@@ -494,7 +500,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
         }
-        
+
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
@@ -763,7 +769,8 @@ SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 /*
  * @implemented
  */
-BOOLEAN NTAPI
+BOOLEAN
+NTAPI
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
               IN BOOLEAN SubjectContextLocked,
