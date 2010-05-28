@@ -281,15 +281,74 @@ SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
-SeAppendPrivileges(PACCESS_STATE AccessState,
-                   PPRIVILEGE_SET Privileges)
+SeAppendPrivileges(IN OUT PACCESS_STATE AccessState,
+                   IN PPRIVILEGE_SET Privileges)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PAUX_ACCESS_DATA AuxData;
+    ULONG OldPrivilegeSetSize;
+    ULONG NewPrivilegeSetSize;
+    PPRIVILEGE_SET PrivilegeSet;
+
+    PAGED_CODE();
+
+    /* Get the Auxiliary Data */
+    AuxData = AccessState->AuxData;
+
+    /* Calculate the size of the old privilege set */
+    OldPrivilegeSetSize = sizeof(PRIVILEGE_SET) +
+                          (AuxData->PrivilegeSet->PrivilegeCount - 1) * sizeof(LUID_AND_ATTRIBUTES);
+
+    if (AuxData->PrivilegeSet->PrivilegeCount +
+        Privileges->PrivilegeCount > INITIAL_PRIVILEGE_COUNT)
+    {
+        /* Calculate the size of the new privilege set */
+        NewPrivilegeSetSize = OldPrivilegeSetSize +
+                              Privileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES);
+
+        /* Allocate a new privilege set */
+        PrivilegeSet = ExAllocatePool(PagedPool, NewPrivilegeSetSize);
+        if (PrivilegeSet == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Copy original privileges from the acess state */
+        RtlCopyMemory(PrivilegeSet,
+                      AuxData->PrivilegeSet,
+                      OldPrivilegeSetSize);
+
+        /* Append privileges from the privilege set*/
+        RtlCopyMemory((PVOID)((ULONG_PTR)PrivilegeSet + OldPrivilegeSetSize),
+                      (PVOID)((ULONG_PTR)Privileges + sizeof(PRIVILEGE_SET) - sizeof(LUID_AND_ATTRIBUTES)),
+                      Privileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
+
+        /* Adjust the number of privileges in the new privilege set */
+        PrivilegeSet->PrivilegeCount += Privileges->PrivilegeCount;
+
+        /* Free the old privilege set if it was allocated */
+        if (AccessState->PrivilegesAllocated == TRUE)
+            ExFreePool(AuxData->PrivilegeSet);
+
+        /* Now we are using an allocated privilege set */
+        AccessState->PrivilegesAllocated = TRUE;
+
+        /* Assign the new privileges to the access state */
+        AuxData->PrivilegeSet = PrivilegeSet;
+    }
+    else
+    {
+        /* Append privileges */
+        RtlCopyMemory((PVOID)((ULONG_PTR)AuxData->PrivilegeSet + OldPrivilegeSetSize),
+                      (PVOID)((ULONG_PTR)Privileges + sizeof(PRIVILEGE_SET) - sizeof(LUID_AND_ATTRIBUTES)),
+                      Privileges->PrivilegeCount * sizeof(LUID_AND_ATTRIBUTES));
+
+        /* Adjust the number of privileges in the target privilege set */
+        AuxData->PrivilegeSet->PrivilegeCount += Privileges->PrivilegeCount;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 /*
