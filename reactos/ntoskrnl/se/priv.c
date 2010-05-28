@@ -294,13 +294,14 @@ SeAppendPrivileges(PACCESS_STATE AccessState,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 NTAPI
 SeFreePrivileges(IN PPRIVILEGE_SET Privileges)
 {
-    UNIMPLEMENTED;
+    PAGED_CODE();
+    ExFreePool(Privileges);
 }
 
 /*
