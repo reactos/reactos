@@ -708,7 +708,7 @@ UserChangeDisplaySettings(
         }
     }
     else if (pdm->dmSize < FIELD_OFFSET(DEVMODEW, dmFields))
-        return DISP_CHANGE_FAILED;
+        return DISP_CHANGE_BADMODE; /* This is what winXP SP3 returns */
     else
         dm = *pdm;
 
@@ -899,7 +899,6 @@ NtUserChangeDisplaySettings(
             /* Probe and copy the full DEVMODE */
             ProbeForRead(lpDevMode, dmLocal.dmSize, 1);
             RtlCopyMemory(&dmLocal, lpDevMode, dmLocal.dmSize);
-            dmLocal.dmSize = sizeof(dmLocal);
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
