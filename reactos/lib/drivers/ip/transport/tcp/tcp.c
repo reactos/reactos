@@ -574,10 +574,11 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     switch( OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
     case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
+    case OSK_EADDRINUSE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break;
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_ECONNRESET:
-    case OSK_ECONNABORTED: Status = STATUS_REMOTE_DISCONNECT; break;
+    case OSK_ECONNRESET: Status = STATUS_REMOTE_DISCONNECT; break;
+    case OSK_ECONNABORTED: Status = STATUS_LOCAL_DISCONNECT; break;
     case OSK_EWOULDBLOCK:
     case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
     case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
