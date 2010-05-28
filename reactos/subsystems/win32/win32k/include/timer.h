@@ -23,7 +23,6 @@ typedef struct _TIMER
 #define TMRF_ONESHOT 0x0010
 #define TMRF_WAITING 0x0020
 #define TMRF_TIFROMWND 0x0040
-#define TMRF_DELETEPENDING 0x8000
 
 extern PKTIMER MasterTimer;
 
