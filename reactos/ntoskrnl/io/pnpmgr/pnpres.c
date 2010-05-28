@@ -18,30 +18,6 @@ IopDetectResourceConflict(
    IN BOOLEAN Silent,
    OUT OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor);
 
-ULONG
-NTAPI
-IopCalculateResourceListSize(
-   IN PCM_RESOURCE_LIST ResourceList)
-{
-   ULONG Size, i, j;
-   PCM_PARTIAL_RESOURCE_LIST pPartialResourceList;
-
-   Size = FIELD_OFFSET(CM_RESOURCE_LIST, List);
-   for (i = 0; i < ResourceList->Count; i++)
-   {
-      pPartialResourceList = &ResourceList->List[i].PartialResourceList;
-      Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors) +
-              pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-      for (j = 0; j < pPartialResourceList->Count; j++)
-      {
-         if (pPartialResourceList->PartialDescriptors[j].Type == CmResourceTypeDeviceSpecific)
-             Size += pPartialResourceList->PartialDescriptors[j].u.DeviceSpecificData.DataSize;
-      }
-   }
-
-   return Size;
-}
-
 static
 BOOLEAN
 IopCheckDescriptorForConflict(PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc, OPTIONAL PCM_PARTIAL_RESOURCE_DESCRIPTOR ConflictingDescriptor)
@@ -533,7 +509,7 @@ IopUpdateControlKeyWithResources(IN PDEVICE_NODE DeviceNode)
                           0,
                           REG_RESOURCE_LIST,
                           DeviceNode->ResourceList,
-                          IopCalculateResourceListSize(DeviceNode->ResourceList));
+                          PnpDetermineResourceListSize(DeviceNode->ResourceList));
    ZwClose(ControlKey);
 
    if (!NT_SUCCESS(Status))
@@ -674,7 +650,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                              0,
                              REG_RESOURCE_LIST,
                              DeviceNode->ResourceList,
-                             IopCalculateResourceListSize(DeviceNode->ResourceList));
+                             PnpDetermineResourceListSize(DeviceNode->ResourceList));
       if (!NT_SUCCESS(Status))
       {
           ZwClose(PnpMgrLevel2);
@@ -692,7 +668,7 @@ IopUpdateResourceMap(IN PDEVICE_NODE DeviceNode, PWCHAR Level1Key, PWCHAR Level2
                              0,
                              REG_RESOURCE_LIST,
                              DeviceNode->ResourceListTranslated,
-                             IopCalculateResourceListSize(DeviceNode->ResourceListTranslated));
+                             PnpDetermineResourceListSize(DeviceNode->ResourceListTranslated));
       ZwClose(PnpMgrLevel2);
       ASSERT(DeviceName);
       ExFreePool(DeviceName);
@@ -732,7 +708,7 @@ IopTranslateDeviceResources(
    /* That's easy to translate a resource list. Just copy the
     * untranslated one and change few fields in the copy
     */
-   ListSize = IopCalculateResourceListSize(DeviceNode->ResourceList);
+   ListSize = PnpDetermineResourceListSize(DeviceNode->ResourceList);
 
    DeviceNode->ResourceListTranslated = ExAllocatePool(PagedPool, ListSize);
    if (!DeviceNode->ResourceListTranslated)
@@ -852,7 +828,7 @@ IopAssignDeviceResources(
 
    if (DeviceNode->BootResources)
    {
-      ListSize = IopCalculateResourceListSize(DeviceNode->BootResources);
+      ListSize = PnpDetermineResourceListSize(DeviceNode->BootResources);
 
       DeviceNode->ResourceList = ExAllocatePool(PagedPool, ListSize);
       if (!DeviceNode->ResourceList)

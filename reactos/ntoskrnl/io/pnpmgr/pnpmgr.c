@@ -948,7 +948,7 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
                                    0,
                                    REG_RESOURCE_LIST,
                                    DeviceNode->BootResources,
-                                   IopCalculateResourceListSize(DeviceNode->BootResources));
+                                   PnpDetermineResourceListSize(DeviceNode->BootResources));
          }
       }
 
