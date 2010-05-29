@@ -1415,7 +1415,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
 	    break;
 
 	  case STRRET_CSTR:
-              if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ) && len)
+              if (!MultiByteToWideChar( CP_ACP, 0, src->u.cStr, -1, dest, len ))
                   dest[len-1] = 0;
 	    break;
 
@@ -1423,7 +1423,7 @@ HRESULT WINAPI StrRetToBufW (LPSTRRET src, const ITEMIDLIST *pidl, LPWSTR dest, 
 	    if (pidl)
 	    {
               if (!MultiByteToWideChar( CP_ACP, 0, ((LPCSTR)&pidl->mkid)+src->u.uOffset, -1,
-                                        dest, len ) && len)
+                                        dest, len ))
                   dest[len-1] = 0;
 	    }
 	    break;

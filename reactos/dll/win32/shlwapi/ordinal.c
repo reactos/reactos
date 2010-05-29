@@ -484,7 +484,6 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
     DWORD mystrlen, mytype;
     DWORD len;
     HKEY mykey;
-    HRESULT retval;
     LCID mylcid;
     WCHAR *mystr;
     LONG lres;
@@ -512,7 +511,7 @@ HRESULT WINAPI GetAcceptLanguagesW( LPWSTR langbuf, LPDWORD buflen)
 
     /* Did not find a value in the registry or the user buffer is too small */
     mylcid = GetUserDefaultLCID();
-    retval = LcidToRfc1766W(mylcid, mystr, mystrlen);
+    LcidToRfc1766W(mylcid, mystr, mystrlen);
     len = lstrlenW(mystr);
 
     memcpy( langbuf, mystr, min(*buflen, len+1)*sizeof(WCHAR) );
