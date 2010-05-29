@@ -790,10 +790,10 @@ SepCreateSystemProcessToken(VOID)
     Privileges[i].Attributes = 0;
     Privileges[i++].Luid = SeTakeOwnershipPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeCreatePagefilePrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeLockMemoryPrivilege;
 
     Privileges[i].Attributes = 0;
@@ -802,16 +802,16 @@ SepCreateSystemProcessToken(VOID)
     Privileges[i].Attributes = 0;
     Privileges[i++].Luid = SeIncreaseQuotaPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeIncreaseBasePriorityPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeCreatePermanentPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeDebugPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeAuditPrivilege;
 
     Privileges[i].Attributes = 0;
@@ -820,7 +820,7 @@ SepCreateSystemProcessToken(VOID)
     Privileges[i].Attributes = 0;
     Privileges[i++].Luid = SeSystemEnvironmentPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeChangeNotifyPrivilege;
 
     Privileges[i].Attributes = 0;
@@ -835,7 +835,7 @@ SepCreateSystemProcessToken(VOID)
     Privileges[i].Attributes = 0;
     Privileges[i++].Luid = SeLoadDriverPrivilege;
 
-    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT|SE_PRIVILEGE_ENABLED;
+    Privileges[i].Attributes = SE_PRIVILEGE_ENABLED_BY_DEFAULT | SE_PRIVILEGE_ENABLED;
     Privileges[i++].Luid = SeProfileSingleProcessPrivilege;
 
     Privileges[i].Attributes = 0;
@@ -1709,7 +1709,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                     {
                         PACL CapturedAcl;
 
-                        /* capture and copy the dacl */
+                        /* Capture and copy the dacl */
                         Status = SepCaptureAcl(InputAcl,
                                                PreviousMode,
                                                PagedPool,
@@ -1717,19 +1717,19 @@ NtSetInformationToken(IN HANDLE TokenHandle,
                                                &CapturedAcl);
                         if (NT_SUCCESS(Status))
                         {
-                            /* free the previous dacl if present */
+                            /* Free the previous dacl if present */
                             if(Token->DefaultDacl != NULL)
                             {
                                 ExFreePool(Token->DefaultDacl);
                             }
 
-                            /* set the new dacl */
+                            /* Set the new dacl */
                             Token->DefaultDacl = CapturedAcl;
                         }
                     }
                     else
                     {
-                        /* clear and free the default dacl if present */
+                        /* Clear and free the default dacl if present */
                         if (Token->DefaultDacl != NULL)
                         {
                             ExFreePool(Token->DefaultDacl);
@@ -1750,7 +1750,7 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
                 _SEH2_TRY
                 {
-                    /* buffer size was already verified, no need to check here again */
+                    /* Buffer size was already verified, no need to check here again */
                     SessionId = *(PULONG)TokenInformation;
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -1880,7 +1880,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
         }
     }
 
-    /* free the captured structure */
+    /* Free the captured structure */
     SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
                                        PreviousMode,
                                        FALSE);
@@ -1997,7 +1997,8 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                     }
                     else
                     {
-                        /* FIXME: Should revert all the changes, calculate how
+                        /*
+                         * FIXME: Should revert all the changes, calculate how
                          * much space would be needed, set ResultLength
                          * accordingly and fail.
                          */
@@ -2044,7 +2045,8 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
                             }
                             else
                             {
-                                /* FIXME: Should revert all the changes, calculate how
+                                /*
+                                 * FIXME: Should revert all the changes, calculate how
                                  * much space would be needed, set ResultLength
                                  * accordingly and fail.
                                  */

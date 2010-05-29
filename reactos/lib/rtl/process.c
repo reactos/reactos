@@ -43,7 +43,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to read image file from disk\n");
-        return(Status);
+        return Status;
     }
 
     /* Now create a section for this image */
@@ -94,7 +94,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to reserve 1MB of space \n");
-            return(Status);
+            return Status;
         }
     }
 
@@ -118,7 +118,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to allocate Environment Block\n");
-            return(Status);
+            return Status;
         }
 
         /* Write the Environment Block */
@@ -144,7 +144,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to allocate Parameter Block\n");
-        return(Status);
+        return Status;
     }
 
     /* Write the Parameter Block */
@@ -245,7 +245,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     {
         DPRINT1("Could not create Kernel Process Object\n");
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Get some information on the image */
@@ -259,7 +259,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         DPRINT1("Could not query Section Info\n");
         ZwClose(ProcessInfo->ProcessHandle);
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Get some information about the process */
@@ -273,7 +273,7 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
         DPRINT1("Could not query Process Info\n");
         ZwClose(ProcessInfo->ProcessHandle);
         ZwClose(hSection);
-        return(Status);
+        return Status;
     }
 
     /* Create Process Environment */
@@ -312,22 +312,21 @@ PVOID
 NTAPI
 RtlEncodePointer(IN PVOID Pointer)
 {
-  ULONG Cookie;
-  NTSTATUS Status;
+    ULONG Cookie;
+    NTSTATUS Status;
 
-  Status = ZwQueryInformationProcess(NtCurrentProcess(),
-                                     ProcessCookie,
-                                     &Cookie,
-                                     sizeof(Cookie),
-                                     NULL);
+    Status = ZwQueryInformationProcess(NtCurrentProcess(),
+                                       ProcessCookie,
+                                       &Cookie,
+                                       sizeof(Cookie),
+                                       NULL);
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to receive the process cookie! Status: 0x%lx\n", Status);
+        return Pointer;
+    }
 
-  if(!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to receive the process cookie! Status: 0x%lx\n", Status);
-    return Pointer;
-  }
-
-  return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
+    return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
 }
 
 /*
@@ -337,7 +336,7 @@ PVOID
 NTAPI
 RtlDecodePointer(IN PVOID Pointer)
 {
-  return RtlEncodePointer(Pointer);
+    return RtlEncodePointer(Pointer);
 }
 
 /*

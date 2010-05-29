@@ -249,9 +249,11 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
                         if (((PSECURITY_QUALITY_OF_SERVICE)ObjectAttributes->SecurityQualityOfService)->Length ==
                             sizeof(SECURITY_QUALITY_OF_SERVICE))
                         {
-                            /* don't allocate memory here because ExAllocate should bugcheck
-                             the system if it's buggy, SEH would catch that! So make a local
-                             copy of the qos structure.*/
+                            /*
+                             * Don't allocate memory here because ExAllocate should bugcheck
+                             * the system if it's buggy, SEH would catch that! So make a local
+                             * copy of the qos structure.
+                             */
                             RtlCopyMemory(&SafeQos,
                                           ObjectAttributes->SecurityQualityOfService,
                                           sizeof(SECURITY_QUALITY_OF_SERVICE));
@@ -407,8 +409,10 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
 
             _SEH2_TRY
             {
-                /* first only probe and copy until the control field of the descriptor
-                 to determine whether it's a self-relative descriptor */
+                /*
+                 * First only probe and copy until the control field of the descriptor
+                 * to determine whether it's a self-relative descriptor
+                 */
                 DescriptorSize = FIELD_OFFSET(SECURITY_DESCRIPTOR,
                                               Owner);
                 ProbeForRead(OriginalSecurityDescriptor,
@@ -420,22 +424,24 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
                     _SEH2_YIELD(return STATUS_UNKNOWN_REVISION);
                 }
 
-                /* make a copy on the stack */
+                /* Make a copy on the stack */
                 DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
                 DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
                 DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
                 DescriptorSize = ((DescriptorCopy.Control & SE_SELF_RELATIVE) ?
                                   sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
 
-                /* probe and copy the entire security descriptor structure. The SIDs
-                 and ACLs will be probed and copied later though */
+                /*
+                 * Probe and copy the entire security descriptor structure. The SIDs
+                 * and ACLs will be probed and copied later though
+                 */
                 ProbeForRead(OriginalSecurityDescriptor,
                              DescriptorSize,
                              sizeof(ULONG));
                 if (DescriptorCopy.Control & SE_SELF_RELATIVE)
                 {
                     PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
-                    
+
                     DescriptorCopy.Owner = (PSID)RelSD->Owner;
                     DescriptorCopy.Group = (PSID)RelSD->Group;
                     DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
@@ -468,12 +474,12 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
         }
         else
         {
-            if(OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
+            if (OriginalSecurityDescriptor->Revision != SECURITY_DESCRIPTOR_REVISION1)
             {
                 return STATUS_UNKNOWN_REVISION;
             }
 
-            /* make a copy on the stack */
+            /* Make a copy on the stack */
             DescriptorCopy.Revision = OriginalSecurityDescriptor->Revision;
             DescriptorCopy.Sbz1 = OriginalSecurityDescriptor->Sbz1;
             DescriptorCopy.Control = OriginalSecurityDescriptor->Control;
@@ -482,7 +488,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
             if (DescriptorCopy.Control & SE_SELF_RELATIVE)
             {
                 PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
-                
+
                 DescriptorCopy.Owner = (PSID)RelSD->Owner;
                 DescriptorCopy.Group = (PSID)RelSD->Group;
                 DescriptorCopy.Sacl = (PACL)RelSD->Sacl;
@@ -499,9 +505,11 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
 
         if (DescriptorCopy.Control & SE_SELF_RELATIVE)
         {
-            /* in case we're dealing with a self-relative descriptor, do a basic convert
-             to an absolute descriptor. We do this so we can simply access the data
-             using the pointers without calculating them again. */
+            /*
+             * In case we're dealing with a self-relative descriptor, do a basic convert
+             * to an absolute descriptor. We do this so we can simply access the data
+             * using the pointers without calculating them again.
+             */
             DescriptorCopy.Control &= ~SE_SELF_RELATIVE;
             if (DescriptorCopy.Owner != NULL)
             {
@@ -521,7 +529,7 @@ SeCaptureSecurityDescriptor(IN PSECURITY_DESCRIPTOR _OriginalSecurityDescriptor,
             }
         }
 
-        /* determine the size of the SIDs */
+        /* Determine the size of the SIDs */
 #define DetermineSIDSize(SidType)                                              \
 do {                                                                       \
 if(DescriptorCopy.SidType != NULL)                                         \
@@ -530,7 +538,7 @@ SID *SidType = (SID*)DescriptorCopy.SidType;                             \
 \
 if(CurrentMode != KernelMode)                                            \
 {                                                                        \
-/* securely access the buffers! */                                     \
+/* Securely access the buffers! */                                     \
 _SEH2_TRY                                                               \
 {                                                                      \
 SidType##SAC = ProbeForReadUchar(&SidType->SubAuthorityCount);       \
@@ -561,7 +569,7 @@ DescriptorSize += ROUND_UP(SidType##Size, sizeof(ULONG));              \
 
 #undef DetermineSIDSize
 
-        /* determine the size of the ACLs */
+        /* Determine the size of the ACLs */
 #define DetermineACLSize(AclType, AclFlag)                                     \
 do {                                                                       \
 if((DescriptorCopy.Control & SE_##AclFlag##_PRESENT) &&                    \
@@ -571,7 +579,7 @@ PACL AclType = (PACL)DescriptorCopy.AclType;                             \
 \
 if(CurrentMode != KernelMode)                                            \
 {                                                                        \
-/* securely access the buffers! */                                     \
+/* Securely access the buffers! */                                     \
 _SEH2_TRY                                                               \
 {                                                                      \
 AclType##Size = ProbeForReadUshort(&AclType->AclSize);               \
@@ -604,27 +612,31 @@ DescriptorCopy.AclType = NULL;                                           \
 
 #undef DetermineACLSize
 
-        /* allocate enough memory to store a complete copy of a self-relative
-         security descriptor */
+        /*
+         * Allocate enough memory to store a complete copy of a self-relative
+         * security descriptor
+         */
         NewDescriptor = ExAllocatePoolWithTag(PoolType,
                                               DescriptorSize,
                                               TAG_SD);
-        if(NewDescriptor != NULL)
+        if (NewDescriptor != NULL)
         {
             ULONG_PTR Offset = sizeof(SECURITY_DESCRIPTOR);
-            
+
             RtlZeroMemory(NewDescriptor, DescriptorSize);
             NewDescriptor->Revision = DescriptorCopy.Revision;
             NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
             NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;
-            
+
             _SEH2_TRY
             {
-                /* setup the offsets and copy the SIDs and ACLs to the new
-                 self-relative security descriptor. Probing the pointers is not
-                 neccessary anymore as we did that when collecting the sizes!
-                 Make sure to validate the SIDs and ACLs *again* as they could have
-                 been modified in the meanwhile! */
+                /*
+                 * Setup the offsets and copy the SIDs and ACLs to the new
+                 * self-relative security descriptor. Probing the pointers is not
+                 * neccessary anymore as we did that when collecting the sizes!
+                 * Make sure to validate the SIDs and ACLs *again* as they could have
+                 * been modified in the meanwhile!
+                 */
 #define CopySID(Type)                                                          \
 do {                                                                   \
 if(DescriptorCopy.Type != NULL)                                        \
@@ -673,14 +685,16 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* we failed to copy the data to the new descriptor */
+                /* We failed to copy the data to the new descriptor */
                 ExFreePool(NewDescriptor);
                 _SEH2_YIELD(return _SEH2_GetExceptionCode());
             }
             _SEH2_END;
 
-            /* we're finally done! copy the pointer to the captured descriptor to
-             to the caller */
+            /*
+             * We're finally done!
+             * Copy the pointer to the captured descriptor to to the caller.
+             */
             *CapturedSecurityDescriptor = NewDescriptor;
             return STATUS_SUCCESS;
         }
@@ -691,7 +705,7 @@ Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
     }
     else
     {
-        /* nothing to do... */
+        /* Nothing to do... */
         *CapturedSecurityDescriptor = NULL;
     }
 
@@ -765,6 +779,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
             Dacl = (PACL)((ULONG_PTR)ObjectSd->Dacl + (ULONG_PTR)ObjectSd);
             DaclLength = ROUND_UP((ULONG)Dacl->AclSize, 4);
         }
+
         Control |= (ObjectSd->Control & (SE_DACL_DEFAULTED | SE_DACL_PRESENT));
     }
 
@@ -776,6 +791,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
             Sacl = (PACL)((ULONG_PTR)ObjectSd->Sacl + (ULONG_PTR)ObjectSd);
             SaclLength = ROUND_UP(Sacl->AclSize, 4);
         }
+
         Control |= (ObjectSd->Control & (SE_SACL_DEFAULTED | SE_SACL_PRESENT));
     }
 
@@ -846,14 +862,16 @@ SeReleaseSecurityDescriptor(IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
 {
     PAGED_CODE();
 
-    /* WARNING! You need to call this function with the same value for CurrentMode
-     and CaptureIfKernelMode that you previously passed to
-     SeCaptureSecurityDescriptor() in order to avoid memory leaks! */
-    if(CapturedSecurityDescriptor != NULL &&
-       (CurrentMode != KernelMode ||
-        (CurrentMode == KernelMode && CaptureIfKernelMode)))
+    /*
+     * WARNING! You need to call this function with the same value for CurrentMode
+     * and CaptureIfKernelMode that you previously passed to
+     * SeCaptureSecurityDescriptor() in order to avoid memory leaks!
+     */
+    if (CapturedSecurityDescriptor != NULL &&
+        (CurrentMode != KernelMode ||
+         (CurrentMode == KernelMode && CaptureIfKernelMode)))
     {
-        /* only delete the descriptor when SeCaptureSecurityDescriptor() allocated one! */
+        /* Only delete the descriptor when SeCaptureSecurityDescriptor() allocated one! */
         ExFreePoolWithTag(CapturedSecurityDescriptor, TAG_SD);
     }
 
@@ -888,8 +906,9 @@ SeSetSecurityDescriptorInfo(IN PVOID Object OPTIONAL,
 
     ObjectSd = *ObjectsSecurityDescriptor;
 
+    /* The object does not have a security descriptor. */
     if (!ObjectSd)
-        return STATUS_NO_SECURITY_ON_OBJECT; // The object does not have a security descriptor.
+        return STATUS_NO_SECURITY_ON_OBJECT;
 
     SecurityInformation = *_SecurityInformation;
 
@@ -1074,8 +1093,9 @@ SeSetSecurityDescriptorInfoEx(IN PVOID Object OPTIONAL,
 {
     PISECURITY_DESCRIPTOR ObjectSd = *ObjectsSecurityDescriptor;
 
+    /* The object does not have a security descriptor. */
     if (!ObjectSd)
-        return STATUS_NO_SECURITY_ON_OBJECT; // The object does not have a security descriptor.
+        return STATUS_NO_SECURITY_ON_OBJECT;
 
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
