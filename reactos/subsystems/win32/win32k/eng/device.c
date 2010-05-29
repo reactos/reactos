@@ -544,6 +544,9 @@ IntCreatePrimarySurface()
     /* attach monitor */
     AttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
+    /* Initialize mouse pointer */
+    RosUserSetCursor(NULL);
+
     /* Put the pointer in the center of the screen */
     RosUserSetCursorPos((SurfaceRect.right - SurfaceRect.left) / 2,
                         (SurfaceRect.bottom - SurfaceRect.top) / 2);
