@@ -3389,6 +3389,8 @@ typedef struct _CERT_CHAIN_ENGINE_CONFIG
     DWORD       dwUrlRetrievalTimeout;
     DWORD       MaximumCachedCertificates;
     DWORD       CycleDetectionModulus;
+    HCERTSTORE  hExclusiveRoot;
+    HCERTSTORE  hExclusiveRootTrustedPeople;
 } CERT_CHAIN_ENGINE_CONFIG, *PCERT_CHAIN_ENGINE_CONFIG;
 
 /* message-related definitions */
