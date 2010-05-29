@@ -561,4 +561,126 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     }
 }
 
+VOID
+NTAPI
+MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
+                IN PMMPTE PointerPte,
+                IN BOOLEAN Modified)
+{
+    PMMPFN Pfn1;
+    NTSTATUS Status;
+    PMMPTE PointerPtePte;
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+    /* Setup the PTE */
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1->PteAddress = PointerPte;
+
+    /* Check if this PFN is part of a valid address space */
+    if (PointerPte->u.Hard.Valid == 1)
+    {
+        /* FIXME: TODO */
+        ASSERT(FALSE);
+    }
+
+    /* Otherwise this is a fresh page -- set it up */
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    Pfn1->u3.e2.ReferenceCount = 1;
+    Pfn1->u2.ShareCount = 1;
+    Pfn1->u3.e1.PageLocation = ActiveAndValid;
+    ASSERT(Pfn1->u3.e1.Rom == 0);
+    Pfn1->u3.e1.Modified = Modified;
+
+    /* Get the page table for the PTE */
+    PointerPtePte = MiAddressToPte(PointerPte);
+    if (PointerPtePte->u.Hard.Valid == 0)
+    {
+        /* Make sure the PDE gets paged in properly */
+        Status = MiCheckPdeForPagedPool(PointerPte);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Crash */
+            KeBugCheckEx(MEMORY_MANAGEMENT,
+                         0x61940,
+                         (ULONG_PTR)PointerPte,
+                         (ULONG_PTR)PointerPtePte->u.Long,
+                         (ULONG_PTR)MiPteToAddress(PointerPte));
+        }
+    }
+
+    /* Get the PFN for the page table */
+    PageFrameIndex = PFN_FROM_PTE(PointerPtePte);
+    ASSERT(PageFrameIndex != 0);
+    Pfn1->u4.PteFrame = PageFrameIndex;
+
+    /* Increase its share count so we don't get rid of it */
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
+    Pfn1->u2.ShareCount++;
+}
+
+VOID
+NTAPI
+MiDecrementShareCount(IN PMMPFN Pfn1,
+                      IN PFN_NUMBER PageFrameIndex)
+{
+    ASSERT(PageFrameIndex > 0);
+    ASSERT(MiGetPfnEntry(PageFrameIndex) != NULL);
+    ASSERT(Pfn1 == MiGetPfnEntry(PageFrameIndex));
+
+    /* Page must be in-use */
+    if ((Pfn1->u3.e1.PageLocation != ActiveAndValid) &&
+        (Pfn1->u3.e1.PageLocation != StandbyPageList))
+    {
+        /* Otherwise we have PFN corruption */
+        KeBugCheckEx(PFN_LIST_CORRUPT,
+                     0x99,
+                     PageFrameIndex,
+                     Pfn1->u3.e1.PageLocation,
+                     0);
+    }
+
+    /* Check if the share count is now 0 */
+    ASSERT(Pfn1->u2.ShareCount < 0xF000000);
+    if (!--Pfn1->u2.ShareCount)
+    {
+        /* ReactOS does not handle these */
+        ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+
+        /* Put the page in transition */
+        Pfn1->u3.e1.PageLocation = TransitionPage;
+    
+        /* PFN lock must be held */
+        ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+        
+        /* Page should at least have one reference */
+        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+        if (Pfn1->u3.e2.ReferenceCount == 1)
+        {
+            /* In ReactOS, this path should always be hit with a deleted PFN */
+            ASSERT(MI_IS_PFN_DELETED(Pfn1) == TRUE);
+
+            /* Clear the last reference */
+            Pfn1->u3.e2.ReferenceCount = 0;
+
+            /*
+             * OriginalPte is used by AweReferenceCount in ReactOS, but either 
+             * ways we shouldn't be seeing RMAP entries at this point
+             */
+            ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
+            ASSERT(Pfn1->OriginalPte.u.Long == 0);
+
+            /* Mark the page temporarily as valid, we're going to make it free soon */
+            Pfn1->u3.e1.PageLocation = ActiveAndValid;
+
+            /* Bring it back into the free list */
+            MiInsertPageInFreeList(PageFrameIndex);
+        }
+        else
+        {
+            /* Otherwise, just drop the reference count */
+            InterlockedDecrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
+        }
+    }
+}
+
 /* EOF */

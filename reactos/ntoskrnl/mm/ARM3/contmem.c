@@ -502,6 +502,9 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
         ASSERT(Pfn1->u4.VerifierAllocation == 0);
         ASSERT(Pfn1->u3.e1.PrototypePte == 0);
         
+        /* Set the special pending delete marker */
+        MI_SET_PFN_DELETED(Pfn1);
+        
         /* Keep going for assertions */
         PointerPte++;
     } while (Pfn1++->u3.e1.EndOfAllocation == 0);
@@ -531,12 +534,11 @@ MiFreeContiguousMemory(IN PVOID BaseAddress)
     // Loop all the pages
     //
     LastPage = PageFrameIndex + PageCount;
+    Pfn1 = MiGetPfnEntry(PageFrameIndex);
     do
     {
-        //
-        // Free each one, and move on
-        //
-        MmReleasePageMemoryConsumer(MC_NPPOOL, PageFrameIndex++);
+        /* Decrement the share count and move on */
+        MiDecrementShareCount(Pfn1++, PageFrameIndex++);
     } while (PageFrameIndex < LastPage);
     
     //

@@ -91,7 +91,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
 {
     PFN_NUMBER PageFrameNumber;
     MMPTE TempPte;
-    DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
+    DPRINT1("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
     

@@ -120,6 +120,12 @@
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
 
 //
+// Marks a PTE as deleted
+//
+#define MI_SET_PFN_DELETED(x)               ((x)->PteAddress = (PMMPTE)((ULONG_PTR)(x)->PteAddress | 1))
+#define MI_IS_PFN_DELETED(x)                ((ULONG_PTR)((x)->PteAddress) & 1)
+
+//
 // Special values for LoadedImports
 //
 #define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
@@ -583,6 +589,21 @@ NTAPI
 MiAllocatePfn(
     IN PMMPTE PointerPte,
     IN ULONG Protection
+);
+
+VOID
+NTAPI
+MiInitializePfn(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN BOOLEAN Modified
+);
+
+VOID
+NTAPI
+MiDecrementShareCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
 );
 
 PFN_NUMBER
