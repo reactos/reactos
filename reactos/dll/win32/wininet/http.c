@@ -1756,7 +1756,7 @@ static DWORD HTTPREQ_QueryOption(object_header_t *hdr, DWORD option, void *buffe
     }
     }
 
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static DWORD HTTPREQ_SetOption(object_header_t *hdr, DWORD option, void *buffer, DWORD size)
@@ -3464,6 +3464,10 @@ static DWORD HTTP_HttpSendRequestW(http_request_t *lpwhr, LPCWSTR lpszHeaders,
          * for all the data */
         HTTP_DrainContent(lpwhr);
         lpwhr->dwContentRead = 0;
+        if(redirected) {
+            lpwhr->dwContentLength = ~0u;
+            lpwhr->dwBytesToWrite = 0;
+        }
 
         if (TRACE_ON(wininet))
         {
@@ -3670,7 +3674,7 @@ lend:
             HTTP_ReceiveRequestData(lpwhr, TRUE);
         else
         {
-            iar.dwResult = (DWORD_PTR)lpwhr->hdr.hInternet;
+            iar.dwResult = 0;
             iar.dwError = res;
 
             INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
@@ -4164,7 +4168,7 @@ static DWORD HTTPSESSION_QueryOption(object_header_t *hdr, DWORD option, void *b
         return ERROR_SUCCESS;
     }
 
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static DWORD HTTPSESSION_SetOption(object_header_t *hdr, DWORD option, void *buffer, DWORD size)
@@ -4261,11 +4265,8 @@ DWORD HTTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
         if(hIC->lpszProxyBypass)
             FIXME("Proxy bypass is ignored.\n");
     }
-    if (lpszServerName && lpszServerName[0])
-    {
-        lpwhs->lpszServerName = heap_strdupW(lpszServerName);
-        lpwhs->lpszHostName = heap_strdupW(lpszServerName);
-    }
+    lpwhs->lpszServerName = heap_strdupW(lpszServerName);
+    lpwhs->lpszHostName = heap_strdupW(lpszServerName);
     if (lpszUserName && lpszUserName[0])
         lpwhs->lpszUserName = heap_strdupW(lpszUserName);
     if (lpszPassword && lpszPassword[0])
@@ -4362,6 +4363,10 @@ static DWORD HTTP_OpenConnection(http_request_t *lpwhr)
     if(res != ERROR_SUCCESS)
        goto lend;
 
+    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
+            INTERNET_STATUS_CONNECTED_TO_SERVER,
+            szaddr, strlen(szaddr)+1);
+
     if (lpwhr->hdr.dwFlags & INTERNET_FLAG_SECURE)
     {
         /* Note: we differ from Microsoft's WinINet here. they seem to have
@@ -4370,20 +4375,31 @@ static DWORD HTTP_OpenConnection(http_request_t *lpwhr)
          * behaviour to be more correct and to not cause any incompatibilities
          * because using a secure connection through a proxy server is a rare
          * case that would be hard for anyone to depend on */
-        if (hIC->lpszProxy && (res = HTTP_SecureProxyConnect(lpwhr)) != ERROR_SUCCESS)
+        if (hIC->lpszProxy && (res = HTTP_SecureProxyConnect(lpwhr)) != ERROR_SUCCESS) {
+            HTTPREQ_CloseConnection(&lpwhr->hdr);
             goto lend;
+        }
 
         res = NETCON_secure_connect(&lpwhr->netConnection, lpwhs->lpszHostName);
         if(res != ERROR_SUCCESS)
         {
             WARN("Couldn't connect securely to host\n");
+
+            if((lpwhr->hdr.ErrorMask&INTERNET_ERROR_MASK_COMBINED_SEC_CERT) && (
+                    res == ERROR_INTERNET_SEC_CERT_DATE_INVALID
+                    || res == ERROR_INTERNET_INVALID_CA
+                    || res == ERROR_INTERNET_SEC_CERT_NO_REV
+                    || res == ERROR_INTERNET_SEC_CERT_REV_FAILED
+                    || res == ERROR_INTERNET_SEC_CERT_REVOKED
+                    || res == ERROR_INTERNET_SEC_INVALID_CERT
+                    || res == ERROR_INTERNET_SEC_CERT_CN_INVALID))
+                res = ERROR_INTERNET_SEC_CERT_ERRORS;
+
+            HTTPREQ_CloseConnection(&lpwhr->hdr);
             goto lend;
         }
     }
 
-    INTERNET_SendCallback(&lpwhr->hdr, lpwhr->hdr.dwContext,
-                          INTERNET_STATUS_CONNECTED_TO_SERVER,
-                          szaddr, strlen(szaddr)+1);
 
 lend:
     lpwhr->read_pos = lpwhr->read_size = 0;
