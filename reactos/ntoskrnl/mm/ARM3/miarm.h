@@ -90,6 +90,90 @@
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
 
 //
+// Specific PTE Definitions that map to the Memory Manager's Protection Mask Bits
+// The Memory Manager's definition define the attributes that must be preserved
+// and these PTE definitions describe the attributes in the hardware sense. This
+// helps deal with hardware differences between the actual boolean expression of
+// the argument.
+//
+// For example, in the logical attributes, we want to express read-only as a flag
+// but on x86, it is writability that must be set. On the other hand, on x86, just
+// like in the kernel, it is disabling the caches that requires a special flag, 
+// while on certain architectures such as ARM, it is enabling the cache which
+// requires a flag.
+//
+#if defined(_M_IX86) || defined(_M_AMD64)
+//
+// Access Flags
+//
+#define PTE_READONLY            0
+#define PTE_EXECUTE             0 // Not worrying about NX yet
+#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
+#define PTE_READWRITE           0x2
+#define PTE_WRITECOPY           0x200
+#define PTE_EXECUTE_READWRITE   0x0
+#define PTE_EXECUTE_WRITECOPY   0x200
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0
+#define PTE_DISABLE_CACHE       0x10
+#define PTE_WRITECOMBINED_CACHE 0x10
+#elif defined(_M_ARM)
+#else
+#error Define these please!
+#endif
+static const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
+ 
+//
 // Assertions for session images, addresses, and PTEs
 //
 #define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
