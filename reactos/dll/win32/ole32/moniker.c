@@ -1109,7 +1109,13 @@ HRESULT WINAPI MkParseDisplayName(LPBC pbc, LPCOLESTR szDisplayName,
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(szDisplayName), pchEaten, ppmk);
 
-    if (!(IsValidInterface((LPUNKNOWN) pbc)))
+    if (!pbc || !IsValidInterface((LPUNKNOWN) pbc))
+        return E_INVALIDARG;
+
+    if (!szDisplayName || !*szDisplayName)
+        return E_INVALIDARG;
+
+    if (!pchEaten || !ppmk)
         return E_INVALIDARG;
 
     *pchEaten = 0;

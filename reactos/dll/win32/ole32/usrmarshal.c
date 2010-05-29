@@ -2761,7 +2761,8 @@ void CALLBACK IAdviseSink_OnDataChange_Proxy(
     FORMATETC *pFormatetc,
     STGMEDIUM *pStgmed)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)->(%p, %p)\n", This, pFormatetc, pStgmed);
+    IAdviseSink_RemoteOnDataChange_Proxy(This, pFormatetc, pStgmed);
 }
 
 HRESULT __RPC_STUB IAdviseSink_OnDataChange_Stub(
@@ -2769,8 +2770,9 @@ HRESULT __RPC_STUB IAdviseSink_OnDataChange_Stub(
     FORMATETC *pFormatetc,
     ASYNC_STGMEDIUM *pStgmed)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p, %p)\n", This, pFormatetc, pStgmed);
+    IAdviseSink_OnDataChange(This, pFormatetc, pStgmed);
+    return S_OK;
 }
 
 void CALLBACK IAdviseSink_OnViewChange_Proxy(
@@ -2778,7 +2780,8 @@ void CALLBACK IAdviseSink_OnViewChange_Proxy(
     DWORD dwAspect,
     LONG lindex)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)->(%d, %d)\n", This, dwAspect, lindex);
+    IAdviseSink_RemoteOnViewChange_Proxy(This, dwAspect, lindex);
 }
 
 HRESULT __RPC_STUB IAdviseSink_OnViewChange_Stub(
@@ -2786,64 +2789,73 @@ HRESULT __RPC_STUB IAdviseSink_OnViewChange_Stub(
     DWORD dwAspect,
     LONG lindex)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%d, %d)\n", This, dwAspect, lindex);
+    IAdviseSink_OnViewChange(This, dwAspect, lindex);
+    return S_OK;
 }
 
 void CALLBACK IAdviseSink_OnRename_Proxy(
     IAdviseSink* This,
     IMoniker *pmk)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)->(%p)\n", This, pmk);
+    IAdviseSink_RemoteOnRename_Proxy(This, pmk);
 }
 
 HRESULT __RPC_STUB IAdviseSink_OnRename_Stub(
     IAdviseSink* This,
     IMoniker *pmk)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, pmk);
+    IAdviseSink_OnRename(This, pmk);
+    return S_OK;
 }
 
 void CALLBACK IAdviseSink_OnSave_Proxy(
     IAdviseSink* This)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)\n", This);
+    IAdviseSink_RemoteOnSave_Proxy(This);
 }
 
 HRESULT __RPC_STUB IAdviseSink_OnSave_Stub(
     IAdviseSink* This)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+    IAdviseSink_OnSave(This);
+    return S_OK;
 }
 
 void CALLBACK IAdviseSink_OnClose_Proxy(
     IAdviseSink* This)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)\n", This);
+    IAdviseSink_RemoteOnClose_Proxy(This);
 }
 
 HRESULT __RPC_STUB IAdviseSink_OnClose_Stub(
     IAdviseSink* This)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)\n", This);
+    IAdviseSink_OnClose(This);
+    return S_OK;
 }
 
 void CALLBACK IAdviseSink2_OnLinkSrcChange_Proxy(
     IAdviseSink2* This,
     IMoniker *pmk)
 {
-    FIXME(":stub\n");
+    TRACE("(%p)->(%p)\n", This, pmk);
+    IAdviseSink2_RemoteOnLinkSrcChange_Proxy(This, pmk);
 }
 
 HRESULT __RPC_STUB IAdviseSink2_OnLinkSrcChange_Stub(
     IAdviseSink2* This,
     IMoniker *pmk)
 {
-    FIXME(":stub\n");
-    return E_NOTIMPL;
+    TRACE("(%p)->(%p)\n", This, pmk);
+    IAdviseSink2_OnLinkSrcChange(This, pmk);
+    return S_OK;
 }
 
 HRESULT CALLBACK IDataObject_GetData_Proxy(

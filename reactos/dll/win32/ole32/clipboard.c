@@ -1266,9 +1266,9 @@ static HRESULT WINAPI snapshot_GetDataHere(IDataObject *iface, FORMATETC *fmt,
     ole_priv_data_entry *entry;
     TYMED supported;
 
-    TRACE("(%p, %p {%s}, %p (tymed %x)\n", iface, fmt, dump_fmtetc(fmt), med, med->tymed);
-
     if ( !fmt || !med ) return E_INVALIDARG;
+
+    TRACE("(%p, %p {%s}, %p (tymed %x)\n", iface, fmt, dump_fmtetc(fmt), med, med->tymed);
 
     if ( !OpenClipboard(NULL)) return CLIPBRD_E_CANT_OPEN;
 
