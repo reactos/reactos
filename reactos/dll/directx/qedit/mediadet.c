@@ -38,8 +38,8 @@ typedef struct MediaDetImpl {
     IGraphBuilder *graph;
     IBaseFilter *source;
     IBaseFilter *splitter;
-    long num_streams;
-    long cur_stream;
+    LONG num_streams;
+    LONG cur_stream;
     IPin *cur_pin;
 } MediaDetImpl;
 
@@ -168,7 +168,7 @@ static HRESULT WINAPI MediaDet_get_CurrentStream(IMediaDet* iface, LONG *pVal)
     return S_OK;
 }
 
-static HRESULT SetCurPin(MediaDetImpl *This, long strm)
+static HRESULT SetCurPin(MediaDetImpl *This, LONG strm)
 {
     IEnumPins *pins;
     IPin *pin;

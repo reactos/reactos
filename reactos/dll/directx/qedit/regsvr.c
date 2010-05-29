@@ -326,5 +326,5 @@ HRESULT WINAPI DllUnregisterServer(void)
     TRACE("\n");
 
     hr = unregister_coclasses(coclass_list);
-    return S_OK;
+    return hr;
 }
