@@ -340,14 +340,13 @@ RtlDecodePointer(IN PVOID Pointer)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 NTAPI
 RtlEncodeSystemPointer(IN PVOID Pointer)
 {
-    UNIMPLEMENTED;
-    return NULL;
+    return (PVOID)((ULONG_PTR)Pointer ^ SharedUserData->Cookie);
 }
 
 /*
