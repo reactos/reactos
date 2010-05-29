@@ -32,10 +32,44 @@ WSAAddressToStringA(IN      LPSOCKADDR lpsaAddress,
                     OUT     LPSTR lpszAddressString,
                     IN OUT  LPDWORD lpdwAddressStringLength)
 {
-    UNIMPLEMENTED
+    DWORD size;
+    CHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
+    CHAR *p;
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    if (!lpsaAddress) return SOCKET_ERROR;
+    if (!lpszAddressString || !lpdwAddressStringLength) return SOCKET_ERROR;
+
+    switch(lpsaAddress->sa_family)
+    {
+    case AF_INET:
+        if (dwAddressLength < sizeof(SOCKADDR_IN)) return SOCKET_ERROR;
+        sprintf( buffer, "%u.%u.%u.%u:%u",
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 24 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 16 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) >> 8 & 0xff),
+               (unsigned int)(ntohl( ((SOCKADDR_IN *)lpsaAddress)->sin_addr.s_addr ) & 0xff),
+               ntohs( ((SOCKADDR_IN *)lpsaAddress)->sin_port ) );
+
+        p = strchr( buffer, ':' );
+        if (!((SOCKADDR_IN *)lpsaAddress)->sin_port) *p = 0;
+        break;
+    default:
+        WSASetLastError(WSAEINVAL);
+        return SOCKET_ERROR;
+    }
+
+    size = strlen( buffer ) + 1;
+
+    if (*lpdwAddressStringLength <  size)
+    {
+        *lpdwAddressStringLength = size;
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    *lpdwAddressStringLength = size;
+    strcpy( lpszAddressString, buffer );
+    return 0;
 }
 
 
@@ -50,10 +84,28 @@ WSAAddressToStringW(IN      LPSOCKADDR lpsaAddress,
                     OUT     LPWSTR lpszAddressString,
                     IN OUT  LPDWORD lpdwAddressStringLength)
 {
-    UNIMPLEMENTED
+    INT   ret;
+    DWORD size;
+    WCHAR buffer[54]; /* 32 digits + 7':' + '[' + '%" + 5 digits + ']:' + 5 digits + '\0' */
+    CHAR bufAddr[54];
 
-    WSASetLastError(WSASYSCALLFAILURE);
-    return SOCKET_ERROR;
+    size = *lpdwAddressStringLength;
+    ret = WSAAddressToStringA(lpsaAddress, dwAddressLength, NULL, bufAddr, &size);
+
+    if (ret) return ret;
+
+    MultiByteToWideChar( CP_ACP, 0, bufAddr, size, buffer, sizeof( buffer )/sizeof(WCHAR));
+
+    if (*lpdwAddressStringLength <  size)
+    {
+        *lpdwAddressStringLength = size;
+        WSASetLastError(WSAEFAULT);
+        return SOCKET_ERROR;
+    }
+
+    *lpdwAddressStringLength = size;
+    lstrcpyW( lpszAddressString, buffer );
+    return 0;
 }
 
 
