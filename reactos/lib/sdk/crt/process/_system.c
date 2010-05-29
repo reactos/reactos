@@ -35,11 +35,14 @@ int system(const char *command)
 // system should return 0 if command is null and the shell is found
 
   if (command == NULL) {
-      if (szComSpec == NULL)
-	return 0;
-      else
-	return -1;
-    }
+    if (szComSpec == NULL)
+      return 0;
+    else
+      return 1;
+  }
+
+  if (szComSpec == NULL)
+    return -1;
 
 // should return 127 or 0 ( MS ) if the shell is not found
 // __set_errno(ENOENT);
