@@ -2,6 +2,7 @@
  * German resources for MSI
  *
  * Copyright 2005 Henning Gerhardt
+ * Copyright 2010 Detlef Riekenberg
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,7 +30,33 @@ STRINGTABLE DISCARDABLE
 	4 "Das angegebene Installationspaket konnte nicht geöffnet werden. Bitte überprüfen Sie den Pfadnamen und versuchen Sie es noch einmal."
 	5 "Der Pfad %s wurde nicht gefunden."
 	9 "Bitte Disk %s einlegen."
-	10 "Falsche Parameter"
+	10 "Windows Installer %s\n\n" \
+	"Benutzung:\n" \
+	"msiexec Befehl {Parameter} [Zusätzliche Parammeter]\n\n" \
+	"Produkt installieren:\n" \
+	"\t/i {Paket|Produktcode} [Eigenschaft]\n" \
+	"\t/package {Paket|Produktcode} [Eigenschaft]\n" \
+	"\t/a Paket [Eigenschaft]\n" \
+	"Installation reparieren:\n" \
+	"\t/f[p|o|e|d|c|a|u|m|s|v] {Paket|Produktcode}\n" \
+	"Produkt deinstallieren:\n" \
+	"\t/uninstall {Paket|Produktcode} [Eigenschaft]\n" \
+	"\t/x {Paket|Produktcode} [Eigenschaft]\n" \
+	"Produkt ankündigen:\n" \
+	"\t/j[u|m] Paket [/t Transformationspaket] [/g Sprachkennung]\n" \
+	"Patch integrieren:\n" \
+	"\t/p Patchpaket [Eigenschaft]\n" \
+	"\t/p Patchpaket /a Paket [Eigenschaft]\n" \
+	"Protokollierung und Benutzeroberfläche für die oberen Befehle anpassen:\n" \
+	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] Protokolldatei\n" \
+	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+	"MSI Service registrieren:\n" \
+	"\t/y\n" \
+	"Registrierung des MSI Service aufheben:\n" \
+	"\t/z\n" \
+	"Hilfe anzeigen:\n" \
+	"\t/help\n" \
+	"\t/?\n"
 	11 "Geben Sie das Verzeichnis ein, dass %s enthält."
 	12 "Die Installationsquelle für das Feature fehlt."
 	13 "Das Netzwerklaufwerk für das Feature fehlt."

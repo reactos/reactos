@@ -64,11 +64,6 @@ typedef struct _tagTT_NAME_RECORD {
 #define SWAPWORD(x) MAKEWORD(HIBYTE(x), LOBYTE(x))
 #define SWAPLONG(x) MAKELONG(SWAPWORD(HIWORD(x)), SWAPWORD(LOWORD(x)))
 
-static const WCHAR szRegisterFonts[] =
-    {'R','e','g','i','s','t','e','r','F','o','n','t','s',0};
-static const WCHAR szUnregisterFonts[] =
-    {'U','n','r','e','g','i','s','t','e','r','F','o','n','t','s',0};
-
 static const WCHAR regfont1[] =
     {'S','o','f','t','w','a','r','e','\\',
      'M','i','c','r','o','s','o','f','t','\\',

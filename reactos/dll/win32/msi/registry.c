@@ -183,6 +183,16 @@ static const WCHAR szUserDataPatch_fmt[] = {
 'U','s','e','r','D','a','t','a','\\',
 '%','s','\\','P','a','t','c','h','e','s','\\','%','s',0};
 
+static const WCHAR szUserDataProductPatches_fmt[] = {
+'S','o','f','t','w','a','r','e','\\',
+'M','i','c','r','o','s','o','f','t','\\',
+'W','i','n','d','o','w','s','\\',
+'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+'I','n','s','t','a','l','l','e','r','\\',
+'U','s','e','r','D','a','t','a','\\',
+'%','s','\\','P','r','o','d','u','c','t','s','\\','%','s','\\',
+'P','a','t','c','h','e','s',0};
+
 static const WCHAR szInstallProperties_fmt[] = {
 'S','o','f','t','w','a','r','e','\\',
 'M','i','c','r','o','s','o','f','t','\\',
@@ -286,7 +296,7 @@ BOOL squash_guid(LPCWSTR in, LPWSTR out)
 
     out[0] = 0;
 
-    if (FAILED(CLSIDFromString((LPOLESTR)in, &guid)))
+    if (FAILED(CLSIDFromString((LPCOLESTR)in, &guid)))
         return FALSE;
 
     for(i=0; i<8; i++)
@@ -887,6 +897,69 @@ UINT MSIREG_OpenUserDataPatchKey(LPCWSTR szPatch, MSIINSTALLCONTEXT dwContext,
     return RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
 }
 
+UINT MSIREG_DeleteUserDataPatchKey(LPCWSTR patch, MSIINSTALLCONTEXT context)
+{
+    UINT r;
+    WCHAR squished_patch[GUID_SIZE];
+    WCHAR keypath[0x200];
+    LPWSTR usersid;
+
+    TRACE("%s\n", debugstr_w(patch));
+    if (!squash_guid(patch, squished_patch))
+        return ERROR_FUNCTION_FAILED;
+    TRACE("squished (%s)\n", debugstr_w(squished_patch));
+
+    if (context == MSIINSTALLCONTEXT_MACHINE)
+        sprintfW(keypath, szUserDataPatch_fmt, szLocalSid, squished_patch);
+    else
+    {
+        r = get_user_sid(&usersid);
+        if (r != ERROR_SUCCESS || !usersid)
+        {
+            ERR("Failed to retrieve user SID: %d\n", r);
+            return r;
+        }
+
+        sprintfW(keypath, szUserDataPatch_fmt, usersid, squished_patch);
+        LocalFree(usersid);
+    }
+
+    return RegDeleteTreeW(HKEY_LOCAL_MACHINE, keypath);
+}
+
+UINT MSIREG_OpenUserDataProductPatchesKey(LPCWSTR product, MSIINSTALLCONTEXT context,
+                                          HKEY *key, BOOL create)
+{
+    UINT rc;
+    WCHAR squished_product[GUID_SIZE];
+    WCHAR keypath[0x200];
+    LPWSTR usersid;
+
+    TRACE("%s\n", debugstr_w(product));
+    if (!squash_guid(product, squished_product))
+        return ERROR_FUNCTION_FAILED;
+
+    if (context == MSIINSTALLCONTEXT_MACHINE)
+        sprintfW(keypath, szUserDataProductPatches_fmt, szLocalSid, squished_product);
+    else
+    {
+        rc = get_user_sid(&usersid);
+        if (rc != ERROR_SUCCESS || !usersid)
+        {
+            ERR("Failed to retrieve user SID: %d\n", rc);
+            return rc;
+        }
+
+        sprintfW(keypath, szUserDataProductPatches_fmt, usersid, squished_product);
+        LocalFree(usersid);
+    }
+
+    if (create)
+        return RegCreateKeyW(HKEY_LOCAL_MACHINE, keypath, key);
+
+    return RegOpenKeyW(HKEY_LOCAL_MACHINE, keypath, key);
+}
+
 UINT MSIREG_OpenInstallProps(LPCWSTR szProduct, MSIINSTALLCONTEXT dwContext,
                              LPCWSTR szUserSid, HKEY *key, BOOL create)
 {
@@ -1156,7 +1229,7 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR szDescriptor, LPWSTR szProduct,
     len = ( &p[21] - szDescriptor );
 
     TRACE("length = %d\n", len);
-    *pUsed = len;
+    if (pUsed) *pUsed = len;
 
     return ERROR_SUCCESS;
 }
@@ -1236,17 +1309,13 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
     if (index && index - last_index != 1)
         return ERROR_INVALID_PARAMETER;
 
+    key = 0;
     r = RegCreateKeyW(HKEY_LOCAL_MACHINE, szInstaller_LocalClassesProd, &key);
-    if( r != ERROR_SUCCESS )
-        return ERROR_NO_MORE_ITEMS;
+    if( r != ERROR_SUCCESS ) goto failed;
 
     r = RegQueryInfoKeyW(key, NULL, NULL, NULL, &machine_count, NULL, NULL,
                          NULL, NULL, NULL, NULL, NULL);
-    if( r != ERROR_SUCCESS )
-    {
-        RegCloseKey(key);
-        return ERROR_NO_MORE_ITEMS;
-    }
+    if( r != ERROR_SUCCESS ) goto failed;
 
     if (machine_count && index <= machine_count)
     {
@@ -1261,26 +1330,23 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
     }
     RegCloseKey(key);
 
+    key = 0;
     r = get_user_sid(&usersid);
     if (r != ERROR_SUCCESS || !usersid)
     {
         ERR("Failed to retrieve user SID: %d\n", r);
+        last_index = 0;
         return r;
     }
     sprintfW(keypath, szInstaller_LocalManaged_fmt, usersid);
     LocalFree(usersid);
 
     r = RegCreateKeyW(HKEY_LOCAL_MACHINE, keypath, &key);
-    if( r != ERROR_SUCCESS )
-        return ERROR_NO_MORE_ITEMS;
+    if( r != ERROR_SUCCESS ) goto failed;
 
     r = RegQueryInfoKeyW(key, NULL, NULL, NULL, &managed_count, NULL, NULL,
                          NULL, NULL, NULL, NULL, NULL);
-    if( r != ERROR_SUCCESS )
-    {
-        RegCloseKey(key);
-        return ERROR_NO_MORE_ITEMS;
-    }
+    if( r != ERROR_SUCCESS ) goto failed;
 
     if (managed_count && index <= machine_count + managed_count)
     {
@@ -1295,17 +1361,13 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
     }
     RegCloseKey(key);
 
+    key = 0;
     r = RegCreateKeyW(HKEY_CURRENT_USER, szUserProduct, &key);
-    if( r != ERROR_SUCCESS )
-        return ERROR_NO_MORE_ITEMS;
+    if( r != ERROR_SUCCESS ) goto failed;
 
     r = RegQueryInfoKeyW(key, NULL, NULL, NULL, &unmanaged_count, NULL, NULL,
                          NULL, NULL, NULL, NULL, NULL);
-    if( r != ERROR_SUCCESS )
-    {
-        RegCloseKey(key);
-        return ERROR_NO_MORE_ITEMS;
-    }
+    if( r != ERROR_SUCCESS ) goto failed;
 
     if (unmanaged_count && index <= machine_count + managed_count + unmanaged_count)
     {
@@ -1318,8 +1380,9 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
             return ERROR_SUCCESS;
         }
     }
+failed:
     RegCloseKey(key);
-
+    last_index = 0;
     return ERROR_NO_MORE_ITEMS;
 }
 
@@ -2051,7 +2114,7 @@ UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
     DWORD idx = 0;
     UINT r;
 
-    static int last_index = 0;
+    static DWORD last_index;
 
     TRACE("(%s, %s, %d, %d, %d, %p, %p, %p, %p, %p)\n",
           debugstr_w(szProductCode), debugstr_w(szUserSid), dwContext, dwFilter,
@@ -2087,6 +2150,8 @@ UINT WINAPI MsiEnumPatchesExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
 
     if (r == ERROR_SUCCESS)
         last_index = dwIndex;
+    else
+        last_index = 0;
 
     return r;
 }

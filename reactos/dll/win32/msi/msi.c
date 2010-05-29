@@ -305,9 +305,8 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     UINT r = ERROR_SUCCESS, type;
     DWORD size = 0;
     LPCWSTR cmd_ptr = szCommandLine;
-    LPCWSTR product_code = szProductCode;
-    LPWSTR beg, end;
-    LPWSTR cmd = NULL, codes = NULL;
+    LPWSTR beg, end, cmd = NULL, codes = NULL;
+    BOOL succeeded = FALSE;
 
     static const WCHAR patcheq[] = {'P','A','T','C','H','=',0};
     static WCHAR empty[] = {0};
@@ -342,8 +341,6 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
         r = MsiSummaryInfoGetPropertyW(info, PID_TEMPLATE, &type, NULL, NULL, codes, &size);
         if (r != ERROR_SUCCESS)
             goto done;
-
-        product_code = codes;
     }
 
     if (!szCommandLine)
@@ -362,16 +359,25 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     lstrcatW(cmd, patcheq);
     lstrcatW(cmd, szPatchPackage);
 
-    beg = codes;
-    while ((end = strchrW(beg, '}')))
+    if (szProductCode)
+        r = MsiConfigureProductExW(szProductCode, INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT, cmd);
+    else
     {
-        *(end + 1) = '\0';
+        beg = codes;
+        while ((end = strchrW(beg, '}')))
+        {
+            *(end + 1) = '\0';
+            r = MsiConfigureProductExW(beg, INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT, cmd);
+            if (r == ERROR_SUCCESS)
+            {
+                TRACE("patch applied\n");
+                succeeded = TRUE;
+            }
+            beg = end + 2;
+        }
 
-        r = MsiConfigureProductExW(beg, INSTALLLEVEL_DEFAULT, INSTALLSTATE_DEFAULT, cmd);
-        if (r != ERROR_SUCCESS)
-            goto done;
-
-        beg = end + 2;
+        if (succeeded)
+            r = ERROR_SUCCESS;
     }
 
 done:
@@ -480,10 +486,43 @@ UINT WINAPI MsiApplyMultiplePatchesW(LPCWSTR szPatchPackages,
 UINT WINAPI MsiDetermineApplicablePatchesA(LPCSTR szProductPackagePath,
         DWORD cPatchInfo, PMSIPATCHSEQUENCEINFOA pPatchInfo)
 {
-    FIXME("(%s, %d, %p): stub!\n", debugstr_a(szProductPackagePath),
-          cPatchInfo, pPatchInfo);
+    UINT i, r;
+    WCHAR *package_path = NULL;
+    MSIPATCHSEQUENCEINFOW *psi;
 
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    TRACE("(%s, %d, %p)\n", debugstr_a(szProductPackagePath), cPatchInfo, pPatchInfo);
+
+    if (szProductPackagePath && !(package_path = strdupAtoW( szProductPackagePath )))
+        return ERROR_OUTOFMEMORY;
+
+    psi = msi_alloc( cPatchInfo * sizeof(*psi) );
+    if (!psi)
+    {
+        msi_free( package_path );
+        return ERROR_OUTOFMEMORY;
+    }
+
+    for (i = 0; i < cPatchInfo; i++)
+    {
+        psi[i].szPatchData = strdupAtoW( pPatchInfo[i].szPatchData );
+        psi[i].ePatchDataType = pPatchInfo[i].ePatchDataType;
+    }
+
+    r = MsiDetermineApplicablePatchesW( package_path, cPatchInfo, psi );
+    if (r == ERROR_SUCCESS)
+    {
+        for (i = 0; i < cPatchInfo; i++)
+        {
+            pPatchInfo[i].dwOrder = psi[i].dwOrder;
+            pPatchInfo[i].uStatus = psi[i].uStatus;
+        }
+    }
+
+    msi_free( package_path );
+    for (i = 0; i < cPatchInfo; i++)
+        msi_free( (WCHAR *)psi[i].szPatchData );
+    msi_free( psi );
+    return r;
 }
 
 static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
@@ -502,15 +541,14 @@ static UINT MSI_ApplicablePatchW( MSIPACKAGE *package, LPCWSTR patch )
     si = MSI_GetSummaryInformationW( patch_db->storage, 0 );
     if (!si)
     {
-        r = ERROR_FUNCTION_FAILED;
-        goto done;
+        msiobj_release( &patch_db->hdr );
+        return ERROR_FUNCTION_FAILED;
     }
 
     r = msi_check_patch_applicable( package, si );
     if (r != ERROR_SUCCESS)
         TRACE("patch not applicable\n");
 
-done:
     msiobj_release( &patch_db->hdr );
     msiobj_release( &si->hdr );
     return r;
@@ -595,10 +633,6 @@ static UINT msi_open_package(LPCWSTR product, MSIINSTALLCONTEXT context,
     LPWSTR localpack;
     WCHAR sourcepath[MAX_PATH];
     WCHAR filename[MAX_PATH];
-
-    static const WCHAR szLocalPackage[] = {
-        'L','o','c','a','l','P','a','c','k','a','g','e',0};
-
 
     r = MSIREG_OpenInstallProps(product, context, NULL, &props, FALSE);
     if (r != ERROR_SUCCESS)
@@ -1181,7 +1215,7 @@ done:
 
 static UINT msi_copy_outval(LPWSTR val, LPWSTR out, LPDWORD size)
 {
-    UINT r;
+    UINT r = ERROR_SUCCESS;
 
     if (!val)
         return ERROR_UNKNOWN_PROPERTY;
@@ -1201,7 +1235,7 @@ static UINT msi_copy_outval(LPWSTR val, LPWSTR out, LPDWORD size)
     if (size)
         *size = lstrlenW(val);
 
-    return ERROR_SUCCESS;
+    return r;
 }
 
 UINT WINAPI MsiGetProductInfoExW(LPCWSTR szProductCode, LPCWSTR szUserSid,
@@ -2149,6 +2183,22 @@ UINT WINAPI MsiMessageBoxW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uT
     return MessageBoxExW(hWnd,lpText,lpCaption,uType,wLanguageId); 
 }
 
+UINT WINAPI MsiMessageBoxExA(HWND hWnd, LPCSTR lpText, LPCSTR lpCaption, UINT uType,
+                DWORD unknown, WORD wLanguageId, DWORD f)
+{
+    FIXME("(%p, %s, %s, %u, 0x%08x, 0x%08x, 0x%08x): semi-stub\n", hWnd, debugstr_a(lpText),
+            debugstr_a(lpCaption), uType, unknown, wLanguageId, f);
+    return MessageBoxExA(hWnd, lpText, lpCaption, uType, wLanguageId);
+}
+
+UINT WINAPI MsiMessageBoxExW(HWND hWnd, LPCWSTR lpText, LPCWSTR lpCaption, UINT uType,
+                DWORD unknown, WORD wLanguageId, DWORD f)
+{
+    FIXME("(%p, %s, %s, %u, 0x%08x, 0x%08x, 0x%08x): semi-stub\n", hWnd, debugstr_w(lpText),
+            debugstr_w(lpCaption), uType, unknown, wLanguageId, f);
+    return MessageBoxExW(hWnd, lpText, lpCaption, uType, wLanguageId);
+}
+
 UINT WINAPI MsiProvideAssemblyA( LPCSTR szAssemblyName, LPCSTR szAppContext,
                 DWORD dwInstallMode, DWORD dwAssemblyInfo, LPSTR lpPathBuf,
                 LPDWORD pcchPathBuf )
@@ -2337,6 +2387,7 @@ done:
         r = ERROR_SUCCESS;
     }
 
+    msiobj_release(&package->hdr);
     return r;
 }
 
@@ -3519,10 +3570,10 @@ UINT WINAPI MsiReinstallFeatureW( LPCWSTR szProduct, LPCWSTR szFeature,
     if (r != ERROR_SUCCESS)
         return r;
 
-    MSI_SetPropertyW( package, szReinstallMode, reinstallmode );
-    MSI_SetPropertyW( package, szInstalled, szOne );
-    MSI_SetPropertyW( package, szLogVerbose, szOne );
-    MSI_SetPropertyW( package, szReinstall, szFeature );
+    msi_set_property( package->db, szReinstallMode, reinstallmode );
+    msi_set_property( package->db, szInstalled, szOne );
+    msi_set_property( package->db, szLogVerbose, szOne );
+    msi_set_property( package->db, szReinstall, szFeature );
 
     r = MSI_InstallPackage( package, sourcepath, NULL );
 

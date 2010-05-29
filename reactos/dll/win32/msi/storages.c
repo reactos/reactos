@@ -43,7 +43,6 @@ WINE_DEFAULT_DEBUG_CHANNEL(msidb);
 typedef struct tabSTORAGE
 {
     UINT str_index;
-    LPWSTR name;
     IStorage *storage;
 } STORAGE;
 
@@ -70,7 +69,7 @@ static BOOL storages_set_table_size(MSISTORAGESVIEW *sv, UINT size)
     return TRUE;
 }
 
-static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPWSTR name, IStorage *stg)
+static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPCWSTR name, IStorage *stg)
 {
     STORAGE *storage;
 
@@ -78,14 +77,7 @@ static STORAGE *create_storage(MSISTORAGESVIEW *sv, LPWSTR name, IStorage *stg)
     if (!storage)
         return NULL;
 
-    storage->name = strdupW(name);
-    if (!storage->name)
-    {
-        msi_free(storage);
-        return NULL;
-    }
-
-    storage->str_index = msi_addstringW(sv->db->strings, 0, storage->name, -1, 1, StringNonPersistent);
+    storage->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
     storage->storage = stg;
 
     if (storage->storage)
@@ -436,8 +428,6 @@ static UINT STORAGES_delete(struct tagMSIVIEW *view)
     {
         if (sv->storages[i]->storage)
             IStorage_Release(sv->storages[i]->storage);
-
-        msi_free(sv->storages[i]->name);
         msi_free(sv->storages[i]);
     }
 
