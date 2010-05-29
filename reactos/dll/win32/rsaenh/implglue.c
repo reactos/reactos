@@ -342,6 +342,7 @@ BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContex
 
         case CALG_RSA_KEYX:
         case CALG_RSA_SIGN:
+        case CALG_SSL3_SHAMD5:
             outlen = inlen = (mp_count_bits(&pKeyContext->rsa.N)+7)/8;
             if (enc) {
                 if (rsa_exptmod(in, inlen, out, &outlen, dwKeySpec, &pKeyContext->rsa) != CRYPT_OK) {
