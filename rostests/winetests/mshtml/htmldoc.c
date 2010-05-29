@@ -3405,6 +3405,14 @@ static void test_put_href(IHTMLDocument2 *doc)
     test_download(DWL_VERBDONE);
 }
 
+static void test_clear(IHTMLDocument2 *doc)
+{
+    HRESULT hres;
+
+    hres = IHTMLDocument2_clear(doc);
+    ok(hres == S_OK, "clear failed: %08x\n", hres);
+}
+
 static const OLECMDF expect_cmds[OLECMDID_GETPRINTTEMPLATE+1] = {
     0,
     OLECMDF_SUPPORTED,                  /* OLECMDID_OPEN */
@@ -4565,6 +4573,8 @@ static void test_HTMLDocument_hlink(void)
     test_InPlaceDeactivate(doc, TRUE);
     test_Close(doc, FALSE);
     test_IsDirty(doc, S_FALSE);
+    test_GetCurMoniker((IUnknown*)doc, &Moniker, NULL);
+    test_clear(doc);
     test_GetCurMoniker((IUnknown*)doc, &Moniker, NULL);
 
     if(view)

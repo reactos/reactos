@@ -20,6 +20,17 @@ function test_removeAttribute(e) {
 
 }
 
+function test_select_index() {
+    var s = document.getElementById("sel");
+
+    ok("0" in s, "'0' is not in s");
+    ok(s[0].text === "opt1", "s[0].text = " + s[0].text);
+    ok("1" in s, "'1 is not in s");
+    ok(s[1].text === "opt2", "s[1].text = " + s[1].text);
+    ok("2" in s, "'2' is in s");
+    ok(s[2] === null, "s[2] = " + s[2]);
+}
+
 function runTest() {
     obj = new Object();
     ok(obj === window.obj, "obj !== window.obj");
@@ -28,11 +39,16 @@ function runTest() {
 
     test_removeAttribute(document.getElementById("divid"));
     test_removeAttribute(document.body);
+    test_select_index();
 
     external.reportSuccess();
 }
 </script>
 <body onload="runTest();">
 <div id="divid"></div>
+<select id="sel">
+<option>opt1</option>
+<option>opt2</option>
+</select>
 </body>
 </html>
