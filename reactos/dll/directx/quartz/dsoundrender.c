@@ -78,8 +78,8 @@ typedef struct DSoundRenderImpl
 
     HANDLE state_change, blocked;
 
-    long volume;
-    long pan;
+    LONG volume;
+    LONG pan;
 } DSoundRenderImpl;
 
 /* Seeking is not needed for a renderer, rely on newsegment for the appropriate changes */
@@ -238,7 +238,7 @@ static HRESULT DSoundRender_Sample(LPVOID iface, IMediaSample * pSample)
 {
     DSoundRenderImpl *This = iface;
     LPBYTE pbSrcStream = NULL;
-    long cbSrcStream = 0;
+    LONG cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop;
     HRESULT hr;
     AM_MEDIA_TYPE *amt;
@@ -344,7 +344,7 @@ static HRESULT DSoundRender_Sample(LPVOID iface, IMediaSample * pSample)
     }
 
     cbSrcStream = IMediaSample_GetActualDataLength(pSample);
-    TRACE("Sample data ptr = %p, size = %ld\n", pbSrcStream, cbSrcStream);
+    TRACE("Sample data ptr = %p, size = %d\n", pbSrcStream, cbSrcStream);
 
 #if 0 /* For debugging purpose */
     {
@@ -677,7 +677,7 @@ static HRESULT WINAPI DSoundRender_GetState(IBaseFilter * iface, DWORD dwMilliSe
     }
     LeaveCriticalSection(&This->csFilter);
 
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI DSoundRender_SetSyncSource(IBaseFilter * iface, IReferenceClock *pClock)
@@ -877,11 +877,11 @@ static HRESULT WINAPI DSoundRender_InputPin_ReceiveConnection(IPin * iface, IPin
         {
             hr = IDirectSoundBuffer_SetVolume(DSImpl->dsbuffer, DSImpl->volume);
             if (FAILED(hr))
-                ERR("Can't set volume to %ld (%x)\n", DSImpl->volume, hr);
+                ERR("Can't set volume to %d (%x)\n", DSImpl->volume, hr);
 
             hr = IDirectSoundBuffer_SetPan(DSImpl->dsbuffer, DSImpl->pan);
             if (FAILED(hr))
-                ERR("Can't set pan to %ld (%x)\n", DSImpl->pan, hr);
+                ERR("Can't set pan to %d (%x)\n", DSImpl->pan, hr);
 
             DSImpl->write_pos = 0;
             hr = S_OK;

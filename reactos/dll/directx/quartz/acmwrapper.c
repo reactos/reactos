@@ -105,7 +105,7 @@ static HRESULT ACMWrapper_ProcessSampleData(InputPin *pin, IMediaSample *pSample
 
     tMed = tStart;
 
-    TRACE("Sample data ptr = %p, size = %ld\n", pbSrcStream, (long)cbSrcStream);
+    TRACE("Sample data ptr = %p, size = %d\n", pbSrcStream, cbSrcStream);
 
     hr = IPin_ConnectionMediaType(This->tf.ppPins[0], &amt);
     if (FAILED(hr))

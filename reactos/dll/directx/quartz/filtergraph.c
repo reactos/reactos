@@ -45,14 +45,14 @@
 WINE_DEFAULT_DEBUG_CHANNEL(quartz);
 
 typedef struct {
-    HWND hWnd;      /* Target window */
-    long msg;       /* User window message */
-    long instance;  /* User data */
-    int  disabled;  /* Disabled messages posting */
+    HWND     hWnd;      /* Target window */
+    UINT     msg;       /* User window message */
+    LONG_PTR instance;  /* User data */
+    int      disabled;  /* Disabled messages posting */
 } WndNotify;
 
 typedef struct {
-    long lEventCode;   /* Event code */
+    LONG lEventCode;   /* Event code */
     LONG_PTR lParam1;  /* Param1 */
     LONG_PTR lParam2;  /* Param2 */
 } Event;
@@ -120,7 +120,7 @@ static int EventsQueue_PutEvent(EventsQueue* omr, const Event* evt)
     return TRUE;
 }
 
-static int EventsQueue_GetEvent(EventsQueue* omr, Event* evt, long msTimeOut)
+static int EventsQueue_GetEvent(EventsQueue* omr, Event* evt, LONG msTimeOut)
 {
     if (WaitForSingleObject(omr->msg_event, msTimeOut) != WAIT_OBJECT_0)
 	return FALSE;
@@ -182,7 +182,7 @@ typedef struct _IFilterGraphImpl {
     LPWSTR * pFilterNames;
     int nFilters;
     int filterCapacity;
-    long nameIndex;
+    LONG nameIndex;
     IReferenceClock *refClock;
     EventsQueue evqueue;
     HANDLE hEventCompletion;
@@ -4970,7 +4970,7 @@ static HRESULT WINAPI MediaEvent_SetNotifyWindow(IMediaEventEx *iface,
 
     This->notif.hWnd = (HWND)hwnd;
     This->notif.msg = lMsg;
-    This->notif.instance = (long) lInstanceData;
+    This->notif.instance = lInstanceData;
 
     return S_OK;
 }
@@ -5055,30 +5055,26 @@ static HRESULT WINAPI MediaFilter_GetClassID(IMediaFilter *iface, CLSID * pClass
 
 static HRESULT WINAPI MediaFilter_Stop(IMediaFilter *iface)
 {
-    FIXME("(): stub\n");
-
-    return E_NOTIMPL;
+    ICOM_THIS_MULTI(IFilterGraphImpl, IMediaFilter_vtbl, iface);
+    return MediaControl_Stop((IMediaControl*)&This->IMediaControl_vtbl);
 }
 
 static HRESULT WINAPI MediaFilter_Pause(IMediaFilter *iface)
 {
-    FIXME("(): stub\n");
-
-    return E_NOTIMPL;
+    ICOM_THIS_MULTI(IFilterGraphImpl, IMediaFilter_vtbl, iface);
+    return MediaControl_Pause((IMediaControl*)&This->IMediaControl_vtbl);
 }
 
 static HRESULT WINAPI MediaFilter_Run(IMediaFilter *iface, REFERENCE_TIME tStart)
 {
-    FIXME("(0x%s): stub\n", wine_dbgstr_longlong(tStart));
-
-    return E_NOTIMPL;
+    ICOM_THIS_MULTI(IFilterGraphImpl, IMediaFilter_vtbl, iface);
+    return MediaControl_Run((IMediaControl*)&This->IMediaControl_vtbl);
 }
 
 static HRESULT WINAPI MediaFilter_GetState(IMediaFilter *iface, DWORD dwMsTimeout, FILTER_STATE * pState)
 {
-    FIXME("(%d, %p): stub\n", dwMsTimeout, pState);
-
-    return E_NOTIMPL;
+    ICOM_THIS_MULTI(IFilterGraphImpl, IMediaFilter_vtbl, iface);
+    return MediaControl_GetState((IMediaControl*)&This->IMediaControl_vtbl, dwMsTimeout, (OAFilterState*)pState);
 }
 
 static HRESULT WINAPI MediaFilter_SetSyncSource(IMediaFilter *iface, IReferenceClock *pClock)
