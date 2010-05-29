@@ -50,13 +50,21 @@ CreateTimer(VOID)
   if (!FirstpTmr)
   {
       FirstpTmr = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
-      if (FirstpTmr) InitializeListHead(&FirstpTmr->ptmrList);
+      if (FirstpTmr)
+      {
+         FirstpTmr->head.h = Handle;
+         InitializeListHead(&FirstpTmr->ptmrList);
+      }
       Ret = FirstpTmr;
   }
   else
   {
       Ret = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
-      if (Ret) InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
+      if (Ret)
+      {
+         Ret->head.h = Handle;
+         InsertTailList(&FirstpTmr->ptmrList, &Ret->ptmrList);
+      }
   }
   return Ret;
 }
@@ -66,14 +74,17 @@ BOOL
 FASTCALL
 RemoveTimer(PTIMER pTmr)
 {
+  BOOL Ret = FALSE;
   if (pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
-     UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
-     return TRUE;
+     UserDereferenceObject(pTmr);
+     Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
-  return FALSE;
+  if (!Ret) DPRINT1("Warning unable to delete timer\n");
+
+  return Ret;
 }
 
 PTIMER
@@ -528,9 +539,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWINDOW_OBJECT Window)
    {
       if ((pTmr) && (pTmr->pti == pti) && (pTmr->pWnd == Window))
       {
-         RemoveEntryList(&pTmr->ptmrList);
-         UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
-         TimersRemoved = TRUE;
+         TimersRemoved = RemoveTimer(pTmr);
       }
       pLE = pTmr->ptmrList.Flink;
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
@@ -557,9 +566,7 @@ DestroyTimersForThread(PTHREADINFO pti)
    {
       if ((pTmr) && (pTmr->pti == pti))
       {
-         RemoveEntryList(&pTmr->ptmrList);
-         UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
-         TimersRemoved = TRUE;
+         TimersRemoved = RemoveTimer(pTmr);
       }
       pLE = pTmr->ptmrList.Flink;
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
