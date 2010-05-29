@@ -56,6 +56,9 @@ static const WCHAR onchangeW[] = {'o','n','c','h','a','n','g','e',0};
 static const WCHAR clickW[] = {'c','l','i','c','k',0};
 static const WCHAR onclickW[] = {'o','n','c','l','i','c','k',0};
 
+static const WCHAR contextmenuW[] = {'c','o','n','t','e','x','t','m','e','n','u',0};
+static const WCHAR oncontextmenuW[] = {'o','n','c','o','n','t','e','x','t','m','e','n','u',0};
+
 static const WCHAR dblclickW[] = {'d','b','l','c','l','i','c','k',0};
 static const WCHAR ondblclickW[] = {'o','n','d','b','l','c','l','i','c','k',0};
 
@@ -141,6 +144,8 @@ static const event_info_t event_info[] = {
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {clickW,             onclickW,             EVENTT_MOUSE,  DISPID_EVMETH_ONCLICK,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
+    {contextmenuW,       oncontextmenuW,       EVENTT_MOUSE,  DISPID_EVMETH_ONCONTEXTMENU,
+        EVENT_BUBBLE},
     {dblclickW,          ondblclickW,          EVENTT_MOUSE,  DISPID_EVMETH_ONDBLCLICK,
         EVENT_DEFAULTLISTENER|EVENT_BUBBLE},
     {dragW,              ondragW,              EVENTT_MOUSE,  DISPID_EVMETH_ONDRAG,
@@ -283,16 +288,14 @@ static ULONG WINAPI HTMLEventObj_Release(IHTMLEventObj *iface)
 static HRESULT WINAPI HTMLEventObj_GetTypeInfoCount(IHTMLEventObj *iface, UINT *pctinfo)
 {
     HTMLEventObj *This = HTMLEVENTOBJ_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, pctinfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfoCount(DISPATCHEX(&This->dispex), pctinfo);
 }
 
 static HRESULT WINAPI HTMLEventObj_GetTypeInfo(IHTMLEventObj *iface, UINT iTInfo,
                                               LCID lcid, ITypeInfo **ppTInfo)
 {
     HTMLEventObj *This = HTMLEVENTOBJ_THIS(iface);
-    FIXME("(%p)->(%u %u %p)\n", This, iTInfo, lcid, ppTInfo);
-    return E_NOTIMPL;
+    return IDispatchEx_GetTypeInfo(DISPATCHEX(&This->dispex), iTInfo, lcid, ppTInfo);
 }
 
 static HRESULT WINAPI HTMLEventObj_GetIDsOfNames(IHTMLEventObj *iface, REFIID riid,
@@ -300,9 +303,7 @@ static HRESULT WINAPI HTMLEventObj_GetIDsOfNames(IHTMLEventObj *iface, REFIID ri
                                                 LCID lcid, DISPID *rgDispId)
 {
     HTMLEventObj *This = HTMLEVENTOBJ_THIS(iface);
-    FIXME("(%p)->(%s %p %u %u %p)\n", This, debugstr_guid(riid), rgszNames, cNames,
-          lcid, rgDispId);
-    return E_NOTIMPL;
+    return IDispatchEx_GetIDsOfNames(DISPATCHEX(&This->dispex), riid, rgszNames, cNames, lcid, rgDispId);
 }
 
 static HRESULT WINAPI HTMLEventObj_Invoke(IHTMLEventObj *iface, DISPID dispIdMember,
@@ -310,9 +311,8 @@ static HRESULT WINAPI HTMLEventObj_Invoke(IHTMLEventObj *iface, DISPID dispIdMem
                             VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr)
 {
     HTMLEventObj *This = HTMLEVENTOBJ_THIS(iface);
-    FIXME("(%p)->(%d %s %d %d %p %p %p %p)\n", This, dispIdMember, debugstr_guid(riid),
-          lcid, wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
-    return E_NOTIMPL;
+    return IDispatchEx_Invoke(DISPATCHEX(&This->dispex), dispIdMember, riid, lcid,
+            wFlags, pDispParams, pVarResult, pExcepInfo, puArgErr);
 }
 
 static HRESULT WINAPI HTMLEventObj_get_srcElement(IHTMLEventObj *iface, IHTMLElement **p)

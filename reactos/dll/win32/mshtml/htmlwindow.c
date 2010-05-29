@@ -511,20 +511,34 @@ static HRESULT WINAPI HTMLWindow2_clearTimeout(IHTMLWindow2 *iface, LONG timerID
     return clear_task_timer(&This->doc->basedoc, FALSE, timerID);
 }
 
+#define MAX_MESSAGE_LEN 2000
+
 static HRESULT WINAPI HTMLWindow2_alert(IHTMLWindow2 *iface, BSTR message)
 {
     HTMLWindow *This = HTMLWINDOW2_THIS(iface);
-    WCHAR wszTitle[100];
+    WCHAR title[100], *msg = message;
+    DWORD len;
 
     TRACE("(%p)->(%s)\n", This, debugstr_w(message));
 
-    if(!LoadStringW(get_shdoclc(), IDS_MESSAGE_BOX_TITLE, wszTitle,
-                    sizeof(wszTitle)/sizeof(WCHAR))) {
+    if(!LoadStringW(get_shdoclc(), IDS_MESSAGE_BOX_TITLE, title,
+                    sizeof(title)/sizeof(WCHAR))) {
         WARN("Could not load message box title: %d\n", GetLastError());
         return S_OK;
     }
 
-    MessageBoxW(This->doc_obj->hwnd, message, wszTitle, MB_ICONWARNING);
+    len = SysStringLen(message);
+    if(len > MAX_MESSAGE_LEN) {
+        msg = heap_alloc((MAX_MESSAGE_LEN+1)*sizeof(WCHAR));
+        if(!msg)
+            return E_OUTOFMEMORY;
+        memcpy(msg, message, MAX_MESSAGE_LEN*sizeof(WCHAR));
+        msg[MAX_MESSAGE_LEN] = 0;
+    }
+
+    MessageBoxW(This->doc_obj->hwnd, msg, title, MB_ICONWARNING);
+    if(msg != message)
+        heap_free(msg);
     return S_OK;
 }
 

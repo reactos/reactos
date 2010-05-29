@@ -41,6 +41,41 @@ struct HTMLFormElement {
 
 #define HTMLFORM(x)  (&(x)->lpHTMLFormElementVtbl)
 
+static HRESULT htmlform_item(HTMLFormElement *This, int i, IDispatch **ret)
+{
+    nsIDOMHTMLCollection *elements;
+    nsIDOMNode *item;
+    HTMLDOMNode *node;
+    nsresult nsres;
+
+    nsres = nsIDOMHTMLFormElement_GetElements(This->nsform, &elements);
+    if(NS_FAILED(nsres)) {
+        FIXME("GetElements failed: 0x%08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMHTMLCollection_Item(elements, i, &item);
+    nsIDOMHTMLCollection_Release(elements);
+    if(NS_FAILED(nsres)) {
+        FIXME("Item failed: 0x%08x\n", nsres);
+        return E_FAIL;
+    }
+
+    if(item) {
+        node = get_node(This->element.node.doc, item, TRUE);
+        if(!node)
+            return E_OUTOFMEMORY;
+
+        IHTMLDOMNode_AddRef(HTMLDOMNODE(node));
+        nsIDOMNode_Release(item);
+        *ret = (IDispatch*)HTMLDOMNODE(node);
+    }else {
+        *ret = NULL;
+    }
+
+    return S_OK;
+}
+
 #define HTMLFORM_THIS(iface) DEFINE_THIS(HTMLFormElement, HTMLFormElement, iface)
 
 static HRESULT WINAPI HTMLFormElement_QueryInterface(IHTMLFormElement *iface,
@@ -98,15 +133,43 @@ static HRESULT WINAPI HTMLFormElement_Invoke(IHTMLFormElement *iface, DISPID dis
 static HRESULT WINAPI HTMLFormElement_put_action(IHTMLFormElement *iface, BSTR v)
 {
     HTMLFormElement *This = HTMLFORM_THIS(iface);
-    FIXME("(%p)->(%s)\n", This, wine_dbgstr_w(v));
-    return E_NOTIMPL;
+    nsAString action_str;
+    nsresult nsres;
+
+    TRACE("(%p)->(%s)\n", This, wine_dbgstr_w(v));
+
+    nsAString_InitDepend(&action_str, v);
+    nsres = nsIDOMHTMLFormElement_SetAction(This->nsform, &action_str);
+    nsAString_Finish(&action_str);
+    if(NS_FAILED(nsres)) {
+        ERR("SetAction failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLFormElement_get_action(IHTMLFormElement *iface, BSTR *p)
 {
     HTMLFormElement *This = HTMLFORM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    nsAString action_str;
+    nsresult nsres;
+    HRESULT hres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsAString_Init(&action_str, NULL);
+    nsres = nsIDOMHTMLFormElement_GetAction(This->nsform, &action_str);
+    if(NS_SUCCEEDED(nsres)) {
+        const PRUnichar *action;
+        nsAString_GetData(&action_str, &action);
+        hres = nsuri_to_url(action, FALSE, p);
+    }else {
+        ERR("GetAction failed: %08x\n", nsres);
+        hres = E_FAIL;
+    }
+
+    return hres;
 }
 
 static HRESULT WINAPI HTMLFormElement_put_dir(IHTMLFormElement *iface, BSTR v)
@@ -238,8 +301,19 @@ static HRESULT WINAPI HTMLFormElement_put_length(IHTMLFormElement *iface, LONG v
 static HRESULT WINAPI HTMLFormElement_get_length(IHTMLFormElement *iface, LONG *p)
 {
     HTMLFormElement *This = HTMLFORM_THIS(iface);
-    FIXME("(%p)->(%p)\n", This, p);
-    return E_NOTIMPL;
+    PRInt32 length;
+    nsresult nsres;
+
+    TRACE("(%p)->(%p)\n", This, p);
+
+    nsres = nsIDOMHTMLFormElement_GetLength(This->nsform, &length);
+    if(NS_FAILED(nsres)) {
+        ERR("GetLength failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    *p = length;
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLFormElement__newEnum(IHTMLFormElement *iface, IUnknown **p)
@@ -253,7 +327,20 @@ static HRESULT WINAPI HTMLFormElement_item(IHTMLFormElement *iface, VARIANT name
         VARIANT index, IDispatch **pdisp)
 {
     HTMLFormElement *This = HTMLFORM_THIS(iface);
-    FIXME("(%p)->(v v %p)\n", This, pdisp);
+
+    TRACE("(%p)->(%s %s %p)\n", This, debugstr_variant(&name), debugstr_variant(&index), pdisp);
+
+    if(!pdisp)
+        return E_INVALIDARG;
+    *pdisp = NULL;
+
+    if(V_VT(&name) == VT_I4) {
+        if(V_I4(&name) < 0)
+            return E_INVALIDARG;
+        return htmlform_item(This, V_I4(&name), pdisp);
+    }
+
+    FIXME("Unsupported args\n");
     return E_NOTIMPL;
 }
 
@@ -428,34 +515,21 @@ static HRESULT HTMLFormElement_invoke(HTMLDOMNode *iface,
         EXCEPINFO *ei, IServiceProvider *caller)
 {
     HTMLFormElement *This = HTMLFORM_NODE_THIS(iface);
-    nsIDOMHTMLCollection *elements;
-    nsIDOMNode *item;
-    HTMLDOMNode *node;
-    nsresult nsres;
+    IDispatch *ret;
+    HRESULT hres;
 
     TRACE("(%p)->(%x %x %x %p %p %p %p)\n", This, id, lcid, flags, params, res, ei, caller);
 
-    nsres = nsIDOMHTMLFormElement_GetElements(This->nsform, &elements);
-    if(NS_FAILED(nsres)) {
-        FIXME("GetElements failed: 0x%08x\n", nsres);
-        return E_FAIL;
+    hres = htmlform_item(This, id - MSHTML_DISPID_CUSTOM_MIN, &ret);
+    if(FAILED(hres))
+        return hres;
+
+    if(ret) {
+        V_VT(res) = VT_DISPATCH;
+        V_DISPATCH(res) = ret;
+    }else {
+        V_VT(res) = VT_NULL;
     }
-
-    nsres = nsIDOMHTMLCollection_Item(elements, id - MSHTML_DISPID_CUSTOM_MIN, &item);
-    nsIDOMHTMLCollection_Release(elements);
-    if(NS_FAILED(nsres)) {
-        FIXME("Item failed: 0x%08x\n", nsres);
-        return E_FAIL;
-    }
-
-    node = get_node(This->element.node.doc, item, TRUE);
-
-    V_VT(res) = VT_DISPATCH;
-    V_DISPATCH(res) = (IDispatch*)node;
-
-    IHTMLDOMNode_AddRef(HTMLDOMNODE(node));
-    nsIDOMNode_Release(item);
-
     return S_OK;
 }
 
