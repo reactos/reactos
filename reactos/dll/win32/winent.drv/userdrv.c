@@ -60,7 +60,7 @@ void move_window_bits( struct ntdrv_win_data *data, const RECT *old_rect, const 
         hdc_src = hdc_dst = GetDCEx( data->hwnd, 0, DCX_CACHE );
     }
 
-    FIXME( "copying bits for win %p (parent %p)/ %s -> %s\n",
+    TRACE( "copying bits for win %p (parent %p)/ %s -> %s\n",
            data->hwnd, parent,
            wine_dbgstr_rect(&src_rect), wine_dbgstr_rect(&dst_rect) );
     BitBlt( hdc_dst, dst_rect.left, dst_rect.top,
@@ -253,7 +253,7 @@ BOOL CDECL RosDrv_IsClipboardFormatAvailable( UINT format )
 
 UINT CDECL RosDrv_RegisterClipboardFormat( LPCWSTR name )
 {
-    UNIMPLEMENTED;
+    //UNIMPLEMENTED;
     return 0;
 }
 

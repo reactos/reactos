@@ -118,7 +118,6 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
     }
 
     CursorInfo->ShowingCursor = TRUE;
-    CursorInfo->CurrentCursorObject = *NewCursor;
 
     hbmMask = NewCursor->hbmMask;
     hbmColor = NewCursor->hbmColor;

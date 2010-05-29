@@ -158,11 +158,20 @@ RosUserCreateCursorIcon(ICONINFO* IconInfoUnsafe,
     RtlZeroMemory(pCursorIcon, sizeof(CURSORICONENTRY));
 
     /* Save the usermode handle and other fields */
-    pCursorIcon->hUser = Handle;
-    //pCursorIcon->hbmMask = GDI_MapUserHandle(IconInfoUnsafe->hbmMask);
-    //pCursorIcon->hbmColor = GDI_MapUserHandle(IconInfoUnsafe->hbmColor);
-    pCursorIcon->hbmMask = IconInfoUnsafe->hbmMask;
-    pCursorIcon->hbmColor = IconInfoUnsafe->hbmColor;
+    pCursorIcon->Self = Handle;
+    pCursorIcon->IconInfo = *IconInfoUnsafe;
+    pCursorIcon->hbmMaskUser = IconInfoUnsafe->hbmMask;
+    pCursorIcon->hbmColorUser = IconInfoUnsafe->hbmColor;
+
+    /* Map handles */
+    pCursorIcon->IconInfo.hbmMask = GDI_MapUserHandle(pCursorIcon->IconInfo.hbmMask);
+    if (pCursorIcon->IconInfo.hbmColor)
+        pCursorIcon->IconInfo.hbmColor = GDI_MapUserHandle(pCursorIcon->IconInfo.hbmColor);
+
+    /* Make those bitmaps "system" objects */
+    GDIOBJ_SetOwnership(pCursorIcon->IconInfo.hbmMask, NULL);
+    if (pCursorIcon->IconInfo.hbmColor)
+        GDIOBJ_SetOwnership(pCursorIcon->IconInfo.hbmColor, NULL);
 
     /* Acquire lock */
     USER_LockCursorIcons();
@@ -192,14 +201,14 @@ RosUserDestroyCursorIcon(ICONINFO* IconInfoUnsafe,
         pCursorIcon = CONTAINING_RECORD(Current, CURSORICONENTRY, Entry);
 
         /* Check if it's our entry */
-        if (pCursorIcon->hUser == Handle)
+        if (pCursorIcon->Self == Handle)
         {
             /* Remove it from the list */
             RemoveEntryList(Current);
 
             /* Get handles back to the user for proper disposal */
-            IconInfoUnsafe->hbmColor = pCursorIcon->hbmColor;
-            IconInfoUnsafe->hbmMask = pCursorIcon->hbmMask;
+            IconInfoUnsafe->hbmColor = pCursorIcon->hbmColorUser;
+            IconInfoUnsafe->hbmMask = pCursorIcon->hbmMaskUser;
 
             // TODO: Go through all windows and remove this cursor from them!
             DPRINT1("Hitting a TODO!\n");
@@ -231,7 +240,7 @@ USER_GetCursorIcon(HCURSOR Handle)
         pCursorIcon = CONTAINING_RECORD(Current, CURSORICONENTRY, Entry);
 
         /* Check if it's our entry */
-        if (pCursorIcon->hUser == Handle) return pCursorIcon;
+        if (pCursorIcon->Self == Handle) return pCursorIcon;
 
         /* Advance to the next pair */
         Current = Current->Flink;

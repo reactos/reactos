@@ -35,6 +35,7 @@ VOID NTAPI SwmTest();
 LIST_ENTRY SwmWindows;
 ERESOURCE SwmLock;
 HDC SwmDc; /* Screen DC for copying operations */
+PCURSORICONENTRY SwmLastCursor;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -784,6 +785,31 @@ SwmGetWindowFromPoint(LONG x, LONG y)
 
         if (point_in_region(Window->Visible, x, y))
         {
+            /* Acquire CI lock */
+            USER_LockCursorIcons();
+
+            /* Check if cursor needs to be changed */
+            if (Window->Cursor != SwmLastCursor)
+            {
+                if (Window->Cursor)
+                {
+                    /* Set the new cursor */
+                    DPRINT1("Setting cursor bitmap %p for hwnd %p\n", Window->Cursor->IconInfo.hbmMask, Window->hwnd);
+                    GreSetCursor(&Window->Cursor->IconInfo, &CursorInfo);
+                }
+                else
+                {
+                    /* This window should have no cursor */
+                    GreSetCursor(NULL, &CursorInfo);
+                }
+
+                /* Update the last cursor */
+                SwmLastCursor = Window->Cursor;
+            }
+
+            /* Release CI lock */
+            USER_UnlockCursorIcons();
+
             /* Release the lock */
             SwmRelease();
 
@@ -820,6 +846,21 @@ SwmDefineCursor(HWND hWnd, HCURSOR hCursor)
 
     /* Acquire the SWM lock */
     SwmAcquire();
+
+    if (!hWnd)
+    {
+        /* Special case for setting default cursor */
+        DPRINT1("Setting cursor bitmap uh%p\n", pCursorIcon->hbmMaskUser);
+        GreSetCursor(&pCursorIcon->IconInfo, &CursorInfo);
+
+        /* Update current cursor */
+        SwmLastCursor = hCursor;
+
+        /* Release the SWM lock */
+        SwmRelease();
+
+        return TRUE;
+    }
 
     /* Now find the window */
     pSwmWindow = SwmFindByHwnd(hWnd);
@@ -858,6 +899,9 @@ SwmInitialize()
     {
         DPRINT1("Failure initializing SWM resource!\n");
     }
+
+    /* Cursor is hidden by default */
+    SwmLastCursor = NULL;
 
     SwmTest();
 }

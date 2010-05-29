@@ -98,7 +98,8 @@ void set_window_cursor( HWND hwnd, HCURSOR handle )
         /* This cursor doesn't exist yet, create it */
         create_cursor(handle);
 
-        //SwmDefineCursor(hwnd, handle);
+        /* Set it for this window */
+        SwmDefineCursor(hwnd, handle);
     }
 
     data->cursor = handle;
@@ -514,85 +515,86 @@ VOID CDECL RosDrv_GetIconInfo(CURSORICONINFO *ciconinfo, PICONINFO iconinfo)
 VOID create_cursor( HANDLE handle )
 {
     HDC hdc;
-    ICONINFO info;
+    ICONINFO icon;
     BITMAP bm;
 
     //if (!handle) return get_empty_cursor();
 
     if (!(hdc = CreateCompatibleDC( 0 ))) return;
-    if (!GetIconInfo( handle, &info ))
+    if (!GetIconInfo( handle, &icon ))
     {
         DeleteDC( hdc );
         return;
     }
 
-    GetObjectW( info.hbmMask, sizeof(bm), &bm );
-    if (!info.hbmColor) bm.bmHeight /= 2;
+    GetObjectW( icon.hbmMask, sizeof(bm), &bm );
+    if (!icon.hbmColor) bm.bmHeight /= 2;
 
     /* make sure hotspot is valid */
-    if (info.xHotspot >= bm.bmWidth || info.yHotspot >= bm.bmHeight)
+    if (icon.xHotspot >= bm.bmWidth || icon.yHotspot >= bm.bmHeight)
     {
-        info.xHotspot = bm.bmWidth / 2;
-        info.yHotspot = bm.bmHeight / 2;
+        icon.xHotspot = bm.bmWidth / 2;
+        icon.yHotspot = bm.bmHeight / 2;
     }
 
-    if (info.hbmColor)
-    {
-        //cursor = create_xlib_cursor( hdc, &info, bm.bmWidth, bm.bmHeight );
-        FIXME("color\n");
-        //DeleteObject( info.hbmColor );
-    }
-    else
-    {
-        FIXME("bitmaps\n");
-        //XColor fg, bg;
-        //fg.red = fg.green = fg.blue = 0xffff;
-        //bg.red = bg.green = bg.blue = 0;
-        //cursor = create_cursor_from_bitmaps( info.hbmMask, info.hbmMask, bm.bmWidth, bm.bmHeight,
-        //                                     bm.bmHeight, 0, &fg, &bg, info.xHotspot, info.yHotspot );
-
-        FIXME("bmBits %p\n", bm.bmBits);
-        //RosGdiCreateBitmap(NULL, info.hbmMask, &bm, bm.bmBits);
-
-        RosUserSetCursor(&info);
-    }
-
-    //DeleteObject( info.hbmMask );
-    DeleteDC( hdc );
-}
-
-/***********************************************************************
- *		CreateCursorIcon (NTDRV.@)
- */
-// TODO: Delete this function
-void CDECL RosDrv_CreateCursorIcon( HCURSOR handle, CURSORICONINFO *info )
-{
-    static const WORD ICON_HOTSPOT = 0x4242;
-    ICONINFO IconInfo;
-
-    /* ignore icons (FIXME: shouldn't use magic hotspot value) */
-    if (info->ptHotSpot.x == ICON_HOTSPOT && info->ptHotSpot.y == ICON_HOTSPOT) return;
-
+    // help for debugging
 #if 0
-    if (lpCursor == NULL)
     {
-        RosUserSetCursor(NULL);
-    }
-    else
-    {
-        /* Set the cursor */
-        RosUserSetCursor( &IconInfo );
+        BITMAPINFO *info;
+        unsigned int *color_bits = NULL;
+        unsigned char *mask_bits = NULL;
+        int width = bm.bmWidth;
+        int height = bm.bmHeight;
+        unsigned int width_bytes = (width + 31) / 32 * 4;
+        BITMAP bitmap;
+
+
+        if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] ))))
+            return;
+
+        info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        info->bmiHeader.biWidth = width;
+        info->bmiHeader.biHeight = -height;
+        info->bmiHeader.biPlanes = 1;
+        info->bmiHeader.biBitCount = 1;
+        info->bmiHeader.biCompression = BI_RGB;
+        info->bmiHeader.biSizeImage = width_bytes * height;
+        info->bmiHeader.biXPelsPerMeter = 0;
+        info->bmiHeader.biYPelsPerMeter = 0;
+        info->bmiHeader.biClrUsed = 0;
+        info->bmiHeader.biClrImportant = 0;
+
+        if (!(mask_bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage ))) goto done;
+        if (!GetDIBits( hdc, icon.hbmMask, 0, height, mask_bits, info, DIB_RGB_COLORS )) goto done;
+
+        /* HACK: Create the mask bitmap */
+        DeleteObject( icon.hbmMask );
+        icon.hbmMask = CreateBitmap ( width, height,
+                                           1, 1, NULL);
+        if( GetObjectW(icon.hbmMask, sizeof(bitmap), &bitmap))
+        {
+            RosGdiCreateBitmap(NULL, icon.hbmMask, &bitmap, NULL);
+            mask_bits[0] = 0xFF; mask_bits[1] = 0xFF; mask_bits[2] = 0xFF;
+            SetDIBits( hdc, icon.hbmMask, 0, height, mask_bits, info, DIB_RGB_COLORS );
+        }
+
+        info->bmiHeader.biBitCount = 32;
+        info->bmiHeader.biSizeImage = width * height * 4;
+        if (!(color_bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage ))) goto done;
+        GetDIBits( hdc, icon.hbmColor, 0, height, color_bits, info, DIB_RGB_COLORS );
+
+done:
+        HeapFree( GetProcessHeap(), 0, info );
+        HeapFree( GetProcessHeap(), 0, color_bits );
+        HeapFree( GetProcessHeap(), 0, mask_bits );
     }
 #endif
 
-    /* Create cursor bitmaps */
-    RosDrv_GetIconInfo( info, &IconInfo );
-
     /* Create the cursor icon */
-    RosUserCreateCursorIcon( &IconInfo, handle );
+    RosUserCreateCursorIcon( &icon, handle );
 
-    FIXME( "cursor %p %ux%u, planes %u, bpp %u -> xid %lx\n",
-               handle, info->nWidth, info->nHeight, info->bPlanes, info->bBitsPerPixel, /*cursor*/ 0);
+    //DeleteObject( icon.hbmMask );
+    DeleteDC( hdc );
 }
 
 /***********************************************************************
@@ -602,21 +604,26 @@ void CDECL RosDrv_DestroyCursorIcon( HCURSOR handle )
 {
     ICONINFO IconInfo = {0};
 
-    FIXME( "%p xid %lx\n", handle, /*cursor*/ 0 );
+    FIXME( "Destroying cursor %p\n", handle );
 
     /* Destroy kernel mode part of the cursor icon */
     RosUserDestroyCursorIcon( &IconInfo, handle );
 
     /* Destroy usermode-created bitmaps */
     // FIXME: Will it delete kernelmode bitmaps?!
-    if (IconInfo.hbmColor) DeleteObject( IconInfo.hbmColor );
-    if (IconInfo.hbmMask) DeleteObject( IconInfo.hbmMask );
+    // HACK
+    //if (IconInfo.hbmColor) DeleteObject( IconInfo.hbmColor );
+    //if (IconInfo.hbmMask) DeleteObject( IconInfo.hbmMask );
 }
 
 void CDECL RosDrv_SetCursor( HCURSOR handle )
 {
-    // FIXME: Remove!
-    RosUserSetCursor(NULL);
+
+    // HACK
+    if (!cursor_window)
+    {
+        cursor_window = SwmGetWindowFromPoint(200, 200);
+    }
 
     if (cursor_window) SendNotifyMessageW( cursor_window, WM_NTDRV_SET_CURSOR, 0, (LPARAM)handle );
     FIXME("handle %x, cursor_window %x\n", handle, cursor_window);

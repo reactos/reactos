@@ -4,7 +4,6 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL Enabled;
   RECT ClipRect;
   BOOL IsClipped;
-  ICONINFO CurrentCursorObject;
   BOOL ShowingCursor;
   POINT CursorPos;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
@@ -23,10 +22,11 @@ typedef struct _GDIPOINTER
 
 typedef struct _CURSORICONENTRY
 {
-    HANDLE     hbmMask;
-    HANDLE     hbmColor;
-    HANDLE     hUser;
     LIST_ENTRY Entry;
+    ICONINFO   IconInfo;
+    HANDLE     Self;
+    HANDLE     hbmMaskUser; // temporary
+    HANDLE     hbmColorUser; // temporary
 } CURSORICONENTRY, *PCURSORICONENTRY;
 
 extern SYSTEM_CURSORINFO CursorInfo;
