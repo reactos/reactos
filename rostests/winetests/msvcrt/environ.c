@@ -42,6 +42,15 @@ static const char *a_very_long_env_string =
  "/usr/lib/mingw32/3.4.2/;"
  "/usr/lib/";
 
+static void test_system(void)
+{
+    int ret = system(NULL);
+    ok(ret == 1, "Expected system to return 1, got %d\n", ret);
+
+    ret = system("echo OK");
+    ok(ret == 0, "Expected system to return 0, got %d\n", ret);
+}
+
 START_TEST(environ)
 {
     ok( _putenv("cat=") == 0, "_putenv failed on deletion of nonexistent environment variable\n" );
@@ -54,4 +63,6 @@ START_TEST(environ)
     ok( _putenv(a_very_long_env_string) == 0, "_putenv failed for long environment string\n");
 
     ok( getenv("nonexistent") == NULL, "getenv should fail with nonexistent var name\n" );
+
+    test_system();
 }

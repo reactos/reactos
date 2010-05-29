@@ -54,20 +54,75 @@ static void test_ctime(void)
 }
 static void test_gmtime(void)
 {
-    time_t gmt = 0;
-    struct tm* gmt_tm = gmtime(&gmt);
-    if(gmt_tm == 0)
-	{
-	    ok(0,"gmtime() error\n");
-	    return;
-	}
+    static __time32_t (__cdecl *p_mkgmtime32)(struct tm*);
+    static struct tm* (__cdecl *p_gmtime32)(__time32_t*);
+
+    HMODULE hmod = GetModuleHandleA("msvcrt.dll");
+    __time32_t valid, gmt;
+    struct tm* gmt_tm;
+
+    p_gmtime32 = (void*)GetProcAddress(hmod, "_gmtime32");
+    if(!p_gmtime32) {
+        win_skip("Skipping _gmtime32 tests\n");
+        return;
+    }
+
+    gmt = valid = 0;
+    gmt_tm = p_gmtime32(&gmt);
+    if(!gmt_tm) {
+        ok(0, "_gmtime32() failed\n");
+        return;
+    }
+
     ok(((gmt_tm->tm_year == 70) && (gmt_tm->tm_mon  == 0) && (gmt_tm->tm_yday  == 0) &&
-	(gmt_tm->tm_mday ==  1) && (gmt_tm->tm_wday == 4) && (gmt_tm->tm_hour  == 0) &&
-	(gmt_tm->tm_min  ==  0) && (gmt_tm->tm_sec  == 0) && (gmt_tm->tm_isdst == 0)),
-       "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday, 
-       gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst); 
-  
+                (gmt_tm->tm_mday ==  1) && (gmt_tm->tm_wday == 4) && (gmt_tm->tm_hour  == 0) &&
+                (gmt_tm->tm_min  ==  0) && (gmt_tm->tm_sec  == 0) && (gmt_tm->tm_isdst == 0)),
+            "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
+            gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday,
+            gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst);
+
+    p_mkgmtime32 = (void*)GetProcAddress(hmod, "_mkgmtime32");
+    if(!p_mkgmtime32) {
+        win_skip("Skipping _mkgmtime32 tests\n");
+        return;
+    }
+
+    gmt_tm->tm_wday = gmt_tm->tm_yday = 0;
+    gmt = p_mkgmtime32(gmt_tm);
+    ok(gmt == valid, "gmt = %u\n", gmt);
+    ok(gmt_tm->tm_wday == 4, "gmt_tm->tm_wday = %d\n", gmt_tm->tm_wday);
+    ok(gmt_tm->tm_yday == 0, "gmt_tm->tm_yday = %d\n", gmt_tm->tm_yday);
+
+    gmt_tm->tm_wday = gmt_tm->tm_yday = 0;
+    gmt_tm->tm_isdst = -1;
+    gmt = p_mkgmtime32(gmt_tm);
+    ok(gmt == valid, "gmt = %u\n", gmt);
+    ok(gmt_tm->tm_wday == 4, "gmt_tm->tm_wday = %d\n", gmt_tm->tm_wday);
+    ok(gmt_tm->tm_yday == 0, "gmt_tm->tm_yday = %d\n", gmt_tm->tm_yday);
+
+    gmt_tm->tm_wday = gmt_tm->tm_yday = 0;
+    gmt_tm->tm_isdst = 1;
+    gmt = p_mkgmtime32(gmt_tm);
+    ok(gmt == valid, "gmt = %u\n", gmt);
+    ok(gmt_tm->tm_wday == 4, "gmt_tm->tm_wday = %d\n", gmt_tm->tm_wday);
+    ok(gmt_tm->tm_yday == 0, "gmt_tm->tm_yday = %d\n", gmt_tm->tm_yday);
+
+    gmt = valid = 173921;
+    gmt_tm = p_gmtime32(&gmt);
+    if(!gmt_tm) {
+        ok(0, "_gmtime32() failed\n");
+        return;
+    }
+
+    gmt_tm->tm_isdst = -1;
+    gmt = p_mkgmtime32(gmt_tm);
+    ok(gmt == valid, "gmt = %u\n", gmt);
+    ok(gmt_tm->tm_wday == 6, "gmt_tm->tm_wday = %d\n", gmt_tm->tm_wday);
+    ok(gmt_tm->tm_yday == 2, "gmt_tm->tm_yday = %d\n", gmt_tm->tm_yday);
+
+    gmt_tm->tm_isdst = 1;
+    gmt = p_mkgmtime32(gmt_tm);
+    ok(gmt == valid, "gmt = %u\n", gmt);
 }
 
 static void test_mktime(void)

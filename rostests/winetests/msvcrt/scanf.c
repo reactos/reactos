@@ -198,7 +198,49 @@ static void test_sscanf( void )
     ok(number_so_far == 4, "%%n yielded wrong result: %d\n", number_so_far);
 }
 
+static void test_sscanf_s(void)
+{
+    int (__cdecl *psscanf_s)(const char*,const char*,...);
+    HMODULE hmod = GetModuleHandleA("msvcrt.dll");
+    int i, ret;
+    char buf[100];
+
+    psscanf_s = (void*)GetProcAddress(hmod, "sscanf_s");
+    if(!psscanf_s) {
+        win_skip("sscanf_s not available\n");
+        return;
+    }
+
+    ret = psscanf_s("123", "%d", &i);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(i == 123, "i = %d\n", i);
+
+    ret = psscanf_s("123", "%s", buf, 100);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(!strcmp("123", buf), "buf = %s\n", buf);
+
+    ret = psscanf_s("123", "%s", buf, 3);
+    ok(ret == 0, "Wrong number of arguments read: %d\n", ret);
+    ok(buf[0]=='\0', "buf = %s\n", buf);
+
+    buf[0] = 'a';
+    ret = psscanf_s("123", "%3c", buf, 2);
+    ok(ret == 0, "Wrong number of arguments read: %d\n", ret);
+    ok(buf[0]=='\0', "buf = %s\n", buf);
+
+    i = 1;
+    ret = psscanf_s("123 123", "%s %d", buf, 2, &i);
+    ok(ret == 0, "Wrong number of arguments read: %d\n", ret);
+    ok(i==1, "i = %d\n", i);
+
+    i = 1;
+    ret = psscanf_s("123 123", "%d %s", &i, buf, 2);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(i==123, "i = %d\n", i);
+}
+
 START_TEST(scanf)
 {
     test_sscanf();
+    test_sscanf_s();
 }
