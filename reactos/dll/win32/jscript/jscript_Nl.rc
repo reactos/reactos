@@ -20,10 +20,13 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 STRINGTABLE DISCARDABLE
 {
     IDS_TO_PRIMITIVE        "Fout bij het omzetten van het object naar een primitief type"
     IDS_INVALID_CALL_ARG    "Ongeldige procedure-aanroep of argument"
+    IDS_CREATE_OBJ_ERROR    "Automatiseringsserver kan het object niet creëren"
     IDS_NO_PROPERTY         "Dit object ondersteunt deze eigenschap of methode niet"
     IDS_ARG_NOT_OPT         "Argument is niet optioneel"
     IDS_SYNTAX_ERROR        "Syntax fout"
@@ -40,6 +43,7 @@ STRINGTABLE DISCARDABLE
     IDS_NOT_BOOL            "Boolean object verwacht"
     IDS_JSCRIPT_EXPECTED    "JScript object verwacht"
     IDS_REGEXP_SYNTAX_ERROR "Syntax fout in reguliere expressie"
+    IDS_URI_INVALID_CHAR    "De te coderen URI bevat ongeldige tekens"
     IDS_INVALID_LENGTH      "Array lengte moet een eindig, positief geheel getal zijn"
     IDS_ARRAY_EXPECTED      "Array object verwacht"
 }
