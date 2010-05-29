@@ -925,10 +925,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Get the LPC Port */
             Status = ObReferenceObjectByHandle(PortHandle,
@@ -969,10 +971,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Assign the actual token */
             Status = PspSetPrimaryToken(Process, TokenHandle, NULL);
@@ -1021,10 +1025,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Setting the session id requires the SeTcbPrivilege */
             if (!SeSinglePrivilegeCheck(SeTcbPrivilege, PreviousMode))
@@ -1089,9 +1095,11 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Check for invalid PriorityClass value */
             if (PriorityClass.PriorityClass > PROCESS_PRIORITY_CLASS_ABOVE_NORMAL)
@@ -1288,7 +1296,7 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
         Access = THREAD_SET_THREAD_TOKEN;
     }
 
-    /* Reference the process */
+    /* Reference the thread */
     Status = ObReferenceObjectByHandle(ThreadHandle,
                                        Access,
                                        PsThreadType,
@@ -1318,10 +1326,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
             if ((Priority > HIGH_PRIORITY) ||
@@ -1353,10 +1363,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
             if ((Priority > THREAD_BASE_PRIORITY_MAX) ||
@@ -1398,8 +1410,8 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
 
@@ -1465,10 +1477,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Assign the actual token */
             Status = PsAssignImpersonationToken(Thread, TokenHandle);
@@ -1491,10 +1505,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Set the address */
             Thread->Win32StartAddress = Address;
@@ -1517,10 +1533,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Validate it */
             if (IdealProcessor > MAXIMUM_PROCESSORS)
@@ -1564,10 +1582,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* Call the kernel */
             KeSetDisableBoostThread(&Thread->Tcb, (BOOLEAN)DisableBoost);
@@ -1590,10 +1610,12 @@ NtSetInformationThread(IN HANDLE ThreadHandle,
             }
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
-                /* Return the exception code */
-                _SEH2_YIELD(return _SEH2_GetExceptionCode());
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
             }
             _SEH2_END;
+
+            if (!NT_SUCCESS(Status)) break;
 
             /* This is only valid for the current thread */
             if (Thread != PsGetCurrentThread())
