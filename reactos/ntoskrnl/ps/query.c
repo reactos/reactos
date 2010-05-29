@@ -5,6 +5,7 @@
  * PURPOSE:         Process Manager: Thread/Process Query/Set Information
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller (w3seek@reactos.org)
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -735,6 +736,43 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             ObDereferenceObject(Process);
             break;
 
+        case ProcessBreakOnTermination:
+
+            /* Set the return length*/
+            Length = sizeof(ULONG);
+            if (ProcessInformationLength != Length)
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Reference the process */
+            Status = ObReferenceObjectByHandle(ProcessHandle,
+                                               PROCESS_QUERY_INFORMATION,
+                                               PsProcessType,
+                                               PreviousMode,
+                                               (PVOID*)&Process,
+                                               NULL);
+            if (!NT_SUCCESS(Status))
+                break;
+
+            /* Enter SEH for writing back data */
+            _SEH2_TRY
+            {
+                /* Return the BreakOnTermination state */
+                *(PULONG)ProcessInformation = Process->BreakOnTermination;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get the exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+
+            /* Dereference the process */
+            ObDereferenceObject(Process);
+            break;
+
         /* Per-process security cookie */
         case ProcessCookie:
 
@@ -1144,6 +1182,35 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
             DPRINT1("Not implemented: ProcessDebugPort\n");
             Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        case ProcessBreakOnTermination:
+
+            /* Check buffer length */
+            if (ProcessInformationLength != sizeof(ULONG))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
+
+            /* Setting 'break on termination' requires the SeDebugPrivilege */
+            if (!SeSinglePrivilegeCheck(SeDebugPrivilege, PreviousMode))
+            {
+                Status = STATUS_PRIVILEGE_NOT_HELD;
+                break;
+            }
+
+            /* Enter SEH for direct buffer read */
+            _SEH2_TRY
+            {
+                Process->BreakOnTermination = *(PULONG)ProcessInformation;
+            }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                /* Get exception code */
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
             break;
 
         /* We currently don't implement any of these */

@@ -2042,12 +2042,12 @@ RtlRemoteCall(
 );
 
 NTSYSAPI
-VOID
+NTSTATUS
 NTAPI
 RtlSetProcessIsCritical(
     IN BOOLEAN NewValue,
     OUT PBOOLEAN OldValue OPTIONAL,
-    IN BOOLEAN IsWinlogon
+    IN BOOLEAN NeedBreaks
 );
 
 NTSYSAPI

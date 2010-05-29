@@ -5,6 +5,7 @@
  * PURPOSE:           Process functions
  * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
  *                    Ariadne (ariadne@xs4all.nl)
+ *                    Eric Kohl
  */
 
 /* INCLUDES ****************************************************************/
@@ -351,18 +352,45 @@ RtlEncodeSystemPointer(IN PVOID Pointer)
 }
 
 /*
- * @unimplemented
+ * @implemented
+ *
+ * NOTES:
+ *   Implementation based on the documentation from:
+ *   http://www.geoffchappell.com/studies/windows/win32/ntdll/api/rtl/peb/setprocessiscritical.htm
  */
-NTSYSAPI
-VOID
+NTSTATUS
 NTAPI
-RtlSetProcessIsCritical(
-    IN   BOOLEAN   NewValue,
-    OUT  PBOOLEAN  OldValue OPTIONAL,
-    IN   BOOLEAN   IsWinlogon)
+RtlSetProcessIsCritical(IN BOOLEAN NewValue,
+                        OUT PBOOLEAN OldValue OPTIONAL,
+                        IN BOOLEAN NeedBreaks)
 {
-	//TODO
-    UNIMPLEMENTED;
+    ULONG BreakOnTermination = FALSE;
+
+    if (OldValue)
+        *OldValue = FALSE;
+
+    /* Fail, if the critical breaks flag is required but is not set */
+    if (NeedBreaks == TRUE &&
+        !(NtCurrentPeb()->NtGlobalFlag & FLG_ENABLE_SYSTEM_CRIT_BREAKS))
+        return STATUS_UNSUCCESSFUL;
+
+    if (OldValue)
+    {
+        /* Query and return the old break on termination flag for the process */
+        ZwQueryInformationProcess(NtCurrentProcess(),
+                                  ProcessBreakOnTermination,
+                                  &BreakOnTermination,
+                                  sizeof(ULONG),
+                                  NULL);
+        *OldValue = (BOOLEAN)BreakOnTermination;
+    }
+
+    /* Set the break on termination flag for the process */
+    BreakOnTermination = NewValue;
+    return ZwSetInformationProcess(NtCurrentProcess(),
+                                   ProcessBreakOnTermination,
+                                   &BreakOnTermination,
+                                   sizeof(ULONG));
 }
 
 ULONG
