@@ -407,7 +407,7 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
     MCI_PLAY_PARMS mciPlay;
     TCHAR szLocalFileName[MAX_PATH];
     UINT FileType;
-    DWORD dwError;
+    MCIERROR mciError;
 
     if (lpFileName == NULL)
     {
@@ -449,14 +449,14 @@ PlayFile(HWND hwnd, LPTSTR lpFileName)
 
     SetTimer(hwnd, IDT_PLAYTIMER, 100, (TIMERPROC) PlayTimerProc);
 
-    dwError = mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
+    mciSendCommand(wDeviceId, MCI_SEEK, MCI_WAIT | MCI_SEEK_TO_START, 0);
 
     mciPlay.dwCallback = (DWORD_PTR)hwnd;
     mciPlay.dwFrom = 0;
     mciPlay.dwTo = MaxFilePos;
 
-    dwError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM | MCI_TO, (DWORD_PTR)&mciPlay);
-    if (dwError != 0)
+    mciError = mciSendCommand(wDeviceId, MCI_PLAY, MCI_NOTIFY | MCI_FROM | MCI_TO, (DWORD_PTR)&mciPlay);
+    if (mciError != 0)
     {
         MessageBox(hwnd, _T("Can't play!"), NULL, MB_OK);
     }
@@ -641,12 +641,12 @@ MainWndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDM_ABOUT:
-		{
+        {
                     HICON mplayIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
                     ShellAbout(hwnd, szAppTitle, 0, mplayIcon);
-		    DeleteObject(mplayIcon);
+            DeleteObject(mplayIcon);
                     break;
-		}
+        }
                 case IDM_EXIT:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     return 0;

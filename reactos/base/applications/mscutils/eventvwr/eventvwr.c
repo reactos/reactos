@@ -506,7 +506,6 @@ QueryEventMessages(LPWSTR lpMachineName,
     DWORD dwRead, dwNeeded, dwThisRecord, dwTotalRecords = 0, dwCurrentRecord = 1, dwRecordsToRead = 0, dwFlags;
     LPWSTR lpSourceName;
     LPWSTR lpComputerName;
-    LPWSTR lpEventStr;
     LPWSTR lpData;
     BOOL bResult = TRUE; /* Read succeeded. */
 
@@ -608,9 +607,6 @@ QueryEventMessages(LPWSTR lpMachineName,
 
             // This ist the data section of the current event
             lpData = (LPWSTR)((LPBYTE)pevlr + pevlr->DataOffset);
-
-            // This is the text of the current event
-            lpEventStr = (LPWSTR)((LPBYTE)pevlr + pevlr->StringOffset);
 
             // Compute the event type
             EventTimeToSystemTime(pevlr->TimeWritten, &time);
