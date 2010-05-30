@@ -170,9 +170,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
-
-    if (iRet != NO_ERROR)
+    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -201,9 +199,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
     ZeroMemory(pIpAddrTable, sizeof(*pIpAddrTable));
 
-    iRet = GetIpAddrTable(pIpAddrTable, &Size, TRUE);
-
-    if (iRet != NO_ERROR)
+    if ((iRet = GetIpAddrTable(pIpAddrTable, &Size, TRUE)) != NO_ERROR)
     {
         _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
         DoFormatMessage();
@@ -272,7 +268,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     PMIB_IPNETTABLE pIpNetTable = NULL;
     DWORD dwIpAddr = 0;
     ULONG Size = 0;
-    INT iRet, i, val, c;
+    INT i, val, c;
 
     /* error checking */
 
@@ -320,9 +316,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
-
-    if (iRet != NO_ERROR)
+    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -382,7 +376,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 
 
     /* Add the ARP entry */
-    if ((iRet = SetIpNetEntry(pAddHost)) != NO_ERROR)
+    if (SetIpNetEntry(pAddHost) != NO_ERROR)
     {
         DoFormatMessage();
         goto cleanup;
@@ -415,7 +409,6 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     PMIB_IPNETTABLE pIpNetTable = NULL;
     ULONG Size = 0;
     DWORD dwIpAddr = 0;
-    INT iRet;
     BOOL bFlushTable = FALSE;
 
     /* error checking */
@@ -449,9 +442,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
 
-    iRet = GetIpNetTable(pIpNetTable, &Size, TRUE);
-
-    if (iRet != NO_ERROR)
+    if (GetIpNetTable(pIpNetTable, &Size, TRUE) != NO_ERROR)
     {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         DoFormatMessage();
@@ -485,7 +476,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     if (bFlushTable == TRUE)
     {
         /* delete arp cache */
-        if ((iRet = FlushIpNetTable(pDelHost->dwIndex)) != NO_ERROR)
+        if (FlushIpNetTable(pDelHost->dwIndex) != NO_ERROR)
         {
             DoFormatMessage();
             goto cleanup;
@@ -501,7 +492,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
         pDelHost->dwAddr = dwIpAddr;
 
     /* Add the ARP entry */
-    if ((iRet = DeleteIpNetEntry(pDelHost)) != NO_ERROR)
+    if (DeleteIpNetEntry(pDelHost) != NO_ERROR)
     {
         DoFormatMessage();
         goto cleanup;

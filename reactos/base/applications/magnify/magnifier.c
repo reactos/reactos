@@ -295,7 +295,7 @@ void Draw(HDC aDc)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int wmId, wmEvent;
+    int wmId;
 
     switch (message)
     {
@@ -354,7 +354,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_COMMAND:
         wmId    = LOWORD(wParam);
-        wmEvent = HIWORD(wParam);
         // Parse the menu selections:
         switch (wmId)
         {

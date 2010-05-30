@@ -275,6 +275,7 @@ void InitializeDirectSoundPage(PDXDIAG_CONTEXT pContext)
 
     /* release the DSound object */
 //    pObj->lpVtbl->Release(pObj);
+    (void)hResult;
 }
 
 

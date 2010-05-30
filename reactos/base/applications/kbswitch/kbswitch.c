@@ -33,7 +33,6 @@ CreateTrayIcon(LPTSTR szLCID)
     HDC hdc, hdcsrc;
     HBITMAP hBitmap, hBmpNew, hBmpOld;
     RECT rect;
-    DWORD bkColor, bkText;
     HFONT hFontOld, hFont = NULL;
     ICONINFO IconInfo;
     HICON hIcon = NULL;
@@ -63,8 +62,8 @@ CreateTrayIcon(LPTSTR szLCID)
             rect.bottom = 16;
             rect.top = 0;
 
-            bkColor = SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
-            bkText  = SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
+            SetBkColor(hdc, GetSysColor(COLOR_HIGHLIGHT));
+            SetTextColor(hdc, GetSysColor(COLOR_HIGHLIGHTTEXT));
 
             ExtTextOut(hdc, rect.left, rect.top, ETO_OPAQUE, &rect, _T(""), 0, NULL);
 
