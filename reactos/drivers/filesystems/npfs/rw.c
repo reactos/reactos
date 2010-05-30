@@ -51,7 +51,9 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     PNPFS_DEVICE_EXTENSION DeviceExt;
     PIO_STACK_LOCATION IoStack;
     PNPFS_CCB Ccb;
-    BOOLEAN Complete = FALSE;
+    PLIST_ENTRY ListEntry;
+    PNPFS_THREAD_CONTEXT ThreadContext;
+    ULONG i;
 
     DPRINT("NpfsReadWriteCancelRoutine(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
@@ -67,27 +69,49 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
     switch(IoStack->MajorFunction)
     {
     case IRP_MJ_READ:
-        if (Ccb->ReadRequestListHead.Flink != &Context->ListEntry)
+        ListEntry = DeviceExt->ThreadListHead.Flink;
+        while (ListEntry != &DeviceExt->ThreadListHead)
         {
-            /* we are not the first in the list, remove an complete us */
-            RemoveEntryList(&Context->ListEntry);
-            Complete = TRUE;
+            ThreadContext = CONTAINING_RECORD(ListEntry, NPFS_THREAD_CONTEXT, ListEntry);
+            /* Real events start at index 1 */
+            for (i = 1; i < ThreadContext->Count; i++)
+            {
+                if (ThreadContext->WaitIrpArray[i] == Irp)
+                {
+                    ASSERT(ThreadContext->WaitObjectArray[i] == Context->WaitEvent);
+
+                    ThreadContext->WaitIrpArray[i] = NULL;
+
+                    RemoveEntryList(&Context->ListEntry);
+
+                    Irp->IoStatus.Status = STATUS_CANCELLED;
+                    Irp->IoStatus.Information = 0;
+
+                    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+                    KeSetEvent(&ThreadContext->Event, IO_NO_INCREMENT, FALSE);
+
+                    ExReleaseFastMutex(&Ccb->DataListLock);
+                    KeUnlockMutex(&DeviceExt->PipeListLock);
+
+                    return;
+                }
+            }
+            ListEntry = ListEntry->Flink;
         }
-        else
-        {
-            KeSetEvent(&Ccb->ReadEvent, IO_NO_INCREMENT, FALSE);
-        }
+
+        RemoveEntryList(&Context->ListEntry);
+
+        ExReleaseFastMutex(&Ccb->DataListLock);
+        KeUnlockMutex(&DeviceExt->PipeListLock);
+
+        Irp->IoStatus.Status = STATUS_CANCELLED;
+        Irp->IoStatus.Information = 0;
+
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
         break;
     default:
         ASSERT(FALSE);
-    }
-    ExReleaseFastMutex(&Ccb->DataListLock);
-    KeUnlockMutex(&DeviceExt->PipeListLock);
-    if (Complete)
-    {
-        Irp->IoStatus.Status = STATUS_CANCELLED;
-        Irp->IoStatus.Information = 0;
-        IoCompleteRequest(Irp, IO_NO_INCREMENT);
     }
 }
 
@@ -96,7 +120,7 @@ NpfsWaiterThread(PVOID InitContext)
 {
     PNPFS_THREAD_CONTEXT ThreadContext = (PNPFS_THREAD_CONTEXT) InitContext;
     ULONG CurrentCount;
-    ULONG Count = 0;
+    ULONG Count = 0, i;
     PIRP Irp = NULL;
     PIRP NextIrp;
     NTSTATUS Status;
@@ -191,8 +215,20 @@ NpfsWaiterThread(PVOID InitContext)
         }
         else
         {
-            /* someone has add a new wait request */
+            /* someone has add a new wait request or cancelled an old one */
             Irp = NULL;
+
+            /* Look for cancelled requests */
+            for (i = 1; i < ThreadContext->Count; i++)
+            {
+                if (ThreadContext->WaitIrpArray[i] == NULL)
+                {
+                   ThreadContext->Count--;
+                   ThreadContext->DeviceExt->EmptyWaiterCount++;
+                   ThreadContext->WaitObjectArray[i] = ThreadContext->WaitObjectArray[ThreadContext->Count];
+                   ThreadContext->WaitIrpArray[i] = ThreadContext->WaitIrpArray[ThreadContext->Count];
+                }
+            }
         }
         if (ThreadContext->Count == 1 && ThreadContext->DeviceExt->EmptyWaiterCount >= MAXIMUM_WAIT_OBJECTS)
         {
