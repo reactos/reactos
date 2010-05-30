@@ -646,6 +646,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TIME_DAYS         "Dni"
     IDS_TIME_HOURS        "Godzin"
+    IDS_TIME_NANOSECONDS  "Nanoseconds"
     IDS_TIME_MICROSECONDS "Mikrosekund"
     IDS_TIME_MILLISECONDS "Milisekund"
     IDS_TIME_MINUTES      "Minut"

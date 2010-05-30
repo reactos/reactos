@@ -276,10 +276,11 @@
 #define IDS_TIME_HOURS                  3002
 #define IDS_TIME_MICROSECONDS           3003
 #define IDS_TIME_MILLISECONDS           3004
-#define IDS_TIME_MINUTES                3005
-#define IDS_TIME_SECONDS                3006
-#define IDS_TIME_WEEKS                  3007
-#define IDS_TIME_YEARS                  3008
+#define IDS_TIME_NANOSECONDS            3005
+#define IDS_TIME_MINUTES                3006
+#define IDS_TIME_SECONDS                3007
+#define IDS_TIME_WEEKS                  3008
+#define IDS_TIME_YEARS                  3009
 
 /* TYPES OF VELOCITIES */
 #define IDS_VELOCITY_CMS_SECOND         3100
