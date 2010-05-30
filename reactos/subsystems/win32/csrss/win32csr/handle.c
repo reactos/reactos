@@ -101,7 +101,7 @@ Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
 {
     ULONG_PTR h = (ULONG_PTR)Handle >> 2;
 
-    DPRINT("CsrGetObject, Object: %x, %x, %x\n", 
+    DPRINT("CsrGetObject, Object: %x, %x, %x\n",
            Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
     RtlEnterCriticalSection(&ProcessData->HandleTableLock);
@@ -271,7 +271,7 @@ CSR_API(CsrGetHandle)
 
         PCSRSS_CONSOLE Console = ProcessData->Console;
         Object_t *Object;
-        
+
         EnterCriticalSection(&Console->Lock);
         if (Request->Type == GET_OUTPUT_HANDLE)
             Object = &Console->ActiveBuffer->Header;
@@ -366,7 +366,7 @@ CSR_API(CsrDuplicateHandle)
             return STATUS_INVALID_PARAMETER;
         }
     }
-    
+
     Request->Status = Win32CsrInsertObject(ProcessData,
                                            &Request->Data.DuplicateHandleRequest.Handle,
                                            Entry->Object,

@@ -23,7 +23,7 @@ HINSTANCE Win32CsrDllHandle = NULL;
 static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
-  {
+{
     CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
     CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
     CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
@@ -83,37 +83,37 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(SET_SCREEN_BUFFER_SIZE,       CsrSetScreenBufferSize),
     CSRSS_DEFINE_API(GET_CONSOLE_SELECTION_INFO,   CsrGetConsoleSelectionInfo),
     { 0, 0, NULL }
-  };
+};
 
 /* FUNCTIONS *****************************************************************/
 
 BOOL WINAPI
 DllMain(HANDLE hDll,
-	DWORD dwReason,
-	LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-  if (DLL_PROCESS_ATTACH == dwReason)
+    if (DLL_PROCESS_ATTACH == dwReason)
     {
-      Win32CsrDllHandle = hDll;
-      InitializeAppSwitchHook();
+        Win32CsrDllHandle = hDll;
+        InitializeAppSwitchHook();
     }
 
-  return TRUE;
+    return TRUE;
 }
 
 NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {
-  return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
+    return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
 }
 
 static BOOL WINAPI
 Win32CsrInitComplete(void)
 {
-  PrivateCsrssInitialized();
+    PrivateCsrssInitialized();
 
-  return TRUE;
+    return TRUE;
 }
 
 BOOL WINAPI
@@ -122,22 +122,22 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
-  NTSTATUS Status;
-  CsrExports = *Exports;
-  Win32CsrApiHeap = CsrssApiHeap;
+    NTSTATUS Status;
+    CsrExports = *Exports;
+    Win32CsrApiHeap = CsrssApiHeap;
 
-  Status = NtUserInitialize(0 ,NULL, NULL);
+    Status = NtUserInitialize(0, NULL, NULL);
 
-  PrivateCsrssManualGuiCheck(0);
-  CsrInitConsoleSupport();
+    PrivateCsrssManualGuiCheck(0);
+    CsrInitConsoleSupport();
 
-  *ApiDefinitions = Win32CsrApiDefinitions;
-  ServerProcs->InitCompleteProc = Win32CsrInitComplete;
-  ServerProcs->HardErrorProc = Win32CsrHardError;
-  ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
-  ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
+    *ApiDefinitions = Win32CsrApiDefinitions;
+    ServerProcs->InitCompleteProc = Win32CsrInitComplete;
+    ServerProcs->HardErrorProc = Win32CsrHardError;
+    ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
+    ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */
