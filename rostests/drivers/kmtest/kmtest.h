@@ -44,7 +44,7 @@ extern int kmtest_ok( int condition, const char *msg, ... );
 #endif /* __GNUC__ */
 
 
-#define ok_(file, line)     (kmtest_set_location(file, line), 0) ? 0 : kmtest_ok
+#define ok_(file, line)     (kmtest_set_location(file, line), 0) ? (void)0 : kmtest_ok
 #define ok     ok_(__FILE__, __LINE__)
 
 PDEVICE_OBJECT AttachDeviceObject;
