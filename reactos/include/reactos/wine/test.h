@@ -80,14 +80,14 @@ extern void winetest_vskip( const char *msg, va_list ap );
 
 #ifdef __GNUC__
 
-extern int winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
+extern void winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
 extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
 extern void winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 
 #else /* __GNUC__ */
 
-extern int winetest_ok( int condition, const char *msg, ... );
+extern void winetest_ok( int condition, const char *msg, ... );
 extern void winetest_skip( const char *msg, ... );
 extern void winetest_win_skip( const char *msg, ... );
 extern void winetest_trace( const char *msg, ... );
@@ -322,15 +322,13 @@ int winetest_vok( int condition, const char *msg, va_list args )
     }
 }
 
-int winetest_ok( int condition, const char *msg, ... )
+void winetest_ok( int condition, const char *msg, ... )
 {
     va_list valist;
-    int rc;
-
+ 
     va_start(valist, msg);
-    rc=winetest_vok(condition, msg, valist);
+    winetest_vok(condition, msg, valist);
     va_end(valist);
-    return rc;
 }
 
 void winetest_trace( const char *msg, ... )
