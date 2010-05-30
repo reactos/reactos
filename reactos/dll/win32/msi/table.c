@@ -1383,7 +1383,7 @@ static UINT TABLE_set_row( struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, UI
                 if ( r != ERROR_SUCCESS )
                 {
                     LPCWSTR sval = MSI_RecordGetString( rec, i + 1 );
-                    val = msi_addstringW( tv->db->strings, 0, sval, -1, 1,
+                    val = msi_addstringW( tv->db->strings, sval, -1, 1,
                       persistent ? StringPersistent : StringNonPersistent );
 
                 }

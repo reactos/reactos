@@ -11,7 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1782,7 +1782,6 @@ BOOL UserDrawCaption(
          static GRADIENT_RECT gcap = {0, 1};
          TRIVERTEX vert[2];
          COLORREF Colors[2];
-         PDC pMemDc;
 
 		 if (Wnd != NULL)
 		 {
@@ -1835,20 +1834,12 @@ BOOL UserDrawCaption(
          vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
          vert[1].Alpha = 0;
 
-         pMemDc = DC_LockDc(hMemDc);
-         if(!pMemDc)
-         {
-            DPRINT1("%s: Can't lock dc!\n", __FUNCTION__);
-            goto cleanup;
-         }
-
-         if(!IntGdiGradientFill(pMemDc, vert, 2, &gcap,
+         if(!GreGradientFill(hMemDc, vert, 2, &gcap,
             1, GRADIENT_FILL_RECT_H))
          {
             DPRINT1("%s: IntGdiGradientFill() failed!\n", __FUNCTION__);
          }
 
-         DC_UnlockDc(pMemDc);
       } //if(uFlags & DC_GRADIENT)
    }
 
@@ -1896,7 +1887,13 @@ BOOL UserDrawCaption(
       if (str)
          UserDrawCaptionText(hMemDc, str, &r, uFlags);
       else if (pWnd != NULL)
-         UserDrawCaptionText(hMemDc, &pWnd->Wnd->strName, &r, uFlags);
+      {
+         UNICODE_STRING ustr;
+         ustr.Buffer = pWnd->Wnd->strName.Buffer;
+         ustr.Length = pWnd->Wnd->strName.Length;
+         ustr.MaximumLength = pWnd->Wnd->strName.MaximumLength;
+         UserDrawCaptionText(hMemDc, &ustr, &r, uFlags);
+      }
    }
 
    if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,

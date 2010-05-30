@@ -1348,7 +1348,7 @@ static BOOL CRYPT_AsnDecodeSPCLinkInternal(DWORD dwCertEncodingType,
                     link->dwLinkChoice = SPC_FILE_LINK_CHOICE;
                     for (i = 0; i < dataLen / sizeof(WCHAR); i++)
                         link->u.pwszFile[i] =
-                         hton16(*(WORD *)(ptr + i * sizeof(WCHAR)));
+                         hton16(*(const WORD *)(ptr + i * sizeof(WCHAR)));
                     link->u.pwszFile[realDataLen / sizeof(WCHAR)] = '\0';
                     TRACE("returning file %s\n", debugstr_w(link->u.pwszFile));
                 }

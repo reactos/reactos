@@ -1217,15 +1217,22 @@ IofCompleteRequest(IN PIRP Irp,
         ErrorCode = PtrToUlong(LastStackPtr->Parameters.Others.Argument4);
     }
 
-    /* Get the Current Stack */
-    StackPtr = IoGetCurrentIrpStackLocation(Irp);
-
-    /* Loop the Stacks and complete the IRPs */
-    do
+    /*
+     * Start the loop with the current stack and point the IRP to the next stack
+     * and then keep incrementing the stack as we loop through. The IRP should
+     * always point to the next stack location w.r.t the one currently being
+     * analyzed, so completion routine code will see the appropriate value.
+     * Because of this, we must loop until the current stack location is +1 of
+     * the stack count, because when StackPtr is at the end, CurrentLocation is +1.
+     */
+    for (StackPtr = IoGetCurrentIrpStackLocation(Irp),
+         Irp->CurrentLocation++,
+         Irp->Tail.Overlay.CurrentStackLocation++;
+         Irp->CurrentLocation <= (Irp->StackCount + 1);
+         StackPtr++,
+         Irp->CurrentLocation++,
+         Irp->Tail.Overlay.CurrentStackLocation++)
     {
-        /* Skip current stack location */
-        IoSkipCurrentIrpStackLocation(Irp);
-
         /* Set Pending Returned */
         Irp->PendingReturned = StackPtr->Control & SL_PENDING_RETURNED;
 
@@ -1287,10 +1294,7 @@ IofCompleteRequest(IN PIRP Irp,
             /* Clear the stack location */
             IopClearStackLocation(StackPtr);
         }
-
-        /* Move pointer to next stack location */
-        StackPtr++;
-    } while (Irp->CurrentLocation <= Irp->StackCount);
+    }
 
     /* Check if the IRP is an associated IRP */
     if (Irp->Flags & IRP_ASSOCIATED_IRP)

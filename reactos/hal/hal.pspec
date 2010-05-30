@@ -51,6 +51,7 @@
 @ stdcall HalInitializeProcessor(long ptr)
 @ stdcall HalMakeBeep(long)
 @ stdcall HalProcessorIdle()
+@ stdcall HalPutDmaAdapter(ptr)
 @ stdcall HalQueryDisplayParameters(ptr ptr ptr ptr)
 @ stdcall HalQueryRealTimeClock(ptr)
 @ stdcall HalReadDmaCounter(ptr)

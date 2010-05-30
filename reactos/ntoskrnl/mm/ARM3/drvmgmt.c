@@ -21,55 +21,12 @@
 MM_DRIVER_VERIFIER_DATA MmVerifierData;
 LIST_ENTRY MiVerifierDriverAddedThunkListHead;
 ULONG MiActiveVerifierThunks;
-
-/* PRIVATE FUNCTIONS *********************************************************/
-
-PLDR_DATA_TABLE_ENTRY
-NTAPI
-MiLookupDataTableEntry(IN PVOID Address)
-{
-    PLDR_DATA_TABLE_ENTRY LdrEntry, FoundEntry = NULL;
-    PLIST_ENTRY NextEntry;
-    PAGED_CODE();
-    
-    //
-    // Loop entries
-    //
-    NextEntry = PsLoadedModuleList.Flink;
-    do
-    {
-        //
-        // Get the loader entry
-        //
-        LdrEntry =  CONTAINING_RECORD(NextEntry,
-                                      LDR_DATA_TABLE_ENTRY,
-                                      InLoadOrderLinks);
-        
-        //
-        // Check if the address matches
-        //
-        if ((Address >= LdrEntry->DllBase) &&
-            (Address < (PVOID)((ULONG_PTR)LdrEntry->DllBase +
-                               LdrEntry->SizeOfImage)))
-        {
-            //
-            // Found a match
-            //
-            FoundEntry = LdrEntry;
-            break;
-        }
-        
-        //
-        // Move on
-        //
-        NextEntry = NextEntry->Flink;
-    } while(NextEntry != &PsLoadedModuleList);
-    
-    //
-    // Return the entry
-    //
-    return FoundEntry;
-}
+WCHAR MmVerifyDriverBuffer[512] = {0};
+ULONG MmVerifyDriverBufferLength = sizeof(MmVerifyDriverBuffer);
+ULONG MmVerifyDriverBufferType = REG_NONE;
+ULONG MmVerifyDriverLevel = -1;
+PVOID MmTriageActionTaken;
+PVOID KernelVerifier;
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
@@ -105,68 +62,6 @@ MmLockPageableDataSection(IN PVOID AddressWithinSection)
     //
     UNIMPLEMENTED;
     return AddressWithinSection;
-}
-
-/*
- * @unimplemented
- */
-PVOID
-NTAPI
-MmPageEntireDriver(IN PVOID AddressWithinSection)
-{
-    //PMMPTE StartPte, EndPte;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PAGED_CODE();
-
-    //
-    // Get the loader entry
-    //
-    LdrEntry = MiLookupDataTableEntry(AddressWithinSection);
-    if (!LdrEntry) return NULL;
-
-    //
-    // Check if paging of kernel mode is disabled or if the driver is mapped as
-    // an image
-    //
-    if ((MmDisablePagingExecutive & 0x1) || (LdrEntry->SectionPointer))
-    {
-        //
-        // Don't do anything, just return the base address
-        //
-        return LdrEntry->DllBase;
-    }
-
-    //
-    // Wait for active DPCs to finish before we page out the driver
-    //
-    KeFlushQueuedDpcs();
-
-    //
-    // Get the PTE range for the whole driver image
-    //
-    //StartPte = MiGetPteAddress(LdrEntry->DllBase);
-    //EndPte = MiGetPteAddress(LdrEntry->DllBase +
-    //                         LdrEntry->SizeOfImage);
-
-    //
-    // Enable paging for the PTE range
-    //
-    //MiSetPagingOfDriver(StartPte, EndPte);
-
-    //
-    // Return the base address
-    //
-    return LdrEntry->DllBase;
-}
-
-/*
- * @unimplemented
- */
-VOID
-NTAPI
-MmResetDriverPaging(IN PVOID AddressWithinSection)
-{
-    UNIMPLEMENTED;
 }
 
 /*

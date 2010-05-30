@@ -21,13 +21,6 @@
 #include <winsock2.h> /* winsock2.h first */
 #include <precomp.h>
 
-//FIXME: remove eventually
-#ifndef _UNICODE
-#define _UNICODE
-#endif
-#include <tchar.h>
-
-
 extern char g_username[];
 extern char g_hostname[];
 extern char g_servername[];
@@ -89,7 +82,7 @@ uni_to_str(char * sizex, TCHAR * size1)
   int len;
   int i;
 
-  len = _tcslen(size1);
+  len = lstrlen(size1);
   for (i = 0; i < len; i++)
   {
     sizex[i] = (char)size1[i];

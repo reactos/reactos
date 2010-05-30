@@ -68,7 +68,7 @@ static BOOL streams_set_table_size(MSISTREAMSVIEW *sv, UINT size)
     return TRUE;
 }
 
-static STREAM *create_stream(MSISTREAMSVIEW *sv, LPWSTR name, BOOL encoded, IStream *stm)
+static STREAM *create_stream(MSISTREAMSVIEW *sv, LPCWSTR name, BOOL encoded, IStream *stm)
 {
     STREAM *stream;
     WCHAR decoded[MAX_STREAM_NAME_LEN];
@@ -84,7 +84,7 @@ static STREAM *create_stream(MSISTREAMSVIEW *sv, LPWSTR name, BOOL encoded, IStr
         name = decoded;
     }
 
-    stream->str_index = msi_addstringW(sv->db->strings, 0, name, -1, 1, StringNonPersistent);
+    stream->str_index = msi_addstringW(sv->db->strings, name, -1, 1, StringNonPersistent);
     stream->stream = stm;
     return stream;
 }
@@ -183,7 +183,7 @@ static UINT STREAMS_set_row(struct tagMSIVIEW *view, UINT row, MSIRECORD *rec, U
     }
 
     encname = encode_streamname(FALSE, name);
-    IStorage_DestroyElement(sv->db->storage, encname);
+    db_destroy_stream(sv->db, encname);
 
     r = write_stream_data(sv->db->storage, name, data, count, FALSE);
     if (r != ERROR_SUCCESS)

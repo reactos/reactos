@@ -528,6 +528,7 @@ WinLdrSetProcessorContext(PVOID GdtIdt, IN ULONG Pcr, IN ULONG Tss)
 		*/
 }
 
+#if DBG
 VOID
 MempDump()
 {
@@ -548,4 +549,5 @@ MempDump()
         DPRINTM(DPRINT_WINDOWS, "\n");
     }
 }
+#endif
 

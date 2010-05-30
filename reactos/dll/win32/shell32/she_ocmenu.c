@@ -756,7 +756,7 @@ static INT_PTR CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wPar
                  break;
          }
          break;
-    case WM_DESTROY:
+    case WM_CLOSE:
         FreeListItems(hwndDlg);
         EndDialog(hwndDlg, 0);
         return TRUE;

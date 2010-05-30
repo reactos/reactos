@@ -2,13 +2,13 @@
 
 [Section]
 Name = IrfanView Plugins
-Version = 4.25
+Version = 4.27
 Licence = Freeware (for personal use)
 Description = Additional Plugins for supporting more file types.
-Size = 7.7MB
+Size = 7.8MB
 Category = 3
 URLSite = http://www.irfanview.com/
-URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_425_setup.exe
+URLDownload = http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_427_setup.exe
 CDPath = none
 
 [Section.0407]

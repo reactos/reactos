@@ -74,7 +74,7 @@ BOOLEAN MiIncludeType[LoaderMaximum];
 PFN_NUMBER MxFreePageBase;
 ULONG64 MxFreePageCount = 0;
 
-extern PFN_NUMBER MmSystemPageDirectory;
+extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 
 BOOLEAN MiPfnsInitialized = FALSE;
 
@@ -378,8 +378,8 @@ MiInitializePageTable()
     FrLdrDbgPrint = NoDbgPrint;
 
     /* Get current directory base */
-    MmSystemPageDirectory = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
-    PageFrameOffset = MmSystemPageDirectory << PAGE_SHIFT;
+    MmSystemPageDirectory[0] = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;
+    PageFrameOffset = MmSystemPageDirectory[0] << PAGE_SHIFT;
     ASSERT(PageFrameOffset == __readcr3());
 
     /* Set directory base for the system process */

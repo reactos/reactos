@@ -5,6 +5,7 @@
 	<define name="__WINESRC__" />
 	<library>wine</library>
 	<library>advapi32</library>
+	<library>shell32</library>
 	<library>uuid</library>
 	<file>corruntimehost.c</file>
 	<file>mscoree_main.c</file>

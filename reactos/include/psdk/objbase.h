@@ -225,10 +225,9 @@
 #define THIS   void
 
 #define interface struct
-#define DECLARE_INTERFACE(iface)        interface iface
-#define DECLARE_INTERFACE_(iface,ibase) interface iface : public ibase
-#define DECLARE_INTERFACE_IID(iface, iid)             interface DECLSPEC_UUID(iid) iface
-#define DECLARE_INTERFACE_IID_(iface, baseiface, iid) interface DECLSPEC_UUID(iid) iface : public baseiface
+#define DECLARE_INTERFACE(iface)        interface DECLSPEC_NOVTABLE iface
+#define DECLARE_INTERFACE_(iface,ibase) interface DECLSPEC_NOVTABLE iface : public ibase
+#define DECLARE_INTERFACE_IID_(iface, ibase, iid) interface DECLSPEC_UUID(iid) DECLSPEC_NOVTABLE iface : public ibase
 
 #define BEGIN_INTERFACE
 #define END_INTERFACE
@@ -268,6 +267,7 @@
          struct iface##Vtbl
 #endif
 #define DECLARE_INTERFACE_(iface,ibase) DECLARE_INTERFACE(iface)
+#define DECLARE_INTERFACE_IID_(iface, ibase, iid) DECLARE_INTERFACE_(iface, ibase)
 
 #define BEGIN_INTERFACE
 #define END_INTERFACE
@@ -431,7 +431,7 @@ HRESULT WINAPI CoWaitForMultipleHandles(DWORD dwFlags,DWORD dwTimeout,ULONG cHan
  *	GUID API
  */
 HRESULT WINAPI StringFromCLSID(REFCLSID id, LPOLESTR*);
-HRESULT WINAPI CLSIDFromString(LPOLESTR, CLSID *);
+HRESULT WINAPI CLSIDFromString(LPCOLESTR, LPCLSID);
 HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID riid);
 HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID);
 

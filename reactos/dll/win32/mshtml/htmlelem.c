@@ -198,8 +198,10 @@ static HRESULT WINAPI HTMLElement_removeAttribute(IHTMLElement *iface, BSTR strA
                                                   LONG lFlags, VARIANT_BOOL *pfSuccess)
 {
     HTMLElement *This = HTMLELEM_THIS(iface);
-    FIXME("(%p)->()\n", This);
-    return E_NOTIMPL;
+
+    TRACE("(%p)->(%s %x %p)\n", This, debugstr_w(strAttributeName), lFlags, pfSuccess);
+
+    return remove_prop(&This->node.dispex, strAttributeName, pfSuccess);
 }
 
 static HRESULT WINAPI HTMLElement_put_className(IHTMLElement *iface, BSTR v)
@@ -1801,13 +1803,11 @@ static HRESULT WINAPI HTMLFiltersCollection_get_length(IHTMLFiltersCollection *i
 {
     HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
 
+    if(!p)
+        return E_POINTER;
+
     FIXME("(%p)->(%p) Always returning 0\n", This, p);
-
-	if(!p)
-		return E_POINTER;
-
-    if(p)
-        *p = 0;
+    *p = 0;
 
     return S_OK;
 }

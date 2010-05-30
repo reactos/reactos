@@ -288,7 +288,7 @@ err_out:
     /* Let's hope we never need this ;) */
     if(wineD3DDevice) IWineD3DDevice_Release(wineD3DDevice);
     if(wineD3D) IWineD3D_Release(wineD3D);
-    if(This) HeapFree(GetProcessHeap(), 0, This->decls);
+    HeapFree(GetProcessHeap(), 0, This->decls);
     HeapFree(GetProcessHeap(), 0, This);
     return hr;
 }

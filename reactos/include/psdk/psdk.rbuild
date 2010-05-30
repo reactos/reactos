@@ -47,6 +47,7 @@
 	<file>richole.idl</file>
 	<file>sensevts.idl</file>
 	<file>servprov.idl</file>
+	<file>shdeprecated.idl</file>
 	<file>shldisp.idl</file>
 	<file>shobjidl.idl</file>
 	<file>shtypes.idl</file>
@@ -68,6 +69,8 @@
 	<file>xmldso.idl</file>
 	<file>xmldom.idl</file>
 	<file>xmllite.idl</file>
+	<file>wia_lh.idl</file>
+	<file>wia_xp.idl</file>
 </module>
 <module name="stdole2" type="embeddedtypelib">
 	<file>stdole2.idl</file>

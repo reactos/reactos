@@ -438,7 +438,6 @@ IopInitializeDriverModule(
    UNICODE_STRING RegistryKey;
    PDRIVER_INITIALIZE DriverEntry;
    PDRIVER_OBJECT Driver;
-   PDEVICE_OBJECT DeviceObject;
    NTSTATUS Status;
 
    DriverEntry = ModuleObject->EntryPoint;
@@ -495,14 +494,7 @@ IopInitializeDriverModule(
    }
 
    /* Set the driver as initialized */
-   Driver->Flags |= DRVO_INITIALIZED;
-   DeviceObject = Driver->DeviceObject;
-   while (DeviceObject)
-   {
-       /* Set every device as initialized too */
-       DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
-       DeviceObject = DeviceObject->NextDevice;
-   }
+   IopReadyDeviceObjects(Driver);
 
    if (PnpSystemInit) IopReinitializeDrivers();
 
@@ -1179,16 +1171,17 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
                                     0,
                                     (PVOID*)&DriverObject);
 
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
+      ExFreePool(ObjectName.Buffer);
+      return Status;
+   }
+
    /*
     * Free the buffer for driver object name
     */
    ExFreePool(ObjectName.Buffer);
-
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
-      return Status;
-   }
 
    /* Check that driver is not already unloading */
    if (DriverObject->Flags & DRVO_UNLOAD_INVOKED)
@@ -1563,11 +1556,14 @@ try_again:
          * Doing so is illegal; drivers shouldn't touch entry points they
          * do not implement.
          */
-        ASSERT(DriverObject->MajorFunction[i] != NULL);
 
         /* Check if it did so anyway */
-		if (!DriverObject->MajorFunction[i])
+        if (!DriverObject->MajorFunction[i])
         {
+            /* Print a warning in the debug log */
+            DPRINT1("Driver <%wZ> set DriverObject->MajorFunction[%d] to NULL!\n",
+                    &DriverObject->DriverName, i);
+
             /* Fix it up */
             DriverObject->MajorFunction[i] = IopInvalidDeviceRequest;
         }

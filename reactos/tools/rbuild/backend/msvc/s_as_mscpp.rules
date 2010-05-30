@@ -7,7 +7,7 @@
 		<CustomBuildRule
 			Name="s_as_mscpp"
 			DisplayName="s (gnu_as mscpp)"
-			CommandLine="cl /nologo /E [sIncPaths] [sPPDefs] $(InputPath) | $(RosBE)\i386\bin\as -o [sOutF]"
+			CommandLine="cl /nologo /E [sIncPaths] [sPPDefs] &quot;$(InputPath)&quot; | &quot;$(RosBE)\i386\bin\as&quot; -o [sOutF]"
 			Outputs="[$sOutF]"
 			FileExtensions="*.s"
 			ExecutionDescription="Assembling "

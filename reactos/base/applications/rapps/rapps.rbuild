@@ -1,3 +1,5 @@
+<?xml version="1.0"?>
+<!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 <module name="rapps" type="win32gui" installbase="system32" installname="rapps.exe" unicode="yes">
 	<include base="ReactOS">include/reactos</include>

@@ -754,4 +754,6 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Tamanho da unidade de atribuição"
 	IDS_COPY_OF                 "Cópia de"
+
+	IDS_SHLEXEC_NOASSOC         "Não existe um programa Windows configurado para abrir este tipo de ficheiro."
 END

@@ -164,64 +164,6 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
     return SUCCEEDED(r) ? ERROR_SUCCESS : ERROR_FUNCTION_FAILED;
 }
 
-UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
-                              USHORT **pdata, UINT *psz )
-{
-    HRESULT r;
-    UINT ret = ERROR_FUNCTION_FAILED;
-    VOID *data;
-    ULONG sz, count;
-    IStream *stm = NULL;
-    STATSTG stat;
-    LPWSTR encname;
-
-    encname = encode_streamname( FALSE, stname );
-    r = db_get_raw_stream( db, encname, &stm );
-    msi_free( encname );
-
-    if( r != ERROR_SUCCESS)
-        return ret;
-
-    r = IStream_Stat(stm, &stat, STATFLAG_NONAME );
-    if( FAILED( r ) )
-    {
-        WARN("open stream failed r = %08x!\n", r);
-        goto end;
-    }
-
-    if( stat.cbSize.QuadPart >> 32 )
-    {
-        WARN("Too big!\n");
-        goto end;
-    }
-
-    sz = stat.cbSize.QuadPart;
-    data = msi_alloc( sz );
-    if( !data )
-    {
-        WARN("couldn't allocate memory r=%08x!\n", r);
-        ret = ERROR_NOT_ENOUGH_MEMORY;
-        goto end;
-    }
-
-    r = IStream_Read(stm, data, sz, &count );
-    if( FAILED( r ) || ( count != sz ) )
-    {
-        msi_free( data );
-        WARN("read stream failed r = %08x!\n", r);
-        goto end;
-    }
-
-    *pdata = data;
-    *psz = sz;
-    ret = ERROR_SUCCESS;
-
-end:
-    IStream_Release( stm );
-
-    return ret;
-}
-
 static void free_transforms( MSIDATABASE *db )
 {
     while( !list_empty( &db->transforms ) )
@@ -231,6 +173,37 @@ static void free_transforms( MSIDATABASE *db )
         list_remove( &t->entry );
         IStorage_Release( t->stg );
         msi_free( t );
+    }
+}
+
+void db_destroy_stream( MSIDATABASE *db, LPCWSTR stname )
+{
+    MSISTREAM *stream, *stream2;
+
+    LIST_FOR_EACH_ENTRY_SAFE( stream, stream2, &db->streams, MSISTREAM, entry )
+    {
+        HRESULT r;
+        STATSTG stat;
+
+        r = IStream_Stat( stream->stm, &stat, 0 );
+        if (FAILED(r))
+        {
+            WARN("failed to stat stream r = %08x\n", r);
+            continue;
+        }
+
+        if (!strcmpW( stname, stat.pwcsName ))
+        {
+            TRACE("destroying %s\n", debugstr_w(stname));
+
+            list_remove( &stream->entry );
+            IStream_Release( stream->stm );
+            msi_free( stream );
+            IStorage_DestroyElement( db->storage, stname );
+            CoTaskMemFree( stat.pwcsName );
+            break;
+        }
+        CoTaskMemFree( stat.pwcsName );
     }
 }
 
@@ -289,7 +262,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     UINT ret = ERROR_FUNCTION_FAILED;
     LPCWSTR szMode, save_path;
     STATSTG stat;
-    BOOL created = FALSE;
+    BOOL created = FALSE, patch = FALSE;
     WCHAR path[MAX_PATH];
 
     static const WCHAR szTables[]  = { '_','T','a','b','l','e','s',0 };
@@ -304,6 +277,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     {
         TRACE("Database is a patch\n");
         szPersist -= MSIDBOPEN_PATCHFILE;
+        patch = TRUE;
     }
 
     save_path = szDBPath;
@@ -331,7 +305,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
               STGM_CREATE|STGM_DIRECT|STGM_READWRITE|STGM_SHARE_EXCLUSIVE, 0, &stg);
         if( r == ERROR_SUCCESS )
         {
-            IStorage_SetClass( stg, &CLSID_MsiDatabase );
+            IStorage_SetClass( stg, patch ? &CLSID_MsiPatch : &CLSID_MsiDatabase );
             /* create the _Tables stream */
             r = write_stream_data(stg, szTables, NULL, 0, TRUE);
             if (SUCCEEDED(r))
@@ -376,6 +350,14 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     {
         ERR("storage GUID is not a MSI database GUID %s\n",
              debugstr_guid(&stat.clsid) );
+        goto end;
+    }
+
+    if ( patch && !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) )
+    {
+        ERR("storage GUID is not the MSI patch GUID %s\n",
+             debugstr_guid(&stat.clsid) );
+        ret = ERROR_OPEN_FAILED;
         goto end;
     }
 

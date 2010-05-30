@@ -87,7 +87,7 @@ KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame)
     else
     {
         /* Kernel mode */
-        return KGDT_64_R0_SS;
+        return KGDT64_SYS_TSS;
     }
 }
 

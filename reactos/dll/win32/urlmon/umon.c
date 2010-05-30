@@ -513,6 +513,12 @@ HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker 
 
     TRACE("(%p, %s, %p, %08x)\n", pmkContext, debugstr_w(szURL), ppmk, dwFlags);
 
+    if (ppmk)
+        *ppmk = NULL;
+
+    if (!szURL || !ppmk)
+        return E_INVALIDARG;
+
     if (dwFlags & URL_MK_UNIFORM) FIXME("ignoring flag URL_MK_UNIFORM\n");
 
     if(!(obj = alloc_moniker()))
@@ -618,6 +624,9 @@ HRESULT WINAPI BindAsyncMoniker(IMoniker *pmk, DWORD grfOpt, IBindStatusCallback
 HRESULT WINAPI MkParseDisplayNameEx(IBindCtx *pbc, LPCWSTR szDisplayName, ULONG *pchEaten, LPMONIKER *ppmk)
 {
     TRACE("(%p %s %p %p)\n", pbc, debugstr_w(szDisplayName), pchEaten, ppmk);
+
+    if (!pbc || !szDisplayName || !*szDisplayName || !pchEaten || !ppmk)
+        return E_INVALIDARG;
 
     if(is_registered_protocol(szDisplayName)) {
         HRESULT hres;

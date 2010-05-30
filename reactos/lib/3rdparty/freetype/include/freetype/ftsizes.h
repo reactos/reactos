@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType size objects management (specification).                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 1996-2001, 2003, 2004, 2006, 2009 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -89,7 +89,7 @@ FT_BEGIN_HEADER
   /*    asize :: A handle to a new size object.                            */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    You need to call @FT_Activate_Size in order to select the new size */
@@ -115,7 +115,7 @@ FT_BEGIN_HEADER
   /*    size :: A handle to a target size object.                          */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Done_Size( FT_Size  size );
@@ -129,8 +129,8 @@ FT_BEGIN_HEADER
   /* <Description>                                                         */
   /*    Even though it is possible to create several size objects for a    */
   /*    given face (see @FT_New_Size for details), functions like          */
-  /*    @FT_Load_Glyph or @FT_Load_Char only use the last-created one to   */
-  /*    determine the `current character pixel size'.                      */
+  /*    @FT_Load_Glyph or @FT_Load_Char only use the one which has been    */
+  /*    activated last to determine the `current character pixel size'.    */
   /*                                                                       */
   /*    This function can be used to `activate' a previously created size  */
   /*    object.                                                            */
@@ -139,7 +139,7 @@ FT_BEGIN_HEADER
   /*    size :: A handle to a target size object.                          */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    If `face' is the size's parent face object, this function changes  */

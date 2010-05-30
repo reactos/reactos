@@ -85,6 +85,8 @@ HANDLE WINAPI OpenConsoleW (LPCWSTR wsName,
 			     BOOL   bInheritHandle,
 			     DWORD  dwShareMode);
 
+BOOL WINAPI SetConsoleInputExeNameW(LPCWSTR lpInputExeName);
+
 PTEB GetTeb(VOID);
 
 HANDLE FASTCALL TranslateStdHandle(HANDLE hHandle);
@@ -190,3 +192,7 @@ IntGetCodePageEntry(UINT CodePage);
 
 LPWSTR
 GetDllLoadPath(LPCWSTR lpModule);
+
+VOID
+WINAPI
+InitCommandLines(VOID);

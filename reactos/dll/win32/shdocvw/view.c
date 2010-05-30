@@ -1,5 +1,6 @@
 /*
  * Copyright 2005 Jacek Caban
+ * Copyright 2010 Ilya Shpigor
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,6 +21,10 @@
 #include "shdocvw.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
+
+/**********************************************************************
+ * Implement the IViewObject interface
+ */
 
 #define VIEWOBJ_THIS(iface) DEFINE_THIS(WebBrowser, ViewObject, iface)
 
@@ -121,4 +126,113 @@ static const IViewObject2Vtbl ViewObjectVtbl = {
 void WebBrowser_ViewObject_Init(WebBrowser *This)
 {
     This->lpViewObjectVtbl = &ViewObjectVtbl;
+}
+
+/**********************************************************************
+ * Implement the IDataObject interface
+ */
+
+#define DATAOBJ_THIS(iface) DEFINE_THIS(WebBrowser, DataObject, iface)
+
+static HRESULT WINAPI DataObject_QueryInterface(LPDATAOBJECT iface, REFIID riid, LPVOID * ppvObj)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    return IWebBrowser2_QueryInterface(WEBBROWSER(This), riid, ppvObj);
+}
+
+static ULONG WINAPI DataObject_AddRef(LPDATAOBJECT iface)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    return IWebBrowser2_AddRef(WEBBROWSER(This));
+}
+
+static ULONG WINAPI DataObject_Release(LPDATAOBJECT iface)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    return IWebBrowser2_Release(WEBBROWSER(This));
+}
+
+static HRESULT WINAPI DataObject_GetData(LPDATAOBJECT iface, LPFORMATETC pformatetcIn, STGMEDIUM *pmedium)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_GetDataHere(LPDATAOBJECT iface, LPFORMATETC pformatetc, STGMEDIUM *pmedium)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_QueryGetData(LPDATAOBJECT iface, LPFORMATETC pformatetc)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_GetCanonicalFormatEtc(LPDATAOBJECT iface, LPFORMATETC pformatectIn, LPFORMATETC pformatetcOut)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_SetData(LPDATAOBJECT iface, LPFORMATETC pformatetc, STGMEDIUM *pmedium, BOOL fRelease)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_EnumFormatEtc(LPDATAOBJECT iface, DWORD dwDirection, IEnumFORMATETC **ppenumFormatEtc)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_DAdvise(LPDATAOBJECT iface, FORMATETC *pformatetc, DWORD advf, IAdviseSink *pAdvSink, DWORD *pdwConnection)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_DUnadvise(LPDATAOBJECT iface, DWORD dwConnection)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI DataObject_EnumDAdvise(LPDATAOBJECT iface, IEnumSTATDATA **ppenumAdvise)
+{
+    WebBrowser *This = DATAOBJ_THIS(iface);
+    FIXME("(%p)->()\n", This);
+    return E_NOTIMPL;
+}
+
+static const IDataObjectVtbl DataObjectVtbl = {
+    DataObject_QueryInterface,
+    DataObject_AddRef,
+    DataObject_Release,
+    DataObject_GetData,
+    DataObject_GetDataHere,
+    DataObject_QueryGetData,
+    DataObject_GetCanonicalFormatEtc,
+    DataObject_SetData,
+    DataObject_EnumFormatEtc,
+    DataObject_DAdvise,
+    DataObject_DUnadvise,
+    DataObject_EnumDAdvise
+};
+
+#undef DATAOBJ_THIS
+
+void WebBrowser_DataObject_Init(WebBrowser *This)
+{
+    This->lpDataObjectVtbl = &DataObjectVtbl;
 }

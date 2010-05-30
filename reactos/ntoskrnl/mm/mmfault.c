@@ -274,15 +274,23 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
 #endif
     }
     
-    //
-    // Check if this is an ARM3 memory area
-    //
+    /* 
+     * Check if this is an ARM3 memory area or if there's no memory area at all.
+     * The latter can happen early in the boot cycle when ARM3 paged pool is in
+     * use before having defined the memory areas proper.
+     * A proper fix would be to define memory areas in the ARM3 code, but we want
+     * to avoid adding this ReactOS-specific construct to ARM3 code.
+     * Either way, in the future, as ReactOS-paged pool is eliminated, this hack
+     * can go away.
+     */
     MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-    if ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3))
+    if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)) ||
+        ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)))
     {
         //
         // Hand it off to more competent hands...
         //
+        DPRINT1("ARM3 fault\n");
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }   
 

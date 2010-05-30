@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines for CJK script (body).                  */
 /*                                                                         */
-/*  Copyright 2006, 2007 by                                                */
+/*  Copyright 2006, 2007, 2008, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -45,7 +45,7 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  static FT_Error
+  FT_LOCAL_DEF( FT_Error )
   af_cjk_metrics_init( AF_LatinMetrics  metrics,
                        FT_Face          face )
   {
@@ -58,9 +58,12 @@
 
     if ( FT_Select_Charmap( face, FT_ENCODING_UNICODE ) )
       face->charmap = NULL;
-
-    /* latin's version would suffice */
-    af_latin_metrics_init_widths( metrics, face, 0x7530 );
+    else
+    {
+      /* latin's version would suffice */
+      af_latin_metrics_init_widths( metrics, face, 0x7530 );
+      af_latin_metrics_check_digits( metrics, face );
+    }
 
     FT_Set_Charmap( face, oldmap );
 
@@ -91,7 +94,7 @@
   }
 
 
-  static void
+  FT_LOCAL_DEF( void )
   af_cjk_metrics_scale( AF_LatinMetrics  metrics,
                         AF_Scaler        scaler )
   {
@@ -427,7 +430,9 @@
 
         /* insert a new edge in the list and */
         /* sort according to the position    */
-        error = af_axis_hints_new_edge( axis, seg->pos, seg->dir, memory, &edge );
+        error = af_axis_hints_new_edge( axis, seg->pos,
+                                        (AF_Direction)seg->dir,
+                                        memory, &edge );
         if ( error )
           goto Exit;
 
@@ -596,7 +601,7 @@
   }
 
 
-  static FT_Error
+  FT_LOCAL_DEF( FT_Error )
   af_cjk_hints_init( AF_GlyphHints    hints,
                      AF_LatinMetrics  metrics )
   {
@@ -1015,7 +1020,7 @@
     AF_AxisHints  axis       = &hints->axis[dim];
     AF_Edge       edges      = axis->edges;
     AF_Edge       edge_limit = edges + axis->num_edges;
-    FT_Int        n_edges;
+    FT_PtrDist    n_edges;
     AF_Edge       edge;
     AF_Edge       anchor   = 0;
     FT_Pos        delta    = 0;
@@ -1251,10 +1256,15 @@
         else if ( after >= edge_limit )
           af_cjk_align_serif_edge( hints, before, edge );
         else
-          edge->pos = before->pos +
-            FT_MulDiv( edge->fpos - before->fpos,
-                       after->pos - before->pos,
-                       after->fpos - before->fpos );
+        {
+          if ( after->fpos == before->fpos )
+            edge->pos = before->pos;
+          else
+            edge->pos = before->pos +
+                        FT_MulDiv( edge->fpos - before->fpos,
+                                   after->pos - before->pos,
+                                   after->fpos - before->fpos );
+        }
       }
     }
   }
@@ -1350,7 +1360,7 @@
   }
 
 
-  static FT_Error
+  FT_LOCAL_DEF( FT_Error )
   af_cjk_hints_apply( AF_GlyphHints    hints,
                       FT_Outline*      outline,
                       AF_LatinMetrics  metrics )
@@ -1434,35 +1444,33 @@
   static const AF_Script_UniRangeRec  af_cjk_uniranges[] =
   {
 #if 0
-    { 0x0100,  0xFFFF },  /* why this? */
+    AF_UNIRANGE_REC(  0x0100UL,  0xFFFFUL ),  /* why this? */
 #endif
-    { 0x2E80,  0x2EFF },  /* CJK Radicals Supplement */
-    { 0x2F00,  0x2FDF },  /* Kangxi Radicals */
-    { 0x3000,  0x303F },  /* CJK Symbols and Punctuation */
-    { 0x3040,  0x309F },  /* Hiragana */
-    { 0x30A0,  0x30FF },  /* Katakana */
-    { 0x3100,  0x312F },  /* Bopomofo */
-    { 0x3130,  0x318F },  /* Hangul Compatibility Jamo */
-    { 0x31A0,  0x31BF },  /* Bopomofo Extended */
-    { 0x31C0,  0x31EF },  /* CJK Strokes */
-    { 0x31F0,  0x31FF },  /* Katakana Phonetic Extensions */
-    { 0x3200,  0x32FF },  /* Enclosed CJK Letters and Months */
-    { 0x3300,  0x33FF },  /* CJK Compatibility */
-    { 0x3400,  0x4DBF },  /* CJK Unified Ideographs Extension A */
-    { 0x4DC0,  0x4DFF },  /* Yijing Hexagram Symbols */
-    { 0x4E00,  0x9FFF },  /* CJK Unified Ideographs */
-    { 0xF900,  0xFAFF },  /* CJK Compatibility Ideographs */
-    { 0xFE30,  0xFE4F },  /* CJK Compatibility Forms */
-    { 0xFF00,  0xFFEF },  /* Halfwidth and Fullwidth Forms */
-    { 0x20000, 0x2A6DF }, /* CJK Unified Ideographs Extension B */
-    { 0x2F800, 0x2FA1F }, /* CJK Compatibility Ideographs Supplement */
-    { 0,       0 }
+    AF_UNIRANGE_REC(  0x2E80UL,  0x2EFFUL ),  /* CJK Radicals Supplement                 */
+    AF_UNIRANGE_REC(  0x2F00UL,  0x2FDFUL ),  /* Kangxi Radicals                         */
+    AF_UNIRANGE_REC(  0x3000UL,  0x303FUL ),  /* CJK Symbols and Punctuation             */
+    AF_UNIRANGE_REC(  0x3040UL,  0x309FUL ),  /* Hiragana                                */
+    AF_UNIRANGE_REC(  0x30A0UL,  0x30FFUL ),  /* Katakana                                */
+    AF_UNIRANGE_REC(  0x3100UL,  0x312FUL ),  /* Bopomofo                                */
+    AF_UNIRANGE_REC(  0x3130UL,  0x318FUL ),  /* Hangul Compatibility Jamo               */
+    AF_UNIRANGE_REC(  0x31A0UL,  0x31BFUL ),  /* Bopomofo Extended                       */
+    AF_UNIRANGE_REC(  0x31C0UL,  0x31EFUL ),  /* CJK Strokes                             */
+    AF_UNIRANGE_REC(  0x31F0UL,  0x31FFUL ),  /* Katakana Phonetic Extensions            */
+    AF_UNIRANGE_REC(  0x3200UL,  0x32FFUL ),  /* Enclosed CJK Letters and Months         */
+    AF_UNIRANGE_REC(  0x3300UL,  0x33FFUL ),  /* CJK Compatibility                       */
+    AF_UNIRANGE_REC(  0x3400UL,  0x4DBFUL ),  /* CJK Unified Ideographs Extension A      */
+    AF_UNIRANGE_REC(  0x4DC0UL,  0x4DFFUL ),  /* Yijing Hexagram Symbols                 */
+    AF_UNIRANGE_REC(  0x4E00UL,  0x9FFFUL ),  /* CJK Unified Ideographs                  */
+    AF_UNIRANGE_REC(  0xF900UL,  0xFAFFUL ),  /* CJK Compatibility Ideographs            */
+    AF_UNIRANGE_REC(  0xFE30UL,  0xFE4FUL ),  /* CJK Compatibility Forms                 */
+    AF_UNIRANGE_REC(  0xFF00UL,  0xFFEFUL ),  /* Halfwidth and Fullwidth Forms           */
+    AF_UNIRANGE_REC( 0x20000UL, 0x2A6DFUL ),  /* CJK Unified Ideographs Extension B      */
+    AF_UNIRANGE_REC( 0x2F800UL, 0x2FA1FUL ),  /* CJK Compatibility Ideographs Supplement */
+    AF_UNIRANGE_REC(       0UL,       0UL )
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_cjk_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
@@ -1474,19 +1482,17 @@
 
     (AF_Script_InitHintsFunc)   af_cjk_hints_init,
     (AF_Script_ApplyHintsFunc)  af_cjk_hints_apply
-  };
+  )
 
 #else /* !AF_CONFIG_OPTION_CJK */
 
   static const AF_Script_UniRangeRec  af_cjk_uniranges[] =
   {
-    { 0, 0 }
+    AF_UNIRANGE_REC( 0UL, 0UL )
   };
 
 
-  FT_CALLBACK_TABLE_DEF const AF_ScriptClassRec
-  af_cjk_script_class =
-  {
+  AF_DEFINE_SCRIPT_CLASS(af_cjk_script_class,
     AF_SCRIPT_CJK,
     af_cjk_uniranges,
 
@@ -1498,7 +1504,7 @@
 
     (AF_Script_InitHintsFunc)   NULL,
     (AF_Script_ApplyHintsFunc)  NULL
-  };
+  )
 
 #endif /* !AF_CONFIG_OPTION_CJK */
 

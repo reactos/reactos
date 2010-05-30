@@ -13,7 +13,7 @@
  *   NtGdiDdUnlock and NtGdiDdUnlockD3D ultimately call the same function in dxg.sys 
  */
 
-#include <w32k.h>
+#include <win32k.h>
 #include <debug.h>
 
 

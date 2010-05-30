@@ -60,8 +60,8 @@ BEGIN
                 MENUITEM "800%", IDM_VIEWZOOM800
             END
             MENUITEM SEPARATOR
-            MENUITEM "Show grid", IDM_VIEWSHOWGRID
-            MENUITEM "Show miniature", IDM_VIEWSHOWMINIATURE
+            MENUITEM "Mostra griglia", IDM_VIEWSHOWGRID
+            MENUITEM "Mostra miniature", IDM_VIEWSHOWMINIATURE
         END
         MENUITEM "Visualizza a schermo intero\tCtrl+F", IDM_VIEWFULLSCREEN
     END
@@ -201,5 +201,5 @@ BEGIN
     IDS_OPENFILTER, "Bitmap files (*.bmp;*.dib)\1*.bmp;*.dib\1All files (*.*)\1*.*\1"
     IDS_SAVEFILTER, "24 bit bitmap (*.bmp;*.dib)\1*.bmp;*.dib\1"
     IDS_FILESIZE, "%d bytes"
-    IDS_PRINTRES, "%d x %d pixels per meter"
+    IDS_PRINTRES, "%d x %d pixels per metro"
 END

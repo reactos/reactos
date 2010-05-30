@@ -317,6 +317,20 @@ typedef enum {
 }KSPROPERTY_BDA_SIGNAL_STATS;
 
 
+typedef struct tagBDA_TRANSPORT_INFO {
+    ULONG ulcbPhyiscalPacket;
+    ULONG ulcbPhyiscalFrame;
+    ULONG ulcbPhyiscalFrameAlignment;
+    REFERENCE_TIME AvgTimePerFrame;
+
+} BDA_TRANSPORT_INFO, *PBDA_TRANSPORT_INFO;
+
+typedef struct tagKS_DATARANGE_BDA_TRANSPORT
+{
+   KSDATARANGE                  DataRange;
+   BDA_TRANSPORT_INFO           BdaTransportInfo;
+} KS_DATARANGE_BDA_TRANSPORT, *PKS_DATARANGE_BDA_TRANSPORT;
+
 /* ------------------------------------------------------------
   BDA Stream Format GUIDs
 */

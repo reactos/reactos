@@ -197,7 +197,6 @@ BOOLEAN DiskGetFirstExtendedPartitionEntry(PMASTER_BOOT_RECORD MasterBootRecord,
 
 BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMASTER_BOOT_RECORD BootRecord)
 {
-	char		ErrMsg[64];
 	ULONG		Index;
 
 	// Read master boot record
@@ -231,9 +230,6 @@ BOOLEAN DiskReadBootRecord(ULONG DriveNumber, ULONGLONG LogicalSectorNumber, PMA
 	// Check the partition table magic value
 	if (BootRecord->MasterBootRecordMagic != 0xaa55)
 	{
-		sprintf(ErrMsg, "Invalid partition table magic 0x%x found on drive 0x%lx",
-		        BootRecord->MasterBootRecordMagic, DriveNumber);
-		DiskError(ErrMsg, 0);
 		return FALSE;
 	}
 

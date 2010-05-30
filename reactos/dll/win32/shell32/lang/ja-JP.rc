@@ -751,4 +751,5 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "デフォルト アロケーション サイズ"
 	IDS_COPY_OF                 "コピー ～"
+    
 END

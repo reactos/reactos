@@ -249,9 +249,9 @@ static const INFORMATION_CLASS_INFO PsProcessInfoClass[] =
     /* ProcessBreakOnTermination */
     IQS_SAME
     (
-        UCHAR,
-        UCHAR,
-        0
+        ULONG,
+        ULONG,
+        ICIF_QUERY | ICIF_SET
     ),
 
     /* ProcessDebugObjectHandle */

@@ -1,0 +1,105 @@
+body 
+{
+    font-family: Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    background: white;
+    color: black;
+}
+
+div.header 
+{
+  border: 1px dashed #333;
+  background-color: #FFFBCB;
+  padding: 10px;
+}
+
+div.footer
+{
+  border: 1px dashed #333;
+  background-color: #FFFBCB;
+  padding: 5px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    	font: 22px Verdana, Arial, Helvetica, sans-serif;
+}
+
+td a {
+	font: 10px Verdana, Arial, Helvetica, sans-serif;
+}
+
+td p {
+	font: 12px Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	border-right: 1px solid #FFF798;
+	border-bottom: 1px solid #FFF798;
+	padding: 6px;
+	background: #FFFBCB;
+}
+
+.table td {
+	font: 10px Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	border-right: 1px solid #FFF798;
+	border-bottom: 1px solid #FFF798;
+	padding: 6px;
+	background: #FFFBCB;
+	vertical-align: top;
+}
+
+.table td.Red {
+	font: 10px Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	border-right: 1px solid #FFF798;
+	border-bottom: 1px solid #FFF798;
+	padding: 6px;
+	background: #FF9999;
+}
+
+.table td.Green {
+	font: 10px Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	border-right: 1px solid #FFF798;
+	border-bottom: 1px solid #FFF798;
+	padding: 6px;
+	background: #CCFF66;
+}
+
+.table th {
+	font: 10px Verdana, Arial, Helvetica, sans-serif;
+	text-align: left;
+	padding: 6px;
+	background: black;
+	color : white;
+}
+
+/* Status colors */
+.hdr                { background-color: #000000; color: #ffffff; }
+.pct0               { background-color: #ff5050; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct5               { background-color: #ff5d4f; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct10              { background-color: #ff694e; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct15              { background-color: #ff764d; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct20              { background-color: #ff824b; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct25              { background-color: #ff8f4a; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct30              { background-color: #ff9b49; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct35              { background-color: #ffa848; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct40              { background-color: #ffb447; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct45              { background-color: #ffc146; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct50              { background-color: #ffcd45; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct55              { background-color: #ffda43; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct60              { background-color: #ffe642; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct65              { background-color: #fff341; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct70              { background-color: #ffff40; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct75              { background-color: #dcff48; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct80              { background-color: #c8ff50; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct85              { background-color: #b4ff58; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct90              { background-color: #a0ff60; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct95              { background-color: #8cff60; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.pct100             { background-color: #60ff60; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.nonexistent        { background-color: #ff5050; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.poor               { background-color: #ff8f4a; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.outdated           { background-color: #ffcd45; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.outdadeq           { background-color: #ffff40; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.adequate           { background-color: #dcff48; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.adeqgood           { background-color: #c0ff54; font: 10px Verdana, Arial, Helvetica, sans-serif;}
+.good               { background-color: #60ff60; font: 10px Verdana, Arial, Helvetica, sans-serif;}

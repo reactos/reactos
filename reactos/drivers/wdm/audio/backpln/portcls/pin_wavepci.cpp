@@ -815,7 +815,6 @@ CPortPinWavePci::Init(
             DPRINT("Failed to add pin to service group\n");
             return Status;
         }
-        m_ServiceGroup->SupportDelayedService();
     }
 
     // delay of 10 milisec

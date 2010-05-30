@@ -27,7 +27,7 @@
  */
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -68,9 +68,6 @@ IntGetClientOrigin(PWINDOW_OBJECT Window OPTIONAL, LPPOINT Point)
 
    return TRUE;
 }
-
-
-
 
 BOOL FASTCALL
 UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point)
@@ -120,8 +117,13 @@ BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
     style = Wnd->Wnd->style;
     if (!(style & WS_VISIBLE) &&
         Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
+    if ((style & WS_MINIMIZE) &&
+        Wnd->pti->pEThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
-    return !(style & WS_DISABLED);
+    return TRUE;
+    /* FIXME: This window could be disable  because the child that closed
+              was a popup. */
+    //return !(style & WS_DISABLED);
 }
 
 
@@ -256,19 +258,17 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, RECTL *RestoreRect)
    if (!Wnd->InternalPosInitialized)
    {
       RECTL WorkArea;
-      PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-      PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
 
       Parent = Window->spwndParent;
       if(Parent)
       {
          if(IntIsDesktopWindow(Parent))
-            IntGetDesktopWorkArea(Desktop, &WorkArea);
+             UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
          else
             WorkArea = Parent->Wnd->rcClient;
       }
       else
-         IntGetDesktopWorkArea(Desktop, &WorkArea);
+         UserSystemParametersInfo(SPI_GETWORKAREA, 0, &WorkArea, 0);
 
       Wnd->InternalPos.NormalRect = Window->Wnd->rcWindow;
       IntGetWindowBorderMeasures(Window, &XInc, &YInc);
@@ -312,7 +312,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
       if (Wnd->style & WS_MINIMIZE)
       {
-         if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
+         if (!co_IntSendMessageNoWait(Window->hSelf, WM_QUERYOPEN, 0, 0))
          {
             return(SWP_NOSIZE | SWP_NOMOVE);
          }
@@ -398,36 +398,72 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
    return(SwpFlags);
 }
 
-static
-VOID FASTCALL
-WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
+BOOL
+UserHasWindowEdge(DWORD Style, DWORD ExStyle)
 {
-   UINT XInc, YInc;
-   RECTL WorkArea;
-   PTHREADINFO pti = PsGetCurrentThreadWin32Thread();
-   PDESKTOP Desktop = pti->rpdesk; /* Or rather get it from the window? */
+   if (Style & WS_MINIMIZE)
+      return TRUE;
+   if (ExStyle & WS_EX_DLGMODALFRAME)
+      return TRUE;
+   if (ExStyle & WS_EX_STATICEDGE)
+      return FALSE;
+   if (Style & WS_THICKFRAME)
+      return TRUE;
+   Style &= WS_CAPTION;
+   if (Style == WS_DLGFRAME || Style == WS_CAPTION)
+      return TRUE;
+   return FALSE;
+}
 
-   IntGetDesktopWorkArea(Desktop, &WorkArea);
+VOID
+UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
+{
+   DWORD Border = 0;
 
-   /* Get default values. */
-   Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
-   Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
-
-   IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-   Info->ptMaxSize.x = WorkArea.right - WorkArea.left + 2 * XInc;
-   Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top + 2 * YInc;
-   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
-   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
-
-   if (Window->Wnd->InternalPosInitialized)
+   if (UserHasWindowEdge(Style, ExStyle))
+      Border += 2;
+   else if (ExStyle & WS_EX_STATICEDGE)
+      Border += 1;
+   if ((ExStyle & WS_EX_CLIENTEDGE) && WithClient)
+      Border += 2;
+   if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
+      Border ++;
+   Size->cx = Size->cy = Border;
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
    {
-      Info->ptMaxPosition = Window->Wnd->InternalPos.MaxPos;
+      Size->cx += UserGetSystemMetrics(SM_CXFRAME) - UserGetSystemMetrics(SM_CXDLGFRAME);
+      Size->cy += UserGetSystemMetrics(SM_CYFRAME) - UserGetSystemMetrics(SM_CYDLGFRAME);
    }
-   else
+   Size->cx *= UserGetSystemMetrics(SM_CXBORDER);
+   Size->cy *= UserGetSystemMetrics(SM_CYBORDER);
+}
+
+BOOL WINAPI
+UserAdjustWindowRectEx(LPRECT lpRect,
+                       DWORD dwStyle,
+                       BOOL bMenu,
+                       DWORD dwExStyle)
+{
+   SIZE BorderSize;
+
+   if (bMenu)
    {
-      Info->ptMaxPosition.x = WorkArea.left - XInc;
-      Info->ptMaxPosition.y = WorkArea.top - YInc;
+      lpRect->top -= UserGetSystemMetrics(SM_CYMENU);
    }
+   if ((dwStyle & WS_CAPTION) == WS_CAPTION)
+   {
+      if (dwExStyle & WS_EX_TOOLWINDOW)
+         lpRect->top -= UserGetSystemMetrics(SM_CYSMCAPTION);
+      else
+         lpRect->top -= UserGetSystemMetrics(SM_CYCAPTION);
+   }
+   UserGetWindowBorders(dwStyle, dwExStyle, &BorderSize, TRUE);
+   RECTL_vInflateRect(
+      lpRect,
+      BorderSize.cx,
+      BorderSize.cy);
+
+   return TRUE;
 }
 
 UINT FASTCALL
@@ -435,12 +471,80 @@ co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
                        POINT* MinTrack, POINT* MaxTrack)
 {
    MINMAXINFO MinMax;
+   PMONITOR monitor;
+    INT xinc, yinc;
+    LONG style = Window->Wnd->style;
+    LONG adjustedStyle;
+    LONG exstyle = Window->Wnd->ExStyle;
+    RECT rc;
 
-   ASSERT_REFS_CO(Window);
+    ASSERT_REFS_CO(Window);
 
-   WinPosFillMinMaxInfoStruct(Window, &MinMax);
+    /* Compute default values */
+
+    rc = Window->Wnd->rcWindow;
+    MinMax.ptReserved.x = rc.left;
+    MinMax.ptReserved.y = rc.top;
+
+    if ((style & WS_CAPTION) == WS_CAPTION)
+        adjustedStyle = style & ~WS_BORDER; /* WS_CAPTION = WS_DLGFRAME | WS_BORDER */
+    else
+        adjustedStyle = style;
+
+    if(Window->Wnd->spwndParent)
+        IntGetClientRect(Window->spwndParent, &rc);
+    UserAdjustWindowRectEx(&rc, adjustedStyle, ((style & WS_POPUP) && Window->Wnd->IDMenu), exstyle);
+
+    xinc = -rc.left;
+    yinc = -rc.top;
+
+    MinMax.ptMaxSize.x = rc.right - rc.left;
+    MinMax.ptMaxSize.y = rc.bottom - rc.top;
+    if (style & (WS_DLGFRAME | WS_BORDER))
+    {
+        MinMax.ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
+        MinMax.ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
+    }
+    else
+    {
+        MinMax.ptMinTrackSize.x = 2 * xinc;
+        MinMax.ptMinTrackSize.y = 2 * yinc;
+    }
+    MinMax.ptMaxTrackSize.x = UserGetSystemMetrics(SM_CXMAXTRACK);
+    MinMax.ptMaxTrackSize.y = UserGetSystemMetrics(SM_CYMAXTRACK);
+    MinMax.ptMaxPosition.x = -xinc;
+    MinMax.ptMaxPosition.y = -yinc;
+
+    //if (!EMPTYPOINT(win->max_pos)) MinMax.ptMaxPosition = win->max_pos;
 
    co_IntSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+
+    /* if the app didn't change the values, adapt them for the current monitor */
+    if ((monitor = IntGetPrimaryMonitor()))
+    {
+        RECT rc_work;
+
+        rc_work = monitor->rcMonitor;
+
+        if (style & WS_MAXIMIZEBOX)
+        {
+            if ((style & WS_CAPTION) == WS_CAPTION || !(style & (WS_CHILD | WS_POPUP)))
+                rc_work = monitor->rcWork;
+        }
+
+        if (MinMax.ptMaxSize.x == UserGetSystemMetrics(SM_CXSCREEN) + 2 * xinc &&
+            MinMax.ptMaxSize.y == UserGetSystemMetrics(SM_CYSCREEN) + 2 * yinc)
+        {
+            MinMax.ptMaxSize.x = (rc_work.right - rc_work.left) + 2 * xinc;
+            MinMax.ptMaxSize.y = (rc_work.bottom - rc_work.top) + 2 * yinc;
+        }
+        if (MinMax.ptMaxPosition.x == -xinc && MinMax.ptMaxPosition.y == -yinc)
+        {
+            MinMax.ptMaxPosition.x = rc_work.left - xinc;
+            MinMax.ptMaxPosition.y = rc_work.top - yinc;
+        }
+    }
+
 
    MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
                                  MinMax.ptMinTrackSize.x);
@@ -531,7 +635,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
+      wvrFlags = co_IntSendMessageNoWait(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
@@ -590,7 +694,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
 
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
-      co_IntPostOrSendMessage(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+      co_IntSendMessageNoWait(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 
    *WindowRect = Wnd->rcWindow;
@@ -1320,7 +1424,7 @@ co_WinPosSetWindowPos(
       {
          if ((Window->Wnd->style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
          {
-            co_IntSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
+            co_IntSendMessageNoWait(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
          }
          else
          {
@@ -1330,7 +1434,16 @@ co_WinPosSetWindowPos(
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
-      co_IntPostOrSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+   {
+      /* WM_WINDOWPOSCHANGED is sent even if SWP_NOSENDCHANGING is set
+         and always contains final window position.
+       */
+      WinPos.x = NewWindowRect.left;
+      WinPos.y = NewWindowRect.top;
+      WinPos.cx = NewWindowRect.right - NewWindowRect.left;
+      WinPos.cy = NewWindowRect.bottom - NewWindowRect.top;
+      co_IntSendMessageNoWait(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+   }
 
    return TRUE;
 }
@@ -1343,7 +1456,7 @@ co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientR
    ASSERT_REFS_CO(Window);
 
    *ClientRect = *WindowRect;
-   Result = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
+   Result = co_IntSendMessageNoWait(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
 
    FixClientRect(ClientRect, WindowRect);
 
@@ -1462,7 +1575,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
    if (ShowFlag != WasVisible)
    {
-      co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
+      co_IntSendMessageNoWait(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
    }
 
    /* We can't activate a child window */
@@ -1476,7 +1589,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
                          ? HWND_TOPMOST : HWND_TOP,
                          NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
 
-   if (Cmd == SW_HIDE)
+   if ((Cmd == SW_HIDE) || (Cmd == SW_MINIMIZE))
    {
       PWINDOW_OBJECT ThreadFocusWindow;
 
@@ -1520,12 +1633,12 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          wParam = SIZE_MINIMIZED;
       }
 
-      co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
+      co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
                         MAKELONG(Wnd->rcClient.right -
                                  Wnd->rcClient.left,
                                  Wnd->rcClient.bottom -
                                  Wnd->rcClient.top));
-      co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
+      co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
                         MAKELONG(Wnd->rcClient.left,
                                  Wnd->rcClient.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
@@ -1734,15 +1847,9 @@ NtUserGetMinMaxInfo(
    WinPosInitInternalPos(Window, &Size,
                          &Wnd->rcWindow);
 
-   if(SendMessage)
-   {
-      co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
-                             &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
-   }
-   else
-   {
-      WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
-   }
+   co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
+                          &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
+
    Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
    if(!NT_SUCCESS(Status))
    {

@@ -4841,15 +4841,7 @@ RegSetValueExW(HKEY hKey,
         return RtlNtStatusToDosError(Status);
     }
 
-    if (lpValueName != NULL)
-    {
-        RtlInitUnicodeString(&ValueName,
-                             lpValueName);
-    }
-    else
-    {
-        RtlInitUnicodeString(&ValueName, L"");
-    }
+    RtlInitUnicodeString(&ValueName, lpValueName);
     pValueName = &ValueName;
 
     if (is_string(dwType) && (cbData != 0))

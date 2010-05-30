@@ -27,7 +27,7 @@
 FT_BEGIN_HEADER
 
 
-  FT_EXPORT_VAR( const FT_Driver_ClassRec )  tt_driver_class;
+  FT_DECLARE_DRIVER( tt_driver_class )
 
 
 FT_END_HEADER

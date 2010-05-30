@@ -604,28 +604,30 @@ INT cmd_copy (LPTSTR param)
                 bTouch = TRUE;
                 bDone = TRUE;
             }
-
-            if(_tcslen(tmpName) == 2)
-            {
-                if(tmpName[1] == _T(':'))
-                {
-                    GetRootPath(tmpName,szSrcPath,MAX_PATH);
-                }
-            }
-            else
-                /* Get the full path to first file in the string of file names */
-                GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);
         }
         else
         {
             bDone = TRUE;
-            if(_tcslen(arg[nSrc]) == 2 && arg[nSrc][1] == _T(':'))
+            _tcscpy(tmpName, arg[nSrc]);
+        }
+
+        /* Get full path or root names */
+        if(_tcslen(tmpName) == 2 && tmpName[1] == _T(':'))
+        {
+            GetRootPath(tmpName,szSrcPath,MAX_PATH);
+        }
+        else
+        {
+            /* Get the full path to first file in the string of file names */
+            GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);
+
+            /* We got a device path of form \\.\x */
+            /* FindFirstFile cannot handle this, therefore use the short path */
+            if (szSrcPath[0] == _T('\\') && szSrcPath[1] == _T('\\') &&
+                szSrcPath[2] == _T('.') && szSrcPath[3] == _T('\\'))
             {
-                GetRootPath(arg[nSrc],szSrcPath,MAX_PATH);
+                _tcscpy(szSrcPath, tmpName);
             }
-            else
-                /* Get the full path of the source file */
-                GetFullPathName (arg[nSrc], MAX_PATH, szSrcPath, NULL);
         }
 
         /* From this point on, we can assume that the shortest path is 3 letters long

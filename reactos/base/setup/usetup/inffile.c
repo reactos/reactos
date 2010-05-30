@@ -92,6 +92,7 @@ InfpOpenInfFileW(
 	IN PCWSTR FileName,
 	IN PCWSTR InfClass,
 	IN DWORD InfStyle,
+	IN LCID LocaleId,
 	OUT PUINT ErrorLine)
 {
 	HINF hInf = NULL;
@@ -103,6 +104,7 @@ InfpOpenInfFileW(
 	Status = InfOpenFile(
 		&hInf,
 		&FileNameU,
+		LocaleId,
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))
@@ -212,6 +214,7 @@ INF_OpenBufferedFileA(
 	IN ULONG FileSize,
 	IN PCSTR InfClass,
 	IN DWORD InfStyle,
+	IN LCID LocaleId,
 	OUT PUINT ErrorLine)
 {
 #ifdef __REACTOS__
@@ -223,6 +226,7 @@ INF_OpenBufferedFileA(
 		&hInf,
 		FileBuffer,
 		FileSize,
+		LocaleId,
 		&ErrorLineUL);
 	*ErrorLine = (UINT)ErrorLineUL;
 	if (!NT_SUCCESS(Status))

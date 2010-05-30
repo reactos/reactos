@@ -264,8 +264,8 @@ IDirectDrawImpl_AddRef(IDirectDraw7 *iface)
 void
 IDirectDrawImpl_Destroy(IDirectDrawImpl *This)
 {
-    /* Clear the cooplevel to restore window and display mode */
     IDirectDraw7_SetCooperativeLevel((IDirectDraw7 *)This, NULL, DDSCL_NORMAL);
+    IDirectDraw7_RestoreDisplayMode((IDirectDraw7 *)This);
 
     /* Destroy the device window if we created one */
     if(This->devicewindow != 0)
@@ -441,12 +441,11 @@ IDirectDrawImpl_SetCooperativeLevel(IDirectDraw7 *iface,
         /* Switching from fullscreen? */
         if(This->cooperative_level & DDSCL_FULLSCREEN)
         {
-            /* Restore the display mode */
-            IDirectDraw7_RestoreDisplayMode(iface);
-
             This->cooperative_level &= ~DDSCL_FULLSCREEN;
             This->cooperative_level &= ~DDSCL_EXCLUSIVE;
             This->cooperative_level &= ~DDSCL_ALLOWMODEX;
+
+            IWineD3DDevice_ReleaseFocusWindow(This->wineD3DDevice);
         }
 
         /* Don't override focus windows or private device windows */
@@ -483,6 +482,13 @@ IDirectDrawImpl_SetCooperativeLevel(IDirectDraw7 *iface,
             !(This->devicewindow) &&
             (hwnd != window) )
         {
+            HRESULT hr = IWineD3DDevice_AcquireFocusWindow(This->wineD3DDevice, hwnd);
+            if (FAILED(hr))
+            {
+                ERR("Failed to acquire focus window, hr %#x.\n", hr);
+                LeaveCriticalSection(&ddraw_cs);
+                return hr;
+            }
             This->dest_window = hwnd;
         }
     }
@@ -1514,11 +1520,24 @@ IDirectDrawImpl_GetSurfaceFromDC(IDirectDraw7 *iface,
                                  IDirectDrawSurface7 **Surface)
 {
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
-    FIXME("(%p)->(%p,%p): Stub!\n", This, hdc, Surface);
+    IWineD3DSurface *wined3d_surface;
+    HRESULT hr;
 
-    /* Implementation idea if needed: Loop through all surfaces and compare
-     * their hdc with hdc. Implement it in WineD3D! */
-    return DDERR_NOTFOUND;
+    TRACE("iface %p, dc %p, surface %p.\n", iface, hdc, Surface);
+
+    if (!Surface) return E_INVALIDARG;
+
+    hr = IWineD3DDevice_GetSurfaceFromDC(This->wineD3DDevice, hdc, &wined3d_surface);
+    if (FAILED(hr))
+    {
+        TRACE("No surface found for dc %p.\n", hdc);
+        *Surface = NULL;
+        return DDERR_NOTFOUND;
+    }
+
+    IWineD3DSurface_GetParent(wined3d_surface, (IUnknown **)Surface);
+    TRACE("Returning surface %p.\n", Surface);
+    return DD_OK;
 }
 
 /*****************************************************************************

@@ -560,7 +560,7 @@ static HRESULT register_inf(BOOL doregister)
     hAdvpack = LoadLibraryW(wszAdvpack);
     pRegInstall = (void *)GetProcAddress(hAdvpack, "RegInstall");
 
-    hres = pRegInstall(URLMON_hInstance, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
+    hres = pRegInstall(hProxyDll, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
 
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
         heap_free(pse[i].pszValue);

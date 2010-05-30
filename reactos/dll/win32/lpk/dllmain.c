@@ -36,7 +36,7 @@ LpkDllInitialize (
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hDll);
             /* Tell usp10 it is activated usp10 */
-            LpkPresent();
+            //LpkPresent();
             break;
 
         default:

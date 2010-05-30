@@ -709,7 +709,7 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         break;
 
     case MSIRUNMODE_MAINTENANCE:
-        r = msi_get_property_int( package, szInstalled, 0 ) != 0;
+        r = msi_get_property_int( package->db, szInstalled, 0 ) != 0;
         break;
 
     case MSIRUNMODE_REBOOTATEND:
@@ -721,6 +721,7 @@ BOOL WINAPI MsiGetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode)
         r = TRUE;
     }
 
+    msiobj_release( &package->hdr );
     return r;
 }
 
@@ -774,6 +775,7 @@ UINT WINAPI MsiSetMode(MSIHANDLE hInstall, MSIRUNMODE iRunMode, BOOL fState)
         r = ERROR_ACCESS_DENIED;
     }
 
+    msiobj_release( &package->hdr );
     return r;
 }
 
@@ -1262,7 +1264,7 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
         return 0;
     }
 
-    langid = msi_get_property_int( package, szProductLanguage, 0 );
+    langid = msi_get_property_int( package->db, szProductLanguage, 0 );
     msiobj_release( &package->hdr );
     return langid;
 }
@@ -1284,7 +1286,7 @@ UINT MSI_SetInstallLevel( MSIPACKAGE *package, int iInstallLevel )
         return MSI_SetFeatureStates( package );
 
     sprintfW( level, fmt, iInstallLevel );
-    r = MSI_SetPropertyW( package, szInstallLevel, level );
+    r = msi_set_property( package->db, szInstallLevel, level );
     if ( r == ERROR_SUCCESS )
         r = MSI_SetFeatureStates( package );
 

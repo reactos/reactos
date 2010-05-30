@@ -5,6 +5,9 @@
 #include <usb.h>
 #include <usbbusif.h>
 
+PVOID
+InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub);
+
 VOID
 USB_BUSIFFN
 InterfaceReference(PVOID BusContext);
@@ -30,7 +33,7 @@ GetUsbDescriptors(PVOID BusContext,
     PUSB_DEVICE_HANDLE DeviceHandle,
     PUCHAR DeviceDescriptorBuffer,
     PULONG DeviceDescriptorBufferLength,
-    PUCHAR ConfigurationBuffer,
+    PUCHAR ConfigDescriptorBuffer,
     PULONG ConfigDescriptorBufferLength);
 
 NTSTATUS

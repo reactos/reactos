@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font data types (specification only).                        */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2006 by Roberto Alameda.                         */
+/*  Copyright 2002, 2003, 2006, 2008 by Roberto Alameda.                   */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -35,7 +35,9 @@ FT_BEGIN_HEADER
     T1_FontRec      type1;
     const void*     psnames;
     const void*     psaux;
+#if 0
     const void*     afm_data;
+#endif
     FT_Byte*        ttf_data;
     FT_ULong        ttf_size;
     FT_Face         ttf_face;
@@ -48,7 +50,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __T1TYPES_H__ */
+#endif /* __T42TYPES_H__ */
 
 
 /* END */

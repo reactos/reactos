@@ -718,6 +718,14 @@ LoadSoundFiles(HWND hwndDlg)
     LRESULT lResult;
     UINT length;
 
+    /* Add no sound listview item */
+    if (LoadString(hApplet, IDS_NO_SOUND, szPath, MAX_PATH))
+    {
+        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
+        SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)szPath);
+    }
+
+    /* Load sound files */
     length = GetWindowsDirectoryW(szPath, MAX_PATH);
     if (length == 0 || length >= MAX_PATH - 9)
     {
@@ -735,11 +743,6 @@ LoadSoundFiles(HWND hwndDlg)
     if (hFile == INVALID_HANDLE_VALUE)
     {
         return FALSE;
-    }
-    if (LoadString(hApplet, IDS_NO_SOUND, szPath, MAX_PATH))
-    {
-        szPath[(sizeof(szPath)/sizeof(WCHAR))-1] = L'\0';
-        SendDlgItemMessageW(hwndDlg, IDC_SOUND_LIST, CB_ADDSTRING, (WPARAM)0, (LPARAM)szPath);
     }
 
     do
@@ -1054,6 +1057,7 @@ SoundsDlgProc(HWND hwndDlg,
                     ZeroMemory(&item, sizeof(LVITEM));
                     item.mask = LVIF_PARAM;
                     item.iItem = nm->iItem;
+
                     if (ListView_GetItem(GetDlgItem(hwndDlg, IDC_SCHEME_LIST), &item))
                     {
                         LRESULT lCount, lIndex, lResult;

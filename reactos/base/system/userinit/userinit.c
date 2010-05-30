@@ -212,7 +212,6 @@ StartAutoApplications(
         WARN("FindFirstFile(%s) failed with error %lu\n", debugstr_w(szPath), GetLastError());
         return;
     }
-    szPath[len] = L'\0';
 
     do
     {
@@ -220,9 +219,10 @@ StartAutoApplications(
         {
             memset(&ExecInfo, 0x0, sizeof(SHELLEXECUTEINFOW));
             ExecInfo.cbSize = sizeof(ExecInfo);
+            wcscpy(&szPath[len+1], findData.cFileName);
             ExecInfo.lpVerb = L"open";
-            ExecInfo.lpFile = findData.cFileName;
-            ExecInfo.lpDirectory = szPath;
+            ExecInfo.lpFile = szPath;
+            ExecInfo.lpDirectory = NULL;
             TRACE("Executing %s in directory %s\n",
                 debugstr_w(findData.cFileName), debugstr_w(szPath));
             ShellExecuteExW(&ExecInfo);

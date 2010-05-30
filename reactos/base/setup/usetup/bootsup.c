@@ -428,7 +428,7 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
     /* ReactOS_KdSerial */
     CreateFreeLoaderEntry(IniCache, IniSection,
         L"ReactOS_KdSerial", L"\"ReactOS (RosDbg)\"",
-        L"ReactOS", ArcPath,
+        L"Windows2003", ArcPath,
         L"/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200 /SOS /KDSERIAL");
 
     /* ReactOS_LogFile */

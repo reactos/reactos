@@ -99,11 +99,11 @@ SepInitSecurityIDs(VOID)
     ULONG SidLength1;
     ULONG SidLength2;
     PULONG SubAuthority;
-    
+
     SidLength0 = RtlLengthRequiredSid(0);
     SidLength1 = RtlLengthRequiredSid(1);
     SidLength2 = RtlLengthRequiredSid(2);
-    
+
     /* create NullSid */
     SeNullSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
     SeWorldSid = ExAllocatePoolWithTag(PagedPool, SidLength1, TAG_SID);
@@ -150,9 +150,9 @@ SepInitSecurityIDs(VOID)
         SeAnonymousLogonSid == NULL)
     {
         FreeInitializedSids();
-        return(FALSE);
+        return FALSE;
     }
-    
+
     RtlInitializeSid(SeNullSid, &SeNullSidAuthority, 1);
     RtlInitializeSid(SeWorldSid, &SeWorldSidAuthority, 1);
     RtlInitializeSid(SeLocalSid, &SeLocalSidAuthority, 1);
@@ -181,7 +181,7 @@ SepInitSecurityIDs(VOID)
     RtlInitializeSid(SeAuthenticatedUsersSid, &SeNtSidAuthority, 1);
     RtlInitializeSid(SeRestrictedSid, &SeNtSidAuthority, 1);
     RtlInitializeSid(SeAnonymousLogonSid, &SeNtSidAuthority, 1);
-    
+
     SubAuthority = RtlSubAuthoritySid(SeNullSid, 0);
     *SubAuthority = SECURITY_NULL_RID;
     SubAuthority = RtlSubAuthoritySid(SeWorldSid, 0);
@@ -252,8 +252,8 @@ SepInitSecurityIDs(VOID)
     *SubAuthority = SECURITY_RESTRICTED_CODE_RID;
     SubAuthority = RtlSubAuthoritySid(SeAnonymousLogonSid, 0);
     *SubAuthority = SECURITY_ANONYMOUS_LOGON_RID;
-    
-    return(TRUE);
+
+    return TRUE;
 }
 
 NTSTATUS
@@ -267,9 +267,9 @@ SepCaptureSid(IN PSID InputSid,
     ULONG SidSize = 0;
     PISID NewSid, Sid = (PISID)InputSid;
     NTSTATUS Status;
-    
+
     PAGED_CODE();
-    
+
     if (AccessMode != KernelMode)
     {
         _SEH2_TRY
@@ -289,11 +289,11 @@ SepCaptureSid(IN PSID InputSid,
             _SEH2_YIELD(return _SEH2_GetExceptionCode());
         }
         _SEH2_END;
-        
+
         /* allocate a SID and copy it */
         NewSid = ExAllocatePool(PoolType,
                                 SidSize);
-        if(NewSid != NULL)
+        if (NewSid != NULL)
         {
             _SEH2_TRY
             {
@@ -316,7 +316,7 @@ SepCaptureSid(IN PSID InputSid,
             Status = STATUS_INSUFFICIENT_RESOURCES;
         }
     }
-    else if(!CaptureIfKernel)
+    else if (!CaptureIfKernel)
     {
         *CapturedSid = InputSid;
         return STATUS_SUCCESS;
@@ -324,16 +324,16 @@ SepCaptureSid(IN PSID InputSid,
     else
     {
         SidSize = RtlLengthRequiredSid(Sid->SubAuthorityCount);
-        
+
         /* allocate a SID and copy it */
         NewSid = ExAllocatePool(PoolType,
                                 SidSize);
-        if(NewSid != NULL)
+        if (NewSid != NULL)
         {
             RtlCopyMemory(NewSid,
                           Sid,
                           SidSize);
-            
+
             *CapturedSid = NewSid;
         }
         else
@@ -341,7 +341,7 @@ SepCaptureSid(IN PSID InputSid,
             Status = STATUS_INSUFFICIENT_RESOURCES;
         }
     }
-    
+
     return Status;
 }
 
@@ -352,10 +352,10 @@ SepReleaseSid(IN PSID CapturedSid,
               IN BOOLEAN CaptureIfKernel)
 {
     PAGED_CODE();
-    
-    if(CapturedSid != NULL &&
-       (AccessMode != KernelMode ||
-        (AccessMode == KernelMode && CaptureIfKernel)))
+
+    if (CapturedSid != NULL &&
+        (AccessMode != KernelMode ||
+         (AccessMode == KernelMode && CaptureIfKernel)))
     {
         ExFreePool(CapturedSid);
     }

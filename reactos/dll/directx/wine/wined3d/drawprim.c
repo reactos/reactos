@@ -28,7 +28,6 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_draw);
-#define GLINFO_LOCATION This->adapter->gl_info
 
 #include <stdio.h>
 #include <math.h>
@@ -71,7 +70,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     UINT vx_index;
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
     const UINT *streamOffset = This->stateBlock->streamOffset;
-    long                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
+    LONG                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
     BOOL                      pixelShader = use_ps(This->stateBlock);
     BOOL specular_fog = FALSE;
     const BYTE *texCoords[WINED3DDP_MAXTEXCOORD];
@@ -85,14 +84,14 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     TRACE("Using slow vertex array code\n");
 
     /* Variable Initialization */
-    if (idxSize != 0) {
-        /* Immediate mode drawing can't make use of indices in a vbo - get the data from the index buffer.
-         * If the index buffer has no vbo(not supported or other reason), or with user pointer drawing
-         * idxData will be != NULL
-         */
-        if(idxData == NULL) {
-            idxData = buffer_get_sysmem((struct wined3d_buffer *) This->stateBlock->pIndexData);
-        }
+    if (idxSize)
+    {
+        /* Immediate mode drawing can't make use of indices in a vbo - get the
+         * data from the index buffer. If the index buffer has no vbo (not
+         * supported or other reason), or with user pointer drawing idxData
+         * will be non-NULL. */
+        if (!idxData)
+            idxData = buffer_get_sysmem((struct wined3d_buffer *)This->stateBlock->pIndexData, gl_info);
 
         if (idxSize == 2) pIdxBufS = idxData;
         else pIdxBufL = idxData;
@@ -102,7 +101,6 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
     }
 
     /* Start drawing in GL */
-    VTRACE(("glBegin(%x)\n", glPrimType));
     glBegin(glPrimType);
 
     if (si->use_map & (1 << WINED3D_FFP_POSITION))
@@ -226,13 +224,10 @@ static void drawStridedSlow(IWineD3DDevice *iface, const struct wined3d_context 
         if (idxData != NULL) {
 
             /* Indexed so work out the number of strides to skip */
-            if (idxSize == 2) {
-                VTRACE(("Idx for vertex %u = %u\n", vx_index, pIdxBufS[startIdx+vx_index]));
+            if (idxSize == 2)
                 SkipnStrides = pIdxBufS[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
-            } else {
-                VTRACE(("Idx for vertex %u = %u\n", vx_index, pIdxBufL[startIdx+vx_index]));
+            else
                 SkipnStrides = pIdxBufL[startIdx + vx_index] + This->stateBlock->loadBaseVertexIndex;
-            }
         }
 
         tmp_tex_mask = tex_mask;
@@ -426,7 +421,8 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
         GLenum glPrimitiveType, const void *idxData, UINT idxSize, UINT startIdx)
 {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
-    long                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
+    const struct wined3d_gl_info *gl_info = &This->adapter->gl_info;
+    LONG                      SkipnStrides = startIdx + This->stateBlock->loadBaseVertexIndex;
     const WORD                *pIdxBufS     = NULL;
     const DWORD               *pIdxBufL     = NULL;
     UINT vx_index;
@@ -434,14 +430,14 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
     IWineD3DStateBlockImpl *stateblock = This->stateBlock;
     const BYTE *ptr;
 
-    if (idxSize != 0) {
-        /* Immediate mode drawing can't make use of indices in a vbo - get the data from the index buffer.
-         * If the index buffer has no vbo(not supported or other reason), or with user pointer drawing
-         * idxData will be != NULL
-         */
-        if(idxData == NULL) {
-            idxData = buffer_get_sysmem((struct wined3d_buffer *) This->stateBlock->pIndexData);
-        }
+    if (idxSize)
+    {
+        /* Immediate mode drawing can't make use of indices in a vbo - get the
+         * data from the index buffer. If the index buffer has no vbo (not
+         * supported or other reason), or with user pointer drawing idxData
+         * will be non-NULL. */
+        if (!idxData)
+            idxData = buffer_get_sysmem((struct wined3d_buffer *)This->stateBlock->pIndexData, gl_info);
 
         if (idxSize == 2) pIdxBufS = idxData;
         else pIdxBufL = idxData;
@@ -451,20 +447,16 @@ static void drawStridedSlowVs(IWineD3DDevice *iface, const struct wined3d_stream
     }
 
     /* Start drawing in GL */
-    VTRACE(("glBegin(%x)\n", glPrimitiveType));
     glBegin(glPrimitiveType);
 
     for (vx_index = 0; vx_index < numberOfVertices; ++vx_index) {
         if (idxData != NULL) {
 
             /* Indexed so work out the number of strides to skip */
-            if (idxSize == 2) {
-                VTRACE(("Idx for vertex %d = %d\n", vx_index, pIdxBufS[startIdx+vx_index]));
+            if (idxSize == 2)
                 SkipnStrides = pIdxBufS[startIdx + vx_index] + stateblock->loadBaseVertexIndex;
-            } else {
-                VTRACE(("Idx for vertex %d = %d\n", vx_index, pIdxBufL[startIdx+vx_index]));
+            else
                 SkipnStrides = pIdxBufL[startIdx + vx_index] + stateblock->loadBaseVertexIndex;
-            }
         }
 
         for (i = MAX_ATTRIBS - 1; i >= 0; i--)
@@ -543,7 +535,7 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
             {
                 struct wined3d_buffer *vb =
                         (struct wined3d_buffer *)stateblock->streamSource[si->elements[instancedData[j]].stream_idx];
-                ptr += (long) buffer_get_sysmem(vb);
+                ptr += (ULONG_PTR)buffer_get_sysmem(vb, &This->adapter->gl_info);
             }
 
             send_attribute(This, si->elements[instancedData[j]].format_desc->format, instancedData[j], ptr);
@@ -555,7 +547,8 @@ static inline void drawStridedInstanced(IWineD3DDevice *iface, const struct wine
     }
 }
 
-static inline void remove_vbos(IWineD3DDeviceImpl *This, struct wined3d_stream_info *s)
+static inline void remove_vbos(IWineD3DDeviceImpl *This, const struct wined3d_gl_info *gl_info,
+        struct wined3d_stream_info *s)
 {
     unsigned int i;
 
@@ -570,7 +563,7 @@ static inline void remove_vbos(IWineD3DDeviceImpl *This, struct wined3d_stream_i
         {
             struct wined3d_buffer *vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
             e->buffer_object = 0;
-            e->data = (BYTE *)((unsigned long)e->data + (unsigned long)buffer_get_sysmem(vb));
+            e->data = (BYTE *)((ULONG_PTR)e->data + (ULONG_PTR)buffer_get_sysmem(vb, gl_info));
         }
     }
 }
@@ -580,7 +573,6 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
 {
 
     IWineD3DDeviceImpl           *This = (IWineD3DDeviceImpl *)iface;
-    IWineD3DSurfaceImpl          *target;
     struct wined3d_context *context;
     unsigned int i;
 
@@ -591,11 +583,11 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
         /* Invalidate the back buffer memory so LockRect will read it the next time */
         for (i = 0; i < This->adapter->gl_info.limits.buffers; ++i)
         {
-            target = (IWineD3DSurfaceImpl *)This->render_targets[i];
+            IWineD3DSurface *target = (IWineD3DSurface *)This->render_targets[i];
             if (target)
             {
-                IWineD3DSurface_LoadLocation((IWineD3DSurface *)target, SFLAG_INDRAWABLE, NULL);
-                IWineD3DSurface_ModifyLocation((IWineD3DSurface *)target, SFLAG_INDRAWABLE, TRUE);
+                IWineD3DSurface_LoadLocation(target, SFLAG_INDRAWABLE, NULL);
+                IWineD3DSurface_ModifyLocation(target, SFLAG_INDRAWABLE, TRUE);
             }
         }
     }
@@ -603,9 +595,18 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
     /* Signals other modules that a drawing is in progress and the stateblock finalized */
     This->isInDraw = TRUE;
 
-    context = context_acquire(This, This->render_targets[0], CTXUSAGE_DRAWPRIM);
+    context = context_acquire(This, This->render_targets[0]);
+    if (!context->valid)
+    {
+        context_release(context);
+        WARN("Invalid context, skipping draw.\n");
+        return;
+    }
 
-    if (This->stencilBufferTarget) {
+    context_apply_draw_state(context, This);
+
+    if (This->depth_stencil)
+    {
         /* Note that this depends on the context_acquire() call above to set
          * This->render_offscreen properly. We don't currently take the
          * Z-compare function into account, but we could skip loading the
@@ -614,9 +615,33 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
         DWORD location = context->render_offscreen ? SFLAG_DS_OFFSCREEN : SFLAG_DS_ONSCREEN;
         if (This->stateBlock->renderState[WINED3DRS_ZWRITEENABLE]
                 || This->stateBlock->renderState[WINED3DRS_ZENABLE])
-            surface_load_ds_location(This->stencilBufferTarget, context, location);
-        if (This->stateBlock->renderState[WINED3DRS_ZWRITEENABLE])
-            surface_modify_ds_location(This->stencilBufferTarget, location);
+        {
+            RECT current_rect, draw_rect, r;
+
+            if (location == SFLAG_DS_ONSCREEN && This->depth_stencil != This->onscreen_depth_stencil)
+                device_switch_onscreen_ds(This, context, This->depth_stencil);
+
+            if (This->depth_stencil->Flags & location)
+                SetRect(&current_rect, 0, 0,
+                        This->depth_stencil->ds_current_size.cx,
+                        This->depth_stencil->ds_current_size.cy);
+            else
+                SetRectEmpty(&current_rect);
+
+            device_get_draw_rect(This, &draw_rect);
+
+            IntersectRect(&r, &draw_rect, &current_rect);
+            if (!EqualRect(&r, &draw_rect))
+                surface_load_ds_location(This->depth_stencil, context, location);
+
+            if (This->stateBlock->renderState[WINED3DRS_ZWRITEENABLE])
+            {
+                surface_modify_ds_location(This->depth_stencil, location,
+                        This->depth_stencil->ds_current_size.cx,
+                        This->depth_stencil->ds_current_size.cy);
+                IWineD3DSurface_ModifyLocation((IWineD3DSurface *)This->depth_stencil, SFLAG_INDRAWABLE, TRUE);
+            }
+        }
     }
 
     /* Ok, we will be updating the screen from here onwards so grab the lock */
@@ -659,7 +684,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
             if(emulation) {
                 stream_info = &stridedlcl;
                 memcpy(&stridedlcl, &This->strided_streams, sizeof(stridedlcl));
-                remove_vbos(This, &stridedlcl);
+                remove_vbos(This, context->gl_info, &stridedlcl);
             }
         }
 
@@ -691,7 +716,12 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
     /* Finished updating the screen, restore lock */
     LEAVE_GL();
 
-    wglFlush(); /* Flush to ensure ordering across contexts. */
+    for(i = 0; i < This->num_buffer_queries; i++)
+    {
+        wined3d_event_query_issue(This->buffer_queries[i], This);
+    }
+
+    if (wined3d_settings.strict_draw_ordering) wglFlush(); /* Flush to ensure ordering across contexts. */
 
     context_release(context);
 
@@ -700,14 +730,14 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
     /* Diagnostics */
 #ifdef SHOW_FRAME_MAKEUP
     {
-        static long int primCounter = 0;
+        static LONG primCounter = 0;
         /* NOTE: set primCounter to the value reported by drawprim
            before you want to to write frame makeup to /tmp */
         if (primCounter >= 0) {
             WINED3DLOCKED_RECT r;
             char buffer[80];
             IWineD3DSurface_LockRect(This->render_targets[0], &r, NULL, WINED3DLOCK_READONLY);
-            sprintf(buffer, "/tmp/backbuffer_%ld.tga", primCounter);
+            sprintf(buffer, "/tmp/backbuffer_%d.tga", primCounter);
             TRACE("Saving screenshot %s\n", buffer);
             IWineD3DSurface_SaveSnapshot(This->render_targets[0], buffer);
             IWineD3DSurface_UnlockRect(This->render_targets[0]);
@@ -718,7 +748,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
             int textureNo;
             for (textureNo = 0; textureNo < MAX_COMBINED_SAMPLERS; ++textureNo) {
                 if (This->stateBlock->textures[textureNo] != NULL) {
-                    sprintf(buffer, "/tmp/texture_%p_%ld_%d.tga", This->stateBlock->textures[textureNo], primCounter, textureNo);
+                    sprintf(buffer, "/tmp/texture_%p_%d_%d.tga", This->stateBlock->textures[textureNo], primCounter, textureNo);
                     TRACE("Saving texture %s\n", buffer);
                     if (IWineD3DBaseTexture_GetType(This->stateBlock->textures[textureNo]) == WINED3DRTYPE_TEXTURE) {
                             IWineD3DTexture_GetSurfaceLevel(This->stateBlock->textures[textureNo], 0, &pSur);
@@ -732,7 +762,7 @@ void drawPrimitive(IWineD3DDevice *iface, UINT index_count, UINT StartIdx, UINT 
            }
 #endif
         }
-        TRACE("drawprim #%ld\n", primCounter);
+        TRACE("drawprim #%d\n", primCounter);
         ++primCounter;
     }
 #endif
@@ -788,7 +818,8 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     /* Simply activate the context for blitting. This disables all the things we don't want and
      * takes care of dirtifying. Dirtifying is preferred over pushing / popping, since drawing the
      * patch (as opposed to normal draws) will most likely need different changes anyway. */
-    context = context_acquire(This, NULL, CTXUSAGE_BLIT);
+    context = context_acquire(This, NULL);
+    context_apply_blit_state(context, This);
 
     /* First, locate the position data. This is provided in a vertex buffer in the stateblock.
      * Beware of vbos
@@ -800,7 +831,7 @@ HRESULT tesselate_rectpatch(IWineD3DDeviceImpl *This,
     {
         struct wined3d_buffer *vb;
         vb = (struct wined3d_buffer *)This->stateBlock->streamSource[e->stream_idx];
-        e->data = (BYTE *)((unsigned long)e->data + (unsigned long)buffer_get_sysmem(vb));
+        e->data = (BYTE *)((ULONG_PTR)e->data + (ULONG_PTR)buffer_get_sysmem(vb, context->gl_info));
     }
     vtxStride = e->stride;
     data = e->data +

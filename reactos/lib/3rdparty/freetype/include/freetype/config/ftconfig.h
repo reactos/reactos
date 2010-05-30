@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    ANSI-specific configuration file (specification only).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007 by                   */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2007, 2008, 2010 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -35,13 +35,13 @@
   /*                                                                       */
   /*************************************************************************/
 
-
 #ifndef __FTCONFIG_H__
 #define __FTCONFIG_H__
 
 #include <ft2build.h>
 #include FT_CONFIG_OPTIONS_H
 #include FT_CONFIG_STANDARD_LIBRARY_H
+
 
 FT_BEGIN_HEADER
 
@@ -134,17 +134,77 @@ FT_BEGIN_HEADER
 #else
 #define FT_MACINTOSH 1
 #endif
+
+#elif defined( __SC__ ) || defined( __MRC__ )
+  /* Classic MacOS compilers */
+#include "ConditionalMacros.h"
+#if TARGET_OS_MAC
+#define FT_MACINTOSH 1
+#endif
+
 #endif
 
 
   /*************************************************************************/
   /*                                                                       */
-  /* IntN types                                                            */
+  /* <Section>                                                             */
+  /*    basic_types                                                        */
   /*                                                                       */
-  /*   Used to guarantee the size of some specific integers.               */
+  /*************************************************************************/
+
+
+  /*************************************************************************/
   /*                                                                       */
-  typedef signed short    FT_Int16;
+  /* <Type>                                                                */
+  /*    FT_Int16                                                           */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A typedef for a 16bit signed integer type.                         */
+  /*                                                                       */
+  typedef signed short  FT_Int16;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FT_UInt16                                                          */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A typedef for a 16bit unsigned integer type.                       */
+  /*                                                                       */
   typedef unsigned short  FT_UInt16;
+
+  /* */
+
+
+  /* this #if 0 ... #endif clause is for documentation purposes */
+#if 0
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FT_Int32                                                           */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A typedef for a 32bit signed integer type.  The size depends on    */
+  /*    the configuration.                                                 */
+  /*                                                                       */
+  typedef signed XXX  FT_Int32;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Type>                                                                */
+  /*    FT_UInt32                                                          */
+  /*                                                                       */
+  /*    A typedef for a 32bit unsigned integer type.  The size depends on  */
+  /*    the configuration.                                                 */
+  /*                                                                       */
+  typedef unsigned XXX  FT_UInt32;
+
+  /* */
+
+#endif
 
 #if FT_SIZEOF_INT == (32 / FT_CHAR_BIT)
 
@@ -159,6 +219,7 @@ FT_BEGIN_HEADER
 #else
 #error "no 32bit type found -- please check your configuration files"
 #endif
+
 
   /* look up an integer type that is at least 32 bits */
 #if FT_SIZEOF_INT >= (32 / FT_CHAR_BIT)
@@ -215,17 +276,12 @@ FT_BEGIN_HEADER
 #endif /* FT_SIZEOF_LONG == (64 / FT_CHAR_BIT) */
 
 
-#define FT_BEGIN_STMNT  do {
-#define FT_END_STMNT    } while ( 0 )
-#define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
-
-
   /*************************************************************************/
   /*                                                                       */
   /* A 64-bit data type will create compilation problems if you compile    */
-  /* in strict ANSI mode.  To avoid them, we disable their use if          */
-  /* __STDC__ is defined.  You can however ignore this rule by             */
-  /* defining the FT_CONFIG_OPTION_FORCE_INT64 configuration macro.        */
+  /* in strict ANSI mode.  To avoid them, we disable its use if __STDC__   */
+  /* is defined.  You can however ignore this rule by defining the         */
+  /* FT_CONFIG_OPTION_FORCE_INT64 configuration macro.                     */
   /*                                                                       */
 #if defined( FT_LONG64 ) && !defined( FT_CONFIG_OPTION_FORCE_INT64 )
 
@@ -238,6 +294,115 @@ FT_BEGIN_HEADER
 #endif /* __STDC__ */
 
 #endif /* FT_LONG64 && !FT_CONFIG_OPTION_FORCE_INT64 */
+
+
+#define FT_BEGIN_STMNT  do {
+#define FT_END_STMNT    } while ( 0 )
+#define FT_DUMMY_STMNT  FT_BEGIN_STMNT FT_END_STMNT
+
+
+#ifndef  FT_CONFIG_OPTION_NO_ASSEMBLER
+  /* Provide assembler fragments for performance-critical functions. */
+  /* These must be defined `static __inline__' with GCC.             */
+
+#if defined( __CC_ARM ) || defined( __ARMCC__ )  /* RVCT */
+#define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
+
+  /* documentation is in freetype.h */
+
+  static __inline FT_Int32
+  FT_MulFix_arm( FT_Int32  a,
+                 FT_Int32  b )
+  {
+    register FT_Int32  t, t2;
+
+
+    __asm
+    {
+      smull t2, t,  b,  a           /* (lo=t2,hi=t) = a*b */
+      mov   a,  t,  asr #31         /* a   = (hi >> 31) */
+      add   a,  a,  #0x8000         /* a  += 0x8000 */
+      adds  t2, t2, a               /* t2 += a */
+      adc   t,  t,  #0              /* t  += carry */
+      mov   a,  t2, lsr #16         /* a   = t2 >> 16 */
+      orr   a,  a,  t,  lsl #16     /* a  |= t << 16 */
+    }
+    return a;
+  }
+
+#endif /* __CC_ARM || __ARMCC__ */
+
+
+#ifdef __GNUC__
+
+#if defined( __arm__ ) && !defined( __thumb__ )    && \
+    !( defined( __CC_ARM ) || defined( __ARMCC__ ) )
+#define FT_MULFIX_ASSEMBLER  FT_MulFix_arm
+
+  /* documentation is in freetype.h */
+
+  static __inline__ FT_Int32
+  FT_MulFix_arm( FT_Int32  a,
+                 FT_Int32  b )
+  {
+    register FT_Int32  t, t2;
+
+
+    asm __volatile__ (
+      "smull  %1, %2, %4, %3\n\t"   /* (lo=%1,hi=%2) = a*b */
+      "mov    %0, %2, asr #31\n\t"  /* %0  = (hi >> 31) */
+      "add    %0, %0, #0x8000\n\t"  /* %0 += 0x8000 */
+      "adds   %1, %1, %0\n\t"       /* %1 += %0 */
+      "adc    %2, %2, #0\n\t"       /* %2 += carry */
+      "mov    %0, %1, lsr #16\n\t"  /* %0  = %1 >> 16 */
+      "orr    %0, %2, lsl #16\n\t"  /* %0 |= %2 << 16 */
+      : "=r"(a), "=&r"(t2), "=&r"(t)
+      : "r"(a), "r"(b) );
+    return a;
+  }
+
+#endif /* __arm__ && !__thumb__ && !( __CC_ARM || __ARMCC__ ) */
+
+#if defined( i386 )
+#define FT_MULFIX_ASSEMBLER  FT_MulFix_i386
+
+  /* documentation is in freetype.h */
+
+  static __inline__ FT_Int32
+  FT_MulFix_i386( FT_Int32  a,
+                  FT_Int32  b )
+  {
+    register FT_Int32  result;
+
+
+    __asm__ __volatile__ (
+      "imul  %%edx\n"
+      "movl  %%edx, %%ecx\n"
+      "sarl  $31, %%ecx\n"
+      "addl  $0x8000, %%ecx\n"
+      "addl  %%ecx, %%eax\n"
+      "adcl  $0, %%edx\n"
+      "shrl  $16, %%eax\n"
+      "shll  $16, %%edx\n"
+      "addl  %%edx, %%eax\n"
+      : "=a"(result), "=d"(b)
+      : "a"(a), "d"(b)
+      : "%ecx", "cc" );
+    return result;
+  }
+
+#endif /* i386 */
+
+#endif /* __GNUC__ */
+
+#endif /* !FT_CONFIG_OPTION_NO_ASSEMBLER */
+
+
+#ifdef FT_CONFIG_OPTION_INLINE_MULFIX
+#ifdef FT_MULFIX_ASSEMBLER
+#define FT_MULFIX_INLINED  FT_MULFIX_ASSEMBLER
+#endif
+#endif
 
 
 #ifdef FT_MAKE_OPTION_SINGLE_OBJECT

@@ -16,15 +16,29 @@ IKsDevice_fnQueryInterface(
     REFIID refiid,
     PVOID* Output)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    NTSTATUS Status;
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     if (IsEqualGUIDAligned(refiid, &IID_IUnknown))
     {
-        *Output = &This->lpVtblIKsDevice;
+        *Output = &This->BasicHeader.OuterUnknown;
         _InterlockedIncrement(&This->ref);
         return STATUS_SUCCESS;
     }
 
+    if (This->BasicHeader.ClientAggregate)
+    {
+         /* using client aggregate */
+         Status = This->BasicHeader.ClientAggregate->lpVtbl->QueryInterface(This->BasicHeader.ClientAggregate, refiid, Output);
+
+         if (NT_SUCCESS(Status))
+         {
+             /* client aggregate supports interface */
+             return Status;
+         }
+    }
+
+    DPRINT("IKsDevice_fnQueryInterface no interface\n");
     return STATUS_NOT_SUPPORTED;
 }
 
@@ -33,7 +47,7 @@ NTAPI
 IKsDevice_fnAddRef(
     IN IKsDevice * iface)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     return InterlockedIncrement(&This->ref);
 }
@@ -43,7 +57,7 @@ NTAPI
 IKsDevice_fnRelease(
     IN IKsDevice * iface)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     InterlockedDecrement(&This->ref);
 
@@ -57,7 +71,7 @@ NTAPI
 IKsDevice_fnGetStruct(
     IN IKsDevice * iface)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     return &This->KsDevice;
 }
@@ -69,7 +83,7 @@ IKsDevice_fnInitializeObjectBag(
     IN PKSIOBJECT_BAG Bag,
     IN PRKMUTEX Mutex)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     if (!Mutex)
     {
@@ -93,7 +107,7 @@ NTAPI
 IKsDevice_fnAcquireDevice(
     IN IKsDevice * iface)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     return KeWaitForSingleObject(&This->DeviceMutex, Executive, KernelMode, FALSE, NULL);
 }
@@ -103,7 +117,7 @@ NTAPI
 IKsDevice_fnReleaseDevice(
     IN IKsDevice * iface)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     return KeReleaseMutex(&This->DeviceMutex, FALSE);
 }
@@ -113,12 +127,14 @@ NTAPI
 IKsDevice_fnGetAdapterObject(
     IN IKsDevice * iface,
     IN PADAPTER_OBJECT * Object,
-    IN PULONG Unknown1,
-    IN PULONG Unknown2)
+    IN PULONG MaxMappingsByteCount,
+    IN PULONG MappingTableStride)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     *Object = This->AdapterObject;
+    *MaxMappingsByteCount = This->MaxMappingsByteCount;
+    *MappingTableStride = This->MappingTableStride;
 
     return STATUS_SUCCESS;
 
@@ -131,7 +147,7 @@ IKsDevice_fnAddPowerEntry(
     IN struct KSPOWER_ENTRY * Entry,
     IN IKsPowerNotify* Notify)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -143,7 +159,7 @@ IKsDevice_fnRemovePowerEntry(
     IN IKsDevice * iface,
     IN struct KSPOWER_ENTRY * Entry)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -159,7 +175,7 @@ IKsDevice_fnPinStateChange(
     IN KSSTATE OldState,
     IN KSSTATE NewState)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -174,7 +190,7 @@ IKsDevice_fnArbitrateAdapterChannel(
     IN PDRIVER_CONTROL ExecutionRoutine,
     IN PVOID Context)
 {
-    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
     NTSTATUS Status;
 
     DPRINT("IKsDevice_fnArbitrateAdapterChannel NumberOfMapRegisters %lu ExecutionRoutine %p Context %p Irql %lu\n", NumberOfMapRegisters, ExecutionRoutine, Context, KeGetCurrentIrql());
@@ -196,7 +212,7 @@ IKsDevice_fnCheckIoCapability(
     IN IKsDevice * iface,
     IN ULONG Unknown)
 {
-    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, lpVtblIKsDevice);
+    //PKSIDEVICE_HEADER This = (PKSIDEVICE_HEADER)CONTAINING_RECORD(iface, KSIDEVICE_HEADER, BasicHeader.OuterUnknown);
 
     UNIMPLEMENTED
     return STATUS_NOT_IMPLEMENTED;
@@ -615,7 +631,7 @@ IKsDevice_Create(
     DeviceHeader = DeviceExtension->DeviceHeader;
 
     /* acquire list lock */
-    IKsDevice_fnAcquireDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
+    IKsDevice_fnAcquireDevice((IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown);
 
     /* sanity check */
     ASSERT(IoStack->FileObject);
@@ -654,7 +670,7 @@ IKsDevice_Create(
     }
 
     /* acquire list lock */
-    IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->lpVtblIKsDevice);
+    IKsDevice_fnReleaseDevice((IKsDevice*)&DeviceHeader->BasicHeader.OuterUnknown);
 
     if (Status != STATUS_PENDING)
     {
@@ -726,7 +742,7 @@ KsInitializeDevice(
     }
 
     /* initialize IKsDevice interface */
-    Header->lpVtblIKsDevice = &vt_IKsDevice;
+    Header->BasicHeader.OuterUnknown = (PUNKNOWN)&vt_IKsDevice;
     Header->ref = 1;
 
     /* allocate object bag */
@@ -810,7 +826,7 @@ KsReferenceSoftwareBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->BasicHeader.OuterUnknown;
 
      if (Device)
      {
@@ -834,7 +850,7 @@ KsReferenceBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->BasicHeader.OuterUnknown;
 
      if (Device)
      {
@@ -859,7 +875,7 @@ KsDereferenceBusObject(
      PKSIDEVICE_HEADER DeviceHeader = (PKSIDEVICE_HEADER)Header;
 
      /* get device interface */
-     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->BasicHeader.OuterUnknown;
 
      if (Device)
      {
@@ -883,7 +899,7 @@ KsDereferenceSoftwareBusObject(
      DPRINT1("KsDereferenceSoftwareBusObject DeviceHeader %p\n", Header);
 
      /* get device interface */
-     Device = (IKsDevice*)DeviceHeader->lpVtblIKsDevice;
+     Device = (IKsDevice*)DeviceHeader->BasicHeader.OuterUnknown;
 
      if (Device)
      {

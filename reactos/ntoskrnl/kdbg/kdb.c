@@ -254,11 +254,11 @@ KdbpKdbTrapFrameFromKernelStack(
     KdbTrapFrame->Tf.Rbx = StackPtr[6];
     KdbTrapFrame->Tf.Rip = StackPtr[7];
     KdbTrapFrame->Tf.Rsp = (ULONG_PTR) (StackPtr + 16);
-    KdbTrapFrame->Tf.SegSs = KGDT_64_R0_SS;
-    KdbTrapFrame->Tf.SegCs = KGDT_64_R0_CODE;
-    KdbTrapFrame->Tf.SegDs = KGDT_64_DATA;
-    KdbTrapFrame->Tf.SegEs = KGDT_64_DATA;
-    KdbTrapFrame->Tf.SegGs = KGDT_64_DATA;
+    KdbTrapFrame->Tf.SegSs = KGDT64_R0_DATA;
+    KdbTrapFrame->Tf.SegCs = KGDT64_R0_CODE;
+    KdbTrapFrame->Tf.SegDs = KGDT64_R0_DATA;
+    KdbTrapFrame->Tf.SegEs = KGDT64_R0_DATA;
+    KdbTrapFrame->Tf.SegGs = KGDT64_R0_DATA;
 #endif
 
     /* FIXME: what about the other registers??? */
@@ -1739,7 +1739,7 @@ KdbpGetCommandLineSettings(
 
     while (p1 && (p2 = strchr(p1, ' ')))
     {
-        p2++;
+        p2 += 2;
 
         if (!_strnicmp(p2, "KDSERIAL", 8))
         {

@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) smooth ;
 
   if $(FT2_MULTI)
   {
-    _sources = ftgrays ftsmooth ;
+    _sources = ftgrays ftsmooth ftspic ;
   }
   else
   {

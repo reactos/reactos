@@ -950,7 +950,7 @@ HRESULT WINAPI AtlAxCreateControlEx(LPCOLESTR lpszName, HWND hWnd,
     TRACE("(%s %p %p %p %p %p %p)\n", debugstr_w(lpszName), hWnd, pStream, 
             ppUnkContainer, ppUnkControl, iidSink, punkSink);
 
-    hRes = CLSIDFromString( (LPOLESTR) lpszName, &controlId );
+    hRes = CLSIDFromString( lpszName, &controlId );
     if ( FAILED(hRes) )
         hRes = CLSIDFromProgID( lpszName, &controlId );
     if ( SUCCEEDED( hRes ) )

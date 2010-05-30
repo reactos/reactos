@@ -1,0 +1,49 @@
+/*
+ * Copyright 2010 Matej Spindler
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "resource.h"
+
+#pragma code_page(65001)
+
+LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_TO_PRIMITIVE        "Napaka med spreminjanjem v primitivni tip"
+    IDS_INVALID_CALL_ARG    "Napačen klic postopka ali argument"
+    IDS_CREATE_OBJ_ERROR    "Avtomatizacijski server ne more ustvariti objekta"
+    IDS_NO_PROPERTY         "Objekt ne podpira atributa ali metode"
+    IDS_ARG_NOT_OPT         "Argument je obvezen"
+    IDS_SYNTAX_ERROR        "Napačna sintaksa"
+    IDS_SEMICOLON           "Pričakujem ';'"
+    IDS_LBRACKET            "Pričakujem '('"
+    IDS_RBRACKET            "Pričakujem ')'"
+    IDS_UNTERMINATED_STR    "Nezaključen niz"
+    IDS_NOT_FUNC            "Pričakujem funkcijo"
+    IDS_NOT_DATE            "'[object]' ni date objekt"
+    IDS_NOT_NUM             "Pričakujem število"
+    IDS_OBJECT_EXPECTED     "Pričakujem objekt"
+    IDS_ILLEGAL_ASSIGN      "Napačna prireditev"
+    IDS_UNDEFINED           "'|' je nedifiniran"
+    IDS_NOT_BOOL            "Pričakujem Boolean objekt"
+    IDS_JSCRIPT_EXPECTED    "Pričakujem JScript objekt"
+    IDS_REGEXP_SYNTAX_ERROR "Napačna sintaksa v regularnem izrazu"
+    IDS_URI_INVALID_CHAR    "URI vsebuje neveljavne znake"
+    IDS_INVALID_LENGTH      "Dožina polja mora bit pozitivno celo število"
+    IDS_ARRAY_EXPECTED      "Pričakujem Array objekt"
+}

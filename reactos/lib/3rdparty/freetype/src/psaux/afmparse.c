@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM parser (body).                                                   */
 /*                                                                         */
-/*  Copyright 2006, 2007 by                                                */
+/*  Copyright 2006, 2007, 2008, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,7 +18,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
-#include FT_INTERNAL_DEBUG_H
 
 #include "afmparse.h"
 #include "psconv.h"
@@ -367,11 +366,11 @@
   FT_LOCAL_DEF( FT_Int )
   afm_parser_read_vals( AFM_Parser  parser,
                         AFM_Value   vals,
-                        FT_Int      n )
+                        FT_UInt     n )
   {
     AFM_Stream  stream = parser->stream;
     char*       str;
-    FT_Int      i;
+    FT_UInt     i;
 
 
     if ( n > AFM_MAX_ARGUMENTS )
@@ -379,7 +378,7 @@
 
     for ( i = 0; i < n; i++ )
     {
-      FT_UInt    len;
+      FT_Offset  len;
       AFM_Value  val = vals + i;
 
 
@@ -441,7 +440,7 @@
   FT_LOCAL_DEF( char* )
   afm_parser_next_key( AFM_Parser  parser,
                        FT_Bool     line,
-                       FT_UInt*    len )
+                       FT_Offset*  len )
   {
     AFM_Stream  stream = parser->stream;
     char*       key    = 0;  /* make stupid compiler happy */
@@ -489,7 +488,7 @@
     }
 
     if ( len )
-      *len = ( key ) ? AFM_STREAM_KEY_LEN( stream, key )
+      *len = ( key ) ? (FT_Offset)AFM_STREAM_KEY_LEN( stream, key )
                      : 0;
 
     return key;
@@ -498,7 +497,7 @@
 
   static AFM_Token
   afm_tokenize( const char*  key,
-                FT_UInt      len )
+                FT_Offset    len )
   {
     int  n;
 
@@ -586,7 +585,7 @@
     AFM_FontInfo   fi = parser->FontInfo;
     AFM_TrackKern  tk;
     char*          key;
-    FT_UInt        len;
+    FT_Offset      len;
     int            n = -1;
 
 
@@ -672,7 +671,12 @@
     FT_ULong  index2 = KERN_INDEX( kp2->index1, kp2->index2 );
 
 
-    return (int)( index1 - index2 );
+    if ( index1 > index2 )
+      return 1;
+    else if ( index1 < index2 )
+      return -1;
+    else
+      return 0;
   }
 
 
@@ -682,7 +686,7 @@
     AFM_FontInfo  fi = parser->FontInfo;
     AFM_KernPair  kp;
     char*         key;
-    FT_UInt       len;
+    FT_Offset     len;
     int           n = -1;
 
 
@@ -770,9 +774,9 @@
   static FT_Error
   afm_parse_kern_data( AFM_Parser  parser )
   {
-    FT_Error  error;
-    char*     key;
-    FT_UInt   len;
+    FT_Error   error;
+    char*      key;
+    FT_Offset  len;
 
 
     while ( ( key = afm_parser_next_key( parser, 1, &len ) ) != 0 )
@@ -814,8 +818,8 @@
                            FT_UInt     n,
                            AFM_Token   end_section )
   {
-    char*    key;
-    FT_UInt  len;
+    char*      key;
+    FT_Offset  len;
 
 
     while ( n-- > 0 )
@@ -846,7 +850,7 @@
     AFM_FontInfo  fi     = parser->FontInfo;
     FT_Error      error  = PSaux_Err_Syntax_Error;
     char*         key;
-    FT_UInt       len;
+    FT_Offset     len;
     FT_Int        metrics_sets = 0;
 
 

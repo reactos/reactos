@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (body).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,6 +19,7 @@
 #include <ft2build.h>
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_INTERNAL_CALC_H
 
 #include "psobjs.h"
 #include "psconv.h"
@@ -169,9 +170,15 @@
                 void*       object,
                 FT_PtrDist  length )
   {
-    if ( idx < 0 || idx > table->max_elems )
+    if ( idx < 0 || idx >= table->max_elems )
     {
       FT_ERROR(( "ps_table_add: invalid index\n" ));
+      return PSaux_Err_Invalid_Argument;
+    }
+
+    if ( length < 0 )
+    {
+      FT_ERROR(( "ps_table_add: invalid length\n" ));
       return PSaux_Err_Invalid_Argument;
     }
 
@@ -179,7 +186,7 @@
     if ( table->cursor + length > table->capacity )
     {
       FT_Error   error;
-      FT_Offset  new_size  = table->capacity;
+      FT_Offset  new_size = table->capacity;
       FT_Long    in_offset;
 
 
@@ -376,7 +383,7 @@
           /* skip octal escape or ignore backslash */
           for ( i = 0; i < 3 && cur < limit; ++i )
           {
-            if ( ! IS_OCTAL_DIGIT( *cur ) )
+            if ( !IS_OCTAL_DIGIT( *cur ) )
               break;
 
             ++cur;
@@ -558,8 +565,8 @@
       cur++;
       if ( cur >= limit || *cur != '>' )             /* >> */
       {
-        FT_ERROR(( "ps_parser_skip_PS_token: "
-                   "unexpected closing delimiter `>'\n" ));
+        FT_ERROR(( "ps_parser_skip_PS_token:"
+                   " unexpected closing delimiter `>'\n" ));
         error = PSaux_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -584,9 +591,10 @@
   Exit:
     if ( cur == parser->cursor )
     {
-      FT_ERROR(( "ps_parser_skip_PS_token: "
-                 "current token is `%c', which is self-delimiting "
-                 "but invalid at this point\n",
+      FT_ERROR(( "ps_parser_skip_PS_token:"
+                 " current token is `%c' which is self-delimiting\n"
+                 "                        "
+                 " but invalid at this point\n",
                  *cur ));
 
       error = PSaux_Err_Invalid_File_Format;
@@ -1147,8 +1155,10 @@
           }
           else
           {
-            FT_ERROR(( "ps_parser_load_field: expected a name or string "
-                       "but found token of type %d instead\n",
+            FT_ERROR(( "ps_parser_load_field:"
+                       " expected a name or string\n"
+                       "                     "
+                       " but found token of type %d instead\n",
                        token.type ));
             error = PSaux_Err_Invalid_File_Format;
             goto Exit;
@@ -1185,8 +1195,8 @@
 
           if ( result < 0 )
           {
-            FT_ERROR(( "ps_parser_load_field: "
-                       "expected four integers in bounding box\n" ));
+            FT_ERROR(( "ps_parser_load_field:"
+                       " expected four integers in bounding box\n" ));
             error = PSaux_Err_Invalid_File_Format;
             goto Exit;
           }
@@ -1259,8 +1269,9 @@
     old_cursor = parser->cursor;
     old_limit  = parser->limit;
 
-    /* we store the elements count if necessary */
-    if ( field->type != T1_FIELD_TYPE_BBOX )
+    /* we store the elements count if necessary;           */
+    /* we further assume that `count_offset' can't be zero */
+    if ( field->type != T1_FIELD_TYPE_BBOX && field->count_offset != 0 )
       *(FT_Byte*)( (FT_Byte*)objects[0] + field->count_offset ) =
         (FT_Byte)num_elements;
 
@@ -1302,7 +1313,7 @@
   FT_LOCAL_DEF( FT_Error )
   ps_parser_to_bytes( PS_Parser  parser,
                       FT_Byte*   bytes,
-                      FT_Long    max_bytes,
+                      FT_Offset  max_bytes,
                       FT_Long*   pnum_bytes,
                       FT_Bool    delimiters )
   {
@@ -1483,12 +1494,6 @@
         builder->hints_funcs = glyph->internal->glyph_hints;
     }
 
-    if ( size )
-    {
-      builder->scale_x = size->metrics.x_scale;
-      builder->scale_y = size->metrics.y_scale;
-    }
-
     builder->pos_x = 0;
     builder->pos_y = 0;
 
@@ -1550,16 +1555,9 @@
       FT_Byte*    control = (FT_Byte*)outline->tags + outline->n_points;
 
 
-      if ( builder->shift )
-      {
-        x >>= 16;
-        y >>= 16;
-      }
-      point->x = x;
-      point->y = y;
+      point->x = FIXED_TO_INT( x );
+      point->y = FIXED_TO_INT( y );
       *control = (FT_Byte)( flag ? FT_CURVE_TAG_ON : FT_CURVE_TAG_CUBIC );
-
-      builder->last = *point;
     }
     outline->n_points++;
   }
@@ -1640,26 +1638,23 @@
   t1_builder_close_contour( T1_Builder  builder )
   {
     FT_Outline*  outline = builder->current;
+    FT_Int       first;
 
 
     if ( !outline )
       return;
 
-    /* XXXX: We must not include the last point in the path if it */
-    /*       is located on the first point.                       */
+    first = outline->n_contours <= 1
+            ? 0 : outline->contours[outline->n_contours - 2] + 1;
+
+    /* We must not include the last point in the path if it */
+    /* is located on the first point.                       */
     if ( outline->n_points > 1 )
     {
-      FT_Int      first   = 0;
       FT_Vector*  p1      = outline->points + first;
       FT_Vector*  p2      = outline->points + outline->n_points - 1;
       FT_Byte*    control = (FT_Byte*)outline->tags + outline->n_points - 1;
 
-
-      if ( outline->n_contours > 1 )
-      {
-        first = outline->contours[outline->n_contours - 2] + 1;
-        p1    = outline->points + first;
-      }
 
       /* `delete' last point only if it coincides with the first */
       /* point and it is not a control point (which can happen). */
@@ -1669,8 +1664,18 @@
     }
 
     if ( outline->n_contours > 0 )
-      outline->contours[outline->n_contours - 1] =
-        (short)( outline->n_points - 1 );
+    {
+      /* Don't add contours only consisting of one point, i.e.,  */
+      /* check whether the first and the last point is the same. */
+      if ( first == outline->n_points - 1 )
+      {
+        outline->n_contours--;
+        outline->n_points--;
+      }
+      else
+        outline->contours[outline->n_contours - 1] =
+          (short)( outline->n_points - 1 );
+    }
   }
 
 

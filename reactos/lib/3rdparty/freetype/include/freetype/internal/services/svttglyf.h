@@ -37,6 +37,25 @@ FT_BEGIN_HEADER
     TT_Glyf_GetLocationFunc  get_location;
   };
 
+#ifndef FT_CONFIG_OPTION_PIC
+
+#define FT_DEFINE_SERVICE_TTGLYFREC(class_, get_location_ )   \
+  static const FT_Service_TTGlyfRec class_ =                  \
+  {                                                           \
+    get_location_                                             \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#define FT_DEFINE_SERVICE_TTGLYFREC(class_, get_location_ )   \
+  void                                                        \
+  FT_Init_Class_##class_( FT_Service_TTGlyfRec*  clazz )      \
+  {                                                           \
+    clazz->get_location = get_location_;                      \
+  } 
+
+#endif /* FT_CONFIG_OPTION_PIC */ 
+
   /* */
 
 

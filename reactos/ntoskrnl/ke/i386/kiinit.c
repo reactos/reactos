@@ -792,7 +792,7 @@ AppCpuInit:
         KdInitSystem(0, KeLoaderBlock);
 
         /* Check for break-in */
-        if (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
+        while (KdPollBreakIn()) DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
     }
 
     /* Raise to HIGH_LEVEL */

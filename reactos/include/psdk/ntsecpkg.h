@@ -19,6 +19,10 @@
 #ifndef _NTSECPKG_H
 #define _NTSECPKG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Flags for the MachineState field in SECPKG_PARAMETERS */
 #define SECPKG_STATE_ENCRYPTION_PERMITTED               0x01
 #define SECPKG_STATE_STRONG_ENCRYPTION_PERMITTED        0x02
@@ -30,6 +34,9 @@
 #define SECPKG_INTERFACE_VERSION                     0x10000
 #define SECPKG_INTERFACE_VERSION_2                   0x20000
 #define SECPKG_INTERFACE_VERSION_3                   0x40000
+#define SECPKG_INTERFACE_VERSION_4                   0x80000
+#define SECPKG_INTERFACE_VERSION_5                  0x100000
+#define SECPKG_INTERFACE_VERSION_6                  0x200000
 
 /* enum definitions for Secure Service Provider/Authentication Packages */
 typedef enum _LSA_TOKEN_INFORMATION_TYPE {
@@ -139,6 +146,11 @@ typedef struct _SECPKG_EXTENDED_INFORMATION {
         SECPKG_MUTUAL_AUTH_LEVEL MutualAuthLevel;
     } Info;
 } SECPKG_EXTENDED_INFORMATION, *PSECPKG_EXTENDED_INFORMATION;
+
+typedef struct  _SECPKG_TARGETINFO {
+    PSID DomainSid;
+    PCWSTR ComputerName;
+} SECPKG_TARGETINFO, *PSECPKG_TARGETINFO;
 
 /* callbacks implemented by SSP/AP dlls and called by the LSA */
 typedef VOID (NTAPI *PLSA_CALLBACK_FUNCTION)(ULONG_PTR, ULONG_PTR, PSecBuffer,
@@ -341,6 +353,18 @@ typedef NTSTATUS (NTAPI SpSetContextAttributesFn)(LSA_SEC_HANDLE, ULONG, PVOID,
  ULONG);
 typedef NTSTATUS (NTAPI SpSetCredentialsAttributesFn)(LSA_SEC_HANDLE, ULONG,
  PVOID, ULONG);
+typedef NTSTATUS (NTAPI SpChangeAccountPasswordFn)(PUNICODE_STRING,
+ PUNICODE_STRING, PUNICODE_STRING, PUNICODE_STRING, BOOLEAN, PSecBufferDesc);
+typedef NTSTATUS (NTAPI SpQueryMetaDataFn)(LSA_SEC_HANDLE, PUNICODE_STRING,
+ ULONG, PULONG, PUCHAR *, PLSA_SEC_HANDLE);
+typedef NTSTATUS (NTAPI SpExchangeMetaDataFn)(LSA_SEC_HANDLE, PUNICODE_STRING,
+ ULONG, ULONG, PUCHAR, PLSA_SEC_HANDLE);
+typedef NTSTATUS (NTAPI SpGetCredUIContextFn)(LSA_SEC_HANDLE, GUID *, PULONG,
+ PUCHAR *);
+typedef NTSTATUS (NTAPI SpUpdateCredentialsFn)(LSA_SEC_HANDLE, GUID *, ULONG,
+ PUCHAR);
+typedef NTSTATUS (NTAPI SpValidateTargetInfoFn)(PLSA_CLIENT_REQUEST, PVOID,
+ PVOID, ULONG, PSECPKG_TARGETINFO);
 
 /* User-mode functions implemented by SSP/AP obtainable by a dispatch table */
 typedef NTSTATUS (NTAPI SpInstanceInitFn)(ULONG, PSECPKG_DLL_FUNCTIONS,
@@ -402,6 +426,15 @@ typedef struct SECPKG_FUNCTION_TABLE {
     /* Packages with version SECPKG_INTERFACE_VERSION_2 end here */
     SpSetCredentialsAttributesFn *SetCredentialsAttributes;
     /* Packages with version SECPKG_INTERFACE_VERSION_3 end here */
+    SpChangeAccountPasswordFn *ChangeAccountPassword;
+    /* Packages with version SECPKG_INTERFACE_VERSION_4 end here */
+    SpQueryMetaDataFn *QueryMetaData;
+    SpExchangeMetaDataFn *ExchangeMetaData;
+    SpGetCredUIContextFn *GetCredUIContext;
+    SpUpdateCredentialsFn *UpdateCredentials;
+    /* Packages with version SECPKG_INTERFACE_VERSION_5 end here */
+    SpValidateTargetInfoFn *ValidateTargetInfo;
+    /* Packages with version SECPKG_INTERFACE_VERSION_6 end here */
 } SECPKG_FUNCTION_TABLE,
  *PSECPKG_FUNCTION_TABLE;
 
@@ -432,4 +465,7 @@ typedef NTSTATUS (NTAPI *SpLsaModeInitializeFn)(ULONG, PULONG,
 typedef NTSTATUS (WINAPI *SpUserModeInitializeFn)(ULONG, PULONG,
  PSECPKG_USER_FUNCTION_TABLE *, PULONG);
 
+#ifdef __cplusplus
+}
+#endif
 #endif /* _NTSECPKG_H */

@@ -14,6 +14,8 @@
     KS CATEGORIES
 */
 
+typedef LONGLONG REFERENCE_TIME;
+
 #define EXTRACT_WAVEFORMATEX_ID(Guid)\
     (USHORT)((Guid)->Data1)
 

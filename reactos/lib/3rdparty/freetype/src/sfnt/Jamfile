@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) sfnt ;
 
   if $(FT2_MULTI)
   {
-    _sources = sfobjs sfdriver ttcmap ttpost ttload ttsbit ttkern ttbdf ;
+    _sources = sfobjs sfdriver ttcmap ttmtx ttpost ttload ttsbit ttkern ttbdf sfntpic ;
   }
   else
   {

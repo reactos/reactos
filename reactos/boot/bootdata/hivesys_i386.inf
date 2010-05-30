@@ -901,13 +901,11 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices","UNC",0x0000
 
 ; System environment settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","ComSpec",0x00020000,"%SystemRoot%\system32\cmd.exe"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","OS",0x00020000,"ReactOS"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","Path",0x00020000,"%SystemRoot%\bin;%SystemRoot%\system32;%SystemRoot%;%SystemRoot%\system32\wbem"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","windir",0x00020000,"%SystemRoot%"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TEMP",0x00020000,"%SystemDrive%\TEMP"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","TMP",0x00020000,"%SystemDrive%\TEMP"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00020000,".COM;.EXE;.BAT;.CMD"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PROCESSOR_ARCHITECTURE",0x00020000,"x86"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Environment","PATHEXT",0x00000000,".COM;.EXE;.BAT;.CMD"
 
 
 ; Known DLLs
@@ -973,6 +971,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Description",0x00000000,"P
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Group",0x00000000,"Audio"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ImagePath",0x00020000,"%SystemRoot%\system32\audiosrv.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\RosAudioSrv","Type",0x00010001,0x00000010
 
@@ -1036,12 +1035,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Disk","Type",0x00010001,0x00000001
 ; DHCP client service
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","DisplayName",0x00000000,"DHCP Client"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Description",0x00000000,"Attempts to obtain network settings automatically from an available DHCP server"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"Network"
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\dhcp.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ErrorControl",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Group",0x00000000,"TDI"
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ImagePath",0x00020000,"%SystemRoot%\system32\svchost.exe -k netsvcs"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Start",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000010
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP","Type",0x00010001,0x00000020
+HKLM,"SYSTEM\CurrentControlSet\Services\DHCP\Parameters","ServiceDll",0x00020000,"%SystemRoot%\system32\dhcpcsvc.dll"
 
 ; Event logging service
 HKLM,"SYSTEM\CurrentControlSet\Services\EventLog",,0x00000010
@@ -1219,6 +1219,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","DisplayName",0x00000000,"Simpl
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ImagePath",0x00020000,"%SystemRoot%\system32\tcpsvcs.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\tcpsvcs","Type",0x00010001,0x00000020
 
@@ -1228,6 +1229,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","DisplayName",0x00000000,"React
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Group",0x00000000,"Network"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ImagePath",0x00020000,"%SystemRoot%\system32\telnetd.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\telnetd","Type",0x00010001,0x00000020
 
@@ -1308,6 +1310,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Description",0x00000000,"Con
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Group",0x00000000,"Windows Installer"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ImagePath",0x00020000,"system32\msiexec.exe /V"
+HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","ObjectName",0x00000000,"LocalSystem"
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\MSIserver","Type",0x00010001,0x00000020
 

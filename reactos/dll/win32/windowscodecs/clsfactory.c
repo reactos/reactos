@@ -50,6 +50,7 @@ static classinfo wic_classes[] = {
     {&CLSID_WICGifDecoder, GifDecoder_CreateInstance},
     {&CLSID_WICIcoDecoder, IcoDecoder_CreateInstance},
     {&CLSID_WICJpegDecoder, JpegDecoder_CreateInstance},
+    {&CLSID_WICTiffDecoder, TiffDecoder_CreateInstance},
     {&CLSID_WICDefaultFormatConverter, FormatConverter_CreateInstance},
     {0}};
 

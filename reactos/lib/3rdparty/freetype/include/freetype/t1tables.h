@@ -5,7 +5,7 @@
 /*    Basic Type 1/Type 2 tables definitions and interface (specification  */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2006 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2006, 2008, 2009 by             */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -43,7 +43,7 @@ FT_BEGIN_HEADER
   /*    Type 1 Tables                                                      */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    Type 1 (PostScript) specific font tables.                          */
+  /*    Type~1 (PostScript) specific font tables.                          */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This section contains the definition of Type 1-specific tables,    */
@@ -62,11 +62,11 @@ FT_BEGIN_HEADER
   /*    PS_FontInfoRec                                                     */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure used to model a Type1/Type2 FontInfo dictionary.  Note */
-  /*    that for Multiple Master fonts, each instance has its own          */
+  /*    A structure used to model a Type~1 or Type~2 FontInfo dictionary.  */
+  /*    Note that for Multiple Master fonts, each instance has its own     */
   /*    FontInfo dictionary.                                               */
   /*                                                                       */
-  typedef struct  PS_FontInfoRec
+  typedef struct  PS_FontInfoRec_
   {
     FT_String*  version;
     FT_String*  notice;
@@ -78,7 +78,18 @@ FT_BEGIN_HEADER
     FT_Short    underline_position;
     FT_UShort   underline_thickness;
 
-  } PS_FontInfoRec, *PS_FontInfo;
+  } PS_FontInfoRec;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    PS_FontInfo                                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a @PS_FontInfoRec structure.                           */
+  /*                                                                       */
+  typedef struct PS_FontInfoRec_*  PS_FontInfo;
 
 
   /*************************************************************************/
@@ -100,9 +111,9 @@ FT_BEGIN_HEADER
   /*    PS_PrivateRec                                                      */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    A structure used to model a Type1/Type2 private dictionary.  Note  */
-  /*    that for Multiple Master fonts, each instance has its own Private  */
-  /*    dictionary.                                                        */
+  /*    A structure used to model a Type~1 or Type~2 private dictionary.   */
+  /*    Note that for Multiple Master fonts, each instance has its own     */
+  /*    Private dictionary.                                                */
   /*                                                                       */
   typedef struct  PS_PrivateRec_
   {
@@ -142,7 +153,18 @@ FT_BEGIN_HEADER
 
     FT_Short   min_feature[2];
 
-  } PS_PrivateRec, *PS_Private;
+  } PS_PrivateRec;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    PS_Private                                                         */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a @PS_PrivateRec structure.                            */
+  /*                                                                       */
+  typedef struct PS_PrivateRec_*  PS_Private;
 
 
   /*************************************************************************/
@@ -168,7 +190,7 @@ FT_BEGIN_HEADER
   /*    given blend dictionary (font info or private).  Used to support    */
   /*    Multiple Masters fonts.                                            */
   /*                                                                       */
-  typedef enum
+  typedef enum  T1_Blend_Flags_
   {
     /*# required fields in a FontInfo blend dictionary */
     T1_BLEND_UNDERLINE_POSITION = 0,
@@ -272,6 +294,14 @@ FT_BEGIN_HEADER
   typedef PS_BlendRec  T1_Blend;
 
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    CID_FaceDictRec                                                    */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A structure used to represent data in a CID top-level dictionary.  */
+  /*                                                                       */
   typedef struct  CID_FaceDictRec_
   {
     PS_PrivateRec  private_dict;
@@ -290,7 +320,20 @@ FT_BEGIN_HEADER
     FT_ULong       subrmap_offset;
     FT_Int         sd_bytes;
 
-  } CID_FaceDictRec, *CID_FaceDict;
+  } CID_FaceDictRec;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    CID_FaceDict                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a @CID_FaceDictRec structure.                          */
+  /*                                                                       */
+  typedef struct CID_FaceDictRec_*  CID_FaceDict;
+
+  /* */
 
 
   /* backwards-compatible definition */
@@ -332,7 +375,18 @@ FT_BEGIN_HEADER
 
     FT_ULong        data_offset;
 
-  } CID_FaceInfoRec, *CID_FaceInfo;
+  } CID_FaceInfoRec;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    CID_FaceInfo                                                       */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to a @CID_FaceInfoRec structure.                          */
+  /*                                                                       */
+  typedef struct CID_FaceInfoRec_*  CID_FaceInfo;
 
 
   /*************************************************************************/
@@ -347,99 +401,99 @@ FT_BEGIN_HEADER
   /*                                                                       */
   typedef CID_FaceInfoRec  CID_Info;
 
-  /* */
 
-
- /************************************************************************
-  *
-  * @function:
-  *    FT_Has_PS_Glyph_Names
-  *
-  * @description:
-  *    Return true if a given face provides reliable Postscript glyph
-  *    names.  This is similar to using the @FT_HAS_GLYPH_NAMES macro,
-  *    except that certain fonts (mostly TrueType) contain incorrect
-  *    glyph name tables.
-  *
-  *    When this function returns true, the caller is sure that the glyph
-  *    names returned by @FT_Get_Glyph_Name are reliable.
-  *
-  * @input:
-  *    face ::
-  *       face handle
-  *
-  * @return:
-  *    Boolean.  True if glyph names are reliable.
-  */
+  /************************************************************************
+   *
+   * @function:
+   *    FT_Has_PS_Glyph_Names
+   *
+   * @description:
+   *    Return true if a given face provides reliable PostScript glyph
+   *    names.  This is similar to using the @FT_HAS_GLYPH_NAMES macro,
+   *    except that certain fonts (mostly TrueType) contain incorrect
+   *    glyph name tables.
+   *
+   *    When this function returns true, the caller is sure that the glyph
+   *    names returned by @FT_Get_Glyph_Name are reliable.
+   *
+   * @input:
+   *    face ::
+   *       face handle
+   *
+   * @return:
+   *    Boolean.  True if glyph names are reliable.
+   *
+   */
   FT_EXPORT( FT_Int )
   FT_Has_PS_Glyph_Names( FT_Face  face );
 
 
- /************************************************************************
-  *
-  * @function:
-  *    FT_Get_PS_Font_Info
-  *
-  * @description:
-  *    Retrieve the @PS_FontInfoRec structure corresponding to a given
-  *    Postscript font.
-  *
-  * @input:
-  *    face ::
-  *       Postscript face handle.
-  *
-  * @output:
-  *    afont_info ::
-  *       Output font info structure pointer.
-  *
-  * @return:
-  *    FreeType error code.  0 means success.
-  *
-  * @note:
-  *    The string pointers within the font info structure are owned by
-  *    the face and don't need to be freed by the caller.
-  *
-  *    If the font's format is not Postscript-based, this function will
-  *    return the `FT_Err_Invalid_Argument' error code.
-  */
+  /************************************************************************
+   *
+   * @function:
+   *    FT_Get_PS_Font_Info
+   *
+   * @description:
+   *    Retrieve the @PS_FontInfoRec structure corresponding to a given
+   *    PostScript font.
+   *
+   * @input:
+   *    face ::
+   *       PostScript face handle.
+   *
+   * @output:
+   *    afont_info ::
+   *       Output font info structure pointer.
+   *
+   * @return:
+   *    FreeType error code.  0~means success.
+   *
+   * @note:
+   *    The string pointers within the font info structure are owned by
+   *    the face and don't need to be freed by the caller.
+   *
+   *    If the font's format is not PostScript-based, this function will
+   *    return the `FT_Err_Invalid_Argument' error code.
+   *
+   */
   FT_EXPORT( FT_Error )
-  FT_Get_PS_Font_Info( FT_Face          face,
-                       PS_FontInfoRec  *afont_info );
+  FT_Get_PS_Font_Info( FT_Face      face,
+                       PS_FontInfo  afont_info );
 
 
- /************************************************************************
-  *
-  * @function:
-  *    FT_Get_PS_Font_Private
-  *
-  * @description:
-  *    Retrieve the @PS_PrivateRec structure corresponding to a given
-  *    Postscript font.
-  *
-  * @input:
-  *    face ::
-  *       Postscript face handle.
-  *
-  * @output:
-  *    afont_private ::
-  *       Output private dictionary structure pointer.
-  *
-  * @return:
-  *    FreeType error code.  0 means success.
-  *
-  * @note:
-  *    The string pointers within the font info structure are owned by
-  *    the face and don't need to be freed by the caller.
-  *
-  *    If the font's format is not Postscript-based, this function will
-  *    return the `FT_Err_Invalid_Argument' error code.
-  */
+  /************************************************************************
+   *
+   * @function:
+   *    FT_Get_PS_Font_Private
+   *
+   * @description:
+   *    Retrieve the @PS_PrivateRec structure corresponding to a given
+   *    PostScript font.
+   *
+   * @input:
+   *    face ::
+   *       PostScript face handle.
+   *
+   * @output:
+   *    afont_private ::
+   *       Output private dictionary structure pointer.
+   *
+   * @return:
+   *    FreeType error code.  0~means success.
+   *
+   * @note:
+   *    The string pointers within the @PS_PrivateRec structure are owned by
+   *    the face and don't need to be freed by the caller.
+   *
+   *    If the font's format is not PostScript-based, this function returns
+   *    the `FT_Err_Invalid_Argument' error code.
+   *
+   */
   FT_EXPORT( FT_Error )
-  FT_Get_PS_Font_Private( FT_Face         face,
-                          PS_PrivateRec  *afont_private );
+  FT_Get_PS_Font_Private( FT_Face     face,
+                          PS_Private  afont_private );
 
- /* */
-
+  /* */
 
 
 FT_END_HEADER

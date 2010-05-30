@@ -341,7 +341,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                                         &StackBegin,
                                         &StackEnd);
         if (!Result) return 0;
-    }
+        }
 
     /* Use a SEH block for maximum protection */
     _SEH2_TRY
@@ -355,12 +355,11 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 
             /* Make sure we can trust the TEB and trap frame */
             if (!(Teb) ||
-                !(Thread->SystemThread) ||
                 (KeIsAttachedProcess()) ||
                 (KeGetCurrentIrql() >= DISPATCH_LEVEL))
             {
                 /* Invalid or unsafe attempt to get the stack */
-                return 0;
+                _SEH2_YIELD(return 0;)
             }
 
             /* Get the stack limits */

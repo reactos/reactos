@@ -365,7 +365,7 @@ static HRESULT WINAPI DefaultHandler_SetClientSite(
   if (This->clientSite)
     IOleClientSite_AddRef(This->clientSite);
 
-  return S_OK;
+  return hr;
 }
 
 /************************************************************************

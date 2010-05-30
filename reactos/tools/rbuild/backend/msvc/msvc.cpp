@@ -420,7 +420,11 @@ MSVCBackend::_clean_project_files ( void )
 		remove ( NcbFileName ( module ).c_str () );
 		remove ( SlnFileName ( module ).c_str () );
 		remove ( SuoFileName ( module ).c_str () );
-		remove ( VcprojFileName ( module ).c_str () );
+
+		if ( configuration.VSProjectVersion == "10.00" )
+			remove ( VcxprojFileName ( module ).c_str () );
+		else
+			remove ( VcprojFileName ( module ).c_str () );
 
 		string username = getenv ( "USERNAME" );
 		string computername = getenv ( "COMPUTERNAME" );

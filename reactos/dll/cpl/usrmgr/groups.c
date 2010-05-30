@@ -234,10 +234,10 @@ GroupNew(HWND hwndDlg)
     }
 
     if (group.lgrpi1_name)
-        HeapFree(GetProcessHeap, 0, group.lgrpi1_name);
+        HeapFree(GetProcessHeap(), 0, group.lgrpi1_name);
 
     if (group.lgrpi1_comment)
-        HeapFree(GetProcessHeap, 0, group.lgrpi1_comment);
+        HeapFree(GetProcessHeap(), 0, group.lgrpi1_comment);
 }
 
 

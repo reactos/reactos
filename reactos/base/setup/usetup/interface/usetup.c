@@ -31,6 +31,7 @@
 #define NDEBUG
 #include <debug.h>
 
+
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
@@ -78,6 +79,10 @@ static PGENERIC_LIST DisplayList = NULL;
 static PGENERIC_LIST KeyboardList = NULL;
 static PGENERIC_LIST LayoutList = NULL;
 static PGENERIC_LIST LanguageList = NULL;
+
+static LANGID LanguageId = 0;
+
+static ULONG RequiredPartitionDiskSpace = ~0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -422,6 +427,7 @@ CheckUnattendedSetup(VOID)
     UnattendInf = SetupOpenInfFileW(UnattendInfPath,
                                     NULL,
                                     INF_STYLE_WIN4,
+                                    LanguageId,
                                     &ErrorLine);
 
     if (UnattendInf == INVALID_HANDLE_VALUE)
@@ -678,6 +684,8 @@ LanguagePage(PINPUT_RECORD Ir)
         {
             SelectedLanguageId = (PWCHAR)GetListEntryUserData(GetCurrentListEntry(LanguageList));
 
+            LanguageId = (LANGID)(wcstol(SelectedLanguageId, NULL, 16) & 0xFFFF);
+
             if (wcscmp(SelectedLanguageId, DefaultLanguage))
             {
                 UpdateKBLayout();
@@ -715,6 +723,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     UINT ErrorLine;
     ULONG ReturnSize;
     PGENERIC_LIST_ENTRY ListEntry;
+    INT IntValue;
 
     CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
@@ -765,6 +774,7 @@ SetupStartPage(PINPUT_RECORD Ir)
     SetupInf = SetupOpenInfFileW(FileNameBuffer,
                                  NULL,
                                  INF_STYLE_WIN4,
+                                 LanguageId,
                                  &ErrorLine);
 
     if (SetupInf == INVALID_HANDLE_VALUE)
@@ -793,6 +803,22 @@ SetupStartPage(PINPUT_RECORD Ir)
         MUIDisplayError(ERROR_SIGNATURE_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;
     }
+
+    /* Open 'DiskSpaceRequirements' section */
+    if (!SetupFindFirstLineW(SetupInf, L"DiskSpaceRequirements", L"FreeSysPartDiskSpace", &Context))
+    {
+        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    /* Get the 'FreeSysPartDiskSpace' value */
+    if (!SetupGetIntField(&Context, 1, &IntValue))
+    {
+        MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
+    RequiredPartitionDiskSpace = (ULONG)IntValue;
 
     /* Start PnP thread */
     if (hPnpThread != INVALID_HANDLE_VALUE)
@@ -823,7 +849,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 		while (ListEntry != NULL)
 		{
-			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
 			{
 				DPRINT("found %S in LanguageList\n",GetListEntryUserData(ListEntry));
 				SetCurrentListEntry(LanguageList, ListEntry);
@@ -837,7 +863,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 
 		while (ListEntry != NULL)
 		{
-			if (!wcscmp(LocaleID, GetListEntryUserData(ListEntry)))
+			if (!wcsicmp(LocaleID, GetListEntryUserData(ListEntry)))
 			{
 				DPRINT("found %S in LayoutList\n",GetListEntryUserData(ListEntry));
 				SetCurrentListEntry(LayoutList, ListEntry);
@@ -1375,6 +1401,31 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
     return DISPLAY_SETTINGS_PAGE;
 }
 
+static BOOL IsDiskSizeValid(PPARTENTRY PartEntry)
+{
+    ULONGLONG m;
+    /*  check for unpartitioned space  */
+    m = PartEntry->UnpartitionedLength; 
+    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if( m > RequiredPartitionDiskSpace)
+    {
+        return TRUE;
+    }
+	
+    // check for partitioned space 
+    m = PartEntry->PartInfo[0].PartitionLength.QuadPart;
+    m = (m + (1 << 19)) >> 20;  /* in MBytes (rounded) */
+    if( m < RequiredPartitionDiskSpace)
+    {
+        /* partition is too small so ask for another partion */
+        DPRINT1("Partition too small");
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
+}
 
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
@@ -1428,9 +1479,13 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         {
             if (AutoPartition)
             {
-                PPARTENTRY PartEntry = PartEntry = PartitionList->CurrentPartition;
+                PPARTENTRY PartEntry = PartitionList->CurrentPartition;
                 ULONG MaxSize = (PartEntry->UnpartitionedLength + (1 << 19)) >> 20;  /* in MBytes (rounded) */
-
+                if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+                {
+                    MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                    return SELECT_PARTITION_PAGE; /* let the user select another partition */
+                }
                 CreateNewPartition(PartitionList,
                                    MaxSize,
                                    TRUE);
@@ -1440,6 +1495,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else
         {
+            if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
+            }
             return(SELECT_FILE_SYSTEM_PAGE);
         }
     }
@@ -1483,6 +1543,11 @@ SelectPartitionPage(PINPUT_RECORD Ir)
         }
         else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)  /* ENTER */
         {
+            if(!IsDiskSizeValid(PartitionList->CurrentPartition))
+            {
+                MUIDisplayError(ERROR_INSUFFICIENT_DISKSPACE, Ir, POPUP_WAIT_ANY_KEY);
+                return SELECT_PARTITION_PAGE; /* let the user select another partition */
+            }
             if (PartitionList->CurrentPartition == NULL ||
                 PartitionList->CurrentPartition->Unpartitioned == TRUE)
             {
@@ -3045,6 +3110,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
                                           InfFileSize,
                                           (const CHAR*) NULL,
                                           INF_STYLE_WIN4,
+                                          LanguageId,
                                           &ErrorLine);
 
         if (InfHandle == INVALID_HANDLE_VALUE)
@@ -3114,7 +3180,7 @@ FileCopyCallback(PVOID Context,
 
         case SPFILENOTIFY_STARTCOPY:
             /* Display copy message */
-            CONSOLE_SetStatusTextAutoFitX (45 , MUIGetString(STRING_COPYING), (PWSTR)Param1);
+            CONSOLE_SetStatusText(MUIGetString(STRING_COPYING), (PWSTR)Param1);
             SetupUpdateMemoryInfo(CopyContext, FALSE);
             break;
 
@@ -3259,6 +3325,8 @@ RegistryPage(PINPUT_RECORD Ir)
 
         DPRINT("Action: %S  File: %S  Section %S\n", Action, File, Section);
 
+        if (Action == NULL) break; // Hackfix
+
         if (!_wcsicmp (Action, L"AddReg"))
         {
             Delete = FALSE;
@@ -3274,7 +3342,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
         CONSOLE_SetStatusText(MUIGetString(STRING_IMPORTFILE), File);
 
-        if (!ImportRegistryFile(File, Section, Delete))
+        if (!ImportRegistryFile(File, Section, LanguageId, Delete))
         {
             DPRINT("Importing %S failed\n", File);
 

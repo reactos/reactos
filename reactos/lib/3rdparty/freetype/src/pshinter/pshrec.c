@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001, 2002, 2003, 2004, 2007 by                              */
+/*  Copyright 2001, 2002, 2003, 2004, 2007, 2009 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,6 +20,8 @@
 #include FT_FREETYPE_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
+#include FT_INTERNAL_CALC_H
+
 #include "pshrec.h"
 #include "pshalgo.h"
 
@@ -62,7 +64,7 @@
   {
     FT_UInt   old_max = table->max_hints;
     FT_UInt   new_max = count;
-    FT_Error  error   = 0;
+    FT_Error  error   = PSH_Err_Ok;
 
 
     if ( new_max > old_max )
@@ -81,7 +83,7 @@
                        FT_Memory      memory,
                        PS_Hint       *ahint )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     FT_UInt   count;
     PS_Hint   hint = 0;
 
@@ -137,7 +139,7 @@
   {
     FT_UInt   old_max = ( mask->max_bits + 7 ) >> 3;
     FT_UInt   new_max = ( count          + 7 ) >> 3;
-    FT_Error  error   = 0;
+    FT_Error  error   = PSH_Err_Ok;
 
 
     if ( new_max > old_max )
@@ -184,7 +186,7 @@
                    FT_Int     idx,
                    FT_Memory  memory )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     FT_Byte*  p;
 
 
@@ -234,7 +236,7 @@
   {
     FT_UInt   old_max = table->max_masks;
     FT_UInt   new_max = count;
-    FT_Error  error   = 0;
+    FT_Error  error   = PSH_Err_Ok;
 
 
     if ( new_max > old_max )
@@ -254,7 +256,7 @@
                        PS_Mask       *amask )
   {
     FT_UInt   count;
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     PS_Mask   mask  = 0;
 
 
@@ -285,7 +287,7 @@
                       FT_Memory      memory,
                       PS_Mask       *amask )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     FT_UInt   count;
     PS_Mask   mask;
 
@@ -314,7 +316,7 @@
                           FT_UInt         bit_count,
                           FT_Memory       memory )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     PS_Mask   mask;
 
 
@@ -407,7 +409,7 @@
                        FT_Memory      memory )
   {
     FT_UInt   temp;
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
 
 
     /* swap index1 and index2 so that index1 < index2 */
@@ -481,8 +483,8 @@
       table->num_masks--;
     }
     else
-      FT_ERROR(( "ps_mask_table_merge: ignoring invalid indices (%d,%d)\n",
-                 index1, index2 ));
+      FT_TRACE0(( "ps_mask_table_merge: ignoring invalid indices (%d,%d)\n",
+                  index1, index2 ));
 
   Exit:
     return error;
@@ -497,7 +499,7 @@
                            FT_Memory      memory )
   {
     FT_Int    index1, index2;
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
 
 
     for ( index1 = table->num_masks - 1; index1 > 0; index1-- )
@@ -558,8 +560,8 @@
                              FT_UInt       idx,
                              FT_Memory     memory )
   {
-    PS_Mask  mask;
-    FT_Error  error = 0;
+    PS_Mask   mask;
+    FT_Error  error = PSH_Err_Ok;
 
 
     /* get last hint mask */
@@ -619,7 +621,7 @@
                               FT_UInt         end_point,
                               FT_Memory       memory )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
 
 
     /* reset current mask, if any */
@@ -644,7 +646,7 @@
                            FT_Memory     memory,
                            FT_Int       *aindex )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
     FT_UInt   flags = 0;
 
 
@@ -715,7 +717,7 @@
                             FT_Int        hint3,
                             FT_Memory     memory )
   {
-    FT_Error  error   = 0;
+    FT_Error  error   = PSH_Err_Ok;
     FT_UInt   count   = dim->counters.num_masks;
     PS_Mask   counter = dim->counters.masks;
 
@@ -789,7 +791,7 @@
     ps_dimension_done( &hints->dimension[0], memory );
     ps_dimension_done( &hints->dimension[1], memory );
 
-    hints->error  = 0;
+    hints->error  = PSH_Err_Ok;
     hints->memory = 0;
   }
 
@@ -800,7 +802,7 @@
   {
     FT_MEM_ZERO( hints, sizeof ( *hints ) );
     hints->memory = memory;
-    return 0;
+    return PSH_Err_Ok;
   }
 
 
@@ -813,7 +815,7 @@
     {
     case PS_HINT_TYPE_1:
     case PS_HINT_TYPE_2:
-      hints->error     = 0;
+      hints->error     = PSH_Err_Ok;
       hints->hint_type = hint_type;
 
       ps_dimension_init( &hints->dimension[0] );
@@ -824,7 +826,7 @@
       hints->error     = PSH_Err_Invalid_Argument;
       hints->hint_type = hint_type;
 
-      FT_ERROR(( "ps_hints_open: invalid charstring type!\n" ));
+      FT_TRACE0(( "ps_hints_open: invalid charstring type\n" ));
       break;
     }
   }
@@ -842,8 +844,8 @@
       /* limit "dimension" to 0..1 */
       if ( dimension < 0 || dimension > 1 )
       {
-        FT_ERROR(( "ps_hints_stem: invalid dimension (%d) used\n",
-                   dimension ));
+        FT_TRACE0(( "ps_hints_stem: invalid dimension (%d) used\n",
+                    dimension ));
         dimension = ( dimension != 0 );
       }
 
@@ -878,8 +880,8 @@
         }
 
       default:
-        FT_ERROR(( "ps_hints_stem: called with invalid hint type (%d)\n",
-                   hints->hint_type ));
+        FT_TRACE0(( "ps_hints_stem: called with invalid hint type (%d)\n",
+                    hints->hint_type ));
         break;
       }
     }
@@ -888,11 +890,11 @@
 
   /* add one Type1 counter stem to the current hints table */
   static void
-  ps_hints_t1stem3( PS_Hints  hints,
-                    FT_Int    dimension,
-                    FT_Long*  stems )
+  ps_hints_t1stem3( PS_Hints   hints,
+                    FT_Int     dimension,
+                    FT_Fixed*  stems )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
 
 
     if ( !hints->error )
@@ -906,8 +908,8 @@
       /* limit "dimension" to 0..1 */
       if ( dimension < 0 || dimension > 1 )
       {
-        FT_ERROR(( "ps_hints_t1stem3: invalid dimension (%d) used\n",
-                   dimension ));
+        FT_TRACE0(( "ps_hints_t1stem3: invalid dimension (%d) used\n",
+                    dimension ));
         dimension = ( dimension != 0 );
       }
 
@@ -919,9 +921,10 @@
         /* add the three stems to our hints/masks table */
         for ( count = 0; count < 3; count++, stems += 2 )
         {
-          error = ps_dimension_add_t1stem(
-                    dim, (FT_Int)stems[0], (FT_Int)stems[1],
-                    memory, &idx[count] );
+          error = ps_dimension_add_t1stem( dim,
+                                           (FT_Int)FIXED_TO_INT( stems[0] ),
+                                           (FT_Int)FIXED_TO_INT( stems[1] ),
+                                           memory, &idx[count] );
           if ( error )
             goto Fail;
         }
@@ -934,7 +937,7 @@
       }
       else
       {
-        FT_ERROR(( "ps_hints_t1stem3: called with invalid hint type!\n" ));
+        FT_ERROR(( "ps_hints_t1stem3: called with invalid hint type\n" ));
         error = PSH_Err_Invalid_Argument;
         goto Fail;
       }
@@ -953,7 +956,7 @@
   ps_hints_t1reset( PS_Hints  hints,
                     FT_UInt   end_point )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSH_Err_Ok;
 
 
     if ( !hints->error )
@@ -1008,8 +1011,8 @@
       /* check bit count; must be equal to current total hint count */
       if ( bit_count !=  count1 + count2 )
       {
-        FT_ERROR(( "ps_hints_t2mask: "
-                   "called with invalid bitcount %d (instead of %d)\n",
+        FT_TRACE0(( "ps_hints_t2mask:"
+                    " called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
 
         /* simply ignore the operator */
@@ -1053,8 +1056,8 @@
       /* check bit count, must be equal to current total hint count */
       if ( bit_count !=  count1 + count2 )
       {
-        FT_ERROR(( "ps_hints_t2counter: "
-                   "called with invalid bitcount %d (instead of %d)\n",
+        FT_TRACE0(( "ps_hints_t2counter:"
+                    " called with invalid bitcount %d (instead of %d)\n",
                    bit_count, count1 + count2 ));
 
         /* simply ignore the operator */
@@ -1124,11 +1127,17 @@
   }
 
   static void
-  t1_hints_stem( T1_Hints  hints,
-                 FT_Int    dimension,
-                 FT_Long*  coords )
+  t1_hints_stem( T1_Hints   hints,
+                 FT_Int     dimension,
+                 FT_Fixed*  coords )
   {
-    ps_hints_stem( (PS_Hints)hints, dimension, 1, coords );
+    FT_Pos  stems[2];
+
+
+    stems[0] = FIXED_TO_INT( coords[0] );
+    stems[1] = FIXED_TO_INT( coords[1] );
+
+    ps_hints_stem( (PS_Hints)hints, dimension, 1, stems );
   }
 
 
@@ -1183,7 +1192,7 @@
       for ( n = 0; n < count * 2; n++ )
       {
         y       += coords[n];
-        stems[n] = ( y + 0x8000L ) >> 16;
+        stems[n] = FIXED_TO_INT( y );
       }
 
       /* compute lengths */

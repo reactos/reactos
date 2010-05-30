@@ -1,1 +1,1 @@
-@ stdcall Win32CsrInitialization(ptr ptr ptr ptr ptr ptr)
+@ stdcall Win32CsrInitialization(ptr ptr ptr ptr)

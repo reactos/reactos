@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -65,6 +65,7 @@
 #include FT_CONFIG_CONFIG_H
 #include FT_MULTIPLE_MASTERS_H
 #include FT_INTERNAL_TYPE1_TYPES_H
+#include FT_INTERNAL_CALC_H
 
 #include "t1load.h"
 #include "t1errors.h"
@@ -213,10 +214,6 @@
   }
 
 
-#define FT_INT_TO_FIXED( a )  ( (a) << 16 )
-#define FT_FIXED_TO_INT( a )  ( FT_RoundFix( a ) >> 16 )
-
-
   /*************************************************************************/
   /*                                                                       */
   /* Given a normalized (blend) coordinate, figure out the design          */
@@ -230,7 +227,7 @@
 
 
     if ( ncv <= axismap->blend_points[0] )
-      return axismap->design_points[0];
+      return INT_TO_FIXED( axismap->design_points[0] );
 
     for ( j = 1; j < axismap->num_points; ++j )
     {
@@ -241,8 +238,7 @@
                                  axismap->blend_points[j] -
                                    axismap->blend_points[j - 1] );
 
-
-        return axismap->design_points[j - 1] +
+        return INT_TO_FIXED( axismap->design_points[j - 1] ) +
                  FT_MulDiv( t,
                             axismap->design_points[j] -
                               axismap->design_points[j - 1],
@@ -250,7 +246,7 @@
       }
     }
 
-    return axismap->design_points[axismap->num_points - 1];
+    return INT_TO_FIXED( axismap->design_points[axismap->num_points - 1] );
   }
 
 
@@ -332,13 +328,13 @@
     for ( i = 0 ; i < mmaster.num_axis; ++i )
     {
       mmvar->axis[i].name    = mmaster.axis[i].name;
-      mmvar->axis[i].minimum = FT_INT_TO_FIXED( mmaster.axis[i].minimum);
-      mmvar->axis[i].maximum = FT_INT_TO_FIXED( mmaster.axis[i].maximum);
+      mmvar->axis[i].minimum = INT_TO_FIXED( mmaster.axis[i].minimum);
+      mmvar->axis[i].maximum = INT_TO_FIXED( mmaster.axis[i].maximum);
       mmvar->axis[i].def     = ( mmvar->axis[i].minimum +
                                    mmvar->axis[i].maximum ) / 2;
                             /* Does not apply.  But this value is in range */
-      mmvar->axis[i].strid   = 0xFFFFFFFFUL;   /* Does not apply */
-      mmvar->axis[i].tag     = 0xFFFFFFFFUL;   /* Does not apply */
+      mmvar->axis[i].strid   = (FT_UInt)-1;    /* Does not apply */
+      mmvar->axis[i].tag     = (FT_ULong)-1;   /* Does not apply */
 
       if ( ft_strcmp( mmvar->axis[i].name, "Weight" ) == 0 )
         mmvar->axis[i].tag = FT_MAKE_TAG( 'w', 'g', 'h', 't' );
@@ -348,16 +344,15 @@
         mmvar->axis[i].tag = FT_MAKE_TAG( 'o', 'p', 's', 'z' );
     }
 
-    if ( blend->num_designs == 1U << blend->num_axis )
+    if ( blend->num_designs == ( 1U << blend->num_axis ) )
     {
       mm_weights_unmap( blend->default_weight_vector,
                         axiscoords,
                         blend->num_axis );
 
       for ( i = 0; i < mmaster.num_axis; ++i )
-        mmvar->axis[i].def =
-          FT_INT_TO_FIXED( mm_axis_unmap( &blend->design_map[i],
-                                          axiscoords[i] ) );
+        mmvar->axis[i].def = mm_axis_unmap( &blend->design_map[i],
+                                            axiscoords[i] );
     }
 
     *master = mmvar;
@@ -504,7 +499,7 @@
      if ( num_coords <= 4 && num_coords > 0 )
      {
        for ( i = 0; i < num_coords; ++i )
-         lcoords[i] = FT_FIXED_TO_INT( coords[i] );
+         lcoords[i] = FIXED_TO_INT( coords[i] );
        error = T1_Set_MM_Design( face, num_coords, lcoords );
      }
 
@@ -656,8 +651,8 @@
     }
     if ( num_designs == 0 || num_designs > T1_MAX_MM_DESIGNS )
     {
-      FT_ERROR(( "parse_blend_design_positions:" ));
-      FT_ERROR(( " incorrect number of designs: %d\n",
+      FT_ERROR(( "parse_blend_design_positions:"
+                 " incorrect number of designs: %d\n",
                  num_designs ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
@@ -674,7 +669,7 @@
 
       for ( n = 0; n < num_designs; n++ )
       {
-        T1_TokenRec  axis_tokens[T1_MAX_MM_DESIGNS];
+        T1_TokenRec  axis_tokens[T1_MAX_MM_AXIS];
         T1_Token     token;
         FT_Int       axis, n_axis;
 
@@ -687,6 +682,15 @@
 
         if ( n == 0 )
         {
+          if ( n_axis <= 0 || n_axis > T1_MAX_MM_AXIS )
+          {
+            FT_ERROR(( "parse_blend_design_positions:"
+                       " invalid number of axes: %d\n",
+                       n_axis ));
+            error = T1_Err_Invalid_File_Format;
+            goto Exit;
+          }
+
           num_axis = n_axis;
           error = t1_allocate_blend( face, num_designs, num_axis );
           if ( error )
@@ -835,8 +839,8 @@
     }
     if ( num_designs == 0 || num_designs > T1_MAX_MM_DESIGNS )
     {
-      FT_ERROR(( "parse_weight_vector:" ));
-      FT_ERROR(( " incorrect number of designs: %d\n",
+      FT_ERROR(( "parse_weight_vector:"
+                 " incorrect number of designs: %d\n",
                  num_designs ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
@@ -852,9 +856,9 @@
     else if ( blend->num_designs != (FT_UInt)num_designs )
     {
       FT_ERROR(( "parse_weight_vector:"
-                 " /BlendDesignPosition and /WeightVector have\n" ));
-      FT_ERROR(( "                    "
-                 " different number of elements!\n" ));
+                 " /BlendDesignPosition and /WeightVector have\n"
+                 "                    "
+                 " different number of elements\n" ));
       error = T1_Err_Invalid_File_Format;
       goto Exit;
     }
@@ -939,6 +943,12 @@
         objects     = (void**)blend->font_infos;
         max_objects = blend->num_designs;
       }
+      break;
+
+    case T1_FIELD_LOCATION_FONT_EXTRA:
+      dummy_object = &face->type1.font_extra;
+      objects      = &dummy_object;
+      max_objects  = 0;
       break;
 
     case T1_FIELD_LOCATION_PRIVATE:
@@ -1130,7 +1140,7 @@
     cur = parser->root.cursor;
     if ( cur >= limit )
     {
-      FT_ERROR(( "parse_encoding: out of bounds!\n" ));
+      FT_ERROR(( "parse_encoding: out of bounds\n" ));
       parser->root.error = T1_Err_Invalid_File_Format;
       return;
     }
@@ -1265,6 +1275,19 @@
 
             n++;
           }
+          else if ( only_immediates )
+          {
+            /* Since the current position is not updated for           */
+            /* immediates-only mode we would get an infinite loop if   */
+            /* we don't do anything here.                              */
+            /*                                                         */
+            /* This encoding array is not valid according to the type1 */
+            /* specification (it might be an encoding for a CID type1  */
+            /* font, however), so we conclude that this font is NOT a  */
+            /* type1 font.                                             */
+            parser->root.error = FT_Err_Unknown_File_Format;
+            return;
+          }
         }
         else
         {
@@ -1310,9 +1333,9 @@
     PS_Table   table  = &loader->subrs;
     FT_Memory  memory = parser->root.memory;
     FT_Error   error;
-    FT_Int     n, num_subrs;
+    FT_Int     num_subrs;
 
-    PSAux_Service  psaux  = (PSAux_Service)face->psaux;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
     T1_Skip_Spaces( parser );
@@ -1346,18 +1369,17 @@
         goto Fail;
     }
 
-    /* the format is simple:                                 */
-    /*                                                       */
-    /*   `index' + binary data                               */
-    /*                                                       */
-    for ( n = 0; n < num_subrs; n++ )
+    /* the format is simple:   */
+    /*                         */
+    /*   `index' + binary data */
+    /*                         */
+    for (;;)
     {
       FT_Long   idx, size;
       FT_Byte*  base;
 
 
-      /* If the next token isn't `dup', we are also done.  This */
-      /* happens when there are `holes' in the Subrs array.     */
+      /* If the next token isn't `dup' we are done. */
       if ( ft_strncmp( (char*)parser->root.cursor, "dup", 3 ) != 0 )
         break;
 
@@ -1397,7 +1419,10 @@
         FT_Byte*  temp;
 
 
-        if ( size <= face->type1.private_dict.lenIV )
+        /* some fonts define empty subr records -- this is not totally */
+        /* compliant to the specification (which says they should at   */
+        /* least contain a `return'), but we support them anyway       */
+        if ( size < face->type1.private_dict.lenIV )
         {
           error = T1_Err_Invalid_File_Format;
           goto Fail;
@@ -1603,15 +1628,11 @@
       }
     }
 
-    if ( loader->num_glyphs )
-      return;
-    else
-      loader->num_glyphs = n;
+    loader->num_glyphs = n;
 
     /* if /.notdef is found but does not occupy index 0, do our magic. */
-    if ( ft_strcmp( (const char*)".notdef",
-                    (const char*)name_table->elements[0] ) &&
-         notdef_found                                      )
+    if ( notdef_found                                                 &&
+         ft_strcmp( ".notdef", (const char*)name_table->elements[0] ) )
     {
       /* Swap glyph in index 0 with /.notdef glyph.  First, add index 0  */
       /* name and code entries to swap_table.  Then place notdef_index   */
@@ -1680,7 +1701,7 @@
       /* and add our own /.notdef glyph to index 0.               */
 
       /* 0 333 hsbw endchar */
-      FT_Byte  notdef_glyph[] = {0x8B, 0xF7, 0xE1, 0x0D, 0x0E};
+      FT_Byte  notdef_glyph[] = { 0x8B, 0xF7, 0xE1, 0x0D, 0x0E };
       char*    notdef_name    = (char *)".notdef";
 
 
@@ -1718,7 +1739,7 @@
         goto Fail;
 
       /* we added a glyph. */
-      loader->num_glyphs = n + 1;
+      loader->num_glyphs += 1;
     }
 
     return;
@@ -2132,7 +2153,7 @@
 #endif
       if ( !loader.charstrings.init )
       {
-        FT_ERROR(( "T1_Open_Face: no `/CharStrings' array in face!\n" ));
+        FT_ERROR(( "T1_Open_Face: no `/CharStrings' array in face\n" ));
         error = T1_Err_Invalid_File_Format;
       }
 
@@ -2161,8 +2182,8 @@
       /* the index is then stored in type1.encoding.char_index, and */
       /* a the name to type1.encoding.char_name                     */
 
-      min_char = +32000;
-      max_char = -32000;
+      min_char = 0;
+      max_char = 0;
 
       charcode = 0;
       for ( ; charcode < loader.encoding_table.max_elems; charcode++ )
@@ -2188,23 +2209,12 @@
               {
                 if ( charcode < min_char )
                   min_char = charcode;
-                if ( charcode > max_char )
-                  max_char = charcode;
+                if ( charcode >= max_char )
+                  max_char = charcode + 1;
               }
               break;
             }
           }
-      }
-
-      /*
-       *  Yes, this happens: Certain PDF-embedded fonts have only a
-       *  `.notdef' glyph defined!
-       */
-
-      if ( min_char > max_char )
-      {
-        min_char = 0;
-        max_char = loader.encoding_table.max_elems;
       }
 
       type1->encoding.code_first = min_char;

@@ -354,7 +354,7 @@ InstantiatePins(
     }
 #endif
 
-    DeviceEntry->Pins[Connect->PinId].References = 0;
+    //DeviceEntry->Pins[Connect->PinId].References = 0;
 
     /* initialize dispatch context */
     DispatchContext->Handle = RealPinHandle;
@@ -386,6 +386,44 @@ InstantiatePins(
 }
 
 NTSTATUS
+GetConnectRequest(
+    IN PIRP Irp,
+    OUT PKSPIN_CONNECT * Result)
+{
+    PIO_STACK_LOCATION IoStack;
+    ULONG ObjectLength, ParametersLength;
+    PVOID Buffer;
+
+    /* get current irp stack */
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
+    /* get object class length */
+    ObjectLength = (wcslen(KSSTRING_Pin) + 2) * sizeof(WCHAR);
+
+    /* check for minium length requirement */
+    if (ObjectLength  + sizeof(KSPIN_CONNECT) > IoStack->FileObject->FileName.MaximumLength)
+        return STATUS_UNSUCCESSFUL;
+
+    /* extract parameters length */
+    ParametersLength = IoStack->FileObject->FileName.MaximumLength - ObjectLength;
+
+    /* allocate buffer */
+    Buffer = ExAllocatePool(NonPagedPool, ParametersLength);
+    if (!Buffer)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* copy parameters */
+    RtlMoveMemory(Buffer, &IoStack->FileObject->FileName.Buffer[ObjectLength / sizeof(WCHAR)], ParametersLength);
+
+    /* store result */
+    *Result = (PKSPIN_CONNECT)Buffer;
+
+    return STATUS_SUCCESS;
+}
+
+
+
+NTSTATUS
 NTAPI
 DispatchCreateSysAudioPin(
     IN PDEVICE_OBJECT DeviceObject,
@@ -394,7 +432,7 @@ DispatchCreateSysAudioPin(
     NTSTATUS Status = STATUS_SUCCESS;
     PIO_STACK_LOCATION IoStack;
     PKSAUDIO_DEVICE_ENTRY DeviceEntry;
-    PKSPIN_CONNECT Connect = NULL;
+    PKSPIN_CONNECT Connect;
     PDISPATCH_CONTEXT DispatchContext;
 
     DPRINT("DispatchCreateSysAudioPin entered\n");
@@ -410,9 +448,6 @@ DispatchCreateSysAudioPin(
     /* get current attached virtual device */
     DeviceEntry = (PKSAUDIO_DEVICE_ENTRY)IoStack->FileObject->RelatedFileObject->FsContext;
 
-    /* now validate pin connect request */
-    Status = KsValidateConnectRequest(Irp, DeviceEntry->PinDescriptorsCount, DeviceEntry->PinDescriptors, &Connect);
-
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
@@ -421,6 +456,19 @@ DispatchCreateSysAudioPin(
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
+
+    /* get connect details */
+    Status = GetConnectRequest(Irp, &Connect);
+
+    /* check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* failed to obtain connect details */
+        Irp->IoStatus.Status = Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
 
     /* allocate dispatch context */
     DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));

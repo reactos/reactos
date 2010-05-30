@@ -204,8 +204,11 @@ FTMarshalImpl_MarshalInterface (LPMARSHAL iface, IStream * pStm, REFIID riid, vo
         hres = IStream_Write (pStm, &object, sizeof (object), NULL);
         if (hres != S_OK) return STG_E_MEDIUMFULL;
 
-        hres = IStream_Write (pStm, &constant, sizeof (constant), NULL);
-        if (hres != S_OK) return STG_E_MEDIUMFULL;
+        if (sizeof(object) == sizeof(DWORD))
+        {
+            hres = IStream_Write (pStm, &constant, sizeof (constant), NULL);
+            if (hres != S_OK) return STG_E_MEDIUMFULL;
+        }
 
         hres = IStream_Write (pStm, &unknown_guid, sizeof (unknown_guid), NULL);
         if (hres != S_OK) return STG_E_MEDIUMFULL;
@@ -237,10 +240,13 @@ FTMarshalImpl_UnmarshalInterface (LPMARSHAL iface, IStream * pStm, REFIID riid, 
     hres = IStream_Read (pStm, &object, sizeof (object), NULL);
     if (hres != S_OK) return STG_E_READFAULT;
 
-    hres = IStream_Read (pStm, &constant, sizeof (constant), NULL);
-    if (hres != S_OK) return STG_E_READFAULT;
-    if (constant != 0)
-        FIXME("constant is 0x%x instead of 0\n", constant);
+    if (sizeof(object) == sizeof(DWORD))
+    {
+        hres = IStream_Read (pStm, &constant, sizeof (constant), NULL);
+        if (hres != S_OK) return STG_E_READFAULT;
+        if (constant != 0)
+            FIXME("constant is 0x%x instead of 0\n", constant);
+    }
 
     hres = IStream_Read (pStm, &unknown_guid, sizeof (unknown_guid), NULL);
     if (hres != S_OK) return STG_E_READFAULT;
@@ -267,10 +273,13 @@ static HRESULT WINAPI FTMarshalImpl_ReleaseMarshalData (LPMARSHAL iface, IStream
     hres = IStream_Read (pStm, &object, sizeof (object), NULL);
     if (hres != S_OK) return STG_E_READFAULT;
 
-    hres = IStream_Read (pStm, &constant, sizeof (constant), NULL);
-    if (hres != S_OK) return STG_E_READFAULT;
-    if (constant != 0)
-        FIXME("constant is 0x%x instead of 0\n", constant);
+    if (sizeof(object) == sizeof(DWORD))
+    {
+        hres = IStream_Read (pStm, &constant, sizeof (constant), NULL);
+        if (hres != S_OK) return STG_E_READFAULT;
+        if (constant != 0)
+            FIXME("constant is 0x%x instead of 0\n", constant);
+    }
 
     hres = IStream_Read (pStm, &unknown_guid, sizeof (unknown_guid), NULL);
     if (hres != S_OK) return STG_E_READFAULT;

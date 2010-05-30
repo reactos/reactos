@@ -26,10 +26,40 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
-    UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
+static NTSTATUS RefillSocketBuffer( PAFD_FCB FCB ) {
+	NTSTATUS Status = STATUS_PENDING;
 
-    return !BytesAvailable;
+	if( !FCB->ReceiveIrp.InFlightRequest ) {
+		AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
+
+		Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
+							 FCB->Connection.Object,
+							 TDI_RECEIVE_NORMAL,
+							 FCB->Recv.Window,
+							 FCB->Recv.Size,
+							 &FCB->ReceiveIrp.Iosb,
+							 ReceiveComplete,
+							 FCB );
+
+        if( ( Status == STATUS_SUCCESS && !FCB->ReceiveIrp.Iosb.Information ) ||
+            ( !NT_SUCCESS( Status ) ) )
+        {
+            /* The socket has been closed */
+            FCB->PollState |= AFD_EVENT_DISCONNECT;
+            FCB->PollStatus[FD_CLOSE_BIT] = Status;
+            FCB->Overread = TRUE;
+            Status = STATUS_FILE_CLOSED;
+        }
+        else if( Status == STATUS_SUCCESS )
+        {
+            FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
+            FCB->PollState |= AFD_EVENT_RECEIVE;
+            FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+        }
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+	}
+
+	return Status;
 }
 
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
@@ -46,7 +76,22 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     AFD_DbgPrint(MID_TRACE,("Called, BytesAvailable = %d\n",
 							BytesAvailable));
 
-    if( CantReadMore(FCB) ) return STATUS_PENDING;
+	if( FCB->Overread ) return STATUS_FILE_CLOSED;
+    if( !BytesAvailable ) {
+        FCB->Recv.Content = FCB->Recv.BytesUsed = 0;
+		Status = RefillSocketBuffer( FCB );
+		if ( Status != STATUS_SUCCESS )
+			return Status;
+
+        /* If RefillSocketBuffer returns STATUS_SUCCESS, we're good to go
+         * If RefillSocketBuffer returns STATUS_PENDING, then it's waiting on the transport for data
+         * If RefillSocketBuffer returns STATUS_FILE_CLOSED, then the connection was terminated
+         */
+
+        /* Recalculate BytesAvailable based on new data */
+        BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
+        ASSERT(BytesAvailable);
+    }
 
     Map = (PAFD_MAPBUF)(RecvReq->BufferArray + RecvReq->BufferCount);
 
@@ -88,23 +133,8 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     if( FCB->Recv.BytesUsed == FCB->Recv.Content ) {
 		FCB->Recv.BytesUsed = FCB->Recv.Content = 0;
         FCB->PollState &= ~AFD_EVENT_RECEIVE;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
 
-		if( !FCB->ReceiveIrp.InFlightRequest ) {
-			AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
-
-			Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
-								 FCB->Connection.Object,
-								 TDI_RECEIVE_NORMAL,
-								 FCB->Recv.Window,
-								 FCB->Recv.Size,
-								 &FCB->ReceiveIrp.Iosb,
-								 ReceiveComplete,
-								 FCB );
-
-            if( Status == STATUS_SUCCESS )
-                FCB->Recv.Content = FCB->ReceiveIrp.Iosb.Information;
-		}
+        RefillSocketBuffer( FCB );
     }
 
     return STATUS_SUCCESS;
@@ -159,12 +189,12 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 	   }
     }
 
-    if( !CantReadMore(FCB) ) {
+    if( FCB->Recv.Content ) {
 		FCB->PollState |= AFD_EVENT_RECEIVE;
+        FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
-		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     AFD_DbgPrint(MID_TRACE,("RetStatus for irp %x is %x\n", Irp, RetStatus));
 
@@ -510,10 +540,10 @@ PacketSocketRecvComplete(
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 		AFD_DbgPrint(MID_TRACE,("Signalling\n"));
 		FCB->PollState |= AFD_EVENT_RECEIVE;
+        FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
     } else
-		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+        FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 		/* Now relaunch the datagram request */
@@ -580,12 +610,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			Status = Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
 			Irp->IoStatus.Information = DatagramRecv->Len;
 
-			if( IsListEmpty( &FCB->DatagramList ) )
-				FCB->PollState &= ~AFD_EVENT_RECEIVE;
-			else
+			if( !IsListEmpty( &FCB->DatagramList ) ) {
 				FCB->PollState |= AFD_EVENT_RECEIVE;
-
-			PollReeval( FCB->DeviceExt, FCB->FileObject );
+                FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+			    PollReeval( FCB->DeviceExt, FCB->FileObject );
+            } else
+                FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
@@ -596,12 +626,12 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 				( FCB, Irp, DatagramRecv,
 				  (PUINT)&Irp->IoStatus.Information );
 
-			if( IsListEmpty( &FCB->DatagramList ) )
-				FCB->PollState &= ~AFD_EVENT_RECEIVE;
-			else
+			if( !IsListEmpty( &FCB->DatagramList ) ) {
 				FCB->PollState |= AFD_EVENT_RECEIVE;
-
-			PollReeval( FCB->DeviceExt, FCB->FileObject );
+                FCB->PollStatus[FD_READ_BIT] = STATUS_SUCCESS;
+			    PollReeval( FCB->DeviceExt, FCB->FileObject );
+            } else
+                FCB->PollState &= ~AFD_EVENT_RECEIVE;
 
 			UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 
@@ -612,12 +642,10 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		AFD_DbgPrint(MID_TRACE,("Nonblocking\n"));
 		Status = STATUS_CANT_WAIT;
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		UnlockBuffers( RecvReq->BufferArray, RecvReq->BufferCount, TRUE );
 		return UnlockAndMaybeComplete( FCB, Status, Irp, 0 );
     } else {
 		FCB->PollState &= ~AFD_EVENT_RECEIVE;
-		PollReeval( FCB->DeviceExt, FCB->FileObject );
 		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_RECV );
     }
 }

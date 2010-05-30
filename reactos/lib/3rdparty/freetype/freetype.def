@@ -40,13 +40,19 @@ EXPORTS
   FT_Face_CheckTrueTypePatents
   FT_Face_SetUnpatentedHinting
   FT_FloorFix
+  FT_Get_Advance
+  FT_Get_Advances
   FT_Get_BDF_Charset_ID
   FT_Get_BDF_Property
   FT_Get_CMap_Format
   FT_Get_CMap_Language_ID
   FT_Get_Char_Index
   FT_Get_Charmap_Index
+  FT_Get_CID_From_Glyph_Index
+  FT_Get_CID_Is_Internally_CID_keyed
+  FT_Get_CID_Registry_Ordering_Supplement
   FT_Get_First_Char
+  FT_Get_FSType_Flags
   FT_Get_Glyph
   FT_Get_Glyph_Name
   FT_Get_Kerning

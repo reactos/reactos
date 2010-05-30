@@ -1504,7 +1504,7 @@ static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg,
  *                              PRINTDLG_WMCommand               [internal]
  */
 static LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
-                                   LPARAM lParam, PRINT_PTRA* PrintStructures)
+                                   PRINT_PTRA* PrintStructures)
 {
     LPPRINTDLGA lppd = PrintStructures->lpPrintDlg;
     UINT PrinterComboID = (lppd->Flags & PD_PRINTSETUP) ? cmb1 : cmb4;
@@ -1658,7 +1658,7 @@ static LRESULT PRINTDLG_WMCommandA(HWND hDlg, WPARAM wParam,
 }
 
 static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
-			LPARAM lParam, PRINT_PTRW* PrintStructures)
+			           PRINT_PTRW* PrintStructures)
 {
     LPPRINTDLGW lppd = PrintStructures->lpPrintDlg;
     UINT PrinterComboID = (lppd->Flags & PD_PRINTSETUP) ? cmb1 : cmb4;
@@ -1846,7 +1846,7 @@ static INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
 
     switch (uMsg) {
     case WM_COMMAND:
-        return PRINTDLG_WMCommandA(hDlg, wParam, lParam, PrintStructures);
+        return PRINTDLG_WMCommandA(hDlg, wParam, PrintStructures);
 
     case WM_DESTROY:
 	DestroyIcon(PrintStructures->hCollateIcon);
@@ -1892,7 +1892,7 @@ static INT_PTR CALLBACK PrintDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
 
     switch (uMsg) {
     case WM_COMMAND:
-        return PRINTDLG_WMCommandW(hDlg, wParam, lParam, PrintStructures);
+        return PRINTDLG_WMCommandW(hDlg, wParam, PrintStructures);
 
     case WM_DESTROY:
 	DestroyIcon(PrintStructures->hCollateIcon);

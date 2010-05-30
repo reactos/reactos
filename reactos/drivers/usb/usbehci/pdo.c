@@ -8,7 +8,6 @@
  */
 
 #define INITGUID
-#define NDEBUG
 
 #include "usbehci.h"
 #include <hubbusif.h>
@@ -86,40 +85,24 @@ VOID NTAPI
 UrbWorkerThread(PVOID Context)
 {
     PPDO_DEVICE_EXTENSION PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)Context;
+    NTSTATUS Status;
+    LARGE_INTEGER DueTime;
+    PVOID PollEvents[] = { (PVOID) &PdoDeviceExtension->QueueDrainedEvent, (PVOID) &PdoDeviceExtension->Timer };
 
-    while (PdoDeviceExtension->HaltUrbHandling == FALSE)
+    DueTime.QuadPart = 0;
+    KeInitializeTimerEx(&PdoDeviceExtension->Timer, SynchronizationTimer);
+    KeSetTimerEx(&PdoDeviceExtension->Timer, DueTime, 100, NULL);
+
+    while (TRUE)
     {
+        Status = KeWaitForMultipleObjects(2, PollEvents, WaitAll, Executive, KernelMode, FALSE, NULL, NULL);
+
+        if (!PdoDeviceExtension->HaltQueue)
+            KeResetEvent(&PdoDeviceExtension->QueueDrainedEvent);
         CompletePendingURBRequest(PdoDeviceExtension);
-        KeStallExecutionProcessor(10);
     }
+
     DPRINT1("Thread terminated\n");
-}
-
-PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent, BOOLEAN Hub)
-{
-    PUSB_DEVICE UsbDevicePointer = NULL;
-    UsbDevicePointer = ExAllocatePoolWithTag(NonPagedPool, sizeof(USB_DEVICE), USB_POOL_TAG);
-
-    if (!UsbDevicePointer)
-    {
-        DPRINT1("Out of memory\n");
-        return NULL;
-    }
-
-    RtlZeroMemory(UsbDevicePointer, sizeof(USB_DEVICE));
-
-    if ((Hub) && (!Parent))
-    {
-        DPRINT1("This is the root hub\n");
-    }
-
-    UsbDevicePointer->Address = DeviceNumber;
-    UsbDevicePointer->Port = Port;
-    UsbDevicePointer->ParentDevice = Parent;
-
-    UsbDevicePointer->IsHub = Hub;
-
-    return UsbDevicePointer;
 }
 
 NTSTATUS NTAPI
@@ -147,7 +130,6 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
             Urb = (PURB) Stack->Parameters.Others.Argument1;
             DPRINT("Header Length %d\n", Urb->UrbHeader.Length);
             DPRINT("Header Function %d\n", Urb->UrbHeader.Function);
-
             /* Queue all request for now, kernel thread will complete them */
             QueueURBRequest(PdoDeviceExtension, Irp);
             Information = 0;
@@ -163,6 +145,8 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         case IOCTL_INTERNAL_USB_ENABLE_PORT:
         {
             DPRINT1("IOCTL_INTERNAL_USB_ENABLE_PORT\n");
+            Information = 0;
+            Status = STATUS_SUCCESS;
             break;
         }
         case IOCTL_INTERNAL_USB_GET_BUS_INFO:
@@ -244,7 +228,18 @@ PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
         }
         case IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION:
         {
+            PUSB_IDLE_CALLBACK_INFO CallBackInfo;
             DPRINT1("IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION\n");
+            /* FIXME: Set Callback for safe power down */
+            CallBackInfo = Stack->Parameters.DeviceIoControl.Type3InputBuffer;
+            DPRINT1("IdleCallback %x\n", CallBackInfo->IdleCallback);
+            DPRINT1("IdleContext %x\n", CallBackInfo->IdleContext);
+
+            PdoDeviceExtension->IdleCallback = CallBackInfo->IdleCallback;
+            PdoDeviceExtension->IdleContext = CallBackInfo->IdleContext;
+
+            Information = 0;
+            Status = STATUS_SUCCESS;
             break;
         }
         default:
@@ -392,6 +387,8 @@ PdoDispatchPnp(
             RootHubDevice->DeviceDescriptor.idVendor = FdoDeviceExtension->VendorId;
             RootHubDevice->DeviceDescriptor.idProduct = FdoDeviceExtension->DeviceId;
 
+            /* FIXME: Do something better below */
+
             RootHubDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
                                                             sizeof(PVOID) * RootHubDevice->DeviceDescriptor.bNumConfigurations,
                                                             USB_POOL_TAG);
@@ -408,13 +405,8 @@ PdoDispatchPnp(
                                                             sizeof(USB_ENDPOINT),
                                                             USB_POOL_TAG);
 
-            DPRINT1("before: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
             RootHubDevice->ActiveConfig = RootHubDevice->Configs[0];
-            DPRINT1("after: ActiveConfig %x\n", RootHubDevice->ActiveConfig);
-
-            DPRINT1("before: ActiveConfig->Interfaces[0] %x\n", RootHubDevice->ActiveConfig->Interfaces[0]);
             RootHubDevice->ActiveInterface = RootHubDevice->ActiveConfig->Interfaces[0];
-
 
             RtlCopyMemory(&RootHubDevice->ActiveConfig->ConfigurationDescriptor,
                           ROOTHUB2_CONFIGURATION_DESCRIPTOR,
@@ -433,6 +425,7 @@ PdoDispatchPnp(
             PdoDeviceExtension->UsbDevices[0] = RootHubDevice;
 
             /* Create a thread to handle the URB's */
+
             Status = PsCreateSystemThread(&PdoDeviceExtension->ThreadHandle,
                                           THREAD_ALL_ACCESS,
                                           NULL,
@@ -454,7 +447,8 @@ PdoDispatchPnp(
             {
                 Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
                 DPRINT1("Set interface state %x\n", Status);
-                if (!NT_SUCCESS(Status)) ASSERT(FALSE);
+                if (!NT_SUCCESS(Status)) 
+                    ASSERT(FALSE);
             }
 
             Status = STATUS_SUCCESS;
@@ -472,7 +466,19 @@ PdoDispatchPnp(
                     break;
                 }
                 case BusRelations:
+                {
+                    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+                    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
                     DPRINT1("BusRelations!!!!!\n");
+
+                    /* The hub driver has created the new device object and reported to pnp, as a result the pnp manager
+                       has resent this IRP and type, so leave the next SCE request pending until a new device arrives.
+                       Is there a better way to do this */
+                    ExAcquireFastMutex(&PdoDeviceExtension->ListLock);
+                    PdoDeviceExtension->HaltQueue = TRUE;
+                    ExReleaseFastMutex(&PdoDeviceExtension->ListLock);
+                }
                 case RemovalRelations:
                 case EjectionRelations:
                 {
@@ -553,9 +559,9 @@ PdoDispatchPnp(
                 DPRINT1("Failed to create string from GUID!\n");
             }
 
-            DPRINT1("Interface GUID requested %wZ\n", &GuidString);
-            DPRINT1("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
-            DPRINT1("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
+            DPRINT("Interface GUID requested %wZ\n", &GuidString);
+            DPRINT("QueryInterface.Size %x\n", Stack->Parameters.QueryInterface.Size);
+            DPRINT("QueryInterface.Version %x\n", Stack->Parameters.QueryInterface.Version);
 
             /* Assume success */
             Status = STATUS_SUCCESS;
@@ -606,7 +612,7 @@ PdoDispatchPnp(
                 }
                 if (Stack->Parameters.QueryInterface.Version >= 6)
                 {
-                    DPRINT1("Unknown version!\n");
+                    DPRINT1("USB_BUS_INTERFACE_HUB_GUID version not supported!\n");
                 }
                 break;
             }
@@ -638,12 +644,12 @@ PdoDispatchPnp(
 
                 if (Stack->Parameters.QueryInterface.Version >= 3)
                 {
-                    DPRINT1("Not Supported!\n");
+                    DPRINT1("SB_BUS_INTERFACE_USBDI_GUID version not supported!\n");
                 }
                 break;
             }
 
-            DPRINT1("Not Supported\n");
+            DPRINT1("GUID Not Supported\n");
             Status = Irp->IoStatus.Status;
             Information = Irp->IoStatus.Information;
 

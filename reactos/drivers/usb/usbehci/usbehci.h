@@ -407,11 +407,16 @@ typedef struct _PDO_DEVICE_EXTENSION
     PIRP CurrentIrp;
     HANDLE ThreadHandle;
     ULONG ChildDeviceCount;
-    BOOLEAN HaltUrbHandling;
+    BOOLEAN HaltQueue;
     PVOID CallbackContext;
     RH_INIT_CALLBACK *CallbackRoutine;
+    USB_IDLE_CALLBACK IdleCallback;
+    PVOID IdleContext;
     ULONG NumberOfPorts;
     EHCIPORTS Ports[32];
+    KTIMER Timer;
+    KEVENT QueueDrainedEvent;
+    FAST_MUTEX ListLock;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 typedef struct _WORKITEM_DATA
@@ -459,10 +464,7 @@ NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 BOOLEAN
-GetDeviceDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index, PUSB_DEVICE_DESCRIPTOR OutBuffer, BOOLEAN Hub);
-
-BOOLEAN
-GetDeviceStringDescriptor(PFDO_DEVICE_EXTENSION DeviceExtension, UCHAR Index);
+ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, UCHAR Address, ULONG Port, PVOID Buffer, ULONG BufferLength);
 
 VOID
 QueueURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension, PIRP Irp);

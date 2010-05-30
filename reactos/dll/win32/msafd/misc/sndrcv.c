@@ -540,7 +540,8 @@ WSPSendTo(SOCKET Handle,
                                                    BindAddress,
                                                    &BindAddressLength);
         /* Bind it */
-        WSPBind(Handle, BindAddress, BindAddressLength, NULL);
+        if (WSPBind(Handle, BindAddress, BindAddressLength, lpErrno) == SOCKET_ERROR)
+            return SOCKET_ERROR;
     }
 
     RemoteAddress = HeapAlloc(GlobalHeap, 0, 0x6 + SocketAddressLength);

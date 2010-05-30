@@ -1,4 +1,4 @@
-#include "w32k.h"
+#include "win32k.h"
 
 NTSTATUS _MmCopyFromCaller( PVOID Target, PVOID Source, UINT Bytes ) {
     NTSTATUS Status = STATUS_SUCCESS;

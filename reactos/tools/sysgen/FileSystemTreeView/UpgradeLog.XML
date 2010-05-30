@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type='text/xsl' href='_UpgradeReport_Files/UpgradeReport.xslt'?><UpgradeLog>
+<Properties><Property Name="Solution" Value="FileSystemTreeView">
+</Property><Property Name="Solution File" Value="C:\SoftwarePorter\FileSystemTreeView\FileSystemTreeView.sln">
+</Property><Property Name="Date" Value="Monday, August 06, 2007">
+</Property><Property Name="Time" Value="0:41:57 AM">
+</Property></Properties><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.csproj" Description="Project file successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\FileSystemTreeView.csproj">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.csproj.user" Description="Project user file successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\FileSystemTreeView.csproj.user">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="AssemblyInfo.cs" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\AssemblyInfo.cs">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.cs" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\FileSystemTreeView.cs">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="Form1.cs" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\Form1.cs">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="ShellIcon.cs" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\ShellIcon.cs">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="App.ico" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\App.ico">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.resx" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\FileSystemTreeView.resx">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="Form1.resx" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\Form1.resx">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="icons\folder.ico" Description="File successfully backed up as C:\SoftwarePorter\FileSystemTreeView\Backup\icons\folder.ico">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.csproj" Description="Project converted successfully">
+</Event><Event ErrorLevel="3" Project="FileSystemTreeView" Source="FileSystemTreeView.csproj" Description="Converted">
+</Event><Event ErrorLevel="0" Project="FileSystemTreeView" Source="FileSystemTreeView.csproj" Description="Scan complete: Upgrade not required for project files.">
+</Event></UpgradeLog>

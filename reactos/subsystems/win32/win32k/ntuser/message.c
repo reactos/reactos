@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <w32k.h>
+#include <win32k.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -165,41 +165,47 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
 }
 
 static NTSTATUS
-PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
+PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL NonPagedPoolNeeded)
 {
    NCCALCSIZE_PARAMS *UnpackedNcCalcsize;
    NCCALCSIZE_PARAMS *PackedNcCalcsize;
    CREATESTRUCTW *UnpackedCs;
    CREATESTRUCTW *PackedCs;
-   PUNICODE_STRING WindowName;
+   PLARGE_STRING WindowName;
    PUNICODE_STRING ClassName;
+   POOL_TYPE PoolType;
    UINT Size;
    PCHAR CsData;
 
    *lParamPacked = lParam;
+
+    if (NonPagedPoolNeeded)
+       PoolType = NonPagedPool;
+    else
+       PoolType = PagedPool;
+
    if (WM_NCCALCSIZE == Msg && wParam)
    {
+
       UnpackedNcCalcsize = (NCCALCSIZE_PARAMS *) lParam;
-      if (UnpackedNcCalcsize->lppos != (PWINDOWPOS) (UnpackedNcCalcsize + 1))
+      PackedNcCalcsize = ExAllocatePoolWithTag(PoolType,
+                         sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
+                         TAG_MSG);
+
+      if (NULL == PackedNcCalcsize)
       {
-         PackedNcCalcsize = ExAllocatePoolWithTag(PagedPool,
-                            sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
-                            TAG_MSG);
-         if (NULL == PackedNcCalcsize)
-         {
-            DPRINT1("Not enough memory to pack lParam\n");
-            return STATUS_NO_MEMORY;
-         }
-         RtlCopyMemory(PackedNcCalcsize, UnpackedNcCalcsize, sizeof(NCCALCSIZE_PARAMS));
-         PackedNcCalcsize->lppos = (PWINDOWPOS) (PackedNcCalcsize + 1);
-         RtlCopyMemory(PackedNcCalcsize->lppos, UnpackedNcCalcsize->lppos, sizeof(WINDOWPOS));
-         *lParamPacked = (LPARAM) PackedNcCalcsize;
+         DPRINT1("Not enough memory to pack lParam\n");
+         return STATUS_NO_MEMORY;
       }
+      RtlCopyMemory(PackedNcCalcsize, UnpackedNcCalcsize, sizeof(NCCALCSIZE_PARAMS));
+      PackedNcCalcsize->lppos = (PWINDOWPOS) (PackedNcCalcsize + 1);
+      RtlCopyMemory(PackedNcCalcsize->lppos, UnpackedNcCalcsize->lppos, sizeof(WINDOWPOS));
+      *lParamPacked = (LPARAM) PackedNcCalcsize;
    }
    else if (WM_CREATE == Msg || WM_NCCREATE == Msg)
    {
       UnpackedCs = (CREATESTRUCTW *) lParam;
-      WindowName = (PUNICODE_STRING) UnpackedCs->lpszName;
+      WindowName = (PLARGE_STRING) UnpackedCs->lpszName;
       ClassName = (PUNICODE_STRING) UnpackedCs->lpszClass;
       Size = sizeof(CREATESTRUCTW) + WindowName->Length + sizeof(WCHAR);
       if (IS_ATOM(ClassName->Buffer))
@@ -210,7 +216,7 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
       {
          Size += sizeof(WCHAR) + ClassName->Length + sizeof(WCHAR);
       }
-      PackedCs = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
+      PackedCs = ExAllocatePoolWithTag(PoolType, Size, TAG_MSG);
       if (NULL == PackedCs)
       {
          DPRINT1("Not enough memory to pack lParam\n");
@@ -244,11 +250,28 @@ PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
       *lParamPacked = (LPARAM) PackedCs;
    }
 
+   else if (PoolType == NonPagedPool)
+   {
+      PMSGMEMORY MsgMemoryEntry;
+      PVOID PackedData;
+
+      MsgMemoryEntry = FindMsgMemory(Msg);
+
+      if ((!MsgMemoryEntry) || (MsgMemoryEntry->Size < 0))
+      {
+         /* Keep previous behavior */
+         return STATUS_SUCCESS;
+      }
+      PackedData = ExAllocatePoolWithTag(NonPagedPool, MsgMemorySize(MsgMemoryEntry, wParam, lParam), TAG_MSG);
+      RtlCopyMemory(PackedData, (PVOID)lParam, MsgMemorySize(MsgMemoryEntry, wParam, lParam));
+      *lParamPacked = (LPARAM)PackedData;
+   }
+
    return STATUS_SUCCESS;
 }
 
 static NTSTATUS
-UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
+UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam, BOOL NonPagedPoolUsed)
 {
    NCCALCSIZE_PARAMS *UnpackedParams;
    NCCALCSIZE_PARAMS *PackedParams;
@@ -275,6 +298,23 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
    {
       ExFreePool((PVOID) lParamPacked);
 
+      return STATUS_SUCCESS;
+   }
+   else if (NonPagedPoolUsed)
+   {
+      PMSGMEMORY MsgMemoryEntry;
+      MsgMemoryEntry = FindMsgMemory(Msg);
+      if (MsgMemoryEntry->Size < 0)
+      {
+         /* Keep previous behavior */
+         return STATUS_INVALID_PARAMETER;
+      }
+
+      if (MsgMemory->Flags == MMS_FLAG_READWRITE)
+      {
+         //RtlCopyMemory((PVOID)lParam, (PVOID)lParamPacked, MsgMemory->Size);
+      }
+      ExFreePool((PVOID) lParamPacked);
       return STATUS_SUCCESS;
    }
 
@@ -394,7 +434,7 @@ IntDispatchMessage(PMSG pMsg)
      lParamBufferSize = MsgMemorySize(MsgMemoryEntry, pMsg->wParam, pMsg->lParam);
   }
 
-  if (! NT_SUCCESS(PackParam(&lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam)))
+  if (! NT_SUCCESS(PackParam(&lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam, FALSE)))
   {
      DPRINT1("Failed to pack message parameters\n");
      return 0;
@@ -408,7 +448,7 @@ IntDispatchMessage(PMSG pMsg)
                                  lParamPacked,
                                  lParamBufferSize);
 
-  if (! NT_SUCCESS(UnpackParam(lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam)))
+  if (! NT_SUCCESS(UnpackParam(lParamPacked, pMsg->message, pMsg->wParam, pMsg->lParam, FALSE)))
   {
      DPRINT1("Failed to unpack message parameters\n");
   }
@@ -645,6 +685,74 @@ co_IntTranslateMouseMessage(
    return FALSE;
 }
 
+BOOL ProcessMouseMessage(MSG* Msg, USHORT HitTest, UINT RemoveMsg)
+{
+    MOUSEHOOKSTRUCT MHook;
+    EVENTMSG Event;
+
+    Event.message = Msg->message;
+    Event.time    = Msg->time;
+    Event.hwnd    = Msg->hwnd;
+    Event.paramL  = Msg->pt.x;
+    Event.paramH  = Msg->pt.y;
+    co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
+
+
+    MHook.pt           = Msg->pt;
+    MHook.hwnd         = Msg->hwnd;
+    MHook.wHitTestCode = HitTest;
+    MHook.dwExtraInfo  = 0;
+    if (co_HOOK_CallHooks( WH_MOUSE,
+                           RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                           Msg->message,
+                           (LPARAM)&MHook ))
+    {
+        if (ISITHOOKED(WH_CBT))
+        {
+            MHook.pt           = Msg->pt;
+            MHook.hwnd         = Msg->hwnd;
+            MHook.wHitTestCode = HitTest;
+            MHook.dwExtraInfo  = 0;
+            co_HOOK_CallHooks( WH_CBT,
+                               HCBT_CLICKSKIPPED,
+                               Msg->message,
+                               (LPARAM)&MHook);
+        }
+        return FALSE;
+    }
+
+	return TRUE;
+}
+
+BOOL ProcessKeyboardMessage(MSG* Msg, UINT RemoveMsg)
+{
+   EVENTMSG Event;
+
+   Event.message = Msg->message;
+   Event.hwnd    = Msg->hwnd;
+   Event.time    = Msg->time;
+   Event.paramL  = (Msg->wParam & 0xFF) | (HIWORD(Msg->lParam) << 8);
+   Event.paramH  = Msg->lParam & 0x7FFF;
+   if (HIWORD(Msg->lParam) & 0x0100) Event.paramH |= 0x8000;
+   co_HOOK_CallHooks( WH_JOURNALRECORD, HC_ACTION, 0, (LPARAM)&Event);
+
+    if (co_HOOK_CallHooks( WH_KEYBOARD,
+                           RemoveMsg ? HC_ACTION : HC_NOREMOVE,
+                           LOWORD(Msg->wParam),
+                           Msg->lParam))
+    {
+        if (ISITHOOKED(WH_CBT))
+        {
+            /* skip this message */
+            co_HOOK_CallHooks( WH_CBT,
+                               HCBT_KEYSKIPPED,
+                               LOWORD(Msg->wParam),
+                               Msg->lParam );
+        }
+        return FALSE;
+    }
+	return TRUE;
+}
 /*
  * Internal version of PeekMessage() doing all the work
  */
@@ -662,7 +770,6 @@ co_IntPeekMessage( PUSER_MESSAGE Msg,
    BOOL Present, RemoveMessages;
    USER_REFERENCE_ENTRY Ref;
    USHORT HitTest;
-   MOUSEHOOKSTRUCT MHook;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -773,23 +880,8 @@ CheckMessages:
       goto MsgExit;
    }
 
-   if (ThreadQueue->WakeMask & QS_TIMER)
-      if (PostTimerMessages(Window)) // If there are timers ready,
-         goto CheckMessages;       // go back and process them.
-
-   // LOL! Polling Timer Queue? How much time is spent doing this?
-   /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage( ThreadQueue,
-                                 Window,
-                                 MsgFilterMin,
-                                 MsgFilterMax,
-                                &Msg->Msg,
-                                 RemoveMessages);
-   if (Present)
-   {
-      Msg->FreeLParam = FALSE;
-      goto MessageFound;
-   }
+   if (PostTimerMessages(Window))
+      goto CheckMessages;
 
    if(Present)
    {
@@ -867,52 +959,20 @@ MessageFound:
       }
 
 MsgExit:
-      if ( ISITHOOKED(WH_MOUSE) &&
-           Msg->Msg.message >= WM_MOUSEFIRST &&
-           Msg->Msg.message <= WM_MOUSELAST )
+      if ( ISITHOOKED(WH_MOUSE) && IS_MOUSE_MESSAGE(Msg->Msg.message))
       {
-         MHook.pt           = Msg->Msg.pt;
-         MHook.hwnd         = Msg->Msg.hwnd;
-         MHook.wHitTestCode = HitTest;
-         MHook.dwExtraInfo  = 0;
-         if (co_HOOK_CallHooks( WH_MOUSE,
-                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
-                                Msg->Msg.message,
-                                (LPARAM)&MHook ))
-         {
-            if (ISITHOOKED(WH_CBT))
-            {
-                MHook.pt           = Msg->Msg.pt;
-                MHook.hwnd         = Msg->Msg.hwnd;
-                MHook.wHitTestCode = HitTest;
-                MHook.dwExtraInfo  = 0;
-                co_HOOK_CallHooks( WH_CBT,
-                                   HCBT_CLICKSKIPPED,
-                                   Msg->Msg.message,
-                                  (LPARAM)&MHook);
-            }
-            return FALSE;
-         }
-      }
+          if(!ProcessMouseMessage(&Msg->Msg, HitTest, RemoveMsg))
+		  {
+			  return FALSE;
+		  }
+	  }
 
-      if ( ISITHOOKED(WH_KEYBOARD) &&
-          (Msg->Msg.message == WM_KEYDOWN || Msg->Msg.message == WM_KEYUP) )
+      if ( ISITHOOKED(WH_KEYBOARD) && IS_KBD_MESSAGE(Msg->Msg.message))
       {
-         if (co_HOOK_CallHooks( WH_KEYBOARD,
-                                RemoveMsg ? HC_ACTION : HC_NOREMOVE,
-                                LOWORD(Msg->Msg.wParam),
-                                Msg->Msg.lParam))
-         {
-            if (ISITHOOKED(WH_CBT))
-            {
-               /* skip this message */
-               co_HOOK_CallHooks( WH_CBT,
-                                  HCBT_KEYSKIPPED,
-                                  LOWORD(Msg->Msg.wParam),
-                                  Msg->Msg.lParam );
-            }
-            return FALSE;
-         }
+          if(!ProcessKeyboardMessage(&Msg->Msg, RemoveMsg))
+          {
+              return FALSE;
+          }
       }
       // The WH_GETMESSAGE hook enables an application to monitor messages about to
       // be returned by the GetMessage or PeekMessage function.
@@ -1337,7 +1397,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
          lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
       }
 
-      if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
+      if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, FALSE)))
       {
           DPRINT1("Failed to pack message parameters\n");
           RETURN( FALSE);
@@ -1357,7 +1417,7 @@ co_IntSendMessageTimeoutSingle( HWND hWnd,
 
       IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-      if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
+      if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
       {
          DPRINT1("Failed to unpack message parameters\n");
          RETURN( TRUE);
@@ -1464,6 +1524,147 @@ co_IntSendMessageTimeout( HWND hWnd,
    return (LRESULT) TRUE;
 }
 
+LRESULT FASTCALL co_IntSendMessageNoWait(HWND hWnd,
+                                         UINT Msg,
+                                         WPARAM wParam,
+                                         LPARAM lParam)
+{
+   ULONG_PTR Result = 0;
+   co_IntSendMessageWithCallBack(hWnd,
+                                 Msg,
+                                 wParam,
+                                 lParam,
+                                 NULL,
+                                 0,
+                                 &Result);
+   return Result;
+}
+
+LRESULT FASTCALL
+co_IntSendMessageWithCallBack( HWND hWnd,
+                               UINT Msg,
+                               WPARAM wParam,
+                               LPARAM lParam,
+                               SENDASYNCPROC CompletionCallback,
+                               ULONG_PTR CompletionCallbackContext,
+                               ULONG_PTR *uResult)
+{
+   ULONG_PTR Result;
+   PWINDOW_OBJECT Window = NULL;
+   PMSGMEMORY MsgMemoryEntry;
+   INT lParamBufferSize;
+   LPARAM lParamPacked;
+   PTHREADINFO Win32Thread;
+   DECLARE_RETURN(LRESULT);
+   USER_REFERENCE_ENTRY Ref;
+   PUSER_SENT_MESSAGE Message;
+
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+       RETURN(FALSE);
+   }
+
+   UserRefObjectCo(Window, &Ref);
+
+   if (Window->state & WINDOWSTATUS_DESTROYING)
+   {
+      /* FIXME - last error? */
+      DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
+      RETURN(FALSE);
+   }
+
+   Win32Thread = PsGetCurrentThreadWin32Thread();
+
+   IntCallWndProc( Window, hWnd, Msg, wParam, lParam);
+
+   if (Win32Thread == NULL)
+   {
+     ASSERT(FALSE);
+     RETURN(FALSE);
+   }
+
+   if (Win32Thread->TIF_flags & TIF_INCLEANUP)
+   {
+      /* Never send messages to exiting threads */
+       RETURN(FALSE);
+   }
+
+   /* See if this message type is present in the table */
+   MsgMemoryEntry = FindMsgMemory(Msg);
+   if (NULL == MsgMemoryEntry)
+   {
+      lParamBufferSize = -1;
+   }
+   else
+   {
+      lParamBufferSize = MsgMemorySize(MsgMemoryEntry, wParam, lParam);
+   }
+
+   if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam, Window->pti->MessageQueue != Win32Thread->MessageQueue)))
+   {
+       DPRINT1("Failed to pack message parameters\n");
+       RETURN( FALSE);
+   }
+
+   /* If this is not a callback and it can be sent now, then send it. */
+   if ((Window->pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+   {
+
+      Result = (ULONG_PTR)co_IntCallWindowProc( Window->Wnd->lpfnWndProc,
+                                               !Window->Wnd->Unicode,
+                                                hWnd,
+                                                Msg,
+                                                wParam,
+                                                lParamPacked,
+                                                lParamBufferSize );
+      if(uResult)
+      {
+         *uResult = Result;
+      }
+   }
+
+   IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
+
+   if ((Window->pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
+   {
+      if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
+      {
+         DPRINT1("Failed to unpack message parameters\n");
+      }
+      RETURN(TRUE);
+   }
+
+   if(!(Message = ExAllocatePoolWithTag(NonPagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG)))
+   {
+      DPRINT1("MsqSendMessage(): Not enough memory to allocate a message");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   Message->Msg.hwnd = hWnd;
+   Message->Msg.message = Msg;
+   Message->Msg.wParam = wParam;
+   Message->Msg.lParam = lParamPacked;
+   Message->CompletionEvent = NULL;
+   Message->Result = 0;
+   Message->SenderQueue = Win32Thread->MessageQueue;
+   IntReferenceMessageQueue(Message->SenderQueue);
+   IntReferenceMessageQueue(Window->pti->MessageQueue);
+   Message->CompletionCallback = CompletionCallback;
+   Message->CompletionCallbackContext = CompletionCallbackContext;
+   Message->HookMessage = MSQ_NORMAL | MSQ_SENTNOWAIT;
+   Message->HasPackedLParam = (lParamBufferSize > 0);
+
+   InsertTailList(&Window->pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
+   InsertTailList(&Win32Thread->MessageQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
+   IntDereferenceMessageQueue(Window->pti->MessageQueue);
+   IntDereferenceMessageQueue(Message->SenderQueue);
+
+   RETURN(TRUE);
+
+CLEANUP:
+   if (Window) UserDerefObjectCo(Window);
+   END_CLEANUP;
+}
 
 /* This function posts a message if the destination's message queue belongs to
    another thread, otherwise it sends the message. It does not support broadcast
@@ -2419,6 +2620,18 @@ NtUserMessageCall(
       }
       break;
       case FNID_SENDMESSAGECALLBACK:
+      {
+         PCALL_BACK_INFO CallBackInfo = (PCALL_BACK_INFO)ResultInfo;
+
+         if (!CallBackInfo)
+            break;
+
+         if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
+             CallBackInfo->CallBack, CallBackInfo->Context, NULL))
+         {
+            DPRINT1("Callback failure!\n");
+         }
+      }
       break;
       // CallNextHook bypass.
       case FNID_CALLWNDPROC:

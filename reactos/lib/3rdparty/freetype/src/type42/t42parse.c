@@ -4,7 +4,8 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by Roberto Alameda.       */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by            */
+/*  Roberto Alameda.                                                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -19,7 +20,6 @@
 #include "t42error.h"
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_STREAM_H
-#include FT_LIST_H
 #include FT_INTERNAL_POSTSCRIPT_AUX_H
 
 
@@ -68,6 +68,13 @@
     T1_FIELD_BOOL  ( "isFixedPitch",       is_fixed_pitch,      0 )
     T1_FIELD_NUM   ( "UnderlinePosition",  underline_position,  0 )
     T1_FIELD_NUM   ( "UnderlineThickness", underline_thickness, 0 )
+
+#undef  FT_STRUCTURE
+#define FT_STRUCTURE  PS_FontExtraRec
+#undef  T1CODE
+#define T1CODE        T1_FIELD_LOCATION_FONT_EXTRA
+
+    T1_FIELD_NUM   ( "FSType",             fs_type,             0 )
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontRec
@@ -296,7 +303,7 @@
     cur = parser->root.cursor;
     if ( cur >= limit )
     {
-      FT_ERROR(( "t42_parse_encoding: out of bounds!\n" ));
+      FT_ERROR(( "t42_parse_encoding: out of bounds\n" ));
       parser->root.error = T42_Err_Invalid_File_Format;
       return;
     }
@@ -464,14 +471,14 @@
 
       else
       {
-        FT_ERROR(( "t42_parse_encoding: invalid token!\n" ));
+        FT_ERROR(( "t42_parse_encoding: invalid token\n" ));
         parser->root.error = T42_Err_Invalid_File_Format;
       }
     }
   }
 
 
-  typedef enum
+  typedef enum  T42_Load_Status_
   {
     BEFORE_START,
     BEFORE_TABLE_DIR,
@@ -517,7 +524,7 @@
 
     if ( parser->root.cursor >= limit || *parser->root.cursor++ != '[' )
     {
-      FT_ERROR(( "t42_parse_sfnts: can't find begin of sfnts vector!\n" ));
+      FT_ERROR(( "t42_parse_sfnts: can't find begin of sfnts vector\n" ));
       error = T42_Err_Invalid_File_Format;
       goto Fail;
     }
@@ -562,7 +569,7 @@
         if ( allocated )
         {
           FT_ERROR(( "t42_parse_sfnts: "
-                     "can't handle mixed binary and hex strings!\n" ));
+                     "can't handle mixed binary and hex strings\n" ));
           error = T42_Err_Invalid_File_Format;
           goto Fail;
         }
@@ -578,7 +585,7 @@
         parser->root.cursor += string_size + 1;
         if ( parser->root.cursor >= limit )
         {
-          FT_ERROR(( "t42_parse_sfnts: too many binary data!\n" ));
+          FT_ERROR(( "t42_parse_sfnts: too many binary data\n" ));
           error = T42_Err_Invalid_File_Format;
           goto Fail;
         }
@@ -586,7 +593,7 @@
 
       if ( !string_buf )
       {
-        FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array!\n" ));
+        FT_ERROR(( "t42_parse_sfnts: invalid data in sfnts array\n" ));
         error = T42_Err_Invalid_File_Format;
         goto Fail;
       }
@@ -597,7 +604,7 @@
 
       if ( !string_size )
       {
-        FT_ERROR(( "t42_parse_sfnts: invalid string!\n" ));
+        FT_ERROR(( "t42_parse_sfnts: invalid string\n" ));
         error = T42_Err_Invalid_File_Format;
         goto Fail;
       }
@@ -662,7 +669,7 @@
           /* all other tables are just copied */
           if ( count >= ttf_size )
           {
-            FT_ERROR(( "t42_parse_sfnts: too many binary data!\n" ));
+            FT_ERROR(( "t42_parse_sfnts: too many binary data\n" ));
             error = T42_Err_Invalid_File_Format;
             goto Fail;
           }
@@ -709,7 +716,7 @@
 
     if ( parser->root.cursor >= limit )
     {
-      FT_ERROR(( "t42_parse_charstrings: out of bounds!\n" ));
+      FT_ERROR(( "t42_parse_charstrings: out of bounds\n" ));
       error = T42_Err_Invalid_File_Format;
       goto Fail;
     }
@@ -751,14 +758,14 @@
     }
     else
     {
-      FT_ERROR(( "t42_parse_charstrings: invalid token!\n" ));
+      FT_ERROR(( "t42_parse_charstrings: invalid token\n" ));
       error = T42_Err_Invalid_File_Format;
       goto Fail;
     }
 
     if ( parser->root.cursor >= limit )
     {
-      FT_ERROR(( "t42_parse_charstrings: out of bounds!\n" ));
+      FT_ERROR(( "t42_parse_charstrings: out of bounds\n" ));
       error = T42_Err_Invalid_File_Format;
       goto Fail;
     }
@@ -818,7 +825,7 @@
 
         if ( cur + 1 >= limit )
         {
-          FT_ERROR(( "t42_parse_charstrings: out of bounds!\n" ));
+          FT_ERROR(( "t42_parse_charstrings: out of bounds\n" ));
           error = T42_Err_Invalid_File_Format;
           goto Fail;
         }
@@ -849,7 +856,7 @@
         (void)T1_ToInt( parser );
         if ( parser->root.cursor >= limit )
         {
-          FT_ERROR(( "t42_parse_charstrings: out of bounds!\n" ));
+          FT_ERROR(( "t42_parse_charstrings: out of bounds\n" ));
           error = T42_Err_Invalid_File_Format;
           goto Fail;
         }
@@ -872,7 +879,7 @@
 
     if ( !notdef_found )
     {
-      FT_ERROR(( "t42_parse_charstrings: no /.notdef glyph!\n" ));
+      FT_ERROR(( "t42_parse_charstrings: no /.notdef glyph\n" ));
       error = T42_Err_Invalid_File_Format;
       goto Fail;
     }
@@ -974,6 +981,10 @@
     {
     case T1_FIELD_LOCATION_FONT_INFO:
       dummy_object = &face->type1.font_info;
+      break;
+
+    case T1_FIELD_LOCATION_FONT_EXTRA:
+      dummy_object = &face->type1.font_extra;
       break;
 
     case T1_FIELD_LOCATION_BBOX:

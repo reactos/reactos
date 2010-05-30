@@ -152,7 +152,7 @@ DllRegisterServer(void)
     }
 
     RegisterBDAComponent(hFilter, L"{71985F4A-1CA1-11d3-9CC8-00C04F7971E0}", L"BDA Playback Filter");
-    RegisterBDAComponent(hFilter, L"{71985F4B-1CA1-11D3-9CC8-00C04F7971E0}", L"BDA Network Providerss");
+    RegisterBDAComponent(hFilter, L"{71985F4B-1CA1-11D3-9CC8-00C04F7971E0}", L"BDA Network Providers");
     RegisterBDAComponent(hFilter, L"{71985F48-1CA1-11d3-9CC8-00C04F7971E0}", L"BDA Source Filter");
     RegisterBDAComponent(hFilter, L"{A2E3074F-6C3D-11D3-B653-00C04F79498E}", L"BDA Transport Information Renderers");
     RegisterBDAComponent(hFilter, L"{FD0A5AF4-B41D-11d2-9C95-00C04F7971E0}", L"BDA Receiver Component");

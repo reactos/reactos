@@ -62,7 +62,7 @@ typedef struct {
     HRESULT (*stop_binding)(BSCallback*,HRESULT);
     HRESULT (*read_data)(BSCallback*,IStream*);
     HRESULT (*on_progress)(BSCallback*,ULONG,LPCWSTR);
-    HRESULT (*on_response)(BSCallback*,DWORD);
+    HRESULT (*on_response)(BSCallback*,DWORD,LPCWSTR);
 } BSCallbackVtbl;
 
 struct BSCallback {
@@ -493,7 +493,7 @@ static HRESULT WINAPI HttpNegotiate_OnResponse(IHttpNegotiate2 *iface, DWORD dwR
     TRACE("(%p)->(%d %s %s %p)\n", This, dwResponseCode, debugstr_w(szResponseHeaders),
           debugstr_w(szRequestHeaders), pszAdditionalRequestHeaders);
 
-    return This->vtbl->on_response(This, dwResponseCode);
+    return This->vtbl->on_response(This, dwResponseCode, szResponseHeaders);
 }
 
 static HRESULT WINAPI HttpNegotiate_GetRootSecurityId(IHttpNegotiate2 *iface,
@@ -825,7 +825,8 @@ static HRESULT BufferBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCWSTR
     return S_OK;
 }
 
-static HRESULT BufferBSC_on_response(BSCallback *bsc, DWORD response_code)
+static HRESULT BufferBSC_on_response(BSCallback *bsc, DWORD response_code,
+        LPCWSTR response_headers)
 {
     return S_OK;
 }
@@ -1099,11 +1100,72 @@ static HRESULT nsChannelBSC_on_progress(BSCallback *bsc, ULONG status_code, LPCW
     return S_OK;
 }
 
-static HRESULT nsChannelBSC_on_response(BSCallback *bsc, DWORD response_code)
+static HRESULT nsChannelBSC_on_response(BSCallback *bsc, DWORD response_code,
+        LPCWSTR response_headers)
 {
     nsChannelBSC *This = NSCHANNELBSC_THIS(bsc);
 
     This->nschannel->response_status = response_code;
+
+    if(response_headers) {
+        const WCHAR *hdr_start, *hdr_end;
+
+        hdr_start = strchrW(response_headers, '\r');
+        while(hdr_start) {
+            const WCHAR *colon;
+            struct ResponseHeader *new_header;
+            int len;
+
+            hdr_start += 2;
+            hdr_end = strchrW(hdr_start, '\r');
+            if(!hdr_end) {
+                WARN("Header doesn't end with CRLF: %s\n", wine_dbgstr_w(hdr_start));
+                break;
+            }
+            if(hdr_end == hdr_start)
+                break;
+
+            for(colon = hdr_start; *colon != ':' && colon != hdr_end; ++colon);
+            if(*colon != ':') {
+                WARN("Header missing colon: %s\n", wine_dbgstr_w(hdr_start));
+                hdr_start = strchrW(hdr_start, '\r');
+                continue;
+            }
+
+            new_header = heap_alloc(sizeof(struct ResponseHeader));
+            if(!new_header)
+                return E_OUTOFMEMORY;
+
+            len = colon - hdr_start;
+            new_header->header = heap_alloc((len + 1) * sizeof(WCHAR));
+            if(!new_header->header) {
+                heap_free(new_header);
+                return E_OUTOFMEMORY;
+            }
+            memcpy(new_header->header, hdr_start, len * sizeof(WCHAR));
+            new_header->header[len] = 0;
+
+            colon++;
+            while(*colon == ' ')
+                colon++;
+
+            len = hdr_end - colon;
+            new_header->data = heap_alloc((len + 1) * sizeof(WCHAR));
+            if(!new_header->data) {
+                heap_free(new_header->header);
+                heap_free(new_header);
+                return E_OUTOFMEMORY;
+            }
+            memcpy(new_header->data, colon, len * sizeof(WCHAR));
+            new_header->data[len] = 0;
+
+            list_add_head(&This->nschannel->response_headers, &new_header->entry);
+            TRACE("Adding header to list: (%s):(%s)\n", wine_dbgstr_w(new_header->header), wine_dbgstr_w(new_header->data));
+
+            hdr_start = strchrW(hdr_start, '\r');
+        }
+    }
+
     return S_OK;
 }
 

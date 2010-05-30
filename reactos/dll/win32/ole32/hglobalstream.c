@@ -371,12 +371,6 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
   TRACE("(%p, %x%08x, %d, %p)\n", iface, dlibMove.u.HighPart,
 	dlibMove.u.LowPart, dwOrigin, plibNewPosition);
 
-  if (dlibMove.u.LowPart >= 0x80000000)
-  {
-    hr = STG_E_SEEKERROR;
-    goto end;
-  }
-
   /*
    * The file pointer is moved depending on the given "function"
    * parameter.
@@ -405,9 +399,18 @@ static HRESULT WINAPI HGLOBALStreamImpl_Seek(
   newPosition.u.HighPart = 0;
   newPosition.u.LowPart += dlibMove.QuadPart;
 
-end:
-  if (plibNewPosition) *plibNewPosition = newPosition;
+  if (dlibMove.u.LowPart >= 0x80000000 &&
+      newPosition.u.LowPart >= dlibMove.u.LowPart)
+  {
+    /* We tried to seek backwards and went past the start. */
+    hr = STG_E_SEEKERROR;
+    goto end;
+  }
+
   This->currentPosition = newPosition;
+
+end:
+  if (plibNewPosition) *plibNewPosition = This->currentPosition;
 
   return hr;
 }

@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) pshinter ;
 
   if $(FT2_MULTI)
   {
-    _sources = pshrec pshglob pshalgo pshmod ;
+    _sources = pshrec pshglob pshalgo pshmod pshpic ;
   }
   else
   {

@@ -855,7 +855,16 @@ BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
     TRACE("(%p, %p, %08x, %p)\n", hCertStore, pCertContext,
      dwAddDisposition, ppStoreContext);
 
-    if (dwAddDisposition != CERT_STORE_ADD_ALWAYS)
+    switch (dwAddDisposition)
+    {
+    case CERT_STORE_ADD_ALWAYS:
+        break;
+    case CERT_STORE_ADD_NEW:
+    case CERT_STORE_ADD_REPLACE_EXISTING:
+    case CERT_STORE_ADD_REPLACE_EXISTING_INHERIT_PROPERTIES:
+    case CERT_STORE_ADD_USE_EXISTING:
+    case CERT_STORE_ADD_NEWER:
+    case CERT_STORE_ADD_NEWER_INHERIT_PROPERTIES:
     {
         BYTE hashToAdd[20];
         DWORD size = sizeof(hashToAdd);
@@ -870,6 +879,12 @@ BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
              pCertContext->dwCertEncodingType, 0, CERT_FIND_SHA1_HASH, &blob,
              NULL);
         }
+        break;
+    }
+    default:
+        FIXME("Unimplemented add disposition %d\n", dwAddDisposition);
+        SetLastError(E_INVALIDARG);
+        ret = FALSE;
     }
 
     switch (dwAddDisposition)
@@ -940,10 +955,6 @@ BOOL WINAPI CertAddCertificateContextToStore(HCERTSTORE hCertStore,
         else
             toAdd = CertDuplicateCertificateContext(pCertContext);
         break;
-    default:
-        FIXME("Unimplemented add disposition %d\n", dwAddDisposition);
-        SetLastError(E_INVALIDARG);
-        ret = FALSE;
     }
 
     if (toAdd)

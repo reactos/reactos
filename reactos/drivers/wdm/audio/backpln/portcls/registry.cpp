@@ -270,6 +270,9 @@ PcNewRegistryKey(
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     CRegistryKey * RegistryKey;
     PPCLASS_DEVICE_EXTENSION DeviceExt;
+    PSUBDEVICE_DESCRIPTOR SubDeviceDescriptor;
+    ISubdevice * Device;
+    PSYMBOLICLINK_ENTRY SymEntry;
 
     DPRINT("PcNewRegistryKey entered\n");
 
@@ -294,8 +297,8 @@ PcNewRegistryKey(
             // object attributes is mandatory
             return STATUS_INVALID_PARAMETER;
         }
-        // try to open the key
-        Status = ZwOpenKey(&hHandle, DesiredAccess, ObjectAttributes);
+        // try to create the key
+        Status = ZwCreateKey(&hHandle, DesiredAccess, ObjectAttributes, 0, NULL, CreateOptions, Disposition);
     }
     else if (RegistryKeyType == DeviceRegistryKey ||
              RegistryKeyType == DriverRegistryKey ||
@@ -305,7 +308,7 @@ PcNewRegistryKey(
         if (RegistryKeyType == HwProfileRegistryKey)
         {
              // IoOpenDeviceRegistryKey used different constant
-            RegistryKeyType = PLUGPLAY_REGKEY_CURRENT_HWPROFILE;
+            RegistryKeyType = PLUGPLAY_REGKEY_CURRENT_HWPROFILE | PLUGPLAY_REGKEY_DEVICE;
         }
 
         // obtain the new device extension
@@ -315,24 +318,71 @@ PcNewRegistryKey(
     }
     else if (RegistryKeyType == DeviceInterfaceRegistryKey)
     {
-        // FIXME
-        UNIMPLEMENTED
-        DbgBreakPoint();
+        if (SubDevice == NULL)
+        {
+            // invalid parameter
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        // look up our undocumented interface
+        Status = ((PUNKNOWN)SubDevice)->QueryInterface(IID_ISubdevice, (LPVOID*)&Device);
+
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("No ISubdevice interface\n");
+            // invalid parameter
+            return STATUS_INVALID_PARAMETER;
+        }
+
+        // get the subdevice descriptor
+        Status = Device->GetDescriptor(&SubDeviceDescriptor);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("Failed to get subdevice descriptor %x\n", Status);
+            ((PUNKNOWN)SubDevice)->Release();
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        // is there an registered device interface
+        if (IsListEmpty(&SubDeviceDescriptor->SymbolicLinkList))
+        {
+            DPRINT("No device interface registered\n");
+            ((PUNKNOWN)SubDevice)->Release();
+            return STATUS_UNSUCCESSFUL;
+        }
+
+        // get the first symbolic link
+        SymEntry = (PSYMBOLICLINK_ENTRY)CONTAINING_RECORD(SubDeviceDescriptor->SymbolicLinkList.Flink, SYMBOLICLINK_ENTRY, Entry);
+
+        // open device interface
+        Status = IoOpenDeviceInterfaceRegistryKey(&SymEntry->SymbolicLink, DesiredAccess, &hHandle);
+
+        // release subdevice interface
+        ((PUNKNOWN)SubDevice)->Release();
     }
 
+    // check for success
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("PcNewRegistryKey failed with %lx\n", Status);
         return Status;
     }
 
+    // allocate new registry key object
     RegistryKey = new(NonPagedPool, TAG_PORTCLASS)CRegistryKey(OuterUnknown, hHandle);
     if (!RegistryKey)
+    {
+        // not enough memory
+        ZwClose(hHandle);
         return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
+    // query for interface
     Status = RegistryKey->QueryInterface(IID_IRegistryKey, (PVOID*)OutRegistryKey);
 
     if (!NT_SUCCESS(Status))
     {
+        // out of memory
         delete RegistryKey;
     }
 

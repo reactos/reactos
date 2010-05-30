@@ -33,6 +33,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define IsDotDir(x)     ((x[0] == '.') && ((x[1] == 0) || ((x[1] == '.') && (x[2] == 0))))
 
 #define FO_MASK         0xF
+#define WM_FILE       (WM_USER + 1)
+#define TIMER_ID      (100)
 
 static const WCHAR wWildcardFile[] = {'*',0};
 static const WCHAR wWildcardChars[] = {'*','?',0};
@@ -51,6 +53,40 @@ typedef struct
     BOOL bManyItems;
     BOOL bCancelled;
 } FILE_OPERATION;
+
+#define ERROR_SHELL_INTERNAL_FILE_NOT_FOUND 1026
+
+typedef struct
+{
+    DWORD attributes;
+    LPWSTR szDirectory;
+    LPWSTR szFilename;
+    LPWSTR szFullPath;
+    BOOL bFromWildcard;
+    BOOL bFromRelative;
+    BOOL bExists;
+} FILE_ENTRY;
+
+typedef struct
+{
+    FILE_ENTRY *feFiles;
+    DWORD num_alloc;
+    DWORD dwNumFiles;
+    BOOL bAnyFromWildcard;
+    BOOL bAnyDirectories;
+    BOOL bAnyDontExist;
+} FILE_LIST;
+
+typedef struct
+{
+    FILE_LIST * from;
+    FILE_LIST * to;
+    FILE_OPERATION * op;
+    DWORD Index;
+    HWND hDlgCtrl;
+    HWND hwndDlg;
+}FILE_OPERATION_CONTEXT;
+
 
 /* Confirm dialogs with an optional "Yes To All" as used in file operations confirmations
  */
@@ -514,6 +550,163 @@ static DWORD SHNotifyMoveFileW(LPCWSTR src, LPCWSTR dest)
 	return GetLastError();
 }
 
+static WINAPI DWORD SHOperationProgressRoutine(LARGE_INTEGER TotalFileSize, LARGE_INTEGER TotalBytesTransferred, LARGE_INTEGER StreamSize, LARGE_INTEGER StreamBytesTransferred, DWORD dwStreamNumber, DWORD dwCallbackReason, HANDLE hSourceFile, HANDLE hDestinationFile, LPVOID lpData)
+{
+    FILE_OPERATION_CONTEXT * Context;
+    LARGE_INTEGER Progress;
+
+    /* get context */
+    Context = (FILE_OPERATION_CONTEXT*)lpData;
+
+    if (TotalBytesTransferred.QuadPart)
+    {
+        Progress.QuadPart = (TotalBytesTransferred.QuadPart * 100) / TotalFileSize.QuadPart;
+    }
+    else
+    {
+        Progress.QuadPart = 1;
+    }
+
+    /* update progress bar */
+    SendMessageW(Context->hDlgCtrl, PBM_SETPOS, (WPARAM)Progress.u.LowPart, 0);
+
+    if (TotalBytesTransferred.QuadPart == TotalFileSize.QuadPart)
+    {
+        /* file was copied */
+        Context->Index++;
+        PostMessageW(Context->hwndDlg, WM_FILE, 0, 0);
+    }
+
+    return PROGRESS_CONTINUE;
+}
+
+BOOL
+QueueFile(
+    FILE_OPERATION_CONTEXT * Context)
+{
+    FILE_ENTRY * from, *to;
+    BOOL bRet = FALSE;
+
+    if (Context->Index >= Context->from->dwNumFiles)
+        return FALSE;
+
+    /* get current file */
+    from = &Context->from->feFiles[Context->Index];
+
+    if (Context->op->req->fFlags != FO_DELETE)
+        to = &Context->to->feFiles[Context->Index];
+
+    /* update status */
+    SendDlgItemMessageW(Context->hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)from->szFullPath);
+
+    if (Context->op->req->wFunc == FO_COPY)
+    {
+        bRet = CopyFileExW(from->szFullPath, to->szFullPath, SHOperationProgressRoutine, (LPVOID)Context, &Context->op->bCancelled, 0);
+    }
+    else if (Context->op->req->wFunc == FO_MOVE)
+    {
+        //bRet = MoveFileWithProgressW(from->szFullPath, to->szFullPath, SHOperationProgressRoutine, (LPVOID)Context, MOVEFILE_COPY_ALLOWED);
+    }
+    else if (Context->op->req->wFunc == FO_DELETE)
+    {
+        bRet = DeleteFile(from->szFullPath);
+    }
+
+    return bRet;
+}
+
+static INT_PTR CALLBACK SHOperationDialog(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    FILE_OPERATION_CONTEXT * Context;
+
+    Context = (FILE_OPERATION_CONTEXT*) GetWindowLongPtr(hwndDlg, DWLP_USER);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG)lParam);
+
+        /* get context */
+        Context = (FILE_OPERATION_CONTEXT*)lParam;
+
+        /* store progress bar handle */
+        Context->hDlgCtrl = GetDlgItem(hwndDlg, 14000);
+
+        /* store window handle */
+        Context->hwndDlg = hwndDlg;
+
+        /* set progress bar range */
+        (void)SendMessageW(Context->hDlgCtrl, (UINT) PBM_SETRANGE, 0, MAKELPARAM(0, 100));
+
+        /* start file queueing */
+        SetTimer(hwndDlg, TIMER_ID, 1000, NULL);
+        //QueueFile(Context);
+
+        return TRUE;
+
+    case WM_CLOSE:
+        Context->op->bCancelled = TRUE;
+        EndDialog(hwndDlg, Context->op->bCancelled);
+        return TRUE;
+    case WM_COMMAND:
+        if (LOWORD(wParam) == 14002)
+        {
+            Context->op->bCancelled = TRUE;
+            EndDialog(hwndDlg, Context->op->bCancelled);
+            return TRUE;
+        }
+        break;
+    case WM_TIMER:
+        if (wParam == TIMER_ID)
+        {
+            QueueFile(Context);
+            KillTimer(hwndDlg, TIMER_ID);
+        }
+        break;
+    case WM_FILE:
+        if (!QueueFile(Context))
+            EndDialog(hwndDlg, Context->op->bCancelled);
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+HRESULT
+SHShowFileOperationDialog(FILE_OPERATION *op, FILE_LIST *flFrom, FILE_LIST *flTo)
+{
+    HWND hwnd;
+    BOOL bRet;
+    MSG msg;
+    FILE_OPERATION_CONTEXT Context;
+
+    Context.from = flFrom;
+    Context.to = flTo;
+    Context.op = op;
+    Context.Index = 0;
+    Context.op->bCancelled = FALSE;
+
+    hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(IDD_SH_FILE_COPY), NULL, SHOperationDialog, (LPARAM)&Context);
+    if (hwnd == NULL)
+    {
+        ERR("Failed to create dialog\n");
+        return E_FAIL;
+    }
+    ShowWindow(hwnd, SW_SHOWNORMAL);
+
+    while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0) 
+    { 
+        if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg)) 
+        {
+            TranslateMessage(&msg); 
+            DispatchMessage(&msg); 
+        }
+    }
+
+    return NOERROR;
+}
+
+
 /************************************************************************
  * SHNotifyCopyFile          [internal]
  *
@@ -808,28 +1001,7 @@ int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 	return retCode;
 }
 
-#define ERROR_SHELL_INTERNAL_FILE_NOT_FOUND 1026
 
-typedef struct
-{
-    DWORD attributes;
-    LPWSTR szDirectory;
-    LPWSTR szFilename;
-    LPWSTR szFullPath;
-    BOOL bFromWildcard;
-    BOOL bFromRelative;
-    BOOL bExists;
-} FILE_ENTRY;
-
-typedef struct
-{
-    FILE_ENTRY *feFiles;
-    DWORD num_alloc;
-    DWORD dwNumFiles;
-    BOOL bAnyFromWildcard;
-    BOOL bAnyDirectories;
-    BOOL bAnyDontExist;
-} FILE_LIST;
 
 
 static void __inline grow_list(FILE_LIST *list)

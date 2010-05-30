@@ -534,7 +534,7 @@ static HRESULT WINAPI StdMediaSample2_GetTime(IMediaSample2 * iface, REFERENCE_T
         hr = S_OK;
     }
 
-    return S_OK;
+    return hr;
 }
 
 static HRESULT WINAPI StdMediaSample2_SetTime(IMediaSample2 * iface, REFERENCE_TIME * pStart, REFERENCE_TIME * pEnd)
@@ -785,7 +785,7 @@ static HRESULT StdMemAllocator_Alloc(IMemAllocator * iface)
     StdMemAllocator *This = (StdMemAllocator *)iface;
     StdMediaSample2 * pSample = NULL;
     SYSTEM_INFO si;
-    long i;
+    LONG i;
 
     assert(list_empty(&This->base.free_list));
 

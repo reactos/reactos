@@ -186,7 +186,7 @@
   gxv_morx_subtable_type2_entry_validate(
     FT_UShort                       state,
     FT_UShort                       flags,
-    GXV_StateTable_GlyphOffsetDesc  glyphOffset,
+    GXV_StateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                        table,
     FT_Bytes                        limit,
     GXV_Validator                   valid )
@@ -206,7 +206,7 @@
     performAction  = (FT_UShort)( ( flags >> 13 ) & 1 );
 
     reserved       = (FT_UShort)( flags & 0x1FFF );
-    ligActionIndex = glyphOffset.u;
+    ligActionIndex = glyphOffset_p->u;
 
     if ( reserved > 0 )
       GXV_TRACE(( "  reserved 14bit is non-zero\n" ));

@@ -753,6 +753,141 @@ FT_BEGIN_HEADER
   /* transitional */
   typedef SFNT_Interface*   SFNT_Service;
 
+#ifndef FT_CONFIG_OPTION_PIC
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_DEFINE_DRIVERS_OLD_INTERNAL(a) \
+  a, 
+#else
+  #define FT_DEFINE_DRIVERS_OLD_INTERNAL(a)
+#endif
+#define FT_INTERNAL(a) \
+  a, 
+
+#define FT_DEFINE_SFNT_INTERFACE(class_,                                     \
+    goto_table_, init_face_, load_face_, done_face_, get_interface_,         \
+    load_any_, load_sfnt_header_, load_directory_, load_head_,               \
+    load_hhea_, load_cmap_, load_maxp_, load_os2_, load_post_,               \
+    load_name_, free_name_, load_hdmx_stub_, free_hdmx_stub_,                \
+    load_kern_, load_gasp_, load_pclt_, load_bhed_,                          \
+    set_sbit_strike_stub_, load_sbits_stub_, find_sbit_image_,               \
+    load_sbit_metrics_, load_sbit_image_, free_sbits_stub_,                  \
+    get_psname_, free_psnames_, load_charmap_stub_, free_charmap_stub_,      \
+    get_kerning_, load_font_dir_, load_hmtx_, load_eblc_, free_eblc_,        \
+    set_sbit_strike_, load_strike_metrics_, get_metrics_ )                   \
+  static const SFNT_Interface class_ =                                       \
+  {                                                                          \
+    FT_INTERNAL(goto_table_) \
+    FT_INTERNAL(init_face_) \
+    FT_INTERNAL(load_face_) \
+    FT_INTERNAL(done_face_) \
+    FT_INTERNAL(get_interface_) \
+    FT_INTERNAL(load_any_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sfnt_header_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_directory_) \
+    FT_INTERNAL(load_head_) \
+    FT_INTERNAL(load_hhea_) \
+    FT_INTERNAL(load_cmap_) \
+    FT_INTERNAL(load_maxp_) \
+    FT_INTERNAL(load_os2_) \
+    FT_INTERNAL(load_post_) \
+    FT_INTERNAL(load_name_) \
+    FT_INTERNAL(free_name_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_hdmx_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_hdmx_stub_) \
+    FT_INTERNAL(load_kern_) \
+    FT_INTERNAL(load_gasp_) \
+    FT_INTERNAL(load_pclt_) \
+    FT_INTERNAL(load_bhed_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(set_sbit_strike_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sbits_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(find_sbit_image_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sbit_metrics_) \
+    FT_INTERNAL(load_sbit_image_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_sbits_stub_) \
+    FT_INTERNAL(get_psname_) \
+    FT_INTERNAL(free_psnames_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_charmap_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_charmap_stub_) \
+    FT_INTERNAL(get_kerning_) \
+    FT_INTERNAL(load_font_dir_) \
+    FT_INTERNAL(load_hmtx_) \
+    FT_INTERNAL(load_eblc_) \
+    FT_INTERNAL(free_eblc_) \
+    FT_INTERNAL(set_sbit_strike_) \
+    FT_INTERNAL(load_strike_metrics_) \
+    FT_INTERNAL(get_metrics_) \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
+#define FT_DEFINE_DRIVERS_OLD_INTERNAL(a, a_) \
+  clazz->a = a_;
+#else
+  #define FT_DEFINE_DRIVERS_OLD_INTERNAL(a, a_)
+#endif
+#define FT_INTERNAL(a, a_) \
+  clazz->a = a_;
+
+#define FT_DEFINE_SFNT_INTERFACE(class_,                                     \
+    goto_table_, init_face_, load_face_, done_face_, get_interface_,         \
+    load_any_, load_sfnt_header_, load_directory_, load_head_,               \
+    load_hhea_, load_cmap_, load_maxp_, load_os2_, load_post_,               \
+    load_name_, free_name_, load_hdmx_stub_, free_hdmx_stub_,                \
+    load_kern_, load_gasp_, load_pclt_, load_bhed_,                          \
+    set_sbit_strike_stub_, load_sbits_stub_, find_sbit_image_,               \
+    load_sbit_metrics_, load_sbit_image_, free_sbits_stub_,                  \
+    get_psname_, free_psnames_, load_charmap_stub_, free_charmap_stub_,      \
+    get_kerning_, load_font_dir_, load_hmtx_, load_eblc_, free_eblc_,        \
+    set_sbit_strike_, load_strike_metrics_, get_metrics_ )                   \
+  void                                                                       \
+  FT_Init_Class_##class_( FT_Library library, SFNT_Interface*  clazz )       \
+  {                                                                          \
+    FT_UNUSED(library);                                                      \
+    FT_INTERNAL(goto_table,goto_table_) \
+    FT_INTERNAL(init_face,init_face_) \
+    FT_INTERNAL(load_face,load_face_) \
+    FT_INTERNAL(done_face,done_face_) \
+    FT_INTERNAL(get_interface,get_interface_) \
+    FT_INTERNAL(load_any,load_any_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sfnt_header,load_sfnt_header_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_directory,load_directory_) \
+    FT_INTERNAL(load_head,load_head_) \
+    FT_INTERNAL(load_hhea,load_hhea_) \
+    FT_INTERNAL(load_cmap,load_cmap_) \
+    FT_INTERNAL(load_maxp,load_maxp_) \
+    FT_INTERNAL(load_os2,load_os2_) \
+    FT_INTERNAL(load_post,load_post_) \
+    FT_INTERNAL(load_name,load_name_) \
+    FT_INTERNAL(free_name,free_name_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_hdmx_stub,load_hdmx_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_hdmx_stub,free_hdmx_stub_) \
+    FT_INTERNAL(load_kern,load_kern_) \
+    FT_INTERNAL(load_gasp,load_gasp_) \
+    FT_INTERNAL(load_pclt,load_pclt_) \
+    FT_INTERNAL(load_bhed,load_bhed_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(set_sbit_strike_stub,set_sbit_strike_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sbits_stub,load_sbits_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(find_sbit_image,find_sbit_image_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_sbit_metrics,load_sbit_metrics_) \
+    FT_INTERNAL(load_sbit_image,load_sbit_image_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_sbits_stub,free_sbits_stub_) \
+    FT_INTERNAL(get_psname,get_psname_) \
+    FT_INTERNAL(free_psnames,free_psnames_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(load_charmap_stub,load_charmap_stub_) \
+    FT_DEFINE_DRIVERS_OLD_INTERNAL(free_charmap_stub,free_charmap_stub_) \
+    FT_INTERNAL(get_kerning,get_kerning_) \
+    FT_INTERNAL(load_font_dir,load_font_dir_) \
+    FT_INTERNAL(load_hmtx,load_hmtx_) \
+    FT_INTERNAL(load_eblc,load_eblc_) \
+    FT_INTERNAL(free_eblc,free_eblc_) \
+    FT_INTERNAL(set_sbit_strike,set_sbit_strike_) \
+    FT_INTERNAL(load_strike_metrics,load_strike_metrics_) \
+    FT_INTERNAL(get_metrics,get_metrics_) \
+  } 
+
+#endif /* FT_CONFIG_OPTION_PIC */ 
 
 FT_END_HEADER
 

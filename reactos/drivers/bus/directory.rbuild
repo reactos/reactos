@@ -13,4 +13,7 @@
 <directory name="pcix">
 	<xi:include href="pcix/pcix.rbuild" />
 </directory>
+<directory name="pcmcia">
+	<xi:include href="pcmcia/pcmcia.rbuild" />
+</directory>
 </group>

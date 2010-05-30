@@ -489,7 +489,7 @@ IDirect3DExecuteBufferImpl_Execute(IDirect3DExecuteBufferImpl *This,
 			
 			memcpy(dst, src, ci->dwCount * sizeof(D3DTLVERTEX));
 		    } else {
-		        ERR("Unhandled vertex processing !\n");
+		        ERR("Unhandled vertex processing flag %#x.\n", ci->dwFlags);
 		    }
 
 		    instr += size;
@@ -703,7 +703,6 @@ IDirect3DExecuteBufferImpl_Lock(IDirect3DExecuteBuffer *iface,
     TRACE("(%p)->(%p)\n", This, lpDesc);
 
     dwSize = lpDesc->dwSize;
-    memset(lpDesc, 0, dwSize);
     memcpy(lpDesc, &This->desc, dwSize);
 
     if (TRACE_ON(d3d7)) {
@@ -789,7 +788,6 @@ IDirect3DExecuteBufferImpl_GetExecuteData(IDirect3DExecuteBuffer *iface,
     TRACE("(%p)->(%p): stub!\n", This, lpData);
 
     dwSize = lpData->dwSize;
-    memset(lpData, 0, dwSize);
     memcpy(lpData, &This->data, dwSize);
 
     if (TRACE_ON(d3d7)) {

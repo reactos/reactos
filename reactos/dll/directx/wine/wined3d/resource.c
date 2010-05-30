@@ -28,7 +28,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
 HRESULT resource_init(IWineD3DResource *iface, WINED3DRESOURCETYPE resource_type,
-        IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct GlPixelFormatDesc *format_desc,
+        IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct wined3d_format_desc *format_desc,
         WINED3DPOOL pool, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
     struct IWineD3DResourceClass *resource = &((IWineD3DResourceImpl *)iface)->resource;
@@ -246,12 +246,4 @@ HRESULT resource_get_parent(IWineD3DResource *iface, IUnknown **pParent)
     IUnknown_AddRef(This->resource.parent);
     *pParent = This->resource.parent;
     return WINED3D_OK;
-}
-
-void dumpResources(struct list *list) {
-    IWineD3DResourceImpl *resource;
-
-    LIST_FOR_EACH_ENTRY(resource, list, IWineD3DResourceImpl, resource.resource_list_entry) {
-        FIXME("Leftover resource %p with type %d,%s\n", resource, IWineD3DResource_GetType((IWineD3DResource *) resource), debug_d3dresourcetype(IWineD3DResource_GetType((IWineD3DResource *) resource)));
-    }
 }

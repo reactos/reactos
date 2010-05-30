@@ -1481,6 +1481,12 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Brak wystarczaj¥cej wolnej przestrzeni w wybranej partycji.\n"
+        "  * Naci˜nij dowolny klawisz aby kontynuowa†.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
         "ENTER = Restart komputera"
@@ -1623,7 +1629,7 @@ MUI_STRING plPLStrings[] =
     {STRING_TXTSETUPFAILED,
     "Instalator nie byˆ w stanie odnale«† sekji '%S'\nw pliku TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Kopiowanie plik¢w: %S"},
+     "   Kopiowanie plik¢w: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Instalator kopiuje pliki..."},
     {STRING_REGHIVEUPDATE,

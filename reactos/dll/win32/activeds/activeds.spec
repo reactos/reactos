@@ -6,7 +6,7 @@
 8 stub ADsBuildVarArrayInt
 9 stdcall ADsOpenObject(wstr wstr wstr long ptr ptr)
 12 stub ADsSetLastError
-13 stub ADsGetLastError
+13 stdcall ADsGetLastError(ptr ptr long ptr long)
 14 stub AllocADsMem
 15 stdcall FreeADsMem(ptr)
 16 stub ReallocADsMem

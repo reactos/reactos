@@ -89,21 +89,6 @@
     ObpFreeCapturedAttributes
 
 //
-// Returns the size of a CM_RESOURCE_LIST
-//
-#define CM_RESOURCE_LIST_SIZE(ResList)                  \
-    (ResList->Count == 1) ?                             \
-        FIELD_OFFSET(                                   \
-            CM_RESOURCE_LIST,                           \
-            List[0].PartialResourceList.                \
-            PartialDescriptors[(ResList)->              \
-                               List[0].                 \
-                               PartialResourceList.     \
-                               Count])                  \
-        :                                               \
-        FIELD_OFFSET(CM_RESOURCE_LIST, List)
-
-//
 // Determines if the IRP is Synchronous
 //
 #define IsIrpSynchronous(Irp, FileObject)               \
@@ -507,10 +492,32 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 } DEVICETREE_TRAVERSE_CONTEXT, *PDEVICETREE_TRAVERSE_CONTEXT;
 
 //
+// Resource code
+//
+ULONG
+NTAPI
+PnpDetermineResourceListSize(IN PCM_RESOURCE_LIST ResourceList);
+
+NTSTATUS
+NTAPI
+IopAssignDeviceResources(
+    IN PDEVICE_NODE DeviceNode
+);
+
+//
 // PNP Routines
 //
-VOID
-PnpInit(
+NTSTATUS
+NTAPI
+PipCallDriverAddDevice(
+    IN PDEVICE_NODE DeviceNode,
+    IN BOOLEAN LoadDriver,     
+    IN PDRIVER_OBJECT DriverObject
+);
+
+NTSTATUS
+NTAPI
+IopInitializePlugPlayServices(
     VOID
 );
 
@@ -549,6 +556,12 @@ IopGetSystemPowerDeviceObject(
     IN PDEVICE_OBJECT *DeviceObject
 );
 
+PDEVICE_NODE
+NTAPI
+PipAllocateDeviceNode(
+    IN PDEVICE_OBJECT PhysicalDeviceObject
+);
+
 NTSTATUS
 IopCreateDeviceNode(
     IN PDEVICE_NODE ParentNode,
@@ -563,6 +576,15 @@ IopFreeDeviceNode(
 );
 
 NTSTATUS
+NTAPI
+IopSynchronousCall(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    OUT PVOID *Information
+);
+
+NTSTATUS
+NTAPI
 IopInitiatePnpIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STATUS_BLOCK IoStatusBlock,
@@ -627,14 +649,32 @@ IopOpenRegistryKeyEx(
 
 NTSTATUS
 NTAPI
-IopGetRegistryValue(IN HANDLE Handle,
-                    IN PWSTR ValueName,
-                    OUT PKEY_VALUE_FULL_INFORMATION *Information);
+IopGetRegistryValue(
+    IN HANDLE Handle,
+    IN PWSTR ValueName,
+    OUT PKEY_VALUE_FULL_INFORMATION *Information
+);
 
+NTSTATUS
+NTAPI
+IopCreateRegistryKeyEx(
+    OUT PHANDLE Handle,
+    IN HANDLE BaseHandle OPTIONAL,
+    IN PUNICODE_STRING KeyName,
+    IN ACCESS_MASK DesiredAccess,
+    IN ULONG CreateOptions,
+    OUT PULONG Disposition OPTIONAL
+);
 
 //
 // PnP Routines
 //
+NTSTATUS
+NTAPI
+IopUpdateRootKey(
+    VOID
+);
+
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -694,6 +734,12 @@ IoInitSystem(
 //
 // Device/Volume Routines
 //
+VOID
+NTAPI
+IopReadyDeviceObjects(
+    IN PDRIVER_OBJECT Driver
+);
+
 NTSTATUS
 FASTCALL
 IopInitializeDevice(
@@ -1115,6 +1161,7 @@ IopStartRamdisk(
 //
 extern POBJECT_TYPE IoCompletionType;
 extern PDEVICE_NODE IopRootDeviceNode;
+extern KSPIN_LOCK IopDeviceTreeLock;
 extern ULONG IopTraceLevel;
 extern GENERAL_LOOKASIDE IopMdlLookasideList;
 extern GENERIC_MAPPING IopCompletionMapping;
@@ -1124,6 +1171,8 @@ extern HAL_DISPATCH _HalDispatchTable;
 extern LIST_ENTRY IopErrorLogListHead;
 extern ULONG IopNumTriageDumpDataBlocks;
 extern PVOID IopTriageDumpDataBlocks[64];
+extern PIO_BUS_TYPE_GUID_LIST PnpBusTypeGuidList;
+extern PDRIVER_OBJECT IopRootDriverObject;
 
 //
 // Inlined Functions

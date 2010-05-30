@@ -121,4 +121,7 @@ RegGetValueCount (HKEY Key);
 VOID
 RegInitializeRegistry(VOID);
 
+VOID
+RegShutdownRegistry(VOID);
+
 /* EOF */

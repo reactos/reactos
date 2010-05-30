@@ -37,6 +37,7 @@
 #include "exdisp.h"
 #include "mshtmhst.h"
 #include "hlink.h"
+#include "htiframe.h"
 
 #include "wine/unicode.h"
 
@@ -126,7 +127,9 @@ struct WebBrowser {
     const IOleInPlaceActiveObjectVtbl   *lpOleInPlaceActiveObjectVtbl;
     const IOleCommandTargetVtbl         *lpOleCommandTargetVtbl;
     const IHlinkFrameVtbl               *lpHlinkFrameVtbl;
+    const ITargetFrame2Vtbl             *lpITargetFrame2Vtbl;
     const IServiceProviderVtbl          *lpServiceProviderVtbl;
+    const IDataObjectVtbl               *lpDataObjectVtbl;
 
     LONG ref;
 
@@ -184,6 +187,8 @@ struct InternetExplorer {
 #define ACTIVEOBJ(x)    ((IOleInPlaceActiveObject*)     &(x)->lpOleInPlaceActiveObjectVtbl)
 #define OLECMD(x)       ((IOleCommandTarget*)           &(x)->lpOleCommandTargetVtbl)
 #define HLINKFRAME(x)   ((IHlinkFrame*)                 &(x)->lpHlinkFrameVtbl)
+#define DATAOBJECT(x)   ((IDataObject*)                 &(x)->lpDataObjectVtbl)
+#define TARGETFRAME2(x) ((ITargetFrame2*)               &(x)->lpITargetFrame2Vtbl)
 
 #define CLIENTSITE(x)   ((IOleClientSite*)              &(x)->lpOleClientSiteVtbl)
 #define INPLACESITE(x)  ((IOleInPlaceSite*)             &(x)->lpOleInPlaceSiteVtbl)
@@ -198,6 +203,7 @@ struct InternetExplorer {
 
 void WebBrowser_OleObject_Init(WebBrowser*);
 void WebBrowser_ViewObject_Init(WebBrowser*);
+void WebBrowser_DataObject_Init(WebBrowser*);
 void WebBrowser_Persist_Init(WebBrowser*);
 void WebBrowser_ClassInfo_Init(WebBrowser*);
 void WebBrowser_HlinkFrame_Init(WebBrowser*);

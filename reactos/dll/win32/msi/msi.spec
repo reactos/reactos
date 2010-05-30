@@ -272,8 +272,8 @@
 276 stub MsiSourceListClearMediaDiskW
 277 stdcall MsiDetermineApplicablePatchesA(str long ptr)
 278 stdcall MsiDetermineApplicablePatchesW(wstr long ptr)
-279 stub MsiMessageBoxExA
-280 stub MsiMessageBoxExW
+279 stdcall MsiMessageBoxExA(long str str long long long long)
+280 stdcall MsiMessageBoxExW(long wstr wstr long long long long)
 281 stdcall MsiSetExternalUIRecord(ptr long ptr ptr)
 
 @ stdcall -private DllCanUnloadNow()

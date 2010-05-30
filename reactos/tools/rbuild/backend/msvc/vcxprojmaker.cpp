@@ -261,7 +261,7 @@ VCXProjMaker::_generate_proj_file ( const Module& module )
 	fprintf ( OUT, "\t\t<Keyword>%s</Keyword>\r\n", "Win32Proj" ); //FIXME: Win32Proj???
 	fprintf ( OUT, "\t\t<RootNamespace>%s</RootNamespace>\r\n", module.name.c_str() ); //FIXME: shouldn't this be the soltion name?
 	fprintf ( OUT, "\t</PropertyGroup>\r\n" );
-
+	fprintf ( OUT, "</Project>" );
 
 
 }

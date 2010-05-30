@@ -31,8 +31,10 @@ MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
     PMMPTE PointerPte;
-    PFN_NUMBER StackPages;
+    PFN_NUMBER StackPages, PageFrameNumber;//, PageTableFrameNumber;
+    PMMPFN Pfn1;//, Pfn2;
     ULONG i;
+    KIRQL OldIrql;
     
     //
     // This should be the guard page, so decrement by one
@@ -46,6 +48,9 @@ MmDeleteKernelStack(IN PVOID StackBase,
     StackPages = BYTES_TO_PAGES(GuiStack ?
                                 KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE);
     
+    /* Acquire the PFN lock */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                            
     //
     // Loop them
     //
@@ -56,10 +61,22 @@ MmDeleteKernelStack(IN PVOID StackBase,
         //
         if (PointerPte->u.Hard.Valid == 1)
         {
-            //
-            // Nuke it
-            //
-            MmReleasePageMemoryConsumer(MC_NPPOOL, PFN_FROM_PTE(PointerPte));
+            /* Get the PTE's page */
+            PageFrameNumber = PFN_FROM_PTE(PointerPte);
+            Pfn1 = MiGetPfnEntry(PageFrameNumber);
+#if 0 // ARM3 might not own the page table, so don't take this risk. Leak it instead!
+            /* Now get the page of the page table mapping it */
+            PageTableFrameNumber = Pfn1->u4.PteFrame;
+            Pfn2 = MiGetPfnEntry(PageTableFrameNumber);
+            
+            /* Remove a shared reference, since the page is going away */
+            MiDecrementShareCount(Pfn2, PageTableFrameNumber);
+#endif
+            /* Set the special pending delete marker */
+            Pfn1->PteAddress = (PMMPTE)((ULONG_PTR)Pfn1->PteAddress | 1);
+            
+            /* And now delete the actual stack page */
+            MiDecrementShareCount(Pfn1, PageFrameNumber);
         }
         
         //
@@ -73,6 +90,9 @@ MmDeleteKernelStack(IN PVOID StackBase,
     //
     ASSERT(PointerPte->u.Hard.Valid == 0);
     
+    /* Release the PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
     //
     // Release the PTEs
     //
@@ -153,17 +173,17 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         // Next PTE
         //
         PointerPte++;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
         
-        //
-        // Get a page
-        //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL);
+        /* Get a page */
+        PageFrameIndex = MiRemoveAnyPage(0);
+        
+        /* Initialize the PFN entry for this page */
+        MiInitializePfn(PageFrameIndex, PointerPte, 1);
+        
+        /* Write the valid PTE */
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        
-        //
-        // Write it
-        //
+        ASSERT(PointerPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
         *PointerPte = TempPte;
     }
 
@@ -243,26 +263,22 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     // Acquire the PFN DB lock
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
+
     //
     // Loop each stack page
     //
     while (LimitPte >= NewLimitPte)
     {
-        //
-        // Sanity check
-        //
-        ASSERT(LimitPte->u.Hard.Valid == 0);
+        /* Get a page */
+        PageFrameIndex = MiRemoveAnyPage(0);
         
-        //
-        // Get a page
-        //
-        PageFrameIndex = MmAllocPage(MC_NPPOOL);
+        /* Initialize the PFN entry for this page */
+        MiInitializePfn(PageFrameIndex, LimitPte, 1);
+        
+        /* Write the valid PTE */
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        
-        //
-        // Write it
-        //
+        ASSERT(LimitPte->u.Hard.Valid == 0);
+        ASSERT(TempPte.u.Hard.Valid == 1);
         *LimitPte-- = TempPte;
     }
     

@@ -607,6 +607,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
     {
         //
+        // Append boot-time options
+        //
+        AppendBootTimeOptions(value);
+
+        //
         // Check if a ramdisk file was given
         //
         PCHAR File;
@@ -718,12 +723,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     }
     else
     {
-        if (! MachDiskNormalizeSystemPath(SystemPath,
-                                          sizeof(SystemPath)))
-        {
-            UiMessageBox("Invalid system path");
-            return;
-        }
         /* copy system path into kernel command line */
         strcpy(reactos_kernel_cmdline, SystemPath);
     }

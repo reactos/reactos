@@ -152,6 +152,20 @@ HCERTCHAINENGINE CRYPT_CreateChainEngine(HCERTSTORE root,
     return engine;
 }
 
+typedef struct _CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT
+{
+    DWORD       cbSize;
+    HCERTSTORE  hRestrictedRoot;
+    HCERTSTORE  hRestrictedTrust;
+    HCERTSTORE  hRestrictedOther;
+    DWORD       cAdditionalStore;
+    HCERTSTORE *rghAdditionalStore;
+    DWORD       dwFlags;
+    DWORD       dwUrlRetrievalTimeout;
+    DWORD       MaximumCachedCertificates;
+    DWORD       CycleDetectionModulus;
+} CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT;
+
 BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
  HCERTCHAINENGINE *phChainEngine)
 {
@@ -159,7 +173,8 @@ BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
 
     TRACE("(%p, %p)\n", pConfig, phChainEngine);
 
-    if (pConfig->cbSize != sizeof(*pConfig))
+    if (pConfig->cbSize != sizeof(CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT)
+     && pConfig->cbSize != sizeof(CERT_CHAIN_ENGINE_CONFIG))
     {
         SetLastError(E_INVALIDARG);
         return FALSE;
@@ -171,7 +186,10 @@ BOOL WINAPI CertCreateCertificateChainEngine(PCERT_CHAIN_ENGINE_CONFIG pConfig,
         HCERTSTORE root;
         HCERTCHAINENGINE engine;
 
-        if (pConfig->hRestrictedRoot)
+        if (pConfig->cbSize >= sizeof(CERT_CHAIN_ENGINE_CONFIG) &&
+         pConfig->hExclusiveRoot)
+            root = CertDuplicateStore(pConfig->hExclusiveRoot);
+        else if (pConfig->hRestrictedRoot)
             root = CertDuplicateStore(pConfig->hRestrictedRoot);
         else
             root = CertOpenSystemStoreW(0, rootW);
@@ -3017,7 +3035,31 @@ static BOOL match_dns_to_subject_alt_name(PCERT_EXTENSION ext,
             {
                 TRACE_(chain)("dNSName: %s\n", debugstr_w(
                  subjectName->rgAltEntry[i].u.pwszDNSName));
-                if (!strcmpiW(server_name,
+                if (subjectName->rgAltEntry[i].u.pwszDNSName[0] == '*')
+                {
+                    LPCWSTR server_name_dot;
+
+                    /* Matching a wildcard: a wildcard matches a single name
+                     * component, which is terminated by a dot.  RFC 1034
+                     * doesn't define whether multiple wildcards are allowed,
+                     * but I will assume that they are not until proven
+                     * otherwise.  RFC 1034 also states that 'the "*" label
+                     * always matches at least one whole label and sometimes
+                     * more, but always whole labels.'  Native crypt32 does not
+                     * match more than one label with a wildcard, so I do the
+                     * same here.  Thus, a wildcard only accepts the first
+                     * label, then requires an exact match of the remaining
+                     * string.
+                     */
+                    server_name_dot = strchrW(server_name, '.');
+                    if (server_name_dot)
+                    {
+                        if (!strcmpiW(server_name_dot,
+                         subjectName->rgAltEntry[i].u.pwszDNSName + 1))
+                            matches = TRUE;
+                    }
+                }
+                else if (!strcmpiW(server_name,
                  subjectName->rgAltEntry[i].u.pwszDNSName))
                     matches = TRUE;
             }

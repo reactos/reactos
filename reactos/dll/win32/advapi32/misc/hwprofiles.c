@@ -1,15 +1,14 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/misc/hwprofiles.c
+ * FILE:            dll/win32/advapi32/misc/hwprofiles.c
  * PURPOSE:         advapi32.dll Hardware Functions
  * PROGRAMMER:      Steven Edwards
- * UPDATE HISTORY:
- *	20042502
+ *                  Eric Kohl
  */
 
 #include <advapi32.h>
+#include <rpc.h>
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
@@ -91,6 +90,7 @@ GetCurrentHwProfileW(LPHW_PROFILE_INFOW lpHwProfileInfo)
     HKEY hProfileKey;
     DWORD dwLength;
     DWORD dwConfigId;
+    UUID uuid;
 
     TRACE("GetCurrentHwProfileW() called\n");
 
@@ -158,9 +158,17 @@ GetCurrentHwProfileW(LPHW_PROFILE_INFOW lpHwProfileInfo)
                          (LPBYTE)&lpHwProfileInfo->szHwProfileGuid,
                          &dwLength))
     {
-        /* FIXME: Create a new GUID */
-        wcscpy(lpHwProfileInfo->szHwProfileGuid,
-               L"{00000000-0000-0000-0000-000000000000}");
+        /* Create a new GUID */
+        UuidCreate(&uuid);
+        swprintf(
+            lpHwProfileInfo->szHwProfileGuid,
+            L"{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+            uuid.Data1, 
+            uuid.Data2, 
+            uuid.Data3,
+            uuid.Data4[0], uuid.Data4[1],
+            uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5], 
+            uuid.Data4[6], uuid.Data4[7]);
 
         dwLength = (wcslen(lpHwProfileInfo->szHwProfileGuid) + 1) * sizeof(WCHAR);
         RegSetValueExW(hProfileKey,

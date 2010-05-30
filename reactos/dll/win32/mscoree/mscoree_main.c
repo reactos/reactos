@@ -21,11 +21,14 @@
 
 #include <stdarg.h>
 
+#include "wine/unicode.h"
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "winnls.h"
 #include "winreg.h"
 #include "ole2.h"
+#include "shellapi.h"
 
 #include "initguid.h"
 #include "cor.h"
@@ -36,26 +39,25 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL( mscoree );
 
-static LPWSTR get_mono_exe(void)
+static BOOL get_mono_path(LPWSTR path)
 {
-    static const WCHAR mono_exe[] = {'b','i','n','\\','m','o','n','o','.','e','x','e',' ',0};
     static const WCHAR mono_key[] = {'S','o','f','t','w','a','r','e','\\','N','o','v','e','l','l','\\','M','o','n','o',0};
     static const WCHAR defaul_clr[] = {'D','e','f','a','u','l','t','C','L','R',0};
     static const WCHAR install_root[] = {'S','d','k','I','n','s','t','a','l','l','R','o','o','t',0};
     static const WCHAR slash[] = {'\\',0};
 
-    WCHAR version[64], version_key[MAX_PATH], root[MAX_PATH], *ret;
-    DWORD len, size;
+    WCHAR version[64], version_key[MAX_PATH];
+    DWORD len;
     HKEY key;
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, mono_key, 0, KEY_READ, &key))
-        return NULL;
+        return FALSE;
 
     len = sizeof(version);
     if (RegQueryValueExW(key, defaul_clr, 0, NULL, (LPBYTE)version, &len))
     {
         RegCloseKey(key);
-        return NULL;
+        return FALSE;
     }
     RegCloseKey(key);
 
@@ -64,24 +66,129 @@ static LPWSTR get_mono_exe(void)
     lstrcatW(version_key, version);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, version_key, 0, KEY_READ, &key))
-        return NULL;
+        return FALSE;
 
-    len = sizeof(root);
-    if (RegQueryValueExW(key, install_root, 0, NULL, (LPBYTE)root, &len))
+    len = sizeof(WCHAR) * MAX_PATH;
+    if (RegQueryValueExW(key, install_root, 0, NULL, (LPBYTE)path, &len))
     {
         RegCloseKey(key);
-        return NULL;
+        return FALSE;
     }
     RegCloseKey(key);
 
-    size = len + sizeof(slash) + sizeof(mono_exe);
-    if (!(ret = HeapAlloc(GetProcessHeap(), 0, size))) return NULL;
+    return TRUE;
+}
 
-    lstrcpyW(ret, root);
-    lstrcatW(ret, slash);
-    lstrcatW(ret, mono_exe);
+static CRITICAL_SECTION mono_lib_cs;
+static CRITICAL_SECTION_DEBUG mono_lib_cs_debug =
+{
+    0, 0, &mono_lib_cs,
+    { &mono_lib_cs_debug.ProcessLocksList,
+      &mono_lib_cs_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": mono_lib_cs") }
+};
+static CRITICAL_SECTION mono_lib_cs = { &mono_lib_cs_debug, -1, 0, 0, 0, 0 };
 
-    return ret;
+HMODULE mono_handle;
+
+void (*mono_config_parse)(const char *filename);
+MonoAssembly* (*mono_domain_assembly_open) (MonoDomain *domain, const char *name);
+void (*mono_jit_cleanup)(MonoDomain *domain);
+int (*mono_jit_exec)(MonoDomain *domain, MonoAssembly *assembly, int argc, char *argv[]);
+MonoDomain* (*mono_jit_init)(const char *file);
+int (*mono_jit_set_trace_options)(const char* options);
+void (*mono_set_dirs)(const char *assembly_dir, const char *config_dir);
+
+static void set_environment(LPCWSTR bin_path)
+{
+    WCHAR path_env[MAX_PATH];
+    int len;
+
+    static const WCHAR pathW[] = {'P','A','T','H',0};
+
+    /* We have to modify PATH as Mono loads other DLLs from this directory. */
+    GetEnvironmentVariableW(pathW, path_env, sizeof(path_env)/sizeof(WCHAR));
+    len = strlenW(path_env);
+    path_env[len++] = ';';
+    strcpyW(path_env+len, bin_path);
+    SetEnvironmentVariableW(pathW, path_env);
+}
+
+static HMODULE load_mono(void)
+{
+    static const WCHAR mono_dll[] = {'\\','b','i','n','\\','m','o','n','o','.','d','l','l',0};
+    static const WCHAR libmono_dll[] = {'\\','b','i','n','\\','l','i','b','m','o','n','o','.','d','l','l',0};
+    static const WCHAR bin[] = {'\\','b','i','n',0};
+    static const WCHAR lib[] = {'\\','l','i','b',0};
+    static const WCHAR etc[] = {'\\','e','t','c',0};
+    HMODULE result;
+    WCHAR mono_path[MAX_PATH], mono_dll_path[MAX_PATH+16], mono_bin_path[MAX_PATH+4];
+    WCHAR mono_lib_path[MAX_PATH+4], mono_etc_path[MAX_PATH+4];
+    char mono_lib_path_a[MAX_PATH], mono_etc_path_a[MAX_PATH];
+
+    EnterCriticalSection(&mono_lib_cs);
+
+    if (!mono_handle)
+    {
+        if (!get_mono_path(mono_path)) goto end;
+
+        strcpyW(mono_bin_path, mono_path);
+        strcatW(mono_bin_path, bin);
+        set_environment(mono_bin_path);
+
+        strcpyW(mono_lib_path, mono_path);
+        strcatW(mono_lib_path, lib);
+        WideCharToMultiByte(CP_UTF8, 0, mono_lib_path, -1, mono_lib_path_a, MAX_PATH, NULL, NULL);
+
+        strcpyW(mono_etc_path, mono_path);
+        strcatW(mono_etc_path, etc);
+        WideCharToMultiByte(CP_UTF8, 0, mono_etc_path, -1, mono_etc_path_a, MAX_PATH, NULL, NULL);
+
+        strcpyW(mono_dll_path, mono_path);
+        strcatW(mono_dll_path, mono_dll);
+        mono_handle = LoadLibraryW(mono_dll_path);
+
+        if (!mono_handle)
+        {
+            strcpyW(mono_dll_path, mono_path);
+            strcatW(mono_dll_path, libmono_dll);
+            mono_handle = LoadLibraryW(mono_dll_path);
+        }
+
+        if (!mono_handle) goto end;
+
+#define LOAD_MONO_FUNCTION(x) do { \
+    x = (void*)GetProcAddress(mono_handle, #x); \
+    if (!x) { \
+        mono_handle = NULL; \
+        goto end; \
+    } \
+} while (0);
+
+        LOAD_MONO_FUNCTION(mono_config_parse);
+        LOAD_MONO_FUNCTION(mono_domain_assembly_open);
+        LOAD_MONO_FUNCTION(mono_jit_cleanup);
+        LOAD_MONO_FUNCTION(mono_jit_exec);
+        LOAD_MONO_FUNCTION(mono_jit_init);
+        LOAD_MONO_FUNCTION(mono_jit_set_trace_options);
+        LOAD_MONO_FUNCTION(mono_set_dirs);
+
+#undef LOAD_MONO_FUNCTION
+
+        mono_set_dirs(mono_lib_path_a, mono_etc_path_a);
+
+        mono_config_parse(NULL);
+    }
+
+end:
+    result = mono_handle;
+
+    LeaveCriticalSection(&mono_lib_cs);
+
+    if (!result)
+        MESSAGE("wine: Install the Windows version of Mono to run .NET executables\n");
+
+    return result;
 }
 
 HRESULT WINAPI CorBindToRuntimeHost(LPCWSTR pwszVersion, LPCWSTR pwszBuildFlavor,
@@ -89,19 +196,15 @@ HRESULT WINAPI CorBindToRuntimeHost(LPCWSTR pwszVersion, LPCWSTR pwszBuildFlavor
                                     DWORD startupFlags, REFCLSID rclsid,
                                     REFIID riid, LPVOID *ppv)
 {
-    WCHAR *mono_exe;
-
     FIXME("(%s, %s, %s, %p, %d, %s, %s, %p): semi-stub!\n", debugstr_w(pwszVersion),
           debugstr_w(pwszBuildFlavor), debugstr_w(pwszHostConfigFile), pReserved,
           startupFlags, debugstr_guid(rclsid), debugstr_guid(riid), ppv);
 
-    if (!(mono_exe = get_mono_exe()))
+    if (!get_mono_path(NULL))
     {
         MESSAGE("wine: Install the Windows version of Mono to run .NET executables\n");
         return E_FAIL;
     }
-
-    HeapFree(GetProcessHeap(), 0, mono_exe);
 
     return S_OK;
 }
@@ -138,68 +241,73 @@ BOOL WINAPI _CorDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     return TRUE;
 }
 
+static void get_utf8_args(int *argc, char ***argv)
+{
+    WCHAR **argvw;
+    int size=0, i;
+    char *current_arg;
+
+    argvw = CommandLineToArgvW(GetCommandLineW(), argc);
+
+    for (i=0; i<*argc; i++)
+    {
+        size += sizeof(char*);
+        size += WideCharToMultiByte(CP_UTF8, 0, argvw[i], -1, NULL, 0, NULL, NULL);
+    }
+    size += sizeof(char*);
+
+    *argv = HeapAlloc(GetProcessHeap(), 0, size);
+    current_arg = (char*)(*argv + *argc + 1);
+
+    for (i=0; i<*argc; i++)
+    {
+        (*argv)[i] = current_arg;
+        current_arg += WideCharToMultiByte(CP_UTF8, 0, argvw[i], -1, current_arg, size, NULL, NULL);
+    }
+
+    (*argv)[*argc] = NULL;
+
+    HeapFree(GetProcessHeap(), 0, argvw);
+}
+
 __int32 WINAPI _CorExeMain(void)
 {
-    STARTUPINFOW si;
-    PROCESS_INFORMATION pi;
-    WCHAR *mono_exe, *cmd_line;
-    DWORD size, exit_code;
-    static const WCHAR WINE_MONO_TRACE[]={'W','I','N','E','_','M','O','N','O','_','T','R','A','C','E',0};
-    static const WCHAR trace_switch_start[]={'"','-','-','t','r','a','c','e','=',0};
-    static const WCHAR trace_switch_end[]={'"',' ',0};
+    int exit_code;
     int trace_size;
-    WCHAR trace_setting[256];
+    char trace_setting[256];
+    int argc;
+    char **argv;
+    MonoDomain *domain;
+    MonoAssembly *assembly;
+    char filename[MAX_PATH];
 
-    if (!(mono_exe = get_mono_exe()))
+    if (!load_mono())
     {
-        MESSAGE("install the Windows version of Mono to run .NET executables\n");
         return -1;
     }
 
-    trace_size = GetEnvironmentVariableW(WINE_MONO_TRACE, trace_setting, sizeof(trace_setting)/sizeof(WCHAR));
+    get_utf8_args(&argc, &argv);
 
-    size = (lstrlenW(mono_exe) + lstrlenW(GetCommandLineW()) + 1) * sizeof(WCHAR);
-
-    if (trace_size)
-        size += (trace_size + lstrlenW(trace_switch_start) + lstrlenW(trace_switch_end)) * sizeof(WCHAR);
-
-    if (!(cmd_line = HeapAlloc(GetProcessHeap(), 0, size)))
-    {
-        HeapFree(GetProcessHeap(), 0, mono_exe);
-        return -1;
-    }
-
-    lstrcpyW(cmd_line, mono_exe);
-    HeapFree(GetProcessHeap(), 0, mono_exe);
+    trace_size = GetEnvironmentVariableA("WINE_MONO_TRACE", trace_setting, sizeof(trace_setting));
 
     if (trace_size)
     {
-        lstrcatW(cmd_line, trace_switch_start);
-        lstrcatW(cmd_line, trace_setting);
-        lstrcatW(cmd_line, trace_switch_end);
+        mono_jit_set_trace_options(trace_setting);
     }
 
-    lstrcatW(cmd_line, GetCommandLineW());
+    GetModuleFileNameA(NULL, filename, MAX_PATH);
 
-    TRACE("new command line: %s\n", debugstr_w(cmd_line));
+    domain = mono_jit_init(filename);
 
-    memset(&si, 0, sizeof(si));
-    si.cb = sizeof(si);
-    if (!CreateProcessW(NULL, cmd_line, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    {
-        HeapFree(GetProcessHeap(), 0, cmd_line);
-        return -1;
-    }
-    HeapFree(GetProcessHeap(), 0, cmd_line);
+    assembly = mono_domain_assembly_open(domain, filename);
 
-    /* wait for the process to exit */
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    GetExitCodeProcess(pi.hProcess, &exit_code);
+    exit_code = mono_jit_exec(domain, assembly, argc, argv);
 
-    CloseHandle(pi.hThread);
-    CloseHandle(pi.hProcess);
+    mono_jit_cleanup(domain);
 
-    return (int)exit_code;
+    HeapFree(GetProcessHeap(), 0, argv);
+
+    return exit_code;
 }
 
 __int32 WINAPI _CorExeMain2(PBYTE ptrMemory, DWORD cntMemory, LPWSTR imageName, LPWSTR loaderName, LPWSTR cmdLine)

@@ -167,7 +167,7 @@ static HRESULT create_automation_object(MSIHANDLE msiHandle, IUnknown *pUnkOuter
     if( pUnkOuter )
         return CLASS_E_NOAGGREGATION;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(AutomationObject)+sizetPrivateData);
+    object = msi_alloc_zero( sizeof(AutomationObject) + sizetPrivateData );
 
     /* Set all the VTable references */
     object->lpVtbl = &AutomationObject_Vtbl;
@@ -184,7 +184,7 @@ static HRESULT create_automation_object(MSIHANDLE msiHandle, IUnknown *pUnkOuter
     object->iTypeInfo = NULL;
     hr = load_type_info((IDispatch *)object, &object->iTypeInfo, clsid, 0x0);
     if (FAILED(hr)) {
-        HeapFree(GetProcessHeap(), 0, object);
+        msi_free( object );
         return hr;
     }
 
@@ -203,7 +203,7 @@ static HRESULT create_list_enumerator(IUnknown *pUnkOuter, LPVOID *ppObj, Automa
     if( pUnkOuter )
         return CLASS_E_NOAGGREGATION;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ListEnumerator));
+    object = msi_alloc_zero( sizeof(ListEnumerator) );
 
     /* Set all the VTable references */
     object->lpVtbl = &ListEnumerator_Vtbl;
@@ -288,7 +288,7 @@ static ULONG WINAPI AutomationObject_Release(IDispatch* iface)
         if (This->funcFree) This->funcFree(This);
         ITypeInfo_Release(This->iTypeInfo);
         MsiCloseHandle(This->msiHandle);
-        HeapFree(GetProcessHeap(), 0, This);
+        msi_free(This);
     }
 
     return ref;
@@ -607,7 +607,7 @@ static ULONG WINAPI ListEnumerator_Release(IEnumVARIANT* iface)
     if (!ref)
     {
         if (This->pObj) IDispatch_Release((IDispatch *)This->pObj);
-        HeapFree(GetProcessHeap(), 0, This);
+        msi_free(This);
     }
 
     return ref;
@@ -1043,7 +1043,7 @@ static void WINAPI ListImpl_Free(AutomationObject *This)
 
     for (idx=0; idx<data->ulCount; idx++)
         VariantClear(&data->pVars[idx]);
-    HeapFree(GetProcessHeap(), 0, data->pVars);
+    msi_free(data->pVars);
 }
 
 static HRESULT WINAPI ViewImpl_Invoke(

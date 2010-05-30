@@ -41,7 +41,7 @@ set "_ROSBE_FULL_PATH_=%_ROSBE_PATH_DIR%%_ROSBE_PATH_%"
 ::echo RosBE insall path = %_ROSBE_FULL_PATH_%
 
 :: Set the path which contains our build tools
-set _ROSBE_BIN_PATH=%_ROSBE_FULL_PATH_%i386\bin
+set _ROSBE_BIN_PATH=%_ROSBE_FULL_PATH_%Tools
 
 :: Add the path to the search path
 path=%path%;%_ROSBE_BIN_PATH%

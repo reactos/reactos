@@ -95,6 +95,15 @@ HRESULT WINAPI ADsOpenObject(LPCWSTR lpszPathName, LPCWSTR lpszUserName, LPCWSTR
 }
 
 /*****************************************************
+ * ADsGetLastError    [ACTIVEDS.13]
+ */
+HRESULT WINAPI ADsGetLastError(LPDWORD perror, LPWSTR errorbuf, DWORD errorbuflen, LPWSTR namebuf, DWORD namebuflen)
+{
+    FIXME("(%p,%p,%d,%p,%d)!stub\n", perror, errorbuf, errorbuflen, namebuf, namebuflen);
+    return E_NOTIMPL;
+}
+
+/*****************************************************
  * FreeADsMem             [ACTIVEDS.15]
  */
 BOOL WINAPI FreeADsMem(LPVOID pMem)

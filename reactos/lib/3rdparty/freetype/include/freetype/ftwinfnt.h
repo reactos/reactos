@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing Windows fnt-specific data.                */
 /*                                                                         */
-/*  Copyright 2003, 2004 by                                                */
+/*  Copyright 2003, 2004, 2008 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -111,11 +111,11 @@ FT_BEGIN_HEADER
    *     ordering and minor deviations).
    *
    *   FT_WinFNT_ID_CP949 ::
-   *     A superset of Korean Hangul KS C 5601-1987 (with different
+   *     A superset of Korean Hangul KS~C 5601-1987 (with different
    *     ordering and minor deviations).
    *
    *   FT_WinFNT_ID_CP950 ::
-   *     A superset of traditional Chinese Big 5 ETen (with different
+   *     A superset of traditional Chinese Big~5 ETen (with different
    *     ordering and minor deviations).
    *
    *   FT_WinFNT_ID_CP1250 ::
@@ -219,36 +219,47 @@ FT_BEGIN_HEADER
     FT_UShort  color_table_offset;
     FT_ULong   reserved1[4];
 
-  } FT_WinFNT_HeaderRec, *FT_WinFNT_Header;
+  } FT_WinFNT_HeaderRec;
 
 
- /**********************************************************************
-  *
-  * @function:
-  *    FT_Get_WinFNT_Header
-  *
-  * @description:
-  *    Retrieve a Windows FNT font info header.
-  *
-  * @input:
-  *    face    :: A handle to the input face.
-  *
-  * @output:
-  *    aheader :: The WinFNT header.
-  *
-  * @return:
-  *   FreeType error code.  0 means success.
-  *
-  * @note:
-  *   This function only works with Windows FNT faces, returning an error
-  *   otherwise.
-  */
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Struct>                                                              */
+  /*    FT_WinFNT_Header                                                   */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    A handle to an @FT_WinFNT_HeaderRec structure.                     */
+  /*                                                                       */
+  typedef struct FT_WinFNT_HeaderRec_*  FT_WinFNT_Header;
+
+
+  /**********************************************************************
+   *
+   * @function:
+   *    FT_Get_WinFNT_Header
+   *
+   * @description:
+   *    Retrieve a Windows FNT font info header.
+   *
+   * @input:
+   *    face    :: A handle to the input face.
+   *
+   * @output:
+   *    aheader :: The WinFNT header.
+   *
+   * @return:
+   *   FreeType error code.  0~means success.
+   *
+   * @note:
+   *   This function only works with Windows FNT faces, returning an error
+   *   otherwise.
+   */
   FT_EXPORT( FT_Error )
   FT_Get_WinFNT_Header( FT_Face               face,
                         FT_WinFNT_HeaderRec  *aheader );
 
 
- /* */
+  /* */
 
 FT_END_HEADER
 

@@ -574,10 +574,11 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     switch( OskitError ) {
     case 0: Status = STATUS_SUCCESS; break;
     case OSK_EADDRNOTAVAIL: Status = STATUS_INVALID_ADDRESS; break;
+    case OSK_EADDRINUSE: Status = STATUS_ADDRESS_ALREADY_EXISTS; break;
     case OSK_EAFNOSUPPORT: Status = STATUS_INVALID_CONNECTION; break;
     case OSK_ECONNREFUSED: Status = STATUS_REMOTE_NOT_LISTENING; break;
-    case OSK_ECONNRESET:
-    case OSK_ECONNABORTED: Status = STATUS_REMOTE_DISCONNECT; break;
+    case OSK_ECONNRESET: Status = STATUS_REMOTE_DISCONNECT; break;
+    case OSK_ECONNABORTED: Status = STATUS_LOCAL_DISCONNECT; break;
     case OSK_EWOULDBLOCK:
     case OSK_EINPROGRESS: Status = STATUS_PENDING; break;
     case OSK_EINVAL: Status = STATUS_INVALID_PARAMETER; break;
@@ -735,16 +736,24 @@ NTSTATUS TCPClose
     Socket = Connection->SocketContext;
     Connection->SocketContext = NULL;
 
-    /* We need to close here otherwise oskit will never indicate
-     * SEL_FIN and we will never fully close the connection
-     */
-    Status = TCPTranslateError( OskitTCPClose( Socket ) );
-
-    if (!NT_SUCCESS(Status))
+    /* Don't try to close again if the other side closed us already */
+    if (Connection->SignalState != SEL_FIN)
     {
-        Connection->SocketContext = Socket;
-        UnlockObject(Connection, OldIrql);
-        return Status;
+       /* We need to close here otherwise oskit will never indicate
+        * SEL_FIN and we will never fully close the connection */
+       Status = TCPTranslateError( OskitTCPClose( Socket ) );
+
+       if (!NT_SUCCESS(Status))
+       {
+           Connection->SocketContext = Socket;
+           UnlockObject(Connection, OldIrql);
+           return Status;
+       }
+    }
+    else
+    {
+       /* We are already closed by the other end so return success */
+       Status = STATUS_SUCCESS;
     }
 
     if (Connection->AddressFile)

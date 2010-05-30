@@ -72,6 +72,8 @@ MM_SECTION_PAGEOUT_CONTEXT;
 
 POBJECT_TYPE MmSectionObjectType = NULL;
 
+BOOLEAN MmAllocationFragment;
+
 ULONG_PTR MmSubsectionBase;
 
 static GENERIC_MAPPING MmpSectionMapping = {

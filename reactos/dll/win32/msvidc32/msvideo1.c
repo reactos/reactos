@@ -95,10 +95,18 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
     blocks_high = height / 4;
     total_blocks = blocks_wide * blocks_high;
     block_inc = 4;
+#ifdef ORIGINAL
     row_dec = stride + 4;
+#else
+    row_dec = - (stride - 4); /* such that -row_dec > 0 */
+#endif
 
     for (block_y = blocks_high; block_y > 0; block_y--) {
+#ifdef ORIGINAL
         block_ptr = ((block_y * 4) - 1) * stride;
+#else
+        block_ptr = ((blocks_high - block_y) * 4) * stride;
+#endif
         for (block_x = blocks_wide; block_x > 0; block_x--) {
             /* check if this block should be skipped */
             if (skip_blocks) {
@@ -131,16 +139,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                    {
-#ifdef ORIGINAL
                         pixels[pixel_ptr++] = colors[(flags & 0x1) ^ 1];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = 
-                               colors[(flags & 0x1) ^ 1];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             } else if (byte_b >= 0x90) {
@@ -153,19 +152,9 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                    {
-#ifdef ORIGINAL
-                        pixels[pixel_ptr++] = 
-                            colors[((pixel_y & 0x2) << 1) + 
+                        pixels[pixel_ptr++] =
+                            colors[((pixel_y & 0x2) << 1) +
                                 (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = 
-                            colors[((pixel_y & 0x2) << 1) + 
-                                (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             } else {
@@ -174,15 +163,7 @@ msvideo1_decode_8bit( int width, int height, const unsigned char *buf, int buf_s
 
                 for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                     for (pixel_x = 0; pixel_x < 4; pixel_x++)
-                    {
-#ifdef ORIGINAL
                         pixels[pixel_ptr++] = colors[0];
-#else
-                        pixels[width*(height-(pixel_ptr/width)-1) + 
-                               pixel_ptr%width] = colors[0];
-                        pixel_ptr++;
-#endif
-                    }
                     pixel_ptr -= row_dec;
                 }
             }
@@ -218,10 +199,18 @@ msvideo1_decode_16bit( int width, int height, const unsigned char *buf, int buf_
     blocks_high = height / 4;
     total_blocks = blocks_wide * blocks_high;
     block_inc = 4;
+#ifdef ORIGINAL
     row_dec = stride + 4;
+#else
+    row_dec = - (stride - 4); /* such that -row_dec > 0 */
+#endif
 
     for (block_y = blocks_high; block_y > 0; block_y--) {
+#ifdef ORIGINAL
         block_ptr = ((block_y * 4) - 1) * stride;
+#else
+        block_ptr = ((blocks_high - block_y) * 4) * stride;
+#endif
         for (block_x = blocks_wide; block_x > 0; block_x--) {
             /* check if this block should be skipped */
             if (skip_blocks) {
@@ -272,8 +261,8 @@ msvideo1_decode_16bit( int width, int height, const unsigned char *buf, int buf_
 
                     for (pixel_y = 0; pixel_y < 4; pixel_y++) {
                         for (pixel_x = 0; pixel_x < 4; pixel_x++, flags >>= 1)
-                            pixels[pixel_ptr++] = 
-                                colors[((pixel_y & 0x2) << 1) + 
+                            pixels[pixel_ptr++] =
+                                colors[((pixel_y & 0x2) << 1) +
                                     (pixel_x & 0x2) + ((flags & 0x1) ^ 1)];
                         pixel_ptr -= row_dec;
                     }
@@ -408,7 +397,7 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
     width  = icd->lpbiInput->biWidth;
     height = icd->lpbiInput->biHeight;
     bit_per_pixel = icd->lpbiInput->biBitCount;
-    stride = width*bit_per_pixel/8;
+    stride = width; /* in bytes or 16bit words */
     sz = icd->lpbiInput->biSizeImage;
 
     if (info->mode_8bit)
@@ -440,7 +429,7 @@ static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DW
     width  = icd->lpbiSrc->biWidth;
     height = icd->lpbiSrc->biHeight;
     bit_per_pixel = icd->lpbiSrc->biBitCount;
-    stride = width*bit_per_pixel/8;
+    stride = width;
     sz = icd->lpbiSrc->biSizeImage;
 
     if (info->mode_8bit)
@@ -560,6 +549,10 @@ LRESULT WINAPI CRAM_DriverProc( DWORD_PTR dwDriverId, HDRVR hdrvr, UINT msg,
     case ICM_DECOMPRESSEX:
         r = CRAM_DecompressEx( info, (ICDECOMPRESSEX*) lParam1,
                                   (DWORD) lParam2 );
+        break;
+
+    case ICM_DECOMPRESS_END:
+        r = ICERR_OK;
         break;
 
     case ICM_COMPRESS_QUERY:

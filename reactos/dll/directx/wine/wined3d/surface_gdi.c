@@ -200,7 +200,7 @@ IWineGDISurfaceImpl_UnlockRect(IWineD3DSurface *iface)
     /* Tell the swapchain to update the screen */
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
     {
-        if(iface == swapchain->frontBuffer)
+        if (This == swapchain->front_buffer)
         {
             x11_copy_to_screen(swapchain, &This->lockedRect);
         }
@@ -240,7 +240,8 @@ IWineGDISurfaceImpl_Flip(IWineD3DSurface *iface,
         return WINEDDERR_NOTFLIPPABLE;
     }
 
-    hr = IWineD3DSwapChain_Present((IWineD3DSwapChain *) swapchain, NULL, NULL, 0, NULL, 0);
+    hr = IWineD3DSwapChain_Present((IWineD3DSwapChain *)swapchain,
+            NULL, NULL, swapchain->win_handle, NULL, 0);
     IWineD3DSwapChain_Release((IWineD3DSwapChain *) swapchain);
     return hr;
 }
@@ -296,9 +297,9 @@ const char* filename)
     FILE* f = NULL;
     UINT y = 0, x = 0;
     IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
+    const struct wined3d_format_desc *format_desc = This->resource.format_desc;
     static char *output = NULL;
     static UINT size = 0;
-    const struct GlPixelFormatDesc *format_desc = This->resource.format_desc;
 
     if (This->pow2Width > size) {
         output = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, This->pow2Width * 3);
@@ -340,14 +341,13 @@ const char* filename)
             fwrite(output, 3 * This->pow2Width, 1, f);
         }
     } else {
-        int red_shift, green_shift, blue_shift, pix_width, alpha_shift;
+        int red_shift, green_shift, blue_shift, pix_width;
 
         pix_width = format_desc->byte_count;
 
         red_shift = get_shift(format_desc->red_mask);
         green_shift = get_shift(format_desc->green_mask);
         blue_shift = get_shift(format_desc->blue_mask);
-        alpha_shift = get_shift(format_desc->alpha_mask);
 
         for (y = 0; y < This->pow2Height; y++) {
             const unsigned char *src = This->resource.allocatedMemory + (y * 1 * IWineD3DSurface_GetPitch(iface));
@@ -366,8 +366,8 @@ const char* filename)
                 output[3 * x + 0] = red_shift > 0 ? comp >> red_shift : comp << -red_shift;
                 comp = color & format_desc->green_mask;
                 output[3 * x + 1] = green_shift > 0 ? comp >> green_shift : comp << -green_shift;
-                comp = color & format_desc->alpha_mask;
-                output[3 * x + 2] = alpha_shift > 0 ? comp >> alpha_shift : comp << -alpha_shift;
+                comp = color & format_desc->blue_mask;
+                output[3 * x + 2] = blue_shift > 0 ? comp >> blue_shift : comp << -blue_shift;
             }
             fwrite(output, 3 * This->pow2Width, 1, f);
         }
@@ -430,7 +430,7 @@ static HRESULT WINAPI IWineGDISurfaceImpl_GetDC(IWineD3DSurface *iface, HDC *pHD
             IWineD3DSurfaceImpl *dds_primary;
             IWineD3DSwapChainImpl *swapchain;
             swapchain = (IWineD3DSwapChainImpl *)This->resource.device->swapchains[0];
-            dds_primary = (IWineD3DSurfaceImpl *)swapchain->frontBuffer;
+            dds_primary = swapchain->front_buffer;
             if (dds_primary && dds_primary->palette)
                 pal = dds_primary->palette->palents;
         }
@@ -500,7 +500,7 @@ static HRESULT WINAPI IWineGDISurfaceImpl_RealizePalette(IWineD3DSurface *iface)
     /* Tell the swapchain to update the screen */
     if (SUCCEEDED(IWineD3DSurface_GetContainer(iface, &IID_IWineD3DSwapChain, (void **)&swapchain)))
     {
-        if(iface == swapchain->frontBuffer)
+        if (This == swapchain->front_buffer)
         {
             x11_copy_to_screen(swapchain, NULL);
         }

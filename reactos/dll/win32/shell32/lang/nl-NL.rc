@@ -751,4 +751,6 @@ BEGIN
 
 	IDS_DEFAULT_CLUSTER_SIZE    "Default allocation size"
 	IDS_COPY_OF                 "Copy of"
+    
+	IDS_SHLEXEC_NOASSOC         "Er is geen Windows-programma geconfigureerd om dit soort bestanden te openen."
 END

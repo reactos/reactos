@@ -10,7 +10,6 @@
 	<library>pseh</library>
 	<library>smdll</library>
 	<directory name="api">
-		<file>handle.c</file>
 		<file>process.c</file>
 		<file>user.c</file>
 		<file>wapi.c</file>

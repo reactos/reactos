@@ -22,8 +22,8 @@ ULONG KeTimeAdjustment;
 VOID
 FASTCALL
 KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN KIRQL Irql,
-                   IN ULONG Increment)
+                   IN ULONG Increment,
+                   IN KIRQL Irql)                   
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULARGE_INTEGER CurrentTime, InterruptTime;

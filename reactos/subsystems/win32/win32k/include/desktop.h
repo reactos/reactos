@@ -24,8 +24,6 @@ typedef struct _DESKTOP
     DWORD dwMouseHoverTime;
 
     /* ReactOS */
-    /* Rectangle of the work area */
-    RECTL WorkArea;
     /* Pointer to the active queue. */
     PVOID ActiveMessageQueue;
     /* Handle of the desktop window. */
@@ -68,9 +66,6 @@ IntDesktopObjectParse(IN PVOID ParseObject,
 
 VOID APIENTRY
 IntDesktopObjectDelete(PWIN32_DELETEMETHOD_PARAMETERS Parameters);
-
-VOID FASTCALL
-IntGetDesktopWorkArea(PDESKTOP Desktop, RECTL *Rect);
 
 LRESULT CALLBACK
 IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);

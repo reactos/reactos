@@ -2,13 +2,13 @@
 
 [Section]
 Name = DOSBox
-Version = 0.73
+Version = 0.74
 Licence = GPL
 Description = DOSBox is a DOS emulator.
 Size = 1.4MB
 Category = 15
 URLSite = http://www.dosbox.com/
-URLDownload = http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.73-win32-installer.exe
+URLDownload = http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.74-win32-installer.exe
 CDPath = none
 
 [Section.0407]

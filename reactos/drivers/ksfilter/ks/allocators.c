@@ -251,7 +251,7 @@ IKsAllocator_fnDeviceIoControl(
         }
     }
 
-    /* unhandeled request */
+    /* unhandled request */
     Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 

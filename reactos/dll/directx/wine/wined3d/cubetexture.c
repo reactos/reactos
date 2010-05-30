@@ -31,11 +31,12 @@ static void cubetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3
 {
     /* Override the IWineD3DResource Preload method. */
     IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
+    UINT sub_count = This->baseTexture.level_count * This->baseTexture.layer_count;
     IWineD3DDeviceImpl *device = This->resource.device;
     struct wined3d_context *context = NULL;
-    unsigned int i, j;
     BOOL srgb_mode;
     BOOL *dirty;
+    UINT i;
 
     switch (srgb)
     {
@@ -66,25 +67,24 @@ static void cubetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3
     {
         /* No danger of recursive calls, context_acquire() sets isInDraw to true
          * when loading offscreen render targets into their texture. */
-        context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
+        context = context_acquire(device, NULL);
     }
 
     if (This->resource.format_desc->format == WINED3DFMT_P8_UINT
             || This->resource.format_desc->format == WINED3DFMT_P8_UINT_A8_UNORM)
     {
-        for (i = 0; i < This->baseTexture.levels; ++i)
+        for (i = 0; i < sub_count; ++i)
         {
-            for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z; ++j)
+            IWineD3DSurfaceImpl *surface = (IWineD3DSurfaceImpl *)This->baseTexture.sub_resources[i];
+
+            if (palette9_changed(surface))
             {
-                if (palette9_changed((IWineD3DSurfaceImpl *)This->surfaces[j][i]))
-                {
-                    TRACE("Reloading surface because the d3d8/9 palette was changed.\n");
-                    /* TODO: This is not necessarily needed with hw palettized texture support. */
-                    IWineD3DSurface_LoadLocation(This->surfaces[j][i], SFLAG_INSYSMEM, NULL);
-                    /* Make sure the texture is reloaded because of the palette change,
-                     * this kills performance though :( */
-                    IWineD3DSurface_ModifyLocation(This->surfaces[j][i], SFLAG_INTEXTURE, FALSE);
-                }
+                TRACE("Reloading surface %p because the d3d8/9 palette was changed.\n", surface);
+                /* TODO: This is not necessarily needed with hw palettized texture support. */
+                IWineD3DSurface_LoadLocation((IWineD3DSurface *)surface, SFLAG_INSYSMEM, NULL);
+                /* Make sure the texture is reloaded because of the palette change,
+                 * this kills performance though :( */
+                IWineD3DSurface_ModifyLocation((IWineD3DSurface *)surface, SFLAG_INTEXTURE, FALSE);
             }
         }
     }
@@ -93,12 +93,9 @@ static void cubetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3
      * since the last load then reload the surfaces. */
     if (*dirty)
     {
-        for (i = 0; i < This->baseTexture.levels; ++i)
+        for (i = 0; i < sub_count; ++i)
         {
-            for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z; ++j)
-            {
-                IWineD3DSurface_LoadTexture(This->surfaces[j][i], srgb_mode);
-            }
+            IWineD3DSurface_LoadTexture((IWineD3DSurface *)This->baseTexture.sub_resources[i], srgb_mode);
         }
     }
     else
@@ -114,26 +111,24 @@ static void cubetexture_internal_preload(IWineD3DBaseTexture *iface, enum WINED3
 
 static void cubetexture_cleanup(IWineD3DCubeTextureImpl *This)
 {
-    unsigned int i, j;
+    UINT sub_count = This->baseTexture.level_count * This->baseTexture.layer_count;
+    UINT i;
 
     TRACE("(%p) : Cleaning up.\n", This);
 
-    for (i = 0; i < This->baseTexture.levels; ++i)
+    for (i = 0; i < sub_count; ++i)
     {
-        for (j = 0; j < 6; ++j)
-        {
-            IWineD3DSurface *surface = This->surfaces[j][i];
+        IWineD3DSurfaceImpl *surface = (IWineD3DSurfaceImpl *)This->baseTexture.sub_resources[i];
 
-            if (surface)
-            {
-                /* Clean out the texture name we gave to the surface so that the
-                 * surface doesn't try and release it. */
-                surface_set_texture_name(surface, 0, TRUE);
-                surface_set_texture_name(surface, 0, FALSE);
-                surface_set_texture_target(surface, 0);
-                IWineD3DSurface_SetContainer(surface, NULL);
-                IWineD3DSurface_Release(surface);
-            }
+        if (surface)
+        {
+            /* Clean out the texture name we gave to the surface so that the
+             * surface doesn't try and release it. */
+            surface_set_texture_name(surface, 0, TRUE);
+            surface_set_texture_name(surface, 0, FALSE);
+            surface_set_texture_target(surface, 0);
+            IWineD3DSurface_SetContainer((IWineD3DSurface *)surface, NULL);
+            IWineD3DSurface_Release((IWineD3DSurface *)surface);
         }
     }
     basetexture_cleanup((IWineD3DBaseTexture *)This);
@@ -207,21 +202,25 @@ static void WINAPI IWineD3DCubeTextureImpl_PreLoad(IWineD3DCubeTexture *iface) {
     cubetexture_internal_preload((IWineD3DBaseTexture *) iface, SRGB_ANY);
 }
 
-static void WINAPI IWineD3DCubeTextureImpl_UnLoad(IWineD3DCubeTexture *iface) {
-    unsigned int i, j;
+static void WINAPI IWineD3DCubeTextureImpl_UnLoad(IWineD3DCubeTexture *iface)
+{
     IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
-    TRACE("(%p)\n", This);
+    UINT sub_count = This->baseTexture.level_count * This->baseTexture.layer_count;
+    UINT i;
+
+    TRACE("iface %p.\n", iface);
 
     /* Unload all the surfaces and reset the texture name. If UnLoad was called on the
      * surface before, this one will be a NOP and vice versa. Unloading an unloaded
-     * surface is fine
-     */
-    for (i = 0; i < This->baseTexture.levels; i++) {
-        for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z ; j++) {
-            IWineD3DSurface_UnLoad(This->surfaces[j][i]);
-            surface_set_texture_name(This->surfaces[j][i], 0, TRUE);
-            surface_set_texture_name(This->surfaces[j][i], 0, FALSE);
-        }
+     * surface is fine. */
+
+    for (i = 0; i < sub_count; ++i)
+    {
+        IWineD3DSurfaceImpl *surface = (IWineD3DSurfaceImpl *)This->baseTexture.sub_resources[i];
+
+        IWineD3DSurface_UnLoad((IWineD3DSurface *)surface);
+        surface_set_texture_name(surface, 0, TRUE);
+        surface_set_texture_name(surface, 0, FALSE);
     }
 
     basetexture_unload((IWineD3DBaseTexture *)iface);
@@ -281,16 +280,19 @@ static HRESULT WINAPI IWineD3DCubeTextureImpl_BindTexture(IWineD3DCubeTexture *i
     TRACE("(%p) : relay to BaseTexture\n", This);
 
     hr = basetexture_bind((IWineD3DBaseTexture *)iface, srgb, &set_gl_texture_desc);
-    if (set_gl_texture_desc && SUCCEEDED(hr)) {
-        UINT i, j;
-        for (i = 0; i < This->baseTexture.levels; ++i) {
-            for (j = WINED3DCUBEMAP_FACE_POSITIVE_X; j <= WINED3DCUBEMAP_FACE_NEGATIVE_Z; ++j) {
-                if(This->baseTexture.is_srgb) {
-                    surface_set_texture_name(This->surfaces[j][i], This->baseTexture.texture_srgb.name, TRUE);
-                } else {
-                    surface_set_texture_name(This->surfaces[j][i], This->baseTexture.texture_rgb.name, FALSE);
-                }
-            }
+    if (set_gl_texture_desc && SUCCEEDED(hr))
+    {
+        UINT sub_count = This->baseTexture.level_count * This->baseTexture.layer_count;
+        UINT i;
+
+        for (i = 0; i < sub_count; ++i)
+        {
+            IWineD3DSurfaceImpl *surface = (IWineD3DSurfaceImpl *)This->baseTexture.sub_resources[i];
+
+            if (This->baseTexture.is_srgb)
+                surface_set_texture_name(surface, This->baseTexture.texture_srgb.name, TRUE);
+            else
+                surface_set_texture_name(surface, This->baseTexture.texture_rgb.name, FALSE);
         }
     }
 
@@ -314,82 +316,102 @@ static BOOL WINAPI IWineD3DCubeTextureImpl_IsCondNP2(IWineD3DCubeTexture *iface)
 /* *******************************************
    IWineD3DCubeTexture IWineD3DCubeTexture parts follow
    ******************************************* */
-static HRESULT WINAPI IWineD3DCubeTextureImpl_GetLevelDesc(IWineD3DCubeTexture *iface, UINT Level, WINED3DSURFACE_DESC* pDesc) {
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
+static HRESULT WINAPI IWineD3DCubeTextureImpl_GetLevelDesc(IWineD3DCubeTexture *iface,
+        UINT level, WINED3DSURFACE_DESC *desc)
+{
+    IWineD3DBaseTextureImpl *texture = (IWineD3DBaseTextureImpl *)iface;
+    IWineD3DSurface *surface;
 
-    if (Level < This->baseTexture.levels) {
-        TRACE("(%p) level (%d)\n", This, Level);
-        return IWineD3DSurface_GetDesc(This->surfaces[0][Level], pDesc);
+    TRACE("iface %p, level %u, desc %p.\n", iface, level, desc);
+
+    if (!(surface = (IWineD3DSurface *)basetexture_get_sub_resource(texture, 0, level)))
+    {
+        WARN("Failed to get sub-resource.\n");
+        return WINED3DERR_INVALIDCALL;
     }
-    WARN("(%p) level(%d) overflow Levels(%d)\n", This, Level, This->baseTexture.levels);
-    return WINED3DERR_INVALIDCALL;
+
+    return IWineD3DSurface_GetDesc(surface, desc);
 }
 
-static HRESULT WINAPI IWineD3DCubeTextureImpl_GetCubeMapSurface(IWineD3DCubeTexture *iface, WINED3DCUBEMAP_FACES FaceType, UINT Level, IWineD3DSurface** ppCubeMapSurface) {
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
-    HRESULT hr = WINED3DERR_INVALIDCALL;
+static HRESULT WINAPI IWineD3DCubeTextureImpl_GetCubeMapSurface(IWineD3DCubeTexture *iface,
+        WINED3DCUBEMAP_FACES face, UINT level, IWineD3DSurface **surface)
+{
+    IWineD3DBaseTextureImpl *texture = (IWineD3DBaseTextureImpl *)iface;
+    IWineD3DSurface *s;
 
-    if (Level < This->baseTexture.levels && FaceType <= WINED3DCUBEMAP_FACE_NEGATIVE_Z) {
-        *ppCubeMapSurface = This->surfaces[FaceType][Level];
-        IWineD3DSurface_AddRef(*ppCubeMapSurface);
+    TRACE("iface %p, face %u, level %u, surface %p.\n",
+            iface, face, level, surface);
 
-        hr = WINED3D_OK;
+    if (!(s = (IWineD3DSurface *)basetexture_get_sub_resource(texture, face, level)))
+    {
+        WARN("Failed to get sub-resource.\n");
+        return WINED3DERR_INVALIDCALL;
     }
-    if (WINED3D_OK == hr) {
-        TRACE("(%p) -> faceType(%d) level(%d) returning surface@%p\n", This, FaceType, Level, This->surfaces[FaceType][Level]);
-    } else {
-        WARN("(%p) level(%d) overflow Levels(%d) Or FaceType(%d)\n", This, Level, This->baseTexture.levels, FaceType);
-    }
 
-    return hr;
+    IWineD3DSurface_AddRef(s);
+    *surface = s;
+
+    TRACE("Returning surface %p.\n", *surface);
+
+    return WINED3D_OK;
 }
 
-static HRESULT WINAPI IWineD3DCubeTextureImpl_LockRect(IWineD3DCubeTexture *iface, WINED3DCUBEMAP_FACES FaceType, UINT Level, WINED3DLOCKED_RECT* pLockedRect, CONST RECT* pRect, DWORD Flags) {
-    HRESULT hr = WINED3DERR_INVALIDCALL;
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
+static HRESULT WINAPI IWineD3DCubeTextureImpl_LockRect(IWineD3DCubeTexture *iface,
+        WINED3DCUBEMAP_FACES face, UINT level, WINED3DLOCKED_RECT *locked_rect, const RECT *rect, DWORD flags)
+{
+    IWineD3DBaseTextureImpl *texture = (IWineD3DBaseTextureImpl *)iface;
+    IWineD3DSurface *surface;
 
-    if (Level < This->baseTexture.levels && FaceType <= WINED3DCUBEMAP_FACE_NEGATIVE_Z) {
-        hr = IWineD3DSurface_LockRect(This->surfaces[FaceType][Level], pLockedRect, pRect, Flags);
+    TRACE("iface %p, face %u, level %u, locked_rect %p, rect %s, flags %#x.\n",
+            iface, face, level, locked_rect, wine_dbgstr_rect(rect), flags);
+
+    if (!(surface = (IWineD3DSurface *)basetexture_get_sub_resource(texture, face, level)))
+    {
+        WARN("Failed to get sub-resource.\n");
+        return WINED3DERR_INVALIDCALL;
     }
 
-    if (WINED3D_OK == hr) {
-        TRACE("(%p) -> faceType(%d) level(%d) returning memory@%p success(%u)\n", This, FaceType, Level, pLockedRect->pBits, hr);
-    } else {
-        WARN("(%p) level(%d) overflow Levels(%d)  Or FaceType(%d)\n", This, Level, This->baseTexture.levels, FaceType);
-    }
-
-    return hr;
+    return IWineD3DSurface_LockRect(surface, locked_rect, rect, flags);
 }
 
-static HRESULT WINAPI IWineD3DCubeTextureImpl_UnlockRect(IWineD3DCubeTexture *iface, WINED3DCUBEMAP_FACES FaceType, UINT Level) {
-    HRESULT hr = WINED3DERR_INVALIDCALL;
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
+static HRESULT WINAPI IWineD3DCubeTextureImpl_UnlockRect(IWineD3DCubeTexture *iface,
+        WINED3DCUBEMAP_FACES face, UINT level)
+{
+    IWineD3DBaseTextureImpl *texture = (IWineD3DBaseTextureImpl *)iface;
+    IWineD3DSurface *surface;
 
-    if (Level < This->baseTexture.levels && FaceType <= WINED3DCUBEMAP_FACE_NEGATIVE_Z) {
-        hr = IWineD3DSurface_UnlockRect(This->surfaces[FaceType][Level]);
+    TRACE("iface %p, face %u, level %u.\n",
+            iface, face, level);
+
+    if (!(surface = (IWineD3DSurface *)basetexture_get_sub_resource(texture, face, level)))
+    {
+        WARN("Failed to get sub-resource.\n");
+        return WINED3DERR_INVALIDCALL;
     }
 
-    if (WINED3D_OK == hr) {
-        TRACE("(%p) -> faceType(%d) level(%d) success(%u)\n", This, FaceType, Level, hr);
-    } else {
-        WARN("(%p) level(%d) overflow Levels(%d) Or FaceType(%d)\n", This, Level, This->baseTexture.levels, FaceType);
-    }
-    return hr;
+    return IWineD3DSurface_UnlockRect(surface);
 }
 
-static HRESULT  WINAPI IWineD3DCubeTextureImpl_AddDirtyRect(IWineD3DCubeTexture *iface, WINED3DCUBEMAP_FACES FaceType, CONST RECT* pDirtyRect) {
-    HRESULT hr = WINED3DERR_INVALIDCALL;
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
-    This->baseTexture.texture_rgb.dirty = TRUE;
-    This->baseTexture.texture_srgb.dirty = TRUE;
-    TRACE("(%p) : dirtyfication of faceType(%d) Level (0)\n", This, FaceType);
-    if (FaceType <= WINED3DCUBEMAP_FACE_NEGATIVE_Z) {
-        surface_add_dirty_rect(This->surfaces[FaceType][0], pDirtyRect);
-        hr = WINED3D_OK;
-    } else {
-        WARN("(%p) overflow FaceType(%d)\n", This, FaceType);
+static HRESULT WINAPI IWineD3DCubeTextureImpl_AddDirtyRect(IWineD3DCubeTexture *iface,
+        WINED3DCUBEMAP_FACES face, const RECT *dirty_rect)
+{
+    IWineD3DBaseTextureImpl *texture = (IWineD3DBaseTextureImpl *)iface;
+    IWineD3DSurfaceImpl *surface;
+
+    TRACE("iface %p, face %u, dirty_rect %s.\n",
+            iface, face, wine_dbgstr_rect(dirty_rect));
+
+    if (!(surface = (IWineD3DSurfaceImpl *)basetexture_get_sub_resource(texture, face, 0)))
+    {
+        WARN("Failed to get sub-resource.\n");
+        return WINED3DERR_INVALIDCALL;
     }
-    return hr;
+
+    texture->baseTexture.texture_rgb.dirty = TRUE;
+    texture->baseTexture.texture_srgb.dirty = TRUE;
+    surface_add_dirty_rect(surface, dirty_rect);
+
+    return WINED3D_OK;
 }
 
 static const IWineD3DCubeTextureVtbl IWineD3DCubeTexture_Vtbl =
@@ -433,7 +455,7 @@ HRESULT cubetexture_init(IWineD3DCubeTextureImpl *texture, UINT edge_length, UIN
         IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    const struct GlPixelFormatDesc *format_desc = getFormatDescEntry(format, gl_info);
+    const struct wined3d_format_desc *format_desc = getFormatDescEntry(format, gl_info);
     UINT pow2_edge_length;
     unsigned int i, j;
     UINT tmp_w;
@@ -478,8 +500,8 @@ HRESULT cubetexture_init(IWineD3DCubeTextureImpl *texture, UINT edge_length, UIN
 
     texture->lpVtbl = &IWineD3DCubeTexture_Vtbl;
 
-    hr = basetexture_init((IWineD3DBaseTextureImpl *)texture, levels, WINED3DRTYPE_CUBETEXTURE,
-            device, 0, usage, format_desc, pool, parent, parent_ops);
+    hr = basetexture_init((IWineD3DBaseTextureImpl *)texture, 6, levels,
+            WINED3DRTYPE_CUBETEXTURE, device, 0, usage, format_desc, pool, parent, parent_ops);
     if (FAILED(hr))
     {
         WARN("Failed to initialize basetexture, returning %#x\n", hr);
@@ -510,7 +532,7 @@ HRESULT cubetexture_init(IWineD3DCubeTextureImpl *texture, UINT edge_length, UIN
 
     /* Generate all the surfaces. */
     tmp_w = edge_length;
-    for (i = 0; i < texture->baseTexture.levels; ++i)
+    for (i = 0; i < texture->baseTexture.level_count; ++i)
     {
         /* Create the 6 faces. */
         for (j = 0; j < 6; ++j)
@@ -524,20 +546,22 @@ HRESULT cubetexture_init(IWineD3DCubeTextureImpl *texture, UINT edge_length, UIN
                 GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB,
                 GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB,
             };
+            UINT idx = j * texture->baseTexture.level_count + i;
+            IWineD3DSurface *surface;
 
             hr = IWineD3DDeviceParent_CreateSurface(device->device_parent, parent, tmp_w, tmp_w,
-                    format, usage, pool, i /* Level */, j, &texture->surfaces[j][i]);
+                    format, usage, pool, i /* Level */, j, &surface);
             if (FAILED(hr))
             {
                 FIXME("(%p) Failed to create surface, hr %#x.\n", texture, hr);
-                texture->surfaces[j][i] = NULL;
                 cubetexture_cleanup(texture);
                 return hr;
             }
 
-            IWineD3DSurface_SetContainer(texture->surfaces[j][i], (IWineD3DBase *)texture);
-            TRACE("Created surface level %u @ %p.\n", i, texture->surfaces[j][i]);
-            surface_set_texture_target(texture->surfaces[j][i], cube_targets[j]);
+            IWineD3DSurface_SetContainer(surface, (IWineD3DBase *)texture);
+            surface_set_texture_target((IWineD3DSurfaceImpl *)surface, cube_targets[j]);
+            texture->baseTexture.sub_resources[idx] = (IWineD3DResourceImpl *)surface;
+            TRACE("Created surface level %u @ %p.\n", i, surface);
         }
         tmp_w = max(1, tmp_w >> 1);
     }

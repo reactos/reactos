@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += WINDOWS_DRIVER
 
 define WINDOWS_DRIVER
-$(OPEN_DRIVER)winfnt_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, winfnt_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)winfnt    $(ECHO_DRIVER_DESC)Windows bitmap fonts with extension *.fnt or *.fon$(ECHO_DRIVER_DONE)
 endef
 

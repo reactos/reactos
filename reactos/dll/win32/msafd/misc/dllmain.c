@@ -318,79 +318,95 @@ error:
     return INVALID_SOCKET;
 }
 
+INT
+TranslateNtStatusError(NTSTATUS Status)
+{
+    switch (Status)
+    {
+       case STATUS_CANT_WAIT:
+          return WSAEWOULDBLOCK;
+
+       case STATUS_TIMEOUT:
+          return WSAETIMEDOUT;
+
+       case STATUS_SUCCESS:
+          return NO_ERROR;
+
+       case STATUS_FILE_CLOSED:
+       case STATUS_END_OF_FILE:
+          return WSAESHUTDOWN;
+
+       case STATUS_PENDING:
+          return WSA_IO_PENDING;
+
+       case STATUS_BUFFER_TOO_SMALL:
+       case STATUS_BUFFER_OVERFLOW:
+          DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n");
+          return WSAEMSGSIZE;
+
+       case STATUS_NO_MEMORY:
+       case STATUS_INSUFFICIENT_RESOURCES:
+          DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n");
+          return WSAENOBUFS;
+
+       case STATUS_INVALID_CONNECTION:
+          DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
+          return WSAEAFNOSUPPORT;
+
+       case STATUS_INVALID_ADDRESS:
+          DbgPrint("MSAFD: STATUS_INVALID_ADDRESS\n");
+          return WSAEADDRNOTAVAIL;
+
+       case STATUS_REMOTE_NOT_LISTENING:
+          DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n");
+          return WSAECONNREFUSED;
+
+       case STATUS_NETWORK_UNREACHABLE:
+          DbgPrint("MSAFD: STATUS_NETWORK_UNREACHABLE\n");
+          return WSAENETUNREACH;
+
+       case STATUS_INVALID_PARAMETER:
+          DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n");
+          return WSAEINVAL;
+
+       case STATUS_CANCELLED:
+          DbgPrint("MSAFD: STATUS_CANCELLED\n");
+          return WSA_OPERATION_ABORTED;
+
+       case STATUS_ADDRESS_ALREADY_EXISTS:
+          DbgPrint("MSAFD: STATUS_ADDRESS_ALREADY_EXISTS\n");
+          return WSAEADDRINUSE;
+
+       case STATUS_LOCAL_DISCONNECT:
+          DbgPrint("MSAFD: STATUS_LOCAL_DISCONNECT\n");
+          return WSAECONNABORTED;
+
+       case STATUS_REMOTE_DISCONNECT:
+          DbgPrint("MSAFD: STATUS_REMOTE_DISCONNECT\n");
+          return WSAECONNRESET;
+
+       default:
+          DbgPrint("MSAFD: Unhandled NTSTATUS value: 0x%x\n", Status);
+          return WSAENETDOWN;
+    }
+}
 
 DWORD MsafdReturnWithErrno(NTSTATUS Status,
                            LPINT Errno,
                            DWORD Received,
                            LPDWORD ReturnedBytes)
 {
-    if( ReturnedBytes )
-        *ReturnedBytes = 0;
-    if( Errno )
+    *Errno = TranslateNtStatusError(Status);
+
+    if (ReturnedBytes)
     {
-        switch (Status)
-        {
-        case STATUS_CANT_WAIT: 
-            *Errno = WSAEWOULDBLOCK;
-            break;
-        case STATUS_TIMEOUT:
-            *Errno = WSAETIMEDOUT;
-            break;
-        case STATUS_SUCCESS: 
-            /* Return Number of bytes Read */
-            if( ReturnedBytes ) 
-                *ReturnedBytes = Received;
-            break;
-        case STATUS_FILE_CLOSED:
-        case STATUS_END_OF_FILE:
-            *Errno = WSAESHUTDOWN;
-            break;
-        case STATUS_PENDING: 
-            *Errno = WSA_IO_PENDING;
-            break;
-        case STATUS_BUFFER_TOO_SMALL:
-        case STATUS_BUFFER_OVERFLOW:
-            DbgPrint("MSAFD: STATUS_BUFFER_TOO_SMALL/STATUS_BUFFER_OVERFLOW\n");
-            *Errno = WSAEMSGSIZE;
-            break;
-        case STATUS_NO_MEMORY: /* Fall through to STATUS_INSUFFICIENT_RESOURCES */
-        case STATUS_INSUFFICIENT_RESOURCES:
-            DbgPrint("MSAFD: STATUS_NO_MEMORY/STATUS_INSUFFICIENT_RESOURCES\n");
-            *Errno = WSAENOBUFS;
-            break;
-        case STATUS_INVALID_CONNECTION:
-            DbgPrint("MSAFD: STATUS_INVALID_CONNECTION\n");
-            *Errno = WSAEAFNOSUPPORT;
-            break;
-        case STATUS_INVALID_ADDRESS:
-            DbgPrint("MSAFD: STATUS_INVALID_ADDRESS\n");
-            *Errno = WSAEADDRNOTAVAIL;
-            break;
-        case STATUS_REMOTE_NOT_LISTENING:
-            DbgPrint("MSAFD: STATUS_REMOTE_NOT_LISTENING\n");
-            *Errno = WSAECONNREFUSED;
-            break;
-        case STATUS_NETWORK_UNREACHABLE:
-            DbgPrint("MSAFD: STATUS_NETWORK_UNREACHABLE\n");
-            *Errno = WSAENETUNREACH;
-            break;
-        case STATUS_INVALID_PARAMETER:
-            DbgPrint("MSAFD: STATUS_INVALID_PARAMETER\n");
-            *Errno = WSAEINVAL;
-            break;
-        case STATUS_CANCELLED:
-            DbgPrint("MSAFD: STATUS_CANCELLED\n");
-            *Errno = WSA_OPERATION_ABORTED;
-            break;
-        default:
-            DbgPrint("MSAFD: Error %x is unknown\n", Status);
-            *Errno = WSAEINVAL;
-            break;
-        }
+        if (!*Errno)
+            *ReturnedBytes = Received;
+        else
+            *ReturnedBytes = 0;
     }
 
-    /* Success */
-    return Status == STATUS_SUCCESS ? 0 : SOCKET_ERROR;
+    return *Errno ? SOCKET_ERROR : 0;
 }
 
 /*
@@ -1400,7 +1416,8 @@ WSPConnect(SOCKET Handle,
                                                     BindAddress, 
                                                     &BindAddressLength);
         /* Bind it */
-        WSPBind(Handle, BindAddress, BindAddressLength, NULL);
+        if (WSPBind(Handle, BindAddress, BindAddressLength, lpErrno) == SOCKET_ERROR)
+            return INVALID_SOCKET;
     }
 
     /* Set the Connect Data */

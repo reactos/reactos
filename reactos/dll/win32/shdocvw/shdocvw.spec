@@ -40,7 +40,7 @@
 151 stdcall -noname URLSubRegQueryA(str str long ptr long long)
 152 stub -noname CShellUIHelper_CreateInstance2
 153 stub -noname IsURLChild
-158 stub -noname SHRestricted2A
+158 stdcall -noname SHRestricted2A(long str long)
 159 stdcall -noname SHRestricted2W(long wstr long)
 160 stub -noname SHIsRestricted2W
 161 stub @ # CSearchAssistantOC::OnDraw

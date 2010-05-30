@@ -142,9 +142,9 @@ static NTSTATUS NTAPI SendComplete
 						  FCB );
     } else {
 		FCB->PollState |= AFD_EVENT_SEND;
+		FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
+		PollReeval( FCB->DeviceExt, FCB->FileObject );
     }
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( TotalBytesCopied > 0 ) {
 		UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount, FALSE );
@@ -186,6 +186,7 @@ static NTSTATUS NTAPI PacketSocketSendComplete
     /* Request is not in flight any longer */
 
     FCB->PollState |= AFD_EVENT_SEND;
+    FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
     PollReeval( FCB->DeviceExt, FCB->FileObject );
 
     if( FCB->State == SOCKET_STATE_CLOSED ) {
@@ -391,10 +392,6 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    FCB->PollState &= ~AFD_EVENT_SEND;
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
-
     /* Check that the socket is bound */
     if( FCB->State != SOCKET_STATE_BOUND )
 		return UnlockAndMaybeComplete
@@ -425,6 +422,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( NT_SUCCESS(Status) ) {
+		FCB->PollState &= ~AFD_EVENT_SEND;
+
 		Status = TdiSendDatagram
 			( &FCB->SendIrp.InFlightRequest,
 			  FCB->AddressFile.Object,

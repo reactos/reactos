@@ -2019,6 +2019,76 @@ typedef struct
 } KSCLOCK_FUNCTIONTABLE, *PKSCLOCK_FUNCTIONTABLE;
 
 
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_TIME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_TIME,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_PHYSICALTIME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_PHYSICALTIME,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(LONGLONG),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_CORRELATEDTIME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_CORRELATEDTIME,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSCORRELATED_TIME),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_CORRELATEDPHYSICALTIME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_CORRELATEDPHYSICALTIME,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSCORRELATED_TIME),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_RESOLUTION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_RESOLUTION,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSRESOLUTION),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_STATE(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_STATE,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSSTATE),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CLOCK_FUNCTIONTABLE(Handler)\
+    DEFINE_KSPROPERTY_ITEM(\
+        KSPROPERTY_CLOCK_FUNCTIONTABLE,\
+        (Handler),\
+        sizeof(KSPROPERTY),\
+        sizeof(KSCLOCK_FUNCTIONTABLE),\
+        NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_CLOCKSET(ClockSet,\
+    PropTime, PropPhysicalTime,\
+    PropCorrelatedTime, PropCorrelatedPhysicalTime,\
+    PropResolution, PropState, PropFunctionTable)\
+DEFINE_KSPROPERTY_TABLE(ClockSet) {\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_TIME(PropTime),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_PHYSICALTIME(PropPhysicalTime),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_CORRELATEDTIME(PropCorrelatedTime),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_CORRELATEDPHYSICALTIME(PropCorrelatedPhysicalTime),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_RESOLUTION(PropResolution),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_STATE(PropState),\
+    DEFINE_KSPROPERTY_ITEM_CLOCK_FUNCTIONTABLE(PropFunctionTable)\
+}
+
 /* ===============================================================
     Objects ??? SORT ME!
 */

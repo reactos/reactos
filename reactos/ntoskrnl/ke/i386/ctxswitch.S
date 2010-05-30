@@ -20,12 +20,9 @@
 /* FUNCTIONS ****************************************************************/
 
 /*++
- * KiSwapContextInternal
+ * KiSwapContextInternal 
  *
- * \brief
  *     The KiSwapContextInternal routine switches context to another thread.
- *
- * BOOLEAN USERCALL KiSwapContextInternal();
  *
  * Params:
  *     ESI - Pointer to the KTHREAD to which the caller wishes to
@@ -33,10 +30,10 @@
  *     EDI - Pointer to the KTHREAD to which the caller wishes to
  *           switch from.
  *
- * \returns
- *     APC state.
+ * Returns:
+ *     None.
  *
- * \remarks
+ * Remarks:
  *     Absolutely all registers except ESP can be trampled here for maximum code flexibility.
  *
  *--*/
@@ -323,25 +320,19 @@ WrongCpu:
 #endif
 .endfunc
 
-/**
- * KiSwapContext
+/*++
+ * KiSwapContext 
  *
- * \brief
  *     The KiSwapContext routine switches context to another thread.
  *
- * BOOLEAN FASTCALL
- * KiSwapContext(PKTHREAD CurrentThread, PKTHREAD TargetThread);
+ * Params:
+ *     TargetThread - Pointer to the KTHREAD to which the caller wishes to
+ *                    switch to.
  *
- * \param CurrentThread
- *     Pointer to the KTHREAD of the current thread.
- *                    
- * \param TargetThread
- *     Pointer to the KTHREAD to which the caller wishes to switch to.
- *
- * \returns
+ * Returns:
  *     The WaitStatus of the Target Thread.
  *
- * \remarks
+ * Remarks:
  *     This is a wrapper around KiSwapContextInternal which will save all the
  *     non-volatile registers so that the Internal function can use all of
  *     them. It will also save the old current thread and set the new one.

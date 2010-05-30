@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-fitter hinting routines (specification).                        */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2005, 2006, 2007 by                              */
+/*  Copyright 2003, 2004, 2005, 2006, 2007, 2008 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -30,7 +30,7 @@ FT_BEGIN_HEADER
   *  script analysis routines (until now).
   */
 
-  typedef enum
+  typedef enum  AF_Dimension_
   {
     AF_DIMENSION_HORZ = 0,  /* x coordinates,                    */
                             /* i.e., vertical segments & edges   */
@@ -44,7 +44,7 @@ FT_BEGIN_HEADER
 
   /* hint directions -- the values are computed so that two vectors are */
   /* in opposite directions iff `dir1 + dir2 == 0'                      */
-  typedef enum
+  typedef enum  AF_Direction_
   {
     AF_DIR_NONE  =  4,
     AF_DIR_RIGHT =  1,
@@ -56,7 +56,7 @@ FT_BEGIN_HEADER
 
 
   /* point hint flags */
-  typedef enum
+  typedef enum  AF_Flags_
   {
     AF_FLAG_NONE = 0,
 
@@ -87,7 +87,7 @@ FT_BEGIN_HEADER
 
 
   /* edge hint flags */
-  typedef enum
+  typedef enum  AF_Edge_Flags_
   {
     AF_EDGE_NORMAL = 0,
     AF_EDGE_ROUND  = 1 << 0,
@@ -214,7 +214,7 @@ FT_BEGIN_HEADER
 
     FT_Pos            xmin_delta;    /* used for warping */
     FT_Pos            xmax_delta;
-
+    
   } AF_GlyphHintsRec;
 
 

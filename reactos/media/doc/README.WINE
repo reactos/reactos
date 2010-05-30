@@ -52,13 +52,13 @@ reactos/dll/win32/comctl32        # Autosync ??
 reactos/dll/win32/comdlg32        # Autosync
 reactos/dll/win32/compstui        # Autosync
 reactos/dll/win32/credui          # Autosync
-reactos/dll/win32/crypt32         # Synced to Wine-1_1_40
+reactos/dll/win32/crypt32         # Synced to Wine-1_1_43
 reactos/dll/win32/cryptdlg        # Autosync
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
 reactos/dll/win32/dbghelp         # Synced to Wine-20080802
-reactos/dll/win32/dciman32        # Synced to Wine-1_0-rc2
+reactos/dll/win32/dciman32        # Synced to Wine-1_1_43
 reactos/dll/win32/dwmapi          # Autosync
 reactos/dll/win32/fusion          # Autosync
 reactos/dll/win32/gdiplus         # Autosync
@@ -113,7 +113,7 @@ reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msvidc32        # Autosync
-reactos/dll/win32/msxml3          # Synced to Wine-1_1_40
+reactos/dll/win32/msxml3          # Synced to Wine-1_1_43
 reactos/dll/win32/nddeapi         # Autosync
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
@@ -144,6 +144,8 @@ reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Autosync
 reactos/dll/win32/sccbase         # Autosync
 reactos/dll/win32/schannel        # Autosync ??
+reactos/dll/win32/secur32         # Forked
+reactos/dll/win32/security        # Forked (different .spec)
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Forked at Wine-20071011
@@ -154,7 +156,7 @@ reactos/dll/win32/slbcsp          # Autosync
 reactos/dll/win32/softpub         # Autosync
 reactos/dll/win32/spoolss         # Autosync
 reactos/dll/win32/stdole2.tlb     # Autosync
-reactos/dll/win32/sti             # Autosync ??
+reactos/dll/win32/sti             # Autosync
 reactos/dll/win32/sxs             # Autosync
 reactos/dll/win32/tapi32          # Autosync
 reactos/dll/win32/traffic         # Autosync
@@ -203,7 +205,7 @@ In addition the following libs, dlls and source files are mostly based on code p
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
 
-reactos/lib/uuid                  # Synced to Wine-20080114
+reactos/lib/sdk/uuid                  # Synced to Wine-1.1.42
 
 advapi32 -
   reactos/dll/win32/advapi32/crypt/*.c          # ekohl says we're not sharing this

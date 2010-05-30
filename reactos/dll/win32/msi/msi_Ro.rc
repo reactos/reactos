@@ -28,7 +28,33 @@ STRINGTABLE DISCARDABLE
         4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
         5 "calea %s nu a fost găsită"
         9 "inserați discul %s"
-        10 "parameteri greșiți"
+        10 "Windows Installer %s\n\n" \
+        "Usage:\n" \
+        "msiexec command {required parameter} [optional parammeter]\n\n" \
+        "Install a product:\n" \
+        "\t/i {package|productcode} [property]\n" \
+        "\t/package {package|productcode} [property]\n" \
+        "\t/a package [property]\n" \
+        "Repair an installation:\n" \
+        "\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+        "Uninstall a product:\n" \
+        "\t/uninstall {package|productcode} [property]\n" \
+        "\t/x {package|productcode} [property]\n" \
+        "Advertise a product:\n" \
+        "\t/j[u|m] package [/t transform] [/g languageid]\n" \
+        "Apply a patch:\n" \
+        "\t/p patchpackage [property]\n" \
+        "\t/p patchpackage /a package [property]\n" \
+        "Log and UI Modifiers for above commands:\n" \
+        "\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+        "\t/q{|n|b|r|f|n+|b+|b-}\n" \
+        "Register MSI Service:\n" \
+        "\t/y\n" \
+        "Unregister MSI Service:\n" \
+        "\t/z\n" \
+        "Display this help:\n" \
+        "\t/help\n" \
+        "\t/?\n"
         11 "introduceți fișierul care conține %s"
         12 "lipsește sursa de instalare pentru această caracteristică"
         13 "lipsește unitatea de rețea pentru această caracteristică"

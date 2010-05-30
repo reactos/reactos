@@ -58,8 +58,6 @@ static LPTSTR lpLeadNumFmtSamples[MAX_LEAD_ZEROES_SAMPLES] =
     {_T(",7"), _T("0,7")};
 static LPTSTR lpListSepSamples[MAX_LIST_SEP_SAMPLES] =
     {_T(";")};
-static LPTSTR lpUnitsSysSamples[MAX_UNITS_SYS_SAMPLES] =
-    {_T("Metric"), _T("Imperial")};
 
 
 /* Init num decimal separator control box */
@@ -495,6 +493,7 @@ InitUnitsSysCB(HWND hwndDlg,
                LCID lcid)
 {
     TCHAR szUnitsSys[MAX_SAMPLES_STR_SIZE];
+    TCHAR szUnitName[128];
     INT nCBIndex;
 
     /* Get current system of units */
@@ -512,10 +511,12 @@ InitUnitsSysCB(HWND hwndDlg,
     /* Create list of standard system of units */
     for (nCBIndex = 0; nCBIndex < MAX_UNITS_SYS_SAMPLES; nCBIndex++)
     {
+        LoadString(hApplet, IDS_METRIC + nCBIndex, szUnitName, 128);
+
         SendMessage(GetDlgItem(hwndDlg, IDC_NUMBERSMEASSYS),
                     CB_ADDSTRING,
                     0,
-                    (LPARAM)lpUnitsSysSamples[nCBIndex]);
+                    (LPARAM)szUnitName);
     }
 
     /* Set current item to value from registry */

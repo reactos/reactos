@@ -17,13 +17,15 @@
 
 PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
+ULONG SidInTokenCalls = 0;
 
 extern ULONG ExpInitializationPhase;
 extern ERESOURCE SepSubjectContextLock;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-static BOOLEAN INIT_FUNCTION
+static BOOLEAN
+INIT_FUNCTION
 SepInitExports(VOID)
 {
     SepExports.SeCreateTokenPrivilege = SeCreateTokenPrivilege;
@@ -118,6 +120,7 @@ NTAPI
 SepInitializationPhase1(VOID)
 {
     NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Insert the system token into the tree */
@@ -279,8 +282,6 @@ SeDefaultObjectMethod(IN PVOID Object,
     return STATUS_SUCCESS;
 }
 
-ULONG SidInTokenCalls = 0;
-
 static BOOLEAN
 SepSidInToken(PACCESS_TOKEN _Token,
               PSID Sid)
@@ -292,7 +293,7 @@ SepSidInToken(PACCESS_TOKEN _Token,
 
     SidInTokenCalls++;
     if (!(SidInTokenCalls % 10000)) DPRINT1("SidInToken Calls: %d\n", SidInTokenCalls);
-    
+
     if (Token->UserAndGroupCount == 0)
     {
         return FALSE;
@@ -340,7 +341,8 @@ SepTokenIsOwner(PACCESS_TOKEN Token,
     return SepSidInToken(Token, Sid);
 }
 
-VOID NTAPI
+VOID
+NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
 {
@@ -351,13 +353,15 @@ SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     {
         *DesiredAccess |= READ_CONTROL;
     }
+
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
     }
 }
 
-VOID NTAPI
+VOID
+NTAPI
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess)
 {
@@ -367,15 +371,20 @@ SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
     {
         *DesiredAccess |= WRITE_OWNER;
     }
+
     if (SecurityInformation & DACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= WRITE_DAC;
     }
+
     if (SecurityInformation & SACL_SECURITY_INFORMATION)
     {
         *DesiredAccess |= ACCESS_SYSTEM_SECURITY;
     }
 }
+
+
+#define OLD_ACCESS_CHECK
 
 BOOLEAN NTAPI
 SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -389,6 +398,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                OUT PNTSTATUS AccessStatus)
 {
     LUID_AND_ATTRIBUTES Privilege;
+#ifdef OLD_ACCESS_CHECK
+    ACCESS_MASK CurrentAccess, AccessMask;
+#endif
     ACCESS_MASK RemainingAccess;
     ACCESS_MASK TempAccess;
     ACCESS_MASK TempGrantedAccess = 0;
@@ -426,6 +438,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     if (PreviouslyGrantedAccess)
         RtlMapGenericMask(&PreviouslyGrantedAccess, GenericMapping);
 
+#ifdef OLD_ACCESS_CHECK
+    CurrentAccess = PreviouslyGrantedAccess;
+#endif
     /* Initialize remaining access rights */
     RemainingAccess = DesiredAccess;
 
@@ -485,10 +500,14 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         {
             *GrantedAccess = DesiredAccess | PreviouslyGrantedAccess;
         }
-        
+
         *AccessStatus = STATUS_SUCCESS;
         return TRUE;
     }
+
+#ifdef OLD_ACCESS_CHECK
+    CurrentAccess = PreviouslyGrantedAccess;
+#endif
 
     /* RULE 2: Check token for 'take ownership' privilege */
     if (DesiredAccess & WRITE_OWNER)
@@ -505,6 +524,9 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             /* Adjust access rights */
             RemainingAccess &= ~WRITE_OWNER;
             PreviouslyGrantedAccess |= WRITE_OWNER;
+#ifdef OLD_ACCESS_CHECK
+            CurrentAccess |= WRITE_OWNER;
+#endif
 
             /* Succeed if there are no more rights to grant */
             if (RemainingAccess == 0)
@@ -618,6 +640,11 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
             {
                 if (SepSidInToken(Token, Sid))
                 {
+#ifdef OLD_ACCESS_CHECK
+                    *GrantedAccess = 0;
+                    *AccessStatus = STATUS_ACCESS_DENIED;
+                    return FALSE;
+#else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
                     RtlMapGenericMask(&TempAccess, GenericMapping);
@@ -625,18 +652,25 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                     /* Leave if a remaining right must be denied */
                     if (RemainingAccess & TempAccess)
                         break;
+#endif
                 }
             }
             else if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
             {
                 if (SepSidInToken(Token, Sid))
                 {
+#ifdef OLD_ACCESS_CHECK
+                    AccessMask = CurrentAce->AccessMask;
+                    RtlMapGenericMask(&AccessMask, GenericMapping);
+                    CurrentAccess |= AccessMask;
+#else
                     /* Map access rights from the ACE */
                     TempAccess = CurrentAce->AccessMask;
                     RtlMapGenericMask(&TempAccess, GenericMapping);
 
                     /* Remove granted rights */
                     RemainingAccess &= ~TempAccess;
+#endif
                 }
             }
             else
@@ -649,6 +683,28 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
         CurrentAce = (PACE)((ULONG_PTR)CurrentAce + CurrentAce->Header.AceSize);
     }
 
+#ifdef OLD_ACCESS_CHECK
+    DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
+           CurrentAccess, DesiredAccess);
+
+    *GrantedAccess = CurrentAccess & DesiredAccess;
+
+    if ((*GrantedAccess & ~VALID_INHERIT_FLAGS) == 
+        (DesiredAccess & ~VALID_INHERIT_FLAGS))
+    {
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
+    }
+    else
+    {
+        DPRINT1("HACK: Should deny access for caller: granted 0x%lx, desired 0x%lx (generic mapping %p).\n",
+                *GrantedAccess, DesiredAccess, GenericMapping);
+        //*AccessStatus = STATUS_ACCESS_DENIED;
+        //return FALSE;
+        *AccessStatus = STATUS_SUCCESS;
+        return TRUE;
+    }
+#else
     DPRINT("DesiredAccess %08lx\nPreviouslyGrantedAccess %08lx\nRemainingAccess %08lx\n",
            DesiredAccess, PreviouslyGrantedAccess, RemainingAccess);
 
@@ -674,6 +730,7 @@ SepAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
     *AccessStatus = STATUS_SUCCESS;
     return TRUE;
+#endif
 }
 
 static PSID
@@ -712,7 +769,8 @@ SepGetSDGroup(IN PSECURITY_DESCRIPTOR _SecurityDescriptor)
 /*
  * @implemented
  */
-BOOLEAN NTAPI
+BOOLEAN
+NTAPI
 SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
               IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
               IN BOOLEAN SubjectContextLocked,

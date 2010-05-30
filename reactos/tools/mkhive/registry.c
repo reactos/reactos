@@ -25,9 +25,9 @@
 
 /*
  * TODO:
- *	- Implement RegDeleteKey()
+ *	- Implement RegDeleteKeyW()
  *	- Implement RegEnumValue()
- *	- Implement RegQueryValueExA()
+ *	- Implement RegQueryValueExW()
  */
 
 #include <stdlib.h>
@@ -127,7 +127,7 @@ RegpOpenOrCreateKey(
 	LocalKeyName = (PWSTR)KeyName;
 	for (;;)
 	{
-		End = (PWSTR) utf16_wcschr(LocalKeyName, '\\');
+		End = (PWSTR)strchrW(LocalKeyName, '\\');
 		if (End)
 		{
 			KeyString.Buffer = LocalKeyName;
@@ -138,9 +138,9 @@ RegpOpenOrCreateKey(
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!utf16_wcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
-                           ParentKey->NameSize == 12 &&
-                           !memcmp(ParentKey->Name, L"SYSTEM", 12))
+		if (!strncmpW(LocalKeyName, L"CurrentControlSet", 17) &&
+		    ParentKey->NameSize == 12 &&
+		    !memcmp(ParentKey->Name, L"SYSTEM", 12))
 			RtlInitUnicodeString(&KeyString, L"ControlSet001");
 
 		/* Check subkey in memory structure */
@@ -246,15 +246,38 @@ RegCreateKeyA(
 }
 
 LONG WINAPI
-RegDeleteKeyA(HKEY Key,
-	     LPCSTR Name)
+RegDeleteKeyW(
+	IN HKEY hKey,
+	IN LPCWSTR lpSubKey)
 {
-  if (Name != NULL && strchr(Name, '\\') != NULL)
-    return(ERROR_INVALID_PARAMETER);
+	DPRINT1("FIXME: implement RegDeleteKeyW!\n");
+	return ERROR_SUCCESS;
+}
 
-  DPRINT1("FIXME!\n");
+LONG WINAPI
+RegDeleteKeyA(
+	IN HKEY hKey,
+	IN LPCSTR lpSubKey)
+{
+	PWSTR lpSubKeyW = NULL;
+	LONG rc;
 
-  return(ERROR_SUCCESS);
+	if (lpSubKey != NULL && strchr(lpSubKey, '\\') != NULL)
+		return ERROR_INVALID_PARAMETER;
+
+	if (lpSubKey)
+	{
+		lpSubKeyW = MultiByteToWideChar(lpSubKey);
+		if (!lpSubKeyW)
+			return ERROR_OUTOFMEMORY;
+	}
+
+	rc = RegDeleteKeyW(hKey, lpSubKeyW);
+
+	if (lpSubKey)
+		free(lpSubKeyW);
+
+	return rc;
 }
 
 LONG WINAPI
@@ -657,6 +680,15 @@ RegInitializeRegistry(VOID)
 		NULL,
 		L"Registry\\Machine\\SYSTEM\\ControlSet001",
 		&ControlSetKey);
+}
+
+VOID
+RegShutdownRegistry(VOID)
+{
+	/* FIXME: clean up the complete hive */
+
+	free(RootKey->Name);
+	free(RootKey);
 }
 
 /* EOF */

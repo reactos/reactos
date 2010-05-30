@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for validating OpenType tables (body).                  */
 /*                                                                         */
-/*  Copyright 2004, 2006 by                                                */
+/*  Copyright 2004, 2006, 2008 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,6 +18,7 @@
 #include <ft2build.h>
 #include FT_INTERNAL_OBJECTS_H
 #include FT_SERVICE_OPENTYPE_VALIDATE_H
+#include FT_OPENTYPE_VALIDATE_H
 
 
   /* documentation is in ftotval.h */

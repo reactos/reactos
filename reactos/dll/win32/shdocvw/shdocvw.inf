@@ -149,9 +149,9 @@ HKLM,"Software\Microsoft\Windows\CurrentVersion\App Paths\iexplore.exe","Path",,
 
 
 [IE.Reg]
-HKLM,"Software\Microsoft\Internet Explorer","Build",,"62900.2180"
-HKLM,"Software\Microsoft\Internet Explorer","IVer",,"103"
-HKLM,"Software\Microsoft\Internet Explorer","Version",,"6.0.2900.2180"
+HKLM,"Software\Microsoft\Internet Explorer","Build",,"86001"
+HKLM,"Software\Microsoft\Internet Explorer","Version",,"8.0.6001.18702"
+HKLM,"Software\Microsoft\Internet Explorer","W2kVersion",,"8.0.6001.18702"
 
 
 [Strings]

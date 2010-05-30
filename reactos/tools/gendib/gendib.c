@@ -1006,7 +1006,7 @@ Generate(char *OutputDir, unsigned Bpp)
   MARK(Out);
   Output(Out, "/* This is a generated file. Please do not edit */\n");
   Output(Out, "\n");
-  Output(Out, "#include <w32k.h>\n");
+  Output(Out, "#include <win32k.h>\n");
   CreateShiftTables(Out);
 
   RopInfo = FindRopInfo(ROPCODE_GENERIC);

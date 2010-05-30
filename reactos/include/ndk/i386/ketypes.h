@@ -151,6 +151,10 @@ Author:
         (USHORT)(sizeof(KTSS)) :                    \
         (USHORT)(FIELD_OFFSET(KTSS, IoMaps[MapNumber-1].IoMap))
 
+typedef UCHAR KIO_ACCESS_MAP[IOPM_SIZE];
+
+typedef KIO_ACCESS_MAP *PKIO_ACCESS_MAP;
+
 //
 // Size of the XMM register save area in the FXSAVE format
 //

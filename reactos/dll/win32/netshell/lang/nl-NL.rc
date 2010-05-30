@@ -39,7 +39,7 @@ BEGIN
     LTEXT "Snelheid:", -1, 19, 48, 60, 8
     GROUPBOX "Activiteit", -1, 9, 74, 182, 70, BS_GROUPBOX
     RTEXT "Verzonden", -1, 26, 90, 60, 8
-    ICON IDI_NETSTAT, -1, 110, 85, 32, 32
+    ICON "", IDC_NETSTAT, 110, 85, 32, 32
     LTEXT "Ontvangen", -1, 149, 90, 37, 8
     LTEXT "Bytes:", -1, 17, 115, 32, 8
     RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8

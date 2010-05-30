@@ -292,4 +292,91 @@ int FASTCALL DocumentEventEx(PVOID,HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
 BOOL FASTCALL EndPagePrinterEx(PVOID,HANDLE);
 BOOL FASTCALL LoadTheSpoolerDrv(VOID);
 
+
+FORCEINLINE
+PVOID
+GdiAllocBatchCommand(
+    HDC hdc,
+    USHORT Cmd)
+{
+    PTEB pTeb;
+    ULONG ulSize;
+    PGDIBATCHHDR pHdr;
+
+    /* Get a pointer to the TEB */
+    pTeb = NtCurrentTeb();
+
+    /* Check if we have a valid environment */
+    if (!pTeb || !pTeb->Win32ThreadInfo) return NULL;
+
+    /* Do we use a DC? */
+    if (hdc)
+    {
+        /* If the batch DC is NULL, we set this one as the new one */
+        if (!pTeb->GdiTebBatch.HDC) pTeb->GdiTebBatch.HDC = hdc;
+
+        /* If not, check if the batch DC equal to our DC */
+        else if (pTeb->GdiTebBatch.HDC != hdc) return NULL;
+    }
+
+    /* Get the size of the entry */
+    switch(Cmd)
+    {
+        case GdiBCPatBlt:
+            ulSize = 0;
+            break;
+        case GdiBCPolyPatBlt:
+            ulSize = 0;
+            break;
+        case GdiBCTextOut:
+            ulSize = 0;
+            break;
+        case GdiBCExtTextOut:
+            ulSize = 0;
+            break;
+        case GdiBCSetBrushOrg:
+            ulSize = 0;
+            break;
+        case GdiBCExtSelClipRgn:
+            ulSize = 0;
+            break;
+        case GdiBCSelObj:
+            ulSize = sizeof(GDIBSOBJECT);
+            break;
+        case GdiBCDelRgn:
+            ulSize = sizeof(GDIBSOBJECT);
+            break;
+        case GdiBCDelObj:
+            ulSize = sizeof(GDIBSOBJECT);
+            break;
+        default:
+            return NULL;
+    }
+
+    /* Unsupported operation */
+    if (ulSize == 0) return NULL;
+
+    /* Check if the buffer is full */
+    if ((pTeb->GdiBatchCount >= GDI_BatchLimit) ||
+        ((pTeb->GdiTebBatch.Offset + ulSize) > GDIBATCHBUFSIZE))
+    {
+        /* Call win32k, the kernel will call NtGdiFlushUserBatch to flush
+           the current batch */
+        NtGdiFlush();
+    }
+
+    /* Get the head of the entry */
+    pHdr = (PVOID)((PUCHAR)pTeb->GdiTebBatch.Buffer + pTeb->GdiTebBatch.Offset);
+
+    /* Update Offset and batch count */
+    pTeb->GdiTebBatch.Offset += ulSize;
+    pTeb->GdiBatchCount++;
+
+    /* Fill in the core fields */
+    pHdr->Cmd = Cmd;
+    pHdr->Size = ulSize;
+
+    return pHdr;
+}
+
 /* EOF */

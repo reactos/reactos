@@ -415,8 +415,9 @@ DoLoginTasks(
 	IN PWSTR Password)
 {
 	LPWSTR ProfilePath = NULL;
+	LPWSTR lpEnvironment = NULL;
 	TOKEN_STATISTICS Stats;
-	PWLX_PROFILE_V1_0 pProfile = NULL;
+	PWLX_PROFILE_V2_0 pProfile = NULL;
 	DWORD cbStats, cbSize;
 	BOOL bResult;
 
@@ -449,14 +450,24 @@ DoLoginTasks(
 	}
 
 	/* Allocate memory for profile */
-	pProfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLX_PROFILE_V1_0));
+	pProfile = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WLX_PROFILE_V2_0));
 	if (!pProfile)
 	{
 		WARN("HeapAlloc() failed\n");
 		goto cleanup;
 	}
-	pProfile->dwType = WLX_PROFILE_TYPE_V1_0;
+	pProfile->dwType = WLX_PROFILE_TYPE_V2_0;
 	pProfile->pszProfile = ProfilePath;
+
+	lpEnvironment = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 32 * sizeof(WCHAR));
+	if (!lpEnvironment)
+	{
+		WARN("HeapAlloc() failed\n");
+		goto cleanup;
+	}
+	wcscpy(lpEnvironment, L"LOGONSERVER=\\\\Test");
+
+	pProfile->pszEnvironment = lpEnvironment;
 
 	if (!GetTokenInformation(pgContext->UserToken,
 		TokenStatistics,
@@ -467,6 +478,7 @@ DoLoginTasks(
 		WARN("Couldn't get Authentication id from user token!\n");
 		goto cleanup;
 	}
+
 	*pgContext->pAuthenticationId = Stats.AuthenticationId; 
 	pgContext->pMprNotifyInfo->pszUserName = DuplicationString(UserName);
 	pgContext->pMprNotifyInfo->pszDomain = DuplicationString(Domain);
@@ -477,6 +489,10 @@ DoLoginTasks(
 	return TRUE;
 
 cleanup:
+	if (pProfile)
+	{
+		HeapFree(GetProcessHeap(), 0, pProfile->pszEnvironment);
+	}
 	HeapFree(GetProcessHeap(), 0, pProfile);
 	HeapFree(GetProcessHeap(), 0, ProfilePath);
 	return FALSE;

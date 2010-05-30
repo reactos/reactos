@@ -1,8 +1,8 @@
 #include <reactos/asm.h>
 #include <ndk/amd64/asm.h>
 
-.globl _KdbEnter
-_KdbEnter:
+.globl KdbEnter
+KdbEnter:
 
     /* save flags */
     pushfq
@@ -129,8 +129,8 @@ _KdbEnter:
 
     ret
 
-.globl _KdbpStackSwitchAndCall
-_KdbpStackSwitchAndCall:
+.globl KdbpStackSwitchAndCall
+KdbpStackSwitchAndCall:
 
     /* Save old stack */
     mov rax, rsp

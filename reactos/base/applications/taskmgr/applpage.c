@@ -236,6 +236,13 @@ void UpdateApplicationListControlViewSetting(void)
 
 DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
 {
+    INT i;
+    BOOL                            bItemRemoved = FALSE;
+    LV_ITEM                         item;
+    LPAPPLICATION_PAGE_LIST_ITEM    pAPLI = NULL;
+    HIMAGELIST                      hImageListLarge;
+    HIMAGELIST                      hImageListSmall;
+
     /* Create the event */
     hApplicationPageEvent = CreateEventW(NULL, TRUE, TRUE, NULL);
 
@@ -269,6 +276,55 @@ DWORD WINAPI ApplicationPageRefreshThread(void *lpParameter)
             EnumWindows(EnumWindowsProc, 0);
             if (noApps)
                 (void)ListView_DeleteAllItems(hApplicationPageListCtrl);
+
+            /* Get the image lists */
+            hImageListLarge = ListView_GetImageList(hApplicationPageListCtrl, LVSIL_NORMAL);
+            hImageListSmall = ListView_GetImageList(hApplicationPageListCtrl, LVSIL_SMALL);
+
+            /* Check to see if we need to remove any items from the list */
+            for (i=ListView_GetItemCount(hApplicationPageListCtrl)-1; i>=0; i--)
+            {
+                memset(&item, 0, sizeof(LV_ITEM));
+                item.mask = LVIF_IMAGE|LVIF_PARAM;
+                item.iItem = i;
+                (void)ListView_GetItem(hApplicationPageListCtrl, &item);
+
+                pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
+                if (!IsWindow(pAPLI->hWnd)||
+                    (wcslen(pAPLI->szTitle) <= 0) ||
+                    !IsWindowVisible(pAPLI->hWnd) ||
+                    (GetParent(pAPLI->hWnd) != NULL) ||
+                    (GetWindow(pAPLI->hWnd, GW_OWNER) != NULL) ||
+                    (GetWindowLongPtr(pAPLI->hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
+                {
+                    ImageList_Remove(hImageListLarge, item.iItem);
+                    ImageList_Remove(hImageListSmall, item.iItem);
+
+                    (void)ListView_DeleteItem(hApplicationPageListCtrl, item.iItem);
+                    HeapFree(GetProcessHeap(), 0, pAPLI);
+                    bItemRemoved = TRUE;
+                }
+            }
+
+            /*
+             * If an item was removed from the list then
+             * we need to resync all the items with the
+             * image list
+             */
+            if (bItemRemoved)
+            {
+                for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++)
+                {
+                    memset(&item, 0, sizeof(LV_ITEM));
+                    item.mask = LVIF_IMAGE;
+                    item.iItem = i;
+                    item.iImage = i;
+                    (void)ListView_SetItem(hApplicationPageListCtrl, &item);
+                }
+                bItemRemoved = FALSE;
+            }
+
+            ApplicationPageUpdate();
         }
     }
 }
@@ -333,13 +389,12 @@ BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam)
 
 void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
 {
-    LPAPPLICATION_PAGE_LIST_ITEM  pAPLI = NULL;
-    HIMAGELIST                    hImageListLarge;
-    HIMAGELIST                    hImageListSmall;
-    LV_ITEM                       item;
-    int                           i;
-    BOOL                          bAlreadyInList = FALSE;
-    BOOL                          bItemRemoved = FALSE;
+    LPAPPLICATION_PAGE_LIST_ITEM    pAPLI = NULL;
+    HIMAGELIST                      hImageListLarge;
+    HIMAGELIST                      hImageListSmall;
+    LV_ITEM                         item;
+    int                             i;
+    BOOL                            bAlreadyInList = FALSE;
 
     memset(&item, 0, sizeof(LV_ITEM));
 
@@ -406,51 +461,7 @@ void AddOrUpdateHwnd(HWND hWnd, WCHAR *szTitle, HICON hIcon, BOOL bHung)
         item.lParam = (LPARAM)pAPLI;
         (void)ListView_InsertItem(hApplicationPageListCtrl, &item);
     }
-
-
-    /* Check to see if we need to remove any items from the list */
-    for (i=ListView_GetItemCount(hApplicationPageListCtrl)-1; i>=0; i--)
-    {
-        memset(&item, 0, sizeof(LV_ITEM));
-        item.mask = LVIF_IMAGE|LVIF_PARAM;
-        item.iItem = i;
-        (void)ListView_GetItem(hApplicationPageListCtrl, &item);
-
-        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)item.lParam;
-        if (!IsWindow(pAPLI->hWnd)||
-            (wcslen(pAPLI->szTitle) <= 0) ||
-            !IsWindowVisible(pAPLI->hWnd) ||
-            (GetParent(pAPLI->hWnd) != NULL) ||
-            (GetWindow(pAPLI->hWnd, GW_OWNER) != NULL) ||
-            (GetWindowLongPtrW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
-        {
-            ImageList_Remove(hImageListLarge, item.iItem);
-            ImageList_Remove(hImageListSmall, item.iItem);
-
-            (void)ListView_DeleteItem(hApplicationPageListCtrl, item.iItem);
-            HeapFree(GetProcessHeap(), 0, pAPLI);
-            bItemRemoved = TRUE;
-        }
-    }
-
-    /*
-     * If an item was removed from the list then
-     * we need to resync all the items with the
-     * image list
-     */
-    if (bItemRemoved)
-    {
-        for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++)
-        {
-            memset(&item, 0, sizeof(LV_ITEM));
-            item.mask = LVIF_IMAGE;
-            item.iItem = i;
-            item.iImage = i;
-            (void)ListView_SetItem(hApplicationPageListCtrl, &item);
-        }
-    }
-
-    ApplicationPageUpdate();
+    return;
 }
 
 void ApplicationPageUpdate(void)

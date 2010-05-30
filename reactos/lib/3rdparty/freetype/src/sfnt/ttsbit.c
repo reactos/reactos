@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,11 +24,11 @@
    *  Alas, the memory-optimized sbit loader can't be used when implementing
    *  the `old internals' hack
    */
-#if !defined FT_CONFIG_OPTION_OLD_INTERNALS
+#ifndef FT_CONFIG_OPTION_OLD_INTERNALS
 
 #include "ttsbit0.c"
 
-#else /* !FT_CONFIG_OPTION_OLD_INTERNALS */
+#else /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
@@ -83,7 +83,8 @@
              FT_Int      line_bits,
              FT_Bool     byte_padded,
              FT_Int      x_offset,
-             FT_Int      y_offset )
+             FT_Int      y_offset,
+             FT_Int      source_height )
   {
     FT_Byte*   line_buff;
     FT_Int     line_incr;
@@ -116,7 +117,7 @@
     acc    = 0;  /* clear accumulator   */
     loaded = 0;  /* no bits were loaded */
 
-    for ( height = target->rows; height > 0; height-- )
+    for ( height = source_height; height > 0; height-- )
     {
       FT_Byte*  cur   = line_buff;        /* current write cursor          */
       FT_Int    count = line_bits;        /* # of bits to extract per line */
@@ -382,8 +383,9 @@
       break;
 
     case 5:
-      error = Load_SBit_Const_Metrics( range, stream )   ||
-              Load_SBit_Range_Codes( range, stream, 0 );
+      error = Load_SBit_Const_Metrics( range, stream );
+      if ( !error )
+        error = Load_SBit_Range_Codes( range, stream, 0 );
       break;
 
     default:
@@ -492,7 +494,7 @@
     if ( version     != 0x00020000L ||
          num_strikes >= 0x10000L    )
     {
-      FT_ERROR(( "tt_face_load_sbit_strikes: invalid table version!\n" ));
+      FT_ERROR(( "tt_face_load_sbit_strikes: invalid table version\n" ));
       error = SFNT_Err_Invalid_File_Format;
 
       goto Exit;
@@ -771,7 +773,7 @@
       Found:
         /* return successfully! */
         *arange  = range;
-        return 0;
+        return SFNT_Err_Ok;
       }
     }
 
@@ -1229,7 +1231,7 @@
       /* the sbit blitter doesn't make a difference between pixmap */
       /* depths.                                                   */
       blit_sbit( map, (FT_Byte*)stream->cursor, line_bits, pad_bytes,
-                 x_offset * pix_bits, y_offset );
+                 x_offset * pix_bits, y_offset, metrics->height );
 
       FT_FRAME_EXIT();
     }
@@ -1323,7 +1325,11 @@
                                range->image_format, metrics, stream );
 
     case 8:  /* compound format */
-      FT_Stream_Skip( stream, 1L );
+      if ( FT_STREAM_SKIP( 1L ) )
+      {
+        error = SFNT_Err_Invalid_Stream_Skip;
+        goto Exit;
+      }
       /* fallthrough */
 
     case 9:
@@ -1495,7 +1501,7 @@
     return error;
   }
 
-#endif /* !FT_CONFIG_OPTION_OLD_INTERNALS */
+#endif /* FT_CONFIG_OPTION_OLD_INTERNALS */
 
 
 /* END */

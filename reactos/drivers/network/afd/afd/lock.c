@@ -17,6 +17,10 @@
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp ) {
     BOOLEAN LockFailed = FALSE;
 
+    ASSERT(IrpSp->Parameters.DeviceIoControl.Type3InputBuffer);
+    ASSERT(IrpSp->Parameters.DeviceIoControl.InputBufferLength);
+    ASSERT(!Irp->MdlAddress);
+
     Irp->MdlAddress =
 	IoAllocateMdl( IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength,

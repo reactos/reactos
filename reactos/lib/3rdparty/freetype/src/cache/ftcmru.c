@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType MRU support (body).                                         */
 /*                                                                         */
-/*  Copyright 2003, 2004, 2006 by                                          */
+/*  Copyright 2003, 2004, 2006, 2009 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -46,7 +46,7 @@
         {
           if ( cnode == node )
           {
-            fprintf( stderr, "FTC_MruNode_Prepend: invalid action!\n" );
+            fprintf( stderr, "FTC_MruNode_Prepend: invalid action\n" );
             exit( 2 );
           }
           cnode = cnode->next;
@@ -94,7 +94,7 @@
 
         } while ( cnode != first );
 
-        fprintf( stderr, "FTC_MruNode_Up: invalid action!\n" );
+        fprintf( stderr, "FTC_MruNode_Up: invalid action\n" );
         exit( 2 );
       Ok:
       }
@@ -141,7 +141,7 @@
 
         } while ( cnode != first );
 
-        fprintf( stderr, "FTC_MruNode_Remove: invalid action!\n" );
+        fprintf( stderr, "FTC_MruNode_Remove: invalid action\n" );
         exit( 2 );
       Ok:
       }

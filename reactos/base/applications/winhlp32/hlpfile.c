@@ -492,7 +492,7 @@ static int comp_FindSubFile(void *p, const void *key,
                             int leaf, void** next)
 {
     *next = (char *)p+strlen(p)+(leaf?5:3);
-    WINE_TRACE("Comparing '%s' with '%s'\n", (char *)p, (char *)key);
+    WINE_TRACE("Comparing '%s' with '%s'\n", (char *)p, (const char *)key);
     return strcmp(p, key);
 }
 
@@ -1601,7 +1601,7 @@ static BOOL HLPFILE_BrowseParagraph(HLPFILE_PAGE* page, struct RtfData* rd,
             case 0xEE:
             case 0xEF:
                 {
-                    char*       ptr = (char*) format + 8;
+                    const char*       ptr = (const char*) format + 8;
                     BYTE        type = format[3];
                     int         wnd = -1;
 

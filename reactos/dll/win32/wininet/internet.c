@@ -102,8 +102,8 @@ static CRITICAL_SECTION_DEBUG WININET_cs_debug =
 static CRITICAL_SECTION WININET_cs = { &WININET_cs_debug, -1, 0, 0, 0, 0 };
 
 static object_header_t **WININET_Handles;
-static UINT WININET_dwNextHandle;
-static UINT WININET_dwMaxHandles;
+static UINT_PTR WININET_dwNextHandle;
+static UINT_PTR WININET_dwMaxHandles;
 
 typedef struct
 {
@@ -122,7 +122,7 @@ static const WCHAR szProxyEnable[] = { 'P','r','o','x','y','E','n','a','b','l','
 HINTERNET WININET_AllocHandle( object_header_t *info )
 {
     object_header_t **p;
-    UINT handle = 0, num;
+    UINT_PTR handle = 0, num;
 
     list_init( &info->children );
 
@@ -173,7 +173,7 @@ object_header_t *WININET_AddRef( object_header_t *info )
 object_header_t *WININET_GetObject( HINTERNET hinternet )
 {
     object_header_t *info = NULL;
-    UINT handle = (UINT) hinternet;
+    UINT_PTR handle = (UINT_PTR) hinternet;
 
     EnterCriticalSection( &WININET_cs );
 
@@ -183,7 +183,7 @@ object_header_t *WININET_GetObject( HINTERNET hinternet )
 
     LeaveCriticalSection( &WININET_cs );
 
-    TRACE("handle %d -> %p\n", handle, info);
+    TRACE("handle %ld -> %p\n", handle, info);
 
     return info;
 }
@@ -218,7 +218,7 @@ BOOL WININET_Release( object_header_t *info )
 BOOL WININET_FreeHandle( HINTERNET hinternet )
 {
     BOOL ret = FALSE;
-    UINT handle = (UINT) hinternet;
+    UINT_PTR handle = (UINT_PTR) hinternet;
     object_header_t *info = NULL, *child, *next;
 
     EnterCriticalSection( &WININET_cs );
@@ -229,7 +229,7 @@ BOOL WININET_FreeHandle( HINTERNET hinternet )
         if( WININET_Handles[handle] )
         {
             info = WININET_Handles[handle];
-            TRACE( "destroying handle %d for object %p\n", handle+1, info);
+            TRACE( "destroying handle %ld for object %p\n", handle+1, info);
             WININET_Handles[handle] = NULL;
             ret = TRUE;
         }
@@ -245,8 +245,8 @@ BOOL WININET_FreeHandle( HINTERNET hinternet )
         /* Free all children as native does */
         LIST_FOR_EACH_ENTRY_SAFE( child, next, &info->children, object_header_t, entry )
         {
-            TRACE( "freeing child handle %d for parent handle %d\n",
-                   (UINT)child->hInternet, handle+1);
+            TRACE( "freeing child handle %ld for parent handle %ld\n",
+                   (UINT_PTR)child->hInternet, handle+1);
             WININET_FreeHandle( child->hInternet );
         }
         WININET_Release( info );
@@ -812,7 +812,7 @@ static DWORD APPINFO_QueryOption(object_header_t *hdr, DWORD option, void *buffe
         }
     }
 
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static const object_vtbl_t APPINFOVtbl = {
@@ -1447,7 +1447,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
     lpUrlComponents->nScheme = UCW.nScheme;
     lpUrlComponents->nPort = UCW.nPort;
 
-    TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", lpszUrl,
+    TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", debugstr_a(lpszUrl),
           debugstr_an(lpUrlComponents->lpszScheme, lpUrlComponents->dwSchemeLength),
           debugstr_an(lpUrlComponents->lpszHostName, lpUrlComponents->dwHostNameLength),
           debugstr_an(lpUrlComponents->lpszUrlPath, lpUrlComponents->dwUrlPathLength),
@@ -1860,7 +1860,7 @@ BOOL WINAPI InternetCanonicalizeUrlA(LPCSTR lpszUrl, LPSTR lpszBuffer,
     DWORD dwURLFlags = URL_WININET_COMPATIBILITY | URL_ESCAPE_UNSAFE;
 
     TRACE("(%s, %p, %p, 0x%08x) bufferlength: %d\n", debugstr_a(lpszUrl), lpszBuffer,
-        lpdwBufferLength, lpdwBufferLength ? *lpdwBufferLength : -1, dwFlags);
+        lpdwBufferLength, dwFlags, lpdwBufferLength ? *lpdwBufferLength : -1);
 
     if(dwFlags & ICU_DECODE)
     {
@@ -2194,7 +2194,7 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
     return res == ERROR_SUCCESS;
 }
 
-DWORD INET_QueryOption(DWORD option, void *buffer, DWORD *size, BOOL unicode)
+DWORD INET_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
 {
     static BOOL warn = TRUE;
 
@@ -2357,6 +2357,25 @@ DWORD INET_QueryOption(DWORD option, void *buffer, DWORD *size, BOOL unicode)
         return ERROR_INTERNET_INCORRECT_HANDLE_TYPE;
     case INTERNET_OPTION_POLICY:
         return ERROR_INVALID_PARAMETER;
+    case INTERNET_OPTION_CONTEXT_VALUE:
+    {
+        if (!hdr)
+            return ERROR_INTERNET_INCORRECT_HANDLE_TYPE;
+        if (!size)
+            return ERROR_INVALID_PARAMETER;
+
+        if (*size < sizeof(DWORD_PTR))
+        {
+            *size = sizeof(DWORD_PTR);
+            return ERROR_INSUFFICIENT_BUFFER;
+        }
+        if (!buffer)
+            return ERROR_INVALID_PARAMETER;
+
+        *(DWORD_PTR *)buffer = hdr->dwContext;
+        *size = sizeof(DWORD_PTR);
+        return ERROR_SUCCESS;
+    }
     }
 
     FIXME("Stub for %d\n", option);
@@ -2388,7 +2407,7 @@ BOOL WINAPI InternetQueryOptionW(HINTERNET hInternet, DWORD dwOption,
             WININET_Release(hdr);
         }
     }else {
-        res = INET_QueryOption(dwOption, lpBuffer, lpdwBufferLength, TRUE);
+        res = INET_QueryOption(NULL, dwOption, lpBuffer, lpdwBufferLength, TRUE);
     }
 
     if(res != ERROR_SUCCESS)
@@ -2421,7 +2440,7 @@ BOOL WINAPI InternetQueryOptionA(HINTERNET hInternet, DWORD dwOption,
             WININET_Release(hdr);
         }
     }else {
-        res = INET_QueryOption(dwOption, lpBuffer, lpdwBufferLength, FALSE);
+        res = INET_QueryOption(NULL, dwOption, lpBuffer, lpdwBufferLength, FALSE);
     }
 
     if(res != ERROR_SUCCESS)
@@ -2484,8 +2503,19 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
       break;
     case INTERNET_OPTION_ERROR_MASK:
       {
-        ULONG flags = *(ULONG *)lpBuffer;
-        FIXME("Option INTERNET_OPTION_ERROR_MASK(%d): STUB\n", flags);
+        if(!lpwhh) {
+            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
+            return FALSE;
+        } else if(*(ULONG*)lpBuffer & (~(INTERNET_ERROR_MASK_INSERT_CDROM|
+                        INTERNET_ERROR_MASK_COMBINED_SEC_CERT|
+                        INTERNET_ERROR_MASK_LOGIN_FAILURE_DISPLAY_ENTITY_BODY))) {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+        } else if(dwBufferLength != sizeof(ULONG)) {
+            SetLastError(ERROR_INTERNET_BAD_OPTION_LENGTH);
+            ret = FALSE;
+        } else
+            lpwhh->ErrorMask = *(ULONG*)lpBuffer;
       }
       break;
     case INTERNET_OPTION_CODEPAGE:
@@ -2550,8 +2580,21 @@ BOOL WINAPI InternetSetOptionW(HINTERNET hInternet, DWORD dwOption,
         break;
     }
     case INTERNET_OPTION_CONTEXT_VALUE:
-	 FIXME("Option INTERNET_OPTION_CONTEXT_VALUE; STUB\n");
-	 break;
+    {
+        if (!lpwhh)
+        {
+            SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
+            return FALSE;
+        }
+        if (!lpBuffer || dwBufferLength != sizeof(DWORD_PTR))
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            ret = FALSE;
+        }
+        else
+            lpwhh->dwContext = *(DWORD_PTR *)lpBuffer;
+        break;
+    }
     case INTERNET_OPTION_SECURITY_FLAGS:
 	 FIXME("Option INTERNET_OPTION_SECURITY_FLAGS; STUB\n");
 	 break;

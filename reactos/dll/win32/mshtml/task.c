@@ -222,7 +222,6 @@ static void call_timer_disp(IDispatch *disp)
 static LRESULT process_timer(void)
 {
     thread_data_t *thread_data = get_thread_data(TRUE);
-    HTMLDocument *doc;
     IDispatch *disp;
     DWORD tc;
     task_timer_t *timer;
@@ -238,7 +237,6 @@ static LRESULT process_timer(void)
             return 0;
         }
 
-        doc = timer->doc;
         disp = timer->disp;
         IDispatch_AddRef(disp);
 

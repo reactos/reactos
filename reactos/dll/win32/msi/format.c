@@ -175,7 +175,7 @@ static LPWSTR deformat_property(FORMAT *format, FORMSTR *str)
     val = msi_alloc((str->len + 1) * sizeof(WCHAR));
     lstrcpynW(val, get_formstr_data(format, str), str->len + 1);
 
-    ret = msi_dup_property(format->package, val);
+    ret = msi_dup_property(format->package->db, val);
 
     msi_free(val);
     return ret;
@@ -805,11 +805,11 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
     format.deformatted = *data;
     format.len = *len;
 
-    stack = create_stack();
-    temp = create_stack();
-
     if (!verify_format(*data))
         return ERROR_SUCCESS;
+
+    stack = create_stack();
+    temp = create_stack();
 
     while ((type = format_lex(&format, &str)) != FORMAT_NULL)
     {

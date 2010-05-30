@@ -1473,6 +1473,12 @@ MUI_ERROR ruRUErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         //ERROR_UPDATE_GEOID,
         "Setup could not set the geo id.\n"
         "ENTER = Reboot computer"
@@ -1615,7 +1621,7 @@ MUI_STRING ruRUStrings[] =
     {STRING_TXTSETUPFAILED,
     "Программа установки не смогла найти секцию '%S'\nв файле TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Копирование: %S"},
+     "   Копирование: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Программа установки копирует файлы..."},
     {STRING_REGHIVEUPDATE,
