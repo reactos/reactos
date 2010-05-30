@@ -172,7 +172,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     while (PointerPte < LastPte)
     {
         /* Allocate a page */
-        TempPte.u.Hard.PageFrameNumber = MmAllocPage(MC_NPPOOL);
+        TempPte.u.Hard.PageFrameNumber = MiAllocatePfn(PointerPte, MM_EXECUTE);
         
         /* Write it */
         ASSERT(PointerPte->u.Hard.Valid == 0);

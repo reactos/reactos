@@ -618,6 +618,44 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     Pfn1->u2.ShareCount++;
 }
 
+PFN_NUMBER
+NTAPI
+MiAllocatePfn(IN PMMPTE PointerPte,
+              IN ULONG Protection)
+{
+    KIRQL OldIrql;
+    PFN_NUMBER PageFrameIndex;
+    MMPTE TempPte;
+    
+    /* Make an empty software PTE */
+    MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
+    
+    /* Lock the PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Check if we're running low on pages */
+    if (MmAvailablePages < 128)
+    {
+        DPRINT1("Warning, running low on memory: %d pages left\n", MmAvailablePages);
+        //MiEnsureAvailablePageOrWait(NULL, OldIrql);
+    }
+    
+    /* Grab a page */
+    PageFrameIndex = MiRemoveAnyPage(0);
+    
+    /* Write the software PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+    *PointerPte = TempPte;
+    PointerPte->u.Soft.Protection |= Protection;
+    
+    /* Initialize its PFN entry */
+    MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
+    
+    /* Release the PFN lock and return the page */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    return PageFrameIndex;
+}
+
 VOID
 NTAPI
 MiDecrementShareCount(IN PMMPFN Pfn1,
