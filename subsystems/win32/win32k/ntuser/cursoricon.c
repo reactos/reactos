@@ -556,7 +556,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
             /* Copy bitmaps and size info */
             if (Indirect)
             {
-                // FIXME: WTF?
+                /* Convert bitmaps to unowned objects, so that they can be shared between processes */
                 CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
                 GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
                 if(CurIcon->IconInfo.hbmColor)
@@ -565,27 +565,24 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
                     GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
                 }
             }
-            else
+            if (CurIcon->IconInfo.hbmColor &&
+                    (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
             {
-                if (CurIcon->IconInfo.hbmColor &&
-                        (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
+                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
+                CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
+                SURFACE_UnlockSurface(psurfBmp);
+                GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+            }
+            if (CurIcon->IconInfo.hbmMask &&
+                    (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
+            {
+                if(!CurIcon->IconInfo.hbmColor)
                 {
                     CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                    CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-                    SURFACE_UnlockSurface(psurfBmp);
-                    GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+                    CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy/2;
                 }
-                if (CurIcon->IconInfo.hbmMask &&
-                        (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
-                {
-                    if(!CurIcon->IconInfo.hbmColor)
-                    {
-                        CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                        CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy*2;
-                    }
-                    SURFACE_UnlockSurface(psurfBmp);
-                    GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
-                }
+                SURFACE_UnlockSurface(psurfBmp);
+                GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
             }
 
             /* Calculate icon hotspot */
@@ -1332,11 +1329,12 @@ UserDrawIconEx(
     SIZE IconSize;
     INT iOldBkColor = 0, iOldTxtColor = 0;
 
-    HDC hMemDC, hOffDC = NULL;
+    HDC hMemDC, hDestDC = hDc;
     HGDIOBJ hOldOffBrush = 0;
     HGDIOBJ hOldOffBmp = 0;
     HBITMAP hTmpBmp = 0, hOffBmp = 0;
     BOOL bAlpha = FALSE;
+    INT x=xLeft, y=yTop;
 
     hbmMask = pIcon->IconInfo.hbmMask;
     hbmColor = pIcon->IconInfo.hbmColor;
@@ -1371,9 +1369,6 @@ UserDrawIconEx(
         IconSize.cy = bm.bmHeight/2;
     }
 
-    if (!diFlags)
-        diFlags = DI_NORMAL;
-
     /* NtGdiCreateCompatibleBitmap will create a monochrome bitmap
        when cxWidth or cyHeight is 0 */
     if (hbmColor
@@ -1384,7 +1379,7 @@ UserDrawIconEx(
     {
         SURFACE *psurfOff = NULL;
         PFN_DIB_GetPixel fnSource_GetPixel = NULL;
-        INT x, y;
+        INT i, j;
 
         /* In order to correctly display 32 bit icons Windows first scans the image,
            because information about transparency is not stored in any image's headers */
@@ -1394,11 +1389,11 @@ UserDrawIconEx(
             fnSource_GetPixel = DibFunctionsForBitmapFormat[psurfOff->SurfObj.iBitmapFormat].DIB_GetPixel;
             if (fnSource_GetPixel)
             {
-                for (x = 0; x < psurfOff->SurfObj.sizlBitmap.cx; x++)
+                for (i = 0; i < psurfOff->SurfObj.sizlBitmap.cx; i++)
                 {
-                    for (y = 0; y < psurfOff->SurfObj.sizlBitmap.cy; y++)
+                    for (j = 0; j < psurfOff->SurfObj.sizlBitmap.cy; j++)
                     {
-                        bAlpha = ((BYTE)(fnSource_GetPixel(&psurfOff->SurfObj, x, y) >> 24) & 0xff);
+                        bAlpha = ((BYTE)(fnSource_GetPixel(&psurfOff->SurfObj, i, j) >> 24) & 0xff);
                         if (bAlpha)
                             break;
                     }
@@ -1423,8 +1418,8 @@ UserDrawIconEx(
 
     if (DoFlickerFree)
     {
-        hOffDC = NtGdiCreateCompatibleDC(hDc);
-        if(!hOffDC)
+        hDestDC = NtGdiCreateCompatibleDC(hDc);
+        if(!hDestDC)
         {
             DPRINT1("NtGdiCreateCompatibleBitmap failed!\n");
             Ret = FALSE;
@@ -1436,25 +1431,23 @@ UserDrawIconEx(
             DPRINT1("NtGdiCreateCompatibleBitmap failed!\n");
             goto Cleanup ;
         }
-        hOldOffBmp = NtGdiSelectBitmap(hOffDC, hOffBmp);
-        hOldOffBrush = NtGdiSelectBrush(hOffDC, hbrFlickerFreeDraw);
-        NtGdiPatBlt(hOffDC, 0, 0, cxWidth, cyHeight, PATCOPY);
-        NtGdiSelectBrush(hOffDC, hOldOffBrush);
-    }
-    else
-    {
-        /* Set Background/foreground colors */
-        iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
-        iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
+        hOldOffBmp = NtGdiSelectBitmap(hDestDC, hOffBmp);
+        hOldOffBrush = NtGdiSelectBrush(hDestDC, hbrFlickerFreeDraw);
+        NtGdiPatBlt(hDestDC, 0, 0, cxWidth, cyHeight, PATCOPY);
+        NtGdiSelectBrush(hDestDC, hOldOffBrush);
+        x=y=0;
     }
 
+    /* Set Background/foreground colors */
+    iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
+    iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
 
-    if (hbmMask && (diFlags & DI_MASK) && !bAlpha)
+    if ((diFlags & DI_MASK) && (!bAlpha || !(diFlags & DI_IMAGE)))
     {
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
-        NtGdiStretchBlt(hOffDC ? hOffDC : hDc,
-                        hOffDC ? 0 : xLeft,
-                        hOffDC ? 0 : yTop,
+        NtGdiStretchBlt(hDestDC,
+                        x,
+                        y,
                         cxWidth,
                         cyHeight,
                         hMemDC,
@@ -1534,9 +1527,9 @@ UserDrawIconEx(
 
             hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
 
-            NtGdiAlphaBlend(hOffDC ? hOffDC : hDc,
-                            hOffDC ? 0 : xLeft,
-                            hOffDC ? 0 : yTop,
+            NtGdiAlphaBlend(hDestDC,
+                            x,
+                            y,
                             cxWidth,
                             cyHeight,
                             hMemDC,
@@ -1555,9 +1548,9 @@ UserDrawIconEx(
         {
             DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
             hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmColor);
-            NtGdiStretchBlt(hOffDC ? hOffDC : hDc,
-                            hOffDC ? 0 : xLeft,
-                            hOffDC ? 0 : yTop,
+            NtGdiStretchBlt(hDestDC,
+                            x,
+                            y,
                             cxWidth,
                             cyHeight,
                             hMemDC,
@@ -1571,23 +1564,25 @@ UserDrawIconEx(
         }
     }
 
-    if(hOffDC)
+    if(hDestDC != hDc)
     {
-        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, cyHeight, hOffDC, 0, 0, SRCCOPY, 0, 0);
+        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, cyHeight, hDestDC, 0, 0, SRCCOPY, 0, 0);
     }
-    else
-    {
-        IntGdiSetBkColor(hDc, iOldBkColor);
-        IntGdiSetTextColor(hDc, iOldTxtColor);
-    }
+
+    /* Restore foreground and background colors */
+    IntGdiSetBkColor(hDc, iOldBkColor);
+    IntGdiSetTextColor(hDc, iOldTxtColor);
 
     Ret = TRUE ;
 
 Cleanup:
     NtGdiDeleteObjectApp(hMemDC);
-    if(hOldOffBmp) NtGdiSelectBitmap(hOffDC, hOldOffBmp);
-    if(hOffDC) NtGdiDeleteObjectApp(hOffDC);
-    if(hOffBmp) NtGdiDeleteObjectApp(hOffBmp);
+    if(hDestDC != hDc)
+    {
+        if(hOldOffBmp) NtGdiSelectBitmap(hDestDC, hOldOffBmp);
+        NtGdiDeleteObjectApp(hDestDC);
+        if(hOffBmp) NtGdiDeleteObjectApp(hOffBmp);
+    }
 
     return Ret;
 }
