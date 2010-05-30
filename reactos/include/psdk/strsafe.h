@@ -3,6 +3,8 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
+#include <string.h> 
 
 #if defined(STRSAFE_NO_CCH_FUNCTIONS) && defined(STRSAFE_NO_CB_FUNCTIONS)
 #error Both STRSAFE_NO_CCH_FUNCTIONS and STRSAFE_NO_CB_FUNCTIONS are defined
