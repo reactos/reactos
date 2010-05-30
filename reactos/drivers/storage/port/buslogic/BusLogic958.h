@@ -814,11 +814,6 @@ typedef struct BusLogic_WmiExtendedSetupInformation
 //_________________________________________________________________________________________
 // function declaractions
 //_________________________________________________________________________________________
-ULONG
-NTAPI
-DriverEntry(IN PVOID DriverObject,
-            IN PVOID Argument2
-            );
 
 ULONG
 NTAPI

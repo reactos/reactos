@@ -79,11 +79,9 @@ v1.2.0.2  // Fix PR 40284 correctly, disable interrupts in the initialization ro
 
 #include "BusLogic958.h"
 
-ULONG
-NTAPI
-DriverEntry(IN PVOID DriverObject,
-            IN PVOID Argument2
-           )
+NTSTATUS
+DriverEntry(IN PDRIVER_OBJECT DriverObject,
+            IN PUNICODE_STRING RegistryPath)
 //_________________________________________________________________________
 // Routine Description:
 //              Installable driver initialization entry point for system.
@@ -157,7 +155,7 @@ DriverEntry(IN PVOID DriverObject,
     DebugPrint((TRACE,"\n BusLogic -  Calling the ScsiPortInitialize Routine\n"));
 
     Status = ScsiPortInitialize(DriverObject,
-                                Argument2,
+                                RegistryPath,
                                 &hwInitializationData,
                                 &HwContext);
 
