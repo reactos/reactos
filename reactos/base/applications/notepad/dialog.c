@@ -400,7 +400,6 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
 {
     TCHAR szText[128];
     HWND hCombo;
-    OFNOTIFY *pNotify;
 
     UNREFERENCED_PARAMETER(wParam);
 
@@ -440,15 +439,13 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
         case WM_NOTIFY:
             if (((NMHDR *) lParam)->code == CDN_FILEOK)
             {
-                pNotify = (OFNOTIFY *) lParam;
-
                 hCombo = GetDlgItem(hDlg, ID_ENCODING);
-				if (hCombo)
-	                Globals.iEncoding = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                if (hCombo)
+                    Globals.iEncoding = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
 
                 hCombo = GetDlgItem(hDlg, ID_EOLN);
-				if (hCombo)
-	                Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+                if (hCombo)
+                    Globals.iEoln = (int) SendMessage(hCombo, CB_GETCURSEL, 0, 0);
             }
             break;
     }
@@ -808,11 +805,11 @@ static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARA
     TCHAR szText[32];
 
     switch(uMsg) {
-	case WM_INITDIALOG:
+    case WM_INITDIALOG:
         hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
-		_sntprintf(szText, SIZEOF(szText), _T("%d"), lParam);
+        _sntprintf(szText, SIZEOF(szText), _T("%d"), lParam);
         SetWindowText(hTextBox, szText);
-		break;
+        break;
     case WM_COMMAND:
         if (HIWORD(wParam) == BN_CLICKED)
         {
@@ -823,11 +820,11 @@ static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARA
                 EndDialog(hwndDialog, _ttoi(szText));
                 bResult = TRUE;
             }
-			else if (LOWORD(wParam) == IDCANCEL)
-			{
+            else if (LOWORD(wParam) == IDCANCEL)
+            {
                 EndDialog(hwndDialog, 0);
                 bResult = TRUE;
-			}
+            }
         }
         break;
     }
@@ -862,7 +859,7 @@ VOID DIALOG_GoTo(VOID)
         Globals.hMainWnd, DIALOG_GoTo_DialogProc, nLine);
 
     if (nLine >= 1)
-	{
+    {
         for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
         {
             if (pszText[i] == '\n')
@@ -870,8 +867,8 @@ VOID DIALOG_GoTo(VOID)
         }
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
-	}
-	HeapFree(GetProcessHeap(), 0, pszText);
+    }
+    HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_StatusBarUpdateCaretPos(VOID)
