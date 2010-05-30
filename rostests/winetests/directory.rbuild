@@ -1,6 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+	<group compilerset="gcc">
+		<compilerflag compiler="cc">-Wno-unused-value</compilerflag>
+	</group>
 	<directory name="advapi32">
 		<xi:include href="advapi32/advapi32.rbuild" />
 	</directory>
