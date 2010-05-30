@@ -30,31 +30,9 @@
 #define PARENT_SEQ_INDEX 0
 #define TRACKBAR_SEQ_INDEX 1
 
+HWND hWndParent;
 
 static struct msg_sequence *sequences[NUM_MSG_SEQUENCE];
-
-static const struct message create_parent_wnd_seq[] = {
-    { WM_GETMINMAXINFO, sent },
-    { WM_NCCREATE, sent },
-    { WM_NCCALCSIZE, sent|wparam, 0 },
-    { WM_CREATE, sent },
-    { WM_SHOWWINDOW, sent|wparam, 1 },
-    { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
-    { WM_QUERYNEWPALETTE, sent|optional },
-    { WM_WINDOWPOSCHANGING, sent|wparam, 0 },
-    { WM_ACTIVATEAPP, sent|wparam, 1 },
-    { WM_NCACTIVATE, sent|wparam, 1 },
-    { WM_ACTIVATE, sent|wparam, 1 },
-    { WM_IME_SETCONTEXT, sent|wparam|defwinproc|optional, 1 },
-    { WM_IME_NOTIFY, sent|defwinproc|optional },
-    { WM_SETFOCUS, sent|wparam|defwinproc, 0 },
-    /* Win9x adds SWP_NOZORDER below */
-    { WM_WINDOWPOSCHANGED, sent, /*|wparam, SWP_SHOWWINDOW|SWP_NOSIZE|SWP_NOMOVE|SWP_NOCLIENTSIZE|SWP_NOCLIENTMOVE*/ },
-    { WM_NCCALCSIZE, sent|wparam|optional, 1 },
-    { WM_SIZE, sent },
-    { WM_MOVE, sent },
-    { 0 }
-};
 
 static const struct message create_trackbar_wnd_seq[] = {
     {0}
@@ -81,12 +59,12 @@ static const struct message parent_create_trackbar_wnd_seq[] = {
 
 static const struct message parent_new_window_test_seq[] = {
     { WM_QUERYNEWPALETTE, sent|optional },
-    { WM_WINDOWPOSCHANGING, sent},
-    { WM_NCACTIVATE, sent},
-    { PBT_APMRESUMECRITICAL, sent},
+    { WM_WINDOWPOSCHANGING, sent|optional},
+    { WM_NCACTIVATE, sent|optional},
+    { PBT_APMRESUMECRITICAL, sent|optional},
     { WM_IME_SETCONTEXT, sent|defwinproc|optional},
     { WM_IME_NOTIFY, sent|defwinproc|optional},
-    { WM_SETFOCUS, sent|defwinproc},
+    { WM_SETFOCUS, sent|defwinproc|optional},
     { WM_NOTIFYFORMAT, sent},
     { WM_QUERYUISTATE, sent|optional},
     {0}
@@ -386,11 +364,6 @@ static const struct message ignore_selection_test_seq[] = {
     {0}
 };
 
-struct subclass_info
-{
-    WNDPROC oldproc;
-};
-
 static LRESULT WINAPI parent_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
     static LONG defwndproc_counter = 0;
     LRESULT ret;
@@ -452,7 +425,7 @@ static HWND create_parent_window(void){
 }
 
 static LRESULT WINAPI trackbar_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam){
-    struct subclass_info *info = (struct subclass_info *) GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
@@ -467,20 +440,16 @@ static LRESULT WINAPI trackbar_subclass_proc(HWND hwnd, UINT message, WPARAM wPa
     add_message(sequences, TRACKBAR_SEQ_INDEX, &msg);
 
     defwndproc_counter++;
-    ret = CallWindowProcA(info->oldproc, hwnd, message, wParam, lParam);
+    ret = CallWindowProcA(oldproc, hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
     return ret;
 }
 
 static HWND create_trackbar(DWORD style, HWND parent){
-    struct subclass_info *info;
     HWND hWndTrack;
+    WNDPROC oldproc;
     RECT rect;
-
-    info = HeapAlloc(GetProcessHeap(), 0, sizeof(struct subclass_info));
-    if (!info)
-        return NULL;
 
     GetClientRect(parent, &rect);
     hWndTrack = CreateWindowEx(
@@ -488,15 +457,10 @@ static HWND create_trackbar(DWORD style, HWND parent){
       rect.right,rect.bottom, 100, 50,
       parent, NULL,GetModuleHandleA(NULL) ,NULL);
 
-    if (!hWndTrack)
-    {
-        HeapFree(GetProcessHeap(), 0, info);
-        return NULL;
-    }
+    if (!hWndTrack) return NULL;
 
-    info->oldproc = (WNDPROC)SetWindowLongPtrA(hWndTrack, GWLP_WNDPROC, (LONG_PTR)trackbar_subclass_proc);
-
-    SetWindowLongPtrA(hWndTrack, GWLP_USERDATA, (LONG_PTR)info);
+    oldproc = (WNDPROC)SetWindowLongPtrA(hWndTrack, GWLP_WNDPROC, (LONG_PTR)trackbar_subclass_proc);
+    SetWindowLongPtrA(hWndTrack, GWLP_USERDATA, (LONG_PTR)oldproc);
 
     return hWndTrack;
 }
@@ -785,40 +749,63 @@ static void test_thumb_length(HWND hWndTrackbar){
 static void test_tic_settings(HWND hWndTrackbar){
     int r;
 
-    flush_sequences(sequences, NUM_MSG_SEQUENCE);
     /* testing TBM_SETTIC */
     /* Set tics at 5 and 10 */
     /* 0 and 20 are out of range and should not be set */
+    r = SendMessage(hWndTrackbar, TBM_GETRANGEMAX, 0, 0);
+    expect(10, r);
+    r = SendMessage(hWndTrackbar, TBM_GETRANGEMIN, 0, 0);
+    expect(5, r);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCE);
     r = SendMessage(hWndTrackbar, TBM_SETTIC, 0, 0);
     ok(r == FALSE, "Expected FALSE, got %d\n", r);
     r = SendMessage(hWndTrackbar, TBM_SETTIC, 0, 5);
-    todo_wine{
-        ok(r == TRUE, "Expected TRUE, got %d\n", r);
-        r = SendMessage(hWndTrackbar, TBM_SETTIC, 0, 10);
-        ok(r == TRUE, "Expected TRUE, got %d\n", r);
-    }
+    ok(r == TRUE, "Expected TRUE, got %d\n", r);
+    r = SendMessage(hWndTrackbar, TBM_SETTIC, 0, 10);
+    ok(r == TRUE, "Expected TRUE, got %d\n", r);
+
     r = SendMessage(hWndTrackbar, TBM_SETTIC, 0, 20);
     ok(r == FALSE, "Expected False, got %d\n", r);
 
     /* test TBM_SETTICFREQ */
     SendMessage(hWndTrackbar, TBM_SETRANGE, TRUE, MAKELONG(0, 10));
     SendMessage(hWndTrackbar, TBM_SETTICFREQ, 2, 0);
-    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0,0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
     expect(6, r);
     SendMessage(hWndTrackbar, TBM_SETTICFREQ, 5, 0);
-    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0,0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
     expect(3, r);
     SendMessage(hWndTrackbar, TBM_SETTICFREQ, 15, 0);
-    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0,0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
     expect(2, r);
 
     /* test TBM_GETNUMTICS */
     /* since TIC FREQ is 15, there should be only 2 tics now */
-    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0,0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
     expect(2, r);
 
     ok_sequence(sequences, TRACKBAR_SEQ_INDEX, tic_settings_test_seq, "tic settings test sequence", TRUE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_tic_settings_test_seq, "parent tic settings test sequence", TRUE);
+
+    /* range [0,0], freq = 1 */
+    SendMessage(hWndTrackbar, TBM_SETRANGEMAX, TRUE, 0);
+    SendMessage(hWndTrackbar, TBM_SETRANGEMIN, TRUE, 0);
+    SendMessage(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
+    expect(2, r);
+    /* range [0,1], freq = 1 */
+    SendMessage(hWndTrackbar, TBM_SETRANGEMAX, TRUE, 1);
+    SendMessage(hWndTrackbar, TBM_SETRANGEMIN, TRUE, 0);
+    SendMessage(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
+    expect(2, r);
+    /* range [0,2], freq = 1 */
+    SendMessage(hWndTrackbar, TBM_SETRANGEMAX, TRUE, 2);
+    SendMessage(hWndTrackbar, TBM_SETRANGEMIN, TRUE, 0);
+    SendMessage(hWndTrackbar, TBM_SETTICFREQ, 1, 0);
+    r = SendMessage(hWndTrackbar, TBM_GETNUMTICS, 0, 0);
+    expect(3, r);
 }
 
 static void test_tic_placement(HWND hWndTrackbar){
@@ -846,9 +833,7 @@ static void test_tic_placement(HWND hWndTrackbar){
     r = SendMessage(hWndTrackbar, TBM_GETTIC, 2,0);
     expect(4, r);
     r = SendMessage(hWndTrackbar, TBM_GETTIC, 4,0);
-    todo_wine{
-        expect(-1, r);
-    }
+    expect(-1, r);
 
     /* test TBM_GETTICPIC */
     r = SendMessage(hWndTrackbar, TBM_GETTICPOS, 0, 0);
@@ -869,15 +854,13 @@ static void test_tool_tips(HWND hWndTrackbar){
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
     /* testing TBM_SETTIPSIDE */
     r = SendMessage(hWndTrackbar, TBM_SETTIPSIDE, TBTS_TOP, 0);
-    todo_wine{
-        expect(0, r);
-    }
+    expect(TBTS_TOP, r);
     r = SendMessage(hWndTrackbar, TBM_SETTIPSIDE, TBTS_LEFT, 0);
-    expect(0, r);
+    expect(TBTS_TOP, r);
     r = SendMessage(hWndTrackbar, TBM_SETTIPSIDE, TBTS_BOTTOM, 0);
-    expect(1, r);
+    expect(TBTS_LEFT, r);
     r = SendMessage(hWndTrackbar, TBM_SETTIPSIDE, TBTS_RIGHT, 0);
-    expect(2, r);
+    expect(TBTS_BOTTOM, r);
 
     /* testing TBM_SETTOOLTIPS */
     hWndTooltip = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, 0,
@@ -967,16 +950,30 @@ static void test_ignore_selection(HWND hWndTrackbar){
     ok_sequence(sequences, PARENT_SEQ_INDEX, parent_empty_test_seq, "parent ignore selection setting test sequence", FALSE);
 }
 
+static void test_initial_state(void)
+{
+    HWND hWnd;
+    DWORD ret;
+
+    hWnd = create_trackbar(0, hWndParent);
+
+    ret = SendMessage(hWnd, TBM_GETNUMTICS, 0, 0);
+    expect(2, ret);
+    ret = SendMessage(hWnd, TBM_GETTIC, 0, 0);
+    expect(-1, ret);
+    ret = SendMessage(hWnd, TBM_GETTICPOS, 0, 0);
+    expect(-1, ret);
+
+    DestroyWindow(hWnd);
+}
+
 START_TEST(trackbar)
 {
     DWORD style = WS_VISIBLE | TBS_TOOLTIPS | TBS_ENABLESELRANGE | TBS_FIXEDLENGTH | TBS_AUTOTICKS;
     HWND hWndTrackbar;
-    HWND hWndParent;
 
     init_msg_sequences(sequences, NUM_MSG_SEQUENCE);
     InitCommonControls();
-
-    flush_sequences(sequences, NUM_MSG_SEQUENCE);
 
     /* create parent window */
     hWndParent = create_parent_window();
@@ -987,7 +984,6 @@ START_TEST(trackbar)
         return;
     }
 
-    ok_sequence(sequences, PARENT_SEQ_INDEX, create_parent_wnd_seq, "create Parent Window", TRUE);
     flush_sequences(sequences, NUM_MSG_SEQUENCE);
 
     /* create trackbar with set styles */
@@ -1035,6 +1031,8 @@ START_TEST(trackbar)
     test_ignore_selection(hWndTrackbar);
 
     DestroyWindow(hWndTrackbar);
+
+    test_initial_state();
 
     DestroyWindow(hWndParent);
 }

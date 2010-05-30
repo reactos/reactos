@@ -22,10 +22,22 @@
 #include <commctrl.h>
 
 #include "wine/test.h"
+#include "msg.h"
+
+#define EDITBOX_SEQ_INDEX  0
+#define NUM_MSG_SEQUENCES  1
+
+#define EDITBOX_ID         0
+
+#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
+
+static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
 
 static HWND hComboExParentWnd;
 static HINSTANCE hMainHinst;
 static const char ComboExTestClass[] = "ComboExTestClass";
+
+static BOOL (WINAPI *pSetWindowSubclass)(HWND, SUBCLASSPROC, UINT_PTR, DWORD_PTR);
 
 #define MAX_CHARS 100
 static char *textBuffer = NULL;
@@ -42,7 +54,7 @@ static LONG addItem(HWND cbex, int idx, LPTSTR text) {
     cbexItem.iItem = idx;
     cbexItem.pszText    = text;
     cbexItem.cchTextMax = 0;
-    return (LONG)SendMessage(cbex, CBEM_INSERTITEM, 0,(LPARAM)&cbexItem);
+    return SendMessage(cbex, CBEM_INSERTITEM, 0, (LPARAM)&cbexItem);
 }
 
 static LONG setItem(HWND cbex, int idx, LPTSTR text) {
@@ -52,11 +64,11 @@ static LONG setItem(HWND cbex, int idx, LPTSTR text) {
     cbexItem.iItem = idx;
     cbexItem.pszText    = text;
     cbexItem.cchTextMax = 0;
-    return (LONG)SendMessage(cbex, CBEM_SETITEM, 0,(LPARAM)&cbexItem);
+    return SendMessage(cbex, CBEM_SETITEM, 0, (LPARAM)&cbexItem);
 }
 
 static LONG delItem(HWND cbex, int idx) {
-    return (LONG)SendMessage(cbex, CBEM_DELETEITEM, (LPARAM)idx, 0);
+    return SendMessage(cbex, CBEM_DELETEITEM, idx, 0);
 }
 
 static LONG getItem(HWND cbex, int idx, COMBOBOXEXITEM *cbItem) {
@@ -65,7 +77,51 @@ static LONG getItem(HWND cbex, int idx, COMBOBOXEXITEM *cbItem) {
     cbItem->pszText      = textBuffer;
     cbItem->iItem        = idx;
     cbItem->cchTextMax   = 100;
-    return (LONG)SendMessage(cbex, CBEM_GETITEM, 0, (LPARAM)cbItem);
+    return SendMessage(cbex, CBEM_GETITEM, 0, (LPARAM)cbItem);
+}
+
+static LRESULT WINAPI editbox_subclass_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    static LONG defwndproc_counter = 0;
+    LRESULT ret;
+    struct message msg;
+
+    msg.message = message;
+    msg.flags = sent|wparam|lparam;
+    if (defwndproc_counter) msg.flags |= defwinproc;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    msg.id     = EDITBOX_ID;
+
+    if (message != WM_PAINT &&
+        message != WM_ERASEBKGND &&
+        message != WM_NCPAINT &&
+        message != WM_NCHITTEST &&
+        message != WM_GETTEXT &&
+        message != WM_GETICON &&
+        message != WM_DEVICECHANGE)
+    {
+        add_message(sequences, EDITBOX_SEQ_INDEX, &msg);
+    }
+
+    defwndproc_counter++;
+    ret = CallWindowProcA(oldproc, hwnd, message, wParam, lParam);
+    defwndproc_counter--;
+    return ret;
+}
+
+static HWND subclass_editbox(HWND hwndComboEx)
+{
+    WNDPROC oldproc;
+    HWND hwnd;
+
+    hwnd = (HWND)SendMessage(hwndComboEx, CBEM_GETEDITCONTROL, 0, 0);
+    oldproc = (WNDPROC)SetWindowLongPtrA(hwnd, GWLP_WNDPROC,
+                                         (LONG_PTR)editbox_subclass_proc);
+    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)oldproc);
+
+    return hwnd;
 }
 
 static void test_comboboxex(void) {
@@ -288,6 +344,41 @@ static void test_WM_LBUTTONDOWN(void)
     DestroyWindow(hComboEx);
 }
 
+static void test_CB_GETLBTEXT(void)
+{
+    HWND hCombo;
+    CHAR buff[1];
+    COMBOBOXEXITEMA item;
+    LRESULT ret;
+
+    hCombo = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
+
+    /* set text to null */
+    addItem(hCombo, 0, NULL);
+
+    buff[0] = 'a';
+    item.mask = CBEIF_TEXT;
+    item.iItem = 0;
+    item.pszText = buff;
+    item.cchTextMax = 1;
+    ret = SendMessage(hCombo, CBEM_GETITEMA, 0, (LPARAM)&item);
+    ok(ret != 0, "CBEM_GETITEM failed\n");
+    ok(buff[0] == 0, "\n");
+
+    ret = SendMessage(hCombo, CB_GETLBTEXTLEN, 0, 0);
+    ok(ret == 0, "Expected zero length\n");
+
+    ret = SendMessage(hCombo, CB_GETLBTEXTLEN, 0, 0);
+    ok(ret == 0, "Expected zero length\n");
+
+    buff[0] = 'a';
+    ret = SendMessage(hCombo, CB_GETLBTEXT, 0, (LPARAM)buff);
+    ok(ret == 0, "Expected zero length\n");
+    ok(buff[0] == 0, "Expected null terminator as a string, got %s\n", buff);
+
+    DestroyWindow(hCombo);
+}
+
 static LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
@@ -320,6 +411,8 @@ static int init(void)
     iccex.dwSize = sizeof(iccex);
     iccex.dwICC  = ICC_USEREX_CLASSES;
     pInitCommonControlsEx(&iccex);
+
+    pSetWindowSubclass = (void*)GetProcAddress(hComctl32, (LPSTR)410);
 
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
@@ -355,13 +448,87 @@ static void cleanup(void)
     UnregisterClassA(ComboExTestClass, GetModuleHandleA(NULL));
 }
 
+static void test_comboboxex_subclass(void)
+{
+    HWND hComboEx, hCombo, hEdit;
+
+    hComboEx = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
+
+    hCombo = (HWND)SendMessage(hComboEx, CBEM_GETCOMBOCONTROL, 0, 0);
+    ok(hCombo != NULL, "Failed to get internal combo\n");
+    hEdit = (HWND)SendMessage(hComboEx, CBEM_GETEDITCONTROL, 0, 0);
+    ok(hEdit != NULL, "Failed to get internal edit\n");
+
+    if (pSetWindowSubclass)
+    {
+        ok(GetPropA(hCombo, "CC32SubclassInfo") != NULL, "Expected CC32SubclassInfo property\n");
+        ok(GetPropA(hEdit, "CC32SubclassInfo") != NULL, "Expected CC32SubclassInfo property\n");
+    }
+
+    DestroyWindow(hComboEx);
+}
+
+static const struct message test_setitem_edit_seq[] = {
+    { WM_SETTEXT, sent|id, 0, 0, EDITBOX_ID },
+    { EM_SETSEL, sent|id|wparam|lparam, 0,  0, EDITBOX_ID },
+    { EM_SETSEL, sent|id|wparam|lparam, 0, -1, EDITBOX_ID },
+    { 0 }
+};
+
+static void test_get_set_item(void)
+{
+    char textA[] = "test";
+    HWND hComboEx;
+    COMBOBOXEXITEMA item;
+    BOOL ret;
+
+    hComboEx = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
+
+    subclass_editbox(hComboEx);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    memset(&item, 0, sizeof(item));
+    item.mask = CBEIF_TEXT;
+    item.pszText = textA;
+    item.iItem = -1;
+    ret = SendMessage(hComboEx, CBEM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    ok_sequence(sequences, EDITBOX_SEQ_INDEX, test_setitem_edit_seq, "set item data for edit", FALSE);
+
+    /* get/set lParam */
+    item.mask = CBEIF_LPARAM;
+    item.iItem = -1;
+    item.lParam = 0xdeadbeef;
+    ret = SendMessage(hComboEx, CBEM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.lParam == 0, "Expected zero, got %ld\n", item.lParam);
+
+    item.lParam = 0xdeadbeef;
+    ret = SendMessage(hComboEx, CBEM_SETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+
+    item.lParam = 0;
+    ret = SendMessage(hComboEx, CBEM_GETITEMA, 0, (LPARAM)&item);
+    expect(TRUE, ret);
+    ok(item.lParam == 0xdeadbeef, "Expected 0xdeadbeef, got %ld\n", item.lParam);
+
+    DestroyWindow(hComboEx);
+}
+
 START_TEST(comboex)
 {
     if (!init())
         return;
 
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+
     test_comboboxex();
     test_WM_LBUTTONDOWN();
+    test_CB_GETLBTEXT();
+    test_comboboxex_subclass();
+    test_get_set_item();
 
     cleanup();
 }

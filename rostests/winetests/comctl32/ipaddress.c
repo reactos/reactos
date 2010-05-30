@@ -33,8 +33,6 @@ static HWND create_ipaddress_control (void)
     handle = CreateWindowEx(0, WC_IPADDRESS, NULL,
 			    WS_BORDER|WS_VISIBLE, 0, 0, 0, 0,
 			    NULL, NULL, NULL, NULL);
-    assert(handle);
-
     return handle;
 }
 
@@ -45,6 +43,11 @@ static void test_get_set_text(void)
     INT r;
 
     hwnd = create_ipaddress_control();
+    if (!hwnd)
+    {
+        win_skip("IPAddress control not implemented\n");
+        return;
+    }
 
     /* check text just after creation */
     r = GetWindowText(hwnd, ip, sizeof(ip)/sizeof(CHAR));

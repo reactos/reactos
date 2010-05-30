@@ -31,17 +31,14 @@
 
 #include "wine/test.h"
 
-#define DPAM_NOSORT 0x1
-#define DPAM_INSERT 0x4
-#define DPAM_DELETE 0x8
+#define expect(expected, got) ok(got == expected, "Expected %d, got %d\n", expected, got)
 
-typedef struct _ITEMDATA
+typedef struct _STREAMDATA
 {
-    INT   iPos;
-    PVOID pvData;
-} ITEMDATA, *LPITEMDATA;
-
-typedef HRESULT (CALLBACK *PFNDPASTM)(LPITEMDATA,IStream*,LPARAM);
+    DWORD dwSize;
+    DWORD dwData2;
+    DWORD dwItems;
+} STREAMDATA, *PSTREAMDATA;
 
 static HDPA    (WINAPI *pDPA_Clone)(const HDPA,const HDPA);
 static HDPA    (WINAPI *pDPA_Create)(INT);
@@ -55,9 +52,9 @@ static INT     (WINAPI *pDPA_GetPtr)(const HDPA,INT);
 static INT     (WINAPI *pDPA_GetPtrIndex)(const HDPA,PVOID);
 static BOOL    (WINAPI *pDPA_Grow)(HDPA,INT);
 static INT     (WINAPI *pDPA_InsertPtr)(const HDPA,INT,PVOID);
-static HRESULT (WINAPI *pDPA_LoadStream)(HDPA*,PFNDPASTM,IStream*,LPARAM);
+static HRESULT (WINAPI *pDPA_LoadStream)(HDPA*,PFNDPASTREAM,IStream*,LPVOID);
 static BOOL    (WINAPI *pDPA_Merge)(const HDPA,const HDPA,DWORD,PFNDPACOMPARE,PFNDPAMERGE,LPARAM);
-static HRESULT (WINAPI *pDPA_SaveStream)(HDPA,PFNDPASTM,IStream*,LPARAM);
+static HRESULT (WINAPI *pDPA_SaveStream)(HDPA,PFNDPASTREAM,IStream*,LPVOID);
 static INT     (WINAPI *pDPA_Search)(HDPA,PVOID,INT,PFNDPACOMPARE,LPARAM,UINT);
 static BOOL    (WINAPI *pDPA_SetPtr)(const HDPA,INT,PVOID);
 static BOOL    (WINAPI *pDPA_Sort)(const HDPA,PFNDPACOMPARE,LPARAM);
@@ -109,14 +106,22 @@ static INT CALLBACK CB_CmpGT(PVOID p1, PVOID p2, LPARAM lp)
     return p1 > p2 ? -1 : p1 < p2 ? 1 : 0;
 }
 
+/* merge callback messages counter
+   DPAMM_MERGE     1
+   DPAMM_DELETE    2
+   DPAMM_INSERT    3  */
+static INT nMessages[4];
+
 static PVOID CALLBACK CB_MergeInsertSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
+    nMessages[op]++;
     ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
     return p1;
 }        
 
 static PVOID CALLBACK CB_MergeDeleteOddSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
+    nMessages[op]++;
     ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
     return ((PCHAR)p2)+1;
 }
@@ -134,30 +139,30 @@ static INT CALLBACK CB_EnumFirstThree(PVOID pItem, PVOID lp)
     return pItem != (PVOID)3;
 }
 
-static HRESULT CALLBACK CB_Save(LPITEMDATA pInfo, IStream *pStm, LPARAM lp)
+static HRESULT CALLBACK CB_Save(DPASTREAMINFO *pInfo, IStream *pStm, LPVOID lp)
 {
     HRESULT hRes;
-    
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+
+    ok(lp == (LPVOID)0xdeadbeef, "lp=%p\n", lp);
     hRes = IStream_Write(pStm, &pInfo->iPos, sizeof(INT), NULL);
-    ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-    hRes = IStream_Write(pStm, &pInfo->pvData, sizeof(PVOID), NULL);
-    ok(hRes == S_OK, "hRes=0x%x\n", hRes);
+    expect(S_OK, hRes);
+    hRes = IStream_Write(pStm, &pInfo->pvItem, sizeof(PVOID), NULL);
+    expect(S_OK, hRes);
     return S_OK;
 }
 
-static HRESULT CALLBACK CB_Load(LPITEMDATA pInfo, IStream *pStm, LPARAM lp)
+static HRESULT CALLBACK CB_Load(DPASTREAMINFO *pInfo, IStream *pStm, LPVOID lp)
 {
     HRESULT hRes;
     INT iOldPos;
     
     iOldPos = pInfo->iPos;
-    ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
+    ok(lp == (LPVOID)0xdeadbeef, "lp=%p\n", lp);
     hRes = IStream_Read(pStm, &pInfo->iPos, sizeof(INT), NULL);
-    ok(hRes == S_OK, "hRes=0x%x\n", hRes);
+    expect(S_OK, hRes);
     ok(pInfo->iPos == iOldPos, "iPos=%d iOldPos=%d\n", pInfo->iPos, iOldPos);
-    hRes = IStream_Read(pStm, &pInfo->pvData, sizeof(PVOID), NULL);
-    ok(hRes == S_OK, "hRes=0x%x\n", hRes);
+    hRes = IStream_Read(pStm, &pInfo->pvItem, sizeof(PVOID), NULL);
+    expect(S_OK, hRes);
     return S_OK;
 }
 
@@ -200,7 +205,6 @@ static void test_dpa(void)
     INT ret, i;
     PVOID p;
     DWORD dw, dw2, dw3;
-    HRESULT hRes;
     BOOL rc;
     
     GetSystemInfo(&si);
@@ -209,9 +213,9 @@ static void test_dpa(void)
     dpa3 = pDPA_CreateEx(0, hHeap);
     ok(dpa3 != NULL, "\n");
     ret = pDPA_Grow(dpa3, si.dwPageSize + 1);
-    todo_wine ok(!ret && GetLastError() == ERROR_NOT_ENOUGH_MEMORY, 
+    ok(!ret && GetLastError() == ERROR_NOT_ENOUGH_MEMORY,
        "ret=%d error=%d\n", ret, GetLastError());
-        
+
     dpa = pDPA_Create(0);
     ok(dpa != NULL, "\n");
 
@@ -288,9 +292,9 @@ static void test_dpa(void)
         ok(j == DPA_ERR, "j=%d\n", j);
         /* ... but for a binary search it's ignored */
         j = pDPA_Search(dpa, (PVOID)(INT_PTR)i, i+1, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
-        todo_wine ok(j+1 == i, "j=%d i=%d\n", j, i);
+        ok(j+1 == i, "j=%d i=%d\n", j, i);
     }
-    
+
     /* Try to get the index of a nonexistent item */
     i = pDPA_GetPtrIndex(dpa, (PVOID)7);
     ok(i == DPA_ERR, "i=%d\n", i);
@@ -335,49 +339,6 @@ static void test_dpa(void)
         ok(j != i, "i=%d\n", i);
     }
 
-    if(pDPA_Merge)
-    {
-        /* Delete all even entries from dpa */
-        p = pDPA_DeletePtr(dpa, 1);
-        p = pDPA_DeletePtr(dpa, 2);
-        p = pDPA_DeletePtr(dpa, 3);
-        rc=CheckDPA(dpa, 0x135, &dw);
-        ok(rc, "dw=0x%x\n", dw);
-    
-        /* Delete all odd entries from dpa2 */
-        pDPA_Merge(dpa2, dpa, DPAM_DELETE, 
-                   CB_CmpLT, CB_MergeDeleteOddSrc, 0xdeadbeef);
-        todo_wine
-        {
-            rc=CheckDPA(dpa2, 0x246, &dw2);
-            ok(rc, "dw=0x%x\n", dw2);
-        }
-    
-        /* Merge dpa3 into dpa2 and dpa */
-        pDPA_Merge(dpa, dpa3, DPAM_INSERT|DPAM_NOSORT, 
-                   CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
-        pDPA_Merge(dpa2, dpa3, DPAM_INSERT|DPAM_NOSORT, 
-                   CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
-    
-        rc=CheckDPA(dpa,  0x123456, &dw);
-        ok(rc, "dw=0x%x\n",  dw);
-        rc=CheckDPA(dpa2, 0x123456, &dw2);
-        ok(rc ||
-           broken(!rc), /* win98 */
-           "dw2=0x%x\n", dw2);
-        rc=CheckDPA(dpa3, 0x123456, &dw3);
-        ok(rc, "dw3=0x%x\n", dw3);
-    }
-
-    if(pDPA_EnumCallback)
-    {
-        nEnum = 0;
-        pDPA_EnumCallback(dpa2, CB_EnumFirstThree, dpa2);
-        rc=CheckDPA(dpa2, 0x777456, &dw2);
-        ok(rc, "dw=0x%x\n", dw2);
-        ok(nEnum == 3, "nEnum=%d\n", nEnum);
-    }
-    
     /* Setting item with huge index should work */
     ok(pDPA_SetPtr(dpa2, 0x12345, (PVOID)0xdeadbeef), "\n");
     ret = pDPA_GetPtrIndex(dpa2, (PVOID)0xdeadbeef);
@@ -386,62 +347,397 @@ static void test_dpa(void)
     pDPA_DeleteAllPtrs(dpa2);
     rc=CheckDPA(dpa2, 0, &dw2);
     ok(rc, "dw2=0x%x\n", dw2);
+
+    pDPA_Destroy(dpa);
     pDPA_Destroy(dpa2);
+    pDPA_Destroy(dpa3);
+}
 
-    if(pDPA_DestroyCallback)
+static void test_DPA_Merge(void)
+{
+    HDPA dpa, dpa2, dpa3;
+    INT ret, i;
+    DWORD dw;
+    BOOL rc;
+
+    if(!pDPA_Merge)
     {
-        nEnum = 0;
-        pDPA_DestroyCallback(dpa3, CB_EnumFirstThree, dpa3);
-        ok(nEnum == 3, "nEnum=%d\n", nEnum);
+        win_skip("DPA_Merge() not available\n");
+        return;
     }
-    else pDPA_Destroy(dpa3);
 
-    if(!pDPA_SaveStream)
-        goto skip_stream_tests;
+    dpa  = pDPA_Create(0);
+    dpa2 = pDPA_Create(0);
+    dpa3 = pDPA_Create(0);
+
+    ret = pDPA_InsertPtr(dpa, 0, (PVOID)1);
+    ok(ret == 0, "ret=%d\n", ret);
+    ret = pDPA_InsertPtr(dpa, 1, (PVOID)3);
+    ok(ret == 1, "ret=%d\n", ret);
+    ret = pDPA_InsertPtr(dpa, 2, (PVOID)5);
+    ok(ret == 2, "ret=%d\n", ret);
+
+    rc = CheckDPA(dpa, 0x135, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    for (i = 0; i < 6; i++)
+    {
+        ret = pDPA_InsertPtr(dpa2, i, (PVOID)(INT_PTR)(6-i));
+        ok(ret == i, "ret=%d\n", ret);
+        ret = pDPA_InsertPtr(dpa3, i, (PVOID)(INT_PTR)(i+1));
+        ok(ret == i, "ret=%d\n", ret);
+    }
+
+    rc = CheckDPA(dpa2, 0x654321, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+    rc = CheckDPA(dpa3, 0x123456, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    /* Delete all odd entries from dpa2 */
+    memset(nMessages, 0, sizeof(nMessages));
+    pDPA_Merge(dpa2, dpa, DPAM_INTERSECT,
+               CB_CmpLT, CB_MergeDeleteOddSrc, 0xdeadbeef);
+    rc = CheckDPA(dpa2, 0x246, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    expect(3, nMessages[DPAMM_MERGE]);
+    expect(3, nMessages[DPAMM_DELETE]);
+    expect(0, nMessages[DPAMM_INSERT]);
+
+    for (i = 0; i < 6; i++)
+    {
+        ret = pDPA_InsertPtr(dpa2, i, (PVOID)(INT_PTR)(6-i));
+        ok(ret == i, "ret=%d\n", ret);
+    }
+
+    /* DPAM_INTERSECT - returning source while merging */
+    memset(nMessages, 0, sizeof(nMessages));
+    pDPA_Merge(dpa2, dpa, DPAM_INTERSECT,
+               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+    rc = CheckDPA(dpa2, 0x135, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    expect(3, nMessages[DPAMM_MERGE]);
+    expect(6, nMessages[DPAMM_DELETE]);
+    expect(0, nMessages[DPAMM_INSERT]);
+
+    /* DPAM_UNION */
+    pDPA_DeleteAllPtrs(dpa);
+    pDPA_InsertPtr(dpa, 0, (PVOID)1);
+    pDPA_InsertPtr(dpa, 1, (PVOID)3);
+    pDPA_InsertPtr(dpa, 2, (PVOID)5);
+    pDPA_DeleteAllPtrs(dpa2);
+    pDPA_InsertPtr(dpa2, 0, (PVOID)2);
+    pDPA_InsertPtr(dpa2, 1, (PVOID)4);
+    pDPA_InsertPtr(dpa2, 2, (PVOID)6);
+
+    memset(nMessages, 0, sizeof(nMessages));
+    pDPA_Merge(dpa2, dpa, DPAM_UNION,
+               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+    rc = CheckDPA(dpa2, 0x123456, &dw);
+    ok(rc ||
+       broken(!rc && dw == 0x23456), /* 4.7x */
+       "dw=0x%x\n", dw);
+
+    expect(0, nMessages[DPAMM_MERGE]);
+    expect(0, nMessages[DPAMM_DELETE]);
+    ok(nMessages[DPAMM_INSERT] == 3 ||
+       broken(nMessages[DPAMM_INSERT] == 2), /* 4.7x */
+       "Expected 3, got %d\n", nMessages[DPAMM_INSERT]);
+
+    /* Merge dpa3 into dpa2 and dpa */
+    memset(nMessages, 0, sizeof(nMessages));
+    pDPA_Merge(dpa, dpa3, DPAM_UNION|DPAM_SORTED,
+               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+    expect(3, nMessages[DPAMM_MERGE]);
+    expect(0, nMessages[DPAMM_DELETE]);
+    expect(3, nMessages[DPAMM_INSERT]);
+
+
+    pDPA_DeleteAllPtrs(dpa2);
+    pDPA_InsertPtr(dpa2, 0, (PVOID)2);
+    pDPA_InsertPtr(dpa2, 1, (PVOID)4);
+    pDPA_InsertPtr(dpa2, 2, (PVOID)6);
+
+    memset(nMessages, 0, sizeof(nMessages));
+    pDPA_Merge(dpa2, dpa3, DPAM_UNION|DPAM_SORTED,
+               CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
+    expect(3, nMessages[DPAMM_MERGE]);
+    expect(0, nMessages[DPAMM_DELETE]);
+    ok(nMessages[DPAMM_INSERT] == 3 ||
+       broken(nMessages[DPAMM_INSERT] == 2), /* 4.7x */
+       "Expected 3, got %d\n", nMessages[DPAMM_INSERT]);
+
+    rc = CheckDPA(dpa,  0x123456, &dw);
+    ok(rc, "dw=0x%x\n",  dw);
+    rc = CheckDPA(dpa2, 0x123456, &dw);
+    ok(rc ||
+       broken(!rc), /* win98 */
+       "dw=0x%x\n", dw);
+    rc = CheckDPA(dpa3, 0x123456, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    pDPA_Destroy(dpa);
+    pDPA_Destroy(dpa2);
+    pDPA_Destroy(dpa3);
+}
+
+static void test_DPA_EnumCallback(void)
+{
+    HDPA dpa;
+    BOOL rc;
+    DWORD dw;
+    INT i, ret;
+
+    if(!pDPA_EnumCallback)
+    {
+        win_skip("DPA_EnumCallback() not available\n");
+        return;
+    }
+
+    dpa = pDPA_Create(0);
+
+    for (i = 0; i < 6; i++)
+    {
+        ret = pDPA_InsertPtr(dpa, i, (PVOID)(INT_PTR)(i+1));
+        ok(ret == i, "ret=%d\n", ret);
+    }
+
+    rc = CheckDPA(dpa, 0x123456, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+
+    nEnum = 0;
+    /* test callback sets first 3 items to 7 */
+    pDPA_EnumCallback(dpa, CB_EnumFirstThree, dpa);
+    rc = CheckDPA(dpa, 0x777456, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+    ok(nEnum == 3, "nEnum=%d\n", nEnum);
+
+    pDPA_Destroy(dpa);
+}
+
+static void test_DPA_DestroyCallback(void)
+{
+    HDPA dpa;
+    INT i, ret;
+
+    if(!pDPA_DestroyCallback)
+    {
+        win_skip("DPA_DestroyCallback() not available\n");
+        return;
+    }
+
+    dpa = pDPA_Create(0);
+
+    for (i = 0; i < 3; i++)
+    {
+        ret = pDPA_InsertPtr(dpa, i, (PVOID)(INT_PTR)(i+1));
+        ok(ret == i, "ret=%d\n", ret);
+    }
+
+    nEnum = 0;
+    pDPA_DestroyCallback(dpa, CB_EnumFirstThree, dpa);
+    ok(nEnum == 3, "nEnum=%d\n", nEnum);
+}
+
+static void test_DPA_LoadStream(void)
+{
+    static const WCHAR szStg[] = { 'S','t','g',0 };
+    IStorage* pStg = NULL;
+    IStream* pStm = NULL;
+    LARGE_INTEGER li;
+    ULARGE_INTEGER uli;
+    DWORD dwMode;
+    HRESULT hRes;
+    STREAMDATA header;
+    ULONG written, ret;
+    HDPA dpa;
+
+    if(!pDPA_LoadStream)
+    {
+        win_skip("DPA_LoadStream() not available. Skipping stream tests.\n");
+        return;
+    }
 
     hRes = CoInitialize(NULL);
-    if(hRes == S_OK)
+    if (hRes != S_OK)
     {
-        static const WCHAR szStg[] = { 'S','t','g',0 };
-        IStorage* pStg = NULL;
-        IStream* pStm = NULL;
-        LARGE_INTEGER liZero;
-        DWORD dwMode;
-        liZero.QuadPart = 0;
-
-        dwMode = STGM_DIRECT|STGM_CREATE|STGM_READWRITE|STGM_SHARE_EXCLUSIVE;
-        hRes = StgCreateDocfile(NULL, dwMode|STGM_DELETEONRELEASE, 0, &pStg);
-        ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-
-        hRes = IStorage_CreateStream(pStg, szStg, dwMode, 0, 0, &pStm);
-        ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-
-        hRes = pDPA_SaveStream(dpa, CB_Save, pStm, 0xdeadbeef);
-        todo_wine ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-        pDPA_Destroy(dpa);
-        
-        hRes = IStream_Seek(pStm, liZero, STREAM_SEEK_SET, NULL);
-        ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-        hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, 0xdeadbeef);
-        todo_wine
-        {
-            ok(hRes == S_OK, "hRes=0x%x\n", hRes);
-            rc=CheckDPA(dpa, 0x123456, &dw);
-            ok(rc, "dw=0x%x\n", dw);
-        }
-
-        ret = IStream_Release(pStm);
-        ok(!ret, "ret=%d\n", ret);
-	
-        ret = IStorage_Release(pStg);
-        ok(!ret, "ret=%d\n", ret);
-
-        CoUninitialize();
+        ok(0, "hResult: %d\n", hRes);
+        return;
     }
-    else ok(0, "hResult: %d\n", hRes);
 
-skip_stream_tests:
+    dwMode = STGM_DIRECT|STGM_CREATE|STGM_READWRITE|STGM_SHARE_EXCLUSIVE;
+    hRes = StgCreateDocfile(NULL, dwMode|STGM_DELETEONRELEASE, 0, &pStg);
+    expect(S_OK, hRes);
+
+    hRes = IStorage_CreateStream(pStg, szStg, dwMode, 0, 0, &pStm);
+    expect(S_OK, hRes);
+
+    /* write less than header size */
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    memset(&header, 0, sizeof(header));
+    written = 0;
+    uli.QuadPart = sizeof(header)-1;
+    hRes = IStream_SetSize(pStm, uli);
+    expect(S_OK, hRes);
+    hRes = IStream_Write(pStm, &header, sizeof(header)-1, &written);
+    expect(S_OK, hRes);
+    written -= sizeof(header)-1;
+    expect(0, written);
+
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, NULL);
+    expect(E_FAIL, hRes);
+
+    /* check stream position after header read failed */
+    li.QuadPart = 0;
+    uli.QuadPart = 1;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_CUR, &uli);
+    expect(S_OK, hRes);
+    ok(uli.QuadPart == 0, "Expected to position reset\n");
+
+    /* write valid header for empty DPA */
+    header.dwSize = sizeof(header);
+    header.dwData2 = 1;
+    header.dwItems = 0;
+    written = 0;
+
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    uli.QuadPart = sizeof(header);
+    hRes = IStream_SetSize(pStm, uli);
+    expect(S_OK, hRes);
+
+    hRes = IStream_Write(pStm, &header, sizeof(header), &written);
+    expect(S_OK, hRes);
+    written -= sizeof(header);
+    expect(0, written);
+
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    dpa = NULL;
+    hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, NULL);
+    expect(S_OK, hRes);
+    DPA_Destroy(dpa);
+
+    /* try with altered dwData2 field */
+    header.dwSize = sizeof(header);
+    header.dwData2 = 2;
+    header.dwItems = 0;
+
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+    hRes = IStream_Write(pStm, &header, sizeof(header), &written);
+    expect(S_OK, hRes);
+    written -= sizeof(header);
+    expect(0, written);
+
+    li.QuadPart = 0;
+    hRes = IStream_Seek(pStm, li, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, (void*)0xdeadbeef);
+    expect(E_FAIL, hRes);
+
+    ret = IStream_Release(pStm);
+    ok(!ret, "ret=%d\n", ret);
+
+    ret = IStorage_Release(pStg);
+    ok(!ret, "ret=%d\n", ret);
+
+    CoUninitialize();
+}
+
+static void test_DPA_SaveStream(void)
+{
+    HDPA dpa;
+    static const WCHAR szStg[] = { 'S','t','g',0 };
+    IStorage* pStg = NULL;
+    IStream* pStm = NULL;
+    DWORD dwMode, dw;
+    HRESULT hRes;
+    ULONG ret;
+    INT i;
+    BOOL rc;
+    LARGE_INTEGER liZero;
+
+    if(!pDPA_SaveStream)
+    {
+        win_skip("DPA_SaveStream() not available. Skipping stream tests.\n");
+        return;
+    }
+
+    hRes = CoInitialize(NULL);
+    if (hRes != S_OK)
+    {
+        ok(0, "hResult: %d\n", hRes);
+        return;
+    }
+
+    dwMode = STGM_DIRECT|STGM_CREATE|STGM_READWRITE|STGM_SHARE_EXCLUSIVE;
+    hRes = StgCreateDocfile(NULL, dwMode|STGM_DELETEONRELEASE, 0, &pStg);
+    expect(S_OK, hRes);
+
+    hRes = IStorage_CreateStream(pStg, szStg, dwMode, 0, 0, &pStm);
+    expect(S_OK, hRes);
+
+    dpa = pDPA_Create(0);
+
+    /* simple parameter check */
+    hRes = pDPA_SaveStream(dpa, NULL, pStm, NULL);
+    ok(hRes == E_INVALIDARG ||
+       broken(hRes == S_OK) /* XP and below */, "Wrong result, %d\n", hRes);
+if (0) {
+    /* crashes on XP */
+    hRes = pDPA_SaveStream(NULL, CB_Save, pStm, NULL);
+    expect(E_INVALIDARG, hRes);
+
+    hRes = pDPA_SaveStream(dpa, CB_Save, NULL, NULL);
+    expect(E_INVALIDARG, hRes);
+}
+
+    /* saving/loading */
+    for (i = 0; i < 6; i++)
+    {
+        ret = pDPA_InsertPtr(dpa, i, (PVOID)(INT_PTR)(i+1));
+        ok(ret == i, "ret=%d\n", ret);
+    }
+
+    liZero.QuadPart = 0;
+    hRes = IStream_Seek(pStm, liZero, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+
+    hRes = pDPA_SaveStream(dpa, CB_Save, pStm, (void*)0xdeadbeef);
+    expect(S_OK, hRes);
     pDPA_Destroy(dpa);
+
+    liZero.QuadPart = 0;
+    hRes = IStream_Seek(pStm, liZero, STREAM_SEEK_SET, NULL);
+    expect(S_OK, hRes);
+    hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, (void*)0xdeadbeef);
+    expect(S_OK, hRes);
+    rc = CheckDPA(dpa, 0x123456, &dw);
+    ok(rc, "dw=0x%x\n", dw);
+    pDPA_Destroy(dpa);
+
+    ret = IStream_Release(pStm);
+    ok(!ret, "ret=%d\n", ret);
+
+    ret = IStorage_Release(pStg);
+    ok(!ret, "ret=%d\n", ret);
+
+    CoUninitialize();
 }
 
 START_TEST(dpa)
@@ -450,8 +746,16 @@ START_TEST(dpa)
 
     hcomctl32 = GetModuleHandleA("comctl32.dll");
 
-    if(InitFunctionPtrs(hcomctl32))
-        test_dpa();
-    else
+    if(!InitFunctionPtrs(hcomctl32))
+    {
         win_skip("Needed functions are not available\n");
+        return;
+    }
+
+    test_dpa();
+    test_DPA_Merge();
+    test_DPA_EnumCallback();
+    test_DPA_DestroyCallback();
+    test_DPA_LoadStream();
+    test_DPA_SaveStream();
 }

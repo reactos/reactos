@@ -104,7 +104,9 @@ static void test_GetPtrAW(void)
         ok (count == sourcelen ||
             broken(count == 0), /* win9x */
             "Expected count to be %d, it was %d\n", sourcelen, count);
-        ok (!lstrcmp(dest, desttest), "Expected destination to not have changed\n");
+        ok (!lstrcmp(dest, desttest) ||
+            broken(!lstrcmp(dest, "")), /* Win7 */
+            "Expected destination to not have changed\n");
 
         count = 0;
         count = pStr_GetPtrA(source, NULL, destsize);

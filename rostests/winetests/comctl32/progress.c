@@ -163,6 +163,7 @@ static void cleanup(void)
 static void test_redraw(void)
 {
     RECT client_rect;
+    LRESULT ret;
 
     SendMessageA(hProgressWnd, PBM_SETRANGE, 0, MAKELPARAM(0, 100));
     SendMessageA(hProgressWnd, PBM_SETPOS, 10, 0);
@@ -184,7 +185,11 @@ static void test_redraw(void)
     /* PBM_STEPIT */
     ok(SendMessageA(hProgressWnd, PBM_STEPIT, 0, 0) == 80, "PBM_STEPIT must return the previous position\n");
     ok(!GetUpdateRect(hProgressWnd, NULL, FALSE), "PBM_STEPIT: The progress bar should be redrawn immediately\n");
-    ok((UINT)SendMessageA(hProgressWnd, PBM_GETPOS, 0, 0) == 100, "PBM_GETPOS returned a wrong position\n");
+    ret = SendMessageA(hProgressWnd, PBM_GETPOS, 0, 0);
+    if (ret == 0)
+        win_skip("PBM_GETPOS needs comctl32 > 4.70\n");
+    else
+        ok(ret == 100, "PBM_GETPOS returned a wrong position : %d\n", (UINT)ret);
     
     /* PBM_SETRANGE and PBM_SETRANGE32:
     Usually the progress bar doesn't repaint itself immediately. If the

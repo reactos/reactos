@@ -15,7 +15,6 @@ extern void func_listview(void);
 extern void func_misc(void);
 extern void func_monthcal(void);
 extern void func_mru(void);
-extern void func_msg(void);
 extern void func_progress(void);
 extern void func_propsheet(void);
 extern void func_rebar(void);
@@ -40,7 +39,6 @@ const struct test winetest_testlist[] =
     { "misc", func_misc },
     { "monthcal", func_monthcal },
     { "mru", func_mru },
-    { "msg", func_msg },
     { "progress", func_progress },
     { "propsheet", func_propsheet },
     { "rebar", func_rebar },

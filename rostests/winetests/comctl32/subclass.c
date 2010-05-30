@@ -279,21 +279,49 @@ static BOOL RegisterWindowClasses(void)
     return TRUE;
 }
 
-START_TEST(subclass)
+static int init_function_pointers(void)
 {
-    HMODULE hdll;
-    
-    hdll = GetModuleHandleA("comctl32.dll");
-    assert(hdll);
+    HMODULE hmod;
+    void *ptr;
+
+    hmod = GetModuleHandleA("comctl32.dll");
+    assert(hmod);
+
     /* Functions have to be loaded by ordinal. Only XP and W2K3 export
      * them by name.
      */
-    pSetWindowSubclass = (void*)GetProcAddress(hdll, (LPSTR)410);
-    pRemoveWindowSubclass = (void*)GetProcAddress(hdll, (LPSTR)412);
-    pDefSubclassProc = (void*)GetProcAddress(hdll, (LPSTR)413);
-    
+#define MAKEFUNC_ORD(f, ord) (p##f = (void*)GetProcAddress(hmod, (LPSTR)(ord)))
+    MAKEFUNC_ORD(SetWindowSubclass, 410);
+    MAKEFUNC_ORD(RemoveWindowSubclass, 412);
+    MAKEFUNC_ORD(DefSubclassProc, 413);
+#undef MAKEFUNC_ORD
+
     if(!pSetWindowSubclass || !pRemoveWindowSubclass || !pDefSubclassProc)
-        return;
+    {
+        win_skip("SetWindowSubclass and friends are not available\n");
+        return 0;
+    }
+
+    /* test named exports */
+    ptr = GetProcAddress(hmod, "SetWindowSubclass");
+    ok(broken(ptr == 0) || ptr != 0, "expected named export for SetWindowSubclass\n");
+    if(ptr)
+    {
+#define TESTNAMED(f) \
+    ptr = (void*)GetProcAddress(hmod, #f); \
+    ok(ptr != 0, "expected named export for " #f "\n");
+        TESTNAMED(RemoveWindowSubclass);
+        TESTNAMED(DefSubclassProc);
+        /* GetWindowSubclass exported for V6 only */
+#undef TESTNAMED
+    }
+
+    return 1;
+}
+
+START_TEST(subclass)
+{
+    if(!init_function_pointers()) return;
 
     if(!RegisterWindowClasses()) assert(0);
 

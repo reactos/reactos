@@ -89,13 +89,14 @@ static const struct message create_parent_wnd_seq[] = {
 
 static const struct message add_tab_to_parent[] = {
     { TCM_INSERTITEMA, sent },
-    { TCM_INSERTITEMA, sent },
+    { TCM_INSERTITEMA, sent|optional },
     { WM_NOTIFYFORMAT, sent|defwinproc },
     { WM_QUERYUISTATE, sent|wparam|lparam|defwinproc|optional, 0, 0 },
     { WM_PARENTNOTIFY, sent|defwinproc },
     { TCM_INSERTITEMA, sent },
     { TCM_INSERTITEMA, sent },
     { TCM_INSERTITEMA, sent },
+    { TCM_INSERTITEMA, sent|optional },
     { 0 }
 };
 
@@ -236,12 +237,15 @@ static const struct message insert_focus_seq[] = {
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_INSERTITEM, sent|wparam, 1 },
+    { WM_NOTIFYFORMAT, sent|defwinproc|optional },
+    { WM_QUERYUISTATE, sent|defwinproc|optional },
+    { WM_PARENTNOTIFY, sent|defwinproc|optional },
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_INSERTITEM, sent|wparam, 2 },
-    { WM_NOTIFYFORMAT, sent|defwinproc, },
+    { WM_NOTIFYFORMAT, sent|defwinproc|optional },
     { WM_QUERYUISTATE, sent|defwinproc|optional, },
-    { WM_PARENTNOTIFY, sent|defwinproc, },
+    { WM_PARENTNOTIFY, sent|defwinproc|optional },
     { TCM_GETITEMCOUNT, sent|wparam|lparam, 0, 0 },
     { TCM_GETCURFOCUS, sent|wparam|lparam, 0, 0 },
     { TCM_SETCURFOCUS, sent|wparam|lparam, -1, 0 },
@@ -370,14 +374,9 @@ static HWND createParentWindow(void)
                           GetDesktopWindow(), NULL, GetModuleHandleA(NULL), NULL);
 }
 
-struct subclass_info
-{
-    WNDPROC oldproc;
-};
-
 static LRESULT WINAPI tabSubclassProcess(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    struct subclass_info *info = (struct subclass_info *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    WNDPROC oldproc = (WNDPROC)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     static LONG defwndproc_counter = 0;
     LRESULT ret;
     struct message msg;
@@ -402,7 +401,7 @@ static LRESULT WINAPI tabSubclassProcess(HWND hwnd, UINT message, WPARAM wParam,
     }
 
     defwndproc_counter++;
-    ret = CallWindowProcA(info->oldproc, hwnd, message, wParam, lParam);
+    ret = CallWindowProcA(oldproc, hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
     return ret;
@@ -412,13 +411,9 @@ static HWND createFilledTabControl(HWND parent_wnd, DWORD style, DWORD mask, INT
 {
     HWND tabHandle;
     TCITEM tcNewTab;
-    struct subclass_info *info;
+    WNDPROC oldproc;
     RECT rect;
     INT i;
-
-    info = HeapAlloc(GetProcessHeap(), 0, sizeof(struct subclass_info));
-    if (!info)
-        return NULL;
 
     GetClientRect(parent_wnd, &rect);
 
@@ -431,8 +426,8 @@ static HWND createFilledTabControl(HWND parent_wnd, DWORD style, DWORD mask, INT
 
     assert(tabHandle);
 
-    info->oldproc = (WNDPROC)SetWindowLongPtrA(tabHandle, GWLP_WNDPROC, (LONG_PTR)tabSubclassProcess);
-    SetWindowLongPtrA(tabHandle, GWLP_USERDATA, (LONG_PTR)info);
+    oldproc = (WNDPROC)SetWindowLongPtrA(tabHandle, GWLP_WNDPROC, (LONG_PTR)tabSubclassProcess);
+    SetWindowLongPtrA(tabHandle, GWLP_USERDATA, (LONG_PTR)oldproc);
 
     tcNewTab.mask = mask;
 
@@ -505,7 +500,7 @@ static void test_tab(INT nMinTabWidth)
     SIZE size;
     HDC hdc;
     HFONT hOldFont;
-    INT i, dpi;
+    INT i, dpi, exp;
 
     hwTab = create_tabcontrol(TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE);
     SendMessage(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
@@ -585,8 +580,11 @@ static void test_tab(INT nMinTabWidth)
     SendMessage(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
 
     trace ("  non fixed width, with text...\n");
-    CheckSize(hwTab, max(size.cx +TAB_PADDING_X*2, (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth), -1,
-              "no icon, default width");
+    exp = max(size.cx +TAB_PADDING_X*2, (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth);
+    SendMessage( hwTab, TCM_GETITEMRECT, 0, (LPARAM)&rTab );
+    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == DEFAULT_MIN_TAB_WIDTH),
+        "no icon, default width: Expected width [%d] got [%d]\n", exp, rTab.right - rTab.left );
+
     for (i=0; i<8; i++)
     {
         INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(i, 2) : nMinTabWidth;
@@ -610,7 +608,11 @@ static void test_tab(INT nMinTabWidth)
     SendMessage(hwTab, TCM_SETMINTABWIDTH, 0, nMinTabWidth);
 
     trace ("  non fixed width, no text...\n");
-    CheckSize(hwTab, (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth, -1, "no icon, default width");
+    exp = (nMinTabWidth < 0) ? DEFAULT_MIN_TAB_WIDTH : nMinTabWidth;
+    SendMessage( hwTab, TCM_GETITEMRECT, 0, (LPARAM)&rTab );
+    ok( rTab.right  - rTab.left == exp || broken(rTab.right  - rTab.left == DEFAULT_MIN_TAB_WIDTH),
+        "no icon, default width: Expected width [%d] got [%d]\n", exp, rTab.right - rTab.left );
+
     for (i=0; i<8; i++)
     {
         INT nTabWidth = (nMinTabWidth < 0) ? TabWidthPadded(i, 2) : nMinTabWidth;
@@ -636,7 +638,290 @@ static void test_tab(INT nMinTabWidth)
     DeleteObject(hFont);
 }
 
-static void test_getters_setters(HWND parent_wnd, INT nTabs)
+static void test_curfocus(HWND parent_wnd, INT nTabs)
+{
+    INT focusIndex;
+    HWND hTab;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* Testing CurFocus with largest appropriate value */
+    SendMessage(hTab, TCM_SETCURFOCUS, nTabs-1, 0);
+    focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
+    expect(nTabs-1, focusIndex);
+
+    /* Testing CurFocus with negative value */
+    SendMessage(hTab, TCM_SETCURFOCUS, -10, 0);
+    focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
+    expect(-1, focusIndex);
+
+    /* Testing CurFocus with value larger than number of tabs */
+    focusIndex = SendMessage(hTab, TCM_SETCURSEL, 1, 0);
+    expect(-1, focusIndex);
+
+    SendMessage(hTab, TCM_SETCURFOCUS, nTabs+1, 0);
+    focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
+    expect(1, focusIndex);
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_seq, "Getset curFoc test sequence", FALSE);
+
+    DestroyWindow(hTab);
+}
+
+static void test_cursel(HWND parent_wnd, INT nTabs)
+{
+    INT selectionIndex;
+    INT focusIndex;
+    TCITEM tcItem;
+    HWND hTab;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* Testing CurSel with largest appropriate value */
+    selectionIndex = SendMessage(hTab, TCM_SETCURSEL, nTabs-1, 0);
+    expect(0, selectionIndex);
+    selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+    expect(nTabs-1, selectionIndex);
+
+    /* Focus should switch with selection */
+    focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
+    expect(nTabs-1, focusIndex);
+
+    /* Testing CurSel with negative value */
+    SendMessage(hTab, TCM_SETCURSEL, -10, 0);
+    selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+    expect(-1, selectionIndex);
+
+    /* Testing CurSel with value larger than number of tabs */
+    selectionIndex = SendMessage(hTab, TCM_SETCURSEL, 1, 0);
+    expect(-1, selectionIndex);
+
+    selectionIndex = SendMessage(hTab, TCM_SETCURSEL, nTabs+1, 0);
+    expect(-1, selectionIndex);
+    selectionIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
+    expect(1, selectionIndex);
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_sel_seq, "Getset curSel test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset curSel test parent sequence", FALSE);
+
+    /* selected item should have TCIS_BUTTONPRESSED state
+       It doesn't depend on button state */
+    memset(&tcItem, 0, sizeof(TCITEM));
+    tcItem.mask = TCIF_STATE;
+    tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+    selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+    SendMessage(hTab, TCM_GETITEM, selectionIndex, (LPARAM) &tcItem);
+    ok (tcItem.dwState & TCIS_BUTTONPRESSED || broken(tcItem.dwState == 0), /* older comctl32 */
+        "Selected item should have TCIS_BUTTONPRESSED\n");
+
+    DestroyWindow(hTab);
+}
+
+static void test_extendedstyle(HWND parent_wnd, INT nTabs)
+{
+    DWORD prevExtendedStyle;
+    DWORD extendedStyle;
+    HWND hTab;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    /* Testing Flat Separators */
+    extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
+    prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_FLATSEPARATORS);
+    expect(extendedStyle, prevExtendedStyle);
+
+    extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
+    expect(TCS_EX_FLATSEPARATORS, extendedStyle);
+
+    /* Testing Register Drop */
+    prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_REGISTERDROP);
+    expect(extendedStyle, prevExtendedStyle);
+
+    extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
+    todo_wine{
+        expect(TCS_EX_REGISTERDROP, extendedStyle);
+    }
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_extended_style_seq, "Getset extendedStyle test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset extendedStyle test parent sequence", FALSE);
+
+    DestroyWindow(hTab);
+}
+
+static void test_unicodeformat(HWND parent_wnd, INT nTabs)
+{
+    INT unicodeFormat;
+    HWND hTab;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, TRUE, 0);
+    todo_wine{
+        expect(0, unicodeFormat);
+    }
+    unicodeFormat = SendMessage(hTab, TCM_GETUNICODEFORMAT, 0, 0);
+    expect(1, unicodeFormat);
+
+    unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, FALSE, 0);
+    expect(1, unicodeFormat);
+    unicodeFormat = SendMessage(hTab, TCM_GETUNICODEFORMAT, 0, 0);
+    expect(0, unicodeFormat);
+
+    unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, TRUE, 0);
+    expect(0, unicodeFormat);
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_unicode_format_seq, "Getset unicodeFormat test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset unicodeFormat test parent sequence", FALSE);
+
+    DestroyWindow(hTab);
+}
+
+static void test_getset_item(HWND parent_wnd, INT nTabs)
+{
+    TCITEM tcItem;
+    DWORD ret;
+    char szText[32] = "New Label";
+    HWND hTab;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    /* passing invalid index should result in initialization to zero
+       for members mentioned in mask requested */
+
+    /* valid range here is [0,4] */
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_PARAM;
+    ret = SendMessage(hTab, TCM_GETITEM, 5, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_IMAGE;
+    ret = SendMessage(hTab, TCM_GETITEM, 5, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    expect(0, tcItem.iImage);
+
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_TEXT;
+    tcItem.pszText = szText;
+    szText[0] = 'a';
+    ret = SendMessage(hTab, TCM_GETITEM, 5, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    expect('a', szText[0]);
+
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_STATE;
+    tcItem.dwStateMask = 0;
+    tcItem.dwState = TCIS_BUTTONPRESSED;
+    ret = SendMessage(hTab, TCM_GETITEM, 5, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    ok(tcItem.dwState == 0, "Expected zero dwState, got %u\n", tcItem.dwState);
+
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_STATE;
+    tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+    tcItem.dwState = TCIS_BUTTONPRESSED;
+    ret = SendMessage(hTab, TCM_GETITEM, 5, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    ok(tcItem.dwState == 0, "Expected zero dwState\n");
+
+    /* check with negative index to be sure */
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_PARAM;
+    ret = SendMessage(hTab, TCM_GETITEM, -1, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+
+    memset(&tcItem, 0xcc, sizeof(tcItem));
+    tcItem.mask = TCIF_PARAM;
+    ret = SendMessage(hTab, TCM_GETITEM, -2, (LPARAM)&tcItem);
+    expect(FALSE, ret);
+    ok(tcItem.lParam == 0, "Expected zero lParam, got %lu\n", tcItem.lParam);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    tcItem.mask = TCIF_TEXT;
+    tcItem.pszText = &szText[0];
+    tcItem.cchTextMax = sizeof(szText);
+
+    strcpy(szText, "New Label");
+    ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
+    ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+    expect_str("New Label", tcItem.pszText);
+
+    ok ( SendMessage(hTab, TCM_GETITEM, 1, (LPARAM) &tcItem), "Getting item failed.\n");
+    expect_str("Tab 2", tcItem.pszText);
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_item_seq, "Getset item test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset item test parent sequence", FALSE);
+
+    /* TCIS_BUTTONPRESSED doesn't depend on tab style */
+    memset(&tcItem, 0, sizeof(tcItem));
+    tcItem.mask = TCIF_STATE;
+    tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+    tcItem.dwState = TCIS_BUTTONPRESSED;
+    ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
+    tcItem.dwState = 0;
+    ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+    if (tcItem.dwState)
+    {
+        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
+        /* next highlight item, test that dwStateMask actually masks */
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_HIGHLIGHTED;
+        tcItem.dwState = TCIS_HIGHLIGHTED;
+        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
+        tcItem.dwState = 0;
+        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+        ok (tcItem.dwState == TCIS_HIGHLIGHTED, "TCIS_HIGHLIGHTED should be set.\n");
+        tcItem.mask = TCIF_STATE;
+        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
+        tcItem.dwState = 0;
+        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
+        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
+    }
+    else win_skip( "Item state mask not supported\n" );
+
+    DestroyWindow(hTab);
+}
+
+static void test_getset_tooltips(HWND parent_wnd, INT nTabs)
+{
+    HWND hTab, toolTip;
+    char toolTipText[32] = "ToolTip Text Test";
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, nTabs);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+
+    toolTip = create_tooltip(hTab, toolTipText);
+    SendMessage(hTab, TCM_SETTOOLTIPS, (LPARAM) toolTip, 0);
+    ok (toolTip == (HWND) SendMessage(hTab,TCM_GETTOOLTIPS,0,0), "ToolTip was set incorrectly.\n");
+
+    SendMessage(hTab, TCM_SETTOOLTIPS, 0, 0);
+    ok (NULL  == (HWND) SendMessage(hTab,TCM_GETTOOLTIPS,0,0), "ToolTip was set incorrectly.\n");
+
+    ok_sequence(sequences, TAB_SEQ_INDEX, getset_tooltip_seq, "Getset tooltip test sequence", TRUE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, getset_tooltip_parent_seq, "Getset tooltip test parent sequence", TRUE);
+
+    DestroyWindow(hTab);
+}
+
+static void test_misc(HWND parent_wnd, INT nTabs)
 {
     HWND hTab;
     RECT rTab;
@@ -694,196 +979,6 @@ static void test_getters_setters(HWND parent_wnd, INT nTabs)
     ok_sequence(sequences, TAB_SEQ_INDEX, get_item_rect_seq, "Get itemRect test sequence", FALSE);
     ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Get itemRect test parent sequence", FALSE);
 
-    /* Testing CurFocus */
-    {
-        INT focusIndex;
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        /* Testing CurFocus with largest appropriate value */
-        SendMessage(hTab, TCM_SETCURFOCUS, nTabs-1, 0);
-        focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
-            expect(nTabs-1, focusIndex);
-
-        /* Testing CurFocus with negative value */
-        SendMessage(hTab, TCM_SETCURFOCUS, -10, 0);
-        focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
-            expect(-1, focusIndex);
-
-        /* Testing CurFocus with value larger than number of tabs */
-        focusIndex = SendMessage(hTab, TCM_SETCURSEL, 1, 0);
-        todo_wine{
-            expect(-1, focusIndex);
-        }
-
-        SendMessage(hTab, TCM_SETCURFOCUS, nTabs+1, 0);
-        focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
-            expect(1, focusIndex);
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_focus_seq, "Getset curFoc test sequence", FALSE);
-    }
-
-    /* Testing CurSel */
-    {
-        INT selectionIndex;
-        INT focusIndex;
-        TCITEM tcItem;
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        /* Testing CurSel with largest appropriate value */
-        selectionIndex = SendMessage(hTab, TCM_SETCURSEL, nTabs-1, 0);
-            expect(1, selectionIndex);
-        selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
-            expect(nTabs-1, selectionIndex);
-
-        /* Focus should switch with selection */
-        focusIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
-            expect(nTabs-1, focusIndex);
-
-        /* Testing CurSel with negative value */
-        SendMessage(hTab, TCM_SETCURSEL, -10, 0);
-        selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
-            expect(-1, selectionIndex);
-
-        /* Testing CurSel with value larger than number of tabs */
-        selectionIndex = SendMessage(hTab, TCM_SETCURSEL, 1, 0);
-            expect(-1, selectionIndex);
-
-        selectionIndex = SendMessage(hTab, TCM_SETCURSEL, nTabs+1, 0);
-            expect(-1, selectionIndex);
-        selectionIndex = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
-            expect(1, selectionIndex);
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_cur_sel_seq, "Getset curSel test sequence", FALSE);
-        ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset curSel test parent sequence", FALSE);
-
-        /* selected item should have TCIS_BUTTONPRESSED state
-           It doesn't depend on button state */
-        memset(&tcItem, 0, sizeof(TCITEM));
-        tcItem.mask = TCIF_STATE;
-        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
-        selectionIndex = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
-        SendMessage(hTab, TCM_GETITEM, selectionIndex, (LPARAM) &tcItem);
-        ok (tcItem.dwState & TCIS_BUTTONPRESSED, "Selected item should have TCIS_BUTTONPRESSED\n");
-    }
-
-    /* Testing ExtendedStyle */
-    {
-        DWORD prevExtendedStyle;
-        DWORD extendedStyle;
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        /* Testing Flat Separators */
-        extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
-        prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_FLATSEPARATORS);
-        expect(extendedStyle, prevExtendedStyle);
-
-        extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
-        expect(TCS_EX_FLATSEPARATORS, extendedStyle);
-
-        /* Testing Register Drop */
-        prevExtendedStyle = SendMessage(hTab, TCM_SETEXTENDEDSTYLE, 0, TCS_EX_REGISTERDROP);
-            expect(extendedStyle, prevExtendedStyle);
-
-        extendedStyle = SendMessage(hTab, TCM_GETEXTENDEDSTYLE, 0, 0);
-        todo_wine{
-            expect(TCS_EX_REGISTERDROP, extendedStyle);
-        }
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_extended_style_seq, "Getset extendedStyle test sequence", FALSE);
-        ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset extendedStyle test parent sequence", FALSE);
-    }
-
-    /* Testing UnicodeFormat */
-    {
-        INT unicodeFormat;
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, TRUE, 0);
-        todo_wine{
-            expect(0, unicodeFormat);
-        }
-        unicodeFormat = SendMessage(hTab, TCM_GETUNICODEFORMAT, 0, 0);
-            expect(1, unicodeFormat);
-
-        unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, FALSE, 0);
-            expect(1, unicodeFormat);
-        unicodeFormat = SendMessage(hTab, TCM_GETUNICODEFORMAT, 0, 0);
-            expect(0, unicodeFormat);
-
-        unicodeFormat = SendMessage(hTab, TCM_SETUNICODEFORMAT, TRUE, 0);
-            expect(0, unicodeFormat);
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_unicode_format_seq, "Getset unicodeFormat test sequence", FALSE);
-        ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset unicodeFormat test parent sequence", FALSE);
-    }
-
-    /* Testing GetSet Item */
-    {
-        TCITEM tcItem;
-        char szText[32] = "New Label";
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        tcItem.mask = TCIF_TEXT;
-        tcItem.pszText = &szText[0];
-        tcItem.cchTextMax = sizeof(szText);
-
-        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
-        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
-        expect_str("New Label", tcItem.pszText);
-
-        ok ( SendMessage(hTab, TCM_GETITEM, 1, (LPARAM) &tcItem), "Getting item failed.\n");
-        expect_str("Tab 2", tcItem.pszText);
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_item_seq, "Getset item test sequence", FALSE);
-        ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "Getset item test parent sequence", FALSE);
-
-        /* TCIS_BUTTONPRESSED doesn't depend on tab style */
-        memset(&tcItem, 0, sizeof(tcItem));
-        tcItem.mask = TCIF_STATE;
-        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
-        tcItem.dwState = TCIS_BUTTONPRESSED;
-        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
-        tcItem.dwState = 0;
-        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
-        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
-        /* next highlight item, test that dwStateMask actually masks */
-        tcItem.mask = TCIF_STATE;
-        tcItem.dwStateMask = TCIS_HIGHLIGHTED;
-        tcItem.dwState = TCIS_HIGHLIGHTED;
-        ok ( SendMessage(hTab, TCM_SETITEM, 0, (LPARAM) &tcItem), "Setting new item failed.\n");
-        tcItem.dwState = 0;
-        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
-        ok (tcItem.dwState == TCIS_HIGHLIGHTED, "TCIS_HIGHLIGHTED should be set.\n");
-        tcItem.mask = TCIF_STATE;
-        tcItem.dwStateMask = TCIS_BUTTONPRESSED;
-        tcItem.dwState = 0;
-        ok ( SendMessage(hTab, TCM_GETITEM, 0, (LPARAM) &tcItem), "Getting item failed.\n");
-        ok (tcItem.dwState == TCIS_BUTTONPRESSED, "TCIS_BUTTONPRESSED should be set.\n");
-    }
-
-    /* Testing GetSet ToolTip */
-    {
-        HWND toolTip;
-        char toolTipText[32] = "ToolTip Text Test";
-
-        flush_sequences(sequences, NUM_MSG_SEQUENCES);
-
-        toolTip = create_tooltip(hTab, toolTipText);
-        SendMessage(hTab, TCM_SETTOOLTIPS, (LPARAM) toolTip, 0);
-        ok (toolTip == (HWND) SendMessage(hTab,TCM_GETTOOLTIPS,0,0), "ToolTip was set incorrectly.\n");
-
-        SendMessage(hTab, TCM_SETTOOLTIPS, 0, 0);
-        ok (NULL  == (HWND) SendMessage(hTab,TCM_GETTOOLTIPS,0,0), "ToolTip was set incorrectly.\n");
-
-        ok_sequence(sequences, TAB_SEQ_INDEX, getset_tooltip_seq, "Getset tooltip test sequence", TRUE);
-        ok_sequence(sequences, PARENT_SEQ_INDEX, getset_tooltip_parent_seq, "Getset tooltip test parent sequence", TRUE);
-    }
-
     DestroyWindow(hTab);
 }
 
@@ -903,6 +998,7 @@ static void test_adjustrect(HWND parent_wnd)
     r = SendMessage(hTab, TCM_ADJUSTRECT, TRUE, 0);
     expect(-1, r);
 }
+
 static void test_insert_focus(HWND parent_wnd)
 {
     HWND hTab;
@@ -960,8 +1056,8 @@ static void test_insert_focus(HWND parent_wnd)
     r = SendMessage(hTab, TCM_GETCURFOCUS, 0, 0);
     expect(2, r);
 
-    ok_sequence(sequences, TAB_SEQ_INDEX, insert_focus_seq, "insert_focus test sequence", TRUE);
-    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "insert_focus parent test sequence", FALSE);
+    ok_sequence(sequences, TAB_SEQ_INDEX, insert_focus_seq, "insert_focus test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "insert_focus parent test sequence", TRUE);
 
     DestroyWindow(hTab);
 }
@@ -1010,7 +1106,7 @@ static void test_delete_focus(HWND parent_wnd)
     expect(-1, r);
 
     ok_sequence(sequences, TAB_SEQ_INDEX, delete_focus_seq, "delete_focus test sequence", FALSE);
-    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "delete_focus parent test sequence", FALSE);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, empty_sequence, "delete_focus parent test sequence", TRUE);
 
     DestroyWindow(hTab);
 }
@@ -1078,6 +1174,28 @@ static void test_removeimage(HWND parent_wnd)
     DestroyIcon(hicon);
 }
 
+static void test_delete_selection(HWND parent_wnd)
+{
+    HWND hTab;
+    DWORD ret;
+
+    hTab = createFilledTabControl(parent_wnd, TCS_FIXEDWIDTH, TCIF_TEXT|TCIF_IMAGE, 4);
+    ok(hTab != NULL, "Failed to create tab control\n");
+
+    ret = SendMessage(hTab, TCM_SETCURSEL, 3, 0);
+    expect(0, ret);
+    ret = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+    expect(3, ret);
+    /* delete selected item - selection goes to -1 */
+    ret = SendMessage(hTab, TCM_DELETEITEM, 3, 0);
+    expect(TRUE, ret);
+
+    ret = SendMessage(hTab, TCM_GETCURSEL, 0, 0);
+    expect(-1, ret);
+
+    DestroyWindow(hTab);
+}
+
 START_TEST(tab)
 {
     HWND parent_wnd;
@@ -1108,13 +1226,19 @@ START_TEST(tab)
     parent_wnd = createParentWindow();
     ok(parent_wnd != NULL, "Failed to create parent window!\n");
 
-    /* Testing getters and setters with 5 tabs */
-    test_getters_setters(parent_wnd, 5);
+    test_curfocus(parent_wnd, 5);
+    test_cursel(parent_wnd, 5);
+    test_extendedstyle(parent_wnd, 5);
+    test_unicodeformat(parent_wnd, 5);
+    test_getset_item(parent_wnd, 5);
+    test_getset_tooltips(parent_wnd, 5);
+    test_misc(parent_wnd, 5);
 
     test_adjustrect(parent_wnd);
 
     test_insert_focus(parent_wnd);
     test_delete_focus(parent_wnd);
+    test_delete_selection(parent_wnd);
     test_removeimage(parent_wnd);
 
     DestroyWindow(parent_wnd);

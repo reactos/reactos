@@ -4,6 +4,7 @@
  * Copyright 2004 Michael Stefaniuc
  * Copyright 2002 Mike McCormack for CodeWeavers
  * Copyright 2007 Dmitry Timoshkov
+ * Copyright 2009 Owen Rudge for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -33,8 +34,12 @@
 #include "winuser.h"
 #include "objbase.h"
 #include "commctrl.h" /* must be included after objbase.h to get ImageList_Write */
+#include "initguid.h"
+#include "commoncontrols.h"
+#include "shellapi.h"
 
 #include "wine/test.h"
+#include "v6util.h"
 
 #undef VISIBLE
 
@@ -65,10 +70,14 @@ typedef struct _ILHEAD
 } ILHEAD;
 #include "poppack.h"
 
+static HIMAGELIST (WINAPI *pImageList_Create)(int, int, UINT, int, int);
+static int (WINAPI *pImageList_Add)(HIMAGELIST, HBITMAP, HBITMAP);
 static BOOL (WINAPI *pImageList_DrawIndirect)(IMAGELISTDRAWPARAMS*);
 static BOOL (WINAPI *pImageList_SetImageCount)(HIMAGELIST,UINT);
+static HRESULT (WINAPI *pImageList_CoCreateInstance)(REFCLSID,const IUnknown *,
+    REFIID,void **);
+static HRESULT (WINAPI *pHIMAGELIST_QueryInterface)(HIMAGELIST,REFIID,void **);
 
-static HDC desktopDC;
 static HINSTANCE hinst;
 
 /* These macros build cursor/bitmap data in 4x4 pixel blocks */
@@ -327,7 +336,7 @@ static BOOL DoTest1(void)
     HICON hicon3 ;
 
     /* create an imagelist to play with */
-    himl = ImageList_Create(84,84,0x10,0,3);
+    himl = ImageList_Create(84, 84, ILC_COLOR16, 0, 3);
     ok(himl!=0,"failed to create imagelist\n");
 
     /* load the icons to add to the image list */
@@ -393,7 +402,7 @@ static BOOL DoTest2(void)
     HICON hicon3 ;
 
     /* create an imagelist to play with */
-    himl = ImageList_Create(84,84,0x10,0,3);
+    himl = ImageList_Create(84, 84, ILC_COLOR16, 0, 3);
     ok(himl!=0,"failed to create imagelist\n");
 
     /* load the icons to add to the image list */
@@ -442,7 +451,7 @@ static BOOL DoTest3(void)
     ok(hdc!=NULL, "couldn't get DC\n");
 
     /* create an imagelist to play with */
-    himl = ImageList_Create(48,48,0x10,0,3);
+    himl = ImageList_Create(48, 48, ILC_COLOR16, 0, 3);
     ok(himl!=0,"failed to create imagelist\n");
 
     /* load the icons to add to the image list */
@@ -824,7 +833,7 @@ static void check_bitmap_data(const char *bm_data, ULONG bm_data_size,
 
 static void check_ilhead_data(const char *ilh_data, INT cx, INT cy, INT cur, INT max)
 {
-    ILHEAD *ilh = (ILHEAD *)ilh_data;
+    const ILHEAD *ilh = (const ILHEAD *)ilh_data;
 
     ok(ilh->usMagic == IMAGELIST_MAGIC, "wrong usMagic %4x (expected %02x)\n", ilh->usMagic, IMAGELIST_MAGIC);
     ok(ilh->usVersion == 0x101, "wrong usVersion %x (expected 0x101)\n", ilh->usVersion);
@@ -981,13 +990,639 @@ static void test_imagelist_storage(void)
     iml_clear_stream_data();
 }
 
+static void test_shell_imagelist(void)
+{
+    BOOL (WINAPI *pSHGetImageList)(INT, REFIID, void**);
+    IImageList *iml = NULL;
+    HMODULE hShell32;
+    HRESULT hr;
+    int out = 0;
+    RECT rect;
+    int cx, cy;
+
+    /* Try to load function from shell32 */
+    hShell32 = LoadLibrary("shell32.dll");
+    pSHGetImageList = (void*)GetProcAddress(hShell32, (LPCSTR) 727);
+
+    if (!pSHGetImageList)
+    {
+        win_skip("SHGetImageList not available, skipping test\n");
+        return;
+    }
+
+    /* Get system image list */
+    hr = (pSHGetImageList)(SHIL_SYSSMALL, &IID_IImageList, (void**)&iml);
+
+    ok(SUCCEEDED(hr), "SHGetImageList failed, hr=%x\n", hr);
+
+    if (hr != S_OK)
+        return;
+
+    IImageList_GetImageCount(iml, &out);
+    ok(out > 0, "IImageList_GetImageCount returned out <= 0\n");
+
+    /* Fetch the small icon size */
+    cx = GetSystemMetrics(SM_CXSMICON);
+    cy = GetSystemMetrics(SM_CYSMICON);
+
+    /* Check icon size matches */
+    IImageList_GetImageRect(iml, 0, &rect);
+    ok(((rect.right == cx) && (rect.bottom == cy)),
+                 "IImageList_GetImageRect returned r:%d,b:%d\n",
+                 rect.right, rect.bottom);
+
+    IImageList_Release(iml);
+    FreeLibrary(hShell32);
+}
+
+static HBITMAP create_test_bitmap(HDC hdc, int bpp, UINT32 pixel1, UINT32 pixel2)
+{
+    HBITMAP hBitmap;
+    UINT32 *buffer = NULL;
+    BITMAPINFO bitmapInfo = {{sizeof(BITMAPINFOHEADER), 2, 1, 1, bpp, BI_RGB,
+                                0, 0, 0, 0, 0}};
+
+    hBitmap = CreateDIBSection(hdc, &bitmapInfo, DIB_RGB_COLORS, (void**)&buffer, NULL, 0);
+    ok(hBitmap != NULL && buffer != NULL, "CreateDIBSection failed.\n");
+
+    if(!hBitmap || !buffer)
+    {
+        DeleteObject(hBitmap);
+        return NULL;
+    }
+
+    buffer[0] = pixel1;
+    buffer[1] = pixel2;
+
+    return hBitmap;
+}
+
+static BOOL colour_match(UINT32 x, UINT32 y)
+{
+    const INT32 tolerance = 8;
+
+    const INT32 dr = abs((INT32)(x & 0x000000FF) - (INT32)(y & 0x000000FF));
+    const INT32 dg = abs((INT32)((x & 0x0000FF00) >> 8) - (INT32)((y & 0x0000FF00) >> 8));
+    const INT32 db = abs((INT32)((x & 0x00FF0000) >> 16) - (INT32)((y & 0x00FF0000) >> 16));
+
+    return (dr <= tolerance && dg <= tolerance && db <= tolerance);
+}
+
+static void check_ImageList_DrawIndirect(IMAGELISTDRAWPARAMS *ildp, UINT32 *bits,
+                                         UINT32 expected, int line)
+{
+    bits[0] = 0x00FFFFFF;
+    pImageList_DrawIndirect(ildp);
+    ok(colour_match(bits[0], expected),
+       "ImageList_DrawIndirect: Pixel %08X, Expected a close match to %08X from line %d\n",
+       bits[0] & 0x00FFFFFF, expected, line);
+}
+
+
+static void check_ImageList_DrawIndirect_fStyle(HDC hdc, HIMAGELIST himl, UINT32 *bits, int i,
+                                                UINT fStyle, UINT32 expected, int line)
+{
+    IMAGELISTDRAWPARAMS ildp = {sizeof(IMAGELISTDRAWPARAMS), himl, i, hdc,
+        0, 0, 0, 0, 0, 0, CLR_NONE, CLR_NONE, fStyle, 0, ILS_NORMAL, 0, 0x00000000};
+    check_ImageList_DrawIndirect(&ildp, bits, expected, line);
+}
+
+static void check_ImageList_DrawIndirect_ILD_ROP(HDC hdc, HIMAGELIST himl, UINT32 *bits, int i,
+                                                DWORD dwRop, UINT32 expected, int line)
+{
+    IMAGELISTDRAWPARAMS ildp = {sizeof(IMAGELISTDRAWPARAMS), himl, i, hdc,
+        0, 0, 0, 0, 0, 0, CLR_NONE, CLR_NONE, ILD_IMAGE | ILD_ROP, dwRop, ILS_NORMAL, 0, 0x00000000};
+    check_ImageList_DrawIndirect(&ildp, bits, expected, line);
+}
+
+static void check_ImageList_DrawIndirect_fState(HDC hdc, HIMAGELIST himl, UINT32 *bits, int i, UINT fStyle,
+                                                UINT fState, DWORD Frame, UINT32 expected, int line)
+{
+    IMAGELISTDRAWPARAMS ildp = {sizeof(IMAGELISTDRAWPARAMS), himl, i, hdc,
+        0, 0, 0, 0, 0, 0, CLR_NONE, CLR_NONE, fStyle, 0, fState, Frame, 0x00000000};
+    check_ImageList_DrawIndirect(&ildp, bits, expected, line);
+}
+
+static void check_ImageList_DrawIndirect_broken(HDC hdc, HIMAGELIST himl, UINT32 *bits, int i,
+                                                UINT fStyle, UINT fState, DWORD Frame, UINT32 expected,
+                                                UINT32 broken_expected, int line)
+{
+    IMAGELISTDRAWPARAMS ildp = {sizeof(IMAGELISTDRAWPARAMS), himl, i, hdc,
+        0, 0, 0, 0, 0, 0, CLR_NONE, CLR_NONE, fStyle, 0, fState, Frame, 0x00000000};
+    bits[0] = 0x00FFFFFF;
+    pImageList_DrawIndirect(&ildp);
+    ok(colour_match(bits[0], expected) ||
+       broken(colour_match(bits[0], broken_expected)),
+       "ImageList_DrawIndirect: Pixel %08X, Expected a close match to %08X from line %d\n",
+       bits[0] & 0x00FFFFFF, expected, line);
+}
+
+static void test_ImageList_DrawIndirect(void)
+{
+    HIMAGELIST himl = NULL;
+    int ret;
+    HDC hdcDst = NULL;
+    HBITMAP hbmOld = NULL, hbmDst = NULL;
+    HBITMAP hbmMask = NULL, hbmInverseMask = NULL;
+    HBITMAP hbmImage = NULL, hbmAlphaImage = NULL, hbmTransparentImage = NULL;
+    int iImage = -1, iAlphaImage = -1, iTransparentImage = -1;
+    UINT32 *bits = 0;
+    UINT32 maskBits = 0x00000000, inverseMaskBits = 0xFFFFFFFF;
+
+    BITMAPINFO bitmapInfo = {{sizeof(BITMAPINFOHEADER), 2, 1, 1, 32, BI_RGB,
+                                0, 0, 0, 0, 0}};
+
+    hdcDst = CreateCompatibleDC(0);
+    ok(hdcDst != 0, "CreateCompatibleDC(0) failed to return a valid DC\n");
+    if (!hdcDst)
+        return;
+
+    hbmMask = CreateBitmap(2, 1, 1, 1, &maskBits);
+    ok(hbmMask != 0, "CreateBitmap failed\n");
+    if(!hbmMask) goto cleanup;
+
+    hbmInverseMask = CreateBitmap(2, 1, 1, 1, &inverseMaskBits);
+    ok(hbmInverseMask != 0, "CreateBitmap failed\n");
+    if(!hbmInverseMask) goto cleanup;
+
+    himl = pImageList_Create(2, 1, ILC_COLOR32, 0, 1);
+    ok(himl != 0, "ImageList_Create failed\n");
+    if(!himl) goto cleanup;
+
+    /* Add a no-alpha image */
+    hbmImage = create_test_bitmap(hdcDst, 32, 0x00ABCDEF, 0x00ABCDEF);
+    if(!hbmImage) goto cleanup;
+
+    iImage = pImageList_Add(himl, hbmImage, hbmMask);
+    ok(iImage != -1, "ImageList_Add failed\n");
+    if(iImage == -1) goto cleanup;
+
+    /* Add an alpha image */
+    hbmAlphaImage = create_test_bitmap(hdcDst, 32, 0x89ABCDEF, 0x89ABCDEF);
+    if(!hbmAlphaImage) goto cleanup;
+
+    iAlphaImage = pImageList_Add(himl, hbmAlphaImage, hbmMask);
+    ok(iAlphaImage != -1, "ImageList_Add failed\n");
+    if(iAlphaImage == -1) goto cleanup;
+
+    /* Add a transparent alpha image */
+    hbmTransparentImage = create_test_bitmap(hdcDst, 32, 0x00ABCDEF, 0x89ABCDEF);
+    if(!hbmTransparentImage) goto cleanup;
+
+    iTransparentImage = pImageList_Add(himl, hbmTransparentImage, hbmMask);
+    ok(iTransparentImage != -1, "ImageList_Add failed\n");
+    if(iTransparentImage == -1) goto cleanup;
+
+    /* 32-bit Tests */
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    hbmDst = CreateDIBSection(hdcDst, &bitmapInfo, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+    ok (hbmDst && bits, "CreateDIBSection failed to return a valid bitmap and buffer\n");
+    if (!hbmDst || !bits)
+        goto cleanup;
+    hbmOld = SelectObject(hdcDst, hbmDst);
+
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iImage, ILD_NORMAL, 0x00ABCDEF, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iImage, ILD_TRANSPARENT, 0x00ABCDEF, __LINE__);
+    todo_wine check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_BLEND25, ILS_NORMAL, 0, 0x00E8F1FA, 0x00D4D9DD, __LINE__);
+    todo_wine check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_BLEND50, ILS_NORMAL, 0, 0x00E8F1FA, 0x00B4BDC4, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iImage, ILD_MASK, 0x00ABCDEF, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iImage, ILD_IMAGE, 0x00ABCDEF, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iImage, ILD_PRESERVEALPHA, 0x00ABCDEF, __LINE__);
+
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iAlphaImage, ILD_NORMAL, 0x00D3E5F7, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iAlphaImage, ILD_TRANSPARENT, 0x00D3E5F7, __LINE__);
+    todo_wine
+    {
+        check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_BLEND25, ILS_NORMAL, 0, 0x00E8F1FA, 0x009DA8B1, __LINE__);
+        check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_BLEND50, ILS_NORMAL, 0, 0x00E8F1FA, 0x008C99A3, __LINE__);
+
+    }
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iAlphaImage, ILD_MASK, 0x00D3E5F7, __LINE__);
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iAlphaImage, ILD_IMAGE, 0x00D3E5F7, __LINE__);
+    todo_wine check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iAlphaImage, ILD_PRESERVEALPHA, 0x005D6F81, __LINE__);
+
+    check_ImageList_DrawIndirect_fStyle(hdcDst, himl, bits, iTransparentImage, ILD_NORMAL, 0x00FFFFFF, __LINE__);
+
+    check_ImageList_DrawIndirect_ILD_ROP(hdcDst, himl, bits, iImage, SRCCOPY, 0x00ABCDEF, __LINE__);
+    check_ImageList_DrawIndirect_ILD_ROP(hdcDst, himl, bits, iImage, SRCINVERT, 0x00543210, __LINE__);
+
+    /* ILD_ROP is ignored when the image has an alpha channel */
+    check_ImageList_DrawIndirect_ILD_ROP(hdcDst, himl, bits, iAlphaImage, SRCCOPY, 0x00D3E5F7, __LINE__);
+    check_ImageList_DrawIndirect_ILD_ROP(hdcDst, himl, bits, iAlphaImage, SRCINVERT, 0x00D3E5F7, __LINE__);
+
+    todo_wine check_ImageList_DrawIndirect_fState(hdcDst, himl, bits, iImage, ILD_NORMAL, ILS_SATURATE, 0, 0x00CCCCCC, __LINE__);
+    todo_wine check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_NORMAL, ILS_SATURATE, 0, 0x00AFAFAF, 0x00F0F0F0, __LINE__);
+
+    check_ImageList_DrawIndirect_fState(hdcDst, himl, bits, iImage, ILD_NORMAL, ILS_GLOW, 0, 0x00ABCDEF, __LINE__);
+    check_ImageList_DrawIndirect_fState(hdcDst, himl, bits, iImage, ILD_NORMAL, ILS_SHADOW, 0, 0x00ABCDEF, __LINE__);
+
+    check_ImageList_DrawIndirect_fState(hdcDst, himl, bits, iImage, ILD_NORMAL, ILS_ALPHA, 127, 0x00D5E6F7, __LINE__);
+    check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_NORMAL, ILS_ALPHA, 127, 0x00E9F2FB, 0x00AEB7C0, __LINE__);
+    todo_wine check_ImageList_DrawIndirect_broken(hdcDst, himl, bits, iAlphaImage, ILD_NORMAL, ILS_NORMAL, 127, 0x00E9F2FB, 0x00D3E5F7, __LINE__);
+
+cleanup:
+
+    if(hbmOld)
+        SelectObject(hdcDst, hbmOld);
+    if(hbmDst)
+        DeleteObject(hbmDst);
+
+    if(hdcDst)
+        DeleteDC(hdcDst);
+
+    if(hbmMask)
+        DeleteObject(hbmMask);
+    if(hbmInverseMask)
+        DeleteObject(hbmInverseMask);
+
+    if(hbmImage)
+        DeleteObject(hbmImage);
+    if(hbmAlphaImage)
+        DeleteObject(hbmAlphaImage);
+    if(hbmTransparentImage)
+        DeleteObject(hbmTransparentImage);
+
+    if(himl)
+    {
+        ret = ImageList_Destroy(himl);
+        ok(ret, "ImageList_Destroy failed\n");
+    }
+}
+
+static void test_iimagelist(void)
+{
+    IImageList *imgl;
+    HIMAGELIST himl;
+    HRESULT hr;
+    ULONG ret;
+
+    if (!pHIMAGELIST_QueryInterface)
+    {
+        win_skip("XP imagelist functions not available\n");
+        return;
+    }
+
+    /* test reference counting on destruction */
+    imgl = (IImageList*)createImageList(32, 32);
+    ret = IUnknown_AddRef(imgl);
+    ok(ret == 2, "Expected 2, got %d\n", ret);
+    ret = ImageList_Destroy((HIMAGELIST)imgl);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
+    ret = ImageList_Destroy((HIMAGELIST)imgl);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
+    ret = ImageList_Destroy((HIMAGELIST)imgl);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+
+    imgl = (IImageList*)createImageList(32, 32);
+    ret = IUnknown_AddRef(imgl);
+    ok(ret == 2, "Expected 2, got %d\n", ret);
+    ret = ImageList_Destroy((HIMAGELIST)imgl);
+    ok(ret == TRUE, "Expected TRUE, got %d\n", ret);
+    ret = IImageList_Release(imgl);
+    ok(ret == 0, "Expected 0, got %d\n", ret);
+    ret = ImageList_Destroy((HIMAGELIST)imgl);
+    ok(ret == FALSE, "Expected FALSE, got %d\n", ret);
+
+    if (!pImageList_CoCreateInstance)
+    {
+        win_skip("Vista imagelist functions not available\n");
+        return;
+    }
+
+    hr = pImageList_CoCreateInstance(&CLSID_ImageList, NULL, &IID_IImageList, (void **) &imgl);
+    ok(SUCCEEDED(hr), "ImageList_CoCreateInstance failed, hr=%x\n", hr);
+
+    if (hr == S_OK)
+        IImageList_Release(imgl);
+
+    himl = createImageList(32, 32);
+
+    if (!himl)
+        return;
+
+    hr = (pHIMAGELIST_QueryInterface)(himl, &IID_IImageList, (void **) &imgl);
+    ok(SUCCEEDED(hr), "HIMAGELIST_QueryInterface failed, hr=%x\n", hr);
+
+    if (hr == S_OK)
+        IImageList_Release(imgl);
+
+    ImageList_Destroy(himl);
+}
+
+static void testHotspot_v6(void)
+{
+    struct hotspot {
+        int dx;
+        int dy;
+    };
+
+#define SIZEX1 47
+#define SIZEY1 31
+#define SIZEX2 11
+#define SIZEY2 17
+#define HOTSPOTS_MAX 4       /* Number of entries in hotspots */
+    static const struct hotspot hotspots[HOTSPOTS_MAX] = {
+        { 10, 7 },
+        { SIZEX1, SIZEY1 },
+        { -9, -8 },
+        { -7, 35 }
+    };
+    int i, j;
+    HIMAGELIST himl1 = createImageList(SIZEX1, SIZEY1);
+    HIMAGELIST himl2 = createImageList(SIZEX2, SIZEY2);
+    IImageList *imgl1, *imgl2;
+    HRESULT hr;
+
+    /* cast to IImageList */
+    imgl1 = (IImageList *) himl1;
+    imgl2 = (IImageList *) himl2;
+
+    for (i = 0; i < HOTSPOTS_MAX; i++) {
+        for (j = 0; j < HOTSPOTS_MAX; j++) {
+            int dx1 = hotspots[i].dx;
+            int dy1 = hotspots[i].dy;
+            int dx2 = hotspots[j].dx;
+            int dy2 = hotspots[j].dy;
+            int correctx, correcty, newx, newy;
+            char loc[256];
+            IImageList *imglNew;
+            POINT ppt;
+
+            hr = IImageList_BeginDrag(imgl1, 0, dx1, dy1);
+            ok(SUCCEEDED(hr), "BeginDrag failed for { %d, %d }\n", dx1, dy1);
+            sprintf(loc, "BeginDrag (%d,%d)\n", i, j);
+
+            /* check merging the dragged image with a second image */
+            hr = IImageList_SetDragCursorImage(imgl2, (IUnknown *) imgl2, 0, dx2, dy2);
+            ok(SUCCEEDED(hr), "SetDragCursorImage failed for {%d, %d}{%d, %d}\n",
+                    dx1, dy1, dx2, dy2);
+            sprintf(loc, "SetDragCursorImage (%d,%d)\n", i, j);
+
+            /* check new hotspot, it should be the same like the old one */
+            hr = IImageList_GetDragImage(imgl2, NULL, &ppt, &IID_IImageList, (PVOID *) &imglNew);
+            ok(SUCCEEDED(hr), "GetDragImage failed\n");
+            ok(ppt.x == dx1 && ppt.y == dy1,
+                    "Expected drag hotspot [%d,%d] got [%d,%d]\n",
+                    dx1, dy1, ppt.x, ppt.y);
+            /* check size of new dragged image */
+            IImageList_GetIconSize(imglNew, &newx, &newy);
+            correctx = max(SIZEX1, max(SIZEX2 + dx2, SIZEX1 - dx2));
+            correcty = max(SIZEY1, max(SIZEY2 + dy2, SIZEY1 - dy2));
+            ok(newx == correctx && newy == correcty,
+                    "Expected drag image size [%d,%d] got [%d,%d]\n",
+                    correctx, correcty, newx, newy);
+            sprintf(loc, "GetDragImage (%d,%d)\n", i, j);
+            IImageList_EndDrag(imgl2);
+        }
+    }
+#undef SIZEX1
+#undef SIZEY1
+#undef SIZEX2
+#undef SIZEY2
+#undef HOTSPOTS_MAX
+    IImageList_Release(imgl2);
+    IImageList_Release(imgl1);
+}
+
+static void DoTest1_v6(void)
+{
+    IImageList *imgl;
+    HIMAGELIST himl;
+    HRESULT hr;
+
+    HICON hicon1;
+    HICON hicon2;
+    HICON hicon3;
+
+    int ret = 0;
+
+    /* create an imagelist to play with */
+    himl = ImageList_Create(84, 84, ILC_COLOR16, 0, 3);
+    ok(himl != 0,"failed to create imagelist\n");
+
+    imgl = (IImageList *) himl;
+
+    /* load the icons to add to the image list */
+    hicon1 = CreateIcon(hinst, 32, 32, 1, 1, icon_bits, icon_bits);
+    ok(hicon1 != 0, "no hicon1\n");
+    hicon2 = CreateIcon(hinst, 32, 32, 1, 1, icon_bits, icon_bits);
+    ok(hicon2 != 0, "no hicon2\n");
+    hicon3 = CreateIcon(hinst, 32, 32, 1, 1, icon_bits, icon_bits);
+    ok(hicon3 != 0, "no hicon3\n");
+
+    /* remove when nothing exists */
+    hr = IImageList_Remove(imgl, 0);
+    ok(!(SUCCEEDED(hr)), "removed nonexistent icon\n");
+
+    /* removing everything from an empty imagelist should succeed */
+    hr = IImageList_Remove(imgl, -1);
+    ok(SUCCEEDED(hr), "removed nonexistent icon\n");
+
+    /* add three */
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl, -1, hicon1, &ret)) && (ret == 0),"failed to add icon1\n");
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl, -1, hicon2, &ret)) && (ret == 1),"failed to add icon2\n");
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl, -1, hicon3, &ret)) && (ret == 2),"failed to add icon3\n");
+
+    /* remove an index out of range */
+    ok(FAILED(IImageList_Remove(imgl, 4711)),"removed nonexistent icon\n");
+
+    /* remove three */
+    ok(SUCCEEDED(IImageList_Remove(imgl,0)),"can't remove 0\n");
+    ok(SUCCEEDED(IImageList_Remove(imgl,0)),"can't remove 0\n");
+    ok(SUCCEEDED(IImageList_Remove(imgl,0)),"can't remove 0\n");
+
+    /* remove one extra */
+    ok(FAILED(IImageList_Remove(imgl, 0)),"removed nonexistent icon\n");
+
+    /* check SetImageCount/GetImageCount */
+    ok(SUCCEEDED(IImageList_SetImageCount(imgl, 3)), "couldn't increase image count\n");
+    ok(SUCCEEDED(IImageList_GetImageCount(imgl, &ret)) && (ret == 3), "invalid image count after increase\n");
+    ok(SUCCEEDED(IImageList_SetImageCount(imgl, 1)), "couldn't decrease image count\n");
+    ok(SUCCEEDED(IImageList_GetImageCount(imgl, &ret)) && (ret == 1), "invalid image count after decrease to 1\n");
+    ok(SUCCEEDED(IImageList_SetImageCount(imgl, 0)), "couldn't decrease image count\n");
+    ok(SUCCEEDED(IImageList_GetImageCount(imgl, &ret)) && (ret == 0), "invalid image count after decrease to 0\n");
+
+    /* destroy it */
+    ok(SUCCEEDED(IImageList_Release(imgl)),"release imagelist failed\n");
+
+    ok(DestroyIcon(hicon1),"icon 1 wasn't deleted\n");
+    ok(DestroyIcon(hicon2),"icon 2 wasn't deleted\n");
+    ok(DestroyIcon(hicon3),"icon 3 wasn't deleted\n");
+}
+
+static void DoTest3_v6(void)
+{
+    IImageList *imgl;
+    HIMAGELIST himl;
+
+    HBITMAP hbm1;
+    HBITMAP hbm2;
+    HBITMAP hbm3;
+
+    IMAGELISTDRAWPARAMS imldp;
+    HWND hwndfortest;
+    HDC hdc;
+    int ret;
+
+    hwndfortest = create_a_window();
+    hdc = GetDC(hwndfortest);
+    ok(hdc!=NULL, "couldn't get DC\n");
+
+    /* create an imagelist to play with */
+    himl = ImageList_Create(48, 48, ILC_COLOR16, 0, 3);
+    ok(himl!=0,"failed to create imagelist\n");
+
+    imgl = (IImageList *) himl;
+
+    /* load the icons to add to the image list */
+    hbm1 = CreateBitmap(48, 48, 1, 1, bitmap_bits);
+    ok(hbm1 != 0, "no bitmap 1\n");
+    hbm2 = CreateBitmap(48, 48, 1, 1, bitmap_bits);
+    ok(hbm2 != 0, "no bitmap 2\n");
+    hbm3 = CreateBitmap(48, 48, 1, 1, bitmap_bits);
+    ok(hbm3 != 0, "no bitmap 3\n");
+
+    /* add three */
+    ok(SUCCEEDED(IImageList_Add(imgl, hbm1, 0, &ret)) && (ret == 0), "failed to add bitmap 1\n");
+    ok(SUCCEEDED(IImageList_Add(imgl, hbm2, 0, &ret)) && (ret == 1), "failed to add bitmap 2\n");
+
+    ok(SUCCEEDED(IImageList_SetImageCount(imgl, 3)), "Setimage count failed\n");
+    ok(SUCCEEDED(IImageList_Replace(imgl, 2, hbm3, 0)), "failed to replace bitmap 3\n");
+
+    memset(&imldp, 0, sizeof (imldp));
+    ok(FAILED(IImageList_Draw(imgl, &imldp)), "zero data succeeded!\n");
+
+    imldp.cbSize = sizeof (imldp);
+    imldp.hdcDst = hdc;
+    imldp.himl = himl;
+
+    if (FAILED(IImageList_Draw(imgl, &imldp)))
+    {
+       /* Earlier versions of native comctl32 use a smaller structure */
+       imldp.cbSize -= 3 * sizeof(DWORD);
+       ok(SUCCEEDED(IImageList_Draw(imgl, &imldp)), "should succeed\n");
+    }
+
+    REDRAW(hwndfortest);
+    WAIT;
+
+    imldp.fStyle = SRCCOPY;
+    imldp.rgbBk = CLR_DEFAULT;
+    imldp.rgbFg = CLR_DEFAULT;
+    imldp.y = 100;
+    imldp.x = 100;
+    ok(SUCCEEDED(IImageList_Draw(imgl, &imldp)), "should succeed\n");
+    imldp.i ++;
+    ok(SUCCEEDED(IImageList_Draw(imgl, &imldp)), "should succeed\n");
+    imldp.i ++;
+    ok(SUCCEEDED(IImageList_Draw(imgl, &imldp)), "should succeed\n");
+    imldp.i ++;
+    ok(FAILED(IImageList_Draw(imgl, &imldp)), "should fail\n");
+
+    /* remove three */
+    ok(SUCCEEDED(IImageList_Remove(imgl, 0)), "removing 1st bitmap\n");
+    ok(SUCCEEDED(IImageList_Remove(imgl, 0)), "removing 2nd bitmap\n");
+    ok(SUCCEEDED(IImageList_Remove(imgl, 0)), "removing 3rd bitmap\n");
+
+    /* destroy it */
+    ok(SUCCEEDED(IImageList_Release(imgl)), "release imagelist failed\n");
+
+    /* bitmaps should not be deleted by the imagelist */
+    ok(DeleteObject(hbm1),"bitmap 1 can't be deleted\n");
+    ok(DeleteObject(hbm2),"bitmap 2 can't be deleted\n");
+    ok(DeleteObject(hbm3),"bitmap 3 can't be deleted\n");
+
+    ReleaseDC(hwndfortest, hdc);
+    DestroyWindow(hwndfortest);
+}
+
+static void testMerge_v6(void)
+{
+    HIMAGELIST himl1, himl2;
+    IImageList *imgl1, *imgl2, *merge;
+    HICON hicon1;
+    HWND hwnd = create_a_window();
+    HRESULT hr;
+    int ret;
+
+    himl1 = ImageList_Create(32,32,0,0,3);
+    ok(himl1 != NULL,"failed to create himl1\n");
+
+    himl2 = ImageList_Create(32,32,0,0,3);
+    ok(himl2 != NULL,"failed to create himl2\n");
+
+    hicon1 = CreateIcon(hinst, 32, 32, 1, 1, icon_bits, icon_bits);
+    ok(hicon1 != NULL, "failed to create hicon1\n");
+
+    if (!himl1 || !himl2 || !hicon1)
+        return;
+
+    /* cast to IImageList */
+    imgl1 = (IImageList *) himl1;
+    imgl2 = (IImageList *) himl2;
+
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl2, -1, hicon1, &ret)) && (ret == 0),"add icon1 to himl2 failed\n");
+
+    /* If himl1 has no images, merge still succeeds */
+    hr = IImageList_Merge(imgl1, -1, (IUnknown *) imgl2, 0, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl1,-1 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    hr = IImageList_Merge(imgl1, 0, (IUnknown *) imgl2, 0, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl1,0 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    /* Same happens if himl2 is empty */
+    IImageList_Release(imgl2);
+    himl2 = ImageList_Create(32,32,0,0,3);
+    ok(himl2 != NULL,"failed to recreate himl2\n");
+
+    imgl2 = (IImageList *) himl2;
+
+    hr = IImageList_Merge(imgl1, -1, (IUnknown *) imgl2, -1, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl2,-1 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    hr = IImageList_Merge(imgl1, -1, (IUnknown *) imgl2, 0, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl2,0 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    /* Now try merging an image with itself */
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl2, -1, hicon1, &ret)) && (ret == 0),"re-add icon1 to himl2 failed\n");
+
+    hr = IImageList_Merge(imgl2, 0, (IUnknown *) imgl2, 0, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl2 with itself failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    /* Try merging 2 different image lists */
+    ok(SUCCEEDED(IImageList_ReplaceIcon(imgl1, -1, hicon1, &ret)) && (ret == 0),"add icon1 to himl1 failed\n");
+
+    hr = IImageList_Merge(imgl1, 0, (IUnknown *) imgl2, 0, 0, 0, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl1 with himl2 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    hr = IImageList_Merge(imgl1, 0, (IUnknown *) imgl2, 0, 8, 16, &IID_IImageList, (void **) &merge);
+    ok(SUCCEEDED(hr), "merge himl1 with himl2 8,16 failed\n");
+    if (SUCCEEDED(hr)) IImageList_Release(merge);
+
+    IImageList_Release(imgl1);
+    IImageList_Release(imgl2);
+
+    DestroyIcon(hicon1);
+    DestroyWindow(hwnd);
+}
+
 START_TEST(imagelist)
 {
+    ULONG_PTR ctx_cookie;
+    HANDLE hCtx;
+
     HMODULE hComCtl32 = GetModuleHandle("comctl32.dll");
+    pImageList_Create = NULL;   /* These are not needed for non-v6.0 tests*/
+    pImageList_Add = NULL;
     pImageList_DrawIndirect = (void*)GetProcAddress(hComCtl32, "ImageList_DrawIndirect");
     pImageList_SetImageCount = (void*)GetProcAddress(hComCtl32, "ImageList_SetImageCount");
 
-    desktopDC=GetDC(NULL);
     hinst = GetModuleHandleA(NULL);
 
     InitCommonControls();
@@ -998,4 +1633,36 @@ START_TEST(imagelist)
     DoTest3();
     testMerge();
     test_imagelist_storage();
+
+    FreeLibrary(hComCtl32);
+
+    /* Now perform v6 tests */
+
+    if (!load_v6_module(&ctx_cookie, &hCtx))
+        return;
+
+    /* Reload comctl32 */
+    hComCtl32 = LoadLibraryA("comctl32.dll");
+    pImageList_Create = (void*)GetProcAddress(hComCtl32, "ImageList_Create");
+    pImageList_Add = (void*)GetProcAddress(hComCtl32, "ImageList_Add");
+    pImageList_DrawIndirect = (void*)GetProcAddress(hComCtl32, "ImageList_DrawIndirect");
+    pImageList_SetImageCount = (void*)GetProcAddress(hComCtl32, "ImageList_SetImageCount");
+    pImageList_CoCreateInstance = (void*)GetProcAddress(hComCtl32, "ImageList_CoCreateInstance");
+    pHIMAGELIST_QueryInterface = (void*)GetProcAddress(hComCtl32, "HIMAGELIST_QueryInterface");
+
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
+    /* Do v6.0 tests */
+    test_ImageList_DrawIndirect();
+    test_shell_imagelist();
+    test_iimagelist();
+
+    testHotspot_v6();
+    DoTest1_v6();
+    DoTest3_v6();
+    testMerge_v6();
+
+    CoUninitialize();
+
+    unload_v6_module(ctx_cookie, hCtx);
 }

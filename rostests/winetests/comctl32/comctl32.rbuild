@@ -4,6 +4,8 @@
 <module name="comctl32_winetest" type="win32cui" installbase="bin" installname="comctl32_winetest.exe" allowwarnings="true">
 	<include base="comctl32_winetest">.</include>
 	<define name="__ROS_LONG64__" />
+	<redefine name="_WIN32_WINNT">0x0600</redefine>
+	<redefine name="_WIN32_IE">0x0500</redefine>
 	<file>comboex.c</file>
 	<file>datetime.c</file>
 	<file>dpa.c</file>
@@ -14,7 +16,6 @@
 	<file>misc.c</file>
 	<file>monthcal.c</file>
 	<file>mru.c</file>
-	<file>msg.c</file>
 	<file>progress.c</file>
 	<file>propsheet.c</file>
 	<file>rebar.c</file>

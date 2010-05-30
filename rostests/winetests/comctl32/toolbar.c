@@ -33,12 +33,27 @@
 
 #include "wine/test.h"
 
+#include "msg.h"
+
+#define PARENT_SEQ_INDEX       0
+#define NUM_MSG_SEQUENCES      1
+
+static struct msg_sequence *sequences[NUM_MSG_SEQUENCES];
+
 static HWND hMainWnd;
 static BOOL g_fBlockHotItemChange;
 static BOOL g_fReceivedHotItemChange;
 static BOOL g_fExpectedHotItemOld;
 static BOOL g_fExpectedHotItemNew;
 static DWORD g_dwExpectedDispInfoMask;
+static BOOL g_ResetDispTextPtr;
+
+static const struct message ttgetdispinfo_parent_seq[] = {
+    { WM_NOTIFY, sent|id, 0, 0, TBN_GETINFOTIPA },
+    /* next line is todo, currently TTN_GETDISPINFOW is raised here */
+    { WM_NOTIFY, sent|id, 0, 0, TTN_GETDISPINFOA },
+    { 0 }
+};
 
 #define expect(EXPECTED,GOT) ok((GOT)==(EXPECTED), "Expected %d, got %d\n", (EXPECTED), (GOT))
 
@@ -56,7 +71,7 @@ static void MakeButton(TBBUTTON *p, int idCommand, int fsStyle, int nString) {
   p->iString = nString;
 }
 
-static LRESULT MyWnd_Notify(LPARAM lParam)
+static LRESULT parent_wnd_notify(LPARAM lParam)
 {
     NMHDR *hdr = (NMHDR *)lParam;
     NMTBHOTITEM *nmhi;
@@ -79,25 +94,65 @@ static LRESULT MyWnd_Notify(LPARAM lParam)
             ok(FALSE, "TBN_GETDISPINFOA received\n");
             break;
 
+        case TBN_GETINFOTIPA:
+        {
+            NMTBGETINFOTIPA *tbgit = (NMTBGETINFOTIPA*)lParam;
+
+            if (g_ResetDispTextPtr)
+            {
+                tbgit->pszText = NULL;
+                return 0;
+            }
+            break;
+        }
         case TBN_GETDISPINFOW:
             nmdisp = (NMTBDISPINFOA *)lParam;
 
             compare(nmdisp->dwMask, g_dwExpectedDispInfoMask, "%x");
-            compare(nmdisp->iImage, -1, "%d");
             ok(nmdisp->pszText == NULL, "pszText is not NULL\n");
         break;
     }
     return 0;
 }
 
-static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK parent_wnd_proc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    switch (msg)
+    static LONG defwndproc_counter = 0;
+    struct message msg;
+    LRESULT ret;
+
+    msg.message = message;
+    msg.flags = sent|wparam|lparam;
+    if (defwndproc_counter) msg.flags |= defwinproc;
+    msg.wParam = wParam;
+    msg.lParam = lParam;
+    if (message == WM_NOTIFY && lParam) msg.id = ((NMHDR*)lParam)->code;
+
+    /* log system messages, except for painting */
+    if (message < WM_USER &&
+        message != WM_PAINT &&
+        message != WM_ERASEBKGND &&
+        message != WM_NCPAINT &&
+        message != WM_NCHITTEST &&
+        message != WM_GETTEXT &&
+        message != WM_GETICON &&
+        message != WM_DEVICECHANGE)
+    {
+        trace("parent: %p, %04x, %08lx, %08lx\n", hWnd, message, wParam, lParam);
+        add_message(sequences, PARENT_SEQ_INDEX, &msg);
+    }
+
+    switch (message)
     {
         case WM_NOTIFY:
-            return MyWnd_Notify(lParam);
+            return parent_wnd_notify(lParam);
     }
-    return DefWindowProcA(hWnd, msg, wParam, lParam);
+
+    defwndproc_counter++;
+    ret = DefWindowProcA(hWnd, message, wParam, lParam);
+    defwndproc_counter--;
+
+    return ret;
 }
 
 static void basic_test(void)
@@ -163,7 +218,7 @@ static void basic_test(void)
 
 static void rebuild_toolbar(HWND *hToolbar)
 {
-    if (*hToolbar != NULL)
+    if (*hToolbar)
         DestroyWindow(*hToolbar);
     *hToolbar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0,
         hMainWnd, (HMENU)5, GetModuleHandle(NULL), NULL);
@@ -374,6 +429,8 @@ static void test_add_bitmap(void)
     addbmp.hInst = HINST_COMMCTRL;
     addbmp.nID = IDB_STD_SMALL_COLOR;
     rebuild_toolbar(&hToolbar);
+    ImageList_Destroy(himl);
+
     ok(SendMessageA(hToolbar, TB_ADDBITMAP, 1, (LPARAM)&addbmp) == 0, "TB_ADDBITMAP - unexpected return\n");
     CHECK_IMAGELIST(15, 16, 16);
     compare((int)SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0), MAKELONG(23, 22), "%x");
@@ -415,7 +472,7 @@ static void test_add_bitmap(void)
                 ok(strcmp(_buf, (tab)[_i]) == 0, "Invalid string #%d - '%s' vs '%s'\n", _i, (tab)[_i], _buf); \
         } \
         ok(SendMessageA(hToolbar, TB_GETSTRING, MAKEWPARAM(260, (count)), (LPARAM)_buf) == -1, \
-            "Too many string in table\n"); \
+            "Too many strings in table\n"); \
     }
 
 static void test_add_string(void)
@@ -432,10 +489,17 @@ static void test_add_string(void)
     HWND hToolbar = NULL;
     TBBUTTON button;
     int ret;
+    CHAR buf[260];
 
     rebuild_toolbar(&hToolbar);
     ret = SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)test1);
     ok(ret == 0, "TB_ADDSTRINGA - unexpected return %d\n", ret);
+    ret = SendMessageA(hToolbar, TB_GETSTRING, MAKEWPARAM(260, 1), (LPARAM)buf);
+    if (ret == 0)
+    {
+        win_skip("TB_GETSTRING needs 5.80\n");
+        return;
+    }
     CHECK_STRING_TABLE(2, ret1);
     ret = SendMessageA(hToolbar, TB_ADDSTRINGA, 0, (LPARAM)test2);
     ok(ret == 2, "TB_ADDSTRINGA - unexpected return %d\n", ret);
@@ -734,6 +798,22 @@ static tbsize_result_t tbsize_results[] =
 
 static int tbsize_numtests = 0;
 
+typedef struct
+{
+    int test_num;
+    int rect_index;
+    RECT rcButton;
+} tbsize_alt_result_t;
+
+static tbsize_alt_result_t tbsize_alt_results[] =
+{
+  { 5, 2, { 0, 24, 8, 29 } },
+  { 20, 1, { 100, 2, 107, 102 } },
+  { 20, 2, { 107, 2, 207, 102 } }
+};
+
+static int tbsize_alt_numtests = 0;
+
 #define check_sizes_todo(todomask) { \
         RECT rc; \
         int buttonCount, i, mask=(todomask); \
@@ -745,7 +825,11 @@ static int tbsize_numtests = 0;
         compare(buttonCount, res->nButtons, "%d"); \
         for (i=0; i<min(buttonCount, res->nButtons); i++) { \
             ok(SendMessageA(hToolbar, TB_GETITEMRECT, i, (LPARAM)&rc) == 1, "TB_GETITEMRECT\n"); \
-            if (!(mask&1)) { \
+            if (broken(tbsize_alt_numtests < sizeof(tbsize_alt_results)/sizeof(tbsize_alt_results[0]) && \
+                       memcmp(&rc, &tbsize_alt_results[tbsize_alt_numtests].rcButton, sizeof(RECT)) == 0)) { \
+                win_skip("Alternate rect found\n"); \
+                tbsize_alt_numtests++; \
+            } else if (!(mask&1)) { \
                 check_rect("button", rc, res->rcButtons[i]); \
             } else {\
                 todo_wine { check_rect("button", rc, res->rcButtons[i]); } \
@@ -954,6 +1038,7 @@ static void test_sizes(void)
 
     rebuild_toolbar(&hToolbar);
     ImageList_Destroy(himl);
+    ImageList_Destroy(himl2);
 
     SendMessageA(hToolbar, TB_ADDBUTTONS, 1, (LPARAM)&buttons3[3]);
     ok(SendMessageA(hToolbar, TB_GETBUTTONSIZE, 0, 0) == MAKELONG(27, 39), "Unexpected button size\n");
@@ -995,10 +1080,17 @@ static void test_sizes(void)
     tbinfo.cx = 672;
     tbinfo.cbSize = sizeof(TBBUTTONINFO);
     tbinfo.dwMask = TBIF_SIZE | TBIF_BYINDEX;
-    ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 0, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
-    ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
-    SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0);
-    check_sizes();
+    if (SendMessageA(hToolbar, TB_SETBUTTONINFO, 0, (LPARAM)&tbinfo))
+    {
+        ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
+        SendMessageA(hToolbar, TB_AUTOSIZE, 0, 0);
+        check_sizes();
+    }
+    else  /* TBIF_BYINDEX probably not supported, confirm that this was the reason for the failure */
+    {
+        tbinfo.dwMask = TBIF_SIZE;
+        ok(SendMessageA(hToolbar, TB_SETBUTTONINFO, 33, (LPARAM)&tbinfo) != 0, "TB_SETBUTTONINFO failed\n");
+    }
 
     DestroyWindow(hToolbar);
 }
@@ -1049,21 +1141,24 @@ static void restore_recalc_state(HWND hToolbar)
 
 static void test_recalc(void)
 {
-    HWND hToolbar;
+    HWND hToolbar = NULL;
     TBBUTTONINFO bi;
     CHAR test[] = "Test";
     const int EX_STYLES_COUNT = 5;
     int i;
+    BOOL recalc;
 
     /* Like TB_ADDBUTTONS tested in test_sized, inserting a button without text
      * results in a relayout, while adding one with text forces a recalc */
     prepare_recalc_test(&hToolbar);
     SendMessage(hToolbar, TB_INSERTBUTTON, 1, (LPARAM)&buttons3[0]);
-    ok(!did_recalc(hToolbar), "Unexpected recalc - adding button without text\n");
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "Unexpected recalc - adding button without text\n");
 
     prepare_recalc_test(&hToolbar);
     SendMessage(hToolbar, TB_INSERTBUTTON, 1, (LPARAM)&buttons3[3]);
-    ok(did_recalc(hToolbar), "Expected a recalc - adding button with text\n");
+    recalc = did_recalc(hToolbar);
+    ok(recalc, "Expected a recalc - adding button with text\n");
 
     /* TB_SETBUTTONINFO, even when adding a text, results only in a relayout */
     prepare_recalc_test(&hToolbar);
@@ -1071,7 +1166,8 @@ static void test_recalc(void)
     bi.dwMask = TBIF_TEXT;
     bi.pszText = test;
     SendMessage(hToolbar, TB_SETBUTTONINFO, 1, (LPARAM)&bi);
-    ok(!did_recalc(hToolbar), "Unexpected recalc - setting a button text\n");
+    recalc = did_recalc(hToolbar);
+    ok(!recalc, "Unexpected recalc - setting a button text\n");
 
     /* most extended styled doesn't force a recalc (testing all the bits gives
      * the same results, but prints some ERRs while testing) */
@@ -1082,22 +1178,31 @@ static void test_recalc(void)
         prepare_recalc_test(&hToolbar);
         expect(0, (int)SendMessage(hToolbar, TB_GETEXTENDEDSTYLE, 0, 0));
         SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, (1 << i));
-        ok(!did_recalc(hToolbar), "Unexpected recalc - setting bit %d\n", i);
+        recalc = did_recalc(hToolbar);
+        ok(!recalc, "Unexpected recalc - setting bit %d\n", i);
         SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, 0);
-        ok(!did_recalc(hToolbar), "Unexpected recalc - clearing bit %d\n", i);
+        recalc = did_recalc(hToolbar);
+        ok(!recalc, "Unexpected recalc - clearing bit %d\n", i);
         expect(0, (int)SendMessage(hToolbar, TB_GETEXTENDEDSTYLE, 0, 0));
     }
 
     /* TBSTYLE_EX_MIXEDBUTTONS does a recalc on change */
     prepare_recalc_test(&hToolbar);
     SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-    ok(did_recalc(hToolbar), "Expected a recalc - setting TBSTYLE_EX_MIXEDBUTTONS\n");
-    restore_recalc_state(hToolbar);
-    SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
-    ok(!did_recalc(hToolbar), "Unexpected recalc - setting TBSTYLE_EX_MIXEDBUTTONS again\n");
-    restore_recalc_state(hToolbar);
-    SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, 0);
-    ok(did_recalc(hToolbar), "Expected a recalc - clearing TBSTYLE_EX_MIXEDBUTTONS\n");
+    recalc = did_recalc(hToolbar);
+    if (recalc)
+    {
+        ok(recalc, "Expected a recalc - setting TBSTYLE_EX_MIXEDBUTTONS\n");
+        restore_recalc_state(hToolbar);
+        SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
+        recalc = did_recalc(hToolbar);
+        ok(!recalc, "Unexpected recalc - setting TBSTYLE_EX_MIXEDBUTTONS again\n");
+        restore_recalc_state(hToolbar);
+        SendMessage(hToolbar, TB_SETEXTENDEDSTYLE, 0, 0);
+        recalc = did_recalc(hToolbar);
+        ok(recalc, "Expected a recalc - clearing TBSTYLE_EX_MIXEDBUTTONS\n");
+    }
+    else win_skip( "No recalc on TBSTYLE_EX_MIXEDBUTTONS\n" );
 
     /* undocumented exstyle 0x2 seems to changes the top margin, what
      * interferes with these tests */
@@ -1117,8 +1222,8 @@ static void test_getbuttoninfo(void)
         int ret;
 
         tbi.cbSize = i;
-        tbi.dwMask = TBIF_BYINDEX | TBIF_COMMAND;
-        ret = (int)SendMessage(hToolbar, TB_GETBUTTONINFO, 0, (LPARAM)&tbi);
+        tbi.dwMask = TBIF_COMMAND;
+        ret = (int)SendMessage(hToolbar, TB_GETBUTTONINFO, 1, (LPARAM)&tbi);
         if (i == sizeof(TBBUTTONINFO)) {
             compare(ret, 0, "%d");
         } else {
@@ -1189,7 +1294,7 @@ static void test_dispinfo(void)
     rebuild_toolbar(&hToolbar);
     SendMessageA(hToolbar, TB_LOADIMAGES, IDB_HIST_SMALL_COLOR, (LPARAM)HINST_COMMCTRL);
     SendMessageA(hToolbar, TB_ADDBUTTONS, 2, (LPARAM)buttons_disp);
-    g_dwExpectedDispInfoMask = 1;
+    g_dwExpectedDispInfoMask = TBNF_IMAGE;
     /* Some TBN_GETDISPINFO tests will be done in MyWnd_Notify function.
      * We will receive TBN_GETDISPINFOW even if the control is ANSI */
     compare((BOOL)SendMessageA(hToolbar, CCM_GETUNICODEFORMAT, 0, 0), 0, "%d");
@@ -1281,6 +1386,12 @@ static void test_getstring(void)
     ok(hToolbar != NULL, "Toolbar creation problem\n");
 
     r = SendMessage(hToolbar, TB_GETSTRING, MAKEWPARAM(0, 0), 0);
+    if (r == 0)
+    {
+        win_skip("TB_GETSTRING and TB_GETSTRINGW need 5.80\n");
+        DestroyWindow(hToolbar);
+        return;
+    }
     expect(-1, r);
     r = SendMessage(hToolbar, TB_GETSTRINGW, MAKEWPARAM(0, 0), 0);
     expect(-1, r);
@@ -1300,12 +1411,46 @@ static void test_getstring(void)
     DestroyWindow(hToolbar);
 }
 
+static void test_tooltip(void)
+{
+    HWND hToolbar = NULL;
+    const TBBUTTON buttons_disp[] = {
+        {-1, 20, TBSTATE_ENABLED, 0, {0, }, 0, -1},
+        {0,  21, TBSTATE_ENABLED, 0, {0, }, 0, -1},
+    };
+    NMTTDISPINFOW nmtti;
+
+    rebuild_toolbar(&hToolbar);
+
+    SendMessageA(hToolbar, TB_ADDBUTTONS, 2, (LPARAM)buttons_disp);
+
+    /* W used to get through toolbar code that assumes tooltip is always Unicode */
+    memset(&nmtti, 0, sizeof(nmtti));
+    nmtti.hdr.code = TTN_GETDISPINFOW;
+    nmtti.hdr.idFrom = 20;
+
+    SendMessageA(hToolbar, CCM_SETUNICODEFORMAT, FALSE, 0);
+
+    flush_sequences(sequences, NUM_MSG_SEQUENCES);
+    SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
+    ok_sequence(sequences, PARENT_SEQ_INDEX, ttgetdispinfo_parent_seq,
+                "dispinfo from tooltip", TRUE);
+
+    g_ResetDispTextPtr = TRUE;
+    SendMessageA(hToolbar, WM_NOTIFY, 0, (LPARAM)&nmtti);
+    g_ResetDispTextPtr = FALSE;
+
+    DestroyWindow(hToolbar);
+}
+
 START_TEST(toolbar)
 {
     WNDCLASSA wc;
     MSG msg;
     RECT rc;
-  
+
+    init_msg_sequences(sequences, NUM_MSG_SEQUENCES);
+
     InitCommonControls();
   
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -1316,11 +1461,11 @@ START_TEST(toolbar)
     wc.hCursor = LoadCursorA(NULL, IDC_IBEAM);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
-    wc.lpszClassName = "MyTestWnd";
-    wc.lpfnWndProc = MyWndProc;
+    wc.lpszClassName = "Toolbar test parent";
+    wc.lpfnWndProc = parent_wnd_proc;
     RegisterClassA(&wc);
     
-    hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW, 
+    hMainWnd = CreateWindowExA(0, "Toolbar test parent", "Blah", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     GetClientRect(hMainWnd, &rc);
     ShowWindow(hMainWnd, SW_SHOW);
@@ -1336,6 +1481,7 @@ START_TEST(toolbar)
     test_dispinfo();
     test_setrows();
     test_getstring();
+    test_tooltip();
 
     PostQuitMessage(0);
     while(GetMessageA(&msg,0,0,0)) {
