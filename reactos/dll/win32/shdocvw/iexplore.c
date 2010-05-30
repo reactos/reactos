@@ -37,6 +37,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
+#define IDI_APPICON 101
+
 static const WCHAR szIEWinFrame[] = { 'I','E','F','r','a','m','e',0 };
 
 static LRESULT iewnd_OnCreate(HWND hwnd, LPCREATESTRUCTW lpcs)
@@ -85,7 +87,7 @@ ie_window_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 void register_iewindow_class(void)
 {
-    WNDCLASSW wc;
+    WNDCLASSEXW wc;
 
     memset(&wc, 0, sizeof wc);
     wc.style = 0;
@@ -93,13 +95,15 @@ void register_iewindow_class(void)
     wc.cbClsExtra = 0;
     wc.cbWndExtra = sizeof(InternetExplorer*);
     wc.hInstance = shdocvw_hinstance;
-    wc.hIcon = 0;
-    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDI_APPLICATION));
+    wc.hIcon = LoadIconW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON));
+    wc.hIconSm = LoadImageW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
+                            GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+    wc.hCursor = LoadCursorW(0, MAKEINTRESOURCEW(IDC_ARROW));
     wc.hbrBackground = 0;
     wc.lpszClassName = szIEWinFrame;
     wc.lpszMenuName = NULL;
 
-    RegisterClassW(&wc);
+    RegisterClassExW(&wc);
 }
 
 void unregister_iewindow_class(void)
