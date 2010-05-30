@@ -94,7 +94,7 @@ extern void winetest_trace( const char *msg, ... );
 
 #endif /* __GNUC__ */
 
-#define ok_(file, line)       (winetest_set_location(file, line), 0) ? 0 : winetest_ok
+#define ok_(file, line)       (winetest_set_location(file, line), 0) ? (void)0 : winetest_ok
 #define skip_(file, line)     (winetest_set_location(file, line), 0) ? (void)0 : winetest_skip
 #define win_skip_(file, line) (winetest_set_location(file, line), 0) ? (void)0 : winetest_win_skip
 #define trace_(file, line)    (winetest_set_location(file, line), 0) ? (void)0 : winetest_trace
