@@ -1844,39 +1844,61 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
                                        PreviousMode,
                                        (PVOID*)&Token,
                                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
+                                           PreviousMode,
+                                           FALSE);
+        return Status;
+    }
+
+    /*
+     * Fail, if the original token is an impersonation token and the caller
+     * tries to raise the impersonation level of the new token above the
+     * impersonation level of the original token.
+     */
+    if (Token->TokenType == TokenImpersonation)
+    {
+        if (QoSPresent &&
+            CapturedSecurityQualityOfService->ImpersonationLevel >Token->ImpersonationLevel)
+        {
+            ObDereferenceObject(Token);
+            SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
+                                               PreviousMode,
+                                               FALSE);
+            return STATUS_BAD_IMPERSONATION_LEVEL;
+        }
+    }
+
+    Status = SepDuplicateToken(Token,
+                               ObjectAttributes,
+                               EffectiveOnly,
+                               TokenType,
+                               (QoSPresent ? CapturedSecurityQualityOfService->ImpersonationLevel : SecurityAnonymous),
+                               PreviousMode,
+                               &NewToken);
+
+    ObDereferenceObject(Token);
+
     if (NT_SUCCESS(Status))
     {
-        Status = SepDuplicateToken(Token,
-                                   ObjectAttributes,
-                                   EffectiveOnly,
-                                   TokenType,
-                                   (QoSPresent ? CapturedSecurityQualityOfService->ImpersonationLevel : SecurityAnonymous),
-                                   PreviousMode,
-                                   &NewToken);
-
-        ObDereferenceObject(Token);
-
+        Status = ObInsertObject((PVOID)NewToken,
+                                NULL,
+                                DesiredAccess,
+                                0,
+                                NULL,
+                                &hToken);
         if (NT_SUCCESS(Status))
         {
-            Status = ObInsertObject((PVOID)NewToken,
-                                    NULL,
-                                    DesiredAccess,
-                                    0,
-                                    NULL,
-                                    &hToken);
-
-            if (NT_SUCCESS(Status))
+            _SEH2_TRY
             {
-                _SEH2_TRY
-                {
-                    *NewTokenHandle = hToken;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
+                *NewTokenHandle = hToken;
             }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
         }
     }
 
