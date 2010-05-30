@@ -29,9 +29,10 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
     PSENDASYNCPROC_CALLBACK_ARGUMENTS CallbackArgs;
 
     TRACE("User32CallSendAsyncProcKernel()\n");
+
     CallbackArgs = (PSENDASYNCPROC_CALLBACK_ARGUMENTS)Arguments;
 
-    if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
+    if (ArgumentLength != sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS))
     {
         return(STATUS_INFO_LENGTH_MISMATCH);
     }

@@ -894,7 +894,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PLIST_ENTRY Entry;
    LRESULT Result;
    BOOL SenderReturned;
-   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -965,26 +964,16 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Notify the sender if they specified a callback. */
+   /* Call the callback if the message was sent with SendMessageCallback */
    if (!SenderReturned && Message->CompletionCallback != NULL)
    {
-      if(!(NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
-                           sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG)))
-      {
-         DPRINT1("MsqDispatchOneSentMessage(): Not enough memory to create a callback notify message\n");
-         goto Notified;
-      }
-      NotifyMessage->CompletionCallback =
-         Message->CompletionCallback;
-      NotifyMessage->CompletionCallbackContext =
-         Message->CompletionCallbackContext;
-      NotifyMessage->Result = Result;
-      NotifyMessage->hWnd = Message->Msg.hwnd;
-      NotifyMessage->Msg = Message->Msg.message;
-      MsqSendNotifyMessage(Message->SenderQueue, NotifyMessage);
+      co_IntCallSentMessageCallback(Message->CompletionCallback,
+                                    Message->Msg.hwnd,
+                                    Message->Msg.message,
+                                    Message->CompletionCallbackContext,
+                                    Result);
    }
 
-Notified:
 
    /* Only if it is not a no wait message */
    if (!(Message->HookMessage & MSQ_SENTNOWAIT))

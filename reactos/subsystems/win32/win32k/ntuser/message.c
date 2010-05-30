@@ -1625,12 +1625,11 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
    IntCallWndProcRet( Window, hWnd, Msg, wParam, lParam, (LRESULT *)uResult);
 
-   if (Window->pti->MessageQueue == Win32Thread->MessageQueue)
+   if ((Window->pti->MessageQueue == Win32Thread->MessageQueue) && (CompletionCallback == NULL))
    {
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam, FALSE)))
       {
          DPRINT1("Failed to unpack message parameters\n");
-         RETURN(TRUE);
       }
       RETURN(TRUE);
    }
@@ -2621,6 +2620,18 @@ NtUserMessageCall(
       }
       break;
       case FNID_SENDMESSAGECALLBACK:
+      {
+         PCALL_BACK_INFO CallBackInfo = (PCALL_BACK_INFO)ResultInfo;
+
+         if (!CallBackInfo)
+            break;
+
+         if (!co_IntSendMessageWithCallBack(hWnd, Msg, wParam, lParam,
+             CallBackInfo->CallBack, CallBackInfo->Context, NULL))
+         {
+            DPRINT1("Callback failure!\n");
+         }
+      }
       break;
       // CallNextHook bypass.
       case FNID_CALLWNDPROC:
