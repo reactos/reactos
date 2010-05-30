@@ -879,14 +879,14 @@ __INTRIN_INLINE unsigned short _rotl16(unsigned short value, unsigned char shift
 	return retval;
 }
 
-__INTRIN_INLINE unsigned int __cdecl _rotl(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int _rotl(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("roll %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned int __cdecl _rotr(unsigned int value, int shift)
+__INTRIN_INLINE unsigned int _rotr(unsigned int value, int shift)
 {
 	unsigned long retval;
 	__asm__("rorl %b[shift], %k[retval]" : [retval] "=rm" (retval) : "[retval]" (value), [shift] "Nc" (shift));
@@ -956,14 +956,14 @@ __INTRIN_INLINE unsigned long long __ull_rshift(const unsigned long long Mask, i
 	return retval;
 }
 
-__INTRIN_INLINE unsigned short __cdecl _byteswap_ushort(unsigned short value)
+__INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
 	unsigned short retval;
 	__asm__("rorw $8, %w[retval]" : [retval] "=rm" (retval) : "[retval]" (value));
 	return retval;
 }
 
-__INTRIN_INLINE unsigned long __cdecl _byteswap_ulong(unsigned long value)
+__INTRIN_INLINE unsigned long _byteswap_ulong(unsigned long value)
 {
 	unsigned long retval;
 	__asm__("bswapl %[retval]" : [retval] "=r" (retval) : "[retval]" (value));
@@ -971,7 +971,7 @@ __INTRIN_INLINE unsigned long __cdecl _byteswap_ulong(unsigned long value)
 }
 
 #ifdef _M_AMD64
-__INTRIN_INLINE unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 value)
+__INTRIN_INLINE unsigned __int64 _byteswap_uint64(unsigned __int64 value)
 {
 	unsigned __int64 retval;
 	__asm__("bswapq %[retval]" : [retval] "=r" (retval) : "[retval]" (value));
