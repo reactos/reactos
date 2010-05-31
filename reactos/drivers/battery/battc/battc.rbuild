@@ -5,6 +5,7 @@
 	<library>hal</library>
 	<importlibrary definition="battc.spec"/>
 	<include base="battc">.</include>
+	<define name="_BATTERYCLASS_" />
 	<file>battc.c</file>
 	<file>battc.rc</file>
 </module>
