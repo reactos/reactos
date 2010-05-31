@@ -25,6 +25,7 @@
 #include <precomp.h>
 #include <mbstring.h>
 #include <locale.h>
+#include <internal/wine/msvcrt.h>
 
 /*
  * @implemented
@@ -33,7 +34,7 @@ unsigned int _mbcjistojms(unsigned int c)
 {
  /* Conversion takes place only when codepage is 932.
      In all other cases, c is returned unchanged */
-  if(MSVCRT___lc_codepage == 932)
+  if(get_locale()->locinfo->lc_codepage == 932)
   {
     if(HIBYTE(c) >= 0x21 && HIBYTE(c) <= 0x7e &&
        LOBYTE(c) >= 0x21 && LOBYTE(c) <= 0x7e)

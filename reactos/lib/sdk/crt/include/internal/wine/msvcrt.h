@@ -80,12 +80,14 @@ typedef struct __MSVCRT_thread_data
     unexpected_function             unexpected_handler;
     _se_translator_function         se_translator;
     EXCEPTION_RECORD               *exc_record;
+    struct localeinfo_struct       *locale;
 } MSVCRT_thread_data;
 
 extern MSVCRT_thread_data *msvcrt_get_thread_data(void);
 
 extern int MSVCRT_current_lc_all_cp;
-
+extern WORD MSVCRT__ctype [257];
+_locale_t get_locale(void);
 void _purecall(void);
 void   MSVCRT__set_errno(int);
 char*  msvcrt_strndup(const char*,unsigned int);

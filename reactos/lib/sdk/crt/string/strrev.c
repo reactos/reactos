@@ -13,20 +13,18 @@
 /*
  * @implemented
  */
-char * _strrev(char *s)
+char* CDECL _strrev(char *str)
 {
-	char a, *b, *e;
-	b=e=s;
-	while (*e)
-		e++;
-	e--; /* start at last char, not NULL char */
-	while ( b < e )
-	{
-		a=*b;
-		*b=*e;
-		*e=a;
-		b++;
-		e--;
-	}
-	return s; /* return ptr to beginning of string */
+  char * p1;
+  char * p2;
+
+  if (str && *str)
+    for (p1 = str, p2 = str + strlen(str) - 1; p2 > p1; ++p1, --p2)
+    {
+      *p1 ^= *p2;
+      *p2 ^= *p1;
+      *p1 ^= *p2;
+    }
+
+  return str;
 }

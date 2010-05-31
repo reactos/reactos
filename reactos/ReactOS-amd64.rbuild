@@ -18,6 +18,7 @@
 	<define name="TARGET_amd64" host="true" />
 
 	<define name="USE_COMPILER_EXCEPTIONS" />
+	<define name ="NO_UNDERSCORE_PREFIX" />
 
 	<property name="PLATFORM" value="PC"/>
 	<property name="usewrc" value="false"/>
@@ -34,7 +35,6 @@
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
 		<!-- compilerflag compiler="as">-gstabs+</compilerflag -->
 		<compilerflag>-U_X86_</compilerflag>
-		<compilerflag>-UWIN32</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
 	</group>
 

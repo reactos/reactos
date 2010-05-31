@@ -73,7 +73,7 @@ PUBLIC _setjmp
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp _setjmp
+.endp setjmp
 
 /*
  * int _setjmpex(jmp_buf _Buf,void *_Ctx);
@@ -112,7 +112,7 @@ PUBLIC _setjmpex
     movdqa [rcx + JUMP_BUFFER_Xmm15], xmm15
     xor rax, rax
     ret
-.endp _setjmpex
+.endp setjmpex
 
 
 /*

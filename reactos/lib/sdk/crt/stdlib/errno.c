@@ -8,6 +8,7 @@
  */
 #include <precomp.h>
 #include "doserrmap.h"
+#include <errno.h>
 #include <internal/wine/msvcrt.h>
 
 /*

@@ -25,6 +25,13 @@
 
 #include <precomp.h>
 #include <ctype.h>
+#include <locale.h>
+
+#ifdef _LIBCNT_
+_locale_t get_locale(void){ return NULL; }
+#else
+_locale_t get_locale(void); //defined in locale.c
+#endif 
 
 // HACK for LIBCNT
 #ifndef debugstr_a
@@ -56,38 +63,73 @@ static int wchar2digit(wchar_t c, int base) {
 }
 
 #ifndef _LIBCNT_
-/* vfscanf */
+/* vfscanf_l */
 #undef WIDE_SCANF
 #undef CONSOLE
 #undef STRING
+#undef SECURE
 #include "scanf.h"
 
-/* vfwscanf */
+/* vfscanf_l */
+#define SECURE 1
+#include "scanf.h"
+
+/* vfwscanf_l */
 #define WIDE_SCANF 1
 #undef CONSOLE
 #undef STRING
+#undef SECURE
+#include "scanf.h"
+
+/* vfwscanf_s_l */
+#define SECURE 1
 #include "scanf.h"
 #endif
 
-/* vsscanf */
+/* vsscanf_l */
 #undef WIDE_SCANF
 #undef CONSOLE
 #define STRING 1
+#undef SECURE
 #include "scanf.h"
 
-/* vswscanf */
+/* vsscanf_s_l */
+#define SECURE 1
+#include "scanf.h"
+
+/* vswscanf_l */
 #define WIDE_SCANF 1
 #undef CONSOLE
 #define STRING 1
+#undef SECURE
+#include "scanf.h"
+
+/* vswscanf_s_l */
+#define SECURE 1
 #include "scanf.h"
 
 #ifndef _LIBCNT_
-/* vcscanf */
+/* vcscanf_l */
 #undef WIDE_SCANF
 #define CONSOLE 1
 #undef STRING
+#undef SECURE
 #include "scanf.h"
 
+/* vcscanf_s_l */
+#define SECURE 1
+#include "scanf.h"
+
+/* vcwscanf_l */
+#define WIDE_SCANF 1
+#define CONSOLE 1
+#undef STRING
+#undef SECURE
+#include "scanf.h"
+
+/* vcwscanf_s_l */
+#define SECURE 1
+#include "scanf.h"
 
 /*********************************************************************
  *		fscanf (MSVCRT.@)
@@ -98,7 +140,51 @@ int fscanf(FILE *file, const char *format, ...)
     int res;
 
     va_start(valist, format);
-    res = vfscanf(file, format, valist);
+    res = vfscanf_l(file, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_fscanf_l (MSVCRT.@)
+ */
+int CDECL _fscanf_l(FILE *file, const char *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfscanf_l(file, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		fscanf_s (MSVCRT.@)
+ */
+int CDECL fscanf_s(FILE *file, const char *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vfscanf_s_l(file, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_fscanf_s_l (MSVCRT.@)
+ */
+int CDECL _fscanf_s_l(FILE *file, const char *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfscanf_s_l(file, format, locale, valist);
     va_end(valist);
     return res;
 }
@@ -106,13 +192,55 @@ int fscanf(FILE *file, const char *format, ...)
 /*********************************************************************
  *		scanf (MSVCRT.@)
  */
-int scanf(const char *format, ...)
+int CDECL scanf(const char *format, ...)
 {
     va_list valist;
     int res;
 
     va_start(valist, format);
-    res = vfscanf(stdin, format, valist);
+    res = vfscanf_l(stdin, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_scanf_l (MSVCRT.@)
+ */
+int CDECL _scanf_l(const char *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfscanf_l(stdin, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		scanf_s (MSVCRT.@)
+ */
+int CDECL scanf_s(const char *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vfscanf_s_l(stdin, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_scanf_s_l (MSVCRT.@)
+ */
+int CDECL _scanf_s_l(const char *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfscanf_s_l(stdin, format, locale, valist);
     va_end(valist);
     return res;
 }
@@ -126,7 +254,51 @@ int fwscanf(FILE *file, const wchar_t *format, ...)
     int res;
 
     va_start(valist, format);
-    res = vfwscanf(file, format, valist);
+    res = vfwscanf_l(file, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_fwscanf_l (MSVCRT.@)
+ */
+int CDECL _fwscanf_l(FILE *file, const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfwscanf_l(file, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		fwscanf_s (MSVCRT.@)
+ */
+int CDECL fwscanf_s(FILE *file, const wchar_t *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vfwscanf_s_l(file, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_fwscanf_s_l (MSVCRT.@)
+ */
+int CDECL _fwscanf_s_l(FILE *file, const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfwscanf_s_l(file, format, locale, valist);
     va_end(valist);
     return res;
 }
@@ -135,33 +307,119 @@ int fwscanf(FILE *file, const wchar_t *format, ...)
 /*********************************************************************
  *		wscanf (MSVCRT.@)
  */
-int wscanf(const wchar_t *format, ...)
+int CDECL wscanf(const wchar_t *format, ...)
 {
     va_list valist;
     int res;
 
     va_start(valist, format);
-    res = vfwscanf(stdin, format, valist);
+    res = vfwscanf_l(stdin, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_wscanf_l (MSVCRT.@)
+ */
+int CDECL _wscanf_l(const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfwscanf_l(stdin, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		wscanf_s (MSVCRT.@)
+ */
+int CDECL wscanf_s(const wchar_t *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vfwscanf_s_l(stdin, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_wscanf_s_l (MSVCRT.@)
+ */
+int CDECL _wscanf_s_l(const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vfwscanf_s_l(stdin, format, locale, valist);
     va_end(valist);
     return res;
 }
 #endif
 
-
 /*********************************************************************
  *		sscanf (MSVCRT.@)
  */
-int sscanf(const char *str, const char *format, ...)
+int CDECL sscanf(const char *str, const char *format, ...)
 {
     va_list valist;
     int res;
 
     va_start(valist, format);
-    res = vsscanf(str, format, valist);
+    res = vsscanf_l(str, format, NULL, valist);
     va_end(valist);
     return res;
 }
 
+/*********************************************************************
+ *		_sscanf_l (MSVCRT.@)
+ */
+int CDECL _sscanf_l(const char *str, const char *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vsscanf_l(str, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		sscanf_s (MSVCRT.@)
+ */
+int CDECL sscanf_s(const char *str, const char *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vsscanf_s_l(str, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_sscanf_s_l (MSVCRT.@)
+ */
+int CDECL _sscanf_s_l(const char *str, const char *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vsscanf_s_l(str, format, locale, valist);
+    va_end(valist);
+    return res;
+}
 
 /*********************************************************************
  *		swscanf (MSVCRT.@)
@@ -172,7 +430,51 @@ int CDECL swscanf(const wchar_t *str, const wchar_t *format, ...)
     int res;
 
     va_start(valist, format);
-    res = vswscanf(str, format, valist);
+    res = vswscanf_l(str, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_swscanf_l (MSVCRT.@)
+ */
+int CDECL _swscanf_l(const wchar_t *str, const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vswscanf_l(str, format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		swscanf_s (MSVCRT.@)
+ */
+int CDECL swscanf_s(const wchar_t *str, const wchar_t *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vswscanf_s_l(str, format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_swscanf_s_l (MSVCRT.@)
+ */
+int CDECL _swscanf_s_l(const wchar_t *str, const wchar_t *format,
+        _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vswscanf_s_l(str, format, locale, valist);
     va_end(valist);
     return res;
 }
@@ -187,7 +489,105 @@ int CDECL _cscanf(const char *format, ...)
     int res;
 
     va_start(valist, format);
-    res = vcscanf(format, valist);
+    res = vcscanf_l(format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cscanf_l (MSVCRT.@)
+ */
+int CDECL _cscanf_l(const char *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vcscanf_l(format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cscanf_s (MSVCRT.@)
+ */
+int CDECL _cscanf_s(const char *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vcscanf_s_l(format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cscanf_s_l (MSVCRT.@)
+ */
+int CDECL _cscanf_s_l(const char *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vcscanf_s_l(format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cwscanf (MSVCRT.@)
+ */
+int CDECL _cwscanf(const wchar_t *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vcwscanf_l(format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cwscanf_l (MSVCRT.@)
+ */
+int CDECL _cwscanf_l(const wchar_t *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vcwscanf_l(format, locale, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cwscanf_s (MSVCRT.@)
+ */
+int CDECL _cwscanf_s(const wchar_t *format, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, format);
+    res = vcwscanf_s_l(format, NULL, valist);
+    va_end(valist);
+    return res;
+}
+
+/*********************************************************************
+ *		_cwscanf_s_l (MSVCRT.@)
+ */
+int CDECL _cwscanf_s_l(const wchar_t *format, _locale_t locale, ...)
+{
+    va_list valist;
+    int res;
+
+    va_start(valist, locale);
+    res = vcwscanf_s_l(format, locale, valist);
     va_end(valist);
     return res;
 }

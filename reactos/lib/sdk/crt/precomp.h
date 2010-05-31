@@ -34,6 +34,7 @@
 #endif
 
 #include "wine/unicode.h"
+#include "wine/config.h"
 
 /* kernelmode libcnt should not include Wine-debugging crap */
 #ifndef _LIBCNT_

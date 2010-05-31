@@ -45,26 +45,24 @@ _wtoi64 (const wchar_t *nptr)
        return value;
 }
 
-
+#ifndef _LIBCNT_
 /*
- * @unimplemented
+ * @implemented
  */
 __int64
 _wcstoi64 (const wchar_t *nptr, wchar_t **endptr, int base)
 {
-   TRACE("_wcstoi64 is UNIMPLEMENTED\n");
-   return 0;
+    return _wcstoi64_l(nptr, endptr, base, NULL);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 unsigned __int64
 _wcstoui64 (const wchar_t *nptr, wchar_t **endptr, int base)
 {
-   TRACE("_wcstoui64 is UNIMPLEMENTED\n");
-   return 0;
+   return _wcstoui64_l(nptr, endptr, base, NULL);
 }
-
+#endif
 
 /* EOF */

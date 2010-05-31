@@ -104,3 +104,25 @@ unsigned int CDECL _control87(unsigned int newval, unsigned int mask)
 
   return flags;
 }
+
+/*********************************************************************
+ *              _controlfp_s (MSVCRT.@)
+ */
+int CDECL _controlfp_s(unsigned int *cur, unsigned int newval, unsigned int mask)
+{
+#ifdef __i386__
+    unsigned int flags;
+
+    FIXME("(%p %u %u) semi-stub\n", cur, newval, mask);
+
+    flags = _control87( newval, mask & ~_EM_DENORMAL );
+
+    if(cur)
+        *cur = flags;
+
+    return 0;
+#else
+    FIXME(":Not Implemented!\n");
+    return 0;
+#endif
+}

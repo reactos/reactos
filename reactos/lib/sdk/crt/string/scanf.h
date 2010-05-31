@@ -48,7 +48,19 @@
 #ifdef CONSOLE
 #define _GETC_(file) (consumed++, _getch())
 #define _UNGETC_(nch, file) do { _ungetch(nch); consumed--; } while(0)
-#define _FUNCTION_ int vcscanf(const char *format, va_list ap)
+#ifdef WIDE_SCANF
+#ifdef SECURE
+#define _FUNCTION_ static int vcwscanf_s_l(const wchar_t *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vcwscanf_l(const wchar_t *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
+#else  /* WIDE_SCANF */
+#ifdef SECURE
+#define _FUNCTION_ static int vcscanf_s_l(const char *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vcscanf_l(const char *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
+#endif /* WIDE_SCANF */
 #else
 #ifdef STRING
 #undef _EOF_
@@ -56,19 +68,35 @@
 #define _GETC_(file) (consumed++, *file++)
 #define _UNGETC_(nch, file) do { file--; consumed--; } while(0)
 #ifdef WIDE_SCANF
-#define _FUNCTION_ int vswscanf(const wchar_t *file, const wchar_t *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vswscanf_s_l(const wchar_t *file, const wchar_t *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vswscanf_l(const wchar_t *file, const wchar_t *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
-#define _FUNCTION_ int vsscanf(const char *file, const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vsscanf_s_l(const char *file, const char *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vsscanf_l(const char *file, const char *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
 #else /* STRING */
 #ifdef WIDE_SCANF
 #define _GETC_(file) (consumed++, fgetwc(file))
 #define _UNGETC_(nch, file) do { ungetwc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfwscanf(FILE* file, const wchar_t *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vfwscanf_s_l(FILE* file, const wchar_t *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfwscanf_l(FILE* file, const wchar_t *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
 #else /* WIDE_SCANF */
 #define _GETC_(file) (consumed++, fgetc(file))
 #define _UNGETC_(nch, file) do { ungetc(nch, file); consumed--; } while(0)
-#define _FUNCTION_ int vfscanf(FILE* file, const char *format, va_list ap)
+#ifdef SECURE
+#define _FUNCTION_ static int vfscanf_s_l(FILE* file, const char *format, _locale_t locale, va_list ap)
+#else  /* SECURE */
+#define _FUNCTION_ static int vfscanf_l(FILE* file, const char *format, _locale_t locale, va_list ap)
+#endif /* SECURE */
 #endif /* WIDE_SCANF */
 #endif /* STRING */
 #endif /* CONSOLE */
@@ -82,7 +110,7 @@ _FUNCTION_ {
     TRACE("(%s):\n", debugstr_a(format));
 #else /* CONSOLE */
 #ifdef STRING
-    TRACE("%s (%s)\n", file, debugstr_a(format));
+    TRACE("%s (%s)\n", debugstr_a(file), debugstr_a(format));
 #else /* STRING */
     TRACE("%p (%s)\n", file, debugstr_a(format));
 #endif /* STRING */
@@ -90,6 +118,9 @@ _FUNCTION_ {
 #endif /* WIDE_SCANF */
     nch = _GETC_(file);
     if (nch == _EOF_) return _EOF_RET;
+
+    if(!locale)
+        locale = get_locale();
 
     while (*format) {
 	/* a whitespace character in the format string causes scanf to read,
@@ -250,7 +281,7 @@ _FUNCTION_ {
                         nch = _GETC_(file);
                     }
 		    /* get first digit. */
-		    if ('.' != nch) {
+		    if (*locale->locinfo->lconv->decimal_point != nch) {
 		      if (!_ISDIGIT_(nch)) break;
 		      cur = (nch - '0');
 		      nch = _GETC_(file);
@@ -262,10 +293,10 @@ _FUNCTION_ {
 			if (width>0) width--;
 		      }
 		    } else {
-		      cur = 0; /* MaxPayneDemo Fix: .8 -> 0.8 */
+		      cur = 0; /* Fix: .8 -> 0.8 */
 		    }
 		    /* handle decimals */
-                    if (width!=0 && nch == '.') {
+                    if (width!=0 && nch == *locale->locinfo->lconv->decimal_point) {
                         long double dec = 1;
                         nch = _GETC_(file);
 			if (width>0) width--;
@@ -336,12 +367,25 @@ _FUNCTION_ {
 #endif /* WIDE_SCANF */
 	    charstring: { /* read a word into a char */
 		    char *sptr = suppress ? NULL : va_arg(ap, char*);
+                    char *sptr_beg = sptr;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
-                        if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *sptr++ = _CHAR2SUPPORTED_(nch);
+                            if(size>1) size--;
+                            else {
+                                *sptr_beg = 0;
+                                return rd;
+                            }
+                        }
 			st++;
                         nch = _GETC_(file);
 			if (width>0) width--;
@@ -352,12 +396,25 @@ _FUNCTION_ {
                 break;
 	    widecharstring: { /* read a word into a wchar_t* */
 		    wchar_t *sptr = suppress ? NULL : va_arg(ap, wchar_t*);
+                    wchar_t *sptr_beg = sptr;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
-                        if (!suppress) *sptr++ = _WIDE2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *sptr++ = _WIDE2SUPPORTED_(nch);
+                            if(size>1) size--;
+                            else {
+                                *sptr_beg = 0;
+                                return rd;
+                            }
+                        }
 			st++;
                         nch = _GETC_(file);
 			if (width>0) width--;
@@ -386,10 +443,23 @@ _FUNCTION_ {
 #endif /* WIDE_SCANF */
 	  character: { /* read single character into char */
                     char *str = suppress ? NULL : va_arg(ap, char*);
+                    char *pstr = str;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(char);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     if (width == -1) width = 1;
-                    while ((width != 0) && (nch != _EOF_))
+                    while (width && (nch != _EOF_))
                     {
-                        if (!suppress) *str++ = _CHAR2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *str++ = _CHAR2SUPPORTED_(nch);
+                            if(size) size--;
+                            else {
+                                *pstr = 0;
+                                return rd;
+                            }
+                        }
                         st++;
                         width--;
                         nch = _GETC_(file);
@@ -398,10 +468,23 @@ _FUNCTION_ {
 		break;
 	  widecharacter: { /* read single character into a wchar_t */
                     wchar_t *str = suppress ? NULL : va_arg(ap, wchar_t*);
+                    wchar_t *pstr = str;
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(wchar_t);
+#else
+                    unsigned size = UINT_MAX;
+#endif
                     if (width == -1) width = 1;
-                    while ((width != 0) && (nch != _EOF_))
+                    while (width && (nch != _EOF_))
                     {
-                        if (!suppress) *str++ = _WIDE2SUPPORTED_(nch);
+                        if (!suppress) {
+                            *str++ = _WIDE2SUPPORTED_(nch);
+                            if(size) size--;
+                            else {
+                                *pstr = 0;
+                                return rd;
+                            }
+                        }
                         st++;
                         width--;
                         nch = _GETC_(file);
@@ -434,14 +517,19 @@ _FUNCTION_ {
 		    RTL_BITMAP bitMask;
                     ULONG *Mask;
 		    int invert = 0; /* Set if we are NOT to find the chars */
-
-            /* Init our bitmap */
-#ifdef _LIBCNT_
-            Mask = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#ifdef SECURE
+                    unsigned size = suppress ? UINT_MAX : va_arg(ap, unsigned)/sizeof(_CHAR_);
 #else
-            Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+                    unsigned size = UINT_MAX;
 #endif
-            RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
+
+		    /* Init our bitmap */
+#ifdef _LIBCNT_
+		    Mask = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#else
+		    Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#endif
+		    RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
 
 		    /* Read the format */
 		    format++;
@@ -482,6 +570,11 @@ _FUNCTION_ {
                         st++;
                         nch = _GETC_(file);
                         if (width>0) width--;
+                        if(size>1) size--;
+                        else {
+                            *str = 0;
+                            return rd;
+                        }
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;

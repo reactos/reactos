@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
-#include <msvcrt/ctype.h>
+#include <ctype.h>
 
 static double powten[] =
 {
@@ -13,7 +13,7 @@ static double powten[] =
 };
 
 long double
-_strtold(const char *s, char **sret)
+strtold(const char *s, char **sret)
 {
   double r;		/* result */
   int e, ne;			/* exponent */

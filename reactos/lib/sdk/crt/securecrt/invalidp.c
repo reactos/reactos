@@ -1,18 +1,22 @@
 #include <precomp.h>
+#include <errno.h>
 
-void * __pInvalidArgHandler = NULL;
+static _invalid_parameter_handler invalid_parameter_handler = NULL;
 
 void
 _invalid_parameter_default(
-    const wchar_t * expression,
-    const wchar_t * function, 
+    const wchar_t * expr,
+    const wchar_t * func, 
     const wchar_t * file, 
     unsigned int line,
     uintptr_t pReserved)
 {
-    // TODO: launch Doc Watson or something like that
-    UNIMPLEMENTED;
-    ExitProcess(-1);
+    if (invalid_parameter_handler) invalid_parameter_handler( expr, func, file, line, pReserved );
+    else
+    {
+        ERR( "%s:%u %s: %s %lx\n", debugstr_w(file), line, debugstr_w(func), debugstr_w(expr), pReserved );
+        RaiseException( STATUS_INVALID_CRUNTIME_PARAMETER, EXCEPTION_NONCONTINUABLE, 0, NULL );
+    }
 }
 
 
@@ -27,9 +31,9 @@ _invalid_parameter(
 {
     _invalid_parameter_handler handler;
 
-    if (__pInvalidArgHandler)
+    if (invalid_parameter_handler)
     {
-        handler = DecodePointer(__pInvalidArgHandler);
+        handler = DecodePointer(invalid_parameter_handler);
     }
     else
     {
@@ -45,3 +49,21 @@ invalid_parameter_noinfo(void)
     _invalid_parameter(0, 0, 0, 0, 0);
 }
 
+/* _get_invalid_parameter_handler - not exported in native msvcrt, added in msvcr80 */
+_invalid_parameter_handler CDECL _get_invalid_parameter_handler(void)
+{
+    TRACE("\n");
+    return invalid_parameter_handler;
+}
+
+/* _set_invalid_parameter_handler - not exproted in native msvcrt, added in msvcr80 */
+_invalid_parameter_handler CDECL _set_invalid_parameter_handler(
+        _invalid_parameter_handler handler)
+{
+    _invalid_parameter_handler old = invalid_parameter_handler;
+
+    TRACE("(%p)\n", handler);
+
+    invalid_parameter_handler = handler;
+    return old;
+}

@@ -15,5 +15,5 @@ int _atoldbl(_LDOUBLE *value, char *str)
 {
     /* FIXME needs error checking for huge/small values */
    //*value = strtold(str,0);
-   return -1;
+   return 0;
 }

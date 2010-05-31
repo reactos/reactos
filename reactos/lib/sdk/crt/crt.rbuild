@@ -26,7 +26,6 @@
 	<define name="_MSVCRT_" />
 	<define name="_MT" />
 	<define name="_CRTBLD" />
-	<define name="__CRT__NO_INLINE" />
 	<directory name="conio">
 		<file>cgets.c</file>
 		<file>cprintf.c</file>
@@ -57,6 +56,7 @@
 		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
+		<file>except.c</file>
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
@@ -264,12 +264,14 @@
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>memchr_asm.s</file>
+				<file>memcpy_asm.s</file>
 				<file>memmove_asm.s</file>
 				<file>memset_asm.s</file>
 			</directory>
 		</if>
 		<ifnot property="ARCH" value="i386">
 			<file>memchr.c</file>
+			<file>memcpy.c</file>
 			<file>memmove.c</file>
 			<file>memset.c</file>
 		</ifnot>
@@ -359,7 +361,6 @@
 		<file>gcvt.c</file>
 		<file>getenv.c</file>
 		<file>makepath.c</file>
-		<file>malloc.c</file>
 		<file>mbtowc.c</file>
 		<file>mbstowcs.c</file>
 		<file>obsol.c</file>
@@ -427,7 +428,6 @@
 		<file>ctype.c</file>
 		<file>itoa.c</file>
 		<file>itow.c</file>
-		<file>lasttok.c</file>
 		<file>scanf.c</file>
 		<file>splitp.c</file>
 		<file>strcoll.c</file>
@@ -448,6 +448,7 @@
 		<file>strtoi64.c</file>
 		<file>strtok.c</file>
 		<file>strtol.c</file>
+		<file>strtold.c</file>
 		<file>strtoul.c</file>
 		<file>strtoull.c</file>
 		<file>strupr.c</file>

@@ -4,14 +4,14 @@
 /*
  * @implemented
  */
-char *_strdup(const char *_s)
+char *_strdup(const char *str)
 {
-  char *rv;
-  if (_s == 0)
-    return 0;
-  rv = (char *)malloc(strlen(_s) + 1);
-  if (rv == 0)
-    return 0;
-  strcpy(rv, _s);
-  return rv;
+    if(str)
+    {
+      char * ret = malloc(strlen(str)+1);
+      if (ret) strcpy( ret, str );
+      return ret;
+    }
+    else return 0;
 }
+
