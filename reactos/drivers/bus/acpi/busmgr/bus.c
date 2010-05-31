@@ -457,6 +457,7 @@ acpi_bus_get_perf_flags (
    -------------------------------------------------------------------------- */
 
 void
+NTAPI
 acpi_bus_generate_event_dpc(PKDPC Dpc,
                             PVOID DeferredContext,
                             PVOID SystemArgument1,

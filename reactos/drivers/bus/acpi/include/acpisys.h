@@ -130,6 +130,7 @@ Bus_PnP (
     );
 
 NTSTATUS
+NTAPI
 Bus_CompletionRoutine(
      PDEVICE_OBJECT   DeviceObject,
      PIRP             Irp,
