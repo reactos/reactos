@@ -414,10 +414,16 @@ HRESULT STDMETHODCALLTYPE CMenuCallback::CallbackSM(LPSMDATA psmd, UINT uMsg, WP
 			{
 			SMINFO *infoPtr = (SMINFO *)lParam;
 			if ((infoPtr->dwMask & SMIM_FLAGS) != 0)
+			{
 				if (psmd->uId == FCIDM_MENU_FAVORITES)
+				{
 					infoPtr->dwFlags |= SMIF_DROPCASCADE;
-				else{
-				 	infoPtr->dwFlags |= SMIF_TRACKPOPUP;}
+				}
+				else
+				{
+				 	infoPtr->dwFlags |= SMIF_TRACKPOPUP;
+				}
+			}
 			if ((infoPtr->dwMask & SMIM_ICON) != 0)
 				infoPtr->iIcon = -1;
 			}
@@ -1213,7 +1219,7 @@ LRESULT CInternetToolbar::OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOO
 	CComPtr<IObjectWithSite>				objectWithSite;
 	CComPtr<IContextMenu>					contextMenu;
 	CMINVOKECOMMANDINFO						commandInfo;
-	char									*searchGUID = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}";
+	const char								*searchGUID = "{169A0691-8DF9-11d1-A1C4-00C04FD75D13}";
 	HRESULT									hResult;
 
 	// TODO: Query shell if this command is enabled first
