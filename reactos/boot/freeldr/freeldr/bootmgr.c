@@ -118,13 +118,13 @@ VOID RunLoader(VOID)
 		UiMessageBoxCritical("Error when detecting hardware");
 		return;
 	}
-
+#ifdef _M_IX86 //BUG: function in x86 specific file
 	// Load additional SCSI driver (if any)
 	if (LoadBootDeviceDriver() != ESUCCESS)
 	{
 		UiMessageBoxCritical("Unable to load additional boot device driver");
 	}
-
+#endif
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");
