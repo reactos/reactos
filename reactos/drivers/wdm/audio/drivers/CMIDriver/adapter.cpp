@@ -29,7 +29,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <initguid.h>
 #include "adapter.hpp"
 
-//#pragma code_seg("PAGE")
+#ifdef _MSC_VER
+//#pragma code_seg("PAGE") // GCC ignores pragma code_seg
+#endif
 
 const GUID KSNODETYPE_DAC = {0x507AE360L, 0xC554, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
 const GUID KSNODETYPE_ADC = {0x4D837FE0L, 0xC555, 0x11D0, {0x8A, 0x2B, 0x00, 0xA0, 0xC9, 0x25, 0x5A, 0xC1}};
@@ -267,7 +269,9 @@ NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST Resour
 	PUNKNOWN unknownTopology = NULL;
 
 	// install the topology miniport.
-	ntStatus = InstallSubdevice(DeviceObject, Irp, L"Topology", CLSID_PortTopology, CLSID_PortTopology, CreateMiniportTopologyCMI, pCMIAdapter, NULL, GUID_NULL, &unknownTopology);
+	ntStatus = InstallSubdevice( DeviceObject, Irp, (PWCHAR) L"Topology",
+		CLSID_PortTopology, CLSID_PortTopology, CreateMiniportTopologyCMI,
+		pCMIAdapter, NULL, GUID_NULL, &unknownTopology );
 	if (!NT_SUCCESS (ntStatus)) {
 		DBGPRINT(("Topology miniport installation failed"));
 		return ntStatus;
@@ -277,7 +281,7 @@ NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST Resour
 	// install the UART miniport - execution order important
 	ntStatus = STATUS_UNSUCCESSFUL;
 	MPUBase = 0;
-	for (int i=0;i<ResourceList->NumberOfPorts();i++) {
+	for ( UINT i=0; i < ResourceList->NumberOfPorts(); i++ ) {
 		if (ResourceList->FindTranslatedPort(i)->u.Port.Length == 2) {
 			MPUBase = (UInt32*)ResourceList->FindTranslatedPort(i)->u.Port.Start.QuadPart;
 		}
@@ -285,7 +289,10 @@ NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST Resour
 	if (MPUBase != 0) {
 		ntStatus = pCMIAdapter->activateMPU(MPUBase);
 		if (NT_SUCCESS(ntStatus)) {
-			ntStatus = InstallSubdevice(DeviceObject, Irp, L"Uart", CLSID_PortDMus, CLSID_MiniportDriverDMusUART, NULL, pCMIAdapter->getInterruptSync(), UartResourceList, IID_IPortDMus, NULL);
+			ntStatus = InstallSubdevice( DeviceObject, Irp, (PWCHAR) L"Uart",
+				CLSID_PortDMus, CLSID_MiniportDriverDMusUART, NULL,
+				pCMIAdapter->getInterruptSync(), UartResourceList,
+				IID_IPortDMus, NULL );
 		}
 	}
 	if (!NT_SUCCESS(ntStatus)) {
@@ -300,9 +307,13 @@ NTSTATUS StartDevice(PDEVICE_OBJECT DeviceObject, PIRP Irp, PRESOURCELIST Resour
 
 	// install the wave miniport - the order matters here
 #ifdef WAVERT
-	ntStatus = InstallSubdevice(DeviceObject, Irp, L"Wave", CLSID_PortWaveRT, CLSID_PortWaveRT, CreateMiniportWaveCMI, pCMIAdapter, ResourceList, IID_IPortWaveRT, &unknownWave);
+	ntStatus = InstallSubdevice(DeviceObject, Irp, (PWCHAR) L"Wave",
+		CLSID_PortWaveRT, CLSID_PortWaveRT, CreateMiniportWaveCMI,
+		pCMIAdapter, ResourceList, IID_IPortWaveRT, &unknownWave );
 #else
-	ntStatus = InstallSubdevice(DeviceObject, Irp, L"Wave", CLSID_PortWaveCyclic, CLSID_PortWaveCyclic, CreateMiniportWaveCMI, pCMIAdapter, ResourceList, IID_IPortWaveCyclic, &unknownWave);
+	ntStatus = InstallSubdevice(DeviceObject, Irp, (PWCHAR) L"Wave",
+		CLSID_PortWaveCyclic, CLSID_PortWaveCyclic, CreateMiniportWaveCMI,
+		pCMIAdapter, ResourceList, IID_IPortWaveCyclic, &unknownWave );
 #endif
 	if (!NT_SUCCESS(ntStatus)) {
 		DBGPRINT(("Wave miniport installation failed"));
@@ -449,8 +460,10 @@ AdapterDispatchPnp(
 		resourceList->List[0].Count    = 0;
 
 		// copy the resources which have already been assigned
-		for (int i=0;i<list->List[0].Count;i++) {
-			if (CopyResourceDescriptor(&list->List[0].Descriptors[i], &resourceList->List[0].Descriptors[resourceList->List[0].Count])) {
+		for ( UINT i=0; i < list->List[0].Count; i++ ) {
+			if (CopyResourceDescriptor( &list->List[0].Descriptors[i],
+				&resourceList->List[0].Descriptors[resourceList->List[0].Count] ))
+			{
 				resourceList->List[0].Count++;
 			}
 		}
