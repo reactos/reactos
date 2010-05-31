@@ -68,7 +68,7 @@ static BOOL ScrollTrackVertical;
 
 HBRUSH DefWndControlColor(HDC hDC, UINT ctlType);
 
-UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /*********************************************************************

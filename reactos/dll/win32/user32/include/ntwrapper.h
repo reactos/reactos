@@ -96,7 +96,7 @@ KillTimer(HWND hWnd, UINT_PTR IDEvent)
     return NtUserKillTimer(hWnd, IDEvent);
 }
 
-EXTINLINE UINT WINAPI // FIXME: wine compatibility definition, should be UINT_PTR
+EXTINLINE UINT_PTR WINAPI
 SetSystemTimer(HWND hWnd, UINT_PTR IDEvent, UINT Period, TIMERPROC TimerFunc)
 {
     return NtUserSetSystemTimer(hWnd, IDEvent, Period, TimerFunc);
