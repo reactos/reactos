@@ -117,6 +117,7 @@ GetNt4SoundDeviceCapabilities(
     {
         /* FIXME - need to support AUX and mixer devices */
         SND_ASSERT( FALSE );
+        IoCtl = 0;
     }
 
     /* Get the capabilities information from the driver */
