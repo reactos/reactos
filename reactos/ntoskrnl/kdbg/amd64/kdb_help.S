@@ -97,7 +97,7 @@ KdbEnter:
     mov r8, 0                  /* Context */
     mov dl, 0                  /* PreviousMode (KernelMode) */
     mov rcx, 0                 /* ExceptionRecord */
-    call _KdbEnterDebuggerException
+    call KdbEnterDebuggerException
 
     /* Restore segment selectors */
     mov ax, [rsp + KTRAP_FRAME_SegDs]

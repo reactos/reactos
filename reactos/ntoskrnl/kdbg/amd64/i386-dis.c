@@ -37,7 +37,7 @@ typedef LONG_PTR bfd_signed_vma;
 #define ATTRIBUTE_UNUSED
 extern int sprintf(char *str, const char *format, ...);
 #define sprintf_vma(BUF, VMA) sprintf(BUF, "%p", VMA)
-#define _setjmp setjmp
+#include <setjmp.h>
 #define _INC_SETJMPEX
 struct disassemble_info;
 
