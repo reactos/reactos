@@ -118,62 +118,6 @@ typedef struct ConsoleInput_t
 #define PAUSED_FROM_SCROLLBAR 0x2
 #define PAUSED_FROM_SELECTION 0x4
 
-NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
-VOID WINAPI ConioDeleteConsole(Object_t *Object);
-VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
-VOID WINAPI CsrInitConsoleSupport(VOID);
-VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
-VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
-void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
-PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
-VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
-VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
-VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,
-                                           DWORD Timeout);
-
-/* api/conio.c */
-CSR_API(CsrWriteConsole);
-CSR_API(CsrAllocConsole);
-CSR_API(CsrFreeConsole);
-CSR_API(CsrReadConsole);
-CSR_API(CsrConnectProcess);
-CSR_API(CsrGetScreenBufferInfo);
-CSR_API(CsrSetCursor);
-CSR_API(CsrFillOutputChar);
-CSR_API(CsrReadInputEvent);
-CSR_API(CsrWriteConsoleOutputChar);
-CSR_API(CsrWriteConsoleOutputAttrib);
-CSR_API(CsrFillOutputAttrib);
-CSR_API(CsrGetCursorInfo);
-CSR_API(CsrSetCursorInfo);
-CSR_API(CsrSetTextAttrib);
-CSR_API(CsrSetConsoleMode);
-CSR_API(CsrGetConsoleMode);
-CSR_API(CsrCreateScreenBuffer);
-CSR_API(CsrSetScreenBuffer);
-CSR_API(CsrSetTitle);
-CSR_API(CsrGetTitle);
-CSR_API(CsrWriteConsoleOutput);
-CSR_API(CsrFlushInputBuffer);
-CSR_API(CsrScrollConsoleScreenBuffer);
-CSR_API(CsrReadConsoleOutputChar);
-CSR_API(CsrReadConsoleOutputAttrib);
-CSR_API(CsrGetNumberOfConsoleInputEvents);
-CSR_API(CsrPeekConsoleInput);
-CSR_API(CsrReadConsoleOutput);
-CSR_API(CsrWriteConsoleInput);
-CSR_API(CsrHardwareStateProperty);
-CSR_API(CsrGetConsoleWindow);
-CSR_API(CsrSetConsoleIcon);
-CSR_API(CsrGetConsoleCodePage);
-CSR_API(CsrSetConsoleCodePage);
-CSR_API(CsrGetConsoleOutputCodePage);
-CSR_API(CsrSetConsoleOutputCodePage);
-CSR_API(CsrGetProcessList);
-CSR_API(CsrGenerateCtrlEvent);
-CSR_API(CsrSetScreenBufferSize);
-CSR_API(CsrGetConsoleSelectionInfo);
-
 #define ConioInitScreenBuffer(Console, Buff) (Console)->Vtbl->InitScreenBuffer((Console), (Buff))
 #define ConioDrawRegion(Console, Region) (Console)->Vtbl->DrawRegion((Console), (Region))
 #define ConioWriteStream(Console, Block, CurStartX, CurStartY, ScrolledLines, Buffer, Length) \
@@ -189,19 +133,79 @@ CSR_API(CsrGetConsoleSelectionInfo);
 #define ConioChangeIcon(Console, hWindowIcon) (Console)->Vtbl->ChangeIcon(Console, hWindowIcon)
 #define ConioResizeBuffer(Console, Buff, Size) (Console)->Vtbl->ResizeBuffer(Console, Buff, Size)
 
-#define ConioRectHeight(Rect) \
-    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
-#define ConioRectWidth(Rect) \
-    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
+/* console.c */
+NTSTATUS FASTCALL ConioConsoleFromProcessData(PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE *Console);
+VOID WINAPI ConioDeleteConsole(Object_t *Object);
+VOID WINAPI CsrInitConsoleSupport(VOID);
+VOID FASTCALL ConioPause(PCSRSS_CONSOLE Console, UINT Flags);
+VOID FASTCALL ConioUnpause(PCSRSS_CONSOLE Console, UINT Flags);
+VOID FASTCALL ConioConsoleCtrlEvent(DWORD Event, PCSRSS_PROCESS_DATA ProcessData);
+VOID FASTCALL ConioConsoleCtrlEventTimeout(DWORD Event, PCSRSS_PROCESS_DATA ProcessData,
+                                           DWORD Timeout);
+CSR_API(CsrAllocConsole);
+CSR_API(CsrFreeConsole);
+CSR_API(CsrSetConsoleMode);
+CSR_API(CsrGetConsoleMode);
+CSR_API(CsrSetTitle);
+CSR_API(CsrGetTitle);
+CSR_API(CsrHardwareStateProperty);
+CSR_API(CsrGetConsoleWindow);
+CSR_API(CsrSetConsoleIcon);
+CSR_API(CsrGetConsoleCodePage);
+CSR_API(CsrSetConsoleCodePage);
+CSR_API(CsrGetConsoleOutputCodePage);
+CSR_API(CsrSetConsoleOutputCodePage);
+CSR_API(CsrGetProcessList);
+CSR_API(CsrGenerateCtrlEvent);
+CSR_API(CsrGetConsoleSelectionInfo);
 
+/* coninput.c */
 #define ConioLockConsole(ProcessData, Handle, Ptr, Access) \
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_CONSOLE_MAGIC)
 #define ConioUnlockConsole(Console) \
     Win32CsrUnlockObject((Object_t *) Console)
+void WINAPI ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode);
+CSR_API(CsrReadConsole);
+CSR_API(CsrReadInputEvent);
+CSR_API(CsrFlushInputBuffer);
+CSR_API(CsrGetNumberOfConsoleInputEvents);
+CSR_API(CsrPeekConsoleInput);
+CSR_API(CsrWriteConsoleInput);
+
+/* conoutput.c */
+#define ConioRectHeight(Rect) \
+    (((Rect)->Top) > ((Rect)->Bottom) ? 0 : ((Rect)->Bottom) - ((Rect)->Top) + 1)
+#define ConioRectWidth(Rect) \
+    (((Rect)->Left) > ((Rect)->Right) ? 0 : ((Rect)->Right) - ((Rect)->Left) + 1)
 #define ConioLockScreenBuffer(ProcessData, Handle, Ptr, Access) \
     Win32CsrLockObject((ProcessData), (Handle), (Object_t **)(Ptr), Access, CONIO_SCREEN_BUFFER_MAGIC)
 #define ConioUnlockScreenBuffer(Buff) \
     Win32CsrUnlockObject((Object_t *) Buff)
+PBYTE FASTCALL ConioCoordToPointer(PCSRSS_SCREEN_BUFFER Buf, ULONG X, ULONG Y);
+VOID FASTCALL ConioDrawConsole(PCSRSS_CONSOLE Console);
+NTSTATUS FASTCALL ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff,
+                                    CHAR *Buffer, DWORD Length, BOOL Attrib);
+NTSTATUS FASTCALL CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer);
+VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
+
+CSR_API(CsrWriteConsole);
+CSR_API(CsrGetScreenBufferInfo);
+CSR_API(CsrSetCursor);
+CSR_API(CsrWriteConsoleOutputChar);
+CSR_API(CsrFillOutputChar);
+CSR_API(CsrWriteConsoleOutputAttrib);
+CSR_API(CsrFillOutputAttrib);
+CSR_API(CsrGetCursorInfo);
+CSR_API(CsrSetCursorInfo);
+CSR_API(CsrSetTextAttrib);
+CSR_API(CsrCreateScreenBuffer);
+CSR_API(CsrSetScreenBuffer);
+CSR_API(CsrWriteConsoleOutput);
+CSR_API(CsrScrollConsoleScreenBuffer);
+CSR_API(CsrReadConsoleOutputChar);
+CSR_API(CsrReadConsoleOutputAttrib);
+CSR_API(CsrReadConsoleOutput);
+CSR_API(CsrSetScreenBufferSize);
 
 /* alias.c */
 VOID IntDeleteAllAliases(struct tagALIAS_HEADER *RootHeader);

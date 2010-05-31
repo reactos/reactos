@@ -17,7 +17,9 @@
 	<library>pseh</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
-	<file>conio.c</file>
+	<file>coninput.c</file>
+	<file>conoutput.c</file>
+	<file>console.c</file>
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
