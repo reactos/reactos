@@ -120,6 +120,7 @@ BEGIN
     IDS_PROPERTIES        "E&igenschaften"
     IDS_OPEN_ALL_USERS    "Öffnen (&Alle Benutzer)"
     IDS_EXPLORE_ALL_USERS "Explorer (A&lle Benutzer)"
+    IDS_STARTUP_ERROR     "Das System kann den Explorer nicht starten, weil die Registrierung nicht verfügbar bzw. fehlerhaft ist."
 END
 
 STRINGTABLE DISCARDABLE

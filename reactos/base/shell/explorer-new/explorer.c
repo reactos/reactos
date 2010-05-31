@@ -284,7 +284,9 @@ _tWinMain(IN HINSTANCE hInstance,
                    TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"),
                    &hkExplorer) != ERROR_SUCCESS)
     {
-        /* FIXME - display error */
+        TCHAR Message[256];
+        LoadString(hInstance, IDS_STARTUP_ERROR, Message, 256);
+        MessageBox(NULL, Message, NULL, MB_ICONERROR);
         return 1;
     }
 
