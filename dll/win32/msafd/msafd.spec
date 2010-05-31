@@ -1,1 +1,1 @@
-@ stdcall WSPStartup (long ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)
+@ stdcall WSPStartup (long ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) mswsock.WSPStartup
