@@ -774,8 +774,7 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
     VOID NTAPI KiSystemStartupBootStack(VOID);
     __asm
     {
-        mov ecx, InitialStack
-        mov esp, ecx
+        mov esp, InitialStack
         sub esp, (NPX_FRAME_LENGTH + KTRAP_FRAME_ALIGN + KTRAP_FRAME_LENGTH)
         push (CR0_EM | CR0_TS | CR0_MP)
         jmp KiSystemStartupBootStack
@@ -783,6 +782,30 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 #else
 #error Unknown Compiler
 #endif
+}
+
+//
+// Emits the iret instruction for C code
+//
+DECLSPEC_NORETURN
+VOID
+FORCEINLINE
+KiIret(VOID)
+{
+#if defined(__GNUC__)
+    __asm__ __volatile__
+    (
+        "iret\n"
+    );
+#elif defined(_MSC_VER)
+    __asm
+    {
+        iret
+    }
+#else
+#error Unsupported compiler
+#endif
+    UNREACHABLE;
 }
 
 //

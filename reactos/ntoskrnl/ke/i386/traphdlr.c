@@ -547,7 +547,7 @@ KiTrap02(VOID)
         //
         // Handled, return from interrupt
         //
-        __asm__ __volatile__ ("iret\n");
+        KiIret();
     }
     
     //
