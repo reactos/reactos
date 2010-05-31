@@ -21,24 +21,32 @@
 
 #include <math.h>
 
-double ldexp (double __x, int __y);
-
-double ldexp (double __x, int __y)
+double ldexp (double value, int exp)
 {
-  register double __val;
+    register double result;
 #ifdef __GNUC__
-  __asm __volatile__
-    ("fscale"
-     : "=t" (__val) : "0" (__x), "u" ((double) __y));
+#if defined(__clang__)
+    asm ("fild %[exp]\n"
+         "fscale\n"
+         "fstp %%st(1)\n"
+         : [result] "=t" (result)
+         : [value] "0" (value), [exp] "m" (exp));
 #else
-  register double __dy = (double)__y;
+    asm ("fscale"
+        : "=t" (result)
+         : "0" (value), "u" ((double)exp)
+         : "1");
+#endif
+#else /* !__GNUC__ */
+  register double __dy = (double)exp;
   __asm
   {
     fld __dy
-    fld __x
+    fld value
     fscale
-    fstp __val
+    fstp result
   }
-#endif /*__GNUC__*/
-  return __val;
+#endif /* !__GNUC__ */
+  return result;
 }
+
