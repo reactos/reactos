@@ -1326,7 +1326,6 @@ UserDrawIconEx(
     HBITMAP hbmMask, hbmColor;
     BITMAP bmpColor, bm;
     BOOL DoFlickerFree;
-    SIZE IconSize;
     INT iOldBkColor = 0, iOldTxtColor = 0;
 
     HDC hMemDC, hDestDC = hDc;
@@ -1356,17 +1355,6 @@ UserDrawIconEx(
     {
         DPRINT1("NtGdiCreateCompatibleDC failed!\n");
         return FALSE;
-    }
-
-    if (hbmColor)
-    {
-        IconSize.cx = bmpColor.bmWidth;
-        IconSize.cy = bmpColor.bmHeight;
-    }
-    else /* take it from mask */
-    {
-        IconSize.cx = bm.bmWidth;
-        IconSize.cy = bm.bmHeight/2;
     }
 
     /* NtGdiCreateCompatibleBitmap will create a monochrome bitmap
@@ -1407,11 +1395,11 @@ UserDrawIconEx(
 
     if (!cxWidth)
         cxWidth = ((diFlags & DI_DEFAULTSIZE) ?
-                   UserGetSystemMetrics(SM_CXICON) : IconSize.cx);
+                   UserGetSystemMetrics(SM_CXICON) : pIcon->Size.cx);
 
     if (!cyHeight)
         cyHeight = ((diFlags & DI_DEFAULTSIZE) ?
-                    UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
+                    UserGetSystemMetrics(SM_CYICON) : pIcon->Size.cy);
 
     DoFlickerFree = (hbrFlickerFreeDraw &&
                      (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
@@ -1453,8 +1441,8 @@ UserDrawIconEx(
                         hMemDC,
                         0,
                         0,
-                        IconSize.cx,
-                        IconSize.cy,
+                        pIcon->Size.cx,
+                        pIcon->Size.cy,
                         SRCAND,
                         0);
         NtGdiSelectBitmap(hMemDC, hTmpBmp);
@@ -1535,8 +1523,8 @@ UserDrawIconEx(
                             hMemDC,
                             0,
                             0,
-                            IconSize.cx,
-                            IconSize.cy,
+                            pIcon->Size.cx,
+                            pIcon->Size.cy,
                             pixelblend,
                             NULL);
             NtGdiSelectBitmap(hMemDC, hTmpBmp);
@@ -1556,8 +1544,27 @@ UserDrawIconEx(
                             hMemDC,
                             0,
                             0,
-                            IconSize.cx,
-                            IconSize.cy,
+                            pIcon->Size.cx,
+                            pIcon->Size.cy,
+                            rop,
+                            0);
+            NtGdiSelectBitmap(hMemDC, hTmpBmp);
+        }
+        else
+        {
+            /* Mask bitmap holds the information in its second half */
+            DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
+            hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
+            NtGdiStretchBlt(hDestDC,
+                            x,
+                            y,
+                            cxWidth,
+                            cyHeight,
+                            hMemDC,
+                            0,
+                            pIcon->Size.cy,
+                            pIcon->Size.cx,
+                            pIcon->Size.cy,
                             rop,
                             0);
             NtGdiSelectBitmap(hMemDC, hTmpBmp);
