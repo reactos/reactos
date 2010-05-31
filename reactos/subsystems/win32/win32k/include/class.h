@@ -78,6 +78,9 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 OUT PCLS **Link  OPTIONAL);
 
 PCLS
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance);
+
+PCLS
 FASTCALL
 IntCreateClass(IN CONST WNDCLASSEXW* lpwcx,
                IN PUNICODE_STRING ClassName,

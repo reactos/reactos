@@ -1463,6 +1463,33 @@ co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientR
    return Result;
 }
 
+void FASTCALL
+co_WinPosSendSizeMove(PWINDOW_OBJECT Window)
+{
+    WPARAM wParam = SIZE_RESTORED;
+    PWND Wnd = Window->Wnd;
+
+    Window->state &= ~WINDOWOBJECT_NEED_SIZE;
+    if (Wnd->style & WS_MAXIMIZE)
+    {
+        wParam = SIZE_MAXIMIZED;
+    }
+    else if (Wnd->style & WS_MINIMIZE)
+    {
+        wParam = SIZE_MINIMIZED;
+    }
+
+    co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
+                        MAKELONG(Wnd->rcClient.right -
+                                 Wnd->rcClient.left,
+                                 Wnd->rcClient.bottom -
+                                 Wnd->rcClient.top));
+    co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
+                        MAKELONG(Wnd->rcClient.left,
+                                 Wnd->rcClient.top));
+    IntEngWindowChanged(Window, WOC_RGN_CLIENT);
+}
+
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 {
@@ -1621,28 +1648,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    if ((Window->state & WINDOWOBJECT_NEED_SIZE) &&
        !(Window->state & WINDOWSTATUS_DESTROYING))
    {
-      WPARAM wParam = SIZE_RESTORED;
-
-      Window->state &= ~WINDOWOBJECT_NEED_SIZE;
-      if (Wnd->style & WS_MAXIMIZE)
-      {
-         wParam = SIZE_MAXIMIZED;
-      }
-      else if (Wnd->style & WS_MINIMIZE)
-      {
-         wParam = SIZE_MINIMIZED;
-      }
-
-      co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
-                        MAKELONG(Wnd->rcClient.right -
-                                 Wnd->rcClient.left,
-                                 Wnd->rcClient.bottom -
-                                 Wnd->rcClient.top));
-      co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
-                        MAKELONG(Wnd->rcClient.left,
-                                 Wnd->rcClient.top));
-      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-
+        co_WinPosSendSizeMove(Window);
    }
 
    /* Activate the window if activation is not requested and the window is not minimized */

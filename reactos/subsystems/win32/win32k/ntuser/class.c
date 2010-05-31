@@ -1207,6 +1207,57 @@ FoundClass:
     return Atom;
 }
 
+PCLS
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance)
+{
+   PCLS *ClassLink, Class = NULL;
+   RTL_ATOM ClassAtom;
+   PTHREADINFO pti;
+
+   pti = PsGetCurrentThreadWin32Thread();
+
+   if ( !(pti->ppi->W32PF_flags & W32PF_CLASSESREGISTERED ))
+   {
+      UserRegisterSystemClasses();
+   }
+
+   /* Check the class. */
+
+   DPRINT("Class %wZ\n", ClassName);
+
+   ClassAtom = IntGetClassAtom(ClassName,
+                               hInstance,
+                               pti->ppi,
+                               &Class,
+                               &ClassLink);
+
+   if (ClassAtom == (RTL_ATOM)0)
+   {
+      if (IS_ATOM(ClassName->Buffer))
+      {
+         DPRINT1("Class 0x%p not found\n", (DWORD_PTR) ClassName->Buffer);
+      }
+      else
+      {
+         DPRINT1("Class \"%wZ\" not found\n", ClassName);
+      }
+
+      SetLastWin32Error(ERROR_CANNOT_FIND_WND_CLASS);
+      return NULL;
+   }
+   DPRINT("ClassAtom %x\n", ClassAtom);
+   Class = IntReferenceClass(Class,
+                             ClassLink,
+                             pti->rpdesk);
+   if (Class == NULL)
+   {
+       DPRINT1("Failed to reference window class!\n");
+       return NULL;
+   }
+
+   return Class;
+}
+
 RTL_ATOM
 UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
                   IN PUNICODE_STRING ClassName,
