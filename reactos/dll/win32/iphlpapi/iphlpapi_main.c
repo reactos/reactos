@@ -63,7 +63,6 @@ typedef struct _NAME_SERVER_LIST_CONTEXT {
 
 BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-  DWORD Version;
   switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
       DisableThreadLibraryCalls( hinstDLL );
