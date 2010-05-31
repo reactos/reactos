@@ -101,7 +101,7 @@ GetNt4SoundDeviceCapabilities(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    if ( ! MMSUCCESS(Result) );
+    if ( ! MMSUCCESS(Result) )
         return TranslateInternalMmResult(Result);
 
     /* Choose the appropriate IOCTL */
