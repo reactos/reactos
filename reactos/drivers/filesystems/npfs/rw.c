@@ -163,7 +163,7 @@ NpfsWaiterThread(PVOID InitContext)
             ASSERT(FALSE);
         }
         KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
-        Count = Status - STATUS_SUCCESS;
+        Count = Status - STATUS_WAIT_0;
         ASSERT (Count < CurrentCount);
         if (Count > 0)
         {
