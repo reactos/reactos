@@ -16,6 +16,16 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "../ARM3/miarm.h"
 
+#define ASSERT_LIST_INVARIANT(x) \
+do { \
+	ASSERT(((x)->Total == 0 && \
+            (x)->Flink == LIST_HEAD && \
+			(x)->Blink == LIST_HEAD) || \
+		   ((x)->Total != 0 && \
+			(x)->Flink != LIST_HEAD && \
+			(x)->Blink != LIST_HEAD)); \
+} while (0)
+
 /* GLOBALS ********************************************************************/
 
 BOOLEAN MmDynamicPfn;
@@ -49,6 +59,9 @@ MiInsertInListTail(IN PMMPFNLIST ListHead,
 {
     PFN_NUMBER OldBlink, EntryIndex = MiGetPfnEntryIndex(Entry);
 
+	ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+	ASSERT_LIST_INVARIANT(ListHead);
+
     /* Get the back link */
     OldBlink = ListHead->Blink;
     if (OldBlink != LIST_HEAD)
@@ -69,6 +82,7 @@ MiInsertInListTail(IN PMMPFNLIST ListHead,
     /* And now the head points back to us, since we are last */
     ListHead->Blink = EntryIndex;
     ListHead->Total++;
+	ASSERT_LIST_INVARIANT(ListHead);
 }
 
 VOID
@@ -97,6 +111,7 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
     
     /* Use the zero list */
     ListHead = &MmZeroedPageListHead;
+	ASSERT_LIST_INVARIANT(ListHead);
     ListHead->Total++;
 
     /* Get the back link */
@@ -136,6 +151,9 @@ MiInsertZeroListAtBack(IN PFN_NUMBER EntryIndex)
         /* Otherwise check if we reached the high threshold and signal the event */
         KeSetEvent(MiHighMemoryEvent, 0, FALSE);
     }
+
+	ASSERT_LIST_INVARIANT(ListHead);
+
 #if 0
     /* Get the page color */
     Color = EntryIndex & MmSecondaryColorMask;
@@ -177,7 +195,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     
     /* Make sure the PFN lock is held */
     ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
-    
+
     /* Make sure the PFN entry isn't in-use */
     ASSERT(Entry->u3.e1.WriteInProgress == 0);
     ASSERT(Entry->u3.e1.ReadInProgress == 0);
@@ -187,6 +205,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     ListName = ListHead->ListName;
     ASSERT(ListHead != NULL);
     ASSERT(ListName <= FreePageList);
+	ASSERT_LIST_INVARIANT(ListHead);
     
     /* Remove one count */
     ASSERT(ListHead->Total != 0);
@@ -205,7 +224,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     else
     {
         /* Set the list head's backlink instead */
-        ListHead->Blink = OldFlink;
+        ListHead->Blink = OldBlink;
     }
     
     /* Check if the back entry is the list head */
@@ -222,6 +241,7 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     
     /* We are not on a list anymore */
     Entry->u1.Flink = Entry->u2.Blink = 0;
+	ASSERT_LIST_INVARIANT(ListHead);
     
     /* FIXME: Deal with color list */
     
@@ -272,6 +292,7 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
 
     /* Could be either on free or zero list */
     ListHead = MmPageLocationList[Pfn1->u3.e1.PageLocation];
+	ASSERT_LIST_INVARIANT(ListHead);
     ListName = ListHead->ListName;
     ASSERT(ListName <= FreePageList);
     
@@ -313,6 +334,9 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     Pfn1->u3.e2.ShortFlags = 0;
     Pfn1->u3.e1.PageColor = OldColor;
     Pfn1->u3.e1.CacheAttribute = OldCache;
+
+	ASSERT_LIST_INVARIANT(ListHead);
+
 #if 0 // When switching to ARM3
     /* Get the first page on the color list */
     ColorTable = &MmFreePagesByColor[ListName][Color];
@@ -379,12 +403,13 @@ MiRemoveAnyPage(IN ULONG Color)
         {
 #endif
             /* Check the free list */
+			ASSERT_LIST_INVARIANT(&MmFreePageListHead);
             PageIndex = MmFreePageListHead.Flink;
             Color = PageIndex & MmSecondaryColorMask;
             if (PageIndex == LIST_HEAD)
             {
                 /* Check the zero list */
-                ASSERT(MmFreePageListHead.Total == 0);
+				ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
                 PageIndex = MmZeroedPageListHead.Flink;
                 Color = PageIndex & MmSecondaryColorMask;
                 ASSERT(PageIndex != LIST_HEAD);
@@ -410,6 +435,9 @@ MiRemoveAnyPage(IN ULONG Color)
     ASSERT(Pfn1->u2.ShareCount == 0);
         
     /* Return the page */
+	ASSERT_LIST_INVARIANT(&MmFreePageListHead);
+	ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
+
     return PageIndex;
 }
 
@@ -420,6 +448,9 @@ MiRemoveHeadList(IN PMMPFNLIST ListHead)
     PFN_NUMBER Entry, Flink;
     PMMPFN Pfn1;
     
+	ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+	ASSERT_LIST_INVARIANT(ListHead);
+
     /* Get the entry that's currently first on the list */
     Entry = ListHead->Flink;
     Pfn1 = MiGetPfnEntry(Entry);
@@ -444,6 +475,8 @@ MiRemoveHeadList(IN PMMPFNLIST ListHead)
     Pfn1->u1.Flink = Pfn1->u2.Blink = 0;
     ListHead->Total--;
     
+	ASSERT_LIST_INVARIANT(ListHead);
+
     /* Return the head element */
     return Pfn1;
 }
@@ -461,6 +494,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
     PMMCOLOR_TABLES ColorTable;
 #endif
     /* Make sure the page index is valid */
+	ASSERT(KeGetCurrentIrql() >= DISPATCH_LEVEL);
     ASSERT((PageFrameIndex != 0) &&
            (PageFrameIndex <= MmHighestPhysicalPage) &&
            (PageFrameIndex >= MmLowestPhysicalPage));
@@ -477,6 +511,7 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 
     /* Get the free page list and increment its count */
     ListHead = &MmFreePageListHead;
+	ASSERT_LIST_INVARIANT(ListHead);
     ListHead->Total++;
 
     /* Get the last page on the list */
@@ -521,6 +556,8 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
         /* Otherwise check if we reached the high threshold and signal the event */
         KeSetEvent(MiHighMemoryEvent, 0, FALSE);
     }
+
+	ASSERT_LIST_INVARIANT(ListHead);
 
 #if 0 // When using ARM3 PFN
     /* Get the page color */
@@ -641,6 +678,8 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     }
     
     /* Grab a page */
+	ASSERT_LIST_INVARIANT(&MmFreePageListHead);
+	ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
     PageFrameIndex = MiRemoveAnyPage(0);
     
     /* Write the software PTE */
@@ -652,6 +691,8 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
     
     /* Release the PFN lock and return the page */
+	ASSERT_LIST_INVARIANT(&MmFreePageListHead);
+	ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     return PageFrameIndex;
 }
