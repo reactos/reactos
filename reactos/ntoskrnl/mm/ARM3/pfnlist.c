@@ -59,7 +59,7 @@ MiInsertInListTail(IN PMMPFNLIST ListHead,
 {
     PFN_NUMBER OldBlink, EntryIndex = MiGetPfnEntryIndex(Entry);
 
-    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
     ASSERT_LIST_INVARIANT(ListHead);
 
     /* Get the back link */

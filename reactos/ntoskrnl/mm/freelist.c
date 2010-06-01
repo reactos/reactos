@@ -457,11 +457,15 @@ MmInitializePageList(VOID)
     PMEMORY_ALLOCATION_DESCRIPTOR Md;
     PLIST_ENTRY NextEntry;
     ULONG NrSystemPages = 0;
+    KIRQL OldIrql;
 
     /* This is what a used page looks like */
     RtlZeroMemory(&UsedPage, sizeof(UsedPage));
     UsedPage.u3.e1.PageLocation = ActiveAndValid;
     UsedPage.u3.e2.ReferenceCount = 1;
+
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Loop the memory descriptors */
     for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
@@ -518,6 +522,9 @@ MmInitializePageList(VOID)
         MmPfnDatabase[0][i] = UsedPage;
         NrSystemPages++;
     }
+
+    /* Release the PFN database lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
     
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
     DPRINT("Pages: %x %x\n", MmAvailablePages, NrSystemPages);
