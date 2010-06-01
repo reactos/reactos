@@ -122,14 +122,9 @@ NpfsWaiterThread(PVOID InitContext)
     ULONG CurrentCount;
     ULONG Count = 0, i;
     PIRP Irp = NULL;
-    PIRP NextIrp;
     NTSTATUS Status;
-    BOOLEAN Terminate = FALSE;
-    BOOLEAN Cancel = FALSE;
     PIO_STACK_LOCATION IoStack = NULL;
-    PNPFS_CONTEXT Context;
-    PNPFS_CONTEXT NextContext;
-    PNPFS_CCB Ccb;
+    KIRQL OldIrql;
 
     KeLockMutex(&ThreadContext->DeviceExt->PipeListLock);
 
@@ -137,29 +132,23 @@ NpfsWaiterThread(PVOID InitContext)
     {
         CurrentCount = ThreadContext->Count;
         KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
-        if (Irp)
+        IoAcquireCancelSpinLock(&OldIrql);
+        if (Irp && IoSetCancelRoutine(Irp, NULL) != NULL)
         {
-            if (Cancel)
+            IoReleaseCancelSpinLock(OldIrql);
+            IoStack = IoGetCurrentIrpStackLocation(Irp);
+            switch (IoStack->MajorFunction)
             {
-                Irp->IoStatus.Status = STATUS_CANCELLED;
-                Irp->IoStatus.Information = 0;
-                IoCompleteRequest(Irp, IO_NO_INCREMENT);
-            }
-            else
-            {
-                switch (IoStack->MajorFunction)
-                {
                 case IRP_MJ_READ:
                     NpfsRead(IoStack->DeviceObject, Irp);
                     break;
                 default:
                     ASSERT(FALSE);
-                }
             }
         }
-        if (Terminate)
+        else
         {
-            break;
+            IoReleaseCancelSpinLock(OldIrql);
         }
         Status = KeWaitForMultipleObjects(CurrentCount,
             ThreadContext->WaitObjectArray,
@@ -183,35 +172,6 @@ NpfsWaiterThread(PVOID InitContext)
             ThreadContext->DeviceExt->EmptyWaiterCount++;
             ThreadContext->WaitObjectArray[Count] = ThreadContext->WaitObjectArray[ThreadContext->Count];
             ThreadContext->WaitIrpArray[Count] = ThreadContext->WaitIrpArray[ThreadContext->Count];
-
-            Cancel = (NULL == IoSetCancelRoutine(Irp, NULL));
-            Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
-            IoStack = IoGetCurrentIrpStackLocation(Irp);
-
-            if (Cancel)
-            {
-                Ccb = IoStack->FileObject->FsContext2;
-                ExAcquireFastMutex(&Ccb->DataListLock);
-                RemoveEntryList(&Context->ListEntry);
-                switch (IoStack->MajorFunction)
-                {
-                case IRP_MJ_READ:
-                    if (!IsListEmpty(&Ccb->ReadRequestListHead))
-                    {
-                        /* put the next request on the wait list */
-                        NextContext = CONTAINING_RECORD(Ccb->ReadRequestListHead.Flink, NPFS_CONTEXT, ListEntry);
-                        ThreadContext->WaitObjectArray[ThreadContext->Count] = NextContext->WaitEvent;
-                        NextIrp = CONTAINING_RECORD(NextContext, IRP, Tail.Overlay.DriverContext);
-                        ThreadContext->WaitIrpArray[ThreadContext->Count] = NextIrp;
-                        ThreadContext->Count++;
-                        ThreadContext->DeviceExt->EmptyWaiterCount--;
-                    }
-                    break;
-                default:
-                    ASSERT(FALSE);
-                }
-                ExReleaseFastMutex(&Ccb->DataListLock);
-            }
         }
         else
         {
@@ -235,7 +195,8 @@ NpfsWaiterThread(PVOID InitContext)
             /* it exist an other thread with empty wait slots, we can remove our thread from the list */
             RemoveEntryList(&ThreadContext->ListEntry);
             ThreadContext->DeviceExt->EmptyWaiterCount -= MAXIMUM_WAIT_OBJECTS - 1;
-            Terminate = TRUE;
+            KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
+            break;
         }
     }
     ExFreePool(ThreadContext);
