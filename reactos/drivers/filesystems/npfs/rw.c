@@ -781,7 +781,16 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
     }
 
     Status = STATUS_SUCCESS;
-    Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+    Buffer = MmGetSystemAddressForMdlSafe (Irp->MdlAddress, NormalPagePriority);
+
+    if (!Buffer)
+    {
+        DPRINT("MmGetSystemAddressForMdlSafe failed\n");
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        Length = 0;
+        goto done;
+
+    }
 
     ExAcquireFastMutex(&ReaderCcb->DataListLock);
 
