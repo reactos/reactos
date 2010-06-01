@@ -23,7 +23,7 @@ typedef set<string> StringSet;
 #undef OUT
 #endif//OUT
 
-PropsMaker::PropsMaker ( Configuration& buildConfig, 
+VSPropsMaker::VSPropsMaker ( Configuration& buildConfig, 
 			 Project* ProjectNode,
 			 std::string filename_props,
 			 MSVCConfiguration* msvc_configs)
@@ -46,13 +46,13 @@ PropsMaker::PropsMaker ( Configuration& buildConfig,
 	}
 }
 
-PropsMaker::~PropsMaker ( )
+VSPropsMaker::~VSPropsMaker ( )
 {
 	fclose ( OUT );
 }
 
 void 
-PropsMaker::_generate_header()
+VSPropsMaker::_generate_header()
 {
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
 	fprintf ( OUT, "<VisualStudioPropertySheet\r\n" );
@@ -64,7 +64,7 @@ PropsMaker::_generate_header()
 }
 
 void
-PropsMaker::_generate_tools_defaults()
+VSPropsMaker::_generate_tools_defaults()
 {
 	fprintf ( OUT, "\t<Tool\r\n");
 	fprintf ( OUT, "\t\tName=\"VCCLCompilerTool\"\r\n");
@@ -119,7 +119,7 @@ PropsMaker::_generate_tools_defaults()
 }
 
 void
-PropsMaker::_generate_macro(std::string Name,
+VSPropsMaker::_generate_macro(std::string Name,
 							std::string Value,
 							bool EvairomentVariable)
 {
@@ -132,7 +132,7 @@ PropsMaker::_generate_macro(std::string Name,
 }
 
 void
-PropsMaker::_generate_global_includes()
+VSPropsMaker::_generate_global_includes()
 {
 	//Generate global includes
 	//they will be used by the c compiler, the resource compiler
@@ -190,7 +190,7 @@ PropsMaker::_generate_global_includes()
 }
 
 void
-PropsMaker::_generate_global_definitions()
+VSPropsMaker::_generate_global_definitions()
 {
 	fprintf ( OUT, "\t<UserMacro\r\n");
 	fprintf ( OUT, "\t\tName=\"globalDefines\"\r\n");
@@ -220,7 +220,7 @@ PropsMaker::_generate_global_definitions()
 		if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
 			continue;
 
-		if ( defs[i]->value[0] )
+		if ( defs[i]->value != "" )
 			fprintf ( OUT, "%s=%s",defs[i]->name.c_str(), defs[i]->value.c_str());
 		else
 			fprintf ( OUT, defs[i]->name.c_str());
@@ -233,14 +233,14 @@ PropsMaker::_generate_global_definitions()
 }
 
 void
-PropsMaker::_generate_footer()
+VSPropsMaker::_generate_footer()
 {
 	fprintf ( OUT, "</VisualStudioPropertySheet>\r\n");
 }
 
 
 void 
-PropsMaker::_generate_props ( std::string solution_version,
+VSPropsMaker::_generate_props ( std::string solution_version,
 							  std::string studio_version )
 {
 	_generate_header();

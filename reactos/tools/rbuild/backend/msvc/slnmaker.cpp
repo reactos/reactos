@@ -42,12 +42,12 @@ using std::set;
 
 
 SlnMaker::SlnMaker ( Configuration& buildConfig,
-					 Project& ProjectNode,
 					 const std::vector<MSVCConfiguration*>& configurations,
-					 std::string filename_sln )
+					 std::string filename_sln,
+					 std::string solution_version, 
+					 std::string studio_version)
 {
 	m_configuration = buildConfig;
-	m_ProjectNode = &ProjectNode;
 	m_configurations = configurations;
 
 	OUT = fopen ( filename_sln.c_str(), "wb" );
@@ -56,10 +56,13 @@ SlnMaker::SlnMaker ( Configuration& buildConfig,
 	{
 		printf ( "Could not create file '%s'.\n", filename_sln.c_str() );
 	}
+
+	_generate_sln_header( solution_version, studio_version);
 }
 
 SlnMaker::~SlnMaker()
 {
+	_generate_sln_footer ( );
 	fclose ( OUT );
 }
 
@@ -73,35 +76,6 @@ SlnMaker::_generate_sln_header ( std::string solution_version, std::string studi
 	fprintf ( OUT, "\r\n" );
 }
 
-
-void
-SlnMaker::_generate_sln_project (
-	const Module& module,
-	std::string vcproj_file,
-	std::string sln_guid,
-	std::string vcproj_guid,
-	const std::vector<Library*>& libraries )
-{
-	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
-
-	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
-/*
-	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
-	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if ((configuration.VSProjectVersion == "7.10") || (libraries.size() > 0)) {
-		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-		for ( size_t i = 0; i < libraries.size(); i++ )
-		{
-			const Module& module = *libraries[i]->importedModule;
-			fprintf ( OUT, "\t\t%s = %s\r\n", module.guid.c_str(), module.guid.c_str() );
-		}
-		fprintf ( OUT, "\tEndProjectSection\r\n" );
-	}
-*/
-	fprintf ( OUT, "EndProject\r\n" );
-}
-
-
 void
 SlnMaker::_generate_sln_footer ( )
 {
@@ -112,11 +86,9 @@ SlnMaker::_generate_sln_footer ( )
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 
 	fprintf ( OUT, "\tGlobalSection(ProjectConfigurationPlatforms) = postSolution\r\n" );
-	for( std::map<std::string, Module*>::const_iterator p = m_ProjectNode->modules.begin(); p != m_ProjectNode->modules.end(); ++ p )
+	for ( size_t i = 0; i < modules.size (); i++)
 	{
-		Module& module = *p->second;
-		std::string guid = module.guid;
-		_generate_sln_configurations ( guid.c_str() );
+		_generate_sln_configurations ( modules[i]->guid.c_str() );
 	}
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 /*
@@ -153,20 +125,13 @@ SlnMaker::_generate_sln_configurations (  std::string vcproj_guid )
 	}
 }
 
-void
-SlnMaker::_generate_sln ( std::string solution_version, std::string studio_version )
+void 
+SlnMaker::_add_project(ProjMaker &project, Module &module)
 {
 	string sln_guid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
-	vector<string> guids;
 
-	_generate_sln_header( solution_version, studio_version);
-	// TODO FIXME - is it necessary to sort them?
-	for( std::map<std::string, Module*>::const_iterator p = m_ProjectNode->modules.begin(); p != m_ProjectNode->modules.end(); ++ p )
-	{
-		Module& module = *p->second;
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \".\\%s\",\"%s\"\n", sln_guid.c_str(), module.name.c_str() , project.VcprojFileName(module).c_str() , module.guid.c_str());
+	fprintf ( OUT, "EndProject\r\n" );
 
-		//std::string vcproj_file = 
-		_generate_sln_project ( module, module.name, sln_guid, module.guid, module.non_if_data.libraries );
-	}
-	_generate_sln_footer ( );
+	modules.push_back(&module);
 }

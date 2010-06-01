@@ -53,7 +53,8 @@ VCXProjMaker::VCXProjMaker ( )
 
 VCXProjMaker::VCXProjMaker ( Configuration& buildConfig,
 							 const std::vector<MSVCConfiguration*>& msvc_configs,
-							 std::string filename )
+							 std::string filename,
+							 const Module& module)
 {
 	configuration = buildConfig;
 	m_configurations = msvc_configs;
@@ -65,157 +66,10 @@ VCXProjMaker::VCXProjMaker ( Configuration& buildConfig,
 	{
 		printf ( "Could not create file '%s'.\n", vcproj_file.c_str() );
 	}
-}
-
-VCXProjMaker::~VCXProjMaker()
-{
-	fclose ( OUT );
-}
-
-void
-VCXProjMaker::_generate_proj_file ( const Module& module )
-{
-	size_t i;
-
-	string computername;
-	string username;
-
-	// make sure the containers are empty
-	header_files.clear();
-	includes.clear();
-	includes_ros.clear();
-	libraries.clear();
-	common_defines.clear();
-
-	if (getenv ( "USERNAME" ) != NULL)
-		username = getenv ( "USERNAME" );
-	if (getenv ( "COMPUTERNAME" ) != NULL)
-		computername = getenv ( "COMPUTERNAME" );
-	else if (getenv ( "HOSTNAME" ) != NULL)
-		computername = getenv ( "HOSTNAME" );
-
-	string vcproj_file_user = "";
-
-	if ((computername != "") && (username != ""))
-		vcproj_file_user = vcproj_file + "." + computername + "." + username + ".user";
-
-	printf ( "Creating MSVC project: '%s'\n", vcproj_file.c_str() );
-
-	string path_basedir = module.GetPathToBaseDir ();
-	string intenv = Environment::GetIntermediatePath ();
-	string outenv = Environment::GetOutputPath ();
-	string outdir;
-	string intdir;
-	string vcdir;
-
-	if ( intenv == "obj-i386" )
-		intdir = path_basedir + "obj-i386"; /* append relative dir from project dir */
-	else
-		intdir = intenv;
-
-	if ( outenv == "output-i386" )
-		outdir = path_basedir + "output-i386";
-	else
-		outdir = outenv;
-
-	if ( configuration.UseVSVersionInPath )
-	{
-		vcdir = DEF_SSEP + _get_vc_dir();
-	}
-
-	bool include_idl = false;
-
-	vector<string> source_files, resource_files;
-	vector<const IfableData*> ifs_list;
-	ifs_list.push_back ( &module.project.non_if_data );
-	ifs_list.push_back ( &module.non_if_data );
-
-	while ( ifs_list.size() )
-	{
-		const IfableData& data = *ifs_list.back();
-		ifs_list.pop_back();
-		const vector<File*>& files = data.files;
-		for ( i = 0; i < files.size(); i++ )
-		{
-			if (files[i]->file.directory != SourceDirectory)
-				continue;
-
-			// We want the full path here for directory support later on
-			string path = Path::RelativeFromDirectory (
-				files[i]->file.relative_path,
-				module.output->relative_path );
-			string file = path + std::string("\\") + files[i]->file.name;
-
-			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
-				resource_files.push_back ( file );
-			else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
-				header_files.push_back ( file );
-			else
-				source_files.push_back ( file );
-		}
-		const vector<Include*>& incs = data.includes;
-		for ( i = 0; i < incs.size(); i++ )
-		{
-			string path = Path::RelativeFromDirectory (
-				incs[i]->directory->relative_path,
-				module.output->relative_path );
-			if ( module.type != RpcServer && module.type != RpcClient )
-			{
-				if ( path.find ("/include/reactos/idl") != string::npos)
-				{
-					include_idl = true;
-					continue;
-				}
-			}
-			// switch between general headers and ros headers
-			if ( !strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\ddk", 11 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\GL", 10 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\psdk", 12 ) ||
-			     !strncmp(incs[i]->directory->relative_path.c_str(), "include\\reactos\\wine", 20 ) )
-			{
-				if (strncmp(incs[i]->directory->relative_path.c_str(), "include\\crt", 11 ))
-					// not crt include
-					includes_ros.push_back ( path );
-			}
-			else
-			{
-				includes.push_back ( path );
-			}
-		}
-		const vector<Library*>& libs = data.libraries;
-		for ( i = 0; i < libs.size(); i++ )
-		{
-			string libpath = outdir + "\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\---\\" + libs[i]->name + ".lib";
-			libraries.push_back ( libpath );
-		}
-		const vector<Define*>& defs = data.defines;
-		for ( i = 0; i < defs.size(); i++ )
-		{
-			if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
-				continue;
-
-			if ( defs[i]->value[0] )
-				common_defines.insert( defs[i]->name + "=" + defs[i]->value );
-			else
-				common_defines.insert( defs[i]->name );
-		}
-		for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
-		{
-			Property& prop = *p->second;
-			if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
-				baseaddr = prop.value;
-		}
-	}
-	/* include intermediate path for reactos.rc */
-	string version = intdir + "\\include";
-	includes.push_back (version);
-	version += "\\reactos";
-	includes.push_back (version);
 
 	// Set the binary type
 	string module_type = GetExtension(*module.output);
-	BinaryType binaryType;
+	
 	if ((module.type == ObjectLibrary) || (module.type == RpcClient) ||(module.type == RpcServer) || (module_type == ".lib") || (module_type == ".a"))
 		binaryType = Lib;
 	else if ((module_type == ".dll") || (module_type == ".cpl"))
@@ -226,13 +80,76 @@ VCXProjMaker::_generate_proj_file ( const Module& module )
 		binaryType = Sys;
 	else
 		binaryType = BinUnknown;
+}
 
-	string include_string;
+VCXProjMaker::~VCXProjMaker()
+{
+	fclose ( OUT );
+}
+
+void
+VCXProjMaker::_generate_item_group (std::vector<std::string> files)
+{
+	size_t i;
+	
+	for( i = 0; i<files.size(); i++)
+	{
+		std::string extension = GetExtension(files[i]);
+
+		if( extension == ".c" || extension == ".cpp") 
+			fprintf ( OUT, "\t\t<ClCompile Include=\"%s\" />\r\n", files[i].c_str());
+		else if( extension == ".s")
+			fprintf ( OUT, "\t\t<s_as_mscpp Include=\"%s\" />\r\n", files[i].c_str());
+		else if( extension == ".spec")
+			fprintf ( OUT, "\t\t<spec Include=\"%s\" />\r\n", files[i].c_str());
+		else if( extension == ".pspec")
+			fprintf ( OUT, "\t\t<pspec Include=\"%s\" />\r\n", files[i].c_str());
+		else if( extension == ".rc")
+			fprintf ( OUT, "\t\t<ResourceCompile Include=\"%s\" />\r\n", files[i].c_str());
+		else if( extension == ".h")
+			fprintf ( OUT, "\t\t<ClInclude Include=\"%s\" />\r\n", files[i].c_str());
+		else
+			fprintf ( OUT, "\t\t<None Include=\"%s\" />\r\n", files[i].c_str());
+	}
+}
+
+string
+VCXProjMaker::_get_configuration_type ()
+{
+	switch (binaryType)
+	{
+	case Exe:
+		return "Application";
+	case Dll:
+	case Sys:
+		return "DynamicLibrary";
+	case Lib:
+		return "StaticLibrary";
+	default:
+		return "";
+	}
+}
+
+void
+VCXProjMaker::_generate_proj_file ( const Module& module )
+{
+	string path_basedir = module.GetPathToBaseDir ();
+	size_t i;
+	string vcdir;
+
+	if ( configuration.UseVSVersionInPath )
+	{
+		vcdir = DEF_SSEP + _get_vc_dir();
+	}
+
+	printf ( "Creating MSVC project: '%s'\n", vcproj_file.c_str() );
+
+	_collect_files(module);
 
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"utf-8\"?>\r\n" );
 	fprintf ( OUT, "<Project " );
 	fprintf ( OUT, "DefaultTargets=\"Build\" " ); //FIXME: what's Build??
-	fprintf ( OUT, "ToolsVersion=\"4.0\" " ); //FIXME: Is it always 4.0??
+	fprintf ( OUT, "ToolsVersion=\"4.0\" " ); //version 4 is the one bundled with .net framework 4
 	fprintf ( OUT, "xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">\r\n" );
 
 	if (configuration.VSProjectVersion.empty())
@@ -245,15 +162,11 @@ VCXProjMaker::_generate_proj_file ( const Module& module )
 		const MSVCConfiguration& cfg = *m_configurations[icfg];
 
 		if ( cfg.optimization == RosBuild )
-		{
 			_generate_makefile_configuration( module, cfg );
-		}
 		else
-		{
 			_generate_standard_configuration( module, cfg, binaryType );
-		}
 	}
-	fprintf ( OUT, "\t</ItemGroup>\r\n" );
+	fprintf ( OUT, "\t</ItemGroup>\r\n\r\n" );
 
 	// Write out the global info
 	fprintf ( OUT, "\t<PropertyGroup Label=\"Globals\">\r\n" );
@@ -261,9 +174,88 @@ VCXProjMaker::_generate_proj_file ( const Module& module )
 	fprintf ( OUT, "\t\t<Keyword>%s</Keyword>\r\n", "Win32Proj" ); //FIXME: Win32Proj???
 	fprintf ( OUT, "\t\t<RootNamespace>%s</RootNamespace>\r\n", module.name.c_str() ); //FIXME: shouldn't this be the soltion name?
 	fprintf ( OUT, "\t</PropertyGroup>\r\n" );
-	fprintf ( OUT, "</Project>" );
+	fprintf ( OUT, "\r\n" );
 
+	fprintf ( OUT, "\t<PropertyGroup Label=\"Configuration\">\r\n");
+	if( binaryType != BinUnknown)
+		fprintf ( OUT, "\t\t<ConfigurationType>%s</ConfigurationType>\r\n" , _get_configuration_type().c_str());
+	fprintf ( OUT, "\t\t<CharacterSet>%s</CharacterSet>\r\n", module.isUnicode ? "Unicode" : "MultiByte");
+	fprintf ( OUT, "\t</PropertyGroup>\r\n");
 
+	fprintf ( OUT, "\t<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />\r\n" );
+	fprintf ( OUT, "\t<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.props\" />\r\n" );
+	fprintf ( OUT, "\t<ImportGroup Label=\"PropertySheets\">\r\n");
+	fprintf ( OUT, "\t\t<Import Project=\"%s\\reactos.props\" />\r\n", path_basedir.c_str());
+	fprintf ( OUT, "\t\t<Import Project=\"%s\\tools\\rbuild\\backend\\msvc\\rules\\reactos.defaults.props\" />\r\n", path_basedir.c_str());
+	fprintf ( OUT, "\t</ImportGroup>\r\n");
+
+	fprintf ( OUT, "\t<PropertyGroup>\r\n");
+	fprintf ( OUT, "\t\t<OutDir>$(RootOutDir)\\%s%s\\$(Configuration)\\</OutDir>\r\n", module.output->relative_path.c_str (), vcdir.c_str ());
+	fprintf ( OUT, "\t\t<IntDir>$(RootIntDir)\\%s%s\\$(Configuration)\\</IntDir>\r\n", module.output->relative_path.c_str (), vcdir.c_str ());
+
+	if( includes.size() != 0)
+	{
+		fprintf( OUT, "\t\t<ProjectIncludes>");
+		for ( i = 0; i < includes.size(); i++ )
+				fprintf ( OUT, "%s;", includes[i].c_str() );
+		fprintf( OUT, "</ProjectIncludes>\r\n");
+	}
+
+	if(defines.size() != 0)
+	{
+		fprintf( OUT, "\t\t<ProjectDefines>");
+		for ( i = 0; i < defines.size(); i++ )
+				fprintf ( OUT, "%s;", defines[i].c_str() );
+		fprintf( OUT, "</ProjectDefines>\r\n");
+	}
+
+	fprintf ( OUT, "\t</PropertyGroup>\r\n\r\n");
+	
+	fprintf ( OUT, "\t<ItemDefinitionGroup>\r\n");
+	fprintf ( OUT, "\t\t<ClCompile>\r\n");
+	if ( module.cplusplus )
+		fprintf ( OUT, "\t\t\t<CompileAs>CompileAsCpp</CompileAs>\r\n");
+	fprintf ( OUT, "\t\t</ClCompile>\r\n");
+	
+	fprintf ( OUT, "\t\t<Link>\r\n");
+	if(libraries.size() != 0)
+	{
+		fprintf ( OUT, "\t\t\t<AdditionalDependencies>");
+		for ( i = 0; i < libraries.size(); i++ )
+		{
+			string libpath = libraries[i].c_str();
+			libpath = libpath.erase (0, libpath.find_last_of ("\\") + 1 );
+			fprintf ( OUT, "%s;", libpath.c_str() );
+		}
+		fprintf ( OUT, "%%(AdditionalDependencies)</AdditionalDependencies>\r\n");
+	
+		fprintf ( OUT, "\t\t\t<AdditionalLibraryDirectories>");
+		for ( i = 0; i < libraries.size(); i++ )
+		{
+			string libpath = libraries[i].c_str();
+			libpath = libpath.substr (0, libpath.find_last_of ("\\") );
+			fprintf ( OUT, "%s;", libpath.c_str() );
+		}
+		fprintf ( OUT, "%%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>\r\n");
+	}
+
+	if( module.CRT != "msvcrt")
+		fprintf ( OUT, "\t\t\t<IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>\r\n");
+
+	fprintf ( OUT, "\t\t</Link>\r\n");
+	fprintf ( OUT, "\t</ItemDefinitionGroup>\r\n");
+
+	fprintf ( OUT, "\t<ItemGroup>\r\n");
+	_generate_item_group(header_files);
+	_generate_item_group(source_files);
+	_generate_item_group(resource_files);
+	_generate_item_group(generated_files);
+	fprintf ( OUT, "\t</ItemGroup>\r\n\r\n");
+
+	fprintf ( OUT, "\t<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />\r\n");
+	fprintf ( OUT, "\t<Import Project=\"%s\\tools\\rbuild\\backend\\msvc\\rules\\reactos.targets\" />\r\n", path_basedir.c_str());
+
+	fprintf ( OUT, "</Project>\r\n");
 }
 
 void

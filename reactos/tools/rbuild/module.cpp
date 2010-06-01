@@ -138,7 +138,7 @@ GetSubPath (
 	return FixSeparator(path + cSep + att_value);
 }
 
-static string
+string
 GetExtension ( const string& filename )
 {
 	size_t index = filename.find_last_of ( '/' );

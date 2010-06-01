@@ -1088,6 +1088,9 @@ GetSubPath (
 	const std::string& att_value );
 
 extern std::string
+GetExtension ( const std::string& filename );
+
+extern std::string
 GetExtension ( const FileLocation& file );
 
 extern std::string
