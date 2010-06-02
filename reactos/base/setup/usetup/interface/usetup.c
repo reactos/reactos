@@ -1418,7 +1418,7 @@ static BOOL IsDiskSizeValid(PPARTENTRY PartEntry)
     if( m < RequiredPartitionDiskSpace)
     {
         /* partition is too small so ask for another partion */
-        DPRINT1("Partition too small");
+        DPRINT1("Partition is too small, required disk space is %lu MB\n", RequiredPartitionDiskSpace);
         return FALSE;
     }
     else

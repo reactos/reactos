@@ -1481,15 +1481,15 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
+        "ENTER = Restart komputera"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Brak wystarczaj¥cej wolnej przestrzeni w wybranej partycji.\n"
         "  * Naci˜nij dowolny klawisz aby kontynuowa†.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "Instalator nie m¢gˆ ustawi† lokalizacji geograficznej.\n"
-        "ENTER = Restart komputera"
     },
     {
         NULL,

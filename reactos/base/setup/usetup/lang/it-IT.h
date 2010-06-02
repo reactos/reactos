@@ -1473,15 +1473,15 @@ MUI_ERROR itITErrorEntries[] =
         "INVIO = Riavviare il computer"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup non ha potuto impostare l'id geografico.\n"
+        "INVIO = Riavviare il computer"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Lo spazio disponibile nella partizione selezionata Š insufficiente.\n"
         "  * Premere un tasto qualsiasi per continuare.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "Setup non ha potuto impostare l'id geografico.\n"
-        "INVIO = Riavviare il computer"
     },
     {
         NULL,
