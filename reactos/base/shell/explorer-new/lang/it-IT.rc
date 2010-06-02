@@ -78,11 +78,11 @@ BEGIN
     LTEXT           "This menu style gives you easy access to your folders, favorite programs, and search.", IDC_STATIC, 20,17,150,24, WS_DISABLED
     PUSHBUTTON      "&Personalizzare...", IDC_TASKBARPROP_STARTMENUCUST, 192,4,53,14, WS_DISABLED
     AUTORADIOBUTTON "Menù avvio &classico", IDC_TASKBARPROP_STARTMENUCLASSIC, 7,47,105,10, WS_DISABLED
-    LTEXT           "This menu style gives you the classic look and functionality",-1,20,57,150,24, WS_DISABLED
-    PUSHBUTTON      "&Customize...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
+    LTEXT           "Questo stile di menù ha funzionalità e aspetto classici",-1,20,57,150,24, WS_DISABLED
+    PUSHBUTTON      "&Personalizza...", IDC_TASKBARPROP_STARTMENUCLASSICCUST, 192,44,53,14, WS_DISABLED
     GROUPBOX        "Privacy",IDC_STATIC, 7,100,238,42
-    AUTOCHECKBOX    "Store and display a list of recently opened &files", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
-    AUTOCHECKBOX    "Store and display a list of recently opened &programs",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Memorizza e mostra un elenco di &file aperti di recente", IDC_TASKBARPROP_RECENTFILES, 14,114,224,10, WS_DISABLED
+    AUTOCHECKBOX    "Memorizza e mostra un elenco di &programmi aperti di recente",IDC_TASKBARPROP_RECENTFOLDERS, 14,128,224,10, WS_DISABLED
 END
 
 IDD_TASKBARPROP_NOTIFICATION DIALOGEX 0, 0, 252, 218
@@ -120,7 +120,7 @@ BEGIN
     IDS_PROPERTIES        "&Proprietà"
     IDS_OPEN_ALL_USERS    "&Apri tutti gli utenti"
     IDS_EXPLORE_ALL_USERS "&Esplora tutti gli utenti"
-    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
+    IDS_STARTUP_ERROR     "Impossibile avviare explorer perché il registro è danneggiato o non disponibile."
 END
 
 STRINGTABLE DISCARDABLE
