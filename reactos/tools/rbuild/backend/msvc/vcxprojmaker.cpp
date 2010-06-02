@@ -94,7 +94,7 @@ VCXProjMaker::_generate_item_group (std::vector<std::string> files)
 	
 	for( i = 0; i<files.size(); i++)
 	{
-		std::string extension = GetExtension(files[i]);
+		std::string extension = ToLower(GetExtension(files[i]));
 
 		if( extension == ".c" || extension == ".cpp") 
 			fprintf ( OUT, "\t\t<ClCompile Include=\"%s\" />\r\n", files[i].c_str());
