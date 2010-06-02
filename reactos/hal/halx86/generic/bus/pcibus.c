@@ -391,7 +391,6 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
         if (PciConfig->VendorID == PCI_INVALID_VENDORID)
         {
             /* It's invalid, but we want to return this much */
-            PciConfig->VendorID = PCI_INVALID_VENDORID;
             Len = sizeof(USHORT);
         }
 
