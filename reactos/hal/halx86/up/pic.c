@@ -94,8 +94,8 @@ PHAL_DISMISS_INTERRUPT HalpSpecialDismissLevelTable[16] =
 /* This table contains the static x86 PIC mapping between IRQLs and IRQs */
 ULONG KiI8259MaskTable[32] =
 {
-#ifdef __GNUC__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 404
+#if defined(__GNUC__) && \
+    (__GNUC__ * 100 + __GNUC_MINOR__ >= 404)
     /*
      * It Device IRQLs only start at 4 or higher, so these are just software
      * IRQLs that don't really change anything on the hardware
@@ -206,14 +206,13 @@ ULONG KiI8259MaskTable[32] =
     0xFFFFFFFB,                    /* IRQL 30 */
     0xFFFFFFFB                     /* IRQL 31 */
 #endif
-#endif
 };
 
 /* This table indicates which IRQs, if pending, can preempt a given IRQL level */
 ULONG FindHigherIrqlMask[32] =
 {
-#ifdef __GNUC__
-#if __GNUC__ * 100 + __GNUC_MINOR__ >= 404
+#if defined(__GNUC__) && \
+    (__GNUC__ * 100 + __GNUC_MINOR__ >= 404)
     /*
      * Software IRQLs, at these levels all hardware interrupts can preempt.
      * Each higher IRQL simply enables which software IRQL can preempt the
@@ -313,7 +312,6 @@ ULONG FindHigherIrqlMask[32] =
     0,                            /* IRQL 30 */
     0                             /* IRQL 31 */
 #endif
-#endif
 };
 
 /* Denotes minimum required IRQL before we can process pending SW interrupts */
@@ -329,6 +327,8 @@ KIRQL SWInterruptLookUpTable[8] =
     DISPATCH_LEVEL                 /* IRR 7 */
 };
 
+#if defined(__GNUC__)
+
 #define HalpDelayedHardwareInterrupt(x)                             \
     VOID HalpHardwareInterrupt##x(VOID);                            \
     VOID                                                            \
@@ -336,6 +336,23 @@ KIRQL SWInterruptLookUpTable[8] =
     {                                                               \
         asm volatile ("int $%c0\n"::"i"(PRIMARY_VECTOR_BASE + x));  \
     }
+
+#elif defined(_MSC_VER)
+
+#define HalpDelayedHardwareInterrupt(x)                             \
+    VOID HalpHardwareInterrupt##x(VOID);                            \
+    VOID                                                            \
+    HalpHardwareInterrupt##x(VOID)                                  \
+    {                                                               \
+        __asm                                                       \
+        {                                                           \
+            int PRIMARY_VECTOR_BASE + x                             \
+        }                                                           \
+    }
+
+#else
+#error Unsupported compiler
+#endif
 
 /* Pending/delayed hardware interrupt handlers */
 HalpDelayedHardwareInterrupt(0);
@@ -522,7 +539,7 @@ KeRaiseIrqlToDpcLevel(VOID)
     CurrentIrql = Pcr->Irql;
     Pcr->Irql = DISPATCH_LEVEL;
     
-#ifdef IRQL_DEBUG
+#if DBG
     /* Validate correct raise */
     if (CurrentIrql > DISPATCH_LEVEL) KeBugCheck(IRQL_NOT_GREATER_OR_EQUAL);
 #endif
@@ -545,7 +562,7 @@ KeRaiseIrqlToSynchLevel(VOID)
     CurrentIrql = Pcr->Irql;
     Pcr->Irql = SYNCH_LEVEL;
     
-#ifdef IRQL_DEBUG
+#if DBG
     /* Validate correct raise */
     if (CurrentIrql > SYNCH_LEVEL)
     {
@@ -575,7 +592,7 @@ KfRaiseIrql(IN KIRQL NewIrql)
     /* Read current IRQL */
     CurrentIrql = Pcr->Irql;
     
-#ifdef IRQL_DEBUG
+#if DBG
     /* Validate correct raise */
     if (CurrentIrql > NewIrql)
     {
@@ -605,7 +622,7 @@ KfLowerIrql(IN KIRQL OldIrql)
     PKPCR Pcr = KeGetPcr();
     PIC_MASK Mask;
     
-#ifdef IRQL_DEBUG
+#if DBG
     /* Validate correct lower */
     if (OldIrql > Pcr->Irql)
     {
