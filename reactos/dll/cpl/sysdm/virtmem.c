@@ -220,7 +220,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
                       pVirtMem->Pagefile[i].MaxValue);
 
             /* Add it to our overall registry string */
-            lstrcat(szPagingFiles + nPos, szText);
+            lstrcpy(szPagingFiles + nPos, szText);
 
             /* Record the position where the next string will start */
             nPos += (INT)lstrlen(szText) + 1;
@@ -299,8 +299,11 @@ static VOID
 OnSet(PVIRTMEM pVirtMem)
 {
     INT Index;
-    UINT Value;
+    UINT InitValue;
+    UINT MaxValue;
     BOOL bTranslated;
+    TCHAR szTitle[64];
+    TCHAR szMessage[256];
 
     pVirtMem->bSave = TRUE;
 
@@ -315,41 +318,61 @@ OnSet(PVIRTMEM pVirtMem)
         if (IsDlgButtonChecked(pVirtMem->hSelf,
                                IDC_CUSTOM) == BST_CHECKED)
         {
-            Value = GetDlgItemInt(pVirtMem->hSelf,
-                                  IDC_INITIALSIZE,
-                                  &bTranslated,
-                                  FALSE);
+            InitValue = GetDlgItemInt(pVirtMem->hSelf,
+                                      IDC_INITIALSIZE,
+                                      &bTranslated,
+                                      FALSE);
             if (!bTranslated)
             {
-                /* FIXME: Show error message instead of setting the edit
-                          field to the previous value */
-                SetDlgItemInt(pVirtMem->hSelf,
-                              IDC_INITIALSIZE,
-                              pVirtMem->Pagefile[Index].InitialValue,
-                              FALSE);
-            }
-            else
-            {
-                pVirtMem->Pagefile[Index].InitialValue = Value;
+                if (LoadString(hApplet,
+                               IDS_MESSAGEBOXTITLE,
+                               szTitle,
+                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
+                    _tcscpy(szTitle, _T("System control panel applet"));
+
+                if (LoadString(hApplet,
+                               IDS_WARNINITIALSIZE,
+                               szMessage,
+                               sizeof(szMessage) / sizeof(szMessage[0])) == 0)
+                    _tcscpy(szMessage, _T("Enter a numeric value for the initial size of the paging file."));
+
+                MessageBox(NULL,
+                           szMessage,
+                           szTitle,
+                           MB_ICONWARNING | MB_OK);
+                return;
             }
 
-            Value = GetDlgItemInt(pVirtMem->hSelf,
-                                  IDC_MAXSIZE,
-                                  &bTranslated,
-                                  FALSE);
+            MaxValue = GetDlgItemInt(pVirtMem->hSelf,
+                                     IDC_MAXSIZE,
+                                     &bTranslated,
+                                     FALSE);
             if (!bTranslated)
             {
-                /* FIXME: Show error message instead of setting the edit
-                          field to the previous value */
-                SetDlgItemInt(pVirtMem->hSelf,
-                              IDC_MAXSIZE,
-                              pVirtMem->Pagefile[Index].MaxValue,
-                              FALSE);
+                if (LoadString(hApplet,
+                               IDS_MESSAGEBOXTITLE,
+                               szTitle,
+                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
+                    _tcscpy(szTitle, _T("System control panel applet"));
+
+                if (LoadString(hApplet,
+                               IDS_WARNMAXIMUMSIZE,
+                               szMessage,
+                               sizeof(szMessage) / sizeof(szMessage[0])) == 0)
+                    _tcscpy(szMessage, _T("Enter a numeric value for the maximum size of the paging file."));
+
+                MessageBox(NULL,
+                           szMessage,
+                           szTitle,
+                           MB_ICONWARNING | MB_OK);
+                return;
             }
-            else
-            {
-                pVirtMem->Pagefile[Index].MaxValue = Value;
-            }
+
+            /* FIXME: Add more file size checks! */
+
+            pVirtMem->Pagefile[Index].InitialValue = InitValue;
+            pVirtMem->Pagefile[Index].MaxValue = MaxValue;
+            pVirtMem->Pagefile[Index].bUsed = TRUE;
         }
         else
         {

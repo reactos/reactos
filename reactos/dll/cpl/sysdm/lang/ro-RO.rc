@@ -1,4 +1,4 @@
-LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+﻿LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
@@ -284,6 +284,9 @@ BEGIN
     IDS_USERPROFILE_TYPE "Tip"
     IDS_USERPROFILE_STATUS "Stare"
     IDS_USERPROFILE_MODIFIED "Modificat"
+    IDS_MESSAGEBOXTITLE "System control panel applet"
+    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
+    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
 END
 
 #pragma code_page(default)

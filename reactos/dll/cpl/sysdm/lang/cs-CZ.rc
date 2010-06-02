@@ -289,4 +289,7 @@ BEGIN
     IDS_USERPROFILE_TYPE "Typ"
     IDS_USERPROFILE_STATUS "Status"
     IDS_USERPROFILE_MODIFIED "Upraveno"
+    IDS_MESSAGEBOXTITLE "System control panel applet"
+    IDS_WARNINITIALSIZE "Enter a numeric value for the initial size of the paging file."
+    IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
 END
