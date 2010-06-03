@@ -34,8 +34,8 @@
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
 		<!-- compilerflag compiler="as">-gstabs+</compilerflag -->
 		<compilerflag>-U_X86_</compilerflag>
+		<compilerflag>-UWIN32</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
-		<compilerflag>-fno-leading-underscore</compilerflag>
 	</group>
 
 	<group linkerset="ld">
@@ -44,8 +44,6 @@
 		<linkerflag>-section-alignment=0x1000</linkerflag>
 		<linkerflag>--unique=.eh_frame</linkerflag>
 		<linkerflag>-static</linkerflag>
-		<linkerflag>-fno-leading-underscore</linkerflag>
-		<linkerflag>-shared</linkerflag>
 		<linkerflag>--exclude-all-symbols</linkerflag>
 	</group>
 
