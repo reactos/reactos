@@ -13,7 +13,6 @@
 
 /* Not defined in any header file */
 extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
-extern VOID WINAPI PrivateCsrssInitialized();
 extern VOID WINAPI InitializeAppSwitchHook();
 
 /* GLOBALS *******************************************************************/
@@ -111,8 +110,6 @@ Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
 static BOOL WINAPI
 Win32CsrInitComplete(void)
 {
-    PrivateCsrssInitialized();
-
     return TRUE;
 }
 

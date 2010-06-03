@@ -65,11 +65,6 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                     IN HINSTANCE hInstance,
                     OUT PCLSMENUNAME pClassMenuName);
 
-ULONG_PTR
-UserGetClassLongPtr(IN PCLS Class,
-                    IN INT Index,
-                    IN BOOL Ansi);
-
 RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,

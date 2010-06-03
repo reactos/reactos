@@ -96,6 +96,8 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
       ASSERT(Window->head.cLockObj >= 0);
 
       Window->head.cLockObj++;
+
+      ASSERT(Window->Wnd);
    }
    return Window;
 }
@@ -130,6 +132,9 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
    }
 
    ASSERT(Window->head.cLockObj >= 0);
+
+   ASSERT(Window->Wnd);
+
    return Window;
 }
 
@@ -163,20 +168,12 @@ IntIsWindow(HWND hWnd)
 
 
 
-/*
-  Caller must NOT dereference retval!
-  But if caller want the returned value to persist spanning a co_ call,
-  it must reference the value (because the owner is not garanteed to
-  exist just because the owned window exist)!
-*/
 PWINDOW_OBJECT FASTCALL
 IntGetParent(PWINDOW_OBJECT Wnd)
 {
-   if (!Wnd->Wnd) return NULL;
-
    if (Wnd->Wnd->style & WS_POPUP)
    {
-      return UserGetWindowObject(Wnd->hOwner);
+       return Wnd->spwndOwner;
    }
    else if (Wnd->Wnd->style & WS_CHILD)
    {
@@ -185,20 +182,6 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 
    return NULL;
 }
-
-
-/*
-  Caller must NOT dereference retval!
-  But if caller want the returned value to persist spanning a co_ call,
-  it must reference the value (because the owner is not garanteed to
-  exist just because the owned window exist)!
-*/
-PWINDOW_OBJECT FASTCALL
-IntGetOwner(PWINDOW_OBJECT Wnd)
-{
-   return UserGetWindowObject(Wnd->hOwner);
-}
-
 
 
 /*
@@ -265,7 +248,7 @@ static void IntSendDestroyMsg(HWND hWnd)
 //      USER_REFERENCE_ENTRY Ref;
 //      UserRefObjectCo(Window, &Ref);
 
-      if (!IntGetOwner(Window) && !IntGetParent(Window))
+      if (!Window->spwndOwner && !IntGetParent(Window))
       {
          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM) hWnd);
       }
@@ -1091,26 +1074,19 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
    if(!Wnd)
       return NULL;
 
-   WndOldOwner = IntGetWindowObject(Wnd->hOwner);
-   if (WndOldOwner)
-   {
-      ret = WndOldOwner->hSelf;
-      UserDereferenceObject(WndOldOwner);
-   }
-   else
-   {
-      ret = 0;
-   }
+   WndOldOwner = Wnd->spwndOwner;
+
+   ret = WndOldOwner ? WndOldOwner->hSelf : 0;
 
    if((WndNewOwner = UserGetWindowObject(hWndNewOwner)))
    {
-      Wnd->hOwner = hWndNewOwner;
-      Wnd->Wnd->spwndOwner = WndNewOwner->Wnd;
+       Wnd->spwndOwner= WndNewOwner;
+       Wnd->Wnd->spwndOwner = WndNewOwner->Wnd;
    }
    else
    {
-      Wnd->hOwner = NULL;
-      Wnd->Wnd->spwndOwner = NULL;
+       Wnd->spwndOwner = NULL;
+       Wnd->Wnd->spwndOwner = NULL;
    }
 
    UserDereferenceObject(Wnd);
@@ -1277,31 +1253,6 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
       WndParent->spwndChild = Wnd->spwndNext;
 
    Wnd->spwndPrev = Wnd->spwndNext = Wnd->spwndParent = NULL;
-}
-
-BOOL FASTCALL
-IntAnyPopup(VOID)
-{
-   PWINDOW_OBJECT Window, Child;
-
-   if(!(Window = UserGetWindowObject(IntGetDesktopWindow())))
-   {
-      return FALSE;
-   }
-
-   for(Child = Window->spwndChild; Child; Child = Child->spwndNext)
-   {
-      if(Child->hOwner && Child->Wnd->style & WS_VISIBLE)
-      {
-         /*
-          * The desktop has a popup window if one of them has
-          * an owner window and is visible
-          */
-         return TRUE;
-      }
-   }
-
-   return FALSE;
 }
 
 BOOL FASTCALL
@@ -1511,7 +1462,7 @@ NtUserBuildHwndList(
          Window = CONTAINING_RECORD(Current, WINDOW_OBJECT, ThreadListEntry);
          ASSERT(Window);
 
-         if(bChildren || Window->hOwner != NULL)
+         if(bChildren || Window->spwndOwner != NULL)
          {
              if(dwCount < *pBufSize && pWnd)
              {
@@ -1737,7 +1688,7 @@ PWINDOW_OBJECT FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    Window->pti = pti;
    Window->hSelf = hWnd;
    Window->spwndParent = ParentWindow;
-   Window->hOwner = OwnerWindow ? OwnerWindow->hSelf : NULL;
+   Window->spwndOwner = OwnerWindow;
 
    Wnd->head.h = hWnd;
    Wnd->head.pti = pti;
@@ -2560,7 +2511,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
                Child = UserGetWindowObject(*ChildHandle);
                if (Child == NULL)
                   continue;
-               if (Child->hOwner != Window->hSelf)
+               if (Child->spwndOwner != Window)
                {
                   continue;
                }
@@ -2576,9 +2527,9 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
                   continue;
                }
 
-               if (Child->hOwner != NULL)
+               if (Child->spwndOwner != NULL)
                {
-                  Child->hOwner = NULL;
+                  Child->spwndOwner = NULL;
                   Child->Wnd->spwndOwner = NULL;
                }
 
@@ -3041,9 +2992,6 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
                   break;
                }
 
-               //temp hack
-//               UserDereferenceObject(Parent);
-
                WndAncestor = Parent;
             }
             break;
@@ -3374,7 +3322,7 @@ BOOL APIENTRY
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
    PWINSTATION_OBJECT WinStaObject;
-   PWINDOW_OBJECT WndShell;
+   PWINDOW_OBJECT WndShell, WndListView;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
    NTSTATUS Status;
@@ -3384,6 +3332,11 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    UserEnterExclusive();
 
    if (!(WndShell = UserGetWindowObject(hwndShell)))
+   {
+      RETURN(FALSE);
+   }
+
+   if(!(WndListView = UserGetWindowObject(hwndListView)))
    {
       RETURN(FALSE);
    }
@@ -3421,14 +3374,14 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       co_WinPosSetWindowPos(hwndListView, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 #endif
 
-      if (UserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+      if (WndListView->Wnd->ExStyle & WS_EX_TOPMOST)
       {
          ObDereferenceObject(WinStaObject);
          RETURN( FALSE);
       }
    }
 
-   if (UserGetWindowLong(hwndShell, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+   if (WndShell->Wnd->ExStyle & WS_EX_TOPMOST)
    {
       ObDereferenceObject(WinStaObject);
       RETURN( FALSE);
@@ -3551,162 +3504,6 @@ CLEANUP:
    DPRINT("Leave NtUserSetSystemMenu, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
-}
-
-HWND FASTCALL
-UserGetWindow(HWND hWnd, UINT Relationship)
-{
-   PWINDOW_OBJECT Parent, Window;
-   HWND hWndResult = NULL;
-
-   if (!(Window = UserGetWindowObject(hWnd)))
-      return NULL;
-
-   switch (Relationship)
-   {
-      case GW_HWNDFIRST:
-         if((Parent = Window->spwndParent))
-         {
-            if (Parent->spwndChild)
-               hWndResult = Parent->spwndChild->hSelf;
-         }
-         break;
-
-      case GW_HWNDLAST:
-         if((Parent = Window->spwndParent))
-         {
-            if (Parent->spwndChild)
-            {
-               Window = Parent->spwndChild;
-               if(Window)
-               {
-                  while(Window->spwndNext)
-                     Window = Window->spwndNext;
-               }
-               hWndResult = Window->hSelf;
-            }
-         }
-         break;
-
-      case GW_HWNDNEXT:
-         if (Window->spwndNext)
-            hWndResult = Window->spwndNext->hSelf;
-         break;
-
-      case GW_HWNDPREV:
-         if (Window->spwndPrev)
-            hWndResult = Window->spwndPrev->hSelf;
-         break;
-
-      case GW_OWNER:
-         if((Parent = UserGetWindowObject(Window->hOwner)))
-         {
-            hWndResult = Parent->hSelf;
-         }
-         break;
-      case GW_CHILD:
-         if (Window->spwndChild)
-            hWndResult = Window->spwndChild->hSelf;
-         break;
-   }
-
-   return hWndResult;
-}
-
-/*
- * NtUserGetWindowLong
- *
- * The NtUserGetWindowLong function retrieves information about the specified
- * window. The function also retrieves the 32-bit (long) value at the
- * specified offset into the extra window memory.
- *
- * Status
- *    @implemented
- */
-
-LONG FASTCALL
-UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
-{
-   PWINDOW_OBJECT Window, Parent;
-   PWND Wnd;
-   LONG Result = 0;
-
-   DPRINT("NtUserGetWindowLong(%x,%d,%d)\n", hWnd, (INT)Index, Ansi);
-
-   if (!(Window = UserGetWindowObject(hWnd)) || !Window->Wnd)
-   {
-      return 0;
-   }
-
-   Wnd = Window->Wnd;
-
-   /*
-    * WndProc is only available to the owner process
-    */
-   if (GWL_WNDPROC == Index
-         && Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
-   {
-      SetLastWin32Error(ERROR_ACCESS_DENIED);
-      return 0;
-   }
-
-   if ((INT)Index >= 0)
-   {
-      if ((Index + sizeof(LONG)) > Window->Wnd->cbwndExtra)
-      {
-         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         return 0;
-      }
-      Result = *((LONG *)((PCHAR)(Window->Wnd + 1) + Index));
-   }
-   else
-   {
-      switch (Index)
-      {
-         case GWL_EXSTYLE:
-            Result = Wnd->ExStyle;
-            break;
-
-         case GWL_STYLE:
-            Result = Wnd->style;
-            break;
-
-         case GWL_WNDPROC:
-            Result = (LONG)IntGetWindowProc(Wnd, Ansi);
-            break;
-
-         case GWL_HINSTANCE:
-            Result = (LONG) Wnd->hModule;
-            break;
-
-         case GWL_HWNDPARENT:
-            Parent = Window->spwndParent;
-            if(Parent)
-            {
-               if (Parent && Parent->hSelf == IntGetDesktopWindow())
-                  Result = (LONG) UserGetWindow(Window->hSelf, GW_OWNER);
-               else
-                  Result = (LONG) Parent->hSelf;
-            }
-            break;
-
-         case GWL_ID:
-            Result = (LONG) Wnd->IDMenu;
-            break;
-
-         case GWL_USERDATA:
-            Result = Wnd->dwUserData;
-            break;
-
-         default:
-            DPRINT1("NtUserGetWindowLong(): Unsupported index %d\n", Index);
-            SetLastWin32Error(ERROR_INVALID_PARAMETER);
-            Result = 0;
-            break;
-      }
-   }
-
-   return Result;
 }
 
 LONG FASTCALL
@@ -4807,7 +4604,7 @@ NtUserDefSetText(HWND hWnd, PLARGE_STRING WindowText)
    // In User32, these are called after: NotifyWinEvent EVENT_OBJECT_NAMECHANGE than
    // RepaintButton, StaticRepaint, NtUserCallHwndLock HWNDLOCK_ROUTINE_REDRAWFRAMEANDHOOK, etc.
    /* Send shell notifications */
-   if (!IntGetOwner(Window) && !IntGetParent(Window))
+   if (!Window->spwndOwner && !IntGetParent(Window))
    {
       co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
    }
@@ -4908,11 +4705,10 @@ IntShowOwnedPopups(PWINDOW_OBJECT OwnerWnd, BOOL fShow )
       count++;
    while (--count >= 0)
    {
-      if (UserGetWindow( win_array[count], GW_OWNER ) != OwnerWnd->hSelf)
-         continue;
       if (!(pWnd = UserGetWindowObject( win_array[count] )))
          continue;
-      //        if (pWnd == WND_OTHER_PROCESS) continue;
+      if (pWnd->spwndOwner != OwnerWnd)
+         continue;
 
       if (fShow)
       {

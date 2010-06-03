@@ -750,7 +750,6 @@
 
 ; ROS specific exports
 @ stdcall PrivateCsrssManualGuiCheck(long)
-@ stdcall PrivateCsrssInitialized()
 
 ; Functions exported by Win Vista
 @ stdcall SetProcessDPIAware()

@@ -1423,7 +1423,7 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)UserGetClassLongPtr(WndDesktop->Wnd->pcls, GCL_HBRBACKGROUND, FALSE);
+   DesktopBrush = (HBRUSH)WndDesktop->Wnd->pcls->hbrBackground;
 
 
    /*

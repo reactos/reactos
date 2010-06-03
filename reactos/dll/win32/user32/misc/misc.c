@@ -45,13 +45,6 @@ PrivateCsrssManualGuiCheck(LONG Check)
   NtUserCallOneParam(Check, ONEPARAM_ROUTINE_CSRSS_GUICHECK);
 }
 
-VOID
-WINAPI
-PrivateCsrssInitialized(VOID)
-{
-  NtUserCallNoParam(NOPARAM_ROUTINE_CSRSS_INITIALIZED);
-}
-
 
 /*
  * @implemented

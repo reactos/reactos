@@ -129,7 +129,7 @@ IntDefWindowProc(
       {
          if ((Wnd->style & WS_VISIBLE) && wParam) break;
          if (!(Wnd->style & WS_VISIBLE) && !wParam) break;
-         if (!Window->hOwner) break;
+         if (!Window->spwndOwner) break;
          if (LOWORD(lParam))
          {
             if (wParam)
