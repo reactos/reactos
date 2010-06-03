@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="quartz" type="win32dll" baseaddress="${BASEADDRESS_QUARTZ}" installbase="system32" installname="quartz.dll" allowwarnings="true">
+<module name="quartz" type="win32dll" baseaddress="${BASEADDRESS_QUARTZ}" installbase="system32" installname="quartz.dll" allowwarnings="true" crt="MSVCRT">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="quartz.spec" />
 	<include base="quartz">.</include>
