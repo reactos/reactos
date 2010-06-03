@@ -32,11 +32,13 @@
 /* Internal kernel headers */
 #include "internal/pci.h"
 #define KeGetCurrentThread _KeGetCurrentThread
-#include <internal/i386/ke.h>
-#include <internal/i386/mm.h>
 #ifdef _M_AMD64
+#include <internal/amd64/ke.h>
+#include <internal/amd64/mm.h>
 #include "internal/amd64/intrin_i.h"
 #else
+#include <internal/i386/ke.h>
+#include <internal/i386/mm.h>
 #include "internal/i386/intrin_i.h"
 #endif
 
