@@ -282,7 +282,7 @@ void CToolbarProxy::Initialize(HWND parent, IUnknown *explorerToolbar)
 
 LRESULT CToolbarProxy::OnAddBitmap(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-	LRESULT									result;
+	long int								result;
 	HRESULT									hResult;
 
 	result = 0;
