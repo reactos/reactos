@@ -2772,7 +2772,7 @@ RtlConvertUlongToLuid(
 
 #if defined(_AMD64_) || defined(_IA64_)
 //DECLSPEC_DEPRECATED_DDK_WINXP
-__inline
+FORCEINLINE
 LARGE_INTEGER
 NTAPI_INLINE
 RtlLargeIntegerDivide(
