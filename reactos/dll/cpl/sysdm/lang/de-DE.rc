@@ -202,7 +202,7 @@ BEGIN
     LTEXT       "", IDC_SPACEAVAIL, 105, 92, 104, 9
     LTEXT       "&Anfangsgröße (MB):", -1, 22, 118, 70, 9
     LTEXT       "Ma&ximale Größe (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Benutzerdefinierte Größe", IDC_CUSTOM, 20, 105, 90, 9, WS_GROUP
+    AUTORADIOBUTTON "&Benutzerdefinierte Größe", IDC_CUSTOM, 20, 105, 95, 9, WS_GROUP
     AUTORADIOBUTTON "Größe wird vom &System verwaltet", IDC_SYSMANSIZE, 20, 145, 120, 9
     AUTORADIOBUTTON "&Keine Auslagerungsdatei", IDC_NOPAGEFILE, 20, 158, 90, 9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
@@ -292,5 +292,7 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Systemsteuerungsoption ""System"""
     IDS_WARNINITIALSIZE "Geben Sie einen numerischen Wert für die Anfangsgröße der Auslagerungsdatei an."
     IDS_WARNMAXIMUMSIZE "Geben Sie einen numerischen Wert für die Maximalgröße der Auslagerungsdatei an."
+    IDS_WARNINITIALRANGE "Die Anfangsgröße der Auslagerungsdatei darf nicht kleiner als 2 MB sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
+    IDS_WARNMAXIMUMRANGE "Die Maximalgröße der Auslagerungsdatei darf nicht kleiner als die Anfangsgröße sein und darf den verfügbaren Speicherplatz auf dem gewählten Laufwerk nicht überschreiten."
     IDS_DEVS "\nReactOS Team\n\nProjektkoordinator\n\nAleksey Bragin\n\nEntwicklerteam\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer \n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini \n\nRelease Verantwortliche\n\nColin Finck\nZ98\n\nWebseitenteam\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedienteam\n\nMindflyer\nWierd_W\n\nweiterer Dank geht an\n\nalle Mitwirkenden\nWine Team\n\n"
 END

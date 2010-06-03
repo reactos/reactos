@@ -35,6 +35,8 @@
 #define IDS_MESSAGEBOXTITLE             77
 #define IDS_WARNINITIALSIZE             78
 #define IDS_WARNMAXIMUMSIZE             79
+#define IDS_WARNINITIALRANGE            80
+#define IDS_WARNMAXIMUMRANGE            81
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100

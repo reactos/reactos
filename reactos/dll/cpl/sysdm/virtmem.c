@@ -110,7 +110,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     TCHAR szVolume[MAX_PATH];
     TCHAR *szDisplayString;
     INT InitialSize = 0;
-    INT MaxSize = 0;
+    INT MaximumSize = 0;
     INT DriveLen;
     INT PgCnt = 0;
 
@@ -141,17 +141,17 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 /* FIXME: we only check the first available pagefile in the reg */
                 GetPageFileSizes(pVirtMem->szPagingFiles,
                                  &InitialSize,
-                                 &MaxSize);
+                                 &MaximumSize);
 
-                pVirtMem->Pagefile[PgCnt].InitialValue = InitialSize;
-                pVirtMem->Pagefile[PgCnt].MaxValue = MaxSize;
+                pVirtMem->Pagefile[PgCnt].InitialSize = InitialSize;
+                pVirtMem->Pagefile[PgCnt].MaximumSize = MaximumSize;
                 pVirtMem->Pagefile[PgCnt].bUsed = TRUE;
                 lstrcpy(pVirtMem->Pagefile[PgCnt].szDrive, szDrive);
             }
             else
             {
-                pVirtMem->Pagefile[PgCnt].InitialValue = 0;
-                pVirtMem->Pagefile[PgCnt].MaxValue = 0;
+                pVirtMem->Pagefile[PgCnt].InitialSize = 0;
+                pVirtMem->Pagefile[PgCnt].MaximumSize = 0;
                 pVirtMem->Pagefile[PgCnt].bUsed = FALSE;
                 lstrcpy(pVirtMem->Pagefile[PgCnt].szDrive, szDrive);
             }
@@ -177,11 +177,11 @@ ParseMemSettings(PVIRTMEM pVirtMem)
                 }
             }
 
-            if ((InitialSize != 0) || (MaxSize != 0))
+            if ((InitialSize != 0) || (MaximumSize != 0))
             {
                 TCHAR szSize[64];
 
-                _stprintf(szSize, _T("%i - %i"), InitialSize, MaxSize);
+                _stprintf(szSize, _T("%i - %i"), InitialSize, MaximumSize);
                 _tcscat(szDisplayString, _T("\t"));
                 _tcscat(szDisplayString, szSize);
             }
@@ -216,8 +216,8 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
         {
             _stprintf(szText, _T("%s\\pagefile.sys %i %i"),
                       pVirtMem->Pagefile[i].szDrive,
-                      pVirtMem->Pagefile[i].InitialValue,
-                      pVirtMem->Pagefile[i].MaxValue);
+                      pVirtMem->Pagefile[i].InitialSize,
+                      pVirtMem->Pagefile[i].MaximumSize);
 
             /* Add it to our overall registry string */
             lstrcpy(szPagingFiles + nPos, szText);
@@ -299,8 +299,8 @@ static VOID
 OnSet(PVIRTMEM pVirtMem)
 {
     INT Index;
-    UINT InitValue;
-    UINT MaxValue;
+    UINT InitialSize;
+    UINT MaximumSize;
     BOOL bTranslated;
     TCHAR szTitle[64];
     TCHAR szMessage[256];
@@ -318,10 +318,10 @@ OnSet(PVIRTMEM pVirtMem)
         if (IsDlgButtonChecked(pVirtMem->hSelf,
                                IDC_CUSTOM) == BST_CHECKED)
         {
-            InitValue = GetDlgItemInt(pVirtMem->hSelf,
-                                      IDC_INITIALSIZE,
-                                      &bTranslated,
-                                      FALSE);
+            InitialSize = GetDlgItemInt(pVirtMem->hSelf,
+                                        IDC_INITIALSIZE,
+                                        &bTranslated,
+                                        FALSE);
             if (!bTranslated)
             {
                 if (LoadString(hApplet,
@@ -343,10 +343,10 @@ OnSet(PVIRTMEM pVirtMem)
                 return;
             }
 
-            MaxValue = GetDlgItemInt(pVirtMem->hSelf,
-                                     IDC_MAXSIZE,
-                                     &bTranslated,
-                                     FALSE);
+            MaximumSize = GetDlgItemInt(pVirtMem->hSelf,
+                                        IDC_MAXSIZE,
+                                        &bTranslated,
+                                        FALSE);
             if (!bTranslated)
             {
                 if (LoadString(hApplet,
@@ -368,16 +368,59 @@ OnSet(PVIRTMEM pVirtMem)
                 return;
             }
 
-            /* FIXME: Add more file size checks! */
+            /* Check the valid range of the inial size */
+            if (InitialSize < 2 ||
+                InitialSize > pVirtMem->Pagefile[Index].FreeSize)
+            {
+                if (LoadString(hApplet,
+                               IDS_MESSAGEBOXTITLE,
+                               szTitle,
+                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
+                    _tcscpy(szTitle, _T("System control panel applet"));
 
-            pVirtMem->Pagefile[Index].InitialValue = InitValue;
-            pVirtMem->Pagefile[Index].MaxValue = MaxValue;
+                LoadString(hApplet,
+                           IDS_WARNINITIALRANGE,
+                           szMessage,
+                           sizeof(szMessage) / sizeof(szMessage[0]));
+
+                MessageBox(NULL,
+                           szMessage,
+                           szTitle,
+                           MB_ICONWARNING | MB_OK);
+                return;
+            }
+
+            /* Check the valid range of the maximum size */
+            if (MaximumSize < InitialSize ||
+                MaximumSize > pVirtMem->Pagefile[Index].FreeSize)
+            {
+                if (LoadString(hApplet,
+                               IDS_MESSAGEBOXTITLE,
+                               szTitle,
+                               sizeof(szTitle) / sizeof(szTitle[0])) == 0)
+                    _tcscpy(szTitle, _T("System control panel applet"));
+
+                LoadString(hApplet,
+                           IDS_WARNMAXIMUMRANGE,
+                           szMessage,
+                           sizeof(szMessage) / sizeof(szMessage[0]));
+
+                MessageBox(NULL,
+                           szMessage,
+                           szTitle,
+                           MB_ICONWARNING | MB_OK);
+                return;
+            }
+
+            pVirtMem->Pagefile[Index].InitialSize = InitialSize;
+            pVirtMem->Pagefile[Index].MaximumSize = MaximumSize;
             pVirtMem->Pagefile[Index].bUsed = TRUE;
         }
         else
         {
             /* set sizes to 0 */
-            pVirtMem->Pagefile[Index].InitialValue = pVirtMem->Pagefile[Index].MaxValue = 0;
+            pVirtMem->Pagefile[Index].InitialSize = 0;
+            pVirtMem->Pagefile[Index].MaximumSize = 0;
 
             // check to see if this drive is used for a paging file
             if (IsDlgButtonChecked(pVirtMem->hSelf,
@@ -420,12 +463,13 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         if (GetDiskFreeSpaceEx(pVirtMem->Pagefile[Index].szDrive,
                                NULL, NULL, &FreeBytes))
         {
+            pVirtMem->Pagefile[Index].FreeSize = FreeBytes.QuadPart >> 20;
             _stprintf(szBuffer, _T("%I64u MB"), FreeBytes.QuadPart / (1024 * 1024));
             SetDlgItemText(hwndDlg, IDC_SPACEAVAIL, szBuffer);
         }
 
-        if (pVirtMem->Pagefile[Index].InitialValue  != 0 &&
-            pVirtMem->Pagefile[Index].MaxValue != 0)
+        if (pVirtMem->Pagefile[Index].InitialSize != 0 &&
+            pVirtMem->Pagefile[Index].MaximumSize != 0)
         {
             /* enable and fill the custom values */
             EnableWindow(GetDlgItem(pVirtMem->hSelf, IDC_MAXSIZE), TRUE);
@@ -433,12 +477,12 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 
             SetDlgItemInt(pVirtMem->hSelf,
                           IDC_INITIALSIZE,
-                          pVirtMem->Pagefile[Index].InitialValue,
+                          pVirtMem->Pagefile[Index].InitialSize,
                           FALSE);
 
             SetDlgItemInt(pVirtMem->hSelf,
                           IDC_MAXSIZE,
-                          pVirtMem->Pagefile[Index].MaxValue,
+                          pVirtMem->Pagefile[Index].MaximumSize,
                           FALSE);
 
             CheckDlgButton(pVirtMem->hSelf,
@@ -482,7 +526,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
         FileSize = 0;
         for (i = 0; i < 26; i++)
         {
-            FileSize += pVirtMem->Pagefile[i].InitialValue;
+            FileSize += pVirtMem->Pagefile[i].InitialSize;
         }
         _stprintf(szBuffer, _T("%u MB"), FileSize);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
