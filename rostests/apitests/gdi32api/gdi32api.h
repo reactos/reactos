@@ -20,6 +20,7 @@
 
 extern HINSTANCE g_hInstance;
 extern PGDI_TABLE_ENTRY GdiHandleTable;
+BOOL IsHandleValid(HGDIOBJ hobj);
 
 #endif /* _GDITEST_H */
 

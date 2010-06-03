@@ -82,6 +82,8 @@ Test_SelectObject(PTESTINFO pti)
 	DeleteObject(hOldObj);
 	RTEST((UINT_PTR)SelectObject(hDC, hNewObj) == SIMPLEREGION); // ??? Why this?
 	DeleteObject(hNewObj);
+	TEST(IsHandleValid(hNewObj) == TRUE);
+	
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test BITMAP */
