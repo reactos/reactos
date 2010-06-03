@@ -1806,6 +1806,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     PTOKEN NewToken;
     PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService;
     BOOLEAN QoSPresent;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -1843,7 +1844,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
                                        SepTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
-                                       NULL);
+                                       &HandleInformation);
     if (!NT_SUCCESS(Status))
     {
         SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
@@ -1884,7 +1885,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     {
         Status = ObInsertObject((PVOID)NewToken,
                                 NULL,
-                                DesiredAccess,
+                                (DesiredAccess ? DesiredAccess : HandleInformation.GrantedAccess),
                                 0,
                                 NULL,
                                 &hToken);
