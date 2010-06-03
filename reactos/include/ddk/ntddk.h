@@ -703,6 +703,7 @@ typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
   USHORT AsUSHORT;
 } PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
 
+#if 0 // Someone (testbot? RosBE for linux?) doesn't like too many types it seems...
 typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
   struct {
     USHORT AttentionButtonPressed:1;
@@ -963,6 +964,8 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 #define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
+
+#endif // 0
 
 typedef enum _HAL_QUERY_INFORMATION_CLASS {
   HalInstalledBusInformation,
