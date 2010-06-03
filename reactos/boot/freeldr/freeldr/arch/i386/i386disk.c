@@ -135,6 +135,9 @@ BOOLEAN DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT B
 
 	DPRINTM(DPRINT_DISK, "DiskGetExtendedDriveParameters()\n");
 
+	if (!DiskInt13ExtensionsSupported(DriveNumber))
+            return FALSE;
+
 	// Initialize transfer buffer
 	*Ptr = BufferSize;
 
