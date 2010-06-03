@@ -36,15 +36,30 @@ Test_NtGdiCreateBitmap_Params(PTESTINFO pti)
 	TEST(NtGdiCreateBitmap(1, -2, 1, 1, NULL) == NULL);
 	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
 
-	/* Test negative cy */
+	/* Test negative cy and valid bits */
 	SetLastError(ERROR_SUCCESS);
 	TEST(NtGdiCreateBitmap(1, -2, 1, 1, BitmapData) == NULL);
+	TEST(GetLastError() == ERROR_SUCCESS);
+
+	/* Test negative cy and invalid bits */
+	SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1, -2, 1, 1, (BYTE*)0x80001234) == NULL);
 	TEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test huge size */
 	SetLastError(ERROR_SUCCESS);
 	TEST(NtGdiCreateBitmap(100000, 100000, 1, 1, NULL) == NULL);
 	TEST(GetLastError() == ERROR_NOT_ENOUGH_MEMORY);
+
+	/* Test huge size and valid bits */
+	SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(1000, 1000, 1, 1, BitmapData) == NULL);
+	TEST(GetLastError() == ERROR_SUCCESS);
+
+	/* Test huge size and invalid bits */
+	SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiCreateBitmap(100000, 100000, 1, 1, (BYTE*)0x80001234) == NULL);
+	TEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test cPlanes == 0 */
 	SetLastError(ERROR_SUCCESS);
