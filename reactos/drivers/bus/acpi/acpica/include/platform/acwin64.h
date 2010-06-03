@@ -118,10 +118,14 @@
 
 /*! [Begin] no source code translation (Keep the include) */
 
-#include "acintel.h"
+//#include "acintel.h"
+// HACK
+#define INT32 _ACPI_INT32
+#define UINT32 _ACPI_UINT32
+
 /*! [End] no source code translation !*/
 
-#define ACPI_MACHINE_WIDTH          64
+#define ACPI_MACHINE_WIDTH      64
 
 #define ACPI_USE_STANDARD_HEADERS
 
