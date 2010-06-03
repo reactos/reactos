@@ -1578,6 +1578,7 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
     {
         /* let's assume utf-8 for now */
         int len;
+        WCHAR *new_buff;
 
         _SEH2_TRY
         {
@@ -1591,17 +1592,16 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
         _SEH2_END;
 
         DPRINT("len = %x\n", len);
-        WCHAR *new_buff;
 
         if (len == -1)
         {
             DPRINT1( "utf-8 conversion failed\n" );
             return STATUS_SXS_CANT_GEN_ACTCTX;
         }
-        if (!(new_buff = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, len * sizeof(WCHAR) )))
+        if (!(new_buff = RtlAllocateHeap( RtlGetProcessHeap(), HEAP_ZERO_MEMORY, len)))
             return STATUS_NO_MEMORY;
 
-        mbstowcs( new_buff, buffer, len);
+        mbstowcs( new_buff, buffer, size);
         xmlbuf.ptr = new_buff;
         DPRINT("Buffer %S\n", new_buff);
         xmlbuf.end = xmlbuf.ptr + len;
