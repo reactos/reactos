@@ -2240,6 +2240,7 @@ extern "C" {
 #define LVSIL_NORMAL 0
 #define LVSIL_SMALL 1
 #define LVSIL_STATE 2
+#define LVSIL_GROUPHEADER       3
 
 #define LVM_SETIMAGELIST (LVM_FIRST+3)
 #define ListView_SetImageList(hwnd,himl,iImageList) (HIMAGELIST)SNDMSG((hwnd),LVM_SETIMAGELIST,(WPARAM)(iImageList),(LPARAM)(HIMAGELIST)(himl))
