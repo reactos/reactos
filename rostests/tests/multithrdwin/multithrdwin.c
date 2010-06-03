@@ -157,7 +157,7 @@ LRESULT CALLBACK MultiWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   HDC hDC;
   RECT Client;
   HBRUSH Brush;
-  DWORD Ret;
+  DWORD_PTR Ret;
 
   static COLORREF Colors[] =
     {

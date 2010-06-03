@@ -15,7 +15,7 @@ int main( int argc, char **argv ) {
   fprintf( stderr, "%lu: Starting\n", GetCurrentProcessId() );
 
   if( argc == 2 ) {
-    h_process = (HANDLE)atoi(argv[1]);
+    h_process = (HANDLE)(ULONG_PTR)atoi(argv[1]);
   } else {
     if( !DuplicateHandle( GetCurrentProcess(),
 			  GetCurrentProcess(),
@@ -38,7 +38,7 @@ int main( int argc, char **argv ) {
     memset( &si, 0, sizeof( si ) );
     memset( &pi, 0, sizeof( pi ) );
 
-    sprintf( cmdline, "%s %lu", argv[0], (DWORD)h_process );
+    sprintf( cmdline, "%s %p", argv[0], h_process );
     if( !CreateProcess(NULL, cmdline, NULL, NULL, TRUE, 0, NULL, NULL,
 		       &si, &pi ) ) {
       fprintf( stderr, "%lu: Could not create child process.\n",

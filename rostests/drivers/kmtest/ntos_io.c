@@ -46,7 +46,7 @@ VOID NtoskrnlIoMdlTest(HANDLE KeyHandle)
 
     ok(Mdl == NULL,
       "IoAllocateMdl should fail allocation of 2Gb or more, but got Mdl=0x%X",
-      (UINT32)Mdl);
+      (UINT_PTR)Mdl);
 
     if (Mdl)
         IoFreeMdl(Mdl);
@@ -57,10 +57,10 @@ VOID NtoskrnlIoMdlTest(HANDLE KeyHandle)
     ok(Mdl != NULL, "Mdl allocation failed");
     // Check fields of the allocated struct
     ok(Mdl->Next == NULL, "Mdl->Next should be NULL, but is 0x%X",
-        (UINT32)Mdl->Next);
+        (UINT_PTR)Mdl->Next);
     ok(Mdl->ByteCount == MdlSize,
         "Mdl->ByteCount should be equal to MdlSize, but is 0x%X",
-        (UINT32)Mdl->ByteCount);
+        (UINT_PTR)Mdl->ByteCount);
     // TODO: Check other fields of MDL struct
 
     IoFreeMdl(Mdl);
@@ -70,7 +70,7 @@ VOID NtoskrnlIoMdlTest(HANDLE KeyHandle)
     Mdl = IoAllocateMdl(VirtualAddress, MdlSize, FALSE, FALSE, Irp);
     ok(Mdl != NULL, "Mdl allocation failed");
     ok(Irp->MdlAddress == Mdl, "Irp->MdlAddress should be 0x%X, but is 0x%X",
-        (UINT32)Mdl, (UINT32)Irp->MdlAddress);
+        (UINT_PTR)Mdl, (UINT_PTR)Irp->MdlAddress);
 
     IoFreeMdl(Mdl);
 

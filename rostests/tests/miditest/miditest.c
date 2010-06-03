@@ -36,7 +36,7 @@ int main()
     printf("Opening MIDI output #0\n");
 
     Result = midiOutOpen(&Handle, 0, 0, 0, CALLBACK_NULL);
-    printf("Result == %d Handle == %d\n", Result, (int)Handle);
+    printf("Result == %d Handle == %p\n", Result, Handle);
 
     // play something:
     midiOutShortMsg(Handle, 0x007f3090);

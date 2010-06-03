@@ -160,7 +160,7 @@ HWND CreateNewMDIChild(HWND hMDIClient)
 	mcs.y = mcs.cy = CW_USEDEFAULT;
 	mcs.style = MDIS_ALLCHILDSTYLES;
 
-	hChild = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LONG)&mcs);
+	hChild = (HWND)SendMessage(hMDIClient, WM_MDICREATE, 0, (LPARAM)&mcs);
 	if(!hChild)
 	{
 		MessageBox(hMDIClient, "MDI Child creation failed.", "Oh Oh...",

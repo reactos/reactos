@@ -17,7 +17,7 @@ int main( int argc, char **argv ) {
 
   if( argc == 2 ) {
     #ifdef WIN64
-        file_map = (void *)atoi64(argv[1]);
+        file_map = (void *)_atoi64(argv[1]);
     #else
         file_map = (void *)UlongToPtr(atoi(argv[1]));
     #endif

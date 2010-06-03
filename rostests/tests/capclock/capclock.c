@@ -11,8 +11,8 @@
 
 UINT Timer = 1;
 
-static BOOL CALLBACK DialogFunc(HWND,UINT,WPARAM,LPARAM);
-static VOID CALLBACK TimerProc(HWND,UINT,UINT,DWORD);
+static INT_PTR CALLBACK DialogFunc(HWND,UINT,WPARAM,LPARAM);
+static VOID CALLBACK TimerProc(HWND,UINT,UINT_PTR,DWORD);
 
 
 INT WINAPI WinMain (HINSTANCE hinst, HINSTANCE hinstPrev, LPSTR lpCmdLine, INT nCmdShow)
@@ -50,7 +50,7 @@ static INT_PTR CALLBACK DialogFunc (HWND hwndDlg, UINT msg, WPARAM wParam, LPARA
 	}
 	return FALSE;
 }
-static VOID CALLBACK TimerProc (HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime)
+static VOID CALLBACK TimerProc (HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 {
 	CHAR text [20];
 	SYSTEMTIME lt;

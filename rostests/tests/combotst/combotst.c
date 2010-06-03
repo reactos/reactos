@@ -282,7 +282,7 @@ CreateCheckButton(const char* lpWindowName, DWORD xSize, DWORD id)
         xSize,   /* nWidth  */
         20,      /* nHeight */
         g_hwnd,
-        (HMENU) id,
+        UlongToHandle(id),
         g_hInst,
         NULL
         );
@@ -302,7 +302,7 @@ CreatePushButton(const char* lpWindowName, DWORD xSize, DWORD id,DWORD Style)
         xSize,   /* nWidth */
         20,      /* nHeight */
         g_hwnd,
-        (HMENU) id,
+        LongToHandle(id),
         g_hInst,
         NULL
         );

@@ -21,7 +21,7 @@ void HexDump(char *buffer, ULONG size)
 
   while (offset < (size & ~15))
     {
-      ptr = (unsigned char*)((ULONG)buffer + offset);
+      ptr = (unsigned char*)((ULONG_PTR)buffer + offset);
       printf("%08lx  %02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx-%02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx",
 	     offset,
 	     ptr[0],
@@ -62,7 +62,7 @@ void HexDump(char *buffer, ULONG size)
       offset += 16;
     }
 
-  ptr = (unsigned char*)((ULONG)buffer + offset);
+  ptr = (unsigned char*)((ULONG_PTR)buffer + offset);
   if (offset < size)
     {
       printf("%08lx ", offset);
