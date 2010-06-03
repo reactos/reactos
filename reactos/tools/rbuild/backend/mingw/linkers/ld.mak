@@ -1,12 +1,12 @@
 # -exclude-all-symbols disables autoexporting all symbols *if none were found* (either in a DEF file or using __declspec(dllexport)
-LDFLAG_DLL:=-shared -exclude-all-symbols
-LDFLAG_DRIVER:=-shared --subsystem=native -exclude-all-symbols
-LDFLAG_NOSTDLIB:=-nostartfiles -nostdlib
+LDFLAG_DLL:=--shared --exclude-all-symbols
+LDFLAG_DRIVER:=--shared --subsystem=native --exclude-all-symbols
+LDFLAG_NOSTDLIB:=--nostartfiles --nostdlib
 LDFLAG_CONSOLE:=--subsystem=console
 LDFLAG_WINDOWS:=--subsystem=windows
 LDFLAG_NATIVE:=--subsystem=native
 
-LDFLAG_EXCLUDE_ALL_SYMBOLS=-exclude-all-symbols
+LDFLAG_EXCLUDE_ALL_SYMBOLS=--exclude-all-symbols
 DLLTOOL_FLAGS=--kill-at
 ifeq ($(ARCH),amd64)
     DLLTOOL_FLAGS= --no-leading-underscore
