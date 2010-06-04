@@ -1700,20 +1700,9 @@ PWINDOW_OBJECT FASTCALL IntCreateWindow(CREATESTRUCTW* Cs,
    Wnd->hModule = Cs->hInstance;
    Wnd->style = Cs->style & ~WS_VISIBLE;
    Wnd->ExStyle = Cs->dwExStyle;
-   Wnd->rcWindow.left = Cs->x;
-   Wnd->rcWindow.top = Cs->y;
-   Wnd->rcWindow.right = Cs->x + Cs->cx;
-   Wnd->rcWindow.bottom = Cs->y + Cs->cy;
    Wnd->cbwndExtra = Wnd->pcls->cbwndExtra;
    Wnd->spwndOwner = OwnerWindow ? OwnerWindow->Wnd : NULL;
    Wnd->spwndParent = ParentWindow ? ParentWindow->Wnd : NULL;      
-   
-   if (Wnd->style & WS_CHILD && ParentWindow)
-   {
-      RECTL_vOffsetRect(&(Wnd->rcWindow), ParentWindow->Wnd->rcClient.left,
-                       ParentWindow->Wnd->rcClient.top);
-   }
-   Wnd->rcClient = Wnd->rcWindow;
 
    IntReferenceMessageQueue(Window->pti->MessageQueue);
    if (Wnd->spwndParent != NULL && Cs->hwndParent != 0)
