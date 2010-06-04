@@ -1566,6 +1566,9 @@ IntReadConsole(HANDLE hConsoleInput,
     }
 
     Request->Status = STATUS_SUCCESS;
+    Request->Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
+    Request->Data.ReadConsoleRequest.Unicode = bUnicode;
+    Request->Data.ReadConsoleRequest.FullReadSize = (WORD)nNumberOfCharsToRead;
     CsrRequest = MAKE_CSR_API(READ_CONSOLE, CSR_CONSOLE);
 
     do
@@ -1582,10 +1585,7 @@ IntReadConsole(HANDLE hConsoleInput,
             }
         }
 
-        Request->Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
-        Request->Data.ReadConsoleRequest.Unicode = bUnicode;
         Request->Data.ReadConsoleRequest.NrCharactersToRead = (WORD)min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
-        Request->Data.ReadConsoleRequest.nCharsCanBeDeleted = (WORD)CharsRead;
 
         Status = CsrClientCallServer(Request,
                                      NULL,
@@ -1607,16 +1607,6 @@ IntReadConsole(HANDLE hConsoleInput,
                Request->Data.ReadConsoleRequest.Buffer,
                Request->Data.ReadConsoleRequest.NrCharactersRead * CharSize);
         CharsRead += Request->Data.ReadConsoleRequest.NrCharactersRead;
-
-        if (Request->Status == STATUS_NOTIFY_CLEANUP)
-        {
-            if(CharsRead > 0)
-            {
-                CharsRead--;
-                nNumberOfCharsToRead++;
-            }
-            Request->Status = STATUS_PENDING;
-        }
     }
     while (Request->Status == STATUS_PENDING && nNumberOfCharsToRead > 0);
 

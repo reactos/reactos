@@ -81,13 +81,10 @@ CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
     RtlCreateUnicodeString(&Console->Title, L"Command Prompt");
 
     Console->ReferenceCount = 0;
-    Console->WaitingChars = 0;
-    Console->WaitingLines = 0;
-    Console->EchoCount = 0;
+    Console->LineBuffer = NULL;
     Console->Header.Type = CONIO_CONSOLE_MAGIC;
     Console->Header.Console = Console;
     Console->Mode = ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_MOUSE_INPUT;
-    Console->EarlyReturn = FALSE;
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
     InitializeListHead(&Console->InputEvents);
@@ -333,6 +330,8 @@ ConioDeleteConsole(Object_t *Object)
     }
 
     ConioCleanupConsole(Console);
+    if (Console->LineBuffer)
+        RtlFreeHeap(Win32CsrApiHeap, 0, Console->LineBuffer);
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
     if (!IsListEmpty(&Console->BufferList))
     {

@@ -75,14 +75,15 @@ typedef struct tagCSRSS_CONSOLE
   PCSRSS_CONSOLE Prev, Next;            /* Next and Prev consoles in console wheel */
   HANDLE ActiveEvent;
   LIST_ENTRY InputEvents;               /* List head for input event queue */
-  WORD WaitingChars;
-  WORD WaitingLines;                    /* number of chars and lines in input queue */
+  PWCHAR LineBuffer;                    /* current line being input, in line buffered mode */
+  WORD LineMaxSize;                     /* maximum size of line in characters (including CR+LF) */
+  WORD LineSize;                        /* current size of line */
+  WORD LinePos;                         /* current position within line */
+  BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
   LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
   PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
   WORD Mode;                            /* Console mode flags */
-  WORD EchoCount;                       /* count of chars to echo, in line buffered mode */
   UNICODE_STRING Title;                 /* Title of console */
-  BOOL EarlyReturn;                     /* wake client and return data, even if we are in line buffered mode, and we don't have a complete line */
   DWORD HardwareState;                  /* _GDI_MANAGED, _DIRECT */
   HWND hWindow;
   COORD Size;
@@ -101,9 +102,6 @@ typedef struct ConsoleInput_t
 {
   LIST_ENTRY ListEntry;
   INPUT_RECORD InputEvent;
-  BOOLEAN Echoed;        // already been echoed or not
-  BOOLEAN Fake;          // synthesized, not a real event
-  BOOLEAN NotChar;       // message should not be used to return a character
 } ConsoleInput;
 
 /* CONSOLE_SELECTION_INFO dwFlags values */

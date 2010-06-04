@@ -70,8 +70,8 @@ typedef struct
 {
    HANDLE ConsoleHandle;
    BOOL Unicode;
+   WORD FullReadSize;
    WORD NrCharactersToRead;
-   WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
    HANDLE EventHandle;
    ULONG NrCharactersRead;
    BYTE Buffer[0];
