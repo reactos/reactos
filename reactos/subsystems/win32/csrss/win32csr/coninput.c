@@ -26,7 +26,7 @@ CSR_API(CsrReadConsole)
 {
     PLIST_ENTRY CurrentEntry;
     ConsoleInput *Input;
-    PUCHAR Buffer;
+    PCHAR Buffer;
     PWCHAR UnicodeBuffer;
     ULONG i;
     ULONG nNumberOfCharsToRead, CharSize;
@@ -42,7 +42,7 @@ CSR_API(CsrReadConsole)
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
-    Buffer = Request->Data.ReadConsoleRequest.Buffer;
+    Buffer = (PCHAR)Request->Data.ReadConsoleRequest.Buffer;
     UnicodeBuffer = (PWCHAR)Buffer;
     Status = ConioLockConsole(ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle,
                               &Console, GENERIC_READ);
@@ -64,21 +64,20 @@ CSR_API(CsrReadConsole)
         /* only pay attention to valid ascii chars, on key down */
         if (KEY_EVENT == Input->InputEvent.EventType
                 && Input->InputEvent.Event.KeyEvent.bKeyDown
-                && Input->InputEvent.Event.KeyEvent.uChar.AsciiChar != '\0')
+                && Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar != L'\0')
         {
             /*
              * backspace handling - if we are in charge of echoing it then we handle it here
              * otherwise we treat it like a normal char.
              */
-            if ('\b' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar && 0
+            if (L'\b' == Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar && 0
                     != (Console->Mode & ENABLE_ECHO_INPUT))
             {
                 /* echo if it has not already been done, and either we or the client has chars to be deleted */
                 if (! Input->Echoed
                         && (0 !=  i || Request->Data.ReadConsoleRequest.nCharsCanBeDeleted))
                 {
-                    ConioWriteConsole(Console, Console->ActiveBuffer,
-                                      &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE);
+                    ConioWriteConsole(Console, Console->ActiveBuffer, "\b", 1, TRUE);
                 }
                 if (0 != i)
                 {
@@ -101,17 +100,20 @@ CSR_API(CsrReadConsole)
             else
             {
                 if(Request->Data.ReadConsoleRequest.Unicode)
-                    ConsoleInputAnsiCharToUnicodeChar(Console, &UnicodeBuffer[i], &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar);
+                    UnicodeBuffer[i] = Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar;
                 else
-                    Buffer[i] = Input->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+                    ConsoleInputUnicodeCharToAnsiChar(Console, &Buffer[i], &Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar);
             }
             /* echo to screen if enabled and we did not already echo the char */
             if (0 != (Console->Mode & ENABLE_ECHO_INPUT)
                     && ! Input->Echoed
-                    && '\r' != Input->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+                    && L'\r' != Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar)
             {
-                ConioWriteConsole(Console, Console->ActiveBuffer,
-                                  &Input->InputEvent.Event.KeyEvent.uChar.AsciiChar, 1, TRUE);
+                CHAR AsciiChar;
+                WideCharToMultiByte(Console->OutputCodePage, 0,
+                                    &Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar, 1, 
+                                    &AsciiChar, 1, NULL, NULL);
+                ConioWriteConsole(Console, Console->ActiveBuffer, &AsciiChar, 1, TRUE);
             }
         }
         else
@@ -215,15 +217,15 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
 
     if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT)))
     {
-        switch(KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+        switch(KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar)
         {
-        case '\r':
+        case L'\r':
             /* first add the \r */
             KeyEventRecord->InputEvent.EventType = KEY_EVENT;
             updown = KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown;
             KeyEventRecord->Echoed = FALSE;
             KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode = VK_RETURN;
-            KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\r';
+            KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar = L'\r';
             InsertTailList(&Console->InputEvents, &KeyEventRecord->ListEntry);
             Console->WaitingChars++;
             KeyEventRecord = HeapAlloc(Win32CsrApiHeap, 0, sizeof(ConsoleInput));
@@ -236,7 +238,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
             KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown = updown;
             KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualKeyCode = 0;
             KeyEventRecord->InputEvent.Event.KeyEvent.wVirtualScanCode = 0;
-            KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar = '\n';
+            KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar = L'\n';
             KeyEventRecord->Fake = TRUE;
             break;
         }
@@ -247,17 +249,17 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     /* if line input mode is enabled, only wake the client on enter key down */
     if (0 == (Console->Mode & ENABLE_LINE_INPUT)
             || Console->EarlyReturn
-            || ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar
+            || (L'\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar
                 && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown))
     {
-        if ('\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+        if (L'\n' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar)
         {
             Console->WaitingLines++;
         }
     }
     KeyEventRecord->Echoed = FALSE;
     if (0 != (Console->Mode & (ENABLE_PROCESSED_INPUT | ENABLE_LINE_INPUT))
-            && '\b' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar
+            && L'\b' == KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar
             && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown)
     {
         /* walk the input queue looking for a char to backspace */
@@ -265,7 +267,7 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
                 TempInput != (ConsoleInput *) &Console->InputEvents
                 && (KEY_EVENT == TempInput->InputEvent.EventType
                     || ! TempInput->InputEvent.Event.KeyEvent.bKeyDown
-                    || '\b' == TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar);
+                    || L'\b' == TempInput->InputEvent.Event.KeyEvent.uChar.UnicodeChar);
                 TempInput = (ConsoleInput *) TempInput->ListEntry.Blink)
         {
             /* NOP */;
@@ -277,9 +279,11 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
             RemoveEntryList(&TempInput->ListEntry);
             if (TempInput->Echoed)
             {
-                ConioWriteConsole(Console, Console->ActiveBuffer,
-                                  &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar,
-                                  1, TRUE);
+                CHAR AsciiChar;
+                WideCharToMultiByte(Console->OutputCodePage, 0,
+                                    &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar, 1,
+                                    &AsciiChar, 1, NULL, NULL);
+                ConioWriteConsole(Console, Console->ActiveBuffer, &AsciiChar, 1, TRUE);
             }
             HeapFree(Win32CsrApiHeap, 0, TempInput);
             RemoveEntryList(&KeyEventRecord->ListEntry);
@@ -292,14 +296,16 @@ ConioProcessChar(PCSRSS_CONSOLE Console,
     {
         /* echo chars if we are supposed to and client is waiting for some */
         if (0 != (Console->Mode & ENABLE_ECHO_INPUT) && Console->EchoCount
-                && KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar
+                && KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar
                 && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown
-                && '\r' != KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+                && L'\r' != KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar)
         {
             /* mark the char as already echoed */
-            ConioWriteConsole(Console, Console->ActiveBuffer,
-                              &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar,
-                              1, TRUE);
+            CHAR AsciiChar;
+            WideCharToMultiByte(Console->OutputCodePage, 0,
+                                &KeyEventRecord->InputEvent.Event.KeyEvent.uChar.UnicodeChar, 1,
+                                &AsciiChar, 1, NULL, NULL);
+            ConioWriteConsole(Console, Console->ActiveBuffer, &AsciiChar, 1, TRUE);
             Console->EchoCount--;
             KeyEventRecord->Echoed = TRUE;
         }
@@ -515,7 +521,6 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
         HeapFree(Win32CsrApiHeap, 0, ConInRec);
         return;
     }
-    /* FIXME - convert to ascii */
     ConioProcessChar(Console, ConInRec);
 }
 
@@ -568,7 +573,7 @@ CSR_API(CsrReadInputEvent)
         {
             if (0 != (Console->Mode & ENABLE_LINE_INPUT)
                     && Input->InputEvent.Event.KeyEvent.bKeyDown
-                    && '\r' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar)
+                    && L'\r' == Input->InputEvent.Event.KeyEvent.uChar.UnicodeChar)
             {
                 Console->WaitingLines--;
             }
@@ -782,11 +787,15 @@ CSR_API(CsrWriteConsoleInput)
         Record->Fake = FALSE;
         //Record->InputEvent = *InputRecord++;
         memcpy(&Record->InputEvent, &InputRecord[i], sizeof(INPUT_RECORD));
-        if (KEY_EVENT == Record->InputEvent.EventType)
+        if (!Request->Data.WriteConsoleInputRequest.Unicode &&
+            Record->InputEvent.EventType == KEY_EVENT)
         {
-            /* FIXME - convert from unicode to ascii!! */
-            ConioProcessChar(Console, Record);
+            CHAR AsciiChar = Record->InputEvent.Event.KeyEvent.uChar.AsciiChar;
+            ConsoleInputAnsiCharToUnicodeChar(Console,
+                                              &Record->InputEvent.Event.KeyEvent.uChar.UnicodeChar,
+                                              &AsciiChar);
         }
+        ConioProcessChar(Console, Record);
     }
 
     ConioUnlockConsole(Console);
