@@ -852,18 +852,6 @@ typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
   USHORT AsUSHORT;
 } PCI_EXPRESS_PME_REQUESTOR_ID, *PPCI_EXPRESS_PME_REQUESTOR_ID;
 
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
-
 typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
   ResourceTypeSingle = 0,
   ResourceTypeRange,

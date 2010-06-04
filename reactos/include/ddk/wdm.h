@@ -124,6 +124,15 @@ extern "C" {
 
 #endif
 
+#if defined(_WIN64)
+#if !defined(USE_DMA_MACROS) && !defined(_NTHAL_)
+#define USE_DMA_MACROS
+#endif
+#ifndef NO_LEGACY_DRIVERS
+#define NO_LEGACY_DRIVERS
+#endif
+#endif /* defined(_WIN64) */
+
 /* Forward declarations */
 struct _IRP;
 struct _MDL;
@@ -3697,18 +3706,6 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
 
 #define WDM_MAJORVERSION        0x06
 #define WDM_MINORVERSION        0x00
-
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
 
 #define STATUS_CONTINUE_COMPLETION      STATUS_SUCCESS
 
