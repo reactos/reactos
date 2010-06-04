@@ -3418,6 +3418,64 @@ GenerateConsoleCtrlEvent(DWORD dwCtrlEvent,
 }
 
 
+static DWORD
+IntGetConsoleTitle(LPVOID lpConsoleTitle, DWORD nSize, BOOL bUnicode)
+{
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(GET_TITLE, CSR_CONSOLE);
+    NTSTATUS Status;
+
+    if (nSize == 0)
+        return 0;
+
+    Request.Data.GetTitleRequest.Length = nSize * (bUnicode ? 1 : sizeof(WCHAR));
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, Request.Data.GetTitleRequest.Length);
+    if (CaptureBuffer == NULL)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              Request.Data.GetTitleRequest.Length,
+                              (PVOID*)&Request.Data.GetTitleRequest.Title);
+
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request.Status)))
+    {
+        CsrFreeCaptureBuffer(CaptureBuffer);
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    if (bUnicode)
+    {
+        if (nSize >= sizeof(WCHAR))
+            wcscpy((LPWSTR)lpConsoleTitle, Request.Data.GetTitleRequest.Title);
+    }
+    else
+    {
+        if (nSize < Request.Data.GetTitleRequest.Length / sizeof(WCHAR) ||
+            !WideCharToMultiByte(CP_ACP, // ANSI code page
+                                 0, // performance and mapping flags
+                                 Request.Data.GetTitleRequest.Title, // address of wide-character string
+                                 -1, // number of characters in string
+                                 (LPSTR)lpConsoleTitle, // address of buffer for new string
+                                 nSize, // size of buffer
+                                 NULL, // FAST
+                                 NULL))
+        {
+            /* Yes, if the buffer isn't big enough, it returns 0... Bad API */
+            *(LPSTR)lpConsoleTitle = '\0';
+            Request.Data.GetTitleRequest.Length = 0;
+        }
+    }
+    CsrFreeCaptureBuffer(CaptureBuffer);
+
+    return Request.Data.GetTitleRequest.Length / sizeof(WCHAR);
+}
+
 /*--------------------------------------------------------------
  *    GetConsoleTitleW
  *
@@ -3428,48 +3486,8 @@ WINAPI
 GetConsoleTitleW(LPWSTR lpConsoleTitle,
                  DWORD nSize)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
-    NTSTATUS Status;
-
-    Request = RtlAllocateHeap(RtlGetProcessHeap(),
-                              0,
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_TITLE) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
-    if (Request == NULL)
-    {
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
-    }
-
-    CsrRequest = MAKE_CSR_API(GET_TITLE, CSR_CONSOLE);
-
-    Status = CsrClientCallServer(Request,
-                                 NULL,
-                                 CsrRequest,
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_TITLE) + CSRSS_MAX_TITLE_LENGTH * sizeof(WCHAR));
-    if (!NT_SUCCESS(Status) || !(NT_SUCCESS(Status = Request->Status)))
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-        SetLastErrorByStatus(Status);
-        return 0;
-    }
-
-    if (nSize * sizeof(WCHAR) <= Request->Data.GetTitleRequest.Length)
-    {
-        nSize--;
-    }
-    else
-    {
-        nSize = Request->Data.GetTitleRequest.Length / sizeof (WCHAR);
-    }
-    memcpy(lpConsoleTitle, Request->Data.GetTitleRequest.Title, nSize * sizeof(WCHAR));
-    lpConsoleTitle[nSize] = L'\0';
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-
-    return nSize;
+    return IntGetConsoleTitle(lpConsoleTitle, nSize, TRUE);
 }
-
 
 /*--------------------------------------------------------------
  *     GetConsoleTitleA
@@ -3483,28 +3501,7 @@ WINAPI
 GetConsoleTitleA(LPSTR lpConsoleTitle,
                  DWORD nSize)
 {
-    WCHAR WideTitle [CSRSS_MAX_TITLE_LENGTH + 1];
-    DWORD nWideTitle = CSRSS_MAX_TITLE_LENGTH + 1;
-    DWORD nWritten;
-
-    if (!lpConsoleTitle || !nSize) return 0;
-    nWideTitle = GetConsoleTitleW((LPWSTR) WideTitle, nWideTitle);
-    if (!nWideTitle) return 0;
-
-    if ((nWritten = WideCharToMultiByte(CP_ACP, // ANSI code page
-                                        0, // performance and mapping flags
-                                        (LPWSTR) WideTitle, // address of wide-character string
-                                        nWideTitle, // number of characters in string
-                                        lpConsoleTitle, // address of buffer for new string
-                                        nSize - 1, // size of buffer
-                                        NULL, // FAST
-                                        NULL))) // FAST
-    {
-        lpConsoleTitle[nWritten] = '\0';
-        return nWritten;
-    }
-
-    return 0;
+    return IntGetConsoleTitle(lpConsoleTitle, nSize, FALSE);
 }
 
 
@@ -3517,40 +3514,32 @@ BOOL
 WINAPI
 SetConsoleTitleW(LPCWSTR lpConsoleTitle)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
     NTSTATUS Status;
-    unsigned int c;
 
-    Request = RtlAllocateHeap(RtlGetProcessHeap(), 0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) +
-                                 min(wcslen(lpConsoleTitle), CSRSS_MAX_TITLE_LENGTH) * sizeof(WCHAR)));
-    if (Request == NULL)
+    Request.Data.SetTitleRequest.Length = wcslen(lpConsoleTitle) * sizeof(WCHAR);
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, Request.Data.SetTitleRequest.Length);
+    if (CaptureBuffer == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
+    CsrCaptureMessageBuffer(CaptureBuffer,
+                            (PVOID)lpConsoleTitle,
+                            Request.Data.SetTitleRequest.Length,
+                            (PVOID*)&Request.Data.SetTitleRequest.Title);
 
-    for (c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++)
-        Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
-
-    Request->Data.SetTitleRequest.Length = c * sizeof(WCHAR);
-    Status = CsrClientCallServer(Request,
-                                 NULL,
-                                 CsrRequest,
-                                 max(sizeof(CSR_API_MESSAGE),
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + c * sizeof(WCHAR)));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
         SetLastErrorByStatus(Status);
-        return(FALSE);
+        return FALSE;
     }
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
 
     return TRUE;
 }
@@ -3567,43 +3556,18 @@ BOOL
 WINAPI
 SetConsoleTitleA(LPCSTR lpConsoleTitle)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
-    NTSTATUS Status;
-    unsigned int c;
-
-    Request = RtlAllocateHeap(RtlGetProcessHeap(),
-                              0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) +
-                                min(strlen(lpConsoleTitle), CSRSS_MAX_TITLE_LENGTH) * sizeof(WCHAR)));
-    if (Request == NULL)
+    ULONG Length = strlen(lpConsoleTitle) + 1;
+    LPWSTR WideTitle = HeapAlloc(GetProcessHeap(), 0, Length * sizeof(WCHAR));
+    BOOL Ret;
+    if (!WideTitle)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
-
-    CsrRequest = MAKE_CSR_API(SET_TITLE, CSR_CONSOLE);
-
-    for (c = 0; lpConsoleTitle[c] && c < CSRSS_MAX_TITLE_LENGTH; c++)
-        Request->Data.SetTitleRequest.Title[c] = lpConsoleTitle[c];
-
-    Request->Data.SetTitleRequest.Length = c * sizeof(WCHAR);
-    Status = CsrClientCallServer(Request,
-                                 NULL,
-                                 CsrRequest,
-                                 max(sizeof(CSR_API_MESSAGE),
-                                 CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + c * sizeof(WCHAR)));
-    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
-    {
-        RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-        SetLastErrorByStatus(Status);
-        return(FALSE);
-    }
-
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
-
-    return TRUE;
+    MultiByteToWideChar(CP_ACP, 0, lpConsoleTitle, -1, WideTitle, Length);
+    Ret = SetConsoleTitleW(WideTitle);
+    HeapFree(GetProcessHeap(), 0, WideTitle);
+    return Ret;
 }
 
 

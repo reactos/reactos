@@ -455,19 +455,15 @@ CSR_API(CsrSetTitle)
 
     DPRINT("CsrSetTitle\n");
 
-    if (Request->Header.u1.s1.TotalLength
-            < CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE)
-            + Request->Data.SetTitleRequest.Length)
+    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
+    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+    if (!Win32CsrValidateBuffer(ProcessData, Request->Data.SetTitleRequest.Title,
+                                Request->Data.SetTitleRequest.Length, 1))
     {
-        DPRINT1("Invalid request size\n");
-        Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-        Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
-        return STATUS_INVALID_PARAMETER;
+        return STATUS_ACCESS_VIOLATION;
     }
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
-    Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-    Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
     if(NT_SUCCESS(Status))
     {
         Buffer =  RtlAllocateHeap(RtlGetProcessHeap(), 0, Request->Data.SetTitleRequest.Length);
@@ -507,6 +503,13 @@ CSR_API(CsrGetTitle)
 
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
+
+    if (!Win32CsrValidateBuffer(ProcessData, Request->Data.GetTitleRequest.Title,
+                                Request->Data.GetTitleRequest.Length, 1))
+    {
+        return STATUS_ACCESS_VIOLATION;
+    }
+
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (! NT_SUCCESS(Status))
     {
@@ -515,19 +518,16 @@ CSR_API(CsrGetTitle)
     }
 
     /* Copy title of the console to the user title buffer */
-    RtlZeroMemory(&Request->Data.GetTitleRequest, sizeof(CSRSS_GET_TITLE));
+    if (Request->Data.GetTitleRequest.Length >= sizeof(WCHAR))
+    {
+        Length = min(Request->Data.GetTitleRequest.Length - sizeof(WCHAR), Console->Title.Length);
+        memcpy(Request->Data.GetTitleRequest.Title, Console->Title.Buffer, Length);
+        Request->Data.GetTitleRequest.Title[Length / sizeof(WCHAR)] = L'\0';
+    }
+
     Request->Data.GetTitleRequest.Length = Console->Title.Length;
-    memcpy (Request->Data.GetTitleRequest.Title, Console->Title.Buffer,
-            Console->Title.Length);
-    Length = CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + Console->Title.Length;
 
     ConioUnlockConsole(Console);
-
-    if (Length > sizeof(CSR_API_MESSAGE))
-    {
-        Request->Header.u1.s1.TotalLength = Length;
-        Request->Header.u1.s1.DataLength = Length - sizeof(PORT_MESSAGE);
-    }
     return STATUS_SUCCESS;
 }
 
@@ -754,7 +754,6 @@ CSR_API(CsrGetProcessList)
     PLIST_ENTRY current_entry;
     ULONG nItems = 0;
     NTSTATUS Status;
-    ULONG_PTR Offset;
 
     DPRINT("CsrGetProcessList\n");
 
@@ -762,13 +761,8 @@ CSR_API(CsrGetProcessList)
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Buffer = Request->Data.GetProcessListRequest.ProcessId;
-    Offset = (PBYTE)Buffer - (PBYTE)ProcessData->CsrSectionViewBase;
-    if (Offset >= ProcessData->CsrSectionViewSize
-        || (Request->Data.GetProcessListRequest.nMaxIds * sizeof(DWORD)) > (ProcessData->CsrSectionViewSize - Offset)
-        || Offset & (sizeof(DWORD) - 1))
-    {
+    if (!Win32CsrValidateBuffer(ProcessData, Buffer, Request->Data.GetProcessListRequest.nMaxIds, sizeof(DWORD)))
         return STATUS_ACCESS_VIOLATION;
-    }
 
     Status = ConioConsoleFromProcessData(ProcessData, &Console);
     if (! NT_SUCCESS(Status))

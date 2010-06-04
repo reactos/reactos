@@ -678,7 +678,6 @@ CSR_API(CsrPeekConsoleInput)
 {
     NTSTATUS Status;
     PCSRSS_CONSOLE Console;
-    DWORD Size;
     DWORD Length;
     PLIST_ENTRY CurrentItem;
     PINPUT_RECORD InputRecord;
@@ -698,10 +697,8 @@ CSR_API(CsrPeekConsoleInput)
 
     InputRecord = Request->Data.PeekConsoleInputRequest.InputRecord;
     Length = Request->Data.PeekConsoleInputRequest.Length;
-    Size = Length * sizeof(INPUT_RECORD);
 
-    if (((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
-            || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
@@ -749,7 +746,6 @@ CSR_API(CsrWriteConsoleInput)
     PCSRSS_CONSOLE Console;
     NTSTATUS Status;
     DWORD Length;
-    DWORD Size;
     DWORD i;
     ConsoleInput* Record;
 
@@ -766,10 +762,8 @@ CSR_API(CsrWriteConsoleInput)
 
     InputRecord = Request->Data.WriteConsoleInputRequest.InputRecord;
     Length = Request->Data.WriteConsoleInputRequest.Length;
-    Size = Length * sizeof(INPUT_RECORD);
 
-    if (((PVOID)InputRecord < ProcessData->CsrSectionViewBase)
-            || (((ULONG_PTR)InputRecord + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    if (!Win32CsrValidateBuffer(ProcessData, InputRecord, Length, sizeof(INPUT_RECORD)))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;

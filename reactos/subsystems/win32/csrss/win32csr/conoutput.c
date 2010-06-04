@@ -1084,7 +1084,6 @@ CSR_API(CsrWriteConsoleOutput)
     COORD BufferSize;
     NTSTATUS Status;
     PBYTE Ptr;
-    DWORD PSize;
 
     DPRINT("CsrWriteConsoleOutput\n");
 
@@ -1101,12 +1100,10 @@ CSR_API(CsrWriteConsoleOutput)
     Console = Buff->Header.Console;
 
     BufferSize = Request->Data.WriteConsoleOutputRequest.BufferSize;
-    PSize = BufferSize.X * BufferSize.Y * sizeof(CHAR_INFO);
     BufferCoord = Request->Data.WriteConsoleOutputRequest.BufferCoord;
     CharInfo = Request->Data.WriteConsoleOutputRequest.CharInfo;
-    if (((PVOID)CharInfo < ProcessData->CsrSectionViewBase) ||
-            (((ULONG_PTR)CharInfo + PSize) >
-             ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    if (!Win32CsrValidateBuffer(ProcessData, CharInfo,
+                                BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_ACCESS_VIOLATION;
@@ -1395,8 +1392,6 @@ CSR_API(CsrReadConsoleOutput)
     PCHAR_INFO CharInfo;
     PCHAR_INFO CurCharInfo;
     PCSRSS_SCREEN_BUFFER Buff;
-    DWORD Size;
-    DWORD Length;
     DWORD SizeX, SizeY;
     NTSTATUS Status;
     COORD BufferSize;
@@ -1423,14 +1418,12 @@ CSR_API(CsrReadConsoleOutput)
     ReadRegion = Request->Data.ReadConsoleOutputRequest.ReadRegion;
     BufferSize = Request->Data.ReadConsoleOutputRequest.BufferSize;
     BufferCoord = Request->Data.ReadConsoleOutputRequest.BufferCoord;
-    Length = BufferSize.X * BufferSize.Y;
-    Size = Length * sizeof(CHAR_INFO);
 
     /* FIXME: Is this correct? */
     CodePage = ProcessData->Console->OutputCodePage;
 
-    if (((PVOID)CharInfo < ProcessData->CsrSectionViewBase)
-            || (((ULONG_PTR)CharInfo + Size) > ((ULONG_PTR)ProcessData->CsrSectionViewBase + ProcessData->CsrSectionViewSize)))
+    if (!Win32CsrValidateBuffer(ProcessData, CharInfo,
+                                BufferSize.X * BufferSize.Y, sizeof(CHAR_INFO)))
     {
         ConioUnlockScreenBuffer(Buff);
         return STATUS_ACCESS_VIOLATION;
