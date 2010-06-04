@@ -2300,8 +2300,8 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
             PM128A Xmm13;
             PM128A Xmm14;
             PM128A Xmm15;
-        };
-    };
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME;
 
     union {
         PULONG64 IntegerContext[16];
@@ -2322,8 +2322,8 @@ typedef struct _KNONVOLATILE_CONTEXT_POINTERS {
             PULONG64 R13;
             PULONG64 R14;
             PULONG64 R15;
-        };
-    };
+        } DUMMYSTRUCTNAME;
+    } DUMMYUNIONNAME2;
 } KNONVOLATILE_CONTEXT_POINTERS, *PKNONVOLATILE_CONTEXT_POINTERS;
 
 #define RUNTIME_FUNCTION_INDIRECT 0x1
