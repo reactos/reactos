@@ -590,10 +590,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     TempPte = ValidKernelPte;
     do
     {
-        //
-        // Allocate a page
-        //
-        PageFrameNumber = MmAllocPage(MC_NPPOOL);
+        /* Allocate a page */
+        PageFrameNumber = MiRemoveAnyPage(0);
         
         /* Get the PFN entry for it and fill it out */
         Pfn1 = MiGetPfnEntry(PageFrameNumber);
