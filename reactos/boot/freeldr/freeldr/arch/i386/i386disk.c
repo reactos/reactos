@@ -51,10 +51,32 @@ BOOLEAN DiskResetController(ULONG DriveNumber)
 
 BOOLEAN DiskInt13ExtensionsSupported(ULONG DriveNumber)
 {
+	static ULONG	LastDriveNumber = 0xffffffff;
+	static BOOLEAN	LastSupported;
 	REGS	RegsIn;
 	REGS	RegsOut;
 
-	DPRINTM(DPRINT_DISK, "DiskInt13ExtensionsSupported()\n");
+	DPRINTM(DPRINT_DISK, "PcDiskInt13ExtensionsSupported()\n");
+
+	if (DriveNumber == LastDriveNumber)
+	{
+		DPRINTM(DPRINT_DISK, "Using cached value %s for drive 0x%x\n", LastSupported ? "TRUE" : "FALSE", DriveNumber);
+		return LastSupported;
+	}
+
+	// Some BIOSes report that extended disk access functions are not supported
+	// when booting from a CD (e.g. Phoenix BIOS v6.00PG and Insyde BIOS shipping
+	// with Intel Macs). Therefore we just return TRUE if we're booting from a CD -
+	// we can assume that all El Torito capable BIOSes support INT 13 extensions.
+	// We simply detect whether we're booting from CD by checking whether the drive
+	// number is >= 0x8A. It's 0x90 on the Insyde BIOS, and 0x9F on most other BIOSes.
+	if (DriveNumber >= 0x8A)
+	{
+		LastSupported = TRUE;
+		return TRUE;
+	}
+
+	LastDriveNumber = DriveNumber;
 
 	// IBM/MS INT 13 Extensions - INSTALLATION CHECK
 	// AH = 41h
@@ -90,35 +112,27 @@ BOOLEAN DiskInt13ExtensionsSupported(ULONG DriveNumber)
 	if (!INT386_SUCCESS(RegsOut))
 	{
 		// CF set on error (extensions not supported)
+		LastSupported = FALSE;
 		return FALSE;
 	}
 
 	if (RegsOut.w.bx != 0xAA55)
 	{
 		// BX = AA55h if installed
+		LastSupported = FALSE;
 		return FALSE;
 	}
 
-	// Note:
-	// The original check is too strict because some BIOSes report that
-	// extended disk access functions are not suported when booting
-	// from a CD (e.g. Phoenix BIOS v6.00PG). Argh!
-#if 0
 	if (!(RegsOut.w.cx & 0x0001))
 	{
 		// CX = API subset support bitmap
 		// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
-		return FALSE;
-	}
-#endif
-
-	// Use this relaxed check instead
-	if (RegsOut.w.cx == 0x0000)
-	{
-		// CX = API subset support bitmap
+		DbgPrint("Suspicious API subset support bitmap 0x%x on device 0x%lx\n", RegsOut.w.cx, DriveNumber);
+		LastSupported = FALSE;
 		return FALSE;
 	}
 
+	LastSupported = TRUE;
 	return TRUE;
 }
 

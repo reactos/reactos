@@ -264,72 +264,6 @@ static BOOLEAN PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNu
 	return TRUE;
 }
 
-static BOOLEAN PcDiskInt13ExtensionsSupported(ULONG DriveNumber)
-{
-	static ULONG	LastDriveNumber = 0xffffffff;
-	static BOOLEAN	LastSupported;
-	REGS	RegsIn;
-	REGS	RegsOut;
-
-	DPRINTM(DPRINT_DISK, "PcDiskInt13ExtensionsSupported()\n");
-
-	if (DriveNumber == LastDriveNumber)
-	{
-		DPRINTM(DPRINT_DISK, "Using cached value %s for drive 0x%x\n", LastSupported ? "TRUE" : "FALSE", DriveNumber);
-		return LastSupported;
-	}
-
-	LastDriveNumber = DriveNumber;
-
-	// IBM/MS INT 13 Extensions - INSTALLATION CHECK
-	// AH = 41h
-	// BX = 55AAh
-	// DL = drive (80h-FFh)
-	// Return:
-	// CF set on error (extensions not supported)
-	// AH = 01h (invalid function)
-	// CF clear if successful
-	// BX = AA55h if installed
-	// AH = major version of extensions
-	// 01h = 1.x
-	// 20h = 2.0 / EDD-1.0
-	// 21h = 2.1 / EDD-1.1
-	// 30h = EDD-3.0
-	// AL = internal use
-	// CX = API subset support bitmap
-	// DH = extension version (v2.0+ ??? -- not present in 1.x)
-	//
-	// Bitfields for IBM/MS INT 13 Extensions API support bitmap
-	// Bit 0, extended disk access functions (AH=42h-44h,47h,48h) supported
-	// Bit 1, removable drive controller functions (AH=45h,46h,48h,49h,INT 15/AH=52h) supported
-	// Bit 2, enhanced disk drive (EDD) functions (AH=48h,AH=4Eh) supported
-	//        extended drive parameter table is valid
-	// Bits 3-15 reserved
-	RegsIn.b.ah = 0x41;
-	RegsIn.w.bx = 0x55AA;
-	RegsIn.b.dl = DriveNumber;
-
-	// Reset the disk controller
-	Int386(0x13, &RegsIn, &RegsOut);
-
-	if (!INT386_SUCCESS(RegsOut))
-	{
-		// CF set on error (extensions not supported)
-		LastSupported = FALSE;
-		return FALSE;
-	}
-
-	if (RegsOut.w.bx != 0xAA55)
-	{
-		// BX = AA55h if installed
-		LastSupported = FALSE;
-		return FALSE;
-	}
-
-	LastSupported = TRUE;
-	return TRUE;
-}
-
 BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer)
 {
 
@@ -340,9 +274,9 @@ BOOLEAN PcDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULON
 	// If so then check to see if Int13 extensions work
 	// If they do then use them, otherwise default back to BIOS calls
 	//
-	if ((DriveNumber >= 0x80) && PcDiskInt13ExtensionsSupported(DriveNumber))
+	if ((DriveNumber >= 0x80) && DiskInt13ExtensionsSupported(DriveNumber))
 	{
-		DPRINTM(DPRINT_DISK, "Using Int 13 Extensions for read. PcDiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, PcDiskInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE");
+		DPRINTM(DPRINT_DISK, "Using Int 13 Extensions for read. DiskInt13ExtensionsSupported(%d) = %s\n", DriveNumber, DiskInt13ExtensionsSupported(DriveNumber) ? "TRUE" : "FALSE");
 
 		//
 		// LBA is easy, nothing to calculate
