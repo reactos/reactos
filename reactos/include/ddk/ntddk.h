@@ -1043,6 +1043,8 @@ typedef struct _PHYSICAL_COUNTER_RESOURCE_LIST {
   PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR Descriptors[ANYSIZE_ARRAY];
 } PHYSICAL_COUNTER_RESOURCE_LIST, *PPHYSICAL_COUNTER_RESOURCE_LIST;
 
+#endif // 0
+
 typedef VOID
 (NTAPI *PciPin2Line)(
   IN struct _BUS_HANDLER *BusHandler,
@@ -1079,6 +1081,8 @@ typedef struct _PCIBUSDATA {
   PCI_SLOT_NUMBER ParentSlot;
   PVOID Reserved[4];
 } PCIBUSDATA, *PPCIBUSDATA;
+
+#if 0 // Someone (testbot? RosBE for linux?) doesn't like too many types it seems...
 
 #ifndef _PCIINTRF_X_
 #define _PCIINTRF_X_
