@@ -36,19 +36,6 @@
 					<file>trap.S</file>
 				</directory>
 			</if>
-			<if property="ARCH" value="amd64">
-				<define name="_X86BIOS_" />
-				<!-- include base="x86emu">.</include -->
-				<directory name="amd64">
-					<file>x86bios.c</file>
-					<!-- file>halinit.c</file -->
-					<!-- file>irq.S</file -->
-					<!-- file>misc.c</file -->
-					<!-- file>apic.c</file -->
-					<file>systimer.S</file>
-					<!-- file>usage.c</file -->
-		</directory>
-			</if>
 		</directory>
 		<directory name="include">
 			<pch>hal.h</pch>

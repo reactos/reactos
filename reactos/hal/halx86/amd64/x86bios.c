@@ -12,7 +12,7 @@
 //#define NDEBUG
 #include <debug.h>
 
-#include "x86emu.h"
+//#include "x86emu.h"
 
 /* This page serves as fallback for pages used by Mm */
 #define DEFAULT_PAGE 0x21
@@ -216,6 +216,7 @@ x86BiosWriteMemory(
     return STATUS_SUCCESS;
 }
 
+#if 0
 BOOLEAN
 NTAPI
 x86BiosCall(
@@ -261,11 +262,13 @@ x86BiosCall(
 
     return TRUE;
 }
+#endif
 
 BOOLEAN
 NTAPI
 HalpBiosDisplayReset(VOID)
 {
+#if 0
     X86_BIOS_REGISTERS Registers;
     ULONG OldEflags;
 
@@ -283,7 +286,7 @@ HalpBiosDisplayReset(VOID)
 
     /* Restore previous flags */
     __writeeflags(OldEflags);
-
+#endif
     return TRUE;
 }
 
