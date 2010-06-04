@@ -446,6 +446,29 @@ extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
 //
+// Creates a valid kernel PTE with the given protection
+//
+FORCEINLINE
+VOID
+MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
+                     IN PMMPTE MappingPte,
+                     IN ULONG ProtectionMask,
+                     IN PFN_NUMBER PageFrameNumber)
+{
+    /* Only valid for kernel, non-session PTEs */
+    ASSERT(MappingPte > MiHighestUserPte);
+    ASSERT(!MI_IS_SESSION_PTE(MappingPte));
+    ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
+    
+    /* Start fresh */
+    *NewPte = ValidKernelPte;
+    
+    /* Set the protection and page */
+    NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
+    NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+}
+
+//
 // Returns if the page is physically resident (ie: a large page)
 // FIXFIX: CISC/x86 only?
 //

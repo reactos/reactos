@@ -107,7 +107,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     PFN_NUMBER StackPtes, StackPages;
     PMMPTE PointerPte, StackPte;
     PVOID BaseAddress;
-    MMPTE TempPte;
+    MMPTE TempPte, InvalidPte;
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
     ULONG i;
@@ -151,13 +151,12 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     if (GuiStack) PointerPte += BYTES_TO_PAGES(KERNEL_LARGE_STACK_SIZE -
                                                KERNEL_LARGE_STACK_COMMIT);
     
-    //
-    // Setup the template stack PTE
-    //
-    TempPte = ValidKernelPte;
-    MI_MAKE_LOCAL_PAGE(&TempPte);
-    MI_MAKE_DIRTY_PAGE(&TempPte);
-    TempPte.u.Hard.PageFrameNumber = 0;
+
+    /* Setup the temporary invalid PTE */
+    MI_MAKE_SOFTWARE_PTE(&InvalidPte, MM_NOACCESS);
+
+    /* Setup the template stack PTE */
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte + 1, MM_READWRITE, 0);
     
     //
     // Acquire the PFN DB lock
@@ -174,8 +173,10 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         //
         PointerPte++;
         
-        /* Get a page */
+        /* Get a page and write the current invalid PTE */
         PageFrameIndex = MiRemoveAnyPage(0);
+        ASSERT(InvalidPte.u.Hard.Valid == 0);
+        *PointerPte = InvalidPte;
         
         /* Initialize the PFN entry for this page */
         MiInitializePfn(PageFrameIndex, PointerPte, 1);
@@ -210,7 +211,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     PMMPTE LimitPte, NewLimitPte, LastPte;
     PFN_NUMBER StackPages;
     KIRQL OldIrql;
-    MMPTE TempPte;
+    MMPTE TempPte, InvalidPte;
     PFN_NUMBER PageFrameIndex;
     
     //
@@ -251,13 +252,8 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     LimitPte--;
     StackPages = (LimitPte - NewLimitPte + 1);
     
-    //
-    // Setup the template stack PTE
-    //
-    TempPte = ValidKernelPte;
-    MI_MAKE_LOCAL_PAGE(&TempPte);
-    MI_MAKE_DIRTY_PAGE(&TempPte);
-    TempPte.u.Hard.PageFrameNumber = 0;
+    /* Setup the temporary invalid PTE */
+    MI_MAKE_SOFTWARE_PTE(&InvalidPte, MM_NOACCESS);
     
     //
     // Acquire the PFN DB lock
@@ -269,14 +265,18 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     //
     while (LimitPte >= NewLimitPte)
     {
-        /* Get a page */
+        /* Get a page and write the current invalid PTE */
         PageFrameIndex = MiRemoveAnyPage(0);
+        ASSERT(InvalidPte.u.Hard.Valid == 0);
+        *LimitPte = InvalidPte;
         
         /* Initialize the PFN entry for this page */
         MiInitializePfn(PageFrameIndex, LimitPte, 1);
         
+        /* Setup the template stack PTE */
+        MI_MAKE_HARDWARE_PTE(&TempPte, LimitPte, MM_READWRITE, PageFrameIndex);
+        
         /* Write the valid PTE */
-        TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
         ASSERT(LimitPte->u.Hard.Valid == 0);
         ASSERT(TempPte.u.Hard.Valid == 1);
         *LimitPte-- = TempPte;
