@@ -105,11 +105,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     ASSERT(PointerPte->u.Hard.Valid == 0);
     
-    //
-    // Get a page
-    //
-    PageFrameNumber = MmAllocPage(MC_PPOOL);
-    DPRINT("New pool page: %lx\n", PageFrameNumber);
+    /* Get a page */
+    PageFrameNumber = MiRemoveAnyPage(0);
+    DPRINT1("New pool page: %lx\n", PageFrameNumber);
+    
+    /* Initialize it */
+    MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
     
     //
     // Release PFN lock
@@ -124,11 +125,8 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Shouldn't see faults for user PTEs yet */
     ASSERT(PointerPte > MiHighestUserPte);
     
-    //
-    // Build the PTE
-    //
-    TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+    /* Build the PTE */
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, PointerPte->u.Soft.Protection, PageFrameNumber);
     ASSERT(TempPte.u.Hard.Valid == 1);
     ASSERT(PointerPte->u.Hard.Valid == 0);
     *PointerPte = TempPte;
@@ -137,7 +135,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     // It's all good now
     //
-    DPRINT("Paged pool page has now been paged in\n");
+    DPRINT1("Paged pool page has now been paged in\n");
     return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
