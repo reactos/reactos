@@ -65,7 +65,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* This seems to be making the assumption that one PDE is one page long */
-        ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+        C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
         
         //
         // Copy it from our double-mapped system page directory

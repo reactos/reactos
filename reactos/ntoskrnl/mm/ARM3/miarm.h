@@ -708,6 +708,14 @@ MiInitializePfn(
 
 VOID
 NTAPI
+MiInitializePfnForOtherProcess(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN PFN_NUMBER PteFrame
+);
+
+VOID
+NTAPI
 MiDecrementShareCount(
     IN PMMPFN Pfn1,
     IN PFN_NUMBER PageFrameIndex
