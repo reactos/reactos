@@ -157,6 +157,52 @@ KiRundownThread(IN PKTHREAD Thread)
 #endif
 }
 
+/* Registers an interrupt handler with an IDT vector */
+FORCEINLINE
+VOID
+KeRegisterInterruptHandler(IN ULONG Vector,
+                           IN PVOID Handler)
+{                           
+    UCHAR Entry;
+    PKIDTENTRY64 Idt;
+
+    /* Get the entry from the HAL */
+    Entry = HalVectorToIDTEntry(Vector);
+
+    /* Now set the data */
+    Idt = &KeGetPcr()->IdtBase[Entry];
+    Idt->OffsetLow = (ULONG_PTR)Handler & 0xffff;
+    Idt->OffsetMiddle = ((ULONG_PTR)Handler >> 16) & 0xffff;
+    Idt->OffsetHigh = (ULONG_PTR)Handler >> 32;
+    Idt->Selector = KGDT64_R0_CODE;
+    Idt->IstIndex = 0;
+    Idt->Type = 0x0e;
+    Idt->Dpl = 0;
+    Idt->Present = 1;
+    Idt->Reserved0 = 0;
+    Idt->Reserved1 = 0;
+}
+
+/* Returns the registered interrupt handler for a given IDT vector */
+FORCEINLINE
+PVOID
+KeQueryInterruptHandler(IN ULONG Vector)
+{
+    UCHAR Entry;
+    PKIDTENTRY64 Idt;
+
+    /* Get the entry from the HAL */
+    Entry = HalVectorToIDTEntry(Vector);
+
+    /* Get the IDT entry */
+    Idt = &KeGetPcr()->IdtBase[Entry];
+
+    /* Return the address */
+    return (PVOID)((ULONG64)Idt->OffsetHigh << 32 | 
+                   (ULONG64)Idt->OffsetMiddle << 16 | 
+                   (ULONG64)Idt->OffsetLow);
+}
+
 VOID
 FORCEINLINE
 KiEndInterrupt(IN KIRQL Irql,
