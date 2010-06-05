@@ -791,7 +791,7 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
         Pfn1->u4.PteFrame = PteFrame;
         
         /* Increase its share count so we don't get rid of it */    
-        Pfn1 = MiGetPfnEntry(PageFrameIndex);
+        Pfn1 = MiGetPfnEntry(PteFrame);
         Pfn1->u2.ShareCount++;
     }
 }
