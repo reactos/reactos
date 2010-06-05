@@ -26,7 +26,7 @@
 	<file>guiconsole.c</file>
 	<file>handle.c</file>
 	<file>harderror.c</file>
-	<file>history.c</file>
+	<file>lineinput.c</file>
 	<file>tuiconsole.c</file>
 	<file>appswitch.c</file>
 	<file>win32csr.rc</file>

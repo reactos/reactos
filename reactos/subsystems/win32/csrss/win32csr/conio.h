@@ -80,6 +80,7 @@ typedef struct tagCSRSS_CONSOLE
   WORD LineSize;                        /* current size of line */
   WORD LinePos;                         /* current position within line */
   BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
+  BOOLEAN LineUpPressed;
   LIST_ENTRY HistoryBuffers;
   WORD HistoryBufferSize;               /* size for newly created history buffers */
   WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
@@ -220,9 +221,8 @@ CSR_API(CsrGetAllConsoleAliasesLength);
 CSR_API(CsrGetConsoleAliasesExes);
 CSR_API(CsrGetConsoleAliasesExesLength);
 
-/* history.c */
+/* lineinput.c */
 struct tagHISTORY_BUFFER;
-VOID FASTCALL HistoryAddEntry(PCSRSS_CONSOLE Console);
 VOID FASTCALL HistoryDeleteBuffer(struct tagHISTORY_BUFFER *Hist);
 CSR_API(CsrGetCommandHistoryLength);
 CSR_API(CsrGetCommandHistory);
@@ -230,5 +230,6 @@ CSR_API(CsrExpungeCommandHistory);
 CSR_API(CsrSetHistoryNumberCommands);
 CSR_API(CsrGetHistoryInfo);
 CSR_API(CsrSetHistoryInfo);
+VOID FASTCALL LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent);
 
 /* EOF */

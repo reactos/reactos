@@ -22,162 +22,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID
-ConioLineInputSetPos(PCSRSS_CONSOLE Console, UINT Pos)
-{
-    if (Pos != Console->LinePos && Console->Mode & ENABLE_ECHO_INPUT)
-    {
-        PCSRSS_SCREEN_BUFFER Buffer = Console->ActiveBuffer;
-        UINT OldCursorX = Buffer->CurrentX;
-        UINT OldCursorY = Buffer->CurrentY;
-        INT XY = OldCursorY * Buffer->MaxX + OldCursorX;
-
-        XY += (Pos - Console->LinePos);
-        if (XY < 0)
-            XY = 0;
-        else if (XY >= Buffer->MaxY * Buffer->MaxX)
-            XY = Buffer->MaxY * Buffer->MaxX - 1;
-
-        Buffer->CurrentX = XY % Buffer->MaxX;
-        Buffer->CurrentY = XY / Buffer->MaxX;
-        ConioSetScreenInfo(Console, Buffer, OldCursorX, OldCursorY);
-    }
-
-    Console->LinePos = Pos;
-}
-
-static VOID
-ConioLineInputEdit(PCSRSS_CONSOLE Console, UINT NumToDelete, UINT NumToInsert, WCHAR *Insertion)
-{
-    UINT Pos = Console->LinePos;
-    UINT NewSize = Console->LineSize - NumToDelete + NumToInsert;
-    INT i;
-
-    /* Make sure there's always enough room for ending \r\n */
-    if (NewSize + 2 > Console->LineMaxSize)
-        return;
-
-    memmove(&Console->LineBuffer[Pos + NumToInsert],
-            &Console->LineBuffer[Pos + NumToDelete],
-            (Console->LineSize - (Pos + NumToDelete)) * sizeof(WCHAR));
-    memcpy(&Console->LineBuffer[Pos], Insertion, NumToInsert * sizeof(WCHAR));
-
-    if (Console->Mode & ENABLE_ECHO_INPUT)
-    {
-        for (i = Pos; i < NewSize; i++)
-        {
-            CHAR AsciiChar;
-            WideCharToMultiByte(Console->OutputCodePage, 0,
-                                &Console->LineBuffer[i], 1,
-                                &AsciiChar, 1, NULL, NULL);
-            ConioWriteConsole(Console, Console->ActiveBuffer, &AsciiChar, 1, TRUE);
-        }
-        for (; i < Console->LineSize; i++)
-        {
-            ConioWriteConsole(Console, Console->ActiveBuffer, " ", 1, TRUE);
-        }
-        Console->LinePos = i;
-    }
-
-    Console->LineSize = NewSize;
-    ConioLineInputSetPos(Console, Pos + NumToInsert);
-}
-
-static VOID
-ConioLineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
-{
-    UINT Pos = Console->LinePos;
-    switch (KeyEvent->wVirtualKeyCode)
-    {
-    case VK_ESCAPE:
-        /* Clear entire line */
-        ConioLineInputSetPos(Console, 0);
-        ConioLineInputEdit(Console, Console->LineSize, 0, NULL);
-        return;
-    case VK_HOME:
-        /* Move to start of line. With ctrl, erase everything left of cursor */
-        ConioLineInputSetPos(Console, 0);
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-            ConioLineInputEdit(Console, Pos, 0, NULL);
-        return;
-    case VK_END:
-        /* Move to end of line. With ctrl, erase everything right of cursor */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-            ConioLineInputEdit(Console, Console->LineSize - Pos, 0, NULL);
-        else
-            ConioLineInputSetPos(Console, Console->LineSize);
-        return;
-    case VK_LEFT:
-        /* Move left. With ctrl, move to beginning of previous word */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-        {
-            while (Pos > 0 && Console->LineBuffer[Pos - 1] == L' ') Pos--;
-            while (Pos > 0 && Console->LineBuffer[Pos - 1] != L' ') Pos--;
-        }
-        else
-        {
-            Pos -= (Pos > 0);
-        }
-        ConioLineInputSetPos(Console, Pos);
-        return;
-    case VK_RIGHT:
-        /* Move right. With ctrl, move to beginning of next word */
-        if (KeyEvent->dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))
-        {
-            while (Pos < Console->LineSize && Console->LineBuffer[Pos] != L' ') Pos++;
-            while (Pos < Console->LineSize && Console->LineBuffer[Pos] == L' ') Pos++;
-        }
-        else
-        {
-            Pos += (Pos < Console->LineSize);
-        }
-        ConioLineInputSetPos(Console, Pos);
-        return;
-    case VK_DELETE:
-        /* Remove character to right of cursor */
-        if (Pos != Console->LineSize)
-            ConioLineInputEdit(Console, 1, 0, NULL);
-        return;
-    case VK_F6:
-        /* Insert a ^Z character */
-        KeyEvent->uChar.UnicodeChar = 26;
-        break;
-    }
-    
-    if (KeyEvent->uChar.UnicodeChar == L'\b' && Console->Mode & ENABLE_PROCESSED_INPUT)
-    {
-        /* backspace handling - if processed input enabled then we handle it here
-         * otherwise we treat it like a normal char. */
-        if (Pos > 0)
-        {
-            ConioLineInputSetPos(Console, Pos - 1);
-            ConioLineInputEdit(Console, 1, 0, NULL);
-        }
-    }
-    else if (KeyEvent->uChar.UnicodeChar == L'\r')
-    {
-        HistoryAddEntry(Console);
-
-        ConioLineInputSetPos(Console, Console->LineSize);
-        Console->LineBuffer[Console->LineSize++] = L'\r';
-        if (Console->Mode & ENABLE_ECHO_INPUT)
-            ConioWriteConsole(Console, Console->ActiveBuffer, "\r", 1, TRUE);
-        if (Console->Mode & ENABLE_PROCESSED_INPUT)
-        {
-            Console->LineBuffer[Console->LineSize++] = L'\n';
-            if (Console->Mode & ENABLE_ECHO_INPUT)
-                ConioWriteConsole(Console, Console->ActiveBuffer, "\n", 1, TRUE);
-        }
-        Console->LineComplete = TRUE;
-        Console->LinePos = 0;
-    }
-    else if (KeyEvent->uChar.UnicodeChar != L'\0')
-    {
-        /* Normal character */
-        ConioLineInputEdit(Console, 0, 1, &KeyEvent->uChar.UnicodeChar);
-    }
-}
-
 CSR_API(CsrReadConsole)
 {
     PLIST_ENTRY CurrentEntry;
@@ -224,6 +68,7 @@ CSR_API(CsrReadConsole)
             Console->LineComplete = FALSE;
             Console->LineSize = 0;
             Console->LinePos = 0;
+            Console->LineUpPressed = FALSE;
         }
 
         /* If we don't have a complete line yet, process the pending input */
@@ -241,7 +86,7 @@ CSR_API(CsrReadConsole)
             if (KEY_EVENT == Input->InputEvent.EventType
                     && Input->InputEvent.Event.KeyEvent.bKeyDown)
             {
-                ConioLineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
+                LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
             }
             HeapFree(Win32CsrApiHeap, 0, Input);
         }
