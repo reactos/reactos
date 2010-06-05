@@ -270,7 +270,7 @@ BOOL WINAPI SetCaretPos( INT x, INT y )
         }
     }
     SERVER_END_REQ;
-    if (ret && !hidden)
+    if (ret && !hidden && (x != r.left || y != r.top))
     {
         if (old_state) CARET_DisplayCaret( hwnd, &r );
         r.right += x - r.left;

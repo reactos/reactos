@@ -1830,6 +1830,43 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
     return TRUE;
 }
 
+/* copy an icon bitmap, even when it can't be selected into a DC */
+/* helper for CreateIconIndirect */
+static void stretch_blt_icon( HDC hdc_dst, int dst_x, int dst_y, int dst_width, int dst_height,
+                              HBITMAP src, int width, int height )
+{
+    HDC hdc = CreateCompatibleDC( 0 );
+
+    if (!SelectObject( hdc, src ))  /* do it the hard way */
+    {
+        BITMAPINFO *info;
+        void *bits;
+
+        if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) return;
+        info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        info->bmiHeader.biWidth = width;
+        info->bmiHeader.biHeight = height;
+        info->bmiHeader.biPlanes = GetDeviceCaps( hdc_dst, PLANES );
+        info->bmiHeader.biBitCount = GetDeviceCaps( hdc_dst, BITSPIXEL );
+        info->bmiHeader.biCompression = BI_RGB;
+        info->bmiHeader.biSizeImage = height * get_dib_width_bytes( width, info->bmiHeader.biBitCount );
+        info->bmiHeader.biXPelsPerMeter = 0;
+        info->bmiHeader.biYPelsPerMeter = 0;
+        info->bmiHeader.biClrUsed = 0;
+        info->bmiHeader.biClrImportant = 0;
+        bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage );
+        if (bits && GetDIBits( hdc, src, 0, height, bits, info, DIB_RGB_COLORS ))
+            StretchDIBits( hdc_dst, dst_x, dst_y, dst_width, dst_height,
+                           0, 0, width, height, bits, info, DIB_RGB_COLORS, SRCCOPY );
+
+        HeapFree( GetProcessHeap(), 0, bits );
+        HeapFree( GetProcessHeap(), 0, info );
+    }
+    else StretchBlt( hdc_dst, dst_x, dst_y, dst_width, dst_height, hdc, 0, 0, width, height, SRCCOPY );
+
+    DeleteDC( hdc );
+}
+
 /**********************************************************************
  *		CreateIconIndirect (USER32.@)
  */
@@ -1839,7 +1876,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
     HICON hObj;
     HBITMAP color = 0, mask;
     int width, height;
-    HDC src, dst;
+    HDC hdc;
 
     TRACE("color %p, mask %p, hotspot %ux%u, fIcon %d\n",
            iconinfo->hbmColor, iconinfo->hbmMask,
@@ -1875,28 +1912,22 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         mask = CreateBitmap( width, height, 1, 1, NULL );
     }
 
-    src = CreateCompatibleDC( 0 );
-    dst = CreateCompatibleDC( 0 );
-
-    SelectObject( src, iconinfo->hbmMask );
-    SelectObject( dst, mask );
-    StretchBlt( dst, 0, 0, width, height, src, 0, 0, bmpAnd.bmWidth, bmpAnd.bmHeight, SRCCOPY );
+    hdc = CreateCompatibleDC( 0 );
+    SelectObject( hdc, mask );
+    stretch_blt_icon( hdc, 0, 0, width, height, iconinfo->hbmMask, bmpAnd.bmWidth, bmpAnd.bmHeight );
 
     if (color)
     {
-        SelectObject( src, iconinfo->hbmColor );
-        SelectObject( dst, color );
-        BitBlt( dst, 0, 0, width, height, src, 0, 0, SRCCOPY );
+        SelectObject( hdc, color );
+        stretch_blt_icon( hdc, 0, 0, width, height, iconinfo->hbmColor, width, height );
     }
     else if (iconinfo->hbmColor)
     {
-        SelectObject( src, iconinfo->hbmColor );
-        BitBlt( dst, 0, height, width, height, src, 0, 0, SRCCOPY );
+        stretch_blt_icon( hdc, 0, height, width, height, iconinfo->hbmColor, width, height );
     }
     else height /= 2;
 
-    DeleteDC( src );
-    DeleteDC( dst );
+    DeleteDC( hdc );
 
     hObj = alloc_icon_handle();
     if (hObj)

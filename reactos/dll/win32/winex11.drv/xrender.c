@@ -193,6 +193,7 @@ MAKE_FUNCPTR(FcPatternCreate)
 MAKE_FUNCPTR(FcPatternDestroy)
 MAKE_FUNCPTR(FcPatternAddInteger)
 MAKE_FUNCPTR(FcPatternAddString)
+MAKE_FUNCPTR(FcPatternGetBool)
 MAKE_FUNCPTR(FcPatternGetInteger)
 MAKE_FUNCPTR(FcPatternGetString)
 static void *fontconfig_handle;
@@ -408,6 +409,7 @@ LOAD_OPTIONAL_FUNCPTR(XRenderSetPictureTransform)
         LOAD_FUNCPTR(FcPatternDestroy);
         LOAD_FUNCPTR(FcPatternAddInteger);
         LOAD_FUNCPTR(FcPatternAddString);
+        LOAD_FUNCPTR(FcPatternGetBool);
         LOAD_FUNCPTR(FcPatternGetInteger);
         LOAD_FUNCPTR(FcPatternGetString);
 #undef LOAD_FUNCPTR
@@ -936,14 +938,17 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
             if ((match = pFcFontMatch( NULL, pattern, &result )))
             {
                 int rgba;
+                FcBool antialias;
 
+                if (pFcPatternGetBool( match, FC_ANTIALIAS, 0, &antialias ) != FcResultMatch)
+                    antialias = TRUE;
                 if (pFcPatternGetInteger( match, FC_RGBA, 0, &rgba ) == FcResultMatch)
                 {
                     FcChar8 *file;
                     if (pFcPatternGetString( match, FC_FILE, 0, &file ) != FcResultMatch) file = NULL;
 
-                    TRACE( "fontconfig returned rgba %u for font %s file %s\n",
-                         rgba, debugstr_w(plfsz->lf.lfFaceName), debugstr_a((char *)file) );
+                    TRACE( "fontconfig returned rgba %u antialias %u for font %s file %s\n",
+                           rgba, antialias, debugstr_w(plfsz->lf.lfFaceName), debugstr_a((char *)file) );
 
                     switch (rgba)
                     {
@@ -951,7 +956,7 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                     case FC_RGBA_BGR:  entry->aa_default = AA_BGR; break;
                     case FC_RGBA_VRGB: entry->aa_default = AA_VRGB; break;
                     case FC_RGBA_VBGR: entry->aa_default = AA_VBGR; break;
-                    case FC_RGBA_NONE: entry->aa_default = AA_None; break;
+                    case FC_RGBA_NONE: entry->aa_default = antialias ? AA_Grey : AA_None; break;
                     }
                 }
                 pFcPatternDestroy( match );
@@ -959,6 +964,30 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
             pFcPatternDestroy( pattern );
         }
 #endif  /* SONAME_LIBFONTCONFIG */
+
+        /* now check Xft resources */
+        {
+            char *value;
+            BOOL antialias = TRUE;
+
+            wine_tsx11_lock();
+            if ((value = XGetDefault( gdi_display, "Xft", "antialias" )))
+            {
+                if (tolower(value[0]) == 'f' || tolower(value[0]) == 'n' ||
+                    value[0] == '0' || !strcasecmp( value, "off" ))
+                    antialias = FALSE;
+            }
+            if ((value = XGetDefault( gdi_display, "Xft", "rgba" )))
+            {
+                TRACE( "Xft resource returned rgba '%s' antialias %u\n", value, antialias );
+                if (!strcmp( value, "rgb" )) entry->aa_default = AA_RGB;
+                else if (!strcmp( value, "bgr" )) entry->aa_default = AA_BGR;
+                else if (!strcmp( value, "vrgb" )) entry->aa_default = AA_VRGB;
+                else if (!strcmp( value, "vbgr" )) entry->aa_default = AA_VBGR;
+                else if (!strcmp( value, "none" )) entry->aa_default = antialias ? AA_Grey : AA_None;
+            }
+            wine_tsx11_unlock();
+        }
     }
     else
         entry->aa_default = AA_None;

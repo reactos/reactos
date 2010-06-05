@@ -309,6 +309,7 @@ HBRUSH CDECL X11DRV_SelectBrush( X11DRV_PDEVICE *physDev, HBRUSH hbrush )
 	    DeleteObject( hBitmap );
             GlobalUnlock( (HGLOBAL)logbrush.lbHatch );
 	}
+
 	break;
     }
     return hbrush;

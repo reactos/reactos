@@ -36,6 +36,7 @@
 #define PI M_PI
 #endif
 #include <string.h>
+#include <limits.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -131,10 +132,10 @@ RGNDATA *X11DRV_GetRegionData( HRGN hrgn, HDC hdc_lptodp )
         for (j = data->rdh.nCount-1; j >= 0; j--)
         {
             tmp = rect[j];
-            xrect[j].x      = tmp.left;
-            xrect[j].y      = tmp.top;
-            xrect[j].width  = tmp.right - tmp.left;
-            xrect[j].height = tmp.bottom - tmp.top;
+            xrect[j].x      = max( min( tmp.left, SHRT_MAX), SHRT_MIN);
+            xrect[j].y      = max( min( tmp.top, SHRT_MAX), SHRT_MIN);
+            xrect[j].width  = max( min( tmp.right - xrect[j].x, USHRT_MAX), 0);
+            xrect[j].height = max( min( tmp.bottom - xrect[j].y, USHRT_MAX), 0);
         }
     }
     else
@@ -142,10 +143,10 @@ RGNDATA *X11DRV_GetRegionData( HRGN hrgn, HDC hdc_lptodp )
         for (i = 0; i < data->rdh.nCount; i++)
         {
             tmp = rect[i];
-            xrect[i].x      = tmp.left;
-            xrect[i].y      = tmp.top;
-            xrect[i].width  = tmp.right - tmp.left;
-            xrect[i].height = tmp.bottom - tmp.top;
+            xrect[i].x      = max( min( tmp.left, SHRT_MAX), SHRT_MIN);
+            xrect[i].y      = max( min( tmp.top, SHRT_MAX), SHRT_MIN);
+            xrect[i].width  = max( min( tmp.right - xrect[i].x, USHRT_MAX), 0);
+            xrect[i].height = max( min( tmp.bottom - xrect[i].y, USHRT_MAX), 0);
         }
     }
     return data;

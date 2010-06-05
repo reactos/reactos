@@ -1548,19 +1548,19 @@ LRESULT NC_HandleSysCommand( HWND hwnd, WPARAM wParam, LPARAM lParam )
         break;
 
     case SC_MINIMIZE:
-        if (hwnd == GetForegroundWindow())
+        if (hwnd == GetActiveWindow())
             ShowOwnedPopups(hwnd,FALSE);
         ShowWindow( hwnd, SW_MINIMIZE );
         break;
 
     case SC_MAXIMIZE:
-        if (IsIconic(hwnd) && hwnd == GetForegroundWindow())
+        if (IsIconic(hwnd) && hwnd == GetActiveWindow())
             ShowOwnedPopups(hwnd,TRUE);
         ShowWindow( hwnd, SW_MAXIMIZE );
         break;
 
     case SC_RESTORE:
-        if (IsIconic(hwnd) && hwnd == GetForegroundWindow())
+        if (IsIconic(hwnd) && hwnd == GetActiveWindow())
             ShowOwnedPopups(hwnd,TRUE);
         ShowWindow( hwnd, SW_RESTORE );
         break;

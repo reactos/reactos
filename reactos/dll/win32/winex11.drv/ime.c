@@ -189,7 +189,7 @@ static int updateField(DWORD origLen, DWORD origOffset, DWORD currentOffset,
      return currentOffset;
 }
 
-static HIMCC updateCompStr(HIMCC old, LPWSTR compstr, DWORD len)
+static HIMCC updateCompStr(HIMCC old, LPCWSTR compstr, DWORD len)
 {
     /* we need to make sure the CompStr, CompClaus and CompAttr fields are all
      * set and correct */
@@ -923,7 +923,7 @@ BOOL WINAPI ImeSetCompositionString(HIMC hIMC, DWORD dwIndex, LPCVOID lpComp,
 
         if (dwCompLen && lpComp)
         {
-            newCompStr = updateCompStr(lpIMC->hCompStr, (LPWSTR)lpComp, dwCompLen / sizeof(WCHAR));
+            newCompStr = updateCompStr(lpIMC->hCompStr, (LPCWSTR)lpComp, dwCompLen / sizeof(WCHAR));
             ImmDestroyIMCC(lpIMC->hCompStr);
             lpIMC->hCompStr = newCompStr;
 

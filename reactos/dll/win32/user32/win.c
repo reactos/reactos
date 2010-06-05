@@ -1149,9 +1149,14 @@ HWND WIN_CreateWindowEx( CREATESTRUCTW *cs, LPCWSTR className, HINSTANCE module,
             if((cs->style & WS_VISIBLE) && IsZoomed(top_child))
             {
                 TRACE("Restoring current maximized child %p\n", top_child);
-                SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
-                ShowWindow( top_child, SW_SHOWNORMAL );
-                SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
+                if (cs->style & WS_MAXIMIZE)
+                {
+                    /* if the new window is maximized don't bother repainting */
+                    SendMessageW( top_child, WM_SETREDRAW, FALSE, 0 );
+                    ShowWindow( top_child, SW_SHOWNORMAL );
+                    SendMessageW( top_child, WM_SETREDRAW, TRUE, 0 );
+                }
+                else ShowWindow( top_child, SW_SHOWNORMAL );
             }
         }
     }

@@ -37,7 +37,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
-#include "wine/winbase16.h"
+#include "winnls.h"
 #include "user_private.h"
 #include "wine/debug.h"
 
@@ -64,6 +64,26 @@ typedef struct
     WORD            idCount;      /* How many images */
     icoICONDIRENTRY idEntries[1]; /* An entry for each image (idCount of 'em) */
 } icoICONDIR, *LPicoICONDIR;
+
+typedef struct
+{
+    WORD offset;
+    WORD length;
+    WORD flags;
+    WORD id;
+    WORD handle;
+    WORD usage;
+} NE_NAMEINFO;
+
+typedef struct
+{
+    WORD  type_id;
+    WORD  count;
+    DWORD resloader;
+} NE_TYPEINFO;
+
+#define NE_RSCTYPE_ICON        0x8003
+#define NE_RSCTYPE_GROUP_ICON  0x800e
 
 #include "poppack.h"
 

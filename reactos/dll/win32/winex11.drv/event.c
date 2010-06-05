@@ -523,7 +523,6 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
         if (IsWindowEnabled(hwnd))
         {
             HMENU hSysMenu;
-            POINT pt;
 
             if (GetClassLongW(hwnd, GCL_STYLE) & CS_NOCLOSE) return;
             hSysMenu = GetSystemMenu(hwnd, FALSE);
@@ -554,10 +553,12 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
                         break;
                 }
             }
-            /* Simulate clicking the caption Close button */
-            GetCursorPos( &pt );
-            PostMessageW( hwnd, WM_NCLBUTTONDOWN, HTCLOSE, MAKELPARAM( pt.x, pt.y ) );
-            PostMessageW( hwnd, WM_LBUTTONUP, HTCLOSE, MAKELPARAM( pt.x, pt.y ) );
+
+            /* Simulate pressing Alt+F4 */
+            keybd_event(VK_MENU, 0, 0, 0);
+            keybd_event(VK_F4, 0, 0, 0);
+            keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0);
+            keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0);
         }
     }
     else if (protocol == x11drv_atom(WM_TAKE_FOCUS))
@@ -942,6 +943,8 @@ static int get_window_wm_state( Display *display, struct x11drv_win_data *data )
 static void handle_wm_state_notify( struct x11drv_win_data *data, XPropertyEvent *event,
                                     BOOL update_window )
 {
+    DWORD style;
+
     switch(event->state)
     {
     case PropertyDelete:
@@ -967,25 +970,37 @@ static void handle_wm_state_notify( struct x11drv_win_data *data, XPropertyEvent
 
     if (!update_window || !data->managed || !data->mapped) return;
 
+    style = GetWindowLongW( data->hwnd, GWL_STYLE );
+
     if (data->iconic && data->wm_state == NormalState)  /* restore window */
     {
         data->iconic = FALSE;
         if (is_net_wm_state_maximized( event->display, data ))
         {
-            TRACE( "restoring to max %p/%lx\n", data->hwnd, data->whole_window );
-            SendMessageW( data->hwnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0 );
+            if ((style & WS_MAXIMIZEBOX) && !(style & WS_DISABLED))
+            {
+                TRACE( "restoring to max %p/%lx\n", data->hwnd, data->whole_window );
+                SendMessageW( data->hwnd, WM_SYSCOMMAND, SC_MAXIMIZE, 0 );
+            }
+            else TRACE( "not restoring to max win %p/%lx style %08x\n",
+                        data->hwnd, data->whole_window, style );
         }
-        else
+        else if (style & (WS_MINIMIZE | WS_MAXIMIZE))
         {
             TRACE( "restoring win %p/%lx\n", data->hwnd, data->whole_window );
             SendMessageW( data->hwnd, WM_SYSCOMMAND, SC_RESTORE, 0 );
         }
+        else TRACE( "not restoring win %p/%lx style %08x\n", data->hwnd, data->whole_window, style );
     }
     else if (!data->iconic && data->wm_state == IconicState)
     {
-        TRACE( "minimizing win %p/%lx\n", data->hwnd, data->whole_window );
         data->iconic = TRUE;
-        SendMessageW( data->hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0 );
+        if ((style & WS_MINIMIZEBOX) && !(style & WS_DISABLED))
+        {
+            TRACE( "minimizing win %p/%lx\n", data->hwnd, data->whole_window );
+            SendMessageW( data->hwnd, WM_SYSCOMMAND, SC_MINIMIZE, 0 );
+        }
+        else TRACE( "not minimizing win %p/%lx style %08x\n", data->hwnd, data->whole_window, style );
     }
 }
 

@@ -361,7 +361,8 @@ BOOL BIDI_Reorder(
                 LPWSTR lpOutString, /* [out] Reordered string */
                 INT uCountOut,  /* [in] Size of output buffer */
                 UINT *lpOrder, /* [out] Logical -> Visual order map */
-                WORD **lpGlyphs /* [out] reordered, mirrored, shaped glyphs to display */
+                WORD **lpGlyphs, /* [out] reordered, mirrored, shaped glyphs to display */
+                INT *cGlyphs /* [out] number of glyphs generated */
     )
 {
     WORD *chartype;
@@ -646,6 +647,8 @@ BOOL BIDI_Reorder(
 
         done += i;
     }
+    if (cGlyphs)
+        *cGlyphs = glyph_i;
 
     HeapFree(GetProcessHeap(), 0, chartype);
     HeapFree(GetProcessHeap(), 0, levels);

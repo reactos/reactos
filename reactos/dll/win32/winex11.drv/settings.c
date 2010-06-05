@@ -245,7 +245,7 @@ static BOOL write_registry_settings(const DEVMODEW *dm)
         return FALSE;
 
 #define set_value(name, data) \
-    if (RegSetValueExA(hkey, name, 0, REG_DWORD, (LPBYTE)(data), sizeof(DWORD))) \
+    if (RegSetValueExA(hkey, name, 0, REG_DWORD, (const BYTE*)(data), sizeof(DWORD))) \
         ret = FALSE
 
     set_value("DefaultSettings.BitsPerPel", &dm->dmBitsPerPel);
