@@ -763,8 +763,8 @@ ExFreePoolWithTag(IN PVOID P,
     //
     // Check for paged pool
     //
-    if (!(AllowPagedPool) && ((P >= MmPagedPoolBase) &&
-                              (P <= (PVOID)((ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize))))
+    if ((P >= MmPagedPoolBase) &&
+        (P <= (PVOID)((ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize)))
     {
         //
         // Use old allocator
