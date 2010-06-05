@@ -34,7 +34,124 @@ PKGUARDED_MUTEX ExpPagedPoolMutex;
 #define POOL_BLOCK(x, i)    (PPOOL_HEADER)((ULONG_PTR)(x) + ((i) * POOL_BLOCK_SIZE))
 #define POOL_NEXT_BLOCK(x)  POOL_BLOCK((x), (x)->BlockSize)
 #define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -(x)->PreviousSize)
-                
+
+/*
+ * Pool list access debug macros, similar to Arthur's pfnlist.c work.
+ * Microsoft actually implements similar checks in the Windows Server 2003 SP1
+ * pool code, but only for checked builds.
+ * As of Vista, however, an MSDN Blog entry by a Security Team Manager indicates
+ * that these checks are done even on retail builds, due to the increasing
+ * number of kernel-mode attacks which depend on dangling list pointers and other
+ * kinds of list-based attacks.
+ * For now, I will leave these checks on all the time, but later they are likely
+ * to be DBG-only, at least until there are enough kernel-mode security attacks
+ * against ReactOS to warrant the performance hit.
+ *
+ */
+FORCEINLINE
+PLIST_ENTRY
+ExpDecodePoolLink(IN PLIST_ENTRY Link) 
+{
+    return (PLIST_ENTRY)((ULONG_PTR)Link & ~1);
+}
+
+FORCEINLINE
+PLIST_ENTRY
+ExpEncodePoolLink(IN PLIST_ENTRY Link) 
+{
+    return (PLIST_ENTRY)((ULONG_PTR)Link | 1);
+}
+
+FORCEINLINE
+VOID
+ExpCheckPoolLinks(IN PLIST_ENTRY ListHead)
+{
+    if ((ExpDecodePoolLink(ExpDecodePoolLink(ListHead->Flink)->Blink) != ListHead) ||
+        (ExpDecodePoolLink(ExpDecodePoolLink(ListHead->Blink)->Flink) != ListHead))
+    {
+        KeBugCheckEx(BAD_POOL_HEADER,
+                     3,
+                     (ULONG_PTR)ListHead,
+                     (ULONG_PTR)ExpDecodePoolLink(ExpDecodePoolLink(ListHead->Flink)->Blink),
+                     (ULONG_PTR)ExpDecodePoolLink(ExpDecodePoolLink(ListHead->Blink)->Flink));
+    }
+}
+
+FORCEINLINE
+VOID
+ExpInitializePoolListHead(IN PLIST_ENTRY ListHead)
+{
+    ListHead->Flink = ListHead->Blink = ExpEncodePoolLink(ListHead);
+}
+
+FORCEINLINE
+BOOLEAN
+ExpIsPoolListEmpty(IN PLIST_ENTRY ListHead)
+{
+    return (ExpDecodePoolLink(ListHead->Flink) == ListHead);
+}
+
+FORCEINLINE
+VOID
+ExpRemovePoolEntryList(IN PLIST_ENTRY Entry)
+{
+    PLIST_ENTRY Blink, Flink;
+    Flink = ExpDecodePoolLink(Entry->Flink);
+    Blink = ExpDecodePoolLink(Entry->Blink);
+    Blink->Flink = ExpEncodePoolLink(Flink);
+    Flink->Blink = ExpEncodePoolLink(Blink);
+}
+    
+FORCEINLINE
+PLIST_ENTRY
+ExpRemovePoolHeadList(IN PLIST_ENTRY ListHead)
+{
+    PLIST_ENTRY Head;
+    Head = ExpDecodePoolLink(ListHead->Flink);
+    ExpRemovePoolEntryList(Head);
+    return Head;
+}
+
+FORCEINLINE
+PLIST_ENTRY
+ExpRemovePoolTailList(IN PLIST_ENTRY ListHead)
+{
+    PLIST_ENTRY Tail;
+    Tail = ExpDecodePoolLink(ListHead->Blink);
+    ExpRemovePoolEntryList(Tail);
+    return Tail;
+}
+
+FORCEINLINE
+VOID
+ExpInsertPoolTailList(IN PLIST_ENTRY ListHead,
+                      IN PLIST_ENTRY Entry)
+{
+    PLIST_ENTRY Blink;
+    ExpCheckPoolLinks(ListHead);
+    Blink = ExpDecodePoolLink(ListHead->Blink);
+    Entry->Flink = ExpEncodePoolLink(ListHead);
+    Entry->Blink = ExpEncodePoolLink(Blink);
+    Blink->Flink = ExpEncodePoolLink(Entry);
+    ListHead->Blink = ExpEncodePoolLink(Entry);
+    ExpCheckPoolLinks(ListHead);
+}
+
+FORCEINLINE
+VOID
+ExpInsertPoolHeadList(IN PLIST_ENTRY ListHead,
+                      IN PLIST_ENTRY Entry)
+{
+    PLIST_ENTRY Flink;
+    ExpCheckPoolLinks(ListHead);
+    Flink = ExpDecodePoolLink(ListHead->Blink);
+    Entry->Flink = ExpEncodePoolLink(Flink);
+    Entry->Blink = ExpEncodePoolLink(ListHead);
+    Flink->Blink = ExpEncodePoolLink(Entry);
+    ListHead->Flink = ExpEncodePoolLink(Entry);
+    ExpCheckPoolLinks(ListHead);
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
