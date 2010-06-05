@@ -733,6 +733,15 @@ MiInsertPageInFreeList(
     IN PFN_NUMBER PageFrameIndex
 );
 
+PFN_NUMBER
+NTAPI
+MiDeleteSystemPageableVm(
+    IN PMMPTE PointerPte,
+    IN PFN_NUMBER PageCount,
+    IN ULONG Flags,
+    OUT PPFN_NUMBER ValidPages
+);
+                         
 PLDR_DATA_TABLE_ENTRY
 NTAPI
 MiLookupDataTableEntry(

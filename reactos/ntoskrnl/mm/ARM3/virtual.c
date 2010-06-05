@@ -29,6 +29,102 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+PFN_NUMBER
+NTAPI
+MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
+                         IN PFN_NUMBER PageCount,
+                         IN ULONG Flags,
+                         OUT PPFN_NUMBER ValidPages)
+{                     
+    PFN_NUMBER ActualPages = 0;
+    PETHREAD CurrentThread;
+    PMMPFN Pfn1, Pfn2;
+    PFN_NUMBER PageFrameIndex, PageTableIndex;
+    KIRQL OldIrql, LockIrql;
+    ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
+    
+    /*
+     * Now we must raise to APC_LEVEL and mark the thread as owner
+     * We don't actually implement a working set pushlock, so this is only
+     * for internal consistency (and blocking APCs)
+     */
+    KeRaiseIrql(APC_LEVEL, &LockIrql);
+    CurrentThread = PsGetCurrentThread();
+    KeEnterGuardedRegion();
+    ASSERT((CurrentThread->OwnsSystemWorkingSetExclusive == 0) &&
+           (CurrentThread->OwnsSystemWorkingSetShared == 0));
+    CurrentThread->OwnsSystemWorkingSetExclusive = 1;
+                
+    /* Loop all pages */
+    while (PageCount)
+    {
+        /* Make sure there's some data about the page */
+        if (PointerPte->u.Long)
+        {
+            /* As always, only handle current ARM3 scenarios */
+            ASSERT(PointerPte->u.Soft.Prototype == 0);
+            ASSERT(PointerPte->u.Soft.Transition == 0);
+            ASSERT(PointerPte->u.Hard.Valid == 1);
+            
+            /* Normally this is one possibility -- freeing a valid page */
+            if (PointerPte->u.Hard.Valid)
+            {
+                /* Get the page PFN */
+                PageFrameIndex = PFN_FROM_PTE(PointerPte);
+                Pfn1 = MiGetPfnEntry(PageFrameIndex);
+                
+                /* Should not have any working set data yet */
+                ASSERT(Pfn1->u1.WsIndex == 0);
+                
+                /* Actual valid, legitimate, pages */
+                if (ValidPages) *ValidPages++;
+                
+                /* Get the page table entry */
+                PageTableIndex = Pfn1->u4.PteFrame;
+                DPRINT1("Page table: %lx\n", PageTableIndex);
+                Pfn2 = MiGetPfnEntry(PageTableIndex);
+                
+                /* Lock the PFN database */
+                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+                
+                /* Delete it the page */
+                MI_SET_PFN_DELETED(Pfn1);
+                MiDecrementShareCount(Pfn1, PageFrameIndex);
+                
+                /* Decrement the page table too */
+                #if 0 // ARM3: Dont't trust this yet
+                MiDecrementShareCount(Pfn2, PageTableIndex);
+                #endif
+                
+                /* Release the PFN database */
+                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+                
+                /* Destroy the PTE */
+                PointerPte->u.Long = 0;
+            }
+    
+            /* Actual legitimate pages */
+            ActualPages++;
+        }
+        
+        /* Keep going */
+        PointerPte++;
+        PageCount--;
+    }
+    
+    /* Re-enable APCs */
+    ASSERT(KeAreAllApcsDisabled() == TRUE);
+    CurrentThread->OwnsSystemWorkingSetExclusive = 0;
+    KeLeaveGuardedRegion();
+    KeLowerIrql(LockIrql);
+    
+    /* Flush the entire TLB */
+    KeFlushEntireTb(TRUE, TRUE);
+    
+    /* Done */
+    return ActualPages;
+}
+
 LONG
 MiGetExceptionInfo(IN PEXCEPTION_POINTERS ExceptionInfo,
                    OUT PBOOLEAN HaveBadAddress, 

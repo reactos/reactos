@@ -264,6 +264,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the page bit count
             //
             i = ((SizeInPages - 1) / 1024) + 1;
+            DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
             
             //
             // Check if there is enougn paged pool expansion space left
@@ -665,6 +666,11 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Now calculate the total number of pages this allocation spans
         //
         NumberOfPages = End - i + 1;
+        
+        /* Delete the actual pages */
+        PointerPte = MmPagedPoolInfo.FirstPteForPagedPool + i;
+        FreePages = MiDeleteSystemPageableVm(PointerPte, NumberOfPages, 0, NULL);
+        ASSERT(FreePages == NumberOfPages);
         
         //
         // Acquire the paged pool lock
