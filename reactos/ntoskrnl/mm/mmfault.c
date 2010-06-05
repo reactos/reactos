@@ -284,13 +284,13 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
      * can go away.
      */
     MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-    if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)) ||
+    if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
         ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)))
     {
         //
         // Hand it off to more competent hands...
         //
-        DPRINT1("ARM3 fault\n");
+        DPRINT1("ARM3 fault %p\n", MemoryArea);
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }   
 
