@@ -39,7 +39,7 @@ ConioLineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
     }
     else if (KeyEvent->uChar.UnicodeChar == L'\r')
     {
-        /* TODO: add line to history */
+        HistoryAddEntry(Console);
 
         Console->LineBuffer[Console->LineSize++] = L'\r';
         if (Console->Mode & ENABLE_ECHO_INPUT)

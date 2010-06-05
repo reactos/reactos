@@ -479,6 +479,37 @@ typedef struct
   CONSOLE_SELECTION_INFO Info;
 } CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
 
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  DWORD Length;
+} CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  PWCHAR History;
+  DWORD Length;
+} CSRSS_GET_COMMAND_HISTORY, *PCSRSS_GET_COMMAND_HISTORY;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+} CSRSS_EXPUNGE_COMMAND_HISTORY, *PCSRSS_EXPUNGE_COMMAND_HISTORY;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  DWORD NumCommands;
+} CSRSS_SET_HISTORY_NUMBER_COMMANDS, *PCSRSS_SET_HISTORY_NUMBER_COMMANDS;
+
+typedef struct
+{
+  DWORD HistoryBufferSize;
+  DWORD NumberOfHistoryBuffers;
+  DWORD dwFlags;
+} CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
+  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
@@ -554,6 +585,12 @@ typedef struct
 #define CREATE_THREAD                 (0x3F)
 #define SET_SCREEN_BUFFER_SIZE        (0x40)
 #define GET_CONSOLE_SELECTION_INFO    (0x41)
+#define GET_COMMAND_HISTORY_LENGTH    (0x42)
+#define GET_COMMAND_HISTORY           (0x43)
+#define EXPUNGE_COMMAND_HISTORY       (0x44)
+#define SET_HISTORY_NUMBER_COMMANDS   (0x45)
+#define GET_HISTORY_INFO              (0x46)
+#define SET_HISTORY_INFO              (0x47)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -629,6 +666,12 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
         CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+        CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
+        CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
+        CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
+        CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
+        CSRSS_GET_HISTORY_INFO GetHistoryInfo;
+        CSRSS_SET_HISTORY_INFO SetHistoryInfo;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

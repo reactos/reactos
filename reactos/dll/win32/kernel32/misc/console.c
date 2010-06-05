@@ -178,6 +178,37 @@ ConsoleControlDispatcher(DWORD CodeAndFlag)
     ExitThread(nExitCode);
 }
 
+/* Get the size needed to copy a string to a capture buffer, including alignment */
+static ULONG
+IntStringSize(LPCVOID String,
+              BOOL Unicode)
+{
+    ULONG Size = (Unicode ? wcslen(String) : strlen(String)) * sizeof(WCHAR);
+    return (Size + 3) & -4;
+}
+
+/* Copy a string to a capture buffer */
+static VOID
+IntCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
+                        LPCVOID String,
+                        BOOL Unicode,
+                        PUNICODE_STRING RequestString)
+{
+    ULONG Size;
+    if (Unicode)
+    {
+        Size = wcslen(String) * sizeof(WCHAR);
+        CsrCaptureMessageBuffer(CaptureBuffer, (PVOID)String, Size, (PVOID *)&RequestString->Buffer);
+    }
+    else
+    {
+        Size = strlen(String);
+        CsrAllocateMessagePointer(CaptureBuffer, Size * sizeof(WCHAR), (PVOID *)&RequestString->Buffer);
+        Size = MultiByteToWideChar(CP_ACP, 0, String, Size, RequestString->Buffer, Size * sizeof(WCHAR))
+               * sizeof(WCHAR);
+    }
+    RequestString->Length = RequestString->MaximumLength = Size;
+}
 
 /* FUNCTIONS *****************************************************************/
 
@@ -336,29 +367,56 @@ DuplicateConsoleHandle(HANDLE hConsole,
 }
 
 
-/*
- * @unimplemented (Undocumented)
- */
-DWORD
-WINAPI
-ExpungeConsoleCommandHistoryW(DWORD Unknown0)
+static BOOL
+IntExpungeConsoleCommandHistory(LPCVOID lpExeName, BOOL bUnicode)
 {
-    DPRINT1("ExpungeConsoleCommandHistoryW(0x%x) UNIMPLEMENTED!\n", Unknown0);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(EXPUNGE_COMMAND_HISTORY, CSR_CONSOLE);
+    NTSTATUS Status;
+
+    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    if (!CaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+                            &Request.Data.ExpungeCommandHistory.ExeName);
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    return TRUE;
 }
 
+/*
+ * @implemented (Undocumented)
+ */
+BOOL
+WINAPI
+ExpungeConsoleCommandHistoryW(LPCWSTR lpExeName)
+{
+    return IntExpungeConsoleCommandHistory(lpExeName, TRUE);
+}
 
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
-DWORD
+BOOL
 WINAPI
-ExpungeConsoleCommandHistoryA (DWORD Unknown0)
+ExpungeConsoleCommandHistoryA(LPCSTR lpExeName)
 {
-    DPRINT1("ExpungeConsoleCommandHistoryW(0x%x) UNIMPLEMENTED!\n", Unknown0);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntExpungeConsoleCommandHistory(lpExeName, FALSE);
 }
 
 
@@ -772,60 +830,138 @@ GetConsoleAliasesLengthA(LPSTR lpExeName)
 }
 
 
+static DWORD
+IntGetConsoleCommandHistory(LPVOID lpHistory, DWORD cbHistory, LPCVOID lpExeName, BOOL bUnicode)
+{
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(GET_COMMAND_HISTORY, CSR_CONSOLE);
+    NTSTATUS Status;
+    DWORD HistoryLength = cbHistory * (bUnicode ? 1 : sizeof(WCHAR));
+
+    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(2, IntStringSize(lpExeName, bUnicode) +
+                                                HistoryLength);
+    if (!CaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+                            &Request.Data.GetCommandHistory.ExeName);
+    Request.Data.GetCommandHistory.Length = HistoryLength;
+    CsrAllocateMessagePointer(CaptureBuffer, HistoryLength,
+                              (PVOID*)&Request.Data.GetCommandHistory.History);
+
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        CsrFreeCaptureBuffer(CaptureBuffer);
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+
+    if (bUnicode)
+    {
+        memcpy(lpHistory,
+               Request.Data.GetCommandHistory.History,
+               Request.Data.GetCommandHistory.Length);
+    }
+    else
+    {
+        WideCharToMultiByte(CP_ACP, 0,
+                            Request.Data.GetCommandHistory.History,
+                            Request.Data.GetCommandHistory.Length / sizeof(WCHAR),
+                            lpHistory,
+                            cbHistory,
+                            NULL, NULL);
+    }
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    return Request.Data.GetCommandHistory.Length;
+}
+
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 DWORD
 WINAPI
-GetConsoleCommandHistoryW(DWORD Unknown0,
-                          DWORD Unknown1,
-                          DWORD Unknown2)
+GetConsoleCommandHistoryW(LPWSTR lpHistory,
+                          DWORD cbHistory,
+                          LPCWSTR lpExeName)
 {
-    DPRINT1("GetConsoleCommandHistoryW(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, TRUE);
 }
 
-
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 DWORD
 WINAPI
-GetConsoleCommandHistoryA(DWORD Unknown0,
-                          DWORD Unknown1,
-                          DWORD Unknown2)
+GetConsoleCommandHistoryA(LPSTR lpHistory,
+                          DWORD cbHistory,
+                          LPCSTR lpExeName)
 {
-    DPRINT1("GetConsoleCommandHistoryA(0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntGetConsoleCommandHistory(lpHistory, cbHistory, lpExeName, FALSE);
 }
 
 
+static DWORD
+IntGetConsoleCommandHistoryLength(LPCVOID lpExeName, BOOL bUnicode)
+{
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(GET_COMMAND_HISTORY_LENGTH, CSR_CONSOLE);
+    NTSTATUS Status;
+
+    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    if (!CaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+                            &Request.Data.GetCommandHistoryLength.ExeName);
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+    return Request.Data.GetCommandHistoryLength.Length;
+}
+
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 DWORD
 WINAPI
-GetConsoleCommandHistoryLengthW(DWORD Unknown0)
+GetConsoleCommandHistoryLengthW(LPCWSTR lpExeName)
 {
-    DPRINT1("GetConsoleCommandHistoryLengthW(0x%x) UNIMPLEMENTED!\n", Unknown0);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntGetConsoleCommandHistoryLength(lpExeName, TRUE);
 }
 
-
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 DWORD
 WINAPI
-GetConsoleCommandHistoryLengthA(DWORD Unknown0)
+GetConsoleCommandHistoryLengthA(LPCSTR lpExeName)
 {
-    DPRINT1("GetConsoleCommandHistoryLengthA(0x%x) UNIMPLEMENTED!\n", Unknown0);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    return IntGetConsoleCommandHistoryLength(lpExeName, FALSE) / sizeof(WCHAR);
 }
+
 
 /*
  * @unimplemented
@@ -1043,19 +1179,6 @@ OpenConsoleW(LPCWSTR wsName,
  */
 BOOL
 WINAPI
-SetConsoleCommandHistoryMode(DWORD dwMode)
-{
-    DPRINT1("SetConsoleCommandHistoryMode(0x%x) UNIMPLEMENTED!\n", dwMode);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-/*
- * @unimplemented (Undocumented)
- */
-BOOL
-WINAPI
 SetConsoleCursor(DWORD Unknown0,
                  DWORD Unknown1)
 {
@@ -1176,31 +1299,61 @@ SetConsoleMenuClose(DWORD Unknown0)
 }
 
 
-/*
- * @unimplemented (Undocumented)
- */
-BOOL
-WINAPI
-SetConsoleNumberOfCommandsA(DWORD Unknown0,
-                            DWORD Unknown1)
+static BOOL
+IntSetConsoleNumberOfCommands(DWORD dwNumCommands,
+                              LPCVOID lpExeName,
+                              BOOL bUnicode)
 {
-    DPRINT1("SetConsoleNumberOfCommandsA(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(SET_HISTORY_NUMBER_COMMANDS, CSR_CONSOLE);
+    NTSTATUS Status;
+
+    if (lpExeName == NULL || !(bUnicode ? *(PWCHAR)lpExeName : *(PCHAR)lpExeName))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, IntStringSize(lpExeName, bUnicode));
+    if (!CaptureBuffer)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    IntCaptureMessageString(CaptureBuffer, lpExeName, bUnicode,
+                            &Request.Data.SetHistoryNumberCommands.ExeName);
+    Request.Data.SetHistoryNumberCommands.NumCommands = dwNumCommands;
+    Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+    CsrFreeCaptureBuffer(CaptureBuffer);
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    return TRUE;
 }
 
-
 /*
- * @unimplemented (Undocumented)
+ * @implemented (Undocumented)
  */
 BOOL
 WINAPI
-SetConsoleNumberOfCommandsW(DWORD Unknown0,
-                            DWORD Unknown1)
+SetConsoleNumberOfCommandsA(DWORD dwNumCommands,
+                            LPCWSTR lpExeName)
 {
-    DPRINT1("SetConsoleNumberOfCommandsW(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, FALSE);
+}
+
+/*
+ * @implemented (Undocumented)
+ */
+BOOL
+WINAPI
+SetConsoleNumberOfCommandsW(DWORD dwNumCommands,
+                            LPCSTR lpExeName)
+{
+    return IntSetConsoleNumberOfCommands(dwNumCommands, lpExeName, TRUE);
 }
 
 
@@ -4027,30 +4180,60 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
 /*--------------------------------------------------------------
  *  GetConsoleHistoryInfo
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
-    DPRINT1("GetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
+    NTSTATUS Status;
+    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    lpConsoleHistoryInfo->HistoryBufferSize      = Request.Data.GetHistoryInfo.HistoryBufferSize;
+    lpConsoleHistoryInfo->NumberOfHistoryBuffers = Request.Data.GetHistoryInfo.NumberOfHistoryBuffers;
+    lpConsoleHistoryInfo->dwFlags                = Request.Data.GetHistoryInfo.dwFlags;
+    return TRUE;
 }
 
 
 /*--------------------------------------------------------------
  *  SetConsoleHistoryInfo
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
 SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
 {
-    DPRINT1("SetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    CSR_API_MESSAGE Request;
+    ULONG CsrRequest = MAKE_CSR_API(GET_HISTORY_INFO, CSR_CONSOLE);
+    NTSTATUS Status;
+    if (lpConsoleHistoryInfo->cbSize != sizeof(CONSOLE_HISTORY_INFO))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    Request.Data.SetHistoryInfo.HistoryBufferSize      = lpConsoleHistoryInfo->HistoryBufferSize;
+    Request.Data.SetHistoryInfo.NumberOfHistoryBuffers = lpConsoleHistoryInfo->NumberOfHistoryBuffers;
+    Request.Data.SetHistoryInfo.dwFlags                = lpConsoleHistoryInfo->dwFlags;
+    Status = CsrClientCallServer(&Request, NULL, CsrRequest, sizeof(CSR_API_MESSAGE));
+    if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 

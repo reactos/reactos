@@ -80,6 +80,10 @@ typedef struct tagCSRSS_CONSOLE
   WORD LineSize;                        /* current size of line */
   WORD LinePos;                         /* current position within line */
   BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
+  LIST_ENTRY HistoryBuffers;
+  WORD HistoryBufferSize;               /* size for newly created history buffers */
+  WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
+  BOOLEAN HistoryNoDup;                 /* remove old duplicate history entries */
   LIST_ENTRY BufferList;                /* List of all screen buffers for this console */
   PCSRSS_SCREEN_BUFFER ActiveBuffer;    /* Pointer to currently active screen buffer */
   WORD Mode;                            /* Console mode flags */
@@ -110,6 +114,8 @@ typedef struct ConsoleInput_t
 #define CONSOLE_SELECTION_NOT_EMPTY   0x2
 #define CONSOLE_MOUSE_SELECTION       0x4
 #define CONSOLE_MOUSE_DOWN            0x8
+/* HistoryFlags values */
+#define HISTORY_NO_DUP_FLAG           0x1
 
 /* PauseFlags values (internal only) */
 #define PAUSED_FROM_KEYBOARD  0x1
@@ -213,5 +219,16 @@ CSR_API(CsrGetAllConsoleAliases);
 CSR_API(CsrGetAllConsoleAliasesLength);
 CSR_API(CsrGetConsoleAliasesExes);
 CSR_API(CsrGetConsoleAliasesExesLength);
+
+/* history.c */
+struct tagHISTORY_BUFFER;
+VOID FASTCALL HistoryAddEntry(PCSRSS_CONSOLE Console);
+VOID FASTCALL HistoryDeleteBuffer(struct tagHISTORY_BUFFER *Hist);
+CSR_API(CsrGetCommandHistoryLength);
+CSR_API(CsrGetCommandHistory);
+CSR_API(CsrExpungeCommandHistory);
+CSR_API(CsrSetHistoryNumberCommands);
+CSR_API(CsrGetHistoryInfo);
+CSR_API(CsrSetHistoryInfo);
 
 /* EOF */

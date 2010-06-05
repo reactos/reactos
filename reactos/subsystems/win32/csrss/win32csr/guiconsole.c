@@ -30,12 +30,9 @@ typedef struct GUI_CONSOLE_DATA_TAG
     WCHAR FontName[LF_FACESIZE];
     DWORD FontSize;
     DWORD FontWeight;
-    DWORD HistoryNoDup;
     DWORD FullScreen;
     DWORD QuickEdit;
     DWORD InsertMode;
-    DWORD NumberOfHistoryBuffers;
-    DWORD HistoryBufferSize;
     DWORD WindowPosition;
     DWORD UseRasterFonts;
     COLORREF ScreenText;
@@ -413,22 +410,24 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
         RegSetValueExW(hKey, L"CursorSize", 0, REG_DWORD, (const BYTE *)&Console->ActiveBuffer->CursorInfo.dwSize, sizeof(DWORD));
     }
 
-    if (GuiData->NumberOfHistoryBuffers == 5)
+    if (Console->NumberOfHistoryBuffers == 5)
     {
         RegDeleteKeyW(hKey, L"NumberOfHistoryBuffers");
     }
     else
     {
-        RegSetValueExW(hKey, L"NumberOfHistoryBuffers", 0, REG_DWORD, (const BYTE *)&GuiData->NumberOfHistoryBuffers, sizeof(DWORD));
+        DWORD Temp = Console->NumberOfHistoryBuffers;
+        RegSetValueExW(hKey, L"NumberOfHistoryBuffers", 0, REG_DWORD, (const BYTE *)&Temp, sizeof(DWORD));
     }
 
-    if (GuiData->HistoryBufferSize == 50)
+    if (Console->HistoryBufferSize == 50)
     {
         RegDeleteKeyW(hKey, L"HistoryBufferSize");
     }
     else
     {
-        RegSetValueExW(hKey, L"HistoryBufferSize", 0, REG_DWORD, (const BYTE *)&GuiData->HistoryBufferSize, sizeof(DWORD));
+        DWORD Temp = Console->HistoryBufferSize;
+        RegSetValueExW(hKey, L"HistoryBufferSize", 0, REG_DWORD, (const BYTE *)&Temp, sizeof(DWORD));
     }
 
     if (GuiData->FullScreen == FALSE)
@@ -458,13 +457,14 @@ GuiConsoleWriteUserSettings(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData)
         RegSetValueExW(hKey, L"InsertMode", 0, REG_DWORD, (const BYTE *)&GuiData->InsertMode, sizeof(DWORD));
     }
 
-    if (GuiData->HistoryNoDup == FALSE)
+    if (Console->HistoryNoDup == FALSE)
     {
         RegDeleteKeyW(hKey, L"HistoryNoDup");
     }
     else
     {
-        RegSetValueExW(hKey, L"HistoryNoDup", 0, REG_DWORD, (const BYTE *)&GuiData->HistoryNoDup, sizeof(DWORD));
+        DWORD Temp = Console->HistoryNoDup;
+        RegSetValueExW(hKey, L"HistoryNoDup", 0, REG_DWORD, (const BYTE *)&Temp, sizeof(DWORD));
     }
 
     if (GuiData->ScreenText == RGB(192, 192, 192))
@@ -564,7 +564,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
         }
         else if (!wcscmp(szValueName, L"HistoryNoDup"))
         {
-            GuiData->HistoryNoDup = Value;
+            Console->HistoryNoDup = Value;
         }
         else if (!wcscmp(szValueName, L"WindowSize"))
         {
@@ -603,12 +603,9 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
     wcscpy(GuiData->FontName, L"DejaVu Sans Mono");
     GuiData->FontSize = 0x0008000C; // font is 8x12
     GuiData->FontWeight = FW_NORMAL;
-    GuiData->HistoryNoDup = FALSE;
     GuiData->FullScreen = FALSE;
     GuiData->QuickEdit = FALSE;
     GuiData->InsertMode = TRUE;
-    GuiData->HistoryBufferSize = 50;
-    GuiData->NumberOfHistoryBuffers = 5;
     GuiData->ScreenText = RGB(192, 192, 192);
     GuiData->ScreenBackground = RGB(0, 0, 0);
     GuiData->PopupText = RGB(128, 0, 128);
@@ -617,6 +614,9 @@ GuiConsoleUseDefaults(PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA GuiData, PCSRSS_
     GuiData->UseRasterFonts = TRUE;
     memcpy(GuiData->Colors, s_Colors, sizeof(s_Colors));
 
+    Console->HistoryBufferSize = 50;
+    Console->NumberOfHistoryBuffers = 5;
+    Console->HistoryNoDup = FALSE;
     Console->Size.X = 80;
     Console->Size.Y = 25;
 
@@ -1437,8 +1437,8 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
 
     /* setup struct */
     SharedInfo.InsertMode = GuiData->InsertMode;
-    SharedInfo.HistoryBufferSize = GuiData->HistoryBufferSize;
-    SharedInfo.NumberOfHistoryBuffers = GuiData->NumberOfHistoryBuffers;
+    SharedInfo.HistoryBufferSize = Console->HistoryBufferSize;
+    SharedInfo.NumberOfHistoryBuffers = Console->NumberOfHistoryBuffers;
     SharedInfo.ScreenText = GuiData->ScreenText;
     SharedInfo.ScreenBackground = GuiData->ScreenBackground;
     SharedInfo.PopupText = GuiData->PopupText;
@@ -1450,7 +1450,7 @@ GuiConsoleShowConsoleProperties(HWND hWnd, BOOL Defaults, PGUI_CONSOLE_DATA GuiD
     SharedInfo.FontSize = (DWORD)GuiData->FontSize;
     SharedInfo.FontWeight = GuiData->FontWeight;
     SharedInfo.CursorSize = Console->ActiveBuffer->CursorInfo.dwSize;
-    SharedInfo.HistoryNoDup = GuiData->HistoryNoDup;
+    SharedInfo.HistoryNoDup = Console->HistoryNoDup;
     SharedInfo.FullScreen = GuiData->FullScreen;
     SharedInfo.QuickEdit = GuiData->QuickEdit;
     memcpy(&SharedInfo.Colors[0], GuiData->Colors, sizeof(s_Colors));

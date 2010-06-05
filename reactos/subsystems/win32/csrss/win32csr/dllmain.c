@@ -81,6 +81,12 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GENERATE_CTRL_EVENT,          CsrGenerateCtrlEvent),
     CSRSS_DEFINE_API(SET_SCREEN_BUFFER_SIZE,       CsrSetScreenBufferSize),
     CSRSS_DEFINE_API(GET_CONSOLE_SELECTION_INFO,   CsrGetConsoleSelectionInfo),
+    CSRSS_DEFINE_API(GET_COMMAND_HISTORY_LENGTH,   CsrGetCommandHistoryLength),
+    CSRSS_DEFINE_API(GET_COMMAND_HISTORY,          CsrGetCommandHistory),
+    CSRSS_DEFINE_API(EXPUNGE_COMMAND_HISTORY,      CsrExpungeCommandHistory),
+    CSRSS_DEFINE_API(SET_HISTORY_NUMBER_COMMANDS,  CsrSetHistoryNumberCommands),
+    CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
+    CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
     { 0, 0, NULL }
 };
 

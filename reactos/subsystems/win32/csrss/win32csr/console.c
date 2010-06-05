@@ -88,6 +88,7 @@ CsrInitConsole(PCSRSS_CONSOLE Console, BOOL Visible)
     InitializeListHead(&Console->BufferList);
     Console->ActiveBuffer = NULL;
     InitializeListHead(&Console->InputEvents);
+    InitializeListHead(&Console->HistoryBuffers);
     Console->CodePage = GetOEMCP();
     Console->OutputCodePage = GetOEMCP();
 
@@ -332,6 +333,9 @@ ConioDeleteConsole(Object_t *Object)
     ConioCleanupConsole(Console);
     if (Console->LineBuffer)
         RtlFreeHeap(Win32CsrApiHeap, 0, Console->LineBuffer);
+    while (!IsListEmpty(&Console->HistoryBuffers))
+        HistoryDeleteBuffer((struct tagHISTORY_BUFFER *)Console->HistoryBuffers.Flink);
+
     ConioDeleteScreenBuffer(Console->ActiveBuffer);
     if (!IsListEmpty(&Console->BufferList))
     {
