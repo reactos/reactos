@@ -98,7 +98,7 @@ SURFACE_Cleanup(PVOID ObjectBody)
 
     /* If this is an API bitmap, free the bits */
     if (pvBits != NULL &&
-        (psurf->flFlags & BITMAPOBJ_IS_APIBITMAP))
+        (psurf->flags & API_BITMAP))
     {
         /* Check if we have a DIB section */
         if (psurf->hSecure)
@@ -395,10 +395,9 @@ IntCreateBitmap(IN SIZEL Size,
     pso->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
     pso->iUniq = 0;
 
-    psurf->flHooks = 0;
-    psurf->flFlags = 0;
-    psurf->dimension.cx = 0;
-    psurf->dimension.cy = 0;
+    psurf->flags = 0;
+    psurf->sizlDim.cx = 0;
+    psurf->sizlDim.cy = 0;
 
     psurf->hSecure = NULL;
     psurf->hDIBSection = NULL;
@@ -547,12 +546,11 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     pso->dhsurf = 0;
     pso->dhpdev = NULL;
     pso->hdev = NULL;
-    psurf->flFlags = 0;
-    psurf->dimension.cx = 0;
-    psurf->dimension.cy = 0;
+    psurf->flags = 0;
+    psurf->sizlDim.cx = 0;
+    psurf->sizlDim.cy = 0;
     psurf->hSecure = NULL;
     psurf->hDIBSection = NULL;
-    psurf->flHooks = 0;
 
     /* Set bits */
     pso->pvBits = Bits;
@@ -695,7 +693,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     pso->iType = STYPE_DEVICE;
     pso->iUniq = 0;
 
-    psurf->flHooks = 0;
+    psurf->flags = 0;
 
     SURFACE_UnlockSurface(psurf);
 
@@ -731,7 +729,8 @@ EngAssociateSurface(
     pso->dhpdev = ppdev->dhpdev;
 
     /* Hook up specified functions */
-    psurf->flHooks = flHooks;
+    psurf->flags &= ~HOOK_FLAGS;
+    psurf->flags |= (flHooks & HOOK_FLAGS);
 
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);
@@ -776,7 +775,8 @@ EngModifySurface(
     pso->dhpdev = ppdev->dhpdev;
 
     /* Hook up specified functions */
-    psurf->flHooks = flHooks;
+    psurf->flags &= ~HOOK_FLAGS;
+    psurf->flags |= (flHooks & HOOK_FLAGS);
 
     /* Get palette */
     psurf->ppal = PALETTE_ShareLockPalette(ppdev->devinfo.hpalDefault);

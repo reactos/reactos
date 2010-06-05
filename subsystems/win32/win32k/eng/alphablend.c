@@ -301,7 +301,7 @@ IntEngAlphaBlend(IN SURFOBJ *psoDest,
     }
 
     /* Call the driver's DrvAlphaBlend if available */
-    if (psurfDest->flHooks & HOOK_ALPHABLEND)
+    if (psurfDest->flags & HOOK_ALPHABLEND)
     {
         ret = GDIDEVFUNCS(psoDest).AlphaBlend(
                   psoDest, psoSource, ClipRegion, ColorTranslation,

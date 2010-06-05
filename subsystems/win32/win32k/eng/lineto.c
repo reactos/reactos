@@ -565,7 +565,7 @@ IntEngLineTo(SURFOBJ *psoDest,
     if (b.left == b.right) b.right++;
     if (b.top == b.bottom) b.bottom++;
 
-    if (psurfDest->flHooks & HOOK_LINETO)
+    if (psurfDest->flags & HOOK_LINETO)
     {
         /* Call the driver's DrvLineTo */
         ret = GDIDEVFUNCS(psoDest).LineTo(
@@ -573,7 +573,7 @@ IntEngLineTo(SURFOBJ *psoDest,
     }
 
 #if 0
-    if (! ret && (psurfDest->flHooks & HOOK_STROKEPATH))
+    if (! ret && (psurfDest->flags & HOOK_STROKEPATH))
     {
         /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
     }

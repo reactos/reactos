@@ -548,7 +548,7 @@ IntEngGradientFill(
   psurf = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
   ASSERT(psurf);
 
-  if(psurf->flHooks & HOOK_GRADIENTFILL)
+  if(psurf->flags & HOOK_GRADIENTFILL)
   {
     Ret = GDIDEVFUNCS(psoDest).GradientFill(
       psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh,

@@ -291,7 +291,7 @@ NtGdiSelectBitmap(
     DC_vSelectSurface(pDC, psurfBmp);
 
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
-    psurfBmp->hDC = hDC;
+    psurfBmp->hdc = hDC;
 
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,

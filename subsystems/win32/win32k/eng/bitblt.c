@@ -585,10 +585,10 @@ IntEngBitBlt(
     }
 
     /* Is the target surface device managed? */
-    if (psurfTrg->flHooks & HOOK_BITBLT)
+    if (psurfTrg->flags & HOOK_BITBLT)
     {
         /* Is the source a different device managed surface? */
-        if (psoSrc && psoSrc->hdev != psoTrg->hdev && psurfSrc->flHooks & HOOK_BITBLT)
+        if (psoSrc && psoSrc->hdev != psoTrg->hdev && psurfSrc->flags & HOOK_BITBLT)
         {
             DPRINT1("Need to copy to standard bitmap format!\n");
             ASSERT(FALSE);
@@ -598,7 +598,7 @@ IntEngBitBlt(
     }
 
     /* Is the source surface device managed? */
-    else if (psoSrc && psurfSrc->flHooks & HOOK_BITBLT)
+    else if (psoSrc && psurfSrc->flags & HOOK_BITBLT)
     {
         pfnBitBlt = GDIDEVFUNCS(psoSrc).BitBlt;
     }

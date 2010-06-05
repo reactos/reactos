@@ -471,7 +471,7 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     /* Prepare color adjustment */
 
     /* Call the driver's DrvStretchBlt if available */
-    if (psurfDest->flHooks & HOOK_STRETCHBLTROP)
+    if (psurfDest->flags & HOOK_STRETCHBLTROP)
     {
         /* Drv->StretchBltROP (look at http://www.osronline.com/ddkx/graphics/ddifncs_0z3b.htm ) */
         ret = GDIDEVFUNCS(psoDest).StretchBltROP(psoDest,

@@ -56,7 +56,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     {
     /* Driver needs to support DrvCopyBits, else we can't do anything */
     SURFACE *psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
-    if (!(psurfDest->flHooks & HOOK_COPYBITS))
+    if (!(psurfDest->flags & HOOK_COPYBITS))
     {
       return FALSE;
     }
@@ -149,7 +149,7 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
   if (NULL != *ppsoOutput)
   {
     SURFACE* psurfOutput = CONTAINING_RECORD(*ppsoOutput, SURFACE, SurfObj);
-    if (0 != (psurfOutput->flHooks & HOOK_SYNCHRONIZE))
+    if (0 != (psurfOutput->flags & HOOK_SYNCHRONIZE))
     {
       if (NULL != GDIDEVFUNCS(*ppsoOutput).SynchronizeSurface)
         {

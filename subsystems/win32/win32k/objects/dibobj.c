@@ -1535,7 +1535,7 @@ DIB_CreateDIBSection(
     bmp->hDIBSection = section;
     bmp->hSecure = hSecure;
     bmp->dwOffset = offset;
-    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+    bmp->flags = API_BITMAP;
     bmp->dsBitfields[0] = dsBitfields[0];
     bmp->dsBitfields[1] = dsBitfields[1];
     bmp->dsBitfields[2] = dsBitfields[2];

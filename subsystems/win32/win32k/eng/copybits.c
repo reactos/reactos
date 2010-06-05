@@ -67,7 +67,7 @@ EngCopyBits(SURFOBJ *psoDest,
         if (psoDest->iType!=STYPE_BITMAP)
         {
             /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-            if (psurfDest->flHooks & HOOK_COPYBITS)
+            if (psurfDest->flags & HOOK_COPYBITS)
             {
                 ret = GDIDEVFUNCS(psoDest).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);
@@ -80,7 +80,7 @@ EngCopyBits(SURFOBJ *psoDest,
         if (psoSource->iType!=STYPE_BITMAP)
         {
             /* FIXME: Eng* functions shouldn't call Drv* functions. ? */
-            if (psurfSource->flHooks & HOOK_COPYBITS)
+            if (psurfSource->flags & HOOK_COPYBITS)
             {
                 ret = GDIDEVFUNCS(psoSource).CopyBits(
                           psoDest, psoSource, Clip, ColorTranslation, DestRect, SourcePoint);

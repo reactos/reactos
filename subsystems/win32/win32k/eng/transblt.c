@@ -284,7 +284,7 @@ IntEngTransparentBlt(SURFOBJ *psoDest,
     OutputRect = InputClippedRect;
   }
 
-  if(psurfDest->flHooks & HOOK_TRANSPARENTBLT)
+  if(psurfDest->flags & HOOK_TRANSPARENTBLT)
   {
     Ret = GDIDEVFUNCS(psoDest).TransparentBlt(
       psoDest, psoSource, Clip, ColorTranslation, &OutputRect,

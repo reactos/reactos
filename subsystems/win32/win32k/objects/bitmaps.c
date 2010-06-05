@@ -79,8 +79,8 @@ IntGdiCreateBitmap(
         return NULL;
     }
 
-    psurfBmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-    psurfBmp->hDC = NULL; // Fixme
+    psurfBmp->flags = API_BITMAP;
+    psurfBmp->hdc = NULL; // Fixme
 
     if (NULL != pBits)
     {
@@ -192,8 +192,8 @@ IntCreateCompatibleBitmap(
             /* Set palette */
             psurf->ppal = PALETTE_ShareLockPalette(Dc->ppdev->devinfo.hpalDefault);
             /* Set flags */
-            psurf->flFlags = BITMAPOBJ_IS_APIBITMAP;
-            psurf->hDC = NULL; // Fixme
+            psurf->flags = API_BITMAP;
+            psurf->hdc = NULL; // Fixme
             SURFACE_UnlockSurface(psurf);
         }
         else
@@ -222,8 +222,8 @@ IntCreateCompatibleBitmap(
                     psurfBmp->ppal = psurf->ppal;
                     GDIOBJ_IncrementShareCount((POBJ)psurf->ppal);
                     /* Set flags */
-                    psurfBmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-                    psurfBmp->hDC = NULL; // Fixme
+                    psurfBmp->flags = API_BITMAP;
+                    psurfBmp->hdc = NULL; // Fixme
                     SURFACE_UnlockSurface(psurfBmp);
                 }
                 else
@@ -362,7 +362,7 @@ NtGdiGetBitmapDimension(
     _SEH2_TRY
     {
         ProbeForWrite(Dimension, sizeof(SIZE), 1);
-        *Dimension = psurfBmp->dimension;
+        *Dimension = psurfBmp->sizlDim;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -689,7 +689,7 @@ NtGdiSetBitmapDimension(
         _SEH2_TRY
         {
             ProbeForWrite(Size, sizeof(SIZE), 1);
-            *Size = psurf->dimension;
+            *Size = psurf->sizlDim;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
         {
@@ -699,8 +699,8 @@ NtGdiSetBitmapDimension(
     }
 
     /* The dimension is changed even if writing the old value failed */
-    psurf->dimension.cx = Width;
-    psurf->dimension.cy = Height;
+    psurf->sizlDim.cx = Width;
+    psurf->sizlDim.cy = Height;
 
     SURFACE_UnlockSurface(psurf);
 
@@ -924,7 +924,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
             IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
             IntSetBitmapBits(resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
             ExFreePoolWithTag(buf,TAG_BITMAP);
-            resBitmap->flFlags = Bitmap->flFlags;
+            resBitmap->flags = Bitmap->flags;
             /* Copy palette */
             if (Bitmap->ppal)
             {
@@ -1033,14 +1033,14 @@ APIENTRY
 NtGdiGetDCforBitmap(
     IN HBITMAP hsurf)
 {
-    HDC hDC = NULL;
+    HDC hdc = NULL;
     PSURFACE psurf = SURFACE_LockSurface(hsurf);
     if (psurf)
     {
-        hDC = psurf->hDC;
+        hdc = psurf->hdc;
         SURFACE_UnlockSurface(psurf);
     }
-    return hDC;
+    return hdc;
 }
 
 /* EOF */

@@ -124,7 +124,7 @@ IntEngPaint(IN SURFOBJ *pso,
 
   DPRINT("pso->iType == %d\n", pso->iType);
   /* Is the surface's Paint function hooked? */
-  if((pso->iType!=STYPE_BITMAP) && (psurf->flHooks & HOOK_PAINT))
+  if((pso->iType!=STYPE_BITMAP) && (psurf->flags & HOOK_PAINT))
   {
     // Call the driver's DrvPaint
     ret = GDIDEVFUNCS(pso).Paint(
