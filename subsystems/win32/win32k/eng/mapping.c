@@ -25,10 +25,10 @@ typedef struct _ENGSECTION
 
 typedef struct _FILEVIEW
 {
-    ULARGE_INTEGER LastWriteTime;  
+    LARGE_INTEGER  LastWriteTime;  
     PVOID          pvKView;
     PVOID          pvViewFD;  
-    ULONG          cjView;  
+    SIZE_T         cjView;  
     PVOID          pSection;  
 } FILEVIEW, *PFILEVIEW;   
 
@@ -60,7 +60,6 @@ NTAPI
 EngCreateSection(
     IN ULONG fl,
     IN SIZE_T cjSize,
-    HANDLE hFile,
     IN ULONG ulTag)
 {
     NTSTATUS Status;
@@ -79,7 +78,7 @@ EngCreateSection(
                              &liSize,
                              PAGE_READWRITE,
                              SEC_COMMIT,
-                             hFile,
+                             NULL,
                              NULL);
     if (!NT_SUCCESS(Status))
     {
@@ -219,7 +218,7 @@ EngAllocSectionMem(
     if (cjSize == 0) return NULL;
 
     /* Allocate a section object */
-    pSection = EngCreateSection(fl, cjSize, NULL, ulTag);
+    pSection = EngCreateSection(fl, cjSize, ulTag);
 
     /* Map the section in session space */
     Status = MmMapViewInSessionSpace(pSection->pvSectionObject,
@@ -251,8 +250,10 @@ EngLoadModuleEx(
     HANDLE hRootDir;
     UNICODE_STRING ustrFileName;
     IO_STATUS_BLOCK IoStatusBlock;
+    FILE_BASIC_INFORMATION FileInformation;
     HANDLE hFile;
     NTSTATUS Status;
+    LARGE_INTEGER liSize;
 
     if (fl & FVF_FONTFILE)
     {
@@ -297,18 +298,41 @@ EngLoadModuleEx(
                           NULL,
                           0);
 
-    /* Check for auto size */
-    if (cjSizeOfModule == 0)
+    Status = ZwQueryInformationFile(hFile,
+                                    &IoStatusBlock,
+                                    &FileInformation,
+                                    sizeof(FILE_BASIC_INFORMATION),
+                                    FileBasicInformation);
+    if (NT_SUCCESS(Status))
     {
+        pFileView->LastWriteTime = FileInformation.LastWriteTime;
     }
 
-    /* Allocate a section object */
-    pFileView->pSection = EngCreateSection(fl, cjSizeOfModule, hFile, '1234');
+    /* Create a section from the file */
+    liSize.QuadPart = cjSizeOfModule;
+    Status = MmCreateSection(&pFileView->pSection,
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             cjSizeOfModule ? &liSize : NULL,
+                             fl & FVF_READONLY ? PAGE_EXECUTE_READ : PAGE_EXECUTE_READWRITE,
+                             SEC_COMMIT,
+                             hFile,
+                             NULL);
 
     /* Close the file handle */
     ZwClose(hFile);
 
-    pFileView->cjView = cjSizeOfModule;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to create a section Status=0x%x\n", Status);
+        EngFreeMem(pFileView);
+        return NULL;
+    }
+
+
+    pFileView->pvKView = NULL;
+    pFileView->pvViewFD = NULL;
+    pFileView->cjView = 0;
 
     return pFileView;
 }
@@ -338,26 +362,23 @@ EngMapModule(
 	OUT PULONG pulSize)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
-    PENGSECTION pSection = pFileView->pSection;
     NTSTATUS Status;
 
+    pFileView->cjView = 0;
+
     /* Map the section in session space */
-    Status = MmMapViewInSessionSpace(pSection->pvSectionObject,
-                                     &pSection->pvMappedBase,
-                                     &pSection->cjViewSize);
-    if (NT_SUCCESS(Status))
-    {
-        *pulSize = pSection->cjViewSize;
-    }
-    else
+    Status = MmMapViewInSessionSpace(pFileView->pSection,
+                                     &pFileView->pvKView,
+                                     &pFileView->cjView);
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to map a section Status=0x%x\n", Status);
         *pulSize = 0;
-        EngFreeSectionMem(pSection, NULL);
         return NULL;
     }
 
-    return pSection->pvMappedBase;
+    *pulSize = pFileView->cjView;
+    return pFileView->pvKView;
 }
 
 VOID
@@ -365,10 +386,18 @@ APIENTRY
 EngFreeModule(IN HANDLE h)
 {
     PFILEVIEW pFileView = (PFILEVIEW)h;
-    PENGSECTION pSection = pFileView->pSection;
+    NTSTATUS Status;
 
-    /* Free the section */
-    EngFreeSectionMem(pSection, pSection->pvMappedBase);
+    /* Unmap the section */
+    Status = MmUnmapViewInSessionSpace(pFileView->pvKView);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MmUnmapViewInSessionSpace failed: 0x%lx\n", Status);
+        ASSERT(FALSE);
+    }
+
+    /* Dereference the section */
+    ObDereferenceObject(pFileView->pSection);
 
     /* Free the file view memory */
     EngFreeMem(pFileView);
