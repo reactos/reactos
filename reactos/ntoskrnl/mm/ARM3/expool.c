@@ -39,30 +39,33 @@ PKGUARDED_MUTEX ExpPagedPoolMutex;
  * Pool list access debug macros, similar to Arthur's pfnlist.c work.
  * Microsoft actually implements similar checks in the Windows Server 2003 SP1
  * pool code, but only for checked builds.
+ *
  * As of Vista, however, an MSDN Blog entry by a Security Team Manager indicates
  * that these checks are done even on retail builds, due to the increasing
  * number of kernel-mode attacks which depend on dangling list pointers and other
  * kinds of list-based attacks.
+ *
  * For now, I will leave these checks on all the time, but later they are likely
  * to be DBG-only, at least until there are enough kernel-mode security attacks
  * against ReactOS to warrant the performance hit.
  *
+ * For now, these are not made inline, so we can get good stack traces.
  */
-FORCEINLINE
+NTAPI
 PLIST_ENTRY
 ExpDecodePoolLink(IN PLIST_ENTRY Link) 
 {
     return (PLIST_ENTRY)((ULONG_PTR)Link & ~1);
 }
 
-FORCEINLINE
+NTAPI
 PLIST_ENTRY
 ExpEncodePoolLink(IN PLIST_ENTRY Link) 
 {
     return (PLIST_ENTRY)((ULONG_PTR)Link | 1);
 }
 
-FORCEINLINE
+NTAPI
 VOID
 ExpCheckPoolLinks(IN PLIST_ENTRY ListHead)
 {
@@ -77,52 +80,56 @@ ExpCheckPoolLinks(IN PLIST_ENTRY ListHead)
     }
 }
 
-FORCEINLINE
+NTAPI
 VOID
 ExpInitializePoolListHead(IN PLIST_ENTRY ListHead)
 {
     ListHead->Flink = ListHead->Blink = ExpEncodePoolLink(ListHead);
 }
 
-FORCEINLINE
+NTAPI
 BOOLEAN
 ExpIsPoolListEmpty(IN PLIST_ENTRY ListHead)
 {
     return (ExpDecodePoolLink(ListHead->Flink) == ListHead);
 }
 
-FORCEINLINE
+NTAPI
 VOID
 ExpRemovePoolEntryList(IN PLIST_ENTRY Entry)
 {
     PLIST_ENTRY Blink, Flink;
     Flink = ExpDecodePoolLink(Entry->Flink);
     Blink = ExpDecodePoolLink(Entry->Blink);
-    Blink->Flink = ExpEncodePoolLink(Flink);
     Flink->Blink = ExpEncodePoolLink(Blink);
+    Blink->Flink = ExpEncodePoolLink(Flink);
 }
     
-FORCEINLINE
+NTAPI
 PLIST_ENTRY
 ExpRemovePoolHeadList(IN PLIST_ENTRY ListHead)
 {
-    PLIST_ENTRY Head;
-    Head = ExpDecodePoolLink(ListHead->Flink);
-    ExpRemovePoolEntryList(Head);
-    return Head;
+    PLIST_ENTRY Entry, Flink;
+    Entry = ExpDecodePoolLink(ListHead->Flink);
+    Flink = ExpDecodePoolLink(Entry->Flink);
+    ListHead->Flink = ExpEncodePoolLink(Flink);
+    Flink->Blink = ExpEncodePoolLink(ListHead);
+    return Entry;
 }
 
-FORCEINLINE
+NTAPI
 PLIST_ENTRY
 ExpRemovePoolTailList(IN PLIST_ENTRY ListHead)
 {
-    PLIST_ENTRY Tail;
-    Tail = ExpDecodePoolLink(ListHead->Blink);
-    ExpRemovePoolEntryList(Tail);
-    return Tail;
+    PLIST_ENTRY Entry, Blink;
+    Entry = ExpDecodePoolLink(ListHead->Blink);
+    Blink = ExpDecodePoolLink(Entry->Blink);
+    ListHead->Blink = ExpEncodePoolLink(Blink);
+    Blink->Flink = ExpEncodePoolLink(ListHead);
+    return Entry;
 }
 
-FORCEINLINE
+NTAPI
 VOID
 ExpInsertPoolTailList(IN PLIST_ENTRY ListHead,
                       IN PLIST_ENTRY Entry)
@@ -137,14 +144,14 @@ ExpInsertPoolTailList(IN PLIST_ENTRY ListHead,
     ExpCheckPoolLinks(ListHead);
 }
 
-FORCEINLINE
+NTAPI
 VOID
 ExpInsertPoolHeadList(IN PLIST_ENTRY ListHead,
                       IN PLIST_ENTRY Entry)
 {
     PLIST_ENTRY Flink;
     ExpCheckPoolLinks(ListHead);
-    Flink = ExpDecodePoolLink(ListHead->Blink);
+    Flink = ExpDecodePoolLink(ListHead->Flink);
     Entry->Flink = ExpEncodePoolLink(Flink);
     Entry->Blink = ExpEncodePoolLink(ListHead);
     Flink->Blink = ExpEncodePoolLink(Entry);
@@ -194,7 +201,7 @@ ExInitializePoolDescriptor(IN PPOOL_DESCRIPTOR PoolDescriptor,
     LastEntry = NextEntry + POOL_LISTS_PER_PAGE;    
     while (NextEntry < LastEntry)
     {
-        InitializeListHead(NextEntry);
+        ExpInitializePoolListHead(NextEntry);
         NextEntry++;
     }
 }
@@ -379,7 +386,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // Are there any free entries available on this list?
         //
-        if (!IsListEmpty(ListHead))
+        if (!ExpIsPoolListEmpty(ListHead))
         {
             //
             // Acquire the pool lock now
@@ -389,7 +396,7 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             //
             // And make sure the list still has entries
             //
-            if (IsListEmpty(ListHead))
+            if (ExpIsPoolListEmpty(ListHead))
             {
                 //
                 // Someone raced us (and won) before we had a chance to acquire
@@ -408,7 +415,9 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
             // there is a guarantee that any block on this list will either be
             // of the correct size, or perhaps larger.
             //
-            Entry = POOL_ENTRY(RemoveHeadList(ListHead));
+            ExpCheckPoolLinks(ListHead);
+            Entry = POOL_ENTRY(ExpRemovePoolHeadList(ListHead));
+            ExpCheckPoolLinks(ListHead);
             ASSERT(Entry->BlockSize >= i);
             ASSERT(Entry->PoolType == 0);
             
@@ -508,13 +517,15 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
                 // "full" entry, which contains enough bytes for a linked list 
                 // and thus can be used for allocations (up to 8 bytes...)
                 //
+                ExpCheckPoolLinks(&PoolDesc->ListHeads[BlockSize - 1]);
                 if (BlockSize != 1)
                 {
                     //
                     // Insert the free entry into the free list for this size
                     //
-                    InsertTailList(&PoolDesc->ListHeads[BlockSize - 1],
-                                   POOL_FREE_BLOCK(FragmentEntry));
+                    ExpInsertPoolTailList(&PoolDesc->ListHeads[BlockSize - 1],
+                                          POOL_FREE_BLOCK(FragmentEntry));
+                    ExpCheckPoolLinks(POOL_FREE_BLOCK(FragmentEntry));
                 }
             }
             
@@ -571,8 +582,10 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
         //
         // And insert the free entry into the free list for this block size
         //
-        InsertTailList(&PoolDesc->ListHeads[BlockSize - 1],
-                       POOL_FREE_BLOCK(FragmentEntry));
+        ExpCheckPoolLinks(&PoolDesc->ListHeads[BlockSize - 1]);
+        ExpInsertPoolTailList(&PoolDesc->ListHeads[BlockSize - 1],
+                              POOL_FREE_BLOCK(FragmentEntry));
+        ExpCheckPoolLinks(POOL_FREE_BLOCK(FragmentEntry));
        
         //
         // Release the pool lock
@@ -690,7 +703,10 @@ ExFreePoolWithTag(IN PVOID P,
                 // The block is at least big enough to have a linked list, so go
                 // ahead and remove it
                 //
-                RemoveEntryList(POOL_FREE_BLOCK(NextEntry));
+                ExpCheckPoolLinks(POOL_FREE_BLOCK(NextEntry));
+                ExpRemovePoolEntryList(POOL_FREE_BLOCK(NextEntry));
+                ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Flink));
+                ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Blink));
             }
             
             //
@@ -727,7 +743,10 @@ ExFreePoolWithTag(IN PVOID P,
                 // The block is at least big enough to have a linked list, so go
                 // ahead and remove it
                 //
-                RemoveEntryList(POOL_FREE_BLOCK(NextEntry));
+                ExpCheckPoolLinks(POOL_FREE_BLOCK(NextEntry));
+                ExpRemovePoolEntryList(POOL_FREE_BLOCK(NextEntry));
+                ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Flink));
+                ExpCheckPoolLinks(ExpDecodePoolLink((POOL_FREE_BLOCK(NextEntry))->Blink));
             }
             
             //
@@ -787,7 +806,8 @@ ExFreePoolWithTag(IN PVOID P,
     //
     // Insert this new free block, and release the pool lock
     //
-    InsertHeadList(&PoolDesc->ListHeads[BlockSize - 1], POOL_FREE_BLOCK(Entry));
+    ExpInsertPoolHeadList(&PoolDesc->ListHeads[BlockSize - 1], POOL_FREE_BLOCK(Entry));
+    ExpCheckPoolLinks(POOL_FREE_BLOCK(Entry));
     ExUnlockPool(PoolDesc, OldIrql);
 }
 
