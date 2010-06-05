@@ -64,7 +64,6 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
             /* As always, only handle current ARM3 scenarios */
             ASSERT(PointerPte->u.Soft.Prototype == 0);
             ASSERT(PointerPte->u.Soft.Transition == 0);
-            ASSERT(PointerPte->u.Hard.Valid == 1);
             
             /* Normally this is one possibility -- freeing a valid page */
             if (PointerPte->u.Hard.Valid)
@@ -105,6 +104,20 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
     
             /* Actual legitimate pages */
             ActualPages++;
+        }
+        else
+        {
+            /* 
+             * The only other ARM3 possibility is a demand zero page, which would
+             * mean freeing some of the paged pool pages that haven't even been
+             * touched yet, as part of a larger allocation.
+             *
+             * Right now, we shouldn't expect any page file information in the PTE
+             */
+             ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+             
+            /* Destroy the PTE */
+            PointerPte->u.Long = 0;
         }
         
         /* Keep going */
