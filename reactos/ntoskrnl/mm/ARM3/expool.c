@@ -29,11 +29,11 @@ PVOID PoolTrackTable;
 PKGUARDED_MUTEX ExpPagedPoolMutex;
 
 /* Pool block/header/list access macros */
-#define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)x - sizeof(POOL_HEADER))
-#define POOL_FREE_BLOCK(x)  (PLIST_ENTRY)((ULONG_PTR)x  + sizeof(POOL_HEADER))
-#define POOL_BLOCK(x, i)    (PPOOL_HEADER)((ULONG_PTR)x + ((i) * POOL_BLOCK_SIZE))
-#define POOL_NEXT_BLOCK(x)  POOL_BLOCK(x, x->BlockSize)
-#define POOL_PREV_BLOCK(x)  POOL_BLOCK(x, -x->PreviousSize)
+#define POOL_ENTRY(x)       (PPOOL_HEADER)((ULONG_PTR)(x) - sizeof(POOL_HEADER))
+#define POOL_FREE_BLOCK(x)  (PLIST_ENTRY)((ULONG_PTR)(x)  + sizeof(POOL_HEADER))
+#define POOL_BLOCK(x, i)    (PPOOL_HEADER)((ULONG_PTR)(x) + ((i) * POOL_BLOCK_SIZE))
+#define POOL_NEXT_BLOCK(x)  POOL_BLOCK((x), (x)->BlockSize)
+#define POOL_PREV_BLOCK(x)  POOL_BLOCK((x), -(x)->PreviousSize)
                 
 /* PRIVATE FUNCTIONS **********************************************************/
 
