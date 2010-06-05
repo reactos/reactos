@@ -104,6 +104,8 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
       0, 0, { (DWORD_PTR)(__FILE__ ": IconCrst") }
 };
 static CRITICAL_SECTION IconCrst = { &critsect_debug, -1, 0, 0, 0, 0 };
+static void stretch_blt_icon( HDC hdc_dst, int dst_x, int dst_y, int dst_width, int dst_height,
+                              HBITMAP src, int width, int height );
 
 
 /**********************************************************************
@@ -294,21 +296,20 @@ static int bitmap_info_size( const BITMAPINFO * info, WORD coloruse )
  */
 static HBITMAP copy_bitmap( HBITMAP bitmap )
 {
-    HDC src, dst;
+    HDC hdc;
     HBITMAP new_bitmap;
     BITMAP bmp;
 
     if (!bitmap) return 0;
     if (!GetObjectW( bitmap, sizeof(bmp), &bmp )) return 0;
 
-    src = CreateCompatibleDC( 0 );
-    dst = CreateCompatibleDC( 0 );
-    SelectObject( src, bitmap );
-    new_bitmap = CreateCompatibleBitmap( src, bmp.bmWidth, bmp.bmHeight );
-    SelectObject( dst, new_bitmap );
-    BitBlt( dst, 0, 0, bmp.bmWidth, bmp.bmHeight, src, 0, 0, SRCCOPY );
-    DeleteDC( dst );
-    DeleteDC( src );
+    hdc = CreateCompatibleDC( 0 );
+    new_bitmap = CreateBitmap( bmp.bmWidth, bmp.bmHeight,
+                               bmp.bmPlanes, bmp.bmBitsPixel, NULL);
+    SelectObject( hdc, new_bitmap );
+    stretch_blt_icon( hdc, 0, 0, bmp.bmWidth, bmp.bmHeight,
+                      bitmap, bmp.bmWidth, bmp.bmHeight );
+    DeleteDC( hdc );
     return new_bitmap;
 }
 
