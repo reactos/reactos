@@ -80,7 +80,6 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 
                 /* Get the page table entry */
                 PageTableIndex = Pfn1->u4.PteFrame;
-                DPRINT1("Page table: %lx\n", PageTableIndex);
                 Pfn2 = MiGetPfnEntry(PageTableIndex);
                 
                 /* Lock the PFN database */
