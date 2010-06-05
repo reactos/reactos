@@ -225,13 +225,18 @@ MmProtectToPteMask[32] =
 // Special IRQL value (found in assertions)
 //
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
-    
+
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
-#define POOL_LISTS_PER_PAGE (PAGE_SIZE / sizeof(LIST_ENTRY))
+#ifdef _M_AMD64
+#define POOL_BLOCK_SIZE 16
+#else
+#define POOL_BLOCK_SIZE  8
+#endif
+#define POOL_LISTS_PER_PAGE (PAGE_SIZE / POOL_BLOCK_SIZE)
 #define BASE_POOL_TYPE_MASK 1
-#define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + sizeof(LIST_ENTRY)))
+#define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + POOL_BLOCK_SIZE))
 
 typedef struct _POOL_DESCRIPTOR
 {
@@ -256,16 +261,30 @@ typedef struct _POOL_HEADER
     {
         struct
         {
+#ifdef _M_AMD64
+            ULONG PreviousSize:8;
+            ULONG PoolIndex:8;
+            ULONG BlockSize:8;
+            ULONG PoolType:8;
+#else
             USHORT PreviousSize:9;
             USHORT PoolIndex:7;
             USHORT BlockSize:9;
             USHORT PoolType:7;
+#endif
         };
         ULONG Ulong1;
     };
+#ifdef _M_AMD64
+    ULONG PoolTag;
+#endif
     union
     {
+#ifdef _M_AMD64
+        PEPROCESS ProcessBilled;
+#else
         ULONG PoolTag;
+#endif
         struct
         {
             USHORT AllocatorBackTraceIndex;
@@ -274,11 +293,8 @@ typedef struct _POOL_HEADER
     };
 } POOL_HEADER, *PPOOL_HEADER;
 
-//
-// Everything depends on this
-//
-C_ASSERT(sizeof(POOL_HEADER) == 8);
-C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
+C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
+C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
