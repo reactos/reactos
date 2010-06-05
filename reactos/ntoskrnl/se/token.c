@@ -1871,6 +1871,21 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
         }
     }
 
+    /*
+     * Fail, if a primary token is to be created from an impersonation token
+     * and and the impersonation level of the impersonation token is below SecurityImpersonation.
+     */
+    if (Token->TokenType == TokenImpersonation &&
+        TokenType == TokenPrimary &&
+        Token->ImpersonationLevel < SecurityImpersonation)
+    {
+        ObDereferenceObject(Token);
+        SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
+                                           PreviousMode,
+                                           FALSE);
+        return STATUS_BAD_IMPERSONATION_LEVEL;
+    }
+
     Status = SepDuplicateToken(Token,
                                ObjectAttributes,
                                EffectiveOnly,
