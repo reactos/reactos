@@ -234,7 +234,9 @@ CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
             if (Found)
             {
                 /* Reference it */
+                ASSERT(Ncb->RefCount != 0xFFFF);
                 Ncb->RefCount++;
+                break;
             }
         }
 
@@ -320,6 +322,7 @@ CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
     CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
     /* Decrease the reference count */
+    ASSERT(Ncb->RefCount >= 1);
     if (!(--Ncb->RefCount))
     {
         /* Find the NCB in the table */
@@ -579,7 +582,7 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     NewRefCount = OldRefCount - 1;
    
     /* Check if we still have references */
-    if( (NewRefCount & 0xFFFF) > 0)
+    if ((NewRefCount & 0xFFFF) > 0)
     {
         /* Do the dereference */
         if (InterlockedCompareExchange((PLONG)&Kcb->RefCount,
