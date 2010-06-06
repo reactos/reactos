@@ -10,3 +10,13 @@ HBITMAP FASTCALL IntCreateBitmap(IN SIZEL Size, IN LONG Width, IN ULONG Format, 
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 UINT    FASTCALL BITMAP_GetRealBitsPixel(UINT nBitsPixel);
 INT     FASTCALL BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
+
+
+HBITMAP
+APIENTRY
+GreCreateBitmap(
+    IN INT nWidth,
+    IN INT nHeight,
+    IN UINT cPlanes,
+    IN UINT cBitsPixel,
+    IN OPTIONAL PVOID pvBits);

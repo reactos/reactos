@@ -116,6 +116,14 @@ SURFACE_AllocSurface(
     IN ULONG cy,
     IN ULONG iFormat);
 
+BOOL
+NTAPI
+SURFACE_bSetBitmapBits(
+    IN PSURFACE psurf,
+    IN USHORT fjBitmap,
+    IN ULONG ulWidth,
+    IN PVOID pvBits OPTIONAL);
+
 #define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 

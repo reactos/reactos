@@ -171,8 +171,8 @@ SURFACE_vSetDefaultPalette(
             break;
         case 24:
         case 32:
-            psurfBmp->ppal = &gpalRGB;
-            GDIOBJ_IncrementShareCount((POBJ)&gpalRGB);
+            psurfBmp->ppal = &gpalBGR;
+            GDIOBJ_IncrementShareCount(&gpalBGR.BaseObject);
             break;
         default:
             DPRINT1("Could not determine palette for bit depth %u.\n", cBitsPixel);
@@ -233,7 +233,7 @@ SURFACE_bSetBitmapBits(
     if (ulWidth)
     {
         /* Align the width (Windows compatibility) */
-        //ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
     }
     else
     {
@@ -542,70 +542,6 @@ EngUnlockSurface(IN SURFOBJ *pso)
         SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
         GDIOBJ_ShareUnlockObjByPtr((POBJ)psurf);
     }
-}
-
-HBITMAP
-FASTCALL
-IntCreateBitmap(
-    IN SIZEL Size,
-    IN LONG Width,
-    IN ULONG Format,
-    IN ULONG Flags,
-    IN PVOID Bits)
-{
-    HBITMAP hbmp;
-    SURFOBJ *pso;
-    PSURFACE psurf;
-    PVOID UncompressedBits;
-    ULONG UncompressedFormat;
-    
-    if (Format == 0)
-        return 0;
-
-    /* Allocate a surface */
-    psurf = SURFACE_AllocSurface(STYPE_BITMAP, Size.cx, Size.cy, Format);
-    if (!psurf)
-    {
-        DPRINT1("SURFACE_AllocSurface failed.\n");
-        return NULL;
-    }
-
-    /* Get the handle for the bitmap and the surfobj */
-    hbmp = (HBITMAP)psurf->SurfObj.hsurf;
-    pso = &psurf->SurfObj;
-
-    if (Format == BMF_4RLE)
-    {
-        UncompressedFormat = BMF_4BPP;
-        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
-        Flags |= BMF_RLE_HACK;
-    }
-    else if (Format == BMF_8RLE)
-    {
-        UncompressedFormat = BMF_8BPP;
-        UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
-        Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
-        Flags |= BMF_RLE_HACK;
-    }
-    else
-    {
-        UncompressedBits = Bits;
-        UncompressedFormat = Format;
-    }
-
-    /* Set the bitmap bits */
-    if (!SURFACE_bSetBitmapBits(psurf, Flags, Width, UncompressedBits))
-    {
-        /* Bail out if that failed */
-        DPRINT1("SURFACE_bSetBitmapBits failed.\n");
-        SURFACE_FreeSurfaceByHandle(hbmp);
-        return NULL;
-    }
-
-    /* Unlock the surface and return */
-    SURFACE_UnlockSurface(psurf);
-    return hbmp;
 }
 
 /* EOF */

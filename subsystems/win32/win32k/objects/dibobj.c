@@ -1178,11 +1178,11 @@ IntCreateDIBitmap(
     }
     else
     {
-        handle = IntGdiCreateBitmap(width,
-                                    height,
-                                    1,
-                                    1,
-                                    NULL);
+        handle = GreCreateBitmap(width,
+                                 height,
+                                 1,
+                                 1,
+                                 NULL);
     }
 
     if (height < 0)
