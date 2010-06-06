@@ -99,7 +99,8 @@ BOOLEAN DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
 {
   PNDIS_MINIPORT_TIMER CurrentTimer;
 
-  ASSERT(Timer->Miniport->TimerQueue);
+  if (!Timer->Miniport->TimerQueue)
+      return FALSE;
 
   if (Timer->Miniport->TimerQueue == Timer)
   {
