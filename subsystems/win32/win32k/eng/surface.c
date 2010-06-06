@@ -90,46 +90,63 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
     }
 }
 
-BOOL INTERNAL_CALL
+BOOL
+INTERNAL_CALL
 SURFACE_Cleanup(PVOID ObjectBody)
 {
     PSURFACE psurf = (PSURFACE)ObjectBody;
     PVOID pvBits = psurf->SurfObj.pvBits;
+    NTSTATUS Status;
 
-    /* If this is an API bitmap, free the bits */
-    if (pvBits != NULL &&
-        (psurf->flags & API_BITMAP))
+    /* Check if the surface has bits */
+    if (pvBits)
     {
-        /* Check if we have a DIB section */
-        if (psurf->hSecure)
-        {
-            // FIXME: IMPLEMENT ME!
-            // MmUnsecureVirtualMemory(psurf->hSecure);
-            if (psurf->hDIBSection)
-            {
-                /* DIB was created from a section */
-                NTSTATUS Status;
+        /* Only bitmaps can have bits */
+        ASSERT(psurf->SurfObj.iType == STYPE_BITMAP);
 
-                pvBits = (PVOID)((ULONG_PTR)pvBits - psurf->dwOffset);
-                Status = ZwUnmapViewOfSection(NtCurrentProcess(), pvBits);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT1("Could not unmap section view!\n");
-                    // Should we BugCheck here?
-                }
-            }
-            else
+        /* Check if it is a DIB section */
+        if (psurf->hDIBSection)
+        {
+            /* Unsecure the memory */
+            EngUnsecureMem(psurf->hSecure);
+
+            /* Calculate the real start of the section */
+            pvBits = (PVOID)((ULONG_PTR)pvBits - psurf->dwOffset);
+
+            /* Unmap the section */
+            Status = MmUnmapViewOfSection(PsGetCurrentProcess(), pvBits);
+            if (!NT_SUCCESS(Status))
             {
-                /* DIB was allocated */
-                EngFreeUserMem(pvBits);
+                DPRINT1("Could not unmap section view!\n");
+                // Should we BugCheck here?
+                ASSERT(FALSE);
             }
+        }
+        else if (psurf->SurfObj.fjBitmap & BMF_USERMEM)
+        {
+            /* Bitmap was allocated from usermode memory */
+            EngFreeUserMem(pvBits);
+        }
+        else if (psurf->SurfObj.fjBitmap & BMF_KMSECTION)
+        {
+            /* Bitmap was allocated from a kernel section */
+            if (!EngFreeSectionMem(NULL, pvBits))
+            {
+                DPRINT1("EngFreeSectionMem failed for %p!\n", pvBits);
+                // Should we BugCheck here?
+                ASSERT(FALSE);
+            }
+        }
+        else if (psurf->SurfObj.fjBitmap & BMF_RLE_HACK)
+        {
+            /* HACK: Free RLE decompressed bits */
+            EngFreeMem(pvBits);
         }
         else
         {
-            // FIXME: use TAG
-            ExFreePool(psurf->SurfObj.pvBits);
+            /* There should be nothing to free */
+            ASSERT(psurf->SurfObj.fjBitmap & BMF_DONT_FREE);
         }
-
     }
 
     /* Free palette */
@@ -168,6 +185,8 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
     }
 
     pso->dhsurf = dhsurf;
+    pso->iType = STYPE_DEVBITMAP;
+
     EngUnlockSurface(pso);
 
     return NewBitmap;
@@ -206,13 +225,13 @@ VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LO
                 case RLE_EOL:
                     x = 0;
                     y--;
-                    break;
+            break;
                 case RLE_END:
                     return;
                 case RLE_DELTA:
                     x += (*bits++)/2;
                     y -= (*bits++)/2;
-                    break;
+            break;
                 default:
                     length /= 2;
                     while (length--)
@@ -306,7 +325,7 @@ IntCreateBitmap(IN SIZEL Size,
     PSURFACE psurf;
     PVOID UncompressedBits;
     ULONG UncompressedFormat;
-
+    
     if (Format == 0)
         return 0;
 
@@ -326,6 +345,7 @@ IntCreateBitmap(IN SIZEL Size,
         UncompressedFormat = BMF_4BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
+        Flags |= BMF_RLE_HACK;
     }
     else if (Format == BMF_8RLE)
     {
@@ -334,6 +354,7 @@ IntCreateBitmap(IN SIZEL Size,
         UncompressedFormat = BMF_8BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
+        Flags |= BMF_RLE_HACK;
     }
     else
     {
@@ -346,6 +367,7 @@ IntCreateBitmap(IN SIZEL Size,
     if (UncompressedBits != NULL)
     {
         pso->pvBits = UncompressedBits;
+        Flags |= BMF_DONT_FREE;
     }
     else
     {
@@ -361,9 +383,15 @@ IntCreateBitmap(IN SIZEL Size,
             }
             else
             {
-                pso->pvBits = EngAllocMem(0 != (Flags & BMF_NOZEROINIT) ?
-                                                  0 : FL_ZERO_MEMORY,
-                                              pso->cjBits, TAG_DIB);
+                PVOID pvSection;
+                Flags |= BMF_KMSECTION;
+                pso->pvBits = EngAllocSectionMem(&pvSection,
+                                                 (Flags & BMF_NOZEROINIT) ?
+                                                    0 : FL_ZERO_MEMORY,
+                                                 pso->cjBits, TAG_DIB);
+                
+                /* Free the section already, keep the mapping */
+                EngFreeSectionMem(pvSection, NULL);
             }
             if (pso->pvBits == NULL)
             {
@@ -392,7 +420,7 @@ IntCreateBitmap(IN SIZEL Size,
     pso->sizlBitmap = Size;
     pso->iBitmapFormat = UncompressedFormat;
     pso->iType = STYPE_BITMAP;
-    pso->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
+    pso->fjBitmap = Flags & (BMF_TOPDOWN|BMF_NOZEROINIT|BMF_KMSECTION|BMF_USERMEM|BMF_DONT_FREE);
     pso->iUniq = 0;
 
     psurf->flags = 0;
@@ -430,11 +458,11 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     SIZEL LocalSize;
     BOOLEAN AllocatedLocally = FALSE;
 
-    /*
+/*
      * First, check the format so we can get the aligned scanline width.
      * RLE and the newer fancy-smanshy JPG/PNG support do NOT have scanlines
      * since they are compressed surfaces!
-     */
+ */
     switch (BitmapInfo->Format)
     {
         case BMF_1BPP:
@@ -499,10 +527,15 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
             }
             else
             {
-                /* Get kernel bits (zeroed out if requested) */
-                Bits = EngAllocMem((BitmapInfo->Flags & BMF_NOZEROINIT) ? 0 : FL_ZERO_MEMORY,
-                                   Size,
-                                   TAG_DIB);
+                PVOID pvSection;
+                BitmapInfo->Flags |= BMF_KMSECTION;
+                Bits = EngAllocSectionMem(&pvSection,
+                                          (BitmapInfo->Flags & BMF_NOZEROINIT) ?
+                                                   0 : FL_ZERO_MEMORY,
+                                                 Size, TAG_DIB);
+                
+                /* Free the section already, keep the mapping */
+                EngFreeSectionMem(pvSection, NULL);
             }
             AllocatedLocally = TRUE;
             /* Bail out if that failed */
@@ -513,6 +546,9 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
     {
         /* Should not have asked for user memory */
         ASSERT((BitmapInfo->Flags & BMF_USERMEM) == 0);
+
+        /* Must not free anything */
+        BitmapInfo->Flags |= BMF_DONT_FREE;
     }
 
     /* Allocate the actual surface object structure */
@@ -534,7 +570,7 @@ SURFMEM_bCreateDib(IN PDEVBITMAPINFO BitmapInfo,
 
     /* Save format and flags */
     pso->iBitmapFormat = BitmapInfo->Format;
-    pso->fjBitmap = BitmapInfo->Flags & (BMF_TOPDOWN | BMF_UMPDMEM | BMF_USERMEM);
+    pso->fjBitmap = BitmapInfo->Flags & (BMF_TOPDOWN | BMF_UMPDMEM | BMF_USERMEM | BMF_KMSECTION | BMF_DONT_FREE);
 
     /* Save size and type */
     LocalSize.cy = BitmapInfo->Height;
@@ -692,6 +728,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
     pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));
     pso->iType = STYPE_DEVICE;
     pso->iUniq = 0;
+    pso->pvBits = NULL;
 
     psurf->flags = 0;
 

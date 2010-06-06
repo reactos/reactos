@@ -232,6 +232,11 @@ EngAllocSectionMem(
         return NULL;
     }
 
+    if (fl & FL_ZERO_MEMORY)
+    {
+        RtlZeroMemory(pSection->pvMappedBase, cjSize);
+    }
+
     /* Set section pointer and return base address */
     *ppvSection = pSection;
     return pSection->pvMappedBase;

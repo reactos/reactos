@@ -21,3 +21,18 @@ IntEngWindowChanged(
 VOID FASTCALL IntGdiAcquireSemaphore ( HSEMAPHORE hsem );
 VOID FASTCALL IntGdiReleaseSemaphore ( HSEMAPHORE hsem );
 ULONGLONG APIENTRY EngGetTickCount(VOID);
+
+BOOL
+APIENTRY
+EngFreeSectionMem(
+    IN PVOID pvSection OPTIONAL,
+    IN PVOID pvMappedBase OPTIONAL);
+
+PVOID
+APIENTRY
+EngAllocSectionMem(
+    OUT PVOID *ppvSection,
+    IN ULONG fl,
+    IN SIZE_T cjSize,
+    IN ULONG ulTag);
+

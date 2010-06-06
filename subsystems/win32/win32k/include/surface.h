@@ -86,6 +86,10 @@ typedef struct _SURFACE
 #define PDEV_SURFACE              0x80000000
 
 
+#define BMF_DONT_FREE 0x100
+#define BMF_RLE_HACK  0x200
+
+
 /*  Internal interface  */
 
 #define SURFACE_AllocSurface()    ((PSURFACE) GDIOBJ_AllocObj(GDIObjType_SURF_TYPE))
