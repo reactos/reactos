@@ -597,7 +597,7 @@ INT DRIVER_ReferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver %S not found to reference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return ++GenericDriver->ReferenceCount;
 }
 
@@ -615,7 +615,7 @@ INT DRIVER_UnreferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver '%S' not found to dereference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return --GenericDriver->ReferenceCount;
 }
 /* EOF */

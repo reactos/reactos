@@ -145,7 +145,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                break;
 
             default:
-               assert(FALSE);
+               ASSERT(FALSE);
                Size = 0;
                break;
          }

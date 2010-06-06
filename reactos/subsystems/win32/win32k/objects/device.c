@@ -1745,7 +1745,7 @@ IntEnumDisplaySettings(
         }
         while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
         {
-            assert(CachedMode->dmSize > 0);
+            ASSERT(CachedMode->dmSize > 0);
             CachedMode = (DEVMODEW *)((PCHAR)CachedMode + CachedMode->dmSize + CachedMode->dmDriverExtra);
         }
         if (CachedMode >= CachedDevModesEnd)
