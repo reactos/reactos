@@ -85,10 +85,8 @@ MiDbgTranslatePhysicalAddress(IN ULONG64 PhysicalAddress,
     //
     Pfn = (PFN_NUMBER)(PhysicalAddress >> PAGE_SHIFT);
 
-    //
-    // Check if this could be an I/O mapping
-    //
-    if (Pfn > MmHighestPhysicalPage)
+    /* Check if this could be an I/O mapping */
+    if (!MiGetPfnEntry(Pfn))
     {
         //
         // FIXME: We don't support this yet

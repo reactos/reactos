@@ -129,7 +129,7 @@ MmBuildMdlForNonPagedPool(IN PMDL Mdl)
     //
     // Check if this is an I/O mapping
     //
-    if (Pfn > MmHighestPhysicalPage) Mdl->MdlFlags |= MDL_IO_SPACE;
+    if (!MiGetPfnEntry(Pfn)) Mdl->MdlFlags |= MDL_IO_SPACE;
 }
 
 /*
