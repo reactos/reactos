@@ -306,7 +306,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // then add the color tables and convert to pages
     //
     MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    MxPfnAllocation <<= 1;
+    //MxPfnAllocation <<= 1;
     MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
     MxPfnAllocation >>= PAGE_SHIFT;
     
@@ -380,19 +380,13 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // with the old memory manager, so we'll create a "Shadow PFN Database"
     // instead, and arbitrarly start it at 0xB0000000.
     //
-    // We actually create two PFN databases, one for ReactOS starting here,
-    // and the next one used for ARM3, which starts right after. The MmPfnAllocation
-    // variable actually holds the size of both (the colored tables come after
-    // the ARM3 PFN database).
-    //
-    MmPfnDatabase[0] = (PVOID)0xB0000000;
-    MmPfnDatabase[1] = &MmPfnDatabase[0][MmHighestPhysicalPage];
-    ASSERT(((ULONG_PTR)MmPfnDatabase[0] & (PDE_MAPPED_VA - 1)) == 0);
+    MmPfnDatabase = (PVOID)0xB0000000;
+    ASSERT(((ULONG_PTR)MmPfnDatabase & (PDE_MAPPED_VA - 1)) == 0);
             
     //
     // Non paged pool comes after the PFN database
     //
-    MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmPfnDatabase[0] +
+    MmNonPagedPoolStart = (PVOID)((ULONG_PTR)MmPfnDatabase +
                                   (MxPfnAllocation << PAGE_SHIFT));
 
     //
@@ -443,7 +437,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     //
     // Now we need pages for the page tables which will map initial NP
     //
-    StartPde = MiAddressToPde(MmPfnDatabase[0]);
+    StartPde = MiAddressToPde(MmPfnDatabase);
     EndPde = MiAddressToPde((PVOID)((ULONG_PTR)MmNonPagedPoolStart +
                                     MmSizeOfNonPagedPoolInBytes - 1));
     while (StartPde <= EndPde)
@@ -510,12 +504,14 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize the color tables */
     MiInitializeColorTables();
     
+    /* ReactOS Stuff */
+    extern KEVENT ZeroPageThreadEvent;
+    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
+    
     /* Build the PFN Database */
     MiInitializePfnDatabase(LoaderBlock);
+    MmInitializeBalancer(MmAvailablePages, 0);
 
-    /* Call back into shitMM to setup the ReactOS PFN database */
-    MmInitializePageList();
-        
     //
     // Reset the descriptor back so we can create the correct memory blocks
     //

@@ -33,8 +33,7 @@
 #define PHYSICAL_PAGE        MMPFN
 #define PPHYSICAL_PAGE       PMMPFN
 
-/* The first array contains ReactOS PFNs, the second contains ARM3 PFNs */
-PPHYSICAL_PAGE MmPfnDatabase[2];
+PPHYSICAL_PAGE MmPfnDatabase;
 
 PFN_NUMBER MmAvailablePages;
 PFN_NUMBER MmResidentAvailablePages;
@@ -450,89 +449,6 @@ MmDumpPfnDatabase(VOID)
 
 VOID
 NTAPI
-MmInitializePageList(VOID)
-{
-    ULONG i;
-    PHYSICAL_PAGE UsedPage;
-    PMEMORY_ALLOCATION_DESCRIPTOR Md;
-    PLIST_ENTRY NextEntry;
-    ULONG NrSystemPages = 0;
-    KIRQL OldIrql;
-
-    /* This is what a used page looks like */
-    RtlZeroMemory(&UsedPage, sizeof(UsedPage));
-    UsedPage.u3.e1.PageLocation = ActiveAndValid;
-    UsedPage.u3.e2.ReferenceCount = 1;
-
-    /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-
-    /* Loop the memory descriptors */
-    for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
-         NextEntry = NextEntry->Flink)
-    {
-        /* Get the descriptor */
-        Md = CONTAINING_RECORD(NextEntry,
-                               MEMORY_ALLOCATION_DESCRIPTOR,
-                               ListEntry);
-
-        /* Skip bad memory */
-        if ((Md->MemoryType == LoaderFirmwarePermanent) ||
-            (Md->MemoryType == LoaderBBTMemory) ||
-            (Md->MemoryType == LoaderSpecialMemory) ||
-            (Md->MemoryType == LoaderBad))
-        {
-            //
-            // We do not build PFN entries for this
-            //
-            continue;
-        }
-        else if ((Md->MemoryType == LoaderFree) ||
-                 (Md->MemoryType == LoaderLoadedProgram) ||
-                 (Md->MemoryType == LoaderFirmwareTemporary) ||
-                 (Md->MemoryType == LoaderOsloaderStack))
-        {
-            /* Loop every page part of the block */
-            for (i = 0; i < Md->PageCount; i++)
-            {
-                /* Mark it as a free page */
-                MmPfnDatabase[0][Md->BasePage + i].u3.e1.PageLocation = FreePageList;
-                MiInsertInListTail(&MmFreePageListHead,
-                                   &MmPfnDatabase[0][Md->BasePage + i]);
-                MmAvailablePages++;
-            }
-        }
-        else
-        {
-            /* Loop every page part of the block */
-            for (i = 0; i < Md->PageCount; i++)
-            {
-                /* Everything else is used memory */
-                MmPfnDatabase[0][Md->BasePage + i] = UsedPage;
-                NrSystemPages++;
-            }
-        }
-    }
-    
-    /* Finally handle the pages describing the PFN database themselves */
-    for (i = MxOldFreeDescriptor.BasePage; i < MxFreeDescriptor->BasePage; i++)
-    {
-        /* Mark it as used kernel memory */
-        MmPfnDatabase[0][i] = UsedPage;
-        NrSystemPages++;
-    }
-
-    /* Release the PFN database lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    
-    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-    DPRINT("Pages: %x %x\n", MmAvailablePages, NrSystemPages);
-    MmInitializeBalancer(MmAvailablePages, NrSystemPages);
-}
-
-VOID
-NTAPI
 MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
    KIRQL oldIrql;
@@ -695,7 +611,7 @@ MmAllocPage(ULONG Type)
 
    MmAvailablePages--;
 
-   PfnOffset = PageDescriptor - MmPfnDatabase[0];
+   PfnOffset = MiGetPfnEntryIndex(PageDescriptor);
    if ((NeedClear) && (Type != MC_SYSTEM))
    {
       MiZeroPage(PfnOffset);
@@ -761,7 +677,7 @@ MmZeroPageThreadMain(PVOID Ignored)
          PageDescriptor = MiRemoveHeadList(&MmFreePageListHead);
          /* We set the page to used, because MmCreateVirtualMapping failed with unused pages */
          KeReleaseQueuedSpinLock(LockQueuePfnLock, oldIrql);
-         Pfn = PageDescriptor - MmPfnDatabase[0];
+         Pfn = MiGetPfnEntryIndex(PageDescriptor);
          Status = MiZeroPage(Pfn);
 
          oldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);

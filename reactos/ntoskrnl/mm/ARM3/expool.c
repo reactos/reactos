@@ -19,7 +19,7 @@
 #undef ExAllocatePoolWithQuota
 #undef ExAllocatePoolWithQuotaTag
 
-BOOLEAN AllowPagedPool = FALSE;
+BOOLEAN AllowPagedPool = TRUE;
  
 /* GLOBALS ********************************************************************/
 
