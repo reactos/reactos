@@ -219,6 +219,11 @@ EngAllocSectionMem(
 
     /* Allocate a section object */
     pSection = EngCreateSection(fl, cjSize, ulTag);
+    if (!pSection)
+    {
+        *ppvSection = NULL;
+        return NULL;
+    }
 
     /* Map the section in session space */
     Status = MmMapViewInSessionSpace(pSection->pvSectionObject,
