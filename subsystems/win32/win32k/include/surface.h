@@ -92,7 +92,6 @@ typedef struct _SURFACE
 
 /*  Internal interface  */
 
-#define SURFACE_AllocSurface()    ((PSURFACE) GDIOBJ_AllocObj(GDIObjType_SURF_TYPE))
 #define SURFACE_AllocSurfaceWithHandle()    ((PSURFACE) GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP))
 #define SURFACE_FreeSurface(pBMObj) GDIOBJ_FreeObj((POBJ) pBMObj, GDIObjType_SURF_TYPE)
 #define SURFACE_FreeSurfaceByHandle(hBMObj) GDIOBJ_FreeObjByHandle((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
@@ -109,8 +108,17 @@ typedef struct _SURFACE
 
 BOOL INTERNAL_CALL SURFACE_Cleanup(PVOID ObjectBody);
 
+PSURFACE
+NTAPI
+SURFACE_AllocSurface(
+    IN ULONG iType,
+    IN ULONG cx,
+    IN ULONG cy,
+    IN ULONG iFormat);
+
 #define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
-INT   FASTCALL BitsPerFormat (ULONG Format);
 ULONG FASTCALL BitmapFormat (WORD Bits, DWORD Compression);
+extern UCHAR gajBitsPerFormat[];
+#define BitsPerFormat(Format) gajBitsPerFormat[Format]

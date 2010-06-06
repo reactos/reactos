@@ -78,6 +78,7 @@
 		<file>paint.c</file>
 		<file>pdevobj.c</file>
 		<file>perfcnt.c</file>
+		<file>rlecomp.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
 		<file>string.c</file>
