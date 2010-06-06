@@ -290,7 +290,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Hand it off to more competent hands...
         //
-        DPRINT1("ARM3 fault %p\n", MemoryArea);
+        DPRINT("ARM3 fault %p\n", MemoryArea);
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
     }   
 

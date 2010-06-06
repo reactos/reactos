@@ -422,7 +422,6 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         KeFlushEntireTb(TRUE, TRUE);
         
         /* Setup a demand-zero writable PTE */
-        DPRINT1("Setting up demand zero\n");
         MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
         
         //

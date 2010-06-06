@@ -107,7 +107,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     
     /* Get a page */
     PageFrameNumber = MiRemoveAnyPage(0);
-    DPRINT1("New pool page: %lx\n", PageFrameNumber);
+    DPRINT("New pool page: %lx\n", PageFrameNumber);
     
     /* Initialize it */
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
@@ -135,7 +135,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     // It's all good now
     //
-    DPRINT1("Paged pool page has now been paged in\n");
+    DPRINT("Paged pool page has now been paged in\n");
     return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
