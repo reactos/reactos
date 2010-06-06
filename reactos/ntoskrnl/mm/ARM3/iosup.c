@@ -172,15 +172,10 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     do
     {
         //
-        // Start out with nothing
-        //
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        
-        //
         // Write the PFN
         //
         TempPte.u.Hard.PageFrameNumber = Pfn++;
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--PageCount);
     
     //

@@ -499,6 +499,33 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
     return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
 }
 
+//
+// Writes a valid PTE
+//
+VOID
+FORCEINLINE
+MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
+                   IN MMPTE TempPte)
+{
+    /* Write the valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    *PointerPte = TempPte;
+}
+
+//
+// Writes an invalid PTE
+//
+VOID
+FORCEINLINE
+MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
+                     IN MMPTE InvalidPte)
+{
+    /* Write the invalid PTE */
+    ASSERT(InvalidPte.u.Hard.Valid == 0);
+    *PointerPte = InvalidPte;
+}
+
 NTSTATUS
 NTAPI
 MmArmInitSystem(

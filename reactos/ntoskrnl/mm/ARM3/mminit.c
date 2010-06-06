@@ -453,9 +453,8 @@ MiInitializeColorTables(VOID)
         {
             /* Get a page and map it */
             TempPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
-            ASSERT(TempPte.u.Hard.Valid == 1);
-            *PointerPte = TempPte;
-            
+            MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
             /* Zero out the page */
             RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
         }
@@ -614,9 +613,7 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 
                 /* Write out this PTE */
                 PagesLeft++;
-                ASSERT(PointerPte->u.Hard.Valid == 0);
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                *PointerPte = TempPte;
+                MI_WRITE_VALID_PTE(PointerPte, TempPte);
                 
                 /* Zero this page */
                 RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
@@ -1482,9 +1479,7 @@ MiBuildPagedPool(VOID)
     TempPte = ValidKernelPte;
     ASSERT(PD_COUNT == 1);
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPte = TempPte;
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     //
     // Let's get back to paged pool work: size it up.
@@ -1555,9 +1550,7 @@ MiBuildPagedPool(VOID)
     /* Allocate a page and map the first paged pool PDE */
     PageFrameIndex = MiRemoveZeroPage(0);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-    ASSERT(PointerPde->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPde = TempPte;
+    MI_WRITE_VALID_PTE(PointerPde, TempPte);
 
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,

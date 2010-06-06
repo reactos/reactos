@@ -127,11 +127,8 @@ MiResolveDemandZeroFault(IN PVOID Address,
     
     /* Build the PTE */
     MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, PointerPte->u.Soft.Protection, PageFrameNumber);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    *PointerPte = TempPte;
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
     //
     // It's all good now
     //

@@ -747,6 +747,9 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
     MMPTE TempPte;
+
+    /* Sanity check that we aren't passed a valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
     
     /* Make an empty software PTE */
     MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
@@ -767,8 +770,7 @@ MiAllocatePfn(IN PMMPTE PointerPte,
     PageFrameIndex = MiRemoveAnyPage(0);
 
     /* Write the software PTE */
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    *PointerPte = TempPte;
+    MI_WRITE_INVALID_PTE(PointerPte, TempPte);
     PointerPte->u.Soft.Protection |= Protection;
     
     /* Initialize its PFN entry */

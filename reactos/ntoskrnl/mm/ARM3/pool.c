@@ -344,8 +344,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                                                MmSystemPageDirectory[(PointerPte - (PMMPTE)PDE_BASE) / PDE_COUNT]);
                              
                 /* Write the actual PTE now */
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                *PointerPte++ = TempPte;
+                MI_WRITE_VALID_PTE(PointerPte++, TempPte);
                 
                 //
                 // Move on to the next expansion address
@@ -604,9 +603,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         
         /* Write the PTE for it */
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--SizeInPages > 0);
     
     //

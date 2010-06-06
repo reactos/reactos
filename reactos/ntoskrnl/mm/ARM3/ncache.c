@@ -154,9 +154,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
         // Set the PFN in the page and write it
         //
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--PageCount);
     
     //

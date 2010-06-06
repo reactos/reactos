@@ -173,12 +173,10 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     {
         /* Allocate a page */
         TempPte.u.Hard.PageFrameNumber = MiAllocatePfn(PointerPte, MM_EXECUTE);
-        
+
         /* Write it */
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte = TempPte;
-        
+        MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
         /* Move on */
         PointerPte++;
     }
@@ -1451,15 +1449,13 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Copy the old data */
             OldPte = *StartPte;
             ASSERT(OldPte.u.Hard.Valid == 1);
-            
+
             /* Set page number from the loader's memory */
             TempPte.u.Hard.PageFrameNumber = OldPte.u.Hard.PageFrameNumber;
-            
+
             /* Write it */
-            ASSERT(PointerPte->u.Hard.Valid == 0);
-            ASSERT(TempPte.u.Hard.Valid == 1);
-            *PointerPte = TempPte;
-            
+            MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
             /* Move on */
             PointerPte++;
             StartPte++;

@@ -411,16 +411,10 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     while (StartPde <= EndPde)
     {
         //
-        // Sanity check
-        //
-        ASSERT(StartPde->u.Hard.Valid == 0);
-        
-        //
         // Get a page
         //
         TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
-        ASSERT(TempPde.u.Hard.Valid == 1);
-        *StartPde = TempPde;
+        MI_WRITE_VALID_PTE(StartPde, TempPde);
         
         //
         // Zero out the page table
@@ -443,17 +437,11 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     while (StartPde <= EndPde)
     {
         //
-        // Sanity check
-        //
-        ASSERT(StartPde->u.Hard.Valid == 0);
-        
-        //
         // Get a page
         //
         TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
-        ASSERT(TempPde.u.Hard.Valid == 1);
-        *StartPde = TempPde;
-        
+        MI_WRITE_VALID_PTE(StartPde, TempPde);
+
         //
         // Zero out the page table
         //
@@ -483,9 +471,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         // Use one of our contigous pages
         //
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex++;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     }
     
     //
@@ -548,9 +534,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PageFrameIndex = MiRemoveAnyPage(0);
     TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
-    ASSERT(StartPde->u.Hard.Valid == 0);
-    ASSERT(TempPde.u.Hard.Valid == 1);
-    *StartPde = TempPde;
+    MI_WRITE_VALID_PTE(StartPde, TempPde);
     
     /* Flush the TLB */
     KeFlushCurrentTb();

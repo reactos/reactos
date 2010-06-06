@@ -416,9 +416,8 @@ MmMapLockedPagesSpecifyCache(IN PMDL Mdl,
             //
             // Write the PTE
             //
-            ASSERT(PointerPte->u.Hard.Valid == 0);
             TempPte.u.Hard.PageFrameNumber = *MdlPages;
-            *PointerPte++ = TempPte;
+            MI_WRITE_VALID_PTE(PointerPte++, TempPte);
         } while (++MdlPages < LastPage);
         
         //

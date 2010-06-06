@@ -175,17 +175,14 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
         
         /* Get a page and write the current invalid PTE */
         PageFrameIndex = MiRemoveAnyPage(0);
-        ASSERT(InvalidPte.u.Hard.Valid == 0);
-        *PointerPte = InvalidPte;
-        
+        MI_WRITE_INVALID_PTE(PointerPte, InvalidPte);
+
         /* Initialize the PFN entry for this page */
         MiInitializePfn(PageFrameIndex, PointerPte, 1);
         
         /* Write the valid PTE */
         TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte, TempPte);
     }
 
     // Bug #4835
@@ -267,9 +264,8 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
     {
         /* Get a page and write the current invalid PTE */
         PageFrameIndex = MiRemoveAnyPage(0);
-        ASSERT(InvalidPte.u.Hard.Valid == 0);
-        *LimitPte = InvalidPte;
-        
+        MI_WRITE_INVALID_PTE(LimitPte, InvalidPte);
+
         /* Initialize the PFN entry for this page */
         MiInitializePfn(PageFrameIndex, LimitPte, 1);
         
@@ -277,9 +273,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
         MI_MAKE_HARDWARE_PTE(&TempPte, LimitPte, MM_READWRITE, PageFrameIndex);
         
         /* Write the valid PTE */
-        ASSERT(LimitPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *LimitPte-- = TempPte;
+        MI_WRITE_VALID_PTE(LimitPte--, TempPte);
     }
     
     //
