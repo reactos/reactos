@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Kernel
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/mm/mmdbg.c
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            ntoskrnl/mm/ARM3/mmdbg.c
  * PURPOSE:         Memory Manager support routines for the Kernel Debugger
  * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
@@ -9,9 +9,16 @@
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
-#include "ARM3/miarm.h"
 #define NDEBUG
 #include <debug.h>
+
+#line 16 "ARM³::DEBUGSUP"
+#define MODULE_INVOLVED_IN_ARM3
+#include "../ARM3/miarm.h"
+
+#ifndef _WINKD_
+#define KdpDprintf DPRINT
+#endif
 
 /* GLOBALS ********************************************************************/
 

@@ -397,6 +397,7 @@
 			<file>iosup.c</file>
 			<file>largepag.c</file>
 			<file>mdlsup.c</file>
+			<file>mmdbg.c</file>
 			<file>mminit.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
@@ -412,9 +413,6 @@
 		<file>balance.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
-		<if property="_WINKD_" value ="1">
-			<file>mmdbg.c</file>
-		</if>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
