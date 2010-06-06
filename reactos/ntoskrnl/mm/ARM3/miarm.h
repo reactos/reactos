@@ -743,6 +743,12 @@ MiRemoveAnyPage(
     IN ULONG Color
 );
 
+PFN_NUMBER
+NTAPI
+MiRemoveZeroPage(
+    IN ULONG Color
+);
+
 VOID
 NTAPI
 MiInsertPageInFreeList(

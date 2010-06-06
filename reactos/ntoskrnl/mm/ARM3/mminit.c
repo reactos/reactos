@@ -1586,14 +1586,17 @@ MiBuildPagedPool(VOID)
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-    //
-    // Allocate a page and map the first paged pool PDE
-    //
-    PageFrameIndex = MmAllocPage(MC_NPPOOL);
+    /* Allocate a page and map the first paged pool PDE */
+    PageFrameIndex = MiRemoveZeroPage(0);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
     ASSERT(PointerPde->u.Hard.Valid == 0);
     ASSERT(TempPte.u.Hard.Valid == 1);
     *PointerPde = TempPte;
+
+    /* Initialize the PFN entry for it */
+    MiInitializePfnForOtherProcess(PageFrameIndex,
+                                   PointerPde,
+                                   MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]);
 
     //
     // Release the PFN database lock
