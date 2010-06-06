@@ -58,6 +58,20 @@ PMMPFNLIST MmPageLocationList[] =
 
 VOID
 NTAPI
+MiZeroPhysicalPage(IN PFN_NUMBER PageFrameIndex)
+{
+    KIRQL OldIrql;
+    PVOID VirtualAddress;
+    PEPROCESS Process = PsGetCurrentProcess();
+
+    /* Map in hyperspace, then wipe it using XMMI or MEMSET */
+    VirtualAddress = MiMapPageInHyperSpace(Process, PageFrameIndex, &OldIrql);
+    KeZeroPages(VirtualAddress, PAGE_SIZE);
+    MiUnmapPageInHyperSpace(Process, VirtualAddress, OldIrql);
+}
+
+VOID
+NTAPI
 MiInsertInListTail(IN PMMPFNLIST ListHead,
                    IN PMMPFN Entry)
 {
@@ -440,6 +454,79 @@ MiRemoveAnyPage(IN ULONG Color)
     /* Return the page */
     return PageIndex;
 }
+
+PFN_NUMBER
+NTAPI
+MiRemoveZeroPage(IN ULONG Color)
+{
+    PFN_NUMBER PageIndex;
+    PMMPFN Pfn1;
+    BOOLEAN Zero;
+
+    /* Make sure PFN lock is held and we have pages */
+    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+    ASSERT(MmAvailablePages != 0);
+    ASSERT(Color < MmSecondaryColors);
+
+    /* Check the colored zero list */
+#if 0 // Enable when using ARM3 database */
+    PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
+    if (PageIndex == LIST_HEAD)
+    {
+#endif
+        /* Check the zero list */
+        ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
+        PageIndex = MmZeroedPageListHead.Flink;
+        Color = PageIndex & MmSecondaryColorMask;
+        if (PageIndex == LIST_HEAD)
+        {
+            ASSERT(MmZeroedPageListHead.Total == 0);
+            Zero = TRUE;
+#if 0 // Enable when using ARM3 database */
+            /* Check the colored free list */
+            PageIndex = MmFreePagesByColor[ZeroedPageList][Color].Flink;
+            if (PageIndex == LIST_HEAD)
+            {
+#endif
+                /* Check the free list */
+                ASSERT_LIST_INVARIANT(&MmFreePageListHead);
+                PageIndex = MmFreePageListHead.Flink;
+                Color = PageIndex & MmSecondaryColorMask;
+                ASSERT(PageIndex != LIST_HEAD);
+                if (PageIndex == LIST_HEAD)
+                {
+                    /* FIXME: Should check the standby list */
+                    ASSERT(MmZeroedPageListHead.Total == 0);
+                }
+#if 0 // Enable when using ARM3 database */
+            }
+#endif
+        }
+#if 0 // Enable when using ARM3 database */
+    }
+#endif
+    /* Sanity checks */
+    Pfn1 = MiGetPfnEntry(PageIndex);
+    ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
+           (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+
+    /* Remove the page from its list */
+    PageIndex = MiRemovePageByColor(PageIndex, Color);
+    ASSERT(Pfn1 == MiGetPfnEntry(PageIndex));
+    
+    /* Zero it, if needed */
+    if (Zero) MiZeroPhysicalPage(PageIndex);
+    
+    /* Sanity checks */
+    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+    ASSERT(Pfn1->u2.ShareCount == 0);
+    ASSERT_LIST_INVARIANT(&MmFreePageListHead);
+    ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
+
+    /* Return the page */
+    return PageIndex;
+}
+
 
 PMMPFN
 NTAPI
