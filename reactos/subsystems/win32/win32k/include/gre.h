@@ -366,15 +366,23 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 
 /* Mouse pointer */
 
-BOOL NTAPI
-GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo);
-
-VOID NTAPI
-GreMovePointer(
-    SURFOBJ *pso,
+ULONG
+NTAPI
+GreSetPointerShape(
+    HDC hdc,
+    HBITMAP hbmMask,
+    HBITMAP hbmColor,
+    LONG xHot,
+    LONG yHot,
     LONG x,
-    LONG y,
-    RECTL *prcl);
+    LONG y);
+
+VOID
+NTAPI
+GreMovePointer(
+    HDC hdc,
+    LONG x,
+    LONG y);
 
 INT FASTCALL
 MouseSafetyOnDrawStart(SURFOBJ *pso,

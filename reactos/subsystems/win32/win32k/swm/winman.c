@@ -35,7 +35,6 @@ VOID NTAPI SwmTest();
 LIST_ENTRY SwmWindows;
 ERESOURCE SwmLock;
 HDC SwmDc; /* Screen DC for copying operations */
-PCURSORICONENTRY SwmLastCursor;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -85,6 +84,14 @@ SwmCreateScreenDc()
 
     /* Make it global */
     GDIOBJ_SetOwnership(SwmDc, NULL);
+}
+
+HDC SwmGetScreenDC()
+{
+    /* Lazily create a global screen DC */
+    if (!SwmDc) SwmCreateScreenDc();
+
+    return SwmDc;
 }
 
 VOID
@@ -785,37 +792,11 @@ SwmGetWindowFromPoint(LONG x, LONG y)
 
         if (point_in_region(Window->Visible, x, y))
         {
-            /* Acquire CI lock */
-            USER_LockCursorIcons();
-
-            /* Check if cursor needs to be changed */
-            if (Window->Cursor != SwmLastCursor)
-            {
-                if (Window->Cursor)
-                {
-                    /* Set the new cursor */
-                    DPRINT1("Setting cursor bitmap %p for hwnd %p\n", Window->Cursor->IconInfo.hbmMask, Window->hwnd);
-                    GreSetCursor(&Window->Cursor->IconInfo, &CursorInfo);
-                }
-                else
-                {
-                    /* This window should have no cursor */
-                    GreSetCursor(NULL, &CursorInfo);
-                }
-
-                /* Update the last cursor */
-                SwmLastCursor = Window->Cursor;
-            }
-
-            /* Release CI lock */
-            USER_UnlockCursorIcons();
-
             /* Release the lock */
             SwmRelease();
 
             return Window->hwnd;
         }
-
         /* Advance to the next window */
         Current = Current->Flink;
     }
@@ -824,63 +805,6 @@ SwmGetWindowFromPoint(LONG x, LONG y)
     SwmRelease();
 
     return 0;
-}
-
-BOOL
-NTAPI
-SwmDefineCursor(HWND hWnd, HCURSOR hCursor)
-{
-    PCURSORICONENTRY pCursorIcon;
-    PSWM_WINDOW pSwmWindow;
-
-    /* Acquire CI lock */
-    USER_LockCursorIcons();
-
-    /* Try to find this cursor */
-    pCursorIcon = USER_GetCursorIcon(hCursor);
-
-    /* Release CI lock */
-    USER_UnlockCursorIcons();
-
-    if (!pCursorIcon) return FALSE;
-
-    /* Acquire the SWM lock */
-    SwmAcquire();
-
-    if (!hWnd)
-    {
-        /* Special case for setting default cursor */
-        DPRINT1("Setting cursor bitmap uh%p\n", pCursorIcon->hbmMaskUser);
-        GreSetCursor(&pCursorIcon->IconInfo, &CursorInfo);
-
-        /* Update current cursor */
-        SwmLastCursor = hCursor;
-
-        /* Release the SWM lock */
-        SwmRelease();
-
-        return TRUE;
-    }
-
-    /* Now find the window */
-    pSwmWindow = SwmFindByHwnd(hWnd);
-
-    /* Success is returned in this case */
-    if (!pSwmWindow)
-    {
-        /* Release the SWM lock */
-        SwmRelease();
-
-        return TRUE;
-    }
-
-    /* Set a cursor for this window */
-    pSwmWindow->Cursor = pCursorIcon;
-
-    /* Release the SWM lock */
-    SwmRelease();
-
-    return TRUE;
 }
 
 VOID
@@ -900,10 +824,7 @@ SwmInitialize()
         DPRINT1("Failure initializing SWM resource!\n");
     }
 
-    /* Cursor is hidden by default */
-    SwmLastCursor = NULL;
-
-    SwmTest();
+    //SwmTest();
 }
 
 VOID

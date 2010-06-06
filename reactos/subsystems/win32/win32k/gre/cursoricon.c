@@ -13,7 +13,7 @@
 extern PDEVOBJ PrimarySurface;
 
 VOID NTAPI
-GreMovePointer(
+IntEngMovePointer(
     IN SURFOBJ *pso,
     IN LONG x,
     IN LONG y,
@@ -27,8 +27,30 @@ GreMovePointer(
     SURFACE_UnlockBitmapBits(pSurf);
 }
 
+VOID
+NTAPI
+GreMovePointer(
+    HDC hdc,
+    LONG x,
+    LONG y)
+{
+    PRECTL prcl;
+    SURFOBJ *pso;
+
+    pso = EngLockSurface(PrimarySurface.pSurface);
+
+    /* Store the cursor exclude position in the PDEV */
+    prcl = &(GDIDEV(pso)->Pointer.Exclude);
+
+    /* Call Eng/Drv function */
+    IntEngMovePointer(pso, x, y, prcl);
+
+    EngUnlockSurface(pso);
+}
+
+
 ULONG NTAPI
-GreSetPointerShape(
+IntSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
    IN SURFOBJ *psoColor,
@@ -90,37 +112,23 @@ GreSetPointerShape(
     return ulResult;
 }
 
-
-
-BOOL
+ULONG
 NTAPI
-GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
+GreSetPointerShape(
+    HDC hdc,
+    HBITMAP hbmMask,
+    HBITMAP hbmColor,
+    LONG xHot,
+    LONG yHot,
+    LONG x,
+    LONG y)
 {
     SURFOBJ *pso;
-    HBITMAP hbmMask, hbmColor;
     PSURFACE psurfMask, psurfColor;
     XLATEOBJ *XlateObj = NULL;
     ULONG Status;
 
     pso = EngLockSurface(PrimarySurface.pSurface);
-
-    if (!NewCursor)
-    {
-        if (CursorInfo->ShowingCursor)
-        {
-            DPRINT("Removing pointer!\n");
-            /* Remove the cursor if it was displayed */
-            GreMovePointer(pso, -1, -1, NULL);
-        }
-        CursorInfo->ShowingCursor = 0;
-        EngUnlockSurface(pso);
-        return TRUE;
-    }
-
-    CursorInfo->ShowingCursor = TRUE;
-
-    hbmMask = NewCursor->hbmMask;
-    hbmColor = NewCursor->hbmColor;
 
     /* Lock the mask bitmap */
     if (hbmMask)
@@ -133,7 +141,7 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
     {
         /* We have one, lock it */
         psurfColor = SURFACE_ShareLock(hbmColor);
-        
+
         if (psurfColor)
         {
             /* Create an XLATEOBJ, no mono support */
@@ -144,14 +152,14 @@ GreSetCursor(ICONINFO* NewCursor, PSYSTEM_CURSORINFO CursorInfo)
     else
         psurfColor = NULL;
 
-   Status  = GreSetPointerShape(pso,
+   Status  = IntSetPointerShape(pso,
                                 psurfMask ? &psurfMask->SurfObj : NULL,
                                 psurfColor ? &psurfColor->SurfObj : NULL,
                                 XlateObj,
-                                NewCursor->xHotspot,
-                                NewCursor->yHotspot,
-                                CursorInfo->CursorPos.x,
-                                CursorInfo->CursorPos.y,
+                                xHot,
+                                yHot,
+                                x,
+                                y,
                                 &(GDIDEV(pso)->Pointer.Exclude),
                                 SPS_CHANGE);
 

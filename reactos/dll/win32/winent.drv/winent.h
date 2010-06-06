@@ -16,12 +16,6 @@ enum ntdrv_escape_codes
     NTDRV_FLUSH_GL_DRAWABLE /* flush changes made to the gl drawable */
 };
 
-/* NT driver private messages, must be in the range 0x80001000..0x80001fff */
-enum ntdrv_window_messages
-{
-    WM_NTDRV_SET_CURSOR = 0x80001000
-};
-
 struct ntdrv_escape_set_drawable
 {
     enum ntdrv_escape_codes  code;         /* escape code (X11DRV_SET_DRAWABLE) */

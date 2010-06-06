@@ -17,6 +17,6 @@ VOID NTAPI SwmInitialize();
 PSWM_WINDOW NTAPI SwmFindByHwnd(HWND hWnd);
 VOID NTAPI SwmAcquire(VOID);
 VOID NTAPI SwmRelease(VOID);
-
+HDC SwmGetScreenDC();
 
 #endif

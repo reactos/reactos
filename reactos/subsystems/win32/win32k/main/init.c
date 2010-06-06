@@ -357,9 +357,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     /* Initialize handle-mapping */
     GDI_InitHandleMapping();
 
-    /* Initialize cursor icons */
-    USER_InitCursorIcons();
-
     /* Create stock objects */
     CreateStockBitmap();
     PALETTE_Init();
