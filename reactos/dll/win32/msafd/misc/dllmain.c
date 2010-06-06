@@ -566,7 +566,7 @@ WSPCloseSocket(IN SOCKET Handle,
     NtClose((HANDLE)Handle);
     NtClose(SockEvent);
 
-    return NO_ERROR;
+    return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 }
 
 
@@ -666,13 +666,17 @@ WSPBind(SOCKET Handle,
         Status = IOSB.Status;
     }
 
+    NtClose( SockEvent );
+    HeapFree(GlobalHeap, 0, BindData);
+
+    if (Status != STATUS_SUCCESS)
+        return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
+
     /* Set up Socket Data */
     Socket->SharedData.State = SocketBound;
     Socket->TdiAddressHandle = (HANDLE)IOSB.Information;
 
-    NtClose( SockEvent );
-    HeapFree(GlobalHeap, 0, BindData);
-    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_BIND))
+    if (Socket->HelperEvents & WSH_NOTIFY_BIND)
     {
         Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
                                                Socket->Handle,
@@ -739,14 +743,17 @@ WSPListen(SOCKET Handle,
     {
         WaitForSingleObject(SockEvent, INFINITE);
         Status = IOSB.Status;
-    }         
+    }
+
+    NtClose( SockEvent );
+
+    if (Status != STATUS_SUCCESS)
+       return MsafdReturnWithErrno ( Status, lpErrno, 0, NULL );
 
     /* Set to Listening */
     Socket->SharedData.Listening = TRUE;
 
-    NtClose( SockEvent );
-
-    if (Status == STATUS_SUCCESS && (Socket->HelperEvents & WSH_NOTIFY_LISTEN))
+    if (Socket->HelperEvents & WSH_NOTIFY_LISTEN)
     {
         Status = Socket->HelperData->WSHNotify(Socket->HelperContext,
                                                Socket->Handle,
@@ -907,6 +914,7 @@ WSPSelect(int nfds,
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
     /* Clear the Structures */
@@ -1440,6 +1448,9 @@ WSPConnect(SOCKET Handle,
             WaitForSingleObject(SockEvent, INFINITE);
             Status = IOSB.Status;
         }
+
+        if (Status != STATUS_SUCCESS)
+            goto notify;
     }
 
     /* Dynamic Structure...ugh */
@@ -1485,6 +1496,9 @@ WSPConnect(SOCKET Handle,
             WaitForSingleObject(SockEvent, INFINITE);
             Status = IOSB.Status;
         }
+
+        if (Status != STATUS_SUCCESS)
+            goto notify;
     }
 
     /* AFD doesn't seem to care if these are invalid, but let's 0 them anyways */
@@ -1516,6 +1530,9 @@ WSPConnect(SOCKET Handle,
         Status = IOSB.Status;
     }
 
+    if (Status != STATUS_SUCCESS)
+        goto notify;
+
     Socket->TdiConnectionHandle = (HANDLE)IOSB.Information;
 
     /* Get any pending connect data */
@@ -1539,13 +1556,14 @@ WSPConnect(SOCKET Handle,
         }
     }
 
+    AFD_DbgPrint(MID_TRACE,("Ending\n"));
+
+notify:
     /* Re-enable Async Event */
     SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     /* FIXME: THIS IS NOT RIGHT!!! HACK HACK HACK! */
     SockReenableAsyncSelectEvent(Socket, FD_CONNECT);
-
-    AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
     NtClose( SockEvent );
 
@@ -2139,7 +2157,11 @@ GetSocketInformation(PSOCKET_INFORMATION Socket,
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
+
+    if (Status != STATUS_SUCCESS)
+        return -1;
 
     /* Return Information */
     if (Ulong != NULL)
@@ -2210,11 +2232,12 @@ SetSocketInformation(PSOCKET_INFORMATION Socket,
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
     NtClose( SockEvent );
 
-    return 0;
+    return Status == STATUS_SUCCESS ? 0 : -1;
 
 }
 
@@ -2275,11 +2298,12 @@ int CreateContext(PSOCKET_INFORMATION Socket)
     if (Status == STATUS_PENDING)
     {
         WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
     NtClose( SockEvent );
 
-    return 0;
+    return Status == STATUS_SUCCESS ? 0 : -1;
 }
 
 BOOLEAN SockCreateOrReferenceAsyncThread(VOID)

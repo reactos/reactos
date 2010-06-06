@@ -182,7 +182,7 @@ WSPRecv(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-        Event ? Event : SockEvent,
+        Event,
         APCFunction,
         APCContext,
         IOSB,
@@ -209,6 +209,9 @@ WSPRecv(SOCKET Handle,
     /* Return the Flags */
     *ReceiveFlags = 0;
 
+    if (Status == STATUS_PENDING)
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
+
     switch (Status)
     {
         case STATUS_RECEIVE_EXPEDITED:
@@ -223,7 +226,7 @@ WSPRecv(SOCKET Handle,
     }
 
     /* Re-enable Async Event */
-    if (*ReceiveFlags == MSG_OOB)
+    if (*ReceiveFlags & MSG_OOB)
     {
         SockReenableAsyncSelectEvent(Socket, FD_OOB);
     }
@@ -334,7 +337,7 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    Event ? Event : SockEvent,
+                                    Event,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -355,6 +358,9 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Return the Flags */
     *ReceiveFlags = 0;
+
+    if (Status == STATUS_PENDING)
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
 
     switch (Status)
     {
@@ -461,7 +467,7 @@ WSPSend(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                    Event ? Event : SockEvent,
+                                    Event,
                                     APCFunction,
                                     APCContext,
                                     IOSB,
@@ -483,7 +489,7 @@ WSPSend(SOCKET Handle,
     if (Status == STATUS_PENDING)
     {
         AFD_DbgPrint(MID_TRACE,("Leaving (Pending)\n"));
-        return WSA_IO_PENDING;
+        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
     }
 
     /* Re-enable Async Event */
@@ -613,7 +619,7 @@ WSPSendTo(SOCKET Handle,
 
     /* Send IOCTL */
     Status = NtDeviceIoControlFile((HANDLE)Handle,
-                                   Event ? Event : SockEvent,
+                                   Event,
                                    APCFunction,
                                    APCContext,
                                    IOSB,
@@ -638,11 +644,8 @@ WSPSendTo(SOCKET Handle,
         HeapFree(GlobalHeap, 0, BindAddress);
     }
 
-    if (Status == STATUS_PENDING)
-        return WSA_IO_PENDING;
-
-    /* Re-enable Async Event */
-    SockReenableAsyncSelectEvent(Socket, FD_WRITE);
+    if (Status != STATUS_PENDING)
+       SockReenableAsyncSelectEvent(Socket, FD_WRITE);
 
     return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesSent);
 }
