@@ -167,7 +167,7 @@ PFN_DrvEnableDriver DRIVER_FindDDIDriver(LPCWSTR Name)
 
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool(FullName);
+    ExFreePoolWithTag(FullName, TAG_DRIVER);
     return NULL;
   }
 
@@ -572,8 +572,8 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
 
   if (Driver != NULL)
   {
-    ExFreePool(Driver->Name);
-    ExFreePool(Driver);
+    ExFreePoolWithTag(Driver->Name, TAG_DRIVER);
+    ExFreePoolWithTag(Driver, TAG_DRIVER);
 
     return  TRUE;
   }
