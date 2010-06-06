@@ -404,6 +404,7 @@
 			<file>pfnlist.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
+			<file>sysldr.c</file>
 			<file>syspte.c</file>
 			<file>virtual.c</file>
 		</directory>
@@ -425,7 +426,6 @@
 		<file>region.c</file>
 		<file>rmap.c</file>
 		<file>section.c</file>
-		<file>sysldr.c</file>
 		<file>virtual.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>

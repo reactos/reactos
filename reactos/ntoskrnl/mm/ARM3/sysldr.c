@@ -15,7 +15,7 @@
 
 #line 16 "ARM³::LOADER"
 #define MODULE_INVOLVED_IN_ARM3
-#include "./ARM3/miarm.h"
+#include "../ARM3/miarm.h"
 
 /* GCC's incompetence strikes again */
 __inline
