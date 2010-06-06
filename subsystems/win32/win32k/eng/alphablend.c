@@ -144,7 +144,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
                            NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY)))
         {
             DPRINT1("EngStretchBlt failed!\n");
-            EngFreeMem(SourceStretchedObj->pvBits);
             EngUnlockSurface(SourceStretchedObj);
             EngDeleteSurface((HSURF)SourceStretchedBitmap);
             return FALSE;
@@ -161,7 +160,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
     {
         if (SourceStretchedObj != NULL)
         {
-            EngFreeMem(SourceStretchedObj->pvBits);
             EngUnlockSurface(SourceStretchedObj);
         }
         if (SourceStretchedBitmap != 0)
@@ -180,7 +178,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
         IntEngLeave(&EnterLeaveSource);
         if (SourceStretchedObj != NULL)
         {
-            EngFreeMem(SourceStretchedObj->pvBits);
             EngUnlockSurface(SourceStretchedObj);
         }
         if (SourceStretchedBitmap != 0)
@@ -258,7 +255,6 @@ EngAlphaBlend(IN SURFOBJ *psoDest,
 
     if (SourceStretchedObj != NULL)
     {
-        EngFreeMem(SourceStretchedObj->pvBits);
         EngUnlockSurface(SourceStretchedObj);
     }
     if (SourceStretchedBitmap != 0)
