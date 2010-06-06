@@ -95,6 +95,32 @@ NdisInitializeTimer(
   KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
 }
 
+VOID DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
+{
+  PNDIS_MINIPORT_TIMER CurrentTimer;
+
+  ASSERT(Timer->Miniport->TimerQueue);
+
+  if (Timer->Miniport->TimerQueue == Timer)
+  {
+      Timer->Miniport->TimerQueue = Timer->NextDeferredTimer;
+  }
+  else
+  {
+      CurrentTimer = Timer->Miniport->TimerQueue;
+      while (CurrentTimer->NextDeferredTimer)
+      {
+          if (CurrentTimer->NextDeferredTimer == Timer)
+          {
+              CurrentTimer->NextDeferredTimer = Timer->NextDeferredTimer;
+              return;
+          }
+          CurrentTimer = CurrentTimer->NextDeferredTimer;
+      }
+      ASSERT(FALSE);
+  }
+}
+
 
 /*
  * @implemented
@@ -118,6 +144,25 @@ NdisMCancelTimer(
   ASSERT(Timer);
 
   *TimerCancelled = KeCancelTimer (&Timer->Timer);
+
+  DequeueMiniportTimer(Timer);
+}
+
+VOID NTAPI
+MiniTimerDpcFunction(PKDPC Dpc,
+                     PVOID DeferredContext,
+                     PVOID SystemArgument1,
+                     PVOID SystemArgument2)
+{
+  PNDIS_MINIPORT_TIMER Timer = DeferredContext;
+
+  Timer->MiniportTimerFunction(Dpc,
+                               Timer->MiniportTimerContext,
+                               SystemArgument1,
+                               SystemArgument2);
+
+  /* FIXME: We can't call this if we have a periodic timer */
+  //DequeueMiniportTimer(Timer);
 }
 
 
@@ -145,9 +190,14 @@ NdisMInitializeTimer(
 {
   PAGED_CODE();
   ASSERT(Timer);
-  KeInitializeTimer (&Timer->Timer);
 
-  KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
+  KeInitializeTimer (&Timer->Timer);
+  KeInitializeDpc (&Timer->Dpc, MiniTimerDpcFunction, Timer);
+
+  Timer->MiniportTimerFunction = TimerFunction;
+  Timer->MiniportTimerContext = FunctionContext;
+  Timer->Miniport = &((PLOGICAL_ADAPTER)MiniportAdapterHandle)->NdisMiniportBlock;
+  Timer->NextDeferredTimer = NULL;
 }
 
 
@@ -176,6 +226,10 @@ NdisMSetPeriodicTimer(
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
+
+  /* Add the timer at the head of the timer queue */
+  Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+  Timer->Miniport->TimerQueue = Timer;
 
   KeSetTimerEx (&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
 }
@@ -207,6 +261,10 @@ NdisMSetTimer(
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
+
+  /* Add the timer at the head of the timer queue */
+  Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+  Timer->Miniport->TimerQueue = Timer;
 
   KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
 }
