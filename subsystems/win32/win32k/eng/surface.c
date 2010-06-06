@@ -233,7 +233,7 @@ SURFACE_bSetBitmapBits(
     if (ulWidth)
     {
         /* Align the width (Windows compatibility) */
-        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+        //ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
     }
     else
     {
@@ -576,8 +576,6 @@ IntCreateBitmap(
 
     if (Format == BMF_4RLE)
     {
-        pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
-        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_4BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
@@ -585,8 +583,6 @@ IntCreateBitmap(
     }
     else if (Format == BMF_8RLE)
     {
-        pso->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
-        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedFormat = BMF_8BPP;
         UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, pso->cjBits, TAG_DIB);
         Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, pso->lDelta);
@@ -594,8 +590,6 @@ IntCreateBitmap(
     }
     else
     {
-        pso->lDelta = abs(Width);
-        pso->cjBits = pso->lDelta * Size.cy;
         UncompressedBits = Bits;
         UncompressedFormat = Format;
     }
