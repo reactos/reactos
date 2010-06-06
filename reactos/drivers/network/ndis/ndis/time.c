@@ -95,7 +95,7 @@ NdisInitializeTimer(
   KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
 }
 
-VOID DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
+BOOLEAN DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
 {
   PNDIS_MINIPORT_TIMER CurrentTimer;
 
@@ -104,6 +104,8 @@ VOID DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
   if (Timer->Miniport->TimerQueue == Timer)
   {
       Timer->Miniport->TimerQueue = Timer->NextDeferredTimer;
+      Timer->NextDeferredTimer = NULL;
+      return TRUE;
   }
   else
   {
@@ -113,11 +115,12 @@ VOID DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
           if (CurrentTimer->NextDeferredTimer == Timer)
           {
               CurrentTimer->NextDeferredTimer = Timer->NextDeferredTimer;
-              return;
+              Timer->NextDeferredTimer = NULL;
+              return TRUE;
           }
           CurrentTimer = CurrentTimer->NextDeferredTimer;
       }
-      ASSERT(FALSE);
+      return FALSE;
   }
 }
 
@@ -161,8 +164,8 @@ MiniTimerDpcFunction(PKDPC Dpc,
                                SystemArgument1,
                                SystemArgument2);
 
-  /* FIXME: We can't call this if we have a periodic timer */
-  //DequeueMiniportTimer(Timer);
+  /* Only dequeue if the timer has a period of 0 */
+  if (!Timer->Timer.Period) DequeueMiniportTimer(Timer);
 }
 
 
@@ -227,6 +230,9 @@ NdisMSetPeriodicTimer(
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
 
+  /* Dequeue the timer if it is queued already */
+  DequeueMiniportTimer(Timer);
+
   /* Add the timer at the head of the timer queue */
   Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
   Timer->Miniport->TimerQueue = Timer;
@@ -261,6 +267,9 @@ NdisMSetTimer(
 
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
+
+  /* Dequeue the timer if it is queued already */
+  DequeueMiniportTimer(Timer);
 
   /* Add the timer at the head of the timer queue */
   Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
