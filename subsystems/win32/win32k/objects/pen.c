@@ -63,11 +63,11 @@ IntGdiExtCreatePen(
 {
    HPEN hPen;
    PBRUSH pbrushPen;
-   static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55};
-   static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0};
-   static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38};
-   static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0};
-   static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38};
+   static const BYTE PatternAlternate[] = {0x55, 0x55, 0x55, 0};
+   static const BYTE PatternDash[] = {0xFF, 0xFF, 0xC0, 0};
+   static const BYTE PatternDot[] = {0xE3, 0x8E, 0x38, 0};
+   static const BYTE PatternDashDot[] = {0xFF, 0x81, 0xC0, 0};
+   static const BYTE PatternDashDotDot[] = {0xFF, 0x8E, 0x38, 0};
 
    dwWidth = abs(dwWidth);
 
