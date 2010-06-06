@@ -221,14 +221,25 @@ SURFACE_bSetBitmapBits(
 {
     SURFOBJ *pso = &psurf->SurfObj;
     PVOID pvSection;
+    UCHAR cBitsPixel;
 
     /* Only bitmaps can have bits */
     ASSERT(psurf->SurfObj.iType == STYPE_BITMAP);
 
-    /* If no width is given, calculate it */
-    if (!ulWidth)
-        ulWidth = DIB_GetDIBWidthBytes(pso->sizlBitmap.cx, 
-                                       BitsPerFormat(pso->iBitmapFormat));
+    /* Get bits per pixel from the format */
+    cBitsPixel = gajBitsPerFormat[pso->iBitmapFormat];
+
+    /* Is a width in bytes given? */
+    if (ulWidth)
+    {
+        /* Align the width (Windows compatibility) */
+        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+    }
+    else
+    {
+        /* Calculate width from the bitmap width in pixels */
+        ulWidth = ((pso->sizlBitmap.cx * cBitsPixel + 31) & ~31) >> 3;
+    }
 
     /* Calculate the bitmap size in bytes */
     pso->cjBits = ulWidth * pso->sizlBitmap.cy;
