@@ -1603,8 +1603,8 @@ static NTSTATUS parse_manifest( struct actctx_loader* acl, struct assembly_ident
 
         mbstowcs( new_buff, buffer, size);
         xmlbuf.ptr = new_buff;
-        DPRINT("Buffer %S\n", new_buff);
-        xmlbuf.end = xmlbuf.ptr + len;
+
+        xmlbuf.end = xmlbuf.ptr + len / sizeof(WCHAR);
         status = parse_manifest_buffer( acl, assembly, ai, &xmlbuf );
 
         RtlFreeHeap( RtlGetProcessHeap(), 0, new_buff );
