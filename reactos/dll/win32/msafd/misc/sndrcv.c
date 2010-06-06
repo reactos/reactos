@@ -209,9 +209,6 @@ WSPRecv(SOCKET Handle,
     /* Return the Flags */
     *ReceiveFlags = 0;
 
-    if (Status == STATUS_PENDING)
-        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
-
     switch (Status)
     {
         case STATUS_RECEIVE_EXPEDITED:
@@ -358,9 +355,6 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Return the Flags */
     *ReceiveFlags = 0;
-
-    if (Status == STATUS_PENDING)
-        return MsafdReturnWithErrno(Status, lpErrno, IOSB->Information, lpNumberOfBytesRead);
 
     switch (Status)
     {
