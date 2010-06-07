@@ -529,12 +529,67 @@ HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 
 BOOLEAN
 NTAPI
-HalpGetPciBridgeConfig(IN ULONG PciType,
-                       IN PUCHAR MaxPciBus)
+HalpIsBridgeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
-    /* Not yet implemented */
-    if (!WarningsGiven[2]++)  DbgPrint("HAL: Not checking for PCI-to-PCI Bridges. Your hardware may malfunction!\n");
-    return FALSE; 
+    /* Either this is a PCI-to-PCI Bridge, or a CardBUS Bridge */
+    return (((PCI_CONFIGURATION_TYPE(PciData) == PCI_BRIDGE_TYPE) &&
+             (PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+             (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI)) ||
+            ((PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE) &&
+             (PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+             (PciData->SubClass == PCI_SUBCLASS_BR_CARDBUS)));
+}
+    
+BOOLEAN
+NTAPI
+HalpGetPciBridgeConfig(IN ULONG PciType,
+                       IN PUCHAR BusCount)
+{
+    PCI_SLOT_NUMBER PciSlot;
+    ULONG i, j, k;
+    UCHAR DataBuffer[PCI_COMMON_HDR_LENGTH];
+    PPCI_COMMON_CONFIG PciData = (PPCI_COMMON_CONFIG)DataBuffer;
+    PBUS_HANDLER BusHandler;
+    
+    /* Loop PCI buses */
+    PciSlot.u.bits.Reserved = 0;
+    for (i = 0; i < *BusCount; i++)
+    {
+        /* Get the bus handler */
+        BusHandler = HalHandlerForBus(PCIBus, i);
+        
+        /* Loop every device */
+        for (j = 0; j < PCI_MAX_DEVICES; j++)
+        {
+            /* Loop every function */
+            PciSlot.u.bits.DeviceNumber = j;
+            for (k = 0; k < PCI_MAX_FUNCTION; k++)
+            {
+                /* Build the final slot structure */
+                PciSlot.u.bits.FunctionNumber = k;
+                
+                /* Read the configuration information */
+                HalpReadPCIConfig(BusHandler,
+                                  PciSlot,
+                                  PciData,
+                                  0,
+                                  PCI_COMMON_HDR_LENGTH);
+                
+                /* Skip if this is an invalid function */
+                if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
+                
+                /* Make sure that this is a PCI bridge or a cardbus bridge */
+                if (!HalpIsBridgeDevice(PciData)) continue;
+                
+                /* Not supported */
+                if (!WarningsGiven[2]++) DPRINT1("Your machine has a PCI-to-PCI or CardBUS Bridge. PCI devices may fail!\n");
+                continue;
+            }
+        }
+    }
+    
+    /* If we exited the loop, then there's no bridge to worry about */
+    return FALSE;
 }
 
 VOID
@@ -555,7 +610,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
         while (ParentBus)
         {
             /* Should merge addresses */
-            if (!WarningsGiven[0]++) DPRINT1("Found parent bus (indicating PCI Bridge). This is not supported!\n");
+            if (!WarningsGiven[0]++) DPRINT1("Found parent bus (indicating PCI Bridge). PCI devices may fail!\n");
 
             /* Check the next parent */
             ParentBus = ParentBus->ParentHandler;
@@ -579,7 +634,7 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
                 if (ParentBus->InterfaceType == PCIBus)
                 {
                     /* Should trim addresses */
-                    if (!WarningsGiven[1]++) DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). This is not supported!\n");
+                    if (!WarningsGiven[1]++) DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). PCI devices may fail!\n");
                 }
             
                 /* Check the next parent */
@@ -710,7 +765,7 @@ HalpInitializePciBus(VOID)
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
                 {
                     /* Not supported */
-                    DbgPrint("HAL: Your machine has a PCI Cardbus Bridge. This is not supported!\n");
+                    DPRINT1("Your machine has a PCI Cardbus Bridge. This device will not work!\n");
                     continue;
                 }
                 
@@ -728,7 +783,7 @@ HalpInitializePciBus(VOID)
                             if (!HalpIsIdeDevice(PciData))
                             {
                                 /* We'll mask out this interrupt then */
-                                DPRINT1("HAL: Device %lx:%lx is not an IDE Device. Should be masking IRQ %d! This is not supported!\n",
+                                DPRINT1("Device %lx:%lx is using IRQ %d! ISA Cards using that IRQ may fail!\n",
                                         PciData->VendorID, PciData->DeviceID,
                                         PciData->u.type1.InterruptLine);
                                 HalpPciIrqMask |= (1 << PciData->u.type1.InterruptLine);
@@ -745,7 +800,7 @@ HalpInitializePciBus(VOID)
                         (PciData->RevisionID < 0x11))
                     {
                         /* Skip */
-                        DbgPrint("HAL: Your machine has a broken Intel 82430 PCI Controller. This is not supported!\n");
+                        DPRINT1("Your machine has a broken Intel 82430 PCI Controller. This device will not work!\n");
                         continue;
                     }
                     
@@ -754,7 +809,7 @@ HalpInitializePciBus(VOID)
                         (PciData->RevisionID <= 3))
                     {
                         /* Skip */
-                        DbgPrint("HAL: Your machine has a broken Intel 82378 PCI-to-ISA Bridge. This is not supported!\n");
+                        DPRINT1("Your machine has a broken Intel 82378 PCI-to-ISA Bridge. This device will not work!\n");
                         continue;
                     }
                     
@@ -762,7 +817,7 @@ HalpInitializePciBus(VOID)
                     if ((PciData->DeviceID == 0x84C4) &&
                         (PciData->RevisionID <= 4))
                     {
-                        DbgPrint("HAL: Your machine has an Intel Orion 82450 PCI Bridge. This is not supported!\n");
+                        DPRINT1("Your machine has an Intel Orion 82450 PCI Bridge. This device will not work!\n");
                         continue;
                     }
                 }
@@ -776,7 +831,7 @@ HalpInitializePciBus(VOID)
                                              HALP_CARD_FEATURE_FULL_DECODE))
                     {
                         /* We'll do chipset checks later */
-                        DPRINT1("Your %lx:%lx PCI device has Extended Address Decoding. This is not supported!\n",
+                        DPRINT1("Your %lx:%lx PCI device has Extended Address Decoding. This device may fail to work on older BIOSes!\n",
                                 PciData->VendorID, PciData->DeviceID);
                         ExtendedAddressDecoding = TRUE;
                     }
@@ -789,21 +844,21 @@ HalpInitializePciBus(VOID)
                     /* Check if this is an OHCI controller */
                     if (PciData->ProgIf == 0x10)
                     {
-                        DbgPrint("HAL: Your machine has an OHCI (USB) PCI Expansion Card. This is not supported!\n");
+                        DPRINT1("Your machine has an OHCI (USB) PCI Expansion Card. Turn off Legacy USB in your BIOS!\n");
                         continue;
                     }
                     
                     /* Check for Intel UHCI controller */
                     if (PciData->VendorID == 0x8086)
                     {
-                        DbgPrint("HAL: Your machine has an Intel UHCI (USB) Controller. This is not supported!\n");
+                        DPRINT1("Your machine has an Intel UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n");
                         continue;
                     }
                     
                     /* Check for VIA UHCI controller */
                     if (PciData->VendorID == 0x1106)
                     {
-                        DbgPrint("HAL: Your machine has a VIA UHCI (USB) Controller. This is not supported!\n");
+                        DPRINT1("Your machine has a VIA UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n");
                         continue;
                     }
                 }
@@ -818,28 +873,28 @@ HalpInitializePciBus(VOID)
                     /* Check for broken ACPI routing */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_ACPI_IRQ_ROUTING)
                     {
-                        DPRINT1("Your hardware has broken ACPI IRQ Routing! This is not supported!\n");
+                        DPRINT1("Your hardware has broken ACPI IRQ Routing! Be aware!\n");
                         continue;
                     }
                     
                     /* Check for broken ACPI timer */
                     if (HackFlags & HAL_PCI_CHIP_HACK_BROKEN_ACPI_TIMER)
                     {
-                         DPRINT1("Your hardware has a broken ACPI timer! This is not supported!\n");
+                         DPRINT1("Your hardware has a broken ACPI timer! Be aware!\n");
                          continue;
                     }
                     
                     /* Check for hibernate-disable */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_HIBERNATE)
                     {
-                        DPRINT1("Your machine has a broken PCI device which is incompatible with hibernation. This is not supported!\n");
+                        DPRINT1("Your machine has a broken PCI device which is incompatible with hibernation. Be aware!\n");
                         continue;
                     }
                     
                     /* Check for USB controllers that generate SMIs */
                     if (HackFlags & HAL_PCI_CHIP_HACK_USB_SMI_DISABLE)
                     {
-                        DPRINT1("Your machine has a USB controller which generates SMIs. This is not supported!\n");
+                        DPRINT1("Your machine has a USB controller which generates SMIs. ReactOS will likely fail to boot!\n");
                         continue;
                     }
                 }
