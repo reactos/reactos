@@ -3,7 +3,7 @@
 
 #include "usetup.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/

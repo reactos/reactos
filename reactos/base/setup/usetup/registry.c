@@ -28,7 +28,7 @@
 
 #include "usetup.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #ifdef __REACTOS__

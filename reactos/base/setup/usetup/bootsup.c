@@ -26,7 +26,7 @@
 
 #include "usetup.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define SECTORSIZE 512

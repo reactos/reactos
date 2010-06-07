@@ -27,7 +27,7 @@
 
 #include "usetup.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 static PPROGRESSBAR FormatProgressBar = NULL;

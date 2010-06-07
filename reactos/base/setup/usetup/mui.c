@@ -31,7 +31,7 @@
 #include "muifonts.h"
 #include "muilanguages.h"
 
-#define YDEBUG
+#define NDEBUG
 #include <debug.h>
 
 extern
