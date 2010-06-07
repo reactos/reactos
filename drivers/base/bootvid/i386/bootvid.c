@@ -155,7 +155,7 @@ VgaInterpretCmdStream(IN PUSHORT CmdStream)
                     if (!ShortValue) continue;
 
                     /* Loop the cmd array */
-                    for (; Count; Count--, CmdStream++, Value++)
+                    for (; Count; Count--, CmdStream++)
                     {
                         /* Get the byte we're writing */
                         ShortValue += (*CmdStream) << 8;

@@ -185,7 +185,7 @@ BEGIN
 	IDS_UPDATES "Updates"
 	IDS_APPLICATIONS "Applications"
 	IDS_CHOOSE_FOLDER_TEXT "Choose a folder which will store Downloads:"
-	IDS_CHOOSE_FOLDER_ERROR "The folder you have specified does not exist."
+	IDS_CHOOSE_FOLDER_ERROR "The folder you have specified does not exist. Create it?"
 	IDS_USER_NOT_ADMIN "You must be an administrator to start ""ReactOS Applications Manager""!"
 	IDS_APP_REG_REMOVE "Are you sure you want to delete the data on the installed program from the registry?"
 	IDS_INFORMATION "Information"

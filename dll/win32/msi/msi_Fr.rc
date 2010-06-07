@@ -2,6 +2,7 @@
  * French resources for MSI
  *
  * Copyright 2005 Jonathan Ernst
+ * Copyright 2009-2010 Frédéric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -30,7 +31,33 @@ STRINGTABLE DISCARDABLE
 	4 "Le paquet d'installation spécifié n'a pu être ouvert. Veuillez vérifier le chemin du fichier et réessayer."
 	5 "Le chemin %s est introuvable"
 	9 "insérez le disque %s"
-	10 "mauvais paramètres"
+	10 "Programme d'installation Windows %s\n\n" \
+	"Usage :\n" \
+	"msiexec commande {paramètre obligatoire} [paramètre optionnel]\n\n" \
+	"Installer un produit :\n" \
+	"\t/i {paquet|code_produit} [propriété]\n" \
+	"\t/package {paquet|code_produit} [propriété]\n" \
+	"\t/a paquet [propriété]\n" \
+	"Réparer une installation :\n" \
+	"\t/f[p|o|e|d|c|a|u|m|s|v] {paquet|code_produit}\n" \
+	"Désinstaller un produit :\n" \
+	"\t/uninstall {paquet|code_produit} [propriété]\n" \
+	"\t/x {paquet|code_produit} [propriété]\n" \
+	"Publier un produit :\n" \
+	"\t/j[u|m] paquet [/t transformation] [/g id_langue]\n" \
+	"Appliquer un patch :\n" \
+	"\t/p paquet_patch [propriété]\n" \
+	"\t/p paquet_patch /a paquet [propriété]\n" \
+	"Modificateurs de journalisation et d'interface utilisateur pour les commandes ci-dessus :\n" \
+	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] fichier_journal\n" \
+	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+	"Enregistrer le service MSI :\n" \
+	"\t/y\n" \
+	"Annuler l'enregistrement du service MSI :\n" \
+	"\t/z\n" \
+	"Afficher cette aide :\n" \
+	"\t/help\n" \
+	"\t/?\n"
 	11 "saisissez le nom du dossier contenant %s"
 	12 "source d'installation pour la fonctionnalité manquante"
 	13 "lecteur réseau pour la fonctionnalité manquante"

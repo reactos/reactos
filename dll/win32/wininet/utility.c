@@ -307,6 +307,7 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
         case INTERNET_STATUS_CONNECTING_TO_SERVER:
         case INTERNET_STATUS_CONNECTED_TO_SERVER:
             lpvNewInfo = heap_strdupAtoW(lpvStatusInfo);
+            dwStatusInfoLength *= sizeof(WCHAR);
             break;
         case INTERNET_STATUS_RESOLVING_NAME:
         case INTERNET_STATUS_REDIRECT:
@@ -325,6 +326,7 @@ VOID INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR dwContext,
         case INTERNET_STATUS_RESOLVING_NAME:
         case INTERNET_STATUS_REDIRECT:
             lpvNewInfo = heap_strdupWtoA(lpvStatusInfo);
+            dwStatusInfoLength /= sizeof(WCHAR);
             break;
         }
     }

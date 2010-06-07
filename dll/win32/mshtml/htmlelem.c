@@ -1803,13 +1803,11 @@ static HRESULT WINAPI HTMLFiltersCollection_get_length(IHTMLFiltersCollection *i
 {
     HTMLFiltersCollection *This = HTMLFILTERSCOLLECTION_THIS(iface);
 
+    if(!p)
+        return E_POINTER;
+
     FIXME("(%p)->(%p) Always returning 0\n", This, p);
-
-	if(!p)
-		return E_POINTER;
-
-    if(p)
-        *p = 0;
+    *p = 0;
 
     return S_OK;
 }

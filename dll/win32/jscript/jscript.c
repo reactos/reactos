@@ -71,6 +71,7 @@ void script_release(script_ctx_t *ctx)
         return;
 
     jsheap_free(&ctx->tmp_heap);
+    SysFreeString(ctx->last_match);
     heap_free(ctx);
 }
 

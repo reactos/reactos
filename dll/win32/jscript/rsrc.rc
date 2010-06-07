@@ -30,3 +30,4 @@ REGINST REGINST jscript.inf
 #include "jscript_Nl.rc"
 #include "jscript_Pt.rc"
 #include "jscript_Ru.rc"
+#include "jscript_Si.rc"

@@ -109,6 +109,7 @@ HalpInitializeClock(VOID)
     HalpCurrentRollOver = RollOver;
 }
 
+#ifdef _M_IX86
 #ifndef _MINIHAL_
 VOID
 FASTCALL
@@ -163,6 +164,7 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 }
 #endif
 
+#endif
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

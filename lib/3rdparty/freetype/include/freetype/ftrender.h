@@ -124,27 +124,32 @@ FT_BEGIN_HEADER
   /*    The renderer module class descriptor.                              */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    root         :: The root @FT_Module_Class fields.                  */
+  /*    root            :: The root @FT_Module_Class fields.               */
   /*                                                                       */
-  /*    glyph_format :: The glyph image format this renderer handles.      */
+  /*    glyph_format    :: The glyph image format this renderer handles.   */
   /*                                                                       */
-  /*    render_glyph :: A method used to render the image that is in a     */
-  /*                    given glyph slot into a bitmap.                    */
+  /*    render_glyph    :: A method used to render the image that is in a  */
+  /*                       given glyph slot into a bitmap.                 */
   /*                                                                       */
-  /*    set_mode     :: A method used to pass additional parameters.       */
+  /*    transform_glyph :: A method used to transform the image that is in */
+  /*                       a given glyph slot.                             */
   /*                                                                       */
-  /*    raster_class :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.  This */
-  /*                    is a pointer to its raster's class.                */
+  /*    get_glyph_cbox  :: A method used to access the glyph's cbox.       */
   /*                                                                       */
-  /*    raster       :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.  This */
-  /*                    is a pointer to the corresponding raster object,   */
-  /*                    if any.                                            */
+  /*    set_mode        :: A method used to pass additional parameters.    */
+  /*                                                                       */
+  /*    raster_class    :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.    */
+  /*                       This is a pointer to its raster's class.        */
+  /*                                                                       */
+  /*    raster          :: For @FT_GLYPH_FORMAT_OUTLINE renderers only.    */
+  /*                       This is a pointer to the corresponding raster   */
+  /*                       object, if any.                                 */
   /*                                                                       */
   typedef struct  FT_Renderer_Class_
   {
-    FT_Module_Class       root;
+    FT_Module_Class            root;
 
-    FT_Glyph_Format       glyph_format;
+    FT_Glyph_Format            glyph_format;
 
     FT_Renderer_RenderFunc     render_glyph;
     FT_Renderer_TransformFunc  transform_glyph;
@@ -162,7 +167,7 @@ FT_BEGIN_HEADER
   /*    FT_Get_Renderer                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Retrieves the current renderer for a given glyph format.           */
+  /*    Retrieve the current renderer for a given glyph format.            */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library :: A handle to the library object.                         */
@@ -170,7 +175,7 @@ FT_BEGIN_HEADER
   /*    format  :: The glyph format.                                       */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    A renderer handle.  0 if none found.                               */
+  /*    A renderer handle.  0~if none found.                               */
   /*                                                                       */
   /* <Note>                                                                */
   /*    An error will be returned if a module already exists by that name, */
@@ -190,7 +195,7 @@ FT_BEGIN_HEADER
   /*    FT_Set_Renderer                                                    */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Sets the current renderer to use, and set additional mode.         */
+  /*    Set the current renderer to use, and set additional mode.          */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    library    :: A handle to the library object.                      */
@@ -203,7 +208,7 @@ FT_BEGIN_HEADER
   /*    parameters :: Additional parameters.                               */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    In case of success, the renderer will be used to convert glyph     */

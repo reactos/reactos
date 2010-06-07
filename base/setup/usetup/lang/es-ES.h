@@ -18,7 +18,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         6,
         8,
-        "Selecci¢n de idioma",
+        "Selecci¢n del idioma",
         TEXT_STYLE_NORMAL
     },
     {
@@ -94,7 +94,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Presione L para ver las condiciones y t‚rminos de licencia",
+        "\x07  Presione L para ver las condiciones y t‚rminos de licencia.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -194,18 +194,24 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         8,
         19,
-        "- El comprobador de integridad del sistema de archivos no est  a£n implementado.",
+        "- El comprobador de integridad del sistema de archivos no est  a£n",
         TEXT_STYLE_NORMAL
     },
     {
         8,
-        23,
-        "\x07  Presione ENTER para instalar ReactOS.",
+        20,
+        "  implementado.",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         25,
+        "\x07  Presione ENTER para instalar ReactOS.",
+        TEXT_STYLE_NORMAL
+    },
+    {
+        8,
+        27,
         "\x07  Presione F3 para salir sin instalar ReactOS.",
         TEXT_STYLE_NORMAL
     },
@@ -358,7 +364,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
     {
         6,
         8,
-        "La lista inferior muestra la configuraci¢n del dispositivo actual.",
+        "La lista inferior muestra la configuraci¢n actual de dispositivos.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1469,15 +1475,21 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_ADDING_KBLAYOUTS,
-        "Setup failed to add keyboard layouts to registry.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido agregar los layouts de teclado al registro.\n"
+        "ENTER = Reiniciar el equipo"
     },
     {
         //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
+        "El instalador no ha podido configurar el ID geogr fico.\n"
+        "ENTER = Reiniciar el equipo"
     },
-{
+    {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "No hay suficiente espacio disponible en la partici¢n seleccionada.\n"
+        "  * Presione una tecla para continuar.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1592,7 +1604,7 @@ MUI_STRING esESStrings[] =
     {STRING_INSTALLDELETEPARTITION,
      "   ENTER = Instalar   D = Borrar Partici¢n   F3 = Salir"},
     {STRING_PARTITIONSIZE,
-     "Tamaño de la nueva partici¢n:"},
+     "Tama¤o de la nueva partici¢n:"},
     {STRING_CHOOSENEWPARTITION,
      "Ha elegido crear una nueva partici¢n en"},
     {STRING_HDDSIZE,
@@ -1614,7 +1626,7 @@ MUI_STRING esESStrings[] =
     {STRING_TXTSETUPFAILED,
     "El instalador fall¢ al buscar la secci¢n\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copiando archivo: %S"},
+     "   Copiando archivo: %S"},
     {STRING_SETUPCOPYINGFILES,
      "El instalador est  copiando archivos..."},
     {STRING_REGHIVEUPDATE,
@@ -1690,6 +1702,6 @@ MUI_STRING esESStrings[] =
     {STRING_GB,
     "GB"},
     {STRING_ADDKBLAYOUTS,
-    "Adding keyboard layouts"},
+    "A¤adiendo disposici¢n de teclado"},
     {0, 0}
 };

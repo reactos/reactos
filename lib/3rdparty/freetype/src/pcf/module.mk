@@ -27,7 +27,7 @@
 FTMODULE_H_COMMANDS += PCF_DRIVER
 
 define PCF_DRIVER
-$(OPEN_DRIVER)pcf_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, pcf_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)pcf       $(ECHO_DRIVER_DESC)pcf bitmap fonts$(ECHO_DRIVER_DONE)
 endef
 

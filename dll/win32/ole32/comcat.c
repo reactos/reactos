@@ -232,18 +232,20 @@ static HRESULT COMCAT_IsClassOfCategories(
     LPCWSTR string;
 
     /* Check that every given category is implemented by class. */
-    res = RegOpenKeyExW(key, impl_keyname, 0, KEY_READ, &subkey);
-    if (res != ERROR_SUCCESS) return S_FALSE;
-    for (string = categories->impl_strings; *string; string += 39) {
-	HKEY catkey;
-	res = RegOpenKeyExW(subkey, string, 0, 0, &catkey);
-	if (res != ERROR_SUCCESS) {
-	    RegCloseKey(subkey);
-	    return S_FALSE;
+    if (*categories->impl_strings) {
+	res = RegOpenKeyExW(key, impl_keyname, 0, KEY_READ, &subkey);
+	if (res != ERROR_SUCCESS) return S_FALSE;
+	for (string = categories->impl_strings; *string; string += 39) {
+	    HKEY catkey;
+	    res = RegOpenKeyExW(subkey, string, 0, 0, &catkey);
+	    if (res != ERROR_SUCCESS) {
+		RegCloseKey(subkey);
+		return S_FALSE;
+	    }
+	    RegCloseKey(catkey);
 	}
-	RegCloseKey(catkey);
+	RegCloseKey(subkey);
     }
-    RegCloseKey(subkey);
 
     /* Check that all categories required by class are given. */
     res = RegOpenKeyExW(key, req_keyname, 0, KEY_READ, &subkey);

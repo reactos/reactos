@@ -6202,6 +6202,20 @@ typedef VBN *PVBN;
   LARGE_INTEGER FileSize; \
   LARGE_INTEGER ValidDataLength;
 
+#define FSRTL_COMMON_FCB_HEADER_LAYOUT \
+  CSHORT NodeTypeCode; \
+  CSHORT NodeByteSize; \
+  UCHAR Flags; \
+  UCHAR IsFastIoPossible; \
+  UCHAR Flags2; \
+  UCHAR Reserved:4; \
+  UCHAR Version:4; \
+  PERESOURCE Resource; \
+  PERESOURCE PagingIoResource; \
+  LARGE_INTEGER AllocationSize; \
+  LARGE_INTEGER FileSize; \
+  LARGE_INTEGER ValidDataLength;
+
 typedef struct _FSRTL_COMMON_FCB_HEADER {
   FSRTL_COMMON_FCB_HEADER_LAYOUT
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;

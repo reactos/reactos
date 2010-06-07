@@ -1231,6 +1231,7 @@ interface IInternetZoneManager : IUnknown
 
     typedef enum tagURLZONE
     {
+        URLZONE_INVALID         = -1,
         URLZONE_PREDEFINED_MIN  = 0,
         URLZONE_LOCAL_MACHINE   = 0,
         URLZONE_INTRANET        = 1,
@@ -1562,6 +1563,15 @@ interface IUri : IUnknown
         Uri_PROPERTY_ZONE = 18,
         Uri_PROPERTY_DWORD_LAST = Uri_PROPERTY_ZONE
     } Uri_PROPERTY;
+
+    typedef enum
+    {
+        Uri_HOST_UNKNOWN = 0,
+        Uri_HOST_DNS = 1,
+        Uri_HOST_IPV4 = 2,
+        Uri_HOST_IPV6 = 3,
+        Uri_HOST_IDN = 4
+    } Uri_HOST_TYPE;
 
     HRESULT GetPropertyBSTR(
         [in]  Uri_PROPERTY uriProp,

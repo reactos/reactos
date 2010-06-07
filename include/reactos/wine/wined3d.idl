@@ -275,9 +275,7 @@ typedef enum _WINED3DFORMAT
 
 typedef enum _WINED3DRENDERSTATETYPE
 {
-    WINED3DRS_TEXTUREHANDLE                 = 1, /* d3d7 */
     WINED3DRS_ANTIALIAS                     = 2, /* d3d7 */
-    WINED3DRS_TEXTUREADDRESS                = 3, /* d3d7 */
     WINED3DRS_TEXTUREPERSPECTIVE            = 4, /* d3d7 */
     WINED3DRS_WRAPU                         = 5, /* d3d7 */
     WINED3DRS_WRAPV                         = 6, /* d3d7 */
@@ -291,11 +289,8 @@ typedef enum _WINED3DRENDERSTATETYPE
     WINED3DRS_ZWRITEENABLE                  = 14,
     WINED3DRS_ALPHATESTENABLE               = 15,
     WINED3DRS_LASTPIXEL                     = 16,
-    WINED3DRS_TEXTUREMAG                    = 17, /* d3d7 */
-    WINED3DRS_TEXTUREMIN                    = 18, /* d3d7 */
     WINED3DRS_SRCBLEND                      = 19,
     WINED3DRS_DESTBLEND                     = 20,
-    WINED3DRS_TEXTUREMAPBLEND               = 21, /* d3d7 */
     WINED3DRS_CULLMODE                      = 22,
     WINED3DRS_ZFUNC                         = 23,
     WINED3DRS_ALPHAREF                      = 24,
@@ -316,9 +311,6 @@ typedef enum _WINED3DRENDERSTATETYPE
     WINED3DRS_STIPPLEENABLE                 = 39, /* d3d7 */
     WINED3DRS_EDGEANTIALIAS                 = 40, /* d3d7, d3d8 */
     WINED3DRS_COLORKEYENABLE                = 41, /* d3d7 */
-    WINED3DRS_BORDERCOLOR                   = 43, /* d3d7 */
-    WINED3DRS_TEXTUREADDRESSU               = 44, /* d3d7 */
-    WINED3DRS_TEXTUREADDRESSV               = 45, /* d3d7 */
     WINED3DRS_MIPMAPLODBIAS                 = 46, /* d3d7 */
     WINED3DRS_ZBIAS                         = 47, /* d3d7, d3d8 */
     WINED3DRS_RANGEFOGENABLE                = 48,
@@ -334,38 +326,6 @@ typedef enum _WINED3DRENDERSTATETYPE
     WINED3DRS_STENCILMASK                   = 58,
     WINED3DRS_STENCILWRITEMASK              = 59,
     WINED3DRS_TEXTUREFACTOR                 = 60,
-    WINED3DRS_STIPPLEPATTERN00              = 64,
-    WINED3DRS_STIPPLEPATTERN01              = 65,
-    WINED3DRS_STIPPLEPATTERN02              = 66,
-    WINED3DRS_STIPPLEPATTERN03              = 67,
-    WINED3DRS_STIPPLEPATTERN04              = 68,
-    WINED3DRS_STIPPLEPATTERN05              = 69,
-    WINED3DRS_STIPPLEPATTERN06              = 70,
-    WINED3DRS_STIPPLEPATTERN07              = 71,
-    WINED3DRS_STIPPLEPATTERN08              = 72,
-    WINED3DRS_STIPPLEPATTERN09              = 73,
-    WINED3DRS_STIPPLEPATTERN10              = 74,
-    WINED3DRS_STIPPLEPATTERN11              = 75,
-    WINED3DRS_STIPPLEPATTERN12              = 76,
-    WINED3DRS_STIPPLEPATTERN13              = 77,
-    WINED3DRS_STIPPLEPATTERN14              = 78,
-    WINED3DRS_STIPPLEPATTERN15              = 79,
-    WINED3DRS_STIPPLEPATTERN16              = 80,
-    WINED3DRS_STIPPLEPATTERN17              = 81,
-    WINED3DRS_STIPPLEPATTERN18              = 82,
-    WINED3DRS_STIPPLEPATTERN19              = 83,
-    WINED3DRS_STIPPLEPATTERN20              = 84,
-    WINED3DRS_STIPPLEPATTERN21              = 85,
-    WINED3DRS_STIPPLEPATTERN22              = 86,
-    WINED3DRS_STIPPLEPATTERN23              = 87,
-    WINED3DRS_STIPPLEPATTERN24              = 88,
-    WINED3DRS_STIPPLEPATTERN25              = 89,
-    WINED3DRS_STIPPLEPATTERN26              = 90,
-    WINED3DRS_STIPPLEPATTERN27              = 91,
-    WINED3DRS_STIPPLEPATTERN28              = 92,
-    WINED3DRS_STIPPLEPATTERN29              = 93,
-    WINED3DRS_STIPPLEPATTERN30              = 94,
-    WINED3DRS_STIPPLEPATTERN31              = 95,
     WINED3DRS_WRAP0                         = 128,
     WINED3DRS_WRAP1                         = 129,
     WINED3DRS_WRAP2                         = 130,
@@ -407,8 +367,6 @@ typedef enum _WINED3DRENDERSTATETYPE
     WINED3DRS_COLORWRITEENABLE              = 168,
     WINED3DRS_TWEENFACTOR                   = 170,
     WINED3DRS_BLENDOP                       = 171,
-    WINED3DRS_POSITIONORDER                 = 172,
-    WINED3DRS_NORMALORDER                   = 173,
     WINED3DRS_POSITIONDEGREE                = 172,
     WINED3DRS_NORMALDEGREE                  = 173,
     WINED3DRS_SCISSORTESTENABLE             = 174,
@@ -3451,6 +3409,15 @@ interface IWineD3DDevice : IWineD3DBase
     HRESULT EnumResources(
         [in] D3DCB_ENUMRESOURCES callback,
         [in] void *data
+    );
+    HRESULT GetSurfaceFromDC(
+        [in] HDC dc,
+        [out] IWineD3DSurface **surface
+    );
+    HRESULT AcquireFocusWindow(
+        [in] HWND window
+    );
+    void ReleaseFocusWindow(
     );
 }
 

@@ -8,7 +8,7 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006 by                              */
+/*  Copyright 2002, 2003, 2004, 2005, 2006, 2009 by                        */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -25,7 +25,7 @@
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_GZIP_H
-#include <string.h>
+#include FT_CONFIG_STANDARD_LIBRARY_H
 
 
 #include FT_MODULE_ERRORS_H
@@ -39,6 +39,10 @@
 
 
 #ifdef FT_CONFIG_OPTION_USE_ZLIB
+
+#ifdef FT_CONFIG_OPTION_PIC
+#error "gzip code does not support PIC yet"
+#endif 
 
 #ifdef FT_CONFIG_OPTION_SYSTEM_ZLIB
 
@@ -54,7 +58,9 @@
  /* original ZLib.                                                   */
 
 #define NO_DUMMY_DECL
-#define MY_ZCALLOC
+#ifndef USE_ZLIB_ZCALLOC
+#define MY_ZCALLOC /* prevent all zcalloc() & zfree() in zutils.c */
+#endif
 
 #include "zlib.h"
 
@@ -117,7 +123,7 @@
   }
 
 
-#ifndef FT_CONFIG_OPTION_SYSTEM_ZLIB
+#if !defined( FT_CONFIG_OPTION_SYSTEM_ZLIB ) && !defined( USE_ZLIB_ZCALLOC )
 
   local voidpf
   zcalloc ( voidpf    opaque,
@@ -134,7 +140,7 @@
     ft_gzip_free( (FT_Memory)opaque, ptr );
   }
 
-#endif /* !SYSTEM_ZLIB */
+#endif /* !SYSTEM_ZLIB && !USE_ZLIB_ZCALLOC */
 
 
 /***************************************************************************/
@@ -569,7 +575,7 @@
       if ( error )
         result = 0;
 
-      FT_Stream_Seek( stream, old_pos );
+      (void)FT_Stream_Seek( stream, old_pos );
     }
 
     return result;

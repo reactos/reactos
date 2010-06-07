@@ -26,7 +26,7 @@
 #ifndef KJK_PSEH2_H_
 #define KJK_PSEH2_H_
 
-#if !defined (__arm__)
+#if !defined (__arm__) && !defined(__clang__)
 
 #if defined(__GNUC__)
 struct _EXCEPTION_RECORD;
@@ -395,7 +395,7 @@ __SEH_END_SCOPE_CHAIN;
 #define _SEH2_END }
 
 #define _SEH2_GetExceptionInformation() 
-#define _SEH2_GetExceptionCode() STATUS_SUCCESS
+#define _SEH2_GetExceptionCode() 0
 #define _SEH2_AbnormalTermination() 
 
 #define _SEH2_YIELD(STMT_) STMT_

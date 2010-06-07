@@ -606,7 +606,16 @@ HRESULT create_builtin_function(script_ctx_t *ctx, builtin_invoke_t value_proc, 
     if(FAILED(hres))
         return hres;
 
-    hres = set_prototype(ctx, &function->dispex, prototype);
+    if(builtin_info) {
+        VARIANT var;
+
+        V_VT(&var) = VT_I4;
+        V_I4(&var) = function->length;
+        hres = jsdisp_propput_const(&function->dispex, lengthW, &var);
+    }
+
+    if(SUCCEEDED(hres))
+        hres = set_prototype(ctx, &function->dispex, prototype);
     if(FAILED(hres)) {
         jsdisp_release(&function->dispex);
         return hres;

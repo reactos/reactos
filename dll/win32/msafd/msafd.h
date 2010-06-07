@@ -100,6 +100,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 
 
@@ -408,6 +409,8 @@ WSPStringToAddress(
 PSOCKET_INFORMATION GetSocketStructure(
 	SOCKET Handle
 );
+
+INT TranslateNtStatusError( NTSTATUS Status );
 
 VOID DeleteSocketStructure( SOCKET Handle );
 

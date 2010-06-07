@@ -436,7 +436,7 @@ NtUserDestroyAcceleratorTable(
 
    if (Accel->Table != NULL)
    {
-      ExFreePool(Accel->Table);
+      ExFreePoolWithTag(Accel->Table, TAG_ACCEL);
       Accel->Table = NULL;
    }
 

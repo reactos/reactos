@@ -95,6 +95,38 @@ NdisInitializeTimer(
   KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
 }
 
+BOOLEAN DequeueMiniportTimer(PNDIS_MINIPORT_TIMER Timer)
+{
+  PNDIS_MINIPORT_TIMER CurrentTimer;
+
+  ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
+
+  if (!Timer->Miniport->TimerQueue)
+      return FALSE;
+
+  if (Timer->Miniport->TimerQueue == Timer)
+  {
+      Timer->Miniport->TimerQueue = Timer->NextDeferredTimer;
+      Timer->NextDeferredTimer = NULL;
+      return TRUE;
+  }
+  else
+  {
+      CurrentTimer = Timer->Miniport->TimerQueue;
+      while (CurrentTimer->NextDeferredTimer)
+      {
+          if (CurrentTimer->NextDeferredTimer == Timer)
+          {
+              CurrentTimer->NextDeferredTimer = Timer->NextDeferredTimer;
+              Timer->NextDeferredTimer = NULL;
+              return TRUE;
+          }
+          CurrentTimer = CurrentTimer->NextDeferredTimer;
+      }
+      return FALSE;
+  }
+}
+
 
 /*
  * @implemented
@@ -113,11 +145,44 @@ NdisMCancelTimer(
  *     - call at IRQL <= DISPATCH_LEVEL
  */
 {
+  KIRQL OldIrql;
+
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(TimerCancelled);
   ASSERT(Timer);
 
   *TimerCancelled = KeCancelTimer (&Timer->Timer);
+
+  if (*TimerCancelled)
+  {
+      KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
+      /* If it's somebody already dequeued it, something is wrong (maybe a double-cancel?) */
+      if (!DequeueMiniportTimer(Timer)) ASSERT(FALSE);
+      KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
+  }
+}
+
+VOID NTAPI
+MiniTimerDpcFunction(PKDPC Dpc,
+                     PVOID DeferredContext,
+                     PVOID SystemArgument1,
+                     PVOID SystemArgument2)
+{
+  PNDIS_MINIPORT_TIMER Timer = DeferredContext;
+
+  Timer->MiniportTimerFunction(Dpc,
+                               Timer->MiniportTimerContext,
+                               SystemArgument1,
+                               SystemArgument2);
+
+  /* Only dequeue if the timer has a period of 0 */
+  if (!Timer->Timer.Period)
+  {
+      KeAcquireSpinLockAtDpcLevel(&Timer->Miniport->Lock);
+      /* If someone already dequeued it, something is wrong (borked timer implementation?) */
+      if (!DequeueMiniportTimer(Timer)) ASSERT(FALSE);
+      KeReleaseSpinLockFromDpcLevel(&Timer->Miniport->Lock);
+  }
 }
 
 
@@ -145,9 +210,14 @@ NdisMInitializeTimer(
 {
   PAGED_CODE();
   ASSERT(Timer);
-  KeInitializeTimer (&Timer->Timer);
 
-  KeInitializeDpc (&Timer->Dpc, (PKDEFERRED_ROUTINE)TimerFunction, FunctionContext);
+  KeInitializeTimer (&Timer->Timer);
+  KeInitializeDpc (&Timer->Dpc, MiniTimerDpcFunction, Timer);
+
+  Timer->MiniportTimerFunction = TimerFunction;
+  Timer->MiniportTimerContext = FunctionContext;
+  Timer->Miniport = &((PLOGICAL_ADAPTER)MiniportAdapterHandle)->NdisMiniportBlock;
+  Timer->NextDeferredTimer = NULL;
 }
 
 
@@ -170,6 +240,7 @@ NdisMSetPeriodicTimer(
  */
 {
   LARGE_INTEGER Timeout;
+  KIRQL OldIrql;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
@@ -177,7 +248,15 @@ NdisMSetPeriodicTimer(
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsPeriod, -10000);
 
-  KeSetTimerEx (&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc);
+  KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
+  /* If KeSetTimer(Ex) returns FALSE then the timer is not in the system's queue (and not in ours either) */
+  if (!KeSetTimerEx(&Timer->Timer, Timeout, MillisecondsPeriod, &Timer->Dpc))
+  {
+      /* Add the timer at the head of the timer queue */
+      Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+      Timer->Miniport->TimerQueue = Timer;
+  }
+  KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
 }
 
 
@@ -201,6 +280,7 @@ NdisMSetTimer(
  */
 {
   LARGE_INTEGER Timeout;
+  KIRQL OldIrql;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
   ASSERT(Timer);
@@ -208,7 +288,15 @@ NdisMSetTimer(
   /* relative delays are negative, absolute are positive; resolution is 100ns */
   Timeout.QuadPart = Int32x32To64(MillisecondsToDelay, -10000);
 
-  KeSetTimer (&Timer->Timer, Timeout, &Timer->Dpc);
+  KeAcquireSpinLock(&Timer->Miniport->Lock, &OldIrql);
+  /* If KeSetTimer(Ex) returns FALSE then the timer is not in the system's queue (and not in ours either) */
+  if (!KeSetTimer(&Timer->Timer, Timeout, &Timer->Dpc))
+  {
+      /* Add the timer at the head of the timer queue */
+      Timer->NextDeferredTimer = Timer->Miniport->TimerQueue;
+      Timer->Miniport->TimerQueue = Timer;
+  }
+  KeReleaseSpinLock(&Timer->Miniport->Lock, OldIrql);
 }
 
 

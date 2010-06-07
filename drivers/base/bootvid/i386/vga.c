@@ -402,33 +402,20 @@ BitBlt(IN ULONG Left,
        IN ULONG BitsPerPixel,
        IN ULONG Delta)
 {
-    ULONG LeftAnd, LeftShifted, LeftPlusOne, LeftPos;
-    ULONG lMask, rMask;
-    UCHAR NotlMask;
-    ULONG Distance;
-    ULONG DistanceMinusLeftBpp;
-    ULONG SomeYesNoFlag, SomeYesNoFlag2;
-    PUCHAR PixelPosition, m;
-    PUCHAR i, k;
-    ULONG j;
-    ULONG x;
-    ULONG Plane;
-    UCHAR LeftArray[84];
-    PUCHAR CurrentLeft;
-    PUCHAR l;
-    ULONG LoopCount;
-    UCHAR pMask, PlaneShift;
-    BOOLEAN Odd;
-    UCHAR Value;
+    ULONG sx, dx, dy;
+    UCHAR color;
+    ULONG offset = 0;
+    const ULONG Bottom = Top + Height;
+    const ULONG Right = Left + Width;
 
     /* Check if the buffer isn't 4bpp */
     if (BitsPerPixel != 4)
     {
         /* FIXME: TODO */
         DbgPrint("Unhandled BitBlt\n"
-                 "%lxx%lx @ (%lx,%lx)\n"
-                 "Bits Per Pixel %lx\n"
-                 "Buffer: %p. Delta: %lx\n",
+                 "%lux%lu @ (%lu|%lu)\n"
+                 "Bits Per Pixel %lu\n"
+                 "Buffer: %p. Delta: %lu\n",
                  Width,
                  Height,
                  Left,
@@ -439,181 +426,28 @@ BitBlt(IN ULONG Left,
         return;
     }
 
-    /* Get the masks and other values */
-    LeftAnd = Left & 0x7;
-    lMask = lMaskTable[LeftAnd];
-    Distance = Width + Left;
-    rMask = rMaskTable[(Distance - 1) & 0x7];
-    Left >>= 3;
-
-    /* Set some values */
-    SomeYesNoFlag = FALSE;
-    SomeYesNoFlag2 = FALSE;
-    Distance = (Distance - 1) >> 3;
-    DistanceMinusLeftBpp = Distance - Left;
-
-    /* Check if the distance is equal to the left position and add the masks */
-    if (Left == Distance) lMask += rMask;
-
-    /* Check if there's no distance offset */
-    if (DistanceMinusLeftBpp)
-    {
-        /* Set the first flag on */
-        SomeYesNoFlag = TRUE;
-
-        /* Decrease offset and check if we still have one */
-        if (--DistanceMinusLeftBpp)
-        {
-            /* Still have a distance offset */
-            SomeYesNoFlag2 = TRUE;
-        }
-    }
-
-    /* Calculate initial pixel position */
-    PixelPosition = (PUCHAR)VgaBase + (Top * 80) + Left;
-
-    /* Set loop buffer variable */
-    i = Buffer;
-
-    /* Switch to mode 0 */
-    ReadWriteMode(0);
-
-    /* Leave now if the height is 0 */
-    if (Height <= 0) return;
-
-    /* Set more weird values */
-    CurrentLeft = &LeftArray[Left];
-    NotlMask = ~(UCHAR)lMask;
-    LeftPlusOne = Left + 1;
-    LeftShifted = (lMask << 8) | 8;
-    j = Height;
-
-    /* Start the height loop */
+    /* 4bpp blitting */
+    dy = Top;
     do
     {
-        /* Start the plane loop */
-        Plane = 0;
+        sx = 0;
         do
         {
-            /* Clear the current value */
-            *CurrentLeft = 0;
-            LoopCount = 0;
+            /* Extract color */
+            color = Buffer[offset + sx];
 
-            /* Set the buffer loop variable for this loop */
-            k = i;
+            /* Calc destination x */
+            dx = Left + (sx << 1);
 
-            /* Calculate plane shift and pixel mask */
-            PlaneShift = 1 << Plane;
-            pMask = PixelMask[LeftAnd];
+            /* Set two pixels */
+            SetPixel(dx, dy, color >> 4);
+            SetPixel(dx + 1, dy, color & 0x0F);
 
-            /* Check if we have a width */
-            if (Width > 0)
-            {
-                /* Loop it */
-                l = CurrentLeft;
-                x = Width;
-                do
-                {
-                    /* Check if we're odd and increase the loop count */
-                    Odd = LoopCount & 1 ? TRUE : FALSE;
-                    LoopCount++;
-                    if (Odd)
-                    {
-                        /* Check for the plane shift */
-                        if (*k & PlaneShift)
-                        {
-                            /* Write the pixel mask */
-                            *l |= pMask;
-                        }
-
-                        /* Increase buffer position */
-                        k++;
-                    }
-                    else
-                    {
-                        /* Check for plane shift */
-                        if ((*k >> 4) & PlaneShift)
-                        {
-                            /* Write the pixel mask */
-                            *l |= pMask;
-                        }
-                    }
-
-                    /* Shift the pixel mask */
-                    pMask >>= 1;
-                    if (!pMask)
-                    {
-                        /* Move to the next current left position and clear it */
-                        l++;
-                        *l = 0;
-
-                        /* Set the pixel mask to 0x80 */
-                        pMask = 0x80;
-                    }
-                } while (--x);
-            }
-
-            /* Set the plane value */
-            __outpw(0x3C4, (1 << (Plane + 8) | 2));
-
-            /* Select the bitmask register and write the mask */
-            __outpw(0x3CE, (USHORT)LeftShifted);
-
-            /* Read the current Pixel value */
-            Value = READ_REGISTER_UCHAR(PixelPosition);
-
-            /* Add our mask */
-            Value = (Value & NotlMask) | *CurrentLeft;
-
-            /* Set current left for the loop, and write new pixel value */
-            LeftPos = LeftPlusOne;
-            WRITE_REGISTER_UCHAR(PixelPosition, Value);
-
-            /* Set loop pixel position and check if we should loop */
-            m = PixelPosition + 1;
-            if (SomeYesNoFlag2)
-            {
-                /* Set the bitmask to 0xFF for all 4 planes */
-                __outpw(0x3CE, 0xFF08);
-
-                /* Check if we have any distance left */
-                if (DistanceMinusLeftBpp > 0)
-                {
-                    /* Start looping it */
-                    x = DistanceMinusLeftBpp;
-                    do
-                    {
-                        /* Write the value */
-                        WRITE_REGISTER_UCHAR(m, LeftArray[LeftPos]);
-
-                        /* Go to the next position */
-                        m++;
-                        LeftPos++;
-                    } while (--x);
-                }
-            }
-
-            /* Check if the first flag is on */
-            if (SomeYesNoFlag)
-            {
-                /* Set the mask value */
-                __outpw(0x3CE, (rMask << 8) | 8);
-
-                /* Read the current Pixel value */
-                Value = READ_REGISTER_UCHAR(m);
-
-                /* Add our mask */
-                Value = (Value & ~(UCHAR)rMask) | LeftArray[LeftPos];
-
-                /* Set current left for the loop, and write new pixel value */
-                WRITE_REGISTER_UCHAR(m, Value);
-            }
-        } while (++Plane < 4);
-
-        /* Update pixel position, buffer and height */
-        PixelPosition += 80;
-        i += Delta;
-    } while (--j);
+            sx++;
+        } while (dx < Right);
+        offset += Delta;
+        dy++;
+    } while (dy < Bottom);
 }
 
 VOID

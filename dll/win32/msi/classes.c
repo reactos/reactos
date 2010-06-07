@@ -18,15 +18,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* actions handled in this module
+/* Actions handled in this module:
+ *
  * RegisterClassInfo
  * RegisterProgIdInfo
  * RegisterExtensionInfo
  * RegisterMIMEInfo
- * UnRegisterClassInfo (TODO)
- * UnRegisterProgIdInfo (TODO)
- * UnRegisterExtensionInfo (TODO)
- * UnRegisterMIMEInfo (TODO)
+ * UnregisterClassInfo
+ * UnregisterProgIdInfo
+ * UnregisterExtensionInfo
+ * UnregisterMIMEInfo
  */
 
 #include <stdarg.h>
@@ -343,7 +344,7 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR extensio
 
 static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 {
-    LPCWSTR buffer;
+    LPCWSTR extension;
     MSIMIME *mt;
 
     /* fill in the data */
@@ -355,8 +356,9 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
     mt->ContentType = msi_dup_record_field( row, 1 ); 
     TRACE("loading mime %s\n", debugstr_w(mt->ContentType));
 
-    buffer = MSI_RecordGetString( row, 2 );
-    mt->Extension = load_given_extension( package, buffer );
+    extension = MSI_RecordGetString( row, 2 );
+    mt->Extension = load_given_extension( package, extension );
+    mt->suffix = strdupW( extension );
 
     mt->clsid = msi_dup_record_field( row, 3 );
     mt->Class = load_given_class( package, mt->clsid );
@@ -720,6 +722,25 @@ static void mark_progid_for_install( MSIPACKAGE* package, MSIPROGID *progid )
     }
 }
 
+static void mark_progid_for_uninstall( MSIPACKAGE *package, MSIPROGID *progid )
+{
+    MSIPROGID *child;
+
+    if (!progid)
+        return;
+
+    if (!progid->InstallMe)
+        return;
+
+    progid->InstallMe = FALSE;
+
+    LIST_FOR_EACH_ENTRY( child, &package->progids, MSIPROGID, entry )
+    {
+        if (child->Parent == progid)
+            mark_progid_for_uninstall( package, child );
+    }
+}
+
 static void mark_mime_for_install( MSIMIME *mime )
 {
     if (!mime)
@@ -727,9 +748,15 @@ static void mark_mime_for_install( MSIMIME *mime )
     mime->InstallMe = TRUE;
 }
 
+static void mark_mime_for_uninstall( MSIMIME *mime )
+{
+    if (!mime)
+        return;
+    mime->InstallMe = FALSE;
+}
+
 static UINT register_appid(const MSIAPPID *appid, LPCWSTR app )
 {
-    static const WCHAR szAppID[] = { 'A','p','p','I','D',0 };
     static const WCHAR szRemoteServerName[] =
          {'R','e','m','o','t','e','S','e','r','v','e','r','N','a','m','e',0};
     static const WCHAR szLocalService[] =
@@ -776,24 +803,13 @@ static UINT register_appid(const MSIAPPID *appid, LPCWSTR app )
 
 UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 {
-    /* 
-     * Again I am assuming the words, "Whose key file represents" when referring
-     * to a Component as to meaning that Components KeyPath file
-     */
-    
-    UINT rc;
-    MSIRECORD *uirow;
-    static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
-    static const WCHAR szProgID[] = { 'P','r','o','g','I','D',0 };
-    static const WCHAR szVIProgID[] = { 'V','e','r','s','i','o','n','I','n','d','e','p','e','n','d','e','n','t','P','r','o','g','I','D',0 };
-    static const WCHAR szAppID[] = { 'A','p','p','I','D',0 };
     static const WCHAR szFileType_fmt[] = {'F','i','l','e','T','y','p','e','\\','%','s','\\','%','i',0};
+    MSIRECORD *uirow;
     HKEY hkey,hkey2,hkey3;
     MSICLASS *cls;
 
     load_classes_and_such(package);
-    rc = RegCreateKeyW(HKEY_CLASSES_ROOT,szCLSID,&hkey);
-    if (rc != ERROR_SUCCESS)
+    if (RegCreateKeyW(HKEY_CLASSES_ROOT, szCLSID, &hkey) != ERROR_SUCCESS)
         return ERROR_FUNCTION_FAILED;
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
@@ -812,14 +828,19 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         if (!feature)
             continue;
 
-        /*
-         * MSDN says that these are based on Feature not on Component.
-         */
         if (feature->ActionRequest != INSTALLSTATE_LOCAL &&
             feature->ActionRequest != INSTALLSTATE_ADVERTISED )
         {
-            TRACE("Feature %s not scheduled for installation, skipping regstration of class %s\n",
+            TRACE("Feature %s not scheduled for installation, skipping registration of class %s\n",
                   debugstr_w(feature->Feature), debugstr_w(cls->clsid));
+            continue;
+        }
+        feature->Action = feature->ActionRequest;
+
+        file = get_loaded_file( package, comp->KeyPath );
+        if (!file)
+        {
+            TRACE("COM server not provided, skipping class %s\n", debugstr_w(cls->clsid));
             continue;
         }
 
@@ -834,12 +855,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
             msi_reg_set_val_str( hkey2, NULL, cls->Description );
 
         RegCreateKeyW( hkey2, cls->Context, &hkey3 );
-        file = get_loaded_file( package, comp->KeyPath );
-        if (!file)
-        {
-            TRACE("COM server not provided, skipping class %s\n", debugstr_w(cls->clsid));
-            continue;
-        }
 
         /*
          * FIXME: Implement install on demand (advertised components).
@@ -887,35 +902,18 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         if (cls->AppID)
         {
             MSIAPPID *appid = cls->AppID;
-
             msi_reg_set_val_str( hkey2, szAppID, appid->AppID );
-
             register_appid( appid, cls->Description );
         }
 
         if (cls->IconPath)
-        {
-            static const WCHAR szDefaultIcon[] = 
-                {'D','e','f','a','u','l','t','I','c','o','n',0};
-
             msi_reg_set_subkey_val( hkey2, szDefaultIcon, NULL, cls->IconPath );
-        }
 
         if (cls->DefInprocHandler)
-        {
-            static const WCHAR szInproc[] =
-                {'I','n','p','r','o','c','H','a','n','d','l','e','r',0};
-
-            msi_reg_set_subkey_val( hkey2, szInproc, NULL, cls->DefInprocHandler );
-        }
+            msi_reg_set_subkey_val( hkey2, szInprocHandler, NULL, cls->DefInprocHandler );
 
         if (cls->DefInprocHandler32)
-        {
-            static const WCHAR szInproc32[] =
-                {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
-
-            msi_reg_set_subkey_val( hkey2, szInproc32, NULL, cls->DefInprocHandler32 );
-        }
+            msi_reg_set_subkey_val( hkey2, szInprocHandler32, NULL, cls->DefInprocHandler32 );
         
         RegCloseKey(hkey2);
 
@@ -947,14 +945,92 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         }
         
         uirow = MSI_CreateRecord(1);
-
         MSI_RecordSetStringW( uirow, 1, cls->clsid );
         ui_actiondata(package,szRegisterClassInfo,uirow);
         msiobj_release(&uirow->hdr);
     }
 
     RegCloseKey(hkey);
-    return rc;
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
+{
+    static const WCHAR szFileType[] = {'F','i','l','e','T','y','p','e','\\',0};
+    MSIRECORD *uirow;
+    MSICLASS *cls;
+    HKEY hkey, hkey2;
+
+    load_classes_and_such( package );
+    if (RegOpenKeyW( HKEY_CLASSES_ROOT, szCLSID, &hkey ) != ERROR_SUCCESS)
+        return ERROR_SUCCESS;
+
+    LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
+    {
+        MSIFEATURE *feature;
+        MSICOMPONENT *comp;
+        LPWSTR filetype;
+        LONG res;
+
+        comp = cls->Component;
+        if (!comp)
+            continue;
+
+        feature = cls->Feature;
+        if (!feature)
+            continue;
+
+        if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+        {
+            TRACE("Feature %s not scheduled for removal, skipping unregistration of class %s\n",
+                  debugstr_w(feature->Feature), debugstr_w(cls->clsid));
+            continue;
+        }
+        feature->Action = feature->ActionRequest;
+
+        TRACE("Unregistering class %s (%p)\n", debugstr_w(cls->clsid), cls);
+
+        cls->Installed = FALSE;
+        mark_progid_for_uninstall( package, cls->ProgID );
+
+        res = RegDeleteTreeW( hkey, cls->clsid );
+        if (res != ERROR_SUCCESS)
+            WARN("Failed to delete class key %d\n", res);
+
+        if (cls->AppID)
+        {
+            res = RegOpenKeyW( HKEY_CLASSES_ROOT, szAppID, &hkey2 );
+            if (res == ERROR_SUCCESS)
+            {
+                res = RegDeleteKeyW( hkey2, cls->AppID->AppID );
+                if (res != ERROR_SUCCESS)
+                    WARN("Failed to delete appid key %d\n", res);
+                RegCloseKey( hkey2 );
+            }
+        }
+        if (cls->FileTypeMask)
+        {
+            filetype = msi_alloc( (strlenW( szFileType ) + strlenW( cls->clsid ) + 1) * sizeof(WCHAR) );
+            if (filetype)
+            {
+                strcpyW( filetype, szFileType );
+                strcatW( filetype, cls->clsid );
+                res = RegDeleteTreeW( HKEY_CLASSES_ROOT, filetype );
+                msi_free( filetype );
+
+                if (res != ERROR_SUCCESS)
+                    WARN("Failed to delete file type %d\n", res);
+            }
+        }
+
+        uirow = MSI_CreateRecord( 1 );
+        MSI_RecordSetStringW( uirow, 1, cls->clsid );
+        ui_actiondata( package, szUnregisterClassInfo, uirow );
+        msiobj_release( &uirow->hdr );
+    }
+
+    RegCloseKey( hkey );
+    return ERROR_SUCCESS;
 }
 
 static LPCWSTR get_clsid_of_progid( const MSIPROGID *progid )
@@ -972,11 +1048,7 @@ static LPCWSTR get_clsid_of_progid( const MSIPROGID *progid )
 
 static UINT register_progid( const MSIPROGID* progid )
 {
-    static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
-    static const WCHAR szDefaultIcon[] =
-        {'D','e','f','a','u','l','t','I','c','o','n',0};
-    static const WCHAR szCurVer[] =
-        {'C','u','r','V','e','r',0};
+    static const WCHAR szCurVer[] = {'C','u','r','V','e','r',0};
     HKEY hkey = 0;
     UINT rc;
 
@@ -1035,6 +1107,41 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
         ui_actiondata( package, szRegisterProgIdInfo, uirow );
+        msiobj_release( &uirow->hdr );
+    }
+
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
+{
+    MSIPROGID *progid;
+    MSIRECORD *uirow;
+    LONG res;
+
+    load_classes_and_such( package );
+
+    LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
+    {
+        /* check if this progid is to be removed */
+        if (progid->Class && !progid->Class->Installed)
+            progid->InstallMe = FALSE;
+
+        if (progid->InstallMe)
+        {
+            TRACE("progid %s not scheduled to be removed\n", debugstr_w(progid->ProgID));
+            continue;
+        }
+
+        TRACE("Unregistering progid %s\n", debugstr_w(progid->ProgID));
+
+        res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid->ProgID );
+        if (res != ERROR_SUCCESS)
+            WARN("Failed to delete progid key %d\n", res);
+
+        uirow = MSI_CreateRecord( 1 );
+        MSI_RecordSetStringW( uirow, 1, progid->ProgID );
+        ui_actiondata( package, szUnregisterProgIdInfo, uirow );
         msiobj_release( &uirow->hdr );
     }
 
@@ -1122,10 +1229,11 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 {
     static const WCHAR szContentType[] = 
         {'C','o','n','t','e','n','t',' ','T','y','p','e',0 };
-    HKEY hkey;
+    HKEY hkey = NULL;
     MSIEXTENSION *ext;
     MSIRECORD *uirow;
     BOOL install_on_demand = TRUE;
+    LONG res;
 
     load_classes_and_such(package);
 
@@ -1157,6 +1265,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
                    debugstr_w(feature->Feature), debugstr_w(ext->Extension));
             continue;
         }
+        feature->Action = feature->ActionRequest;
 
         TRACE("Registering extension %s (%p)\n", debugstr_w(ext->Extension), ext);
 
@@ -1170,12 +1279,16 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
 
         mark_mime_for_install(ext->Mime);
 
-        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2)*sizeof(WCHAR) );
-        extension[0] = '.';
-        lstrcpyW(extension+1,ext->Extension);
-
-        RegCreateKeyW(HKEY_CLASSES_ROOT,extension,&hkey);
-        msi_free( extension );
+        extension = msi_alloc( (strlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        if (extension)
+        {
+            extension[0] = '.';
+            strcpyW( extension + 1, ext->Extension );
+            res = RegCreateKeyW( HKEY_CLASSES_ROOT, extension, &hkey );
+            msi_free( extension );
+            if (res != ERROR_SUCCESS)
+                WARN("Failed to create extension key %d\n", res);
+        }
 
         if (ext->Mime)
             msi_reg_set_val_str( hkey, szContentType, ext->Mime->ContentType );
@@ -1225,6 +1338,86 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
     return ERROR_SUCCESS;
 }
 
+UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
+{
+    MSIEXTENSION *ext;
+    MSIRECORD *uirow;
+    LONG res;
+
+    load_classes_and_such( package );
+
+    LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
+    {
+        LPWSTR extension;
+        MSIFEATURE *feature;
+
+        if (!ext->Component)
+            continue;
+
+        feature = ext->Feature;
+        if (!feature)
+            continue;
+
+        if (feature->ActionRequest != INSTALLSTATE_ABSENT)
+        {
+            TRACE("Feature %s not scheduled for removal, skipping unregistration of extension %s\n",
+                   debugstr_w(feature->Feature), debugstr_w(ext->Extension));
+            continue;
+        }
+
+        TRACE("Unregistering extension %s\n", debugstr_w(ext->Extension));
+
+        ext->Installed = FALSE;
+
+        if (ext->ProgID && !list_empty( &ext->verbs ))
+            mark_progid_for_uninstall( package, ext->ProgID );
+
+        mark_mime_for_uninstall( ext->Mime );
+
+        extension = msi_alloc( (strlenW( ext->Extension ) + 2) * sizeof(WCHAR) );
+        if (extension)
+        {
+            extension[0] = '.';
+            strcpyW( extension + 1, ext->Extension );
+            res = RegDeleteTreeW( HKEY_CLASSES_ROOT, extension );
+            msi_free( extension );
+            if (res != ERROR_SUCCESS)
+                WARN("Failed to delete extension key %d\n", res);
+        }
+
+        if (ext->ProgID || ext->ProgIDText)
+        {
+            static const WCHAR shellW[] = {'\\','s','h','e','l','l',0};
+            LPCWSTR progid;
+            LPWSTR progid_shell;
+
+            if (ext->ProgID)
+                progid = ext->ProgID->ProgID;
+            else
+                progid = ext->ProgIDText;
+
+            progid_shell = msi_alloc( (strlenW( progid ) + strlenW( shellW ) + 1) * sizeof(WCHAR) );
+            if (progid_shell)
+            {
+                strcpyW( progid_shell, progid );
+                strcatW( progid_shell, shellW );
+                res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid_shell );
+                msi_free( progid_shell );
+                if (res != ERROR_SUCCESS)
+                    WARN("Failed to delete shell key %d\n", res);
+                RegDeleteKeyW( HKEY_CLASSES_ROOT, progid );
+            }
+        }
+
+        uirow = MSI_CreateRecord( 1 );
+        MSI_RecordSetStringW( uirow, 1, ext->Extension );
+        ui_actiondata( package, szUnregisterExtensionInfo, uirow );
+        msiobj_release( &uirow->hdr );
+    }
+
+    return ERROR_SUCCESS;
+}
+
 UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 {
     static const WCHAR szExten[] = 
@@ -1237,11 +1430,6 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
         LPWSTR extension;
-        LPCWSTR exten;
-        LPCWSTR mime;
-        static const WCHAR fmt[] = 
-            {'M','I','M','E','\\','D','a','t','a','b','a','s','e','\\',
-             'C','o','n','t','e','n','t',' ','T','y','p','e','\\', '%','s',0};
         LPWSTR key;
 
         /* 
@@ -1254,33 +1442,80 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
         if (!mt->InstallMe)
         {
-            TRACE("MIME %s not scheduled to be installed\n",
-                             debugstr_w(mt->ContentType));
+            TRACE("MIME %s not scheduled to be installed\n", debugstr_w(mt->ContentType));
             continue;
         }
-        
-        mime = mt->ContentType;
-        exten = mt->Extension->Extension;
 
-        extension = msi_alloc( (lstrlenW( exten ) + 2)*sizeof(WCHAR) );
-        extension[0] = '.';
-        lstrcpyW(extension+1,exten);
+        TRACE("Registering MIME type %s\n", debugstr_w(mt->ContentType));
 
-        key = msi_alloc( (strlenW(mime)+strlenW(fmt)+1) * sizeof(WCHAR) );
-        sprintfW(key,fmt,mime);
-        msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExten, extension );
+        extension = msi_alloc( (strlenW( mt->Extension->Extension ) + 2) * sizeof(WCHAR) );
+        key = msi_alloc( (strlenW( mt->ContentType ) + strlenW( szMIMEDatabase ) + 1) * sizeof(WCHAR) );
 
-        msi_free(extension);
-        msi_free(key);
+        if (extension && key)
+        {
+            extension[0] = '.';
+            strcpyW( extension + 1, mt->Extension->Extension );
 
-        if (mt->clsid)
-            FIXME("Handle non null for field 3\n");
+            strcpyW( key, szMIMEDatabase );
+            strcatW( key, mt->ContentType );
+            msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExten, extension );
 
-        uirow = MSI_CreateRecord(2);
-        MSI_RecordSetStringW(uirow,1,mt->ContentType);
-        MSI_RecordSetStringW(uirow,2,exten);
-        ui_actiondata(package,szRegisterMIMEInfo,uirow);
-        msiobj_release(&uirow->hdr);
+            if (mt->clsid)
+                msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szCLSID, mt->clsid );
+        }
+        msi_free( extension );
+        msi_free( key );
+
+        uirow = MSI_CreateRecord( 2 );
+        MSI_RecordSetStringW( uirow, 1, mt->ContentType );
+        MSI_RecordSetStringW( uirow, 2, mt->suffix );
+        ui_actiondata( package, szRegisterMIMEInfo, uirow );
+        msiobj_release( &uirow->hdr );
+    }
+
+    return ERROR_SUCCESS;
+}
+
+UINT ACTION_UnregisterMIMEInfo( MSIPACKAGE *package )
+{
+    MSIRECORD *uirow;
+    MSIMIME *mime;
+
+    load_classes_and_such( package );
+
+    LIST_FOR_EACH_ENTRY( mime, &package->mimes, MSIMIME, entry )
+    {
+        LONG res;
+        LPWSTR mime_key;
+
+        mime->InstallMe = (mime->InstallMe ||
+                          (mime->Class && mime->Class->Installed) ||
+                          (mime->Extension && mime->Extension->Installed));
+
+        if (mime->InstallMe)
+        {
+            TRACE("MIME %s not scheduled to be removed\n", debugstr_w(mime->ContentType));
+            continue;
+        }
+
+        TRACE("Unregistering MIME type %s\n", debugstr_w(mime->ContentType));
+
+        mime_key = msi_alloc( (strlenW( szMIMEDatabase ) + strlenW( mime->ContentType ) + 1) * sizeof(WCHAR) );
+        if (mime_key)
+        {
+            strcpyW( mime_key, szMIMEDatabase );
+            strcatW( mime_key, mime->ContentType );
+            res = RegDeleteKeyW( HKEY_CLASSES_ROOT, mime_key );
+            if (res != ERROR_SUCCESS)
+                WARN("Failed to delete MIME key %d\n", res);
+            msi_free( mime_key );
+        }
+
+        uirow = MSI_CreateRecord( 2 );
+        MSI_RecordSetStringW( uirow, 1, mime->ContentType );
+        MSI_RecordSetStringW( uirow, 2, mime->suffix );
+        ui_actiondata( package, szUnregisterMIMEInfo, uirow );
+        msiobj_release( &uirow->hdr );
     }
 
     return ERROR_SUCCESS;

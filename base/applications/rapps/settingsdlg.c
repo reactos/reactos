@@ -115,7 +115,14 @@ SettingsDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam)
                                     IDS_CHOOSE_FOLDER_ERROR,
                                     szMsgText, sizeof(szMsgText) / sizeof(WCHAR));
 
-                        MessageBoxW(hDlg, szMsgText, NULL, MB_OK | MB_ICONERROR);
+                        if (MessageBoxW(hDlg, szMsgText, NULL, MB_YESNO) == IDYES)
+                        {
+                            if (CreateDirectoryW(szDir, NULL))
+                            {
+                                EndDialog(hDlg, LOWORD(wParam));
+                            }
+                        }
+
                         SetFocus(GetDlgItem(hDlg, IDC_DOWNLOAD_DIR_EDIT));
                         break;
                     }

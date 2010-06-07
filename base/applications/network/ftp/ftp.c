@@ -345,7 +345,7 @@ getreply(expecteof)
 		cp = reply_string;
 		while ((c = fgetcSocket(cin)) != '\n') {
 			if (c == IAC) {     /* handle telnet commands */
-				switch (c = fgetcSocket(cin)) {
+				switch (fgetcSocket(cin)) {
 				case WILL:
 				case WONT:
 					c = fgetcSocket(cin);
@@ -745,7 +745,7 @@ void recvrequest(const char *cmd, const char *local, const char *remote, const c
 	long bytes = 0, hashbytes = HASHBYTES;
 //	struct
 		fd_set mask;
-	register int c, d;
+	register int c;
 	struct timeval start, stop;
 //	struct stat st;
 
@@ -781,6 +781,7 @@ null();//			(void) signal(SIGINT, oldintr);
 null();//	oldintr = signal(SIGINT, abortrecv);
 	if (strcmp(local, "-") && *local != '|') {
 #ifndef _WIN32
+	register int d;
 // This whole thing is a problem... access Won't work on non-existent files
 		if (access(local, 2) < 0) {
 			char *dir = rindex(local, '/');
@@ -919,7 +920,7 @@ null();//		oldintp = signal(SIGPIPE, SIG_IGN);
 				(*closefunc)(fout);
 			return;
 		}
-		errno = d = 0;
+		errno = 0;
 //		while ((c = recv(din, buf, bufsize, 1)) > 0) {
 //			if ((d = write(fileno(fout), buf, c)) != c)
 //			if ((d = write(fileno(fout), buf, c)) != c)
@@ -1106,10 +1107,10 @@ null();//		(void) signal(SIGINT,oldintr);
 		lostpeer();
 	}
 	if (din && FD_ISSET(din, &mask)) {
-		while ((c = recv(din, buf, bufsize, 0)) > 0)
+		while (recv(din, buf, bufsize, 0) > 0)
 			;
 	}
-	if ((c = getreply(0)) == ERROR && code == 552) { /* needed for nic style abort */
+	if (getreply(0) == ERROR && code == 552) { /* needed for nic style abort */
 		if (data >= 0) {
 			(void) close(data);
 			data = -1;

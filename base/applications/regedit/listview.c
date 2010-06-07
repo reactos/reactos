@@ -380,7 +380,7 @@ static int CALLBACK CompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
     if (g_columnToSort == 2) {
         /* FIXME: Sort on value */
     }
-    return g_invertSort ? _tcscmp(r->name, l->name) : _tcscmp(l->name, r->name);
+    return g_invertSort ? _tcsicmp(r->name, l->name) : _tcsicmp(l->name, r->name);
 }
 
 BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)

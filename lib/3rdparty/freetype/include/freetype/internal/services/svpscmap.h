@@ -98,7 +98,7 @@ FT_BEGIN_HEADER
   (*PS_Unicodes_CharIndexFunc)( PS_Unicodes  unicodes,
                                 FT_UInt32    unicode );
 
-  typedef FT_ULong
+  typedef FT_UInt32
   (*PS_Unicodes_CharNextFunc)( PS_Unicodes  unicodes,
                                FT_UInt32   *unicode );
 
@@ -116,6 +116,41 @@ FT_BEGIN_HEADER
     const unsigned short*      adobe_std_encoding;
     const unsigned short*      adobe_expert_encoding;
   };
+
+
+#ifndef FT_CONFIG_OPTION_PIC
+
+#define FT_DEFINE_SERVICE_PSCMAPSREC(class_, unicode_value_, unicodes_init_, \
+        unicodes_char_index_, unicodes_char_next_, macintosh_name_,          \
+        adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_)     \
+  static const FT_Service_PsCMapsRec class_ =                                \
+  {                                                                          \
+    unicode_value_, unicodes_init_,                                          \
+    unicodes_char_index_, unicodes_char_next_, macintosh_name_,              \
+    adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_          \
+  };
+
+#else /* FT_CONFIG_OPTION_PIC */ 
+
+#define FT_DEFINE_SERVICE_PSCMAPSREC(class_, unicode_value_, unicodes_init_, \
+        unicodes_char_index_, unicodes_char_next_, macintosh_name_,          \
+        adobe_std_strings_, adobe_std_encoding_, adobe_expert_encoding_)     \
+  void                                                                       \
+  FT_Init_Class_##class_( FT_Library library,                                \
+                          FT_Service_PsCMapsRec* clazz)                      \
+  {                                                                          \
+    FT_UNUSED(library);                                                      \
+    clazz->unicode_value = unicode_value_;                                   \
+    clazz->unicodes_init = unicodes_init_;                                   \
+    clazz->unicodes_char_index = unicodes_char_index_;                       \
+    clazz->unicodes_char_next = unicodes_char_next_;                         \
+    clazz->macintosh_name = macintosh_name_;                                 \
+    clazz->adobe_std_strings = adobe_std_strings_;                           \
+    clazz->adobe_std_encoding = adobe_std_encoding_;                         \
+    clazz->adobe_expert_encoding = adobe_expert_encoding_;                   \
+  } 
+
+#endif /* FT_CONFIG_OPTION_PIC */ 
 
   /* */
 

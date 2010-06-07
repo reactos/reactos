@@ -18,6 +18,7 @@
 
 #include "afmodule.h"
 #include "afloader.h"
+#include "afpic.h"
 
 #ifdef AF_DEBUG
   int    _af_debug;
@@ -66,19 +67,15 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_AutoHinter_ServiceRec  af_autofitter_service =
-  {
+  FT_DEFINE_AUTOHINTER_SERVICE(af_autofitter_service,
     NULL,
     NULL,
     NULL,
     (FT_AutoHinter_GlyphLoadFunc)af_autofitter_load_glyph
-  };
+  )
 
+  FT_DEFINE_MODULE(autofit_module_class,
 
-  FT_CALLBACK_TABLE_DEF
-  const FT_Module_Class  autofit_module_class =
-  {
     FT_MODULE_HINTER,
     sizeof ( FT_AutofitterRec ),
 
@@ -86,12 +83,12 @@
     0x10000L,   /* version 1.0 of the autofitter  */
     0x20000L,   /* requires FreeType 2.0 or above */
 
-    (const void*)&af_autofitter_service,
+    (const void*)&AF_AF_AUTOFITTER_SERVICE_GET,
 
     (FT_Module_Constructor)af_autofitter_init,
     (FT_Module_Destructor) af_autofitter_done,
     (FT_Module_Requester)  NULL
-  };
+  )
 
 
 /* END */

@@ -4,6 +4,17 @@
 	<include base="ftp">.</include>
 	<define name="lint" />
 
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+	<define name="chdir">_chdir</define>
+	<define name="getcwd">_getcwd</define>
+	<define name="mktemp">_mktemp</define>
+	<define name="unlink">_unlink</define>
+	<define name="close">_close</define>
+	<define name="fileno">_fileno</define>
+	<define name="read">_read</define>
+	<define name="write">_write</define>
+	<define name="lseek">_lseek</define>
+
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>oldnames</library>

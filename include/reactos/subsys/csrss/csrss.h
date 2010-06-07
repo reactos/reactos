@@ -51,10 +51,9 @@ typedef struct
 
 typedef struct
 {
-  ULONG nMaxIds;
-   ULONG nProcessIdsCopied;
-   ULONG nProcessIdsTotal;
-   HANDLE ProcessId[0];
+    USHORT nMaxIds;
+    PDWORD ProcessId;
+    ULONG nProcessIdsTotal;
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
 typedef struct
@@ -63,6 +62,7 @@ typedef struct
    BOOL Unicode;
    ULONG NrCharactersToWrite;
    ULONG NrCharactersWritten;
+   HANDLE UnpauseEvent;
    BYTE Buffer[0];
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 
@@ -70,8 +70,8 @@ typedef struct
 {
    HANDLE ConsoleHandle;
    BOOL Unicode;
+   WORD FullReadSize;
    WORD NrCharactersToRead;
-   WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
    HANDLE EventHandle;
    ULONG NrCharactersRead;
    BYTE Buffer[0];
@@ -80,7 +80,8 @@ typedef struct
 typedef struct
 {
    PCONTROLDISPATCHER CtrlDispatcher;
-   BOOL ConsoleNeeded;
+   BOOLEAN ConsoleNeeded;
+   BOOLEAN Visible;
    HANDLE Console;
    HANDLE InputHandle;
    HANDLE OutputHandle;
@@ -206,13 +207,13 @@ typedef struct
 typedef struct
 {
   DWORD Length;
-  WCHAR Title[0];
+  PWCHAR Title;
 } CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
 
 typedef struct
 {
   DWORD Length;
-  WCHAR Title[0];
+  PWCHAR Title;
 } CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
 
 typedef struct
@@ -320,15 +321,10 @@ typedef struct
 {
   DWORD Access;
   BOOL Inheritable;
-  HANDLE InputHandle;
-} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE;
-
-typedef struct
-{
-  DWORD Access;
-  BOOL Inheritable;
-  HANDLE OutputHandle;
-} CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
+  HANDLE Handle;
+  DWORD ShareMode;
+} CSRSS_GET_INPUT_HANDLE, *PCSRSS_GET_INPUT_HANDLE,
+  CSRSS_GET_OUTPUT_HANDLE, *PCSRSS_GET_OUTPUT_HANDLE;
 
 typedef struct
 {
@@ -478,6 +474,42 @@ typedef struct
   COORD Size;
 } CSRSS_SET_SCREEN_BUFFER_SIZE, *PCSRSS_SET_SCREEN_BUFFER_SIZE;
 
+typedef struct
+{
+  CONSOLE_SELECTION_INFO Info;
+} CSRSS_GET_CONSOLE_SELECTION_INFO, *PCSRSS_GET_CONSOLE_SELECTION_INFO;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  DWORD Length;
+} CSRSS_GET_COMMAND_HISTORY_LENGTH, *PCSRSS_GET_COMMAND_HISTORY_LENGTH;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  PWCHAR History;
+  DWORD Length;
+} CSRSS_GET_COMMAND_HISTORY, *PCSRSS_GET_COMMAND_HISTORY;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+} CSRSS_EXPUNGE_COMMAND_HISTORY, *PCSRSS_EXPUNGE_COMMAND_HISTORY;
+
+typedef struct
+{
+  UNICODE_STRING ExeName;
+  DWORD NumCommands;
+} CSRSS_SET_HISTORY_NUMBER_COMMANDS, *PCSRSS_SET_HISTORY_NUMBER_COMMANDS;
+
+typedef struct
+{
+  DWORD HistoryBufferSize;
+  DWORD NumberOfHistoryBuffers;
+  DWORD dwFlags;
+} CSRSS_GET_HISTORY_INFO, *PCSRSS_GET_HISTORY_INFO,
+  CSRSS_SET_HISTORY_INFO, *PCSRSS_SET_HISTORY_INFO;
 
 #define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
 #define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
@@ -486,11 +518,6 @@ typedef struct
 #define CSRSS_MAX_READ_CONSOLE                  (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE))
 #define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR      (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
 #define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB    (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
-#define CSRSS_MAX_GET_PROCESS_LIST              (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_PROCESS_LIST))
-
-/* WCHARs, not bytes! */
-#define CSRSS_MAX_TITLE_LENGTH          80
-#define CSRSS_MAX_ALIAS_TARGET_LENGTH   80
 
 #define CREATE_PROCESS                (0x0)
 #define TERMINATE_PROCESS             (0x1)
@@ -557,6 +584,13 @@ typedef struct
 #define GENERATE_CTRL_EVENT           (0x3E)
 #define CREATE_THREAD                 (0x3F)
 #define SET_SCREEN_BUFFER_SIZE        (0x40)
+#define GET_CONSOLE_SELECTION_INFO    (0x41)
+#define GET_COMMAND_HISTORY_LENGTH    (0x42)
+#define GET_COMMAND_HISTORY           (0x43)
+#define EXPUNGE_COMMAND_HISTORY       (0x44)
+#define SET_HISTORY_NUMBER_COMMANDS   (0x45)
+#define GET_HISTORY_INFO              (0x46)
+#define SET_HISTORY_INFO              (0x47)
 
 /* Keep in sync with definition below. */
 #define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
@@ -631,6 +665,13 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_CONSOLE_ALIASES_EXES_LENGTH GetConsoleAliasesExesLength;
         CSRSS_GENERATE_CTRL_EVENT GenerateCtrlEvent;
         CSRSS_SET_SCREEN_BUFFER_SIZE SetScreenBufferSize;
+        CSRSS_GET_CONSOLE_SELECTION_INFO GetConsoleSelectionInfo;
+        CSRSS_GET_COMMAND_HISTORY_LENGTH GetCommandHistoryLength;
+        CSRSS_GET_COMMAND_HISTORY GetCommandHistory;
+        CSRSS_EXPUNGE_COMMAND_HISTORY ExpungeCommandHistory;
+        CSRSS_SET_HISTORY_NUMBER_COMMANDS SetHistoryNumberCommands;
+        CSRSS_GET_HISTORY_INFO GetHistoryInfo;
+        CSRSS_SET_HISTORY_INFO SetHistoryInfo;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 

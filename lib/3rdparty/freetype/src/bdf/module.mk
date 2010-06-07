@@ -27,7 +27,7 @@
 FTMODULE_H_COMMANDS += BDF_DRIVER
 
 define BDF_DRIVER
-$(OPEN_DRIVER)bdf_driver_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Driver_ClassRec, bdf_driver_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)bdf       $(ECHO_DRIVER_DESC)bdf bitmap fonts$(ECHO_DRIVER_DONE)
 endef
 

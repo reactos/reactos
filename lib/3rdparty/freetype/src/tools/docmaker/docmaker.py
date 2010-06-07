@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#  DocMaker (c) 2002, 2004 David Turner <david@freetype.org>
+#  DocMaker (c) 2002, 2004, 2008 David Turner <david@freetype.org>
 #
 # This program is a re-write of the original DocMaker took used
 # to generate the API Reference of the FreeType font engine
@@ -24,9 +24,9 @@ import utils
 import sys, os, time, string, glob, getopt
 
 
-def usage():
+def  usage():
     print "\nDocMaker Usage information\n"
-    print "  docmaker [options] file1 [ file2 ... ]\n"
+    print "  docmaker [options] file1 [file2 ...]\n"
     print "using the following options:\n"
     print "  -h : print this page"
     print "  -t : set project title, as in '-t \"My Project\"'"
@@ -38,16 +38,15 @@ def usage():
     print "  --prefix : same as -p, as in '--prefix=ft2'"
 
 
-def main( argv ):
+def  main( argv ):
     """main program loop"""
 
     global output_dir
 
     try:
-        opts, args = getopt.getopt( sys.argv[1:],
-                                    "ht:o:p:",
-                                    [ "help", "title=", "output=", "prefix=" ] )
-
+        opts, args = getopt.getopt( sys.argv[1:], \
+                                    "ht:o:p:",    \
+                                    ["help", "title=", "output=", "prefix="] )
     except getopt.GetoptError:
         usage()
         sys.exit( 2 )
@@ -76,7 +75,7 @@ def main( argv ):
         if opt[0] in ( "-p", "--prefix" ):
             project_prefix = opt[1]
 
-    check_output( )
+    check_output()
 
     # create context and processor
     source_processor  = SourceProcessor()

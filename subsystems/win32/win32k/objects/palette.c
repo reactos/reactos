@@ -61,9 +61,6 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     int i;
     HPALETTE hpalette;
     PLOGPALETTE palPtr;
-#ifndef NO_MAPPING
-    PALOBJ *palObj;
-#endif
 
     // create default palette (20 system colors)
     palPtr = ExAllocatePoolWithTag(PagedPool,
@@ -84,19 +81,6 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
 
     hpalette = NtGdiCreatePaletteInternal(palPtr,NB_RESERVED_COLORS);
     ExFreePoolWithTag(palPtr, TAG_PALETTE);
-
-#ifndef NO_MAPPING
-    palObj = (PALOBJ*)PALETTE_LockPalette(hpalette);
-    if (palObj)
-    {
-        if (!(palObj->mapping = ExAllocatePool(PagedPool, sizeof(int) * 20)))
-        {
-            DbgPrint("Win32k: Can not create palette mapping -- out of memory!");
-            return FALSE;
-        }
-        PALETTE_UnlockPalette(palObj);
-    }
-#endif
 
     /*  palette_size = visual->map_entries; */
 
@@ -232,7 +216,7 @@ PALETTE_Cleanup(PVOID ObjectBody)
     PPALETTE pPal = (PPALETTE)ObjectBody;
     if (NULL != pPal->IndexedColors)
     {
-        ExFreePool(pPal->IndexedColors);
+        ExFreePoolWithTag(pPal->IndexedColors, TAG_PALETTE);
     }
 
     return TRUE;
@@ -453,7 +437,7 @@ NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
     else
     {
         /* FIXME - Handle PalGDI == NULL!!!! */
-        DPRINT1("waring PalGDI is NULL \n");
+        DPRINT1("PalGDI is NULL\n");
     }
   return NewPalette;
 }
@@ -981,7 +965,7 @@ NtGdiDoPalette(
 
 	if (pUnsafeEntries)
 	{
-		pEntries = ExAllocatePool(PagedPool, cEntries * sizeof(PALETTEENTRY));
+		pEntries = ExAllocatePoolWithTag(PagedPool, cEntries * sizeof(PALETTEENTRY), TAG_PALETTE);
 		if (!pEntries)
 			return 0;
 		if (bInbound)
@@ -993,7 +977,7 @@ NtGdiDoPalette(
 			}
 			_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
 			{
-				ExFreePool(pEntries);
+				ExFreePoolWithTag(pEntries, TAG_PALETTE);
 				_SEH2_YIELD(return 0);
 			}
 			_SEH2_END
@@ -1047,7 +1031,7 @@ NtGdiDoPalette(
 			}
 			_SEH2_END
 		}
-		ExFreePool(pEntries);
+		ExFreePoolWithTag(pEntries, TAG_PALETTE);
 	}
 
 	return ret;

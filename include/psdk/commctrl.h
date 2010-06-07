@@ -2240,6 +2240,7 @@ extern "C" {
 #define LVSIL_NORMAL 0
 #define LVSIL_SMALL 1
 #define LVSIL_STATE 2
+#define LVSIL_GROUPHEADER       3
 
 #define LVM_SETIMAGELIST (LVM_FIRST+3)
 #define ListView_SetImageList(hwnd,himl,iImageList) (HIMAGELIST)SNDMSG((hwnd),LVM_SETIMAGELIST,(WPARAM)(iImageList),(LPARAM)(HIMAGELIST)(himl))
@@ -2392,6 +2393,7 @@ extern "C" {
 
 #define LVFI_PARAM 0x1
 #define LVFI_STRING 0x2
+#define LVFI_SUBSTRING 0x4
 #define LVFI_PARTIAL 0x8
 #define LVFI_WRAP 0x20
 #define LVFI_NEARESTXY 0x40
@@ -4379,6 +4381,8 @@ typedef struct tagTVDISPINFOEXW {
     UINT uHit;
     SYSTEMTIME st;
   } MCHITTESTINFO,*PMCHITTESTINFO;
+
+#define MCHITTESTINFO_V1_SIZE CCSIZEOF_STRUCT(MCHITTESTINFO, st)
 
 #define MCHT_TITLE 0x10000
 #define MCHT_CALENDAR 0x20000

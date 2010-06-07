@@ -167,7 +167,7 @@ PFN_DrvEnableDriver DRIVER_FindDDIDriver(LPCWSTR Name)
 
   if (!NT_SUCCESS(Status))
   {
-    ExFreePool(FullName);
+    ExFreePoolWithTag(FullName, TAG_DRIVER);
     return NULL;
   }
 
@@ -572,8 +572,8 @@ BOOL DRIVER_UnregisterDriver(LPCWSTR  Name)
 
   if (Driver != NULL)
   {
-    ExFreePool(Driver->Name);
-    ExFreePool(Driver);
+    ExFreePoolWithTag(Driver->Name, TAG_DRIVER);
+    ExFreePoolWithTag(Driver, TAG_DRIVER);
 
     return  TRUE;
   }
@@ -597,7 +597,7 @@ INT DRIVER_ReferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver %S not found to reference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return ++GenericDriver->ReferenceCount;
 }
 
@@ -615,7 +615,7 @@ INT DRIVER_UnreferenceDriver (LPCWSTR  Name)
     Driver = Driver->Next;
   }
   DPRINT( "Driver '%S' not found to dereference, generic count: %d\n", Name, GenericDriver->ReferenceCount );
-  assert( GenericDriver != 0 );
+  ASSERT( GenericDriver != 0 );
   return --GenericDriver->ReferenceCount;
 }
 /* EOF */

@@ -1489,6 +1489,12 @@ MUI_ERROR bgBGErrorEntries[] =
         "ENTER = Презапускане на компютъра"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Натиснете клавиш, за да продължите.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1626,7 +1632,7 @@ MUI_STRING bgBGStrings[] =
     {STRING_TXTSETUPFAILED,
     "Не бе намерен раздел '%S'\nв TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Запис на файл: %S"},
+     "   Запис на файл: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Тече записване на файловете..."},
     {STRING_REGHIVEUPDATE,

@@ -30,11 +30,12 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
                           OUT PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     BOOLEAN CopyOnOpen, EffectiveOnly;
+
     PAGED_CODE();
-    
+
     /* Save the unique ID */
     SubjectContext->ProcessAuditId = Process->UniqueProcessId;
-    
+
     /* Check if we have a thread */
     if (!Thread)
     {
@@ -49,7 +50,7 @@ SeCaptureSubjectContextEx(IN PETHREAD Thread,
                                                                     &EffectiveOnly,
                                                                     &SubjectContext->ImpersonationLevel);
     }
-    
+
     /* Get the primary token */
     SubjectContext->PrimaryToken = PsReferencePrimaryToken(Process);
 }
@@ -75,7 +76,7 @@ NTAPI
 SeLockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
-    
+
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&SepSubjectContextLock, TRUE);
 }
@@ -88,7 +89,7 @@ NTAPI
 SeUnlockSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
-    
+
     ExReleaseResourceLite(&SepSubjectContextLock);
     KeLeaveCriticalRegion();
 }
@@ -101,12 +102,12 @@ NTAPI
 SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext)
 {
     PAGED_CODE();
-    
+
     if (SubjectContext->PrimaryToken != NULL)
     {
         ObFastDereferenceObject(&PsGetCurrentProcess()->Token, SubjectContext->PrimaryToken);
     }
-    
+
     if (SubjectContext->ClientToken != NULL)
     {
         ObDereferenceObject(SubjectContext->ClientToken);
@@ -127,6 +128,7 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
 {
     ACCESS_MASK AccessMask = Access;
     PTOKEN Token;
+
     PAGED_CODE();
 
     /* Map the Generic Acess to Specific Access if we have a Mapping */
@@ -150,9 +152,9 @@ SeCreateAccessStateEx(IN PETHREAD Thread,
     ExpAllocateLocallyUniqueId(&AccessState->OperationID);
 
     /* Get the Token to use */
-    Token =  AccessState->SubjectSecurityContext.ClientToken ?
-             (PTOKEN)&AccessState->SubjectSecurityContext.ClientToken :
-             (PTOKEN)&AccessState->SubjectSecurityContext.PrimaryToken;
+    Token = AccessState->SubjectSecurityContext.ClientToken ?
+            (PTOKEN)&AccessState->SubjectSecurityContext.ClientToken :
+            (PTOKEN)&AccessState->SubjectSecurityContext.PrimaryToken;
 
     /* Check for Travers Privilege */
     if (Token->TokenFlags & TOKEN_HAS_TRAVERSE_PRIVILEGE)
@@ -200,6 +202,7 @@ NTAPI
 SeDeleteAccessState(IN PACCESS_STATE AccessState)
 {
     PAUX_ACCESS_DATA AuxData;
+
     PAGED_CODE();
 
     /* Get the Auxiliary Data */
@@ -213,7 +216,8 @@ SeDeleteAccessState(IN PACCESS_STATE AccessState)
     {
         ExFreePool(AccessState->ObjectName.Buffer);
     }
-    if (AccessState->ObjectTypeName.Buffer) 
+
+    if (AccessState->ObjectTypeName.Buffer)
     {
         ExFreePool(AccessState->ObjectTypeName.Buffer);
     }
@@ -252,8 +256,9 @@ SeCreateClientSecurity(IN PETHREAD Thread,
     PACCESS_TOKEN Token;
     NTSTATUS Status;
     PACCESS_TOKEN NewToken;
+
     PAGED_CODE();
-    
+
     Token = PsReferenceEffectiveToken(Thread,
                                       &TokenType,
                                       &ThreadEffectiveOnly,
@@ -269,7 +274,7 @@ SeCreateClientSecurity(IN PETHREAD Thread,
             if (Token) ObDereferenceObject(Token);
             return STATUS_BAD_IMPERSONATION_LEVEL;
         }
-        
+
         if ((ImpersonationLevel == SecurityAnonymous) ||
             (ImpersonationLevel == SecurityIdentification) ||
             ((RemoteClient) && (ImpersonationLevel != SecurityDelegation)))
@@ -277,12 +282,11 @@ SeCreateClientSecurity(IN PETHREAD Thread,
             if (Token) ObDereferenceObject(Token);
             return STATUS_BAD_IMPERSONATION_LEVEL;
         }
-        
+
         ClientContext->DirectAccessEffectiveOnly = ((ThreadEffectiveOnly) ||
-                                                    (Qos->EffectiveOnly)) ?
-        TRUE : FALSE;
+                                                    (Qos->EffectiveOnly)) ? TRUE : FALSE;
     }
-    
+
     if (Qos->ContextTrackingMode == SECURITY_STATIC_TRACKING)
     {
         ClientContext->DirectlyAccessClientToken = FALSE;
@@ -299,10 +303,10 @@ SeCreateClientSecurity(IN PETHREAD Thread,
                                          &ClientContext->ClientTokenControl);
 #endif
         }
-        
+
         NewToken = Token;
     }
-    
+
     ClientContext->SecurityQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
     ClientContext->SecurityQos.ImpersonationLevel = Qos->ImpersonationLevel;
     ClientContext->SecurityQos.ContextTrackingMode = Qos->ContextTrackingMode;
@@ -347,9 +351,9 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
                     IN PETHREAD ServerThread OPTIONAL)
 {
     UCHAR b;
-    
+
     PAGED_CODE();
-    
+
     if (ClientContext->DirectlyAccessClientToken == FALSE)
     {
         b = ClientContext->SecurityQos.EffectiveOnly;
@@ -358,10 +362,12 @@ SeImpersonateClient(IN PSECURITY_CLIENT_CONTEXT ClientContext,
     {
         b = ClientContext->DirectAccessEffectiveOnly;
     }
+
     if (ServerThread == NULL)
     {
         ServerThread = PsGetCurrentThread();
     }
+
     PsImpersonateClient(ServerThread,
                         ClientContext->ClientToken,
                         1,

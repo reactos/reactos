@@ -779,9 +779,9 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
     DWORD parens_cnt = 0, parens_size=0, rep_len=0, length;
     BSTR rep_str = NULL, match_str = NULL, ret_str, val_str;
     DispatchEx *rep_func = NULL, *regexp = NULL;
-    match_result_t *parens = NULL, match, **parens_ptr = &parens;
+    match_result_t *parens = NULL, match = {NULL,0}, **parens_ptr = &parens;
     strbuf_t ret = {NULL,0,0};
-    DWORD re_flags = 0;
+    DWORD re_flags = REM_NO_CTX_UPDATE;
     VARIANT *arg_var;
     HRESULT hres = S_OK;
 
@@ -860,7 +860,7 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
             if(regexp) {
                 hres = regexp_match_next(ctx, regexp, re_flags, str, length, &cp, parens_ptr,
                         &parens_size, &parens_cnt, &match);
-                re_flags = REM_CHECK_GLOBAL;
+                re_flags |= REM_CHECK_GLOBAL;
 
                 if(hres == S_FALSE) {
                     hres = S_OK;
@@ -969,12 +969,27 @@ static HRESULT String_replace(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DI
 
     if(rep_func)
         jsdisp_release(rep_func);
-    if(regexp)
-        jsdisp_release(regexp);
-    SysFreeString(val_str);
     SysFreeString(rep_str);
     SysFreeString(match_str);
     heap_free(parens);
+
+    if(SUCCEEDED(hres) && match.str && regexp) {
+        if(!val_str)
+            val_str = SysAllocStringLen(str, length);
+        if(val_str) {
+            SysFreeString(ctx->last_match);
+            ctx->last_match = val_str;
+            val_str = NULL;
+            ctx->last_match_index = match.str-str;
+            ctx->last_match_length = match.len;
+        }else {
+            hres = E_OUTOFMEMORY;
+        }
+    }
+
+    if(regexp)
+        jsdisp_release(regexp);
+    SysFreeString(val_str);
 
     if(SUCCEEDED(hres) && retv) {
         ret_str = SysAllocStringLen(ret.buf, ret.len);

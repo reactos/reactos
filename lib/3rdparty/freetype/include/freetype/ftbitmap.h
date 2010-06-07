@@ -2,10 +2,9 @@
 /*                                                                         */
 /*  ftbitmap.h                                                             */
 /*                                                                         */
-/*    FreeType utility functions for converting 1bpp, 2bpp, 4bpp, and 8bpp */
-/*    bitmaps into 8bpp format (specification).                            */
+/*    FreeType utility functions for bitmaps (specification).              */
 /*                                                                         */
-/*  Copyright 2004, 2005, 2006 by                                          */
+/*  Copyright 2004, 2005, 2006, 2008 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -72,7 +71,7 @@ FT_BEGIN_HEADER
   /*    FT_Bitmap_Copy                                                     */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Copies an bitmap into another one.                                 */
+  /*    Copy a bitmap into another one.                                    */
   /*                                                                       */
   /* <Input>                                                               */
   /*    library :: A handle to a library object.                           */
@@ -83,7 +82,7 @@ FT_BEGIN_HEADER
   /*    target  :: A handle to the target bitmap.                          */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Bitmap_Copy( FT_Library        library,
@@ -114,14 +113,14 @@ FT_BEGIN_HEADER
   /*    bitmap    :: A handle to the target bitmap.                        */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The current implementation restricts `xStrength' to be less than   */
-  /*    or equal to 8 if bitmap is of pixel_mode @FT_PIXEL_MODE_MONO.      */
+  /*    or equal to~8 if bitmap is of pixel_mode @FT_PIXEL_MODE_MONO.      */
   /*                                                                       */
   /*    If you want to embolden the bitmap owned by a @FT_GlyphSlotRec,    */
-  /*    you should call `FT_GlyphSlot_Own_Bitmap' on the slot first.       */
+  /*    you should call @FT_GlyphSlot_Own_Bitmap on the slot first.        */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Bitmap_Embolden( FT_Library  library,
@@ -152,7 +151,7 @@ FT_BEGIN_HEADER
   /*    target    :: The target bitmap.                                    */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    It is possible to call @FT_Bitmap_Convert multiple times without   */
@@ -173,6 +172,28 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
+  /*    FT_GlyphSlot_Own_Bitmap                                            */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Make sure that a glyph slot owns `slot->bitmap'.                   */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    slot :: The glyph slot.                                            */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0~means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    This function is to be used in combination with                    */
+  /*    @FT_Bitmap_Embolden.                                               */
+  /*                                                                       */
+  FT_EXPORT( FT_Error )
+  FT_GlyphSlot_Own_Bitmap( FT_GlyphSlot  slot );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
   /*    FT_Bitmap_Done                                                     */
   /*                                                                       */
   /* <Description>                                                         */
@@ -184,7 +205,7 @@ FT_BEGIN_HEADER
   /*    bitmap  :: The bitmap object to be freed.                          */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
+  /*    FreeType error code.  0~means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The `library' argument is taken to have access to FreeType's       */

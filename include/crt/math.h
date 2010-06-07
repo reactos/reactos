@@ -435,8 +435,6 @@ __CRT_INLINE int isinf (double d) {
     return res;
   }
 
-  extern long double __cdecl modfl (long double, long double*);
-
   /* 7.12.6.13 */
   extern double __cdecl scalbn (double, int);
   extern float __cdecl scalbnf (float, int);
@@ -458,7 +456,6 @@ __CRT_INLINE int isinf (double d) {
   extern long double __cdecl expl(long double);
   extern long double expm1l(long double);
   extern long double __cdecl coshl(long double);
-  extern long double __cdecl fabsl (long double);
   extern long double __cdecl acosl(long double);
   extern long double __cdecl asinl(long double);
   extern long double __cdecl atanl(long double);

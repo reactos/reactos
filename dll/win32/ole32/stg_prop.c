@@ -1314,6 +1314,13 @@ static HRESULT PropertyStorage_ReadFromStream(PropertyStorage_impl *This)
     hr = PropertyStorage_ReadFmtIdOffsetFromStream(This->stm, &fmtOffset);
     if (FAILED(hr))
         goto end;
+    if (!IsEqualGUID(&fmtOffset.fmtid, &FMTID_DocSummaryInformation) &&
+        !IsEqualGUID(&fmtOffset.fmtid, &FMTID_SummaryInformation))
+    {
+        WARN("not reading unknown fmtid %s\n", debugstr_guid(&fmtOffset.fmtid));
+        hr = S_FALSE;
+        goto end;
+    }
     if (fmtOffset.dwOffset > stat.cbSize.u.LowPart)
     {
         WARN("invalid offset %d (stream length is %d)\n", fmtOffset.dwOffset,

@@ -347,7 +347,7 @@ symbol_s:
             COND_input* cond = (COND_input*) info;
             UINT len;
 
-            $$ = msi_dup_property( cond->package, $1 );
+            $$ = msi_dup_property( cond->package->db, $1 );
             if ($$)
             {
                 len = (lstrlenW($$) + 1) * sizeof (WCHAR);

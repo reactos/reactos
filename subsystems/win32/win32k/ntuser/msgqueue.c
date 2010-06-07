@@ -171,38 +171,8 @@ MsqInitializeImpl(VOID)
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
 {
-   LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
    ULONG Prev;
-   MSLLHOOKSTRUCT MouseHookData;
-
-   KeQueryTickCount(&LargeTickCount);
-   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-
-   MouseHookData.pt.x = LOWORD(Msg->lParam);
-   MouseHookData.pt.y = HIWORD(Msg->lParam);
-   switch(Msg->message)
-   {
-        case WM_MOUSEWHEEL:
-           MouseHookData.mouseData = MAKELONG(0, GET_WHEEL_DELTA_WPARAM(Msg->wParam));
-           break;
-        case WM_XBUTTONDOWN:
-        case WM_XBUTTONUP:
-        case WM_XBUTTONDBLCLK:
-        case WM_NCXBUTTONDOWN:
-        case WM_NCXBUTTONUP:
-        case WM_NCXBUTTONDBLCLK:
-           MouseHookData.mouseData = MAKELONG(0, HIWORD(Msg->wParam));
-           break;
-        default:
-           MouseHookData.mouseData = 0;
-           break;
-     }
-     MouseHookData.flags = 0;
-     MouseHookData.time = Msg->time;
-     MouseHookData.dwExtraInfo = 0;
-     if( co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION, Msg->message, (LPARAM) &MouseHookData))
-         return;
 
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
@@ -924,7 +894,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PLIST_ENTRY Entry;
    LRESULT Result;
    BOOL SenderReturned;
-   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -995,26 +964,16 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
    }
 
-   /* Notify the sender if they specified a callback. */
+   /* Call the callback if the message was sent with SendMessageCallback */
    if (!SenderReturned && Message->CompletionCallback != NULL)
    {
-      if(!(NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
-                           sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG)))
-      {
-         DPRINT1("MsqDispatchOneSentMessage(): Not enough memory to create a callback notify message\n");
-         goto Notified;
-      }
-      NotifyMessage->CompletionCallback =
-         Message->CompletionCallback;
-      NotifyMessage->CompletionCallbackContext =
-         Message->CompletionCallbackContext;
-      NotifyMessage->Result = Result;
-      NotifyMessage->hWnd = Message->Msg.hwnd;
-      NotifyMessage->Msg = Message->Msg.message;
-      MsqSendNotifyMessage(Message->SenderQueue, NotifyMessage);
+      co_IntCallSentMessageCallback(Message->CompletionCallback,
+                                    Message->Msg.hwnd,
+                                    Message->Msg.message,
+                                    Message->CompletionCallbackContext,
+                                    Result);
    }
 
-Notified:
 
    /* Only if it is not a no wait message */
    if (!(Message->HookMessage & MSQ_SENTNOWAIT))
@@ -1024,7 +983,7 @@ Notified:
    }
 
    /* free the message */
-   ExFreePool(Message);
+   ExFreePoolWithTag(Message, TAG_USRMSG);
    return(TRUE);
 }
 
@@ -1101,7 +1060,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          }
 
          /* free the message */
-         ExFreePool(SentMessage);
+         ExFreePoolWithTag(SentMessage, TAG_USRMSG);
 
          CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
       }
@@ -1396,18 +1355,7 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFil
                          UINT MsgFilterMin, UINT MsgFilterMax)
 {
    PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
-   LARGE_INTEGER TimerExpiry;
-   PLARGE_INTEGER Timeout;
    NTSTATUS ret;
-
-   if (MsqGetFirstTimerExpiry(MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, &TimerExpiry))
-   {
-      Timeout = &TimerExpiry;
-   }
-   else
-   {
-      Timeout = NULL;
-   }
 
    IdlePing(); // Going to wait so send Idle ping.
 
@@ -1419,11 +1367,9 @@ co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT WndFil
                                   Executive,
                                   UserMode,
                                   FALSE,
-                                  Timeout,
+                                  NULL,
                                   NULL);
-
    UserEnterCo();
-
    return ret;
 }
 

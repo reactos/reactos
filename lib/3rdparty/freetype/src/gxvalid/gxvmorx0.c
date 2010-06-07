@@ -42,7 +42,7 @@
   gxv_morx_subtable_type0_entry_validate(
     FT_UShort                        state,
     FT_UShort                        flags,
-    GXV_XStateTable_GlyphOffsetDesc  glyphOffset,
+    GXV_XStateTable_GlyphOffsetCPtr  glyphOffset_p,
     FT_Bytes                         table,
     FT_Bytes                         limit,
     GXV_Validator                    valid )
@@ -54,7 +54,7 @@
     FT_UShort  verb;
 
     FT_UNUSED( state );
-    FT_UNUSED( glyphOffset );
+    FT_UNUSED( glyphOffset_p );
     FT_UNUSED( table );
     FT_UNUSED( limit );
 

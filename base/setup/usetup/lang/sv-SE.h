@@ -1478,6 +1478,12 @@ MUI_ERROR svSEErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1614,7 +1620,7 @@ MUI_STRING svSEStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_REGHIVEUPDATE,

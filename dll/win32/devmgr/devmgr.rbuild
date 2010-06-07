@@ -5,6 +5,7 @@
 	<library>setupapi</library>
 	<library>advapi32</library>
 	<library>user32</library>
+	<library>version</library>
 	<file>devmgr.rc</file>
 	<file>advprop.c</file>
 	<file>devprblm.c</file>

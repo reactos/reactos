@@ -16,7 +16,7 @@
 FTMODULE_H_COMMANDS += PSHINTER_MODULE
 
 define PSHINTER_MODULE
-$(OPEN_DRIVER)pshinter_module_class$(CLOSE_DRIVER)
+$(OPEN_DRIVER) FT_Module_Class, pshinter_module_class $(CLOSE_DRIVER)
 $(ECHO_DRIVER)pshinter  $(ECHO_DRIVER_DESC)Postscript hinter module$(ECHO_DRIVER_DONE)
 endef
 

@@ -119,7 +119,6 @@ typedef nsISupports nsIDOMDOMImplementation;
 typedef nsISupports nsIDOMCDATASection;
 typedef nsISupports nsIDOMProcessingInstruction;
 typedef nsISupports nsIDOMEntityReference;
-typedef nsISupports nsIDOMHTMLOptionsCollection;
 typedef nsISupports nsIWebProgressListener;
 typedef nsISupports nsIDOMCSSValue;
 typedef nsISupports nsIPrintSession;
@@ -1317,6 +1316,20 @@ interface nsIDOMHTMLOptionElement : nsIDOMHTMLElement
     nsresult SetSelected(PRBool aSelected);
     nsresult GetValue(nsAString *aValue);
     nsresult SetValue(const nsAString *aValue);
+}
+
+[
+    object,
+    uuid(bce0213c-f70f-488f-b93f-688acca55d63),
+    local
+    /* FROZEN */
+]
+interface nsIDOMHTMLOptionsCollection : nsISupports
+{
+    nsresult GetLength(PRUint32 *aLength);
+    nsresult SetLength(PRUint32 aLength);
+    nsresult Item(PRUint32 index, nsIDOMNode **_retval);
+    nsresult NamedItem(const nsAString *name, nsIDOMNode **_retval);
 }
 
 [

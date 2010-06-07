@@ -5,7 +5,7 @@
 /*    Basic OpenType/CFF type definitions and interface (specification     */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2006, 2007 by                         */
+/*  Copyright 1996-2001, 2002, 2003, 2006, 2007, 2008 by                   */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -114,7 +114,7 @@ FT_BEGIN_HEADER
     FT_Int     paint_type;
     FT_Int     charstring_type;
     FT_Matrix  font_matrix;
-    FT_UShort  units_per_em;
+    FT_ULong   units_per_em;  /* temporarily used as scaling value also */
     FT_Vector  font_offset;
     FT_ULong   unique_id;
     FT_BBox    font_bbox;
@@ -130,7 +130,7 @@ FT_BEGIN_HEADER
     /* these should only be used for the top-level font dictionary */
     FT_UInt    cid_registry;
     FT_UInt    cid_ordering;
-    FT_ULong   cid_supplement;
+    FT_Long    cid_supplement;
 
     FT_Long    cid_font_version;
     FT_Long    cid_font_revision;
@@ -259,6 +259,10 @@ FT_BEGIN_HEADER
     /* since version 2.3.0 */
     PS_FontInfoRec*  font_info;   /* font info dictionary */
 
+    /* since version 2.3.6 */
+    FT_String*       registry;
+    FT_String*       ordering;
+      
   } CFF_FontRec, *CFF_Font;
 
 

@@ -90,6 +90,8 @@ static HRESULT confirm_safety(HTMLDocumentNode *This, const WCHAR *url, struct C
     IObjectSafety *obj_safety;
     HRESULT hres;
 
+    TRACE("%s %p %s\n", debugstr_w(url), cs->pUnk, debugstr_guid(&cs->clsid));
+
     /* FIXME: Check URLACTION_ACTIVEX_OVERRIDE_SCRIPT_SAFETY */
 
     hres = IInternetSecurityManager_ProcessUrlAction(This->secmgr, url, URLACTION_SCRIPT_SAFE_ACTIVEX,
@@ -119,11 +121,17 @@ static HRESULT confirm_safety(HTMLDocumentNode *This, const WCHAR *url, struct C
     }
 
     hres = IObjectSafety_GetInterfaceSafetyOptions(obj_safety, &IID_IDispatchEx, &supported_opts, &enabled_opts);
-    if(SUCCEEDED(hres)) {
-        enabled_opts = INTERFACESAFE_FOR_UNTRUSTED_CALLER;
-        if(supported_opts & INTERFACE_USES_SECURITY_MANAGER)
-            enabled_opts |= INTERFACE_USES_SECURITY_MANAGER;
-        hres = IObjectSafety_SetInterfaceSafetyOptions(obj_safety, &IID_IDispatchEx, enabled_opts, enabled_opts);
+    if(FAILED(hres))
+        supported_opts = 0;
+
+    enabled_opts = INTERFACESAFE_FOR_UNTRUSTED_CALLER;
+    if(supported_opts & INTERFACE_USES_SECURITY_MANAGER)
+        enabled_opts |= INTERFACE_USES_SECURITY_MANAGER;
+
+    hres = IObjectSafety_SetInterfaceSafetyOptions(obj_safety, &IID_IDispatchEx, enabled_opts, enabled_opts);
+    if(FAILED(hres)) {
+        enabled_opts &= ~INTERFACE_USES_SECURITY_MANAGER;
+        hres = IObjectSafety_SetInterfaceSafetyOptions(obj_safety, &IID_IDispatch, enabled_opts, enabled_opts);
     }
     IObjectSafety_Release(obj_safety);
 
@@ -175,6 +183,7 @@ static HRESULT WINAPI InternetHostSecurityManager_QueryCustomPolicy(IInternetHos
 
         *(DWORD*)*ppPolicy = policy;
         *pcbPolicy = sizeof(policy);
+        TRACE("policy %x\n", policy);
         return S_OK;
     }
 

@@ -49,71 +49,71 @@ DtbgWindowProc(HWND Wnd,
 
     switch (Msg)
     {
-        case WM_ERASEBKGND:
-            PaintDesktop((HDC)wParam);
-            return 1;
+    case WM_ERASEBKGND:
+        PaintDesktop((HDC)wParam);
+        return 1;
 
-        case WM_PAINT:
-            if (BeginPaint(Wnd, &PS))
-                EndPaint(Wnd, &PS);
-            return 0;
+    case WM_PAINT:
+        if (BeginPaint(Wnd, &PS))
+            EndPaint(Wnd, &PS);
+        return 0;
 
-        case WM_SETCURSOR:
-            return (LRESULT)SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+    case WM_SETCURSOR:
+        return (LRESULT)SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
 
-        case WM_NCCREATE:
-            return (LRESULT)TRUE;
+    case WM_NCCREATE:
+        return (LRESULT)TRUE;
 
-        case WM_CREATE:
-        case WM_CLOSE:
-            return 0;
+    case WM_CREATE:
+    case WM_CLOSE:
+        return 0;
 
-        case WM_NOTIFY:
+    case WM_NOTIFY:
+    {
+        PPRIVATE_NOTIFY_DESKTOP nmh = (PPRIVATE_NOTIFY_DESKTOP)lParam;
+
+        /* Use WM_NOTIFY for private messages since
+         * it can't be sent between processes!
+         */
+        switch (nmh->hdr.code)
         {
-            PPRIVATE_NOTIFY_DESKTOP nmh = (PPRIVATE_NOTIFY_DESKTOP)lParam;
+        case PM_SHOW_DESKTOP:
+        {
+            LRESULT Result;
 
-            /* Use WM_NOTIFY for private messages since
-             * it can't be sent between processes!
-             */
-            switch (nmh->hdr.code)
-            {
-                case PM_SHOW_DESKTOP:
-                {
-                    LRESULT Result;
+            Result = !SetWindowPos(Wnd, NULL, 0, 0,
+                                   nmh->ShowDesktop.Width,
+                                   nmh->ShowDesktop.Height,
+                                   SWP_NOACTIVATE | SWP_NOZORDER |
+                                   SWP_SHOWWINDOW);
 
-                    Result = !SetWindowPos(Wnd, NULL, 0, 0,
-                                           nmh->ShowDesktop.Width,
-                                           nmh->ShowDesktop.Height,
-                                           SWP_NOACTIVATE | SWP_NOZORDER |
-                                           SWP_SHOWWINDOW);
+            UpdateWindow(Wnd);
+            VisibleDesktopWindow = Wnd;
+            return Result;
+        }
 
-                    UpdateWindow(Wnd);
-                    VisibleDesktopWindow = Wnd;
-                    return Result;
-                }
+        case PM_HIDE_DESKTOP:
+        {
+            LRESULT Result;
 
-                case PM_HIDE_DESKTOP:
-                {
-                    LRESULT Result;
+            Result = !SetWindowPos(Wnd, NULL, 0, 0, 0, 0,
+                                   SWP_NOACTIVATE | SWP_NOZORDER |
+                                   SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
 
-                    Result = !SetWindowPos(Wnd, NULL, 0, 0, 0, 0,
-                                           SWP_NOACTIVATE | SWP_NOZORDER |
-                                           SWP_NOMOVE | SWP_NOSIZE | SWP_HIDEWINDOW);
-
-                    UpdateWindow(Wnd);
-                    VisibleDesktopWindow = NULL;
-                    return Result;
-                }
-
-                default:
-                    DPRINT("Unknown notification code 0x%x sent to the desktop window!\n",
-                           nmh->hdr.code);
-                    return 0;
-            }
+            UpdateWindow(Wnd);
+            VisibleDesktopWindow = NULL;
+            return Result;
         }
 
         default:
-            return DefWindowProcW(Wnd, Msg, wParam, lParam);
+            DPRINT("Unknown notification code 0x%x sent to the desktop window!\n",
+                   nmh->hdr.code);
+            return 0;
+        }
+    }
+
+    default:
+        return DefWindowProcW(Wnd, Msg, wParam, lParam);
     }
 
     return 0;
@@ -309,7 +309,7 @@ FASTCALL
 DtbgIsDesktopVisible(VOID)
 {
     if (VisibleDesktopWindow != NULL &&
-        !IsWindowVisible(VisibleDesktopWindow))
+            !IsWindowVisible(VisibleDesktopWindow))
     {
         VisibleDesktopWindow = NULL;
     }

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,9 +18,7 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_STREAM_H
-#include FT_TRUETYPE_IDS_H
 #include FT_TRUETYPE_TAGS_H
 #include FT_INTERNAL_SFNT_H
 
@@ -144,6 +142,40 @@
 #endif /* TT_USE_BYTECODE_INTERPRETER */
 
 
+  /* Compare the face with a list of well-known `tricky' fonts. */
+  /* This list shall be expanded as we find more of them.       */
+
+  static FT_Bool
+  tt_check_trickyness( FT_String*  name )
+  {
+#define TRICK_NAMES_MAX_CHARACTERS  16
+#define TRICK_NAMES_COUNT 7
+    static const char trick_names[TRICK_NAMES_COUNT][TRICK_NAMES_MAX_CHARACTERS+1] =
+    {
+      "DFKaiSho-SB",     /* dfkaisb.ttf */
+      "DFKaiShu",
+      "DFKai-SB",        /* kaiu.ttf */
+      "HuaTianSongTi?",  /* htst3.ttf */
+      "MingLiU",         /* mingliu.ttf & mingliu.ttc */
+      "PMingLiU",        /* mingliu.ttc */
+      "MingLi43",        /* mingli.ttf */
+    };
+    int  nn;
+
+
+    if ( !name )
+      return FALSE;
+
+    /* Note that we only check the face name at the moment; it might */
+    /* be worth to do more checks for a few special cases.           */
+    for ( nn = 0; nn < TRICK_NAMES_COUNT; nn++ )
+      if ( ft_strstr( name, trick_names[nn] ) )
+        return TRUE;
+
+    return FALSE;
+  }
+
+
   /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
@@ -180,7 +212,7 @@
     TT_Face       face = (TT_Face)ttface;
 
 
-    library = face->root.driver->root.library;
+    library = ttface->driver->root.library;
     sfnt    = (SFNT_Service)FT_Get_Module_Interface( library, "sfnt" );
     if ( !sfnt )
       goto Bad_Format;
@@ -206,7 +238,7 @@
     }
 
 #ifdef TT_USE_BYTECODE_INTERPRETER
-    face->root.face_flags |= FT_FACE_FLAG_HINTER;
+    ttface->face_flags |= FT_FACE_FLAG_HINTER;
 #endif
 
     /* If we are performing a simple font format check, exit immediately. */
@@ -218,29 +250,37 @@
     if ( error )
       goto Exit;
 
+    if ( tt_check_trickyness( ttface->family_name ) )
+      ttface->face_flags |= FT_FACE_FLAG_TRICKY;
+
     error = tt_face_load_hdmx( face, stream );
     if ( error )
       goto Exit;
 
-    if ( face->root.face_flags & FT_FACE_FLAG_SCALABLE )
+    if ( FT_IS_SCALABLE( ttface ) )
     {
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
-      if ( !face->root.internal->incremental_interface )
+      if ( !ttface->internal->incremental_interface )
         error = tt_face_load_loca( face, stream );
       if ( !error )
-        error = tt_face_load_cvt( face, stream )  ||
-                tt_face_load_fpgm( face, stream ) ||
-                tt_face_load_prep( face, stream );
+        error = tt_face_load_cvt( face, stream );
+      if ( !error )
+        error = tt_face_load_fpgm( face, stream );
+      if ( !error )
+        error = tt_face_load_prep( face, stream );
 
 #else
 
       if ( !error )
-        error = tt_face_load_loca( face, stream ) ||
-                tt_face_load_cvt( face, stream )  ||
-                tt_face_load_fpgm( face, stream ) ||
-                tt_face_load_prep( face, stream );
+        error = tt_face_load_loca( face, stream );
+      if ( !error )
+        error = tt_face_load_cvt( face, stream );
+      if ( !error )
+        error = tt_face_load_fpgm( face, stream );
+      if ( !error )
+        error = tt_face_load_prep( face, stream );
 
 #endif
 
@@ -262,38 +302,8 @@
         if ( params[i].tag == FT_PARAM_TAG_UNPATENTED_HINTING )
           unpatented_hinting = TRUE;
 
-      /* Compare the face with a list of well-known `tricky' fonts. */
-      /* This list shall be expanded as we find more of them.       */
       if ( !unpatented_hinting )
-      {
-        static const char* const  trick_names[] =
-        {
-          "DFKaiSho-SB",     /* dfkaisb.ttf */
-          "DFKai-SB",        /* kaiu.ttf */
-          "HuaTianSongTi?",  /* htst3.ttf */
-          "MingLiU",         /* mingliu.ttf & mingliu.ttc */
-          "PMingLiU",        /* mingliu.ttc */
-          "MingLi43",        /* mingli.ttf */
-          NULL
-        };
-        int  nn;
-
-
-        /* Note that we only check the face name at the moment; it might */
-        /* be worth to do more checks for a few special cases.           */
-        for ( nn = 0; trick_names[nn] != NULL; nn++ )
-        {
-          if ( ttface->family_name                               &&
-               ft_strstr( ttface->family_name, trick_names[nn] ) )
-          {
-            unpatented_hinting = 1;
-            break;
-          }
-        }
-      }
-
-      ttface->internal->ignore_unpatented_hinter =
-        FT_BOOL( !unpatented_hinting );
+        ttface->internal->ignore_unpatented_hinter = TRUE;
     }
 
 #endif /* TT_CONFIG_OPTION_UNPATENTED_HINTING &&
@@ -325,12 +335,18 @@
   FT_LOCAL_DEF( void )
   tt_face_done( FT_Face  ttface )           /* TT_Face */
   {
-    TT_Face       face   = (TT_Face)ttface;
-    FT_Memory     memory = face->root.memory;
-    FT_Stream     stream = face->root.stream;
+    TT_Face       face = (TT_Face)ttface;
+    FT_Memory     memory;
+    FT_Stream     stream;
+    SFNT_Service  sfnt;
 
-    SFNT_Service  sfnt   = (SFNT_Service)face->sfnt;
 
+    if ( !face )
+      return;
+
+    memory = ttface->memory;
+    stream = ttface->stream;
+    sfnt   = (SFNT_Service)face->sfnt;
 
     /* for `extended TrueType formats' (i.e. compressed versions) */
     if ( face->extra.finalizer )
@@ -595,18 +611,15 @@
 
     /* Set default metrics */
     {
-      FT_Size_Metrics*  metrics  = &size->metrics;
-      TT_Size_Metrics*  metrics2 = &size->ttmetrics;
+      TT_Size_Metrics*  metrics = &size->ttmetrics;
 
-      metrics->x_ppem = 0;
-      metrics->y_ppem = 0;
 
-      metrics2->rotated   = FALSE;
-      metrics2->stretched = FALSE;
+      metrics->rotated   = FALSE;
+      metrics->stretched = FALSE;
 
       /* set default compensation (all 0) */
       for ( i = 0; i < 4; i++ )
-        metrics2->compensations[i] = 0;
+        metrics->compensations[i] = 0;
     }
 
     /* allocate function defs, instruction defs, cvt, and storage area */
@@ -669,7 +682,7 @@
     if ( !size->cvt_ready )
     {
       FT_UInt  i;
-      TT_Face  face = (TT_Face) size->root.face;
+      TT_Face  face = (TT_Face)size->root.face;
 
 
       /* Scale the cvt values to the new ppem.          */
@@ -694,8 +707,9 @@
 
       error = tt_size_run_prep( size );
       if ( !error )
-          size->cvt_ready = 1;
+        size->cvt_ready = 1;
     }
+
   Exit:
     return error;
   }

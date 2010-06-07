@@ -16,7 +16,7 @@ SubDir  FT2_TOP $(FT2_SRC_DIR) truetype ;
 
   if $(FT2_MULTI)
   {
-    _sources = ttdriver ttobjs ttpload ttgload ttinterp ttgxvar ;
+    _sources = ttdriver ttobjs ttpload ttgload ttinterp ttgxvar ttpic ;
   }
   else
   {

@@ -25,6 +25,7 @@
 
 
 #define FT_INTERNAL_OBJECTS_H             <freetype/internal/ftobjs.h>
+#define FT_INTERNAL_PIC_H                 <freetype/internal/ftpic.h>
 #define FT_INTERNAL_STREAM_H              <freetype/internal/ftstream.h>
 #define FT_INTERNAL_MEMORY_H              <freetype/internal/ftmemory.h>
 #define FT_INTERNAL_DEBUG_H               <freetype/internal/ftdebug.h>

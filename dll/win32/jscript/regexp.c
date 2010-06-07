@@ -96,6 +96,12 @@ static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR execW[] = {'e','x','e','c',0};
 static const WCHAR testW[] = {'t','e','s','t',0};
 
+static const WCHAR leftContextW[] =
+    {'l','e','f','t','C','o','n','t','e','x','t',0};
+static const WCHAR rightContextW[] =
+    {'r','i','g','h','t','C','o','n','t','e','x','t',0};
+
+static const WCHAR undefinedW[] = {'u','n','d','e','f','i','n','e','d',0};
 static const WCHAR emptyW[] = {0};
 
 /* FIXME: Better error handling */
@@ -1977,7 +1983,7 @@ PushBackTrackState(REGlobalData *gData, REOp op,
     ptrdiff_t btincr = ((char *)result + sz) -
                        ((char *)gData->backTrackStack + btsize);
 
-    TRACE("\tBT_Push: %lu,%lu\n", (unsigned long) parenIndex, (unsigned long) parenCount);
+    TRACE("\tBT_Push: %lu,%lu\n", (ULONG_PTR)parenIndex, (ULONG_PTR)parenCount);
 
     JS_COUNT_OPERATION(gData->cx, JSOW_JUMP * (1 + parenCount));
     if (btincr > 0) {
@@ -2729,7 +2735,7 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
 
               case REOP_LPAREN:
                 pc = ReadCompactIndex(pc, &parenIndex);
-                TRACE("[ %lu ]\n", (unsigned long) parenIndex);
+                TRACE("[ %lu ]\n", (ULONG_PTR)parenIndex);
                 assert(parenIndex < gData->regexp->parenCount);
                 if (parenIndex + 1 > parenSoFar)
                     parenSoFar = parenIndex + 1;
@@ -3093,8 +3099,8 @@ ExecuteREBytecode(REGlobalData *gData, REMatchState *x)
             }
 
             TRACE("\tBT_Pop: %ld,%ld\n",
-                     (unsigned long) backTrackData->parenIndex,
-                     (unsigned long) backTrackData->parenCount);
+                     (ULONG_PTR)backTrackData->parenIndex,
+                     (ULONG_PTR)backTrackData->parenCount);
             continue;
         }
         x = result;
@@ -3342,8 +3348,6 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp, D
     }
 
     if(parens) {
-        DWORD i;
-
         if(regexp->jsregexp->parenCount > *parens_size) {
             match_result_t *new_parens;
 
@@ -3356,6 +3360,22 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp, D
 
             *parens = new_parens;
         }
+    }
+
+    /* FIXME: We often already have a copy of input string that we could use to store last match */
+    if(!(rem_flags & REM_NO_CTX_UPDATE) &&
+       (!ctx->last_match || len != SysStringLen(ctx->last_match) || strncmpW(ctx->last_match, str, len))) {
+        BSTR last_match;
+
+        last_match = SysAllocStringLen(str, len);
+        if(!last_match)
+            return E_OUTOFMEMORY;
+        SysFreeString(ctx->last_match);
+        ctx->last_match = last_match;
+    }
+
+    if(parens) {
+        DWORD i;
 
         *parens_cnt = regexp->jsregexp->parenCount;
 
@@ -3375,6 +3395,11 @@ static HRESULT do_regexp_match_next(script_ctx_t *ctx, RegExpInstance *regexp, D
     ret->str = result->cp-matchlen;
     ret->len = matchlen;
     set_last_index(regexp, result->cp-str);
+
+    if(!(rem_flags & REM_NO_CTX_UPDATE)) {
+        ctx->last_match_index = ret->str-str;
+        ctx->last_match_length = matchlen;
+    }
 
     return S_OK;
 }
@@ -3712,12 +3737,24 @@ static HRESULT RegExp_test(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPP
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     match_result_t match;
+    VARIANT undef_var;
     VARIANT_BOOL b;
+    DWORD argc;
     HRESULT hres;
 
     TRACE("\n");
 
-    hres = run_exec(ctx, jsthis, arg_cnt(dp) ? get_arg(dp,0) : NULL, ei, NULL, &match, NULL, NULL, &b);
+    argc = arg_cnt(dp);
+    if(!argc) {
+        V_VT(&undef_var) = VT_BSTR;
+        V_BSTR(&undef_var) = SysAllocString(undefinedW);
+        if(!V_BSTR(&undef_var))
+            return E_OUTOFMEMORY;
+    }
+
+    hres = run_exec(ctx, jsthis, argc ? get_arg(dp,0) : &undef_var, ei, NULL, &match, NULL, NULL, &b);
+    if(!argc)
+        SysFreeString(V_BSTR(&undef_var));
     if(FAILED(hres))
         return hres;
 
@@ -3959,6 +3996,58 @@ HRESULT regexp_string_match(script_ctx_t *ctx, DispatchEx *re, BSTR str,
     return hres;
 }
 
+static HRESULT RegExpConstr_leftContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    switch(flags) {
+    case DISPATCH_PROPERTYGET: {
+        BSTR ret;
+
+        ret = SysAllocStringLen(ctx->last_match, ctx->last_match_index);
+        if(!ret)
+            return E_OUTOFMEMORY;
+
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = ret;
+    }
+    case DISPATCH_PROPERTYPUT:
+        return S_OK;
+    default:
+        FIXME("unsupported flags\n");
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
+}
+
+static HRESULT RegExpConstr_rightContext(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags,
+         DISPPARAMS *dp, VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
+{
+    TRACE("\n");
+
+    switch(flags) {
+    case DISPATCH_PROPERTYGET: {
+        BSTR ret;
+
+        ret = SysAllocString(ctx->last_match+ctx->last_match_index+ctx->last_match_length);
+        if(!ret)
+            return E_OUTOFMEMORY;
+
+        V_VT(retv) = VT_BSTR;
+        V_BSTR(retv) = ret;
+    }
+    case DISPATCH_PROPERTYPUT:
+        return S_OK;
+    default:
+        FIXME("unsupported flags\n");
+        return E_NOTIMPL;
+    }
+
+    return S_OK;
+}
+
 static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags, DISPPARAMS *dp,
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
@@ -4019,6 +4108,20 @@ static HRESULT RegExpConstr_value(script_ctx_t *ctx, vdisp_t *jsthis, WORD flags
     return S_OK;
 }
 
+static const builtin_prop_t RegExpConstr_props[] = {
+    {leftContextW,    RegExpConstr_leftContext,    0},
+    {rightContextW,   RegExpConstr_rightContext,   0}
+};
+
+static const builtin_info_t RegExpConstr_info = {
+    JSCLASS_FUNCTION,
+    {NULL, Function_value, 0},
+    sizeof(RegExpConstr_props)/sizeof(*RegExpConstr_props),
+    RegExpConstr_props,
+    NULL,
+    NULL
+};
+
 HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx *object_prototype, DispatchEx **ret)
 {
     RegExpInstance *regexp;
@@ -4030,7 +4133,7 @@ HRESULT create_regexp_constr(script_ctx_t *ctx, DispatchEx *object_prototype, Di
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_function(ctx, RegExpConstr_value, RegExpW, NULL,
+    hres = create_builtin_function(ctx, RegExpConstr_value, RegExpW, &RegExpConstr_info,
             PROPF_CONSTR|2, &regexp->dispex, ret);
 
     jsdisp_release(&regexp->dispex);

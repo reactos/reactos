@@ -141,7 +141,10 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, &null_char);
 
         file_name = url+sizeof(wszFile)/sizeof(WCHAR);
-        if(file_name[0] == '/' && file_name[1] == '/')
+
+        /* Strip both forward and back slashes */
+        if( (file_name[0] == '/' && file_name[1] == '/') ||
+            (file_name[0] == '\\' && file_name[1] == '\\'))
             file_name += 2;
         if(*file_name == '/')
             file_name++;

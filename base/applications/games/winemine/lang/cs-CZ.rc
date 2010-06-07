@@ -1,8 +1,8 @@
 /* FILE:        applications/games/winemine/lang/cs-CZ.rc
  * PURPOSE:     Czech Language File
- * TRANSLATOR:  Stepan Gabriel - SGABA (sgaba@centrum.cz)
+ * TRANSLATORS:  Stepan Gabriel - SGABA (sgaba@centrum.cz); Radek Liska aka Black_Fox (radekliska at gmail dot com)
  * TRANSLATED FROM: Slovak translation by Kario (kario@szm.sk)
- * UPDATED:     2008-07-06
+ * UPDATED:     2010-05-25
  *
  * Czech translation
  * Copyleft 2007 Kario (kario@szm.sk),2008 SGABA (sgaba@centrum.cz) 
@@ -15,7 +15,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
 	IDS_SECONDS, "sek."
-	IDS_NOBODY,  "Nikdo" //windows = Anonym
+	IDS_NOBODY,  "Bezejmenný" //windows = Anonym
 	IDS_ABOUT,   "od Joshua Thielena a vývojáøù systému ReactOS"
 END
 
@@ -36,15 +36,15 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Konec",           IDM_EXIT
 	END
-	POPUP "&Info" //windows = &Pomocník
+	POPUP "&Nápovìda" //windows = &Pomocník
         BEGIN
-		MENUITEM "C&o je hra Miny...", IDM_ABOUT
+		MENUITEM "&O programu...", IDM_ABOUT
 	END
 END
 
 IDD_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Nejrychlejší htedaèi min"
+CAPTION "Nejrychlejší hledaèi min"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	GROUPBOX        "Nejlepší èasy", IDNONE,     10,  10, 182,  45
@@ -66,7 +66,7 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Blahopøeji!"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT           "Zadejte prosím svoje jméno.", IDIGNORE,      25,  10, 150,  10
+	LTEXT           "Zadejte prosím svoje jméno",  IDIGNORE,      25,  10, 150,  10
 	EDITTEXT                                       IDC_EDITNAME,  25,  20, 110,  12
 	DEFPUSHBUTTON   "OK",                          IDOK,          60,  40,  40,  15
 END
@@ -83,5 +83,5 @@ BEGIN
 	EDITTEXT                  IDC_EDITCOLS,  49,  35,  30,  12, ES_NUMBER
 	EDITTEXT                  IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
 	DEFPUSHBUTTON   "OK",     IDOK,          86,  32,  45,  15
-	PUSHBUTTON      "Zrušit", IDCANCEL,      86,  52,  45,  15
+	PUSHBUTTON      "Storno", IDCANCEL,      86,  52,  45,  15
 END

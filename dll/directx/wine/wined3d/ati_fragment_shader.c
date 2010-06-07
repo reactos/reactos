@@ -190,7 +190,6 @@ static const char *debug_mask(GLuint mask) {
         default:                                return "Unexpected writemask";
     }
 }
-#define GLINFO_LOCATION (*gl_info)
 
 static void wrap_op1(const struct wined3d_gl_info *gl_info, GLuint op, GLuint dst, GLuint dstMask, GLuint dstMod,
         GLuint arg1, GLuint arg1Rep, GLuint arg1Mod)
@@ -796,11 +795,10 @@ static GLuint gen_ati_shader(const struct texture_stage_op op[MAX_TEXTURES], con
     checkGLcall("GL_EXTCALL(glEndFragmentShaderATI())");
     return ret;
 }
-#undef GLINFO_LOCATION
 
-#define GLINFO_LOCATION stateblock->device->adapter->gl_info
 static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     IWineD3DDeviceImpl *This = stateblock->device;
     const struct atifs_ffp_desc *desc;
     struct ffp_frag_settings     settings;
@@ -818,14 +816,14 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, st
             return;
         }
         new_desc->num_textures_used = 0;
-        for (i = 0; i < context->gl_info->limits.texture_stages; ++i)
+        for (i = 0; i < gl_info->limits.texture_stages; ++i)
         {
             if(settings.op[i].cop == WINED3DTOP_DISABLE) break;
             new_desc->num_textures_used = i;
         }
 
         memcpy(&new_desc->parent.settings, &settings, sizeof(settings));
-        new_desc->shader = gen_ati_shader(settings.op, context->gl_info);
+        new_desc->shader = gen_ati_shader(settings.op, gl_info);
         add_ffp_frag_shader(&priv->fragment_shaders, &new_desc->parent);
         TRACE("Allocated fixed function replacement shader descriptor %p\n", new_desc);
         desc = new_desc;
@@ -849,6 +847,7 @@ static void set_tex_op_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, st
 
 static void state_texfactor_atifs(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     float col[4];
     D3DCOLORTOGLFLOAT4(stateblock->renderState[WINED3DRS_TEXTUREFACTOR], col);
 
@@ -859,6 +858,7 @@ static void state_texfactor_atifs(DWORD state, IWineD3DStateBlockImpl *statebloc
 static void set_bumpmat(DWORD state, IWineD3DStateBlockImpl *stateblock, struct wined3d_context *context)
 {
     DWORD stage = (state - STATE_TEXTURESTAGE(0, 0)) / (WINED3D_HIGHEST_TEXTURE_STATE + 1);
+    const struct wined3d_gl_info *gl_info = context->gl_info;
     float mat[2][2];
 
     mat[0][0] = *((float *) &stateblock->textureState[stage][WINED3DTSS_BUMPENVMAT00]);
@@ -907,127 +907,124 @@ static void atifs_apply_pixelshader(DWORD state, IWineD3DStateBlockImpl *statebl
     if(!isStateDirty(context, device->StateTable[STATE_VSHADER].representative)) {
         device->shader_backend->shader_select(context, FALSE, use_vshader);
 
-        if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT) && use_vshader) {
-            device->StateTable[STATE_VERTEXSHADERCONSTANT].apply(STATE_VERTEXSHADERCONSTANT, stateblock, context);
-        }
+        if (!isStateDirty(context, STATE_VERTEXSHADERCONSTANT) && use_vshader)
+            stateblock_apply_state(STATE_VERTEXSHADERCONSTANT, stateblock, context);
     }
 }
-
-#undef GLINFO_LOCATION
 
 static const struct StateEntryTemplate atifs_fragmentstate_template[] = {
     {STATE_RENDER(WINED3DRS_TEXTUREFACTOR),               { STATE_RENDER(WINED3DRS_TEXTUREFACTOR),              state_texfactor_atifs   }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3DRS_FOGCOLOR),                    { STATE_RENDER(WINED3DRS_FOGCOLOR),                   state_fogcolor          }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3DRS_FOGDENSITY),                  { STATE_RENDER(WINED3DRS_FOGDENSITY),                 state_fogdensity        }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3DRS_FOGENABLE),                   { STATE_RENDER(WINED3DRS_FOGENABLE),                  state_fog_fragpart      }, WINED3D_GL_EXT_NONE             },
-    {STATE_RENDER(WINED3DRS_FOGTABLEMODE),                { STATE_RENDER(WINED3DRS_FOGENABLE),                  state_fog_fragpart      }, WINED3D_GL_EXT_NONE             },
-    {STATE_RENDER(WINED3DRS_FOGVERTEXMODE),               { STATE_RENDER(WINED3DRS_FOGENABLE),                  state_fog_fragpart      }, WINED3D_GL_EXT_NONE             },
+    {STATE_RENDER(WINED3DRS_FOGTABLEMODE),                { STATE_RENDER(WINED3DRS_FOGENABLE),                  NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_RENDER(WINED3DRS_FOGVERTEXMODE),               { STATE_RENDER(WINED3DRS_FOGENABLE),                  NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_RENDER(WINED3DRS_FOGSTART),                    { STATE_RENDER(WINED3DRS_FOGSTART),                   state_fogstartend       }, WINED3D_GL_EXT_NONE             },
-    {STATE_RENDER(WINED3DRS_FOGEND),                      { STATE_RENDER(WINED3DRS_FOGSTART),                   state_fogstartend       }, WINED3D_GL_EXT_NONE             },
+    {STATE_RENDER(WINED3DRS_FOGEND),                      { STATE_RENDER(WINED3DRS_FOGSTART),                   NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(0, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(1, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(2, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(3, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(4, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(5, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          set_tex_op_atifs        }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(6, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLOROP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_COLORARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAOP),           { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG1),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG2),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_ALPHAARG0),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_RESULTARG),         { STATE_TEXTURESTAGE(0, WINED3DTSS_COLOROP),          NULL                    }, WINED3D_GL_EXT_NONE             },
     {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
-    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     set_bumpmat             }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT01),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT10),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
+    {STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT11),      { STATE_TEXTURESTAGE(7, WINED3DTSS_BUMPENVMAT00),     NULL                    }, WINED3D_GL_EXT_NONE             },
     { STATE_SAMPLER(0),                                   { STATE_SAMPLER(0),                                   sampler_texdim          }, WINED3D_GL_EXT_NONE             },
     { STATE_SAMPLER(1),                                   { STATE_SAMPLER(1),                                   sampler_texdim          }, WINED3D_GL_EXT_NONE             },
     { STATE_SAMPLER(2),                                   { STATE_SAMPLER(2),                                   sampler_texdim          }, WINED3D_GL_EXT_NONE             },
@@ -1063,6 +1060,7 @@ static void atifs_enable(IWineD3DDevice *iface, BOOL enable) {
 
 static void atifs_get_caps(const struct wined3d_gl_info *gl_info, struct fragment_caps *caps)
 {
+    caps->PrimitiveMiscCaps = WINED3DPMISCCAPS_TSSARGTEMP;
     caps->TextureOpCaps =  WINED3DTEXOPCAPS_DISABLE                     |
                            WINED3DTEXOPCAPS_SELECTARG1                  |
                            WINED3DTEXOPCAPS_SELECTARG2                  |
@@ -1105,8 +1103,6 @@ static void atifs_get_caps(const struct wined3d_gl_info *gl_info, struct fragmen
      */
     caps->MaxTextureBlendStages   = 8;
     caps->MaxSimultaneousTextures = 6;
-
-    caps->PrimitiveMiscCaps |= WINED3DPMISCCAPS_TSSARGTEMP;
 }
 
 static HRESULT atifs_alloc(IWineD3DDevice *iface) {
@@ -1128,11 +1124,11 @@ static HRESULT atifs_alloc(IWineD3DDevice *iface) {
     return WINED3D_OK;
 }
 
-#define GLINFO_LOCATION This->adapter->gl_info
 /* Context activation is done by the caller. */
 static void atifs_free_ffpshader(struct wine_rb_entry *entry, void *context)
 {
     IWineD3DDeviceImpl *This = context;
+    const struct wined3d_gl_info *gl_info = &This->adapter->gl_info;
     struct atifs_ffp_desc *entry_ati = WINE_RB_ENTRY_VALUE(entry, struct atifs_ffp_desc, parent.entry);
 
     ENTER_GL();
@@ -1152,7 +1148,6 @@ static void atifs_free(IWineD3DDevice *iface) {
     HeapFree(GetProcessHeap(), 0, priv);
     This->fragment_priv = NULL;
 }
-#undef GLINFO_LOCATION
 
 static BOOL atifs_color_fixup_supported(struct color_fixup_desc fixup)
 {

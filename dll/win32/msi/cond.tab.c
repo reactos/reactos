@@ -1989,7 +1989,7 @@ yyreduce:
             COND_input* cond = (COND_input*) info;
             UINT len;
 
-            (yyval.string) = msi_dup_property( cond->package, (yyvsp[(1) - (1)].string) );
+            (yyval.string) = msi_dup_property( cond->package->db, (yyvsp[(1) - (1)].string) );
             if ((yyval.string))
             {
                 len = (lstrlenW((yyval.string)) + 1) * sizeof (WCHAR);

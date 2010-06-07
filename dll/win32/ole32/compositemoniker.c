@@ -445,7 +445,6 @@ static HRESULT WINAPI
 CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar,
                IMoniker** ppmkToLeft, IMoniker** ppmkReduced)
 {
-    HRESULT   res;
     IMoniker *tempMk,*antiMk,*mostRigthMk,*leftReducedComposedMk,*mostRigthReducedMk;
     IEnumMoniker *enumMoniker;
 
@@ -462,8 +461,8 @@ CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar
         IEnumMoniker_Next(enumMoniker,1,&mostRigthMk,NULL);
         IEnumMoniker_Release(enumMoniker);
 
-        res=CreateAntiMoniker(&antiMk);
-        res=IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
+        CreateAntiMoniker(&antiMk);
+        IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
         IMoniker_Release(antiMk);
 
         return IMoniker_Reduce(mostRigthMk,pbc,dwReduceHowFar,&tempMk, ppmkReduced);
@@ -479,8 +478,8 @@ CompositeMonikerImpl_Reduce(IMoniker* iface, IBindCtx* pbc, DWORD dwReduceHowFar
         IEnumMoniker_Next(enumMoniker,1,&mostRigthMk,NULL);
         IEnumMoniker_Release(enumMoniker);
 
-        res=CreateAntiMoniker(&antiMk);
-        res=IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
+        CreateAntiMoniker(&antiMk);
+        IMoniker_ComposeWith(iface,antiMk,0,&tempMk);
         IMoniker_Release(antiMk);
 
         /* If any of the components  reduces itself, the method returns S_OK and passes back a composite */

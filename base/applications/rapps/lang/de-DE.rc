@@ -185,7 +185,7 @@ BEGIN
 	IDS_UPDATES "Aktualisierungen"
 	IDS_APPLICATIONS "Anwendungen"
 	IDS_CHOOSE_FOLDER_TEXT "Wählen Sie ein Verzeichnis aus, das zum Herunterladen verwendet werden soll:"
-	IDS_CHOOSE_FOLDER_ERROR "Sie haben ein nicht existentes Verzeichnis angegeben!"
+	IDS_CHOOSE_FOLDER_ERROR "Sie haben ein nicht existierendes Verzeichnis angegeben! Neu anlegen?"
 	IDS_USER_NOT_ADMIN "Sie müssen als Administrator angemeldet sein, um den Anwendungsmanager zu starten!"
 	IDS_APP_REG_REMOVE "Sind Sie sich sicher, dass Sie die Daten dieses Programms aus der Registry entfernen möchten?"
 	IDS_INFORMATION "Informationen"

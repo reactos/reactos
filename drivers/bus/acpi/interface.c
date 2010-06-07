@@ -25,13 +25,14 @@ AcpiInterfaceDereference(PVOID Context)
 }
 
 NTSTATUS
+NTAPI
 AcpiInterfaceConnectVector(PDEVICE_OBJECT Context,
                            ULONG GpeNumber,
                            KINTERRUPT_MODE Mode,
                            BOOLEAN Shareable,
                            PGPE_SERVICE_ROUTINE ServiceRoutine,
                            PVOID ServiceContext,
-                           PVOID *ObjectContext)
+                           PVOID ObjectContext)
 {
   UNIMPLEMENTED
 
@@ -39,8 +40,8 @@ AcpiInterfaceConnectVector(PDEVICE_OBJECT Context,
 }
 
 NTSTATUS
-AcpiInterfaceDisconnectVector(PDEVICE_OBJECT Context,
-                              PVOID ObjectContext)
+NTAPI
+AcpiInterfaceDisconnectVector(PVOID ObjectContext)
 {
   UNIMPLEMENTED
 
@@ -48,6 +49,7 @@ AcpiInterfaceDisconnectVector(PDEVICE_OBJECT Context,
 }
 
 NTSTATUS
+NTAPI
 AcpiInterfaceEnableEvent(PDEVICE_OBJECT Context,
                          PVOID ObjectContext)
 {
@@ -57,6 +59,7 @@ AcpiInterfaceEnableEvent(PDEVICE_OBJECT Context,
 }
 
 NTSTATUS
+NTAPI
 AcpiInterfaceDisableEvent(PDEVICE_OBJECT Context,
                           PVOID ObjectContext)
 {
@@ -66,6 +69,7 @@ AcpiInterfaceDisableEvent(PDEVICE_OBJECT Context,
 }
 
 NTSTATUS
+NTAPI
 AcpiInterfaceClearStatus(PDEVICE_OBJECT Context,
                          PVOID ObjectContext)
 {
@@ -75,6 +79,7 @@ AcpiInterfaceClearStatus(PDEVICE_OBJECT Context,
 }
 
 NTSTATUS
+NTAPI
 AcpiInterfaceNotificationsRegister(PDEVICE_OBJECT Context,
                                    PDEVICE_NOTIFY_CALLBACK NotificationHandler,
                                    PVOID NotificationContext)
@@ -85,6 +90,7 @@ AcpiInterfaceNotificationsRegister(PDEVICE_OBJECT Context,
 }
 
 VOID
+NTAPI
 AcpiInterfaceNotificationsUnregister(PDEVICE_OBJECT Context,
                                      PDEVICE_NOTIFY_CALLBACK NotificationHandler)
 {

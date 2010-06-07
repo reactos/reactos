@@ -129,6 +129,7 @@ BEGIN
     IDS_PROPERTIES        "P&ropiedades"
     IDS_OPEN_ALL_USERS    "A&brir todos los usuarios"
     IDS_EXPLORE_ALL_USERS "E&xplorar todos los usuarios"
+    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE DISCARDABLE

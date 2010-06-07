@@ -1,5 +1,5 @@
 /*
- * Durch resources for MSI
+ * Dutch resources for MSI
  *
  * Copyright 2005 Hans Leidekker
  *
@@ -24,13 +24,39 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
+	4 "Het opgegeven installatie pakket kon niet worden geopend.  Verifieer het bestandspad en probeer opnieuw."
 	5 "Pad %s niet gevonden"
 	9 "Plaats disk %s"
-	10 "Ongeldige parameters"
+	10 "Windows Installer %s\n\n" \
+	"Gebruik:\n" \
+	"msiexec commando {vereiste parameter} [optionele parameter]\n\n" \
+	"Installeer een product:\n" \
+	"\t/i {pakket|productcode} [eigenschap]\n" \
+	"\t/package {pakket|productcode} [eigenschap]\n" \
+	"\t/a pakket [eigenschap]\n" \
+	"Herstel een installatie:\n" \
+	"\t/f[p|o|e|d|c|a|u|m|s|v] {pakket|productcode}\n" \
+	"Verwijder een product:\n" \
+	"\t/uninstall {pakket|productcode} [eigenschap]\n" \
+	"\t/x {pakket|productcode} [eigenschap]\n" \
+	"Adverteer een product:\n" \
+	"\t/j[u|m] pakket [/t transform] [/g languageid]\n" \
+	"Pas een patch toe:\n" \
+	"\t/p patchpakket [eigenschap]\n" \
+	"\t/p patchpakket /a pakket [eigenschap]\n" \
+	"Log en UI Modifiers voor bovenstaande commando's:\n" \
+	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logbestand\n" \
+	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+	"Registreer MSI Service:\n" \
+	"\t/y\n" \
+	"Maak registratie MSI Service ongedaan:\n" \
+	"\t/z\n" \
+	"Laat dit helpvenster zien:\n" \
+	"\t/help\n" \
+	"\t/?\n"
 	11 "Voer de map in die %s bevat"
-	12 "De installatiebron van het feature ontbreekt"
-	13 "De netwerkschijf met het feature ontbreekt"
+	12 "De installatiebron van de feature ontbreekt"
+	13 "De netwerkschijf met de feature ontbreekt"
 	14 "Feature van:"
 	15 "Kies de map die %s bevat"
 }

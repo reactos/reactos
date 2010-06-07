@@ -1474,6 +1474,12 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = Taask„ivita arvuti"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Valitud partitsioonil pole piisavalt ruumi.\n"
+        "  * Vajuta suvalist klahvi, et j„tkata.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1609,9 +1615,9 @@ MUI_STRING etEEStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER = Taask„ivita arvuti"},
     {STRING_TXTSETUPFAILED,
-	"TXTSETUP.SIF failist ei leitud '%S' sektsiooni\n"},
+     "TXTSETUP.SIF failist ei leitud '%S' sektsiooni\n"},
     {STRING_COPYING,
-     "\xB3 Kopeerimine: %S"},
+     "   Kopeerimine: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Failide kopeerimine..."},
     {STRING_REGHIVEUPDATE,

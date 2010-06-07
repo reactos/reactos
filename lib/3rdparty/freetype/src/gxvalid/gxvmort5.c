@@ -139,7 +139,7 @@
   gxv_mort_subtable_type5_entry_validate(
     FT_Byte                         state,
     FT_UShort                       flags,
-    GXV_StateTable_GlyphOffsetDesc  glyphOffset,
+    GXV_StateTable_GlyphOffsetCPtr  glyphOffset,
     FT_Bytes                        table,
     FT_Bytes                        limit,
     GXV_Validator                   valid )
@@ -168,8 +168,8 @@
     currentInsertCount   = (FT_Byte)( ( flags >> 5 ) & 0x1F   );
     markedInsertCount    = (FT_Byte)(   flags        & 0x001F );
 
-    currentInsertList    = (FT_UShort)( glyphOffset.ul >> 16 );
-    markedInsertList     = (FT_UShort)( glyphOffset.ul       );
+    currentInsertList    = (FT_UShort)( glyphOffset->ul >> 16 );
+    markedInsertList     = (FT_UShort)( glyphOffset->ul       );
 
     if ( 0 != currentInsertList && 0 != currentInsertCount )
     {

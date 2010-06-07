@@ -595,7 +595,7 @@
 
     if ( org_count + count > glyph->max_subs )
     {
-      FT_UInt  new_max = ( org_count + count + 3 ) & -4;
+      FT_UInt  new_max = ( org_count + count + 3 ) & (FT_UInt)-4;
 
 
       if ( FT_RENEW_ARRAY( glyph->subs, glyph->max_subs, new_max ) )

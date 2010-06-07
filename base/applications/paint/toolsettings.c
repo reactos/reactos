@@ -34,13 +34,13 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             DefWindowProc(hwnd, message, wParam, lParam);
 
-            DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (activeTool == 6) ? BF_RECT : BF_RECT | BF_MIDDLE);
-            DrawEdge(hdc, &rect2, (activeTool >= 13) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
+            DrawEdge(hdc, &rect1, BDR_SUNKENOUTER, (activeTool == TOOL_ZOOM) ? BF_RECT : BF_RECT | BF_MIDDLE);
+            DrawEdge(hdc, &rect2, (activeTool >= TOOL_RECT) ? BDR_SUNKENOUTER : 0, BF_RECT | BF_MIDDLE);
             switch (activeTool)
             {
-                case 1:
-                case 2:
-                case 10:
+                case TOOL_FREESEL:
+                case TOOL_RECTSEL:
+                case TOOL_TEXT:
                 {
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -50,7 +50,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DrawIconEx(hdc, 1, 33, hTranspIcon, 40, 30, 0, NULL, DI_NORMAL);
                     break;
                 }
-                case 3:
+                case TOOL_RUBBER:
                 {
                     int i;
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
@@ -69,7 +69,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DeleteObject(SelectObject(hdc, oldPen));
                     break;
                 }
-                case 8:
+                case TOOL_BRUSH:
                 {
                     int i;
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
@@ -82,7 +82,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                               GetSysColor((i == brushStyle) ? COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT), i);
                     break;
                 }
-                case 9:
+                case TOOL_AIRBRUSH:
                 {
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
                     SelectObject(hdc, GetSysColorBrush(COLOR_HIGHLIGHT));
@@ -112,8 +112,8 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DeleteObject(SelectObject(hdc, oldPen));
                     break;
                 }
-                case 11:
-                case 12:
+                case TOOL_LINE:
+                case TOOL_BEZIER:
                 {
                     int i;
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
@@ -132,10 +132,10 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DeleteObject(SelectObject(hdc, oldPen));
                     break;
                 }
-                case 13:
-                case 14:
-                case 15:
-                case 16:
+                case TOOL_RECT:
+                case TOOL_SHAPE:
+                case TOOL_ELLIPSE:
+                case TOOL_RRECT:
                 {
                     int i;
                     HPEN oldPen = SelectObject(hdc, CreatePen(PS_NULL, 0, 0));
@@ -178,23 +178,23 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             switch (activeTool)
             {
-                case 1:
-                case 2:
-                case 10:
+                case TOOL_FREESEL:
+                case TOOL_RECTSEL:
+                case TOOL_TEXT:
                     if ((HIWORD(lParam) > 1) && (HIWORD(lParam) < 64))
                     {
                         transpBg = (HIWORD(lParam) - 2) / 31;
                         SendMessage(hwnd, WM_PAINT, 0, 0);
                     }
                     break;
-                case 3:
+                case TOOL_RUBBER:
                     if ((HIWORD(lParam) > 1) && (HIWORD(lParam) < 62))
                     {
                         rubberRadius = (HIWORD(lParam) - 2) / 15 + 2;
                         SendMessage(hwnd, WM_PAINT, 0, 0);
                     }
                     break;
-                case 8:
+                case TOOL_BRUSH:
                     if ((LOWORD(lParam) > 1) && (LOWORD(lParam) < 40) && (HIWORD(lParam) > 1)
                         && (HIWORD(lParam) < 62))
                     {
@@ -202,7 +202,7 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         SendMessage(hwnd, WM_PAINT, 0, 0);
                     }
                     break;
-                case 9:
+                case TOOL_AIRBRUSH:
                     if (HIWORD(lParam) < 62)
                     {
                         if (HIWORD(lParam) < 30)
@@ -222,18 +222,18 @@ SettingsWinProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                         SendMessage(hwnd, WM_PAINT, 0, 0);
                     }
                     break;
-                case 11:
-                case 12:
+                case TOOL_LINE:
+                case TOOL_BEZIER:
                     if (HIWORD(lParam) <= 62)
                     {
                         lineWidth = (HIWORD(lParam) - 2) / 12 + 1;
                         SendMessage(hwnd, WM_PAINT, 0, 0);
                     }
                     break;
-                case 13:
-                case 14:
-                case 15:
-                case 16:
+                case TOOL_RECT:
+                case TOOL_SHAPE:
+                case TOOL_ELLIPSE:
+                case TOOL_RRECT:
                     if (HIWORD(lParam) <= 60)
                     {
                         shapeStyle = (HIWORD(lParam) - 2) / 20;

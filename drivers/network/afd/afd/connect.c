@@ -247,6 +247,8 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
    if( Status == STATUS_PENDING ) Status = STATUS_SUCCESS;
 
    FCB->PollState |= AFD_EVENT_CONNECT | AFD_EVENT_SEND;
+   FCB->PollStatus[FD_CONNECT_BIT] = STATUS_SUCCESS;
+   FCB->PollStatus[FD_WRITE_BIT] = STATUS_SUCCESS;
    PollReeval( FCB->DeviceExt, FCB->FileObject );
 
    return Status;
@@ -291,6 +293,7 @@ static NTSTATUS NTAPI StreamSocketConnectComplete
 
     if( !NT_SUCCESS(Irp->IoStatus.Status) ) {
 	FCB->PollState |= AFD_EVENT_CONNECT_FAIL;
+        FCB->PollStatus[FD_CONNECT_BIT] = Irp->IoStatus.Status;
 	AFD_DbgPrint(MID_TRACE,("Going to bound state\n"));
 	FCB->State = SOCKET_STATE_BOUND;
         PollReeval( FCB->DeviceExt, FCB->FileObject );

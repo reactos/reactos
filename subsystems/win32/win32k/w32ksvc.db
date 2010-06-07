@@ -684,7 +684,6 @@ NtGdiOffsetWindowOrgEx                  4
 #
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
-NtUserGetClassLong                      3
 NtUserGetMenuDefaultItem                3
 NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3

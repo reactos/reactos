@@ -721,6 +721,7 @@ static HRESULT shader_get_registers_used(IWineD3DBaseShader *iface, const struct
             else if (ins.handler_idx == WINED3DSIH_MOVA) reg_maps->usesmova = 1;
             else if (ins.handler_idx == WINED3DSIH_IFC) reg_maps->usesifc = 1;
             else if (ins.handler_idx == WINED3DSIH_CALL) reg_maps->usescall = 1;
+            else if (ins.handler_idx == WINED3DSIH_RCP) reg_maps->usesrcp = 1;
 
             limit = ins.src_count + (ins.predicate ? 1 : 0);
             for (i = 0; i < limit; ++i)
@@ -1150,7 +1151,11 @@ void shader_generate_main(IWineD3DBaseShader *iface, struct wined3d_shader_buffe
         if (ins.dst_count) fe->shader_read_dst_param(fe_data, &ptr, &dst_param, &dst_rel_addr);
 
         /* Predication token */
-        if (ins.predicate) ins.predicate = *ptr++;
+        if (ins.predicate)
+        {
+            FIXME("Predicates not implemented.\n");
+            ins.predicate = *ptr++;
+        }
 
         /* Other source tokens */
         for (i = 0; i < ins.src_count; ++i)
@@ -1399,7 +1404,7 @@ static void shader_cleanup(IWineD3DBaseShader *iface)
 
 static void shader_none_handle_instruction(const struct wined3d_shader_instruction *ins) {}
 static void shader_none_select(const struct wined3d_context *context, BOOL usePS, BOOL useVS) {}
-static void shader_none_select_depth_blt(IWineD3DDevice *iface, enum tex_types tex_type) {}
+static void shader_none_select_depth_blt(IWineD3DDevice *iface, enum tex_types tex_type, const SIZE *ds_mask_size) {}
 static void shader_none_deselect_depth_blt(IWineD3DDevice *iface) {}
 static void shader_none_update_float_vertex_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
 static void shader_none_update_float_pixel_constants(IWineD3DDevice *iface, UINT start, UINT count) {}
@@ -1414,8 +1419,11 @@ static void shader_none_get_caps(const struct wined3d_gl_info *gl_info, struct s
 {
     /* Set the shader caps to 0 for the none shader backend */
     caps->VertexShaderVersion = 0;
+    caps->MaxVertexShaderConst = 0;
     caps->PixelShaderVersion = 0;
     caps->PixelShader1xMaxValue = 0.0f;
+    caps->MaxPixelShaderConst = 0;
+    caps->VSClipping = FALSE;
 }
 
 static BOOL shader_none_color_fixup_supported(struct color_fixup_desc fixup)
@@ -2016,6 +2024,9 @@ void find_ps_compile_args(IWineD3DPixelShaderImpl *shader,
             continue;
         }
         args->color_fixup[i] = texture->resource.format_desc->color_fixup;
+
+        if (texture->resource.format_desc->Flags & WINED3DFMT_FLAG_SHADOW)
+            args->shadow |= 1 << i;
 
         /* Flag samplers that need NP2 texcoord fixup. */
         if (!texture->baseTexture.pow2Matrix_identity)

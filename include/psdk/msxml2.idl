@@ -85,6 +85,22 @@ interface IMXAttributes;
 interface IMXReaderControl;
 interface IMXWriter;
 
+interface IXMLDOMSchemaCollection2;
+interface ISchemaStringCollection;
+interface ISchemaItemCollection;
+interface ISchemaItem;
+interface ISchema;
+interface ISchemaParticle;
+interface ISchemaAttribute;
+interface ISchemaElement;
+interface ISchemaType;
+interface ISchemaComplexType;
+interface ISchemaAttributeGroup;
+interface ISchemaModelGroup;
+interface ISchemaAny;
+interface ISchemaIdentityConstraint;
+interface ISchemaNotation;
+
 
 cpp_quote("#define DOMDocument DOMDocument2")
 cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
@@ -107,6 +123,134 @@ typedef enum tagDOMNodeType
     NODE_NOTATION 		= 12
 } DOMNodeType;
 cpp_quote("#endif   /* __WIDL_XMLDOM_H */")
+
+typedef enum _SOMITEMTYPE
+{
+    SOMITEM_SCHEMA                      = 0x1000,
+    SOMITEM_ATTRIBUTE                   = 0x1001,
+    SOMITEM_ATTRIBUTEGROUP              = 0x1002,
+    SOMITEM_NOTATION                    = 0x1003,
+    SOMITEM_IDENTITYCONSTRAINT          = 0x1100,
+    SOMITEM_KEY                         = 0x1101,
+    SOMITEM_KEYREF                      = 0x1102,
+    SOMITEM_UNIQUE                      = 0x1103,
+    SOMITEM_ANYTYPE                     = 0x2000,
+    SOMITEM_DATATYPE                    = 0x2100,
+    SOMITEM_DATATYPE_ANYTYPE            = 0x2101,
+    SOMITEM_DATATYPE_ANYURI             = 0x2102,
+    SOMITEM_DATATYPE_BASE64BINARY       = 0x2103,
+    SOMITEM_DATATYPE_BOOLEAN            = 0x2104,
+    SOMITEM_DATATYPE_BYTE               = 0x2105,
+    SOMITEM_DATATYPE_DATE               = 0x2106,
+    SOMITEM_DATATYPE_DATETIME           = 0x2107,
+    SOMITEM_DATATYPE_DAY                = 0x2108,
+    SOMITEM_DATATYPE_DECIMAL            = 0x2109,
+    SOMITEM_DATATYPE_DOUBLE             = 0x210A,
+    SOMITEM_DATATYPE_DURATION           = 0x210B,
+    SOMITEM_DATATYPE_ENTITIES           = 0x210C,
+    SOMITEM_DATATYPE_ENTITY             = 0x210D,
+    SOMITEM_DATATYPE_FLOAT              = 0x210E,
+    SOMITEM_DATATYPE_HEXBINARY          = 0x210F,
+    SOMITEM_DATATYPE_ID                 = 0x2110,
+    SOMITEM_DATATYPE_IDREF              = 0x2111,
+    SOMITEM_DATATYPE_IDREFS             = 0x2112,
+    SOMITEM_DATATYPE_INT                = 0x2113,
+    SOMITEM_DATATYPE_INTEGER            = 0x2114,
+    SOMITEM_DATATYPE_LANGUAGE           = 0x2115,
+    SOMITEM_DATATYPE_LONG               = 0x2116,
+    SOMITEM_DATATYPE_MONTH              = 0x2117,
+    SOMITEM_DATATYPE_MONTHDAY           = 0x2118,
+    SOMITEM_DATATYPE_NAME               = 0x2119,
+    SOMITEM_DATATYPE_NCNAME             = 0x211A,
+    SOMITEM_DATATYPE_NEGATIVEINTEGER    = 0x211B,
+    SOMITEM_DATATYPE_NMTOKEN            = 0x211C,
+    SOMITEM_DATATYPE_NMTOKENS           = 0x211D,
+    SOMITEM_DATATYPE_NONNEGATIVEINTEGER = 0x211E,
+    SOMITEM_DATATYPE_NONPOSITIVEINTEGER = 0x211F,
+    SOMITEM_DATATYPE_NORMALIZEDSTRING   = 0x2120,
+    SOMITEM_DATATYPE_NOTATION           = 0x2121,
+    SOMITEM_DATATYPE_POSITIVEINTEGER    = 0x2122,
+    SOMITEM_DATATYPE_QNAME              = 0x2123,
+    SOMITEM_DATATYPE_SHORT              = 0x2124,
+    SOMITEM_DATATYPE_STRING             = 0x2125,
+    SOMITEM_DATATYPE_TIME               = 0x2126,
+    SOMITEM_DATATYPE_TOKEN              = 0x2127,
+    SOMITEM_DATATYPE_UNSIGNEDBYTE       = 0x2128,
+    SOMITEM_DATATYPE_UNSIGNEDINT        = 0x2129,
+    SOMITEM_DATATYPE_UNSIGNEDLONG       = 0x212A,
+    SOMITEM_DATATYPE_UNSIGNEDSHORT      = 0x212B,
+    SOMITEM_DATATYPE_YEAR               = 0x212C,
+    SOMITEM_DATATYPE_YEARMONTH          = 0x212D,
+    SOMITEM_DATATYPE_ANYSIMPLETYPE      = 0x21FF,
+    SOMITEM_SIMPLETYPE                  = 0x2200,
+    SOMITEM_COMPLEXTYPE                 = 0x2400,
+    SOMITEM_PARTICLE                    = 0x4000,
+    SOMITEM_ANY                         = 0x4001,
+    SOMITEM_ANYATTRIBUTE                = 0x4002,
+    SOMITEM_ELEMENT                     = 0x4003,
+    SOMITEM_GROUP                       = 0x4100,
+    SOMITEM_ALL                         = 0x4101,
+    SOMITEM_CHOICE                      = 0x4102,
+    SOMITEM_SEQUENCE                    = 0x4103,
+    SOMITEM_EMPTYPARTICLE               = 0x4104,
+    SOMITEM_NULL                        = 0x0800,
+    SOMITEM_NULL_TYPE                   = 0x2800,
+    SOMITEM_NULL_ANY                    = 0x4801,
+    SOMITEM_NULL_ANYATTRIBUTE           = 0x4802,
+    SOMITEM_NULL_ELEMENT                = 0x4803,
+} SOMITEMTYPE;
+
+typedef enum _SCHEMAUSE
+{
+    SCHEMAUSE_OPTIONAL,
+    SCHEMAUSE_PROHIBITED,
+    SCHEMAUSE_REQUIRED,
+} SCHEMAUSE;
+
+typedef enum _SCHEMADERIVATIONMETHOD
+{
+    SCHEMADERIVATIONMETHOD_EMPTY        = 0x0000,
+    SCHEMADERIVATIONMETHOD_SUBSTITUTION = 0x0001,
+    SCHEMADERIVATIONMETHOD_EXTENSION    = 0x0002,
+    SCHEMADERIVATIONMETHOD_RESTRICTION  = 0x0004,
+    SCHEMADERIVATIONMETHOD_LIST         = 0x0008,
+    SCHEMADERIVATIONMETHOD_UNION        = 0x0010,
+    SCHEMADERIVATIONMETHOD_ALL          = 0x00FF,
+    SCHEMADERIVATIONMETHOD_NONE         = 0x0100,
+} SCHEMADERIVATIONMETHOD;
+
+typedef enum _SCHEMACONTENTTYPE
+{
+    SCHEMACONTENTTYPE_EMPTY,
+    SCHEMACONTENTTYPE_TEXTONLY,
+    SCHEMACONTENTTYPE_ELEMENTONLY,
+    SCHEMACONTENTTYPE_MIXED,
+} SCHEMACONTENTTYPE;
+
+typedef enum _SCHEMAPROCESSCONTENTS
+{
+    SCHEMAPROCESSCONTENTS_NONE,
+    SCHEMAPROCESSCONTENTS_SKIP,
+    SCHEMAPROCESSCONTENTS_LAX,
+    SCHEMAPROCESSCONTENTS_STRICT,
+} SCHEMAPROCESSCONTENTS;
+
+typedef enum _SCHEMAWHITESPACE
+{
+    SCHEMAWHITESPACE_NONE       = -1,
+    SCHEMAWHITESPACE_PRESERVE   =  0,
+    SCHEMAWHITESPACE_REPLACE    =  1,
+    SCHEMAWHITESPACE_COLLAPSE   =  2,
+} SCHEMAWHITESPACE;
+
+
+typedef enum _SCHEMATYPEVARIETY
+{
+    SCHEMATYPEVARIETY_NONE      = -1,
+    SCHEMATYPEVARIETY_ATOMIC    =  0,
+    SCHEMATYPEVARIETY_LIST      =  1,
+    SCHEMATYPEVARIETY_UNION     =  2,
+} SCHEMATYPEVARIETY;
 
 [
 local,
@@ -416,6 +560,35 @@ interface IXMLDOMSchemaCollection : IDispatch
     [propget, id(DISPID_NEWENUM)]
     HRESULT _newEnum([retval, out] IUnknown **ppUnk);
 }
+
+[
+    local,
+    object,
+    uuid(50ea08b0-dd1b-4664-9a50-c2f40f4bd79a),
+]
+interface IXMLDOMSchemaCollection2 : IXMLDOMSchemaCollection
+{
+    [id(DISPID_SOM_VALIDATE)]
+    HRESULT validate();
+
+    [propput, id(DISPID_SOM_VALIDATEONLOAD)]
+    HRESULT validateOnLoad(
+        [in] VARIANT_BOOL validateOnLoad);
+
+    [propget, id(DISPID_SOM_VALIDATEONLOAD)]
+    HRESULT validateOnLoad(
+        [out,retval] VARIANT_BOOL* validateOnLoad);
+
+    [id(DISPID_SOM_GETSCHEMA)]
+    HRESULT getSchema(
+        [in] BSTR namespaceURI,
+        [out,retval] ISchema** schema);
+
+    [id(DISPID_SOM_GETDECLARATION)]
+    HRESULT getDeclaration(
+        [in] IXMLDOMNode* node,
+        [out,retval]ISchemaItem** item);
+};
 
 [
 local,
@@ -1107,6 +1280,15 @@ coclass FreeThreadedDOMDocument30
 }
 
 [
+    uuid(88d969c1-f192-11d4-a65f-0040963251e5),
+]
+coclass FreeThreadedDOMDocument40
+{
+    [default] interface IXMLDOMDocument2;
+    [default, source] dispinterface XMLDOMDocumentEvents;
+};
+
+[
     uuid(373984c9-b845-449b-91e7-45ac83036ade)
 ]
 coclass XMLSchemaCache
@@ -1129,6 +1311,14 @@ coclass XMLSchemaCache30
 {
     [default] interface IXMLDOMSchemaCollection;
 }
+
+[
+    uuid(88d969c2-f192-11d4-a65f-0040963251e5)
+]
+coclass XMLSchemaCache40
+{
+    [default] interface IXMLDOMSchemaCollection2;
+};
 
 [
     uuid(2933BF94-7B36-11d2-B20E-00C04F983E60)
@@ -1960,6 +2150,443 @@ interface IMXWriter :  IDispatch
 };
 
 [
+    local,
+    object,
+    uuid(50ea08b1-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaStringCollection : IDispatch
+{
+    [id(DISPID_VALUE), propget]
+    HRESULT item(
+        [in] long index,
+        [out,retval] BSTR* bstr);
+
+    [id(DISPID_SOM_LENGTH), propget]
+    HRESULT length(
+        [out,retval] long* length);
+
+    [id(DISPID_NEWENUM), hidden, restricted, propget]
+    HRESULT _newEnum(
+        [out,retval] IUnknown** ppunk);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b2-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaItemCollection : IDispatch
+{
+    [id(DISPID_VALUE), propget]
+    HRESULT item(
+        [in] long index,
+        [out,retval]ISchemaItem** item);
+
+    [id(DISPID_SOM_ITEMBYNAME)]
+    HRESULT itemByName(
+        [in] BSTR name,
+        [out,retval] ISchemaItem** item);
+
+    [id(DISPID_SOM_ITEMBYQNAME)]
+    HRESULT itemByQName(
+        [in] BSTR name,
+        [in] BSTR namespaceURI,
+        [out,retval] ISchemaItem** item);
+
+    [id(DISPID_SOM_LENGTH), propget]
+    HRESULT length(
+        [out,retval]long* length);
+
+    [id(DISPID_NEWENUM), hidden, restricted, propget]
+    HRESULT _newEnum(
+        [out,retval]IUnknown** ppunk);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b3-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaItem : IDispatch
+{
+    [id(DISPID_SOM_NAME), propget]
+    HRESULT name(
+        [out,retval] BSTR* name);
+
+    [id(DISPID_SOM_NAMESPACEURI), propget]
+    HRESULT namespaceURI(
+        [out,retval] BSTR* namespaceURI);
+
+    [id(DISPID_SOM_SCHEMA), propget]
+    HRESULT schema(
+        [out,retval] ISchema** schema);
+
+    [id(DISPID_SOM_ID), propget]
+    HRESULT id(
+        [out,retval] BSTR* id);
+
+    [id(DISPID_SOM_ITEMTYPE), propget]
+    HRESULT itemType(
+        [out,retval] SOMITEMTYPE* itemType);
+
+    [id(DISPID_SOM_UNHANDLEDATTRS), propget]
+    HRESULT unhandledAttributes(
+        [out,retval] IVBSAXAttributes** attributes);
+
+    [id(DISPID_SOM_WRITEANNOTATION)]
+    HRESULT writeAnnotation(
+        [in] IUnknown* annotationSink,
+        [out,retval] VARIANT_BOOL* isWritten);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b4-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchema : ISchemaItem
+{
+    [id(DISPID_SOM_TARGETNAMESPACE), propget]
+    HRESULT targetNamespace(
+        [out,retval] BSTR* targetNamespace);
+
+    [id(DISPID_SOM_VERSION), propget]
+    HRESULT version(
+        [out,retval] BSTR* version);
+
+    [id(DISPID_SOM_TYPES), propget]
+    HRESULT types(
+        [out,retval] ISchemaItemCollection** types);
+
+    [id(DISPID_SOM_ELEMENTS), propget]
+    HRESULT elements(
+        [out,retval] ISchemaItemCollection** elements);
+
+    [id(DISPID_SOM_ATTRIBUTES), propget]
+    HRESULT attributes(
+        [out,retval] ISchemaItemCollection** attributes);
+
+    [id(DISPID_SOM_ATTRIBUTEGROUPS), propget]
+    HRESULT attributeGroups(
+        [out,retval] ISchemaItemCollection** attributeGroups);
+
+    [id(DISPID_SOM_MODELGROUPS), propget]
+    HRESULT modelGroups(
+        [out,retval] ISchemaItemCollection** modelGroups);
+
+    [id(DISPID_SOM_NOTATIONS), propget]
+    HRESULT notations(
+        [out,retval] ISchemaItemCollection** notations);
+
+    [id(DISPID_SOM_SCHEMALOCATIONS), propget]
+    HRESULT schemaLocations(
+        [out,retval] ISchemaStringCollection** schemaLocations);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b5-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaParticle : ISchemaItem
+{
+    [id(DISPID_SOM_MINOCCURS), propget]
+    HRESULT minOccurs(
+        [out,retval] VARIANT* minOccurs);
+
+    [id(DISPID_SOM_MAXOCCURS), propget]
+    HRESULT maxOccurs(
+        [out,retval] VARIANT* maxOccurs);
+};
+
+[
+    object,
+    uuid(50ea08b6-dd1b-4664-9a50-c2f40f4bd79a),
+    dual,
+]
+interface ISchemaAttribute : ISchemaItem
+{
+    [id(DISPID_SOM_TYPE), propget]
+    HRESULT type(
+        [out,retval] ISchemaType** type);
+
+    [id(DISPID_SOM_SCOPE), propget]
+    HRESULT scope(
+        [out,retval] ISchemaComplexType** scope);
+
+    [id(DISPID_SOM_DEFAULTVALUE), propget]
+    HRESULT defaultValue(
+        [out,retval]BSTR* defaultValue);
+
+    [id(DISPID_SOM_FIXEDVALUE), propget]
+    HRESULT fixedValue(
+        [out,retval] BSTR* fixedValue);
+
+    [id(DISPID_SOM_USE), propget]
+    HRESULT use(
+        [out,retval] SCHEMAUSE* use);
+
+    [id(DISPID_SOM_ISREFERENCE), propget]
+    HRESULT isReference(
+        [out,retval] VARIANT_BOOL* reference);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b7-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaElement : ISchemaParticle
+{
+    [id(DISPID_SOM_TYPE), propget]
+    HRESULT type(
+        [out,retval] ISchemaType** type);
+
+    [id(DISPID_SOM_SCOPE), propget]
+    HRESULT scope(
+        [out,retval] ISchemaComplexType** scope);
+
+    [id(DISPID_SOM_DEFAULTVALUE), propget]
+    HRESULT defaultValue(
+        [out,retval] BSTR* defaultValue);
+
+    [id(DISPID_SOM_FIXEDVALUE), propget]
+    HRESULT fixedValue(
+        [out,retval] BSTR* fixedValue);
+
+    [id(DISPID_SOM_ISNILLABLE), propget]
+    HRESULT isNillable(
+        [out,retval] VARIANT_BOOL* nillable);
+
+    [id(DISPID_SOM_IDCONSTRAINTS), propget]
+    HRESULT identityConstraints(
+        [out,retval] ISchemaItemCollection** constraints);
+
+    [id(DISPID_SOM_SUBSTITUTIONGROUP), propget]
+    HRESULT substitutionGroup(
+        [out,retval] ISchemaElement** element);
+
+    [id(DISPID_SOM_EXCLUSIONS), propget]
+    HRESULT substitutionGroupExclusions(
+        [out,retval] SCHEMADERIVATIONMETHOD* exclusions);
+
+    [id(DISPID_SOM_DISALLOWED), propget]
+    HRESULT disallowedSubstitutions(
+        [out,retval] SCHEMADERIVATIONMETHOD* disallowed);
+
+    [id(DISPID_SOM_ISABSTRACT), propget]
+    HRESULT isAbstract(
+        [out,retval] VARIANT_BOOL* abstract);
+
+    [id(DISPID_SOM_ISREFERENCE), propget]
+    HRESULT isReference(
+        [out,retval] VARIANT_BOOL* reference);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b8-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaType : ISchemaItem
+{
+    [id(DISPID_SOM_BASETYPES), propget]
+    HRESULT baseTypes(
+        [out,retval] ISchemaItemCollection** baseTypes);
+
+    [id(DISPID_SOM_FINAL), propget]
+    HRESULT final(
+        [out,retval] SCHEMADERIVATIONMETHOD* final);
+
+    [id(DISPID_SOM_VARIETY), propget]
+    HRESULT variety(
+        [out,retval] SCHEMATYPEVARIETY* variety);
+
+    [id(DISPID_SOM_DERIVEDBY), propget]
+    HRESULT derivedBy(
+        [out,retval] SCHEMADERIVATIONMETHOD* derivedBy);
+
+    [id(DISPID_SOM_ISVALID)]
+    HRESULT isValid(
+        [in] BSTR data,
+        [out,retval] VARIANT_BOOL* valid);
+
+    [id(DISPID_SOM_MINEXCLUSIVE), propget]
+    HRESULT minExclusive(
+        [out,retval]BSTR* minExclusive);
+
+    [id(DISPID_SOM_MININCLUSIVE), propget]
+    HRESULT minInclusive(
+        [out,retval] BSTR* minInclusive);
+
+    [id(DISPID_SOM_MAXEXCLUSIVE), propget]
+    HRESULT maxExclusive(
+        [out,retval] BSTR* maxExclusive);
+
+    [id(DISPID_SOM_MAXINCLUSIVE), propget]
+    HRESULT maxInclusive(
+        [out,retval] BSTR* maxInclusive);
+
+    [id(DISPID_SOM_TOTALDIGITS), propget]
+    HRESULT totalDigits(
+        [out,retval] VARIANT* totalDigits);
+
+    [id(DISPID_SOM_FRACTIONDIGITS), propget]
+    HRESULT fractionDigits(
+        [out,retval] VARIANT* fractionDigits);
+
+    [id(DISPID_SOM_LENGTH), propget]
+    HRESULT length(
+        [out,retval] VARIANT* length);
+
+    [id(DISPID_SOM_MINLENGTH), propget]
+    HRESULT minLength(
+        [out,retval]VARIANT* minLength);
+
+    [id(DISPID_SOM_MAXLENGTH), propget]
+    HRESULT maxLength(
+        [out,retval]VARIANT* maxLength);
+
+    [id(DISPID_SOM_ENUMERATION), propget]
+    HRESULT enumeration(
+        [out,retval] ISchemaStringCollection** enumeration);
+
+    [id(DISPID_SOM_WHITESPACE), propget]
+    HRESULT whitespace(
+        [out,retval]SCHEMAWHITESPACE* whitespace);
+
+    [id(DISPID_SOM_PATTERNS), propget]
+    HRESULT patterns(
+        [out,retval] ISchemaStringCollection** patterns);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08b9-dd1b-4664-9a50-c2f40f4bd79a),
+    dual,
+]
+interface ISchemaComplexType : ISchemaType
+{
+    [id(DISPID_SOM_ISABSTRACT), propget]
+    HRESULT isAbstract(
+        [out,retval] VARIANT_BOOL* abstract);
+
+    [id(DISPID_SOM_ANYATTRIBUTE), propget]
+    HRESULT anyAttribute(
+        [out,retval] ISchemaAny** anyAttribute);
+
+    [id(DISPID_SOM_ATTRIBUTES), propget]
+    HRESULT attributes(
+        [out,retval] ISchemaItemCollection** attributes);
+
+    [id(DISPID_SOM_CONTENTTYPE), propget]
+    HRESULT contentType(
+        [out,retval] SCHEMACONTENTTYPE* contentType);
+
+    [id(DISPID_SOM_CONTENTMODEL), propget]
+    HRESULT contentModel(
+        [out,retval] ISchemaModelGroup** contentModel);
+
+    [id(DISPID_SOM_PROHIBITED), propget]
+    HRESULT prohibitedSubstitutions(
+        [out,retval] SCHEMADERIVATIONMETHOD* prohibited);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08ba-dd1b-4664-9a50-c2f40f4bd79a),
+    dual,
+]
+interface ISchemaAttributeGroup : ISchemaItem
+{
+    [id(DISPID_SOM_ANYATTRIBUTE), propget]
+    HRESULT anyAttribute(
+        [out,retval] ISchemaAny** anyAttribute);
+
+    [id(DISPID_SOM_ATTRIBUTES), propget]
+        HRESULT attributes(
+            [out,retval] ISchemaItemCollection** attributes);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08bb-dd1b-4664-9a50-c2f40f4bd79a),
+    dual,
+]
+interface ISchemaModelGroup : ISchemaParticle
+{
+    [id(DISPID_SOM_PARTICLES), propget]
+    HRESULT particles(
+        [out,retval] ISchemaItemCollection** particles);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08bc-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaAny : ISchemaParticle
+{
+    [id(DISPID_SOM_NAMESPACES), propget]
+    HRESULT namespaces(
+        [out,retval] ISchemaStringCollection** namespaces);
+
+    [id(DISPID_SOM_PROCESSCONTENTS), propget]
+    HRESULT processContents(
+        [out,retval] SCHEMAPROCESSCONTENTS* processContents);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08bd-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaIdentityConstraint : ISchemaItem
+{
+    [id(DISPID_SOM_SELECTOR), propget]
+    HRESULT selector(
+        [out,retval] BSTR* selector);
+
+    [id(DISPID_SOM_FIELDS), propget]
+        HRESULT fields(
+            [out,retval] ISchemaStringCollection** fields);
+
+    [id(DISPID_SOM_REFERENCEDKEY), propget]
+    HRESULT referencedKey(
+        [out,retval] ISchemaIdentityConstraint** key);
+};
+
+[
+    local,
+    object,
+    uuid(50ea08be-dd1b-4664-9a50-c2f40f4bd79a),
+    dual
+]
+interface ISchemaNotation : ISchemaItem
+{
+    [id(DISPID_SOM_SYSTEMIDENTIFIER), propget]
+    HRESULT systemIdentifier(
+        [out,retval] BSTR* uri);
+
+    [id(DISPID_SOM_PUBLICIDENTIFIER), propget]
+    HRESULT publicIdentifier(
+        [out,retval] BSTR* uri);
+};
+
+
+[
     uuid(079aa557-4a18-424a-8eee-e39f0a8d41b9)
 ]
 coclass SAXXMLReader
@@ -2029,6 +2656,26 @@ coclass MXXMLWriter30
 };
 
 [
+    uuid(88d969c8-f192-11d4-a65f-0040963251e5),
+]
+coclass MXXMLWriter40
+{
+    [default] interface IMXWriter;
+
+    interface ISAXContentHandler;
+    interface ISAXDeclHandler;
+    interface ISAXDTDHandler;
+    interface ISAXErrorHandler;
+    interface ISAXLexicalHandler;
+
+    interface IVBSAXContentHandler;
+    interface IVBSAXDeclHandler;
+    interface IVBSAXDTDHandler;
+    interface IVBSAXErrorHandler;
+    interface IVBSAXLexicalHandler;
+};
+
+[
     uuid(4dd441ad-526d-4a77-9f1b-9841ed802fb0)
 ]
 coclass SAXAttributes
@@ -2042,6 +2689,16 @@ coclass SAXAttributes
     uuid(3e784a01-f3ae-4dc0-9354-9526b9370eba)
 ]
 coclass SAXAttributes30
+{
+    [default] interface IMXAttributes;
+    interface IVBSAXAttributes;
+    interface ISAXAttributes;
+};
+
+[
+    uuid(88d969ca-f192-11d4-a65f-0040963251e5),
+]
+coclass SAXAttributes40
 {
     [default] interface IMXAttributes;
     interface IVBSAXAttributes;

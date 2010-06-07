@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 parser (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007 by             */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005, 2006, 2007, 2009 by       */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,7 +18,6 @@
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
-#include FT_INTERNAL_CALC_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_STREAM_H
 
@@ -87,13 +86,13 @@
     /* `StartData' or `/sfnts'                      */
     {
       FT_Byte   buffer[256 + 10];
-      FT_Int    read_len = 256 + 10;
+      FT_Long   read_len = 256 + 10; /* same as signed FT_Stream->size */
       FT_Byte*  p        = buffer;
 
 
-      for ( offset = (FT_ULong)FT_STREAM_POS(); ; offset += 256 )
+      for ( offset = FT_STREAM_POS(); ; offset += 256 )
       {
-        FT_Int  stream_len;
+        FT_Long  stream_len; /* same as signed FT_Stream->size */
 
 
         stream_len = stream->size - FT_STREAM_POS();

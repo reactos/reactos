@@ -607,6 +607,11 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     if (IniReadSettingByName(SectionId, "Options", value, sizeof(value)))
     {
         //
+        // Append boot-time options
+        //
+        AppendBootTimeOptions(value);
+
+        //
         // Check if a ramdisk file was given
         //
         PCHAR File;

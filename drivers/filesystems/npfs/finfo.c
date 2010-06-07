@@ -26,6 +26,13 @@ NpfsSetPipeInformation(PDEVICE_OBJECT DeviceObject,
     PFILE_PIPE_INFORMATION Request;
     DPRINT("NpfsSetPipeInformation()\n");
 
+    if (*BufferLength < sizeof(FILE_PIPE_INFORMATION))
+    {
+        /* Buffer too small */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+
     /* Get the Pipe and data */
     Fcb = Ccb->Fcb;
     Request = (PFILE_PIPE_INFORMATION)Info;
@@ -63,6 +70,12 @@ NpfsSetPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
     PFILE_PIPE_REMOTE_INFORMATION Request;
     DPRINT("NpfsSetPipeRemoteInformation()\n");
 
+    if (*BufferLength < sizeof(FILE_PIPE_REMOTE_INFORMATION))
+    {
+        /* Buffer too small */
+        return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
     /* Get the Pipe and data */
     Fcb = Ccb->Fcb;
     Request = (PFILE_PIPE_REMOTE_INFORMATION)Info;
@@ -86,6 +99,13 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
     ULONG ConnectionSideReadMode;
     DPRINT("NpfsQueryPipeInformation()\n");
 
+    if (*BufferLength < sizeof(FILE_PIPE_INFORMATION))
+    {
+        /* Buffer too small */
+        *BufferLength = sizeof(FILE_PIPE_INFORMATION);
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
     /* Get the Pipe */
     Fcb = Ccb->Fcb;
 
@@ -100,7 +120,7 @@ NpfsQueryPipeInformation(PDEVICE_OBJECT DeviceObject,
     Info->ReadMode = ConnectionSideReadMode;
 
     /* Return success */
-    *BufferLength -= sizeof(FILE_PIPE_INFORMATION);
+    *BufferLength = sizeof(FILE_PIPE_INFORMATION);
     return STATUS_SUCCESS;
 }
 
@@ -114,6 +134,13 @@ NpfsQueryPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
     PNPFS_FCB Fcb;
     DPRINT("NpfsQueryPipeRemoteInformation()\n");
 
+    if (*BufferLength < sizeof(FILE_PIPE_REMOTE_INFORMATION))
+    {
+        /* Buffer too small */
+        *BufferLength = sizeof(FILE_PIPE_REMOTE_INFORMATION);
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
     /* Get the Pipe */
     Fcb = Ccb->Fcb;
 
@@ -125,7 +152,7 @@ NpfsQueryPipeRemoteInformation(PDEVICE_OBJECT DeviceObject,
     Info->CollectDataTime = Fcb->TimeOut;
 
     /* Return success */
-    *BufferLength -= sizeof(FILE_PIPE_REMOTE_INFORMATION);
+    *BufferLength = sizeof(FILE_PIPE_REMOTE_INFORMATION);
     return STATUS_SUCCESS;
 }
 
@@ -140,11 +167,21 @@ NpfsQueryLocalPipeInformation(PDEVICE_OBJECT DeviceObject,
 
     DPRINT("NpfsQueryLocalPipeInformation()\n");
 
+    if (*BufferLength < sizeof(FILE_PIPE_REMOTE_INFORMATION))
+    {
+        /* Buffer too small */
+        *BufferLength = sizeof(FILE_PIPE_REMOTE_INFORMATION);
+        return STATUS_BUFFER_OVERFLOW;
+    }
+
+    /* Get the Pipe */
     Fcb = Ccb->Fcb;
 
+    /* Clear Info */
     RtlZeroMemory(Info,
         sizeof(FILE_PIPE_LOCAL_INFORMATION));
 
+    /* Return Info */
     Info->NamedPipeType = Fcb->PipeType;
     Info->NamedPipeConfiguration = Fcb->PipeConfiguration;
     Info->MaximumInstances = Fcb->MaximumInstances;
@@ -165,7 +202,7 @@ NpfsQueryLocalPipeInformation(PDEVICE_OBJECT DeviceObject,
         Info->WriteQuotaAvailable = Ccb->OtherSide->WriteQuotaAvailable;
     }
 
-    *BufferLength -= sizeof(FILE_PIPE_LOCAL_INFORMATION);
+    *BufferLength = sizeof(FILE_PIPE_LOCAL_INFORMATION);
     return STATUS_SUCCESS;
 }
 
@@ -226,14 +263,12 @@ NpfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 
     default:
         Status = STATUS_NOT_SUPPORTED;
+        BufferLength = 0;
     }
 
     Irp->IoStatus.Status = Status;
-    if (NT_SUCCESS(Status))
-        Irp->IoStatus.Information =
-        IoStack->Parameters.QueryFile.Length - BufferLength;
-    else
-        Irp->IoStatus.Information = 0;
+    Irp->IoStatus.Information = BufferLength;
+
     IoCompleteRequest (Irp, IO_NO_INCREMENT);
 
     return Status;

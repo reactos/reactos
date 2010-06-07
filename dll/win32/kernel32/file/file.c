@@ -1906,7 +1906,8 @@ ReplaceFileW(
     )
 {
     HANDLE hReplaced = NULL, hReplacement = NULL;
-    UNICODE_STRING NtReplacedName, NtReplacementName;
+    UNICODE_STRING NtReplacedName = { 0, 0, NULL };
+    UNICODE_STRING NtReplacementName = { 0, 0, NULL };
     DWORD Error = ERROR_SUCCESS;
     NTSTATUS Status;
     BOOL Ret = FALSE;
@@ -2029,8 +2030,10 @@ Cleanup:
     if (hReplacement) NtClose(hReplacement);
     if (Buffer) RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
 
-    RtlFreeUnicodeString(&NtReplacementName);
-    RtlFreeUnicodeString(&NtReplacedName);
+    if (NtReplacementName.Buffer)
+        RtlFreeHeap(GetProcessHeap(), 0, NtReplacementName.Buffer);
+    if (NtReplacedName.Buffer)
+        RtlFreeHeap(GetProcessHeap(), 0, NtReplacedName.Buffer);
 
     /* If there was an error, set the error code */
     if(!Ret)

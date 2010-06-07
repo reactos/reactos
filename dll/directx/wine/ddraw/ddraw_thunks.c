@@ -290,6 +290,7 @@ IDirectDrawImpl_CreateSurface(LPDIRECTDRAW This, LPDDSURFACEDESC pSDesc,
     set_surf_version(impl, 1);
     IDirectDraw7_Release((IDirectDraw7 *)ddraw_from_ddraw1(This));
     impl->ifaceToRelease = NULL;
+
     return hr;
 }
 
@@ -309,11 +310,13 @@ IDirectDraw2Impl_CreateSurface(LPDIRECTDRAW2 This, LPDDSURFACEDESC pSDesc,
         *ppSurface = NULL;
         return hr;
     }
+
     impl = (IDirectDrawSurfaceImpl *)pSurface7;
     *ppSurface = (IDirectDrawSurface *)&impl->IDirectDrawSurface3_vtbl;
     set_surf_version(impl, 2);
     IDirectDraw7_Release((IDirectDraw7 *)ddraw_from_ddraw2(This));
     impl->ifaceToRelease = NULL;
+
     return hr;
 }
 

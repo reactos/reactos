@@ -17,5 +17,4 @@
 
 /* Internal CSRSS Headers */
 #include <api.h>
-#include <conio.h>
 #include <csrplugin.h>

@@ -765,6 +765,12 @@ KeUpdateSystemTime(
     IN KIRQL OldIrql
 );
 
+VOID
+NTAPI
+HalpInitBusHandlers(
+    VOID
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP

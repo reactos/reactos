@@ -97,7 +97,7 @@ static HRESULT STDMETHODCALLTYPE rendertarget_view_GetResource(IWineD3DRendertar
     return WINED3D_OK;
 }
 
-const struct IWineD3DRendertargetViewVtbl wined3d_rendertarget_view_vtbl =
+static const struct IWineD3DRendertargetViewVtbl wined3d_rendertarget_view_vtbl =
 {
     /* IUnknown methods */
     rendertarget_view_QueryInterface,
@@ -108,3 +108,13 @@ const struct IWineD3DRendertargetViewVtbl wined3d_rendertarget_view_vtbl =
     /* IWineD3DRendertargetView methods */
     rendertarget_view_GetResource,
 };
+
+void wined3d_rendertarget_view_init(struct wined3d_rendertarget_view *view,
+        IWineD3DResource *resource, IUnknown *parent)
+{
+    view->vtbl = &wined3d_rendertarget_view_vtbl;
+    view->refcount = 1;
+    IWineD3DResource_AddRef(resource);
+    view->resource = resource;
+    view->parent = parent;
+}

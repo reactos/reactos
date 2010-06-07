@@ -178,10 +178,10 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
 {
     DWORD dwIndex = 0;
     LONG result;
-	WCHAR szName[50];
+    WCHAR szName[50];
     WCHAR szGUID[40];
     WCHAR szTemp[63];
-	WCHAR szResult[MAX_PATH+20] = {0};
+    WCHAR szResult[MAX_PATH+20] = {0};
     DWORD RegProviders = 0;
     DWORD ProviderIndex;
     DWORD dwName;
@@ -203,13 +203,12 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
         szResult[0] = L'\0';
         LoadStringW(hInst, PreDefProviders[dwIndex].ResourceID, szResult, sizeof(szResult)/sizeof(WCHAR));
         szResult[(sizeof(szResult)/sizeof(WCHAR))-1] = L'\0';
-        lResult = SendMessageW(hDlgCtrl, LVM_INSERTITEM, 0, (LPARAM)&Item);
+        Item.iItem = SendMessageW(hDlgCtrl, LVM_INSERTITEM, 0, (LPARAM)&Item);
+        Item.iSubItem = 1;
         szResult[0] = L'\0';
         LoadStringW(hInst, IDS_REG_FAIL, szResult, sizeof(szResult)/sizeof(WCHAR));
         szResult[(sizeof(szResult)/sizeof(WCHAR))-1] = L'\0';
-		Item.iItem = lResult;
-        Item.iSubItem = 1;
-        lResult = SendMessageW(hDlgCtrl, LVM_SETITEM, 0, (LPARAM)&Item);
+        SendMessageW(hDlgCtrl, LVM_SETITEM, 0, (LPARAM)&Item);
     }
 
     dwIndex = 0;
@@ -228,8 +227,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
             if (ProviderIndex == UINT_MAX)
             {
                 /* a custom service provider was found */
-                lResult = ListView_GetItemCount(hDlgCtrl);
-                Item.iItem = lResult;
+                Item.iItem = ListView_GetItemCount(hDlgCtrl);
 
                 /* FIXME
                  * on Windows Vista we need to use RegLoadMUIString which is not available for older systems 
@@ -291,7 +289,7 @@ EnumerateServiceProviders(HKEY hKey, HWND hDlgCtrl, DIRECTPLAY_GUID * PreDefProv
                 }
         }
         dwIndex++;
-	}while(result != ERROR_NO_MORE_ITEMS);
+    }while(result != ERROR_NO_MORE_ITEMS);
 
     /* check if all providers have been registered */
 //    if (RegProviders == 15)
@@ -330,7 +328,7 @@ InitializeDirectPlayDialog(HWND hwndDlg)
         return;
 
     /* enumerate providers */
-    result = EnumerateServiceProviders(hKey, hDlgCtrl, DirectPlaySP);
+    EnumerateServiceProviders(hKey, hDlgCtrl, DirectPlaySP);
     RegCloseKey(hKey);
 }
 

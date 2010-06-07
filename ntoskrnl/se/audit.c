@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/se/audit.c
  * PURPOSE:         Audit functions
  *
- * PROGRAMMERS:     Eric Kohl <eric.kohl@t-online.de>
+ * PROGRAMMERS:     Eric Kohl
  */
 
 /* INCLUDES *******************************************************************/
@@ -47,6 +47,7 @@ SeInitializeProcessAuditName(IN PFILE_OBJECT FileObject,
     POBJECT_NAME_INFORMATION ObjectNameInfo = NULL;
     ULONG ReturnLength = 8;
     NTSTATUS Status;
+
     PAGED_CODE();
     ASSERT(AuditInfo);
 
@@ -120,6 +121,7 @@ SeLocateProcessImageName(IN PEPROCESS Process,
     PUNICODE_STRING ImageName;
     PFILE_OBJECT FileObject;
     NTSTATUS Status = STATUS_SUCCESS;
+
     PAGED_CODE();
 
     /* Assume failure */
@@ -189,7 +191,7 @@ SeAuditHardLinkCreation(IN PUNICODE_STRING FileName,
                         IN PUNICODE_STRING LinkName,
                         IN BOOLEAN bSuccess)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -200,8 +202,8 @@ NTAPI
 SeAuditingFileEvents(IN BOOLEAN AccessGranted,
                      IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -213,8 +215,8 @@ SeAuditingFileEventsWithContext(IN BOOLEAN AccessGranted,
                                 IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -225,8 +227,8 @@ NTAPI
 SeAuditingHardLinkEvents(IN BOOLEAN AccessGranted,
                          IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -238,8 +240,8 @@ SeAuditingHardLinkEventsWithContext(IN BOOLEAN AccessGranted,
                                     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                     IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext OPTIONAL)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -251,8 +253,8 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
                              IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                              IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /*
@@ -260,13 +262,11 @@ SeAuditingFileOrGlobalEvents(IN BOOLEAN AccessGranted,
  */
 VOID
 NTAPI
-SeCloseObjectAuditAlarm(
-                        IN PVOID Object,
+SeCloseObjectAuditAlarm(IN PVOID Object,
                         IN HANDLE Handle,
-                        IN BOOLEAN PerformAction
-                        )
+                        IN BOOLEAN PerformAction)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /*
@@ -295,10 +295,10 @@ SeOpenObjectAuditAlarm(IN PUNICODE_STRING ObjectTypeName,
                        OUT PBOOLEAN GenerateOnClose)
 {
     PAGED_CODE();
-    
+
     /* Audits aren't done on kernel-mode access */
     if (AccessMode == KernelMode) return;
-    
+
     /* Otherwise, unimplemented! */
     //UNIMPLEMENTED;
     return;
@@ -333,7 +333,7 @@ SePrivilegeObjectAuditAlarm(IN HANDLE Handle,
                             IN BOOLEAN AccessGranted,
                             IN KPROCESSOR_MODE CurrentMode)
 {
-	UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 /* SYSTEM CALLS ***************************************************************/
@@ -363,7 +363,7 @@ NtCloseObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                         IN BOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -373,7 +373,7 @@ NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                          IN BOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -392,7 +392,7 @@ NtOpenObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                        OUT PBOOLEAN GenerateOnClose)
 {
     UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -404,7 +404,7 @@ NtPrivilegedServiceAuditAlarm(IN PUNICODE_STRING SubsystemName,
                               IN BOOLEAN AccessGranted)
 {
     UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 
@@ -417,7 +417,7 @@ NtPrivilegeObjectAuditAlarm(IN PUNICODE_STRING SubsystemName,
                             IN BOOLEAN AccessGranted)
 {
     UNIMPLEMENTED;
-    return(STATUS_NOT_IMPLEMENTED);
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 /* EOF */

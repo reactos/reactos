@@ -1176,7 +1176,7 @@ static DWORD FTPFILE_QueryOption(object_header_t *hdr, DWORD option, void *buffe
         }
     }
     }
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static DWORD FTPFILE_ReadFile(object_header_t *hdr, void *buffer, DWORD size, DWORD *read)
@@ -2395,7 +2395,7 @@ static DWORD FTPSESSION_QueryOption(object_header_t *hdr, DWORD option, void *bu
         return ERROR_SUCCESS;
     }
 
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static const object_vtbl_t FTPSESSIONVtbl = {
@@ -3476,7 +3476,7 @@ static DWORD FTPFINDNEXT_QueryOption(object_header_t *hdr, DWORD option, void *b
         return ERROR_SUCCESS;
     }
 
-    return INET_QueryOption(option, buffer, size, unicode);
+    return INET_QueryOption(hdr, option, buffer, size, unicode);
 }
 
 static DWORD FTPFINDNEXT_FindNextFileW(object_header_t *hdr, void *data)

@@ -114,7 +114,7 @@ __INTRIN_INLINE long _InterlockedCompareExchange(volatile long * const Destinati
 
 __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
 {
-	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
+	return (void *)__sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
 
 __INTRIN_INLINE long _InterlockedExchange(volatile long * const Target, const long Value)
@@ -137,7 +137,7 @@ __INTRIN_INLINE void * _InterlockedExchangePointer(void * volatile * const Targe
 {
 	/* NOTE: ditto */
 	__sync_synchronize();
-	return __sync_lock_test_and_set(Target, Value);
+	return (void *)__sync_lock_test_and_set(Target, Value);
 }
 
 __INTRIN_INLINE long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value)

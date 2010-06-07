@@ -82,7 +82,11 @@ extern "C" {
 #if (_WIN32_IE >= 0x0500)
 #define PSM_GETRESULT	1159
 #define PropSheet_GetResult(hDlg)	SNDMSG(hDlg, PSM_GETRESULT, 0, 0)
+
 #define PSM_HWNDTOINDEX	1153
+#define PropSheet_HwndToIndex(hDlg, hwnd) \
+        (int)SNDMSG(hDlg, PSM_HWNDTOINDEX, (WPARAM)(hwnd), 0)
+
 #define PSM_IDTOINDEX	1157
 #define PSM_INDEXTOHWND	1154
 #define PSM_INDEXTOID	1158

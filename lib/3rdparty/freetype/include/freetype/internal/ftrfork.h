@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Embedded resource forks accessor (specification).                    */
 /*                                                                         */
-/*  Copyright 2004, 2006 by                                                */
+/*  Copyright 2004, 2006, 2007 by                                          */
 /*  Masatake YAMATO and Redhat K.K.                                        */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,7 +34,19 @@ FT_BEGIN_HEADER
 
   /* Number of guessing rules supported in `FT_Raccess_Guess'.            */
   /* Don't forget to increment the number if you add a new guessing rule. */
-#define FT_RACCESS_N_RULES  8
+#define FT_RACCESS_N_RULES  9
+
+
+  /* A structure to describe a reference in a resource by its resource ID */
+  /* and internal offset.  The `POST' resource expects to be concatenated */
+  /* by the order of resource IDs instead of its appearance in the file.  */
+
+  typedef struct  FT_RFork_Ref_
+  {
+    FT_UShort  res_id;
+    FT_ULong   offset;
+
+  } FT_RFork_Ref;
 
 
   /*************************************************************************/

@@ -29,7 +29,9 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "minwavetables.hpp"
 #include "ntddk.h"
 
-#pragma code_seg("PAGE")
+#ifdef _MSC_VER
+#pragma code_seg("PAGE") /* warning - ignored by GCC compiler */
+#endif
 
 HRESULT NTAPI CreateMiniportWaveCMI(PUNKNOWN *Unknown, REFCLSID, PUNKNOWN UnknownOuter, POOL_TYPE PoolType)
 {
@@ -233,7 +235,8 @@ NTSTATUS CMiniportWaveCMI::loadChannelConfigFromRegistry()
 	PREGISTRYKEY       DriverKey;
 	PREGISTRYKEY       SettingsKey;
     UNICODE_STRING     KeyName;
-    DWORD              Value, ResultLength;
+    //DWORD              Value, ResultLength;
+    DWORD              ResultLength;
 	PVOID              KeyInfo;
 
     DBGPRINT(("CMiniportWaveCMI::loadChannelConfigFromRegistry()"));
@@ -418,12 +421,12 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 	DBGPRINT(("---channels: %d, resolution: %d, sample rate: %d, pin: %d, formatMask: %x", waveFormat->nChannels, waveFormat->wBitsPerSample, waveFormat->nSamplesPerSec, PinID, cm->formatMask));
 
 //WaveFormatEx
-	if  ( ( format->FormatSize >= sizeof(KSDATAFORMAT_WAVEFORMATEX))
+	if  ( ( (size_t) format->FormatSize >= sizeof(KSDATAFORMAT_WAVEFORMATEX))
 	  && IsEqualGUIDAligned(format->MajorFormat,KSDATAFORMAT_TYPE_AUDIO)
 	  && IsEqualGUIDAligned(format->Specifier,KSDATAFORMAT_SPECIFIER_WAVEFORMATEX) ) {
 		switch (EXTRACT_WAVEFORMATEX_ID(&format->SubFormat)) {
 			case WAVE_FORMAT_PCM:
-				if ((PinID != PIN_WAVE_RENDER_SINK) && (PinID != PIN_WAVE_CAPTURE_SOURCE) && (PinID != -1)) {
+				if ((PinID != PIN_WAVE_RENDER_SINK) && (PinID != PIN_WAVE_CAPTURE_SOURCE) && ((int)PinID != -1)) {
 					if ((PinID == PIN_WAVE_AC3_RENDER_SINK) && !IoIsWdmVersionAvailable(6,0)) {
 						return STATUS_INVALID_PARAMETER;
 					}
@@ -438,10 +441,10 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 					return isFormatAllowed(waveFormat->nSamplesPerSec, FALSE, FALSE);
 				}
 				if ( (waveFormat->wBitsPerSample == 16)
-				  && ((waveFormat->nChannels >= 4) && (waveFormat->nChannels <= cm->maxChannels))
+				  && ((waveFormat->nChannels >= 4) && (waveFormat->nChannels <= (WORD) cm->maxChannels))
 				  && ((waveFormat->nSamplesPerSec == 44100) || (waveFormat->nSamplesPerSec == 48000)) ) {
 #if OUT_CHANNEL == 1
-					if ((PinID == PIN_WAVE_RENDER_SINK) || (PinID == -1)) {
+					if ((PinID == PIN_WAVE_RENDER_SINK) || ((int)PinID == -1)) {
 						return isFormatAllowed(waveFormat->nSamplesPerSec, TRUE, FALSE);
 					}
 #else
@@ -450,7 +453,7 @@ NTSTATUS CMiniportWaveCMI::validateFormat(PKSDATAFORMAT format, ULONG PinID, BOO
 				}
 				break;
 			case WAVE_FORMAT_DOLBY_AC3_SPDIF:
-				if ((PinID != PIN_WAVE_AC3_RENDER_SINK) && (PinID != -1)) {
+				if ((PinID != PIN_WAVE_AC3_RENDER_SINK) && ((int)PinID != -1)) {
 					return STATUS_INVALID_PARAMETER;
 				}
 				if ( ((waveFormat->wBitsPerSample >= MIN_BITS_PER_SAMPLE_AC3) && (waveFormat->wBitsPerSample <= MAX_BITS_PER_SAMPLE_AC3))
@@ -907,7 +910,7 @@ NTSTATUS CMiniportWaveStreamCMI::prepareStream()
 	DBGPRINT(("---streamIndex: %d, channelNumber: %d", streamIndex, channelNumber));
 
 	NTSTATUS ntStatus;
-	UInt8    reg;
+	//UInt8    reg;
 	UInt32   val;
 
 	if (state == KSSTATE_RUN) {
@@ -990,7 +993,7 @@ NTSTATUS CMiniportWaveStreamCMI::setDACChannels()
 	NTSTATUS ntStatus = STATUS_SUCCESS;
 
 	if (currentChannelCount > 2) {
-		if (Miniport->cm->maxChannels < currentChannelCount) {
+		if ((WORD) Miniport->cm->maxChannels < currentChannelCount ) {
 			return STATUS_INVALID_DEVICE_REQUEST;
 		}
 		if ((currentResolution != 16) || (currentChannelCount < 2)) {
@@ -1052,7 +1055,7 @@ NTSTATUS CMiniportWaveStreamCMI::setupSPDIFPlayback(bool enableSPDIF)
 	//PAGED_CODE();
 	DBGPRINT(("CMiniportWaveStreamCMI[%p]::setupSPDIFPlayback(%d)", this, enableSPDIF));
 
-	NTSTATUS ntStatus;
+	//NTSTATUS ntStatus;
 
 	KeWaitForSingleObject(&Miniport->mutex, Executive, KernelMode, false, NULL);
 
@@ -1434,7 +1437,9 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveStreamCMI::GetClockRegister(PKSRTAUDIO_HWRE
 /*
 ** non-paged code below
 */
-#pragma code_seg()
+#ifdef _MSC_VER
+#pragma code_seg() /* warning - ignored by GCC compiler */
+#endif
 
 STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 {
@@ -1461,7 +1466,9 @@ STDMETHODIMP CMiniportWaveStreamCMI::SetState(KSSTATE NewState)
 
 	// STOP -> ACQUIRE -> PAUSE -> PLAY -> PAUSE -> ACQUIRE -> STOP
 	if (state != NewState) {
-		switch (NewState) {
+		switch ((UINT) NewState) {
+			// LN: The cast on NewState is to satisfy the compiler about
+			// KSSTATE_STOP_AC3, which is not in the original enum KSSTATE.
 			case KSSTATE_ACQUIRE:
 				DBGPRINT(("---KSSTATE_ACQUIRE: previous state: %d", state));
 				if (state == KSSTATE_PAUSE) {

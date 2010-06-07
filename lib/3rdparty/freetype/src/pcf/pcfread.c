@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 by
+  Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,7 +32,6 @@ THE SOFTWARE.
 #include FT_INTERNAL_OBJECTS_H
 
 #include "pcf.h"
-#include "pcfdrivr.h"
 #include "pcfread.h"
 
 #include "pcferror.h"
@@ -48,7 +47,7 @@ THE SOFTWARE.
 #define FT_COMPONENT  trace_pcfread
 
 
-#if defined( FT_DEBUG_LEVEL_TRACE )
+#ifdef FT_DEBUG_LEVEL_TRACE
   static const char* const  tableNames[] =
   {
     "prop", "accl", "mtrcs", "bmps", "imtrcs",
@@ -152,7 +151,7 @@ THE SOFTWARE.
         break;
     }
 
-#if defined( FT_DEBUG_LEVEL_TRACE )
+#ifdef FT_DEBUG_LEVEL_TRACE
 
     {
       FT_UInt      i, j;
@@ -290,13 +289,13 @@ THE SOFTWARE.
   static FT_Error
   pcf_seek_to_table_type( FT_Stream  stream,
                           PCF_Table  tables,
-                          FT_Int     ntables,
+                          FT_ULong   ntables, /* same as PCF_Toc->count */
                           FT_ULong   type,
                           FT_ULong  *aformat,
                           FT_ULong  *asize )
   {
     FT_Error  error = PCF_Err_Invalid_File_Format;
-    FT_Int    i;
+    FT_ULong  i;
 
 
     for ( i = 0; i < ntables; i++ )
@@ -328,10 +327,10 @@ THE SOFTWARE.
 
   static FT_Bool
   pcf_has_table_type( PCF_Table  tables,
-                      FT_Int     ntables,
+                      FT_ULong   ntables, /* same as PCF_Toc->count */
                       FT_ULong   type )
   {
-    FT_Int  i;
+    FT_ULong  i;
 
 
     for ( i = 0; i < ntables; i++ )
@@ -400,7 +399,7 @@ THE SOFTWARE.
   {
     PCF_ParseProperty  props      = 0;
     PCF_Property       properties;
-    FT_UInt            nprops, i;
+    FT_ULong           nprops, i;
     FT_ULong           format, size;
     FT_Error           error;
     FT_Memory          memory     = FT_FACE(face)->memory;
@@ -434,7 +433,10 @@ THE SOFTWARE.
     if ( error )
       goto Bail;
 
-    FT_TRACE4(( "  nprop = %d\n", nprops ));
+    FT_TRACE4(( "  nprop = %d (truncate %d props)\n",
+                (int)nprops, nprops - (int)nprops ));
+
+    nprops = (int)nprops;
 
     /* rough estimate */
     if ( nprops > size / PCF_PROPERTY_SIZE )
@@ -443,7 +445,7 @@ THE SOFTWARE.
       goto Bail;
     }
 
-    face->nprops = nprops;
+    face->nprops = (int)nprops;
 
     if ( FT_NEW_ARRAY( props, nprops ) )
       goto Bail;
@@ -470,7 +472,11 @@ THE SOFTWARE.
     if ( nprops & 3 )
     {
       i = 4 - ( nprops & 3 );
-      FT_Stream_Skip( stream, i );
+      if ( FT_STREAM_SKIP( i ) )
+      {
+        error = PCF_Err_Invalid_Stream_Skip;
+        goto Bail;
+      }
     }
 
     if ( PCF_BYTE_ORDER( format ) == MSBFirst )
@@ -539,9 +545,9 @@ THE SOFTWARE.
       }
       else
       {
-        properties[i].value.integer = props[i].value;
+        properties[i].value.l = props[i].value;
 
-        FT_TRACE4(( " %d\n", properties[i].value.integer ));
+        FT_TRACE4(( " %d\n", properties[i].value.l ));
       }
     }
 
@@ -623,7 +629,7 @@ THE SOFTWARE.
     metrics = face->metrics;
     for ( i = 0; i < nmetrics; i++ )
     {
-      pcf_get_metric( stream, format, metrics + i );
+      error = pcf_get_metric( stream, format, metrics + i );
 
       metrics[i].bits = 0;
 
@@ -658,7 +664,7 @@ THE SOFTWARE.
     FT_Long*   offsets;
     FT_Long    bitmapSizes[GLYPHPADOPTIONS];
     FT_ULong   format, size;
-    int        nbitmaps, i, sizebitmaps = 0;
+    FT_ULong   nbitmaps, i, sizebitmaps = 0;
 
 
     error = pcf_seek_to_table_type( stream,
@@ -689,7 +695,8 @@ THE SOFTWARE.
 
     FT_TRACE4(( "  number of bitmaps: %d\n", nbitmaps ));
 
-    if ( nbitmaps != face->nmetrics )
+    /* XXX: PCF_Face->nmetrics is singed FT_Long, see pcf.h */
+    if ( face->nmetrics < 0 || nbitmaps != ( FT_ULong )face->nmetrics )
       return PCF_Err_Invalid_File_Format;
 
     if ( FT_NEW_ARRAY( offsets, nbitmaps ) )
@@ -735,8 +742,8 @@ THE SOFTWARE.
       if ( ( offsets[i] < 0 )              ||
            ( (FT_ULong)offsets[i] > size ) )
       {
-        FT_ERROR(( "pcf_get_bitmaps:"));
-        FT_ERROR(( " invalid offset to bitmap data of glyph %d\n", i ));
+        FT_TRACE0(( "pcf_get_bitmaps:"
+                    " invalid offset to bitmap data of glyph %d\n", i ));
       }
       else
         face->metrics[i].bits = stream->pos + offsets[i];
@@ -989,9 +996,9 @@ THE SOFTWARE.
 
     PCF_Property  prop;
 
-    int    nn, len;
-    char*  strings[4] = { NULL, NULL, NULL, NULL };
-    int    lengths[4];
+    size_t  nn, len;
+    char*   strings[4] = { NULL, NULL, NULL, NULL };
+    size_t  lengths[4];
 
 
     face->style_flags = 0;
@@ -1073,7 +1080,7 @@ THE SOFTWARE.
         /* add_style_name and setwidth_name     */
         if ( nn == 0 || nn == 3 )
         {
-          int  mm;
+          size_t  mm;
 
 
           for ( mm = 0; mm < len; mm++ )
@@ -1198,7 +1205,7 @@ THE SOFTWARE.
 
         prop = pcf_find_property( face, "AVERAGE_WIDTH" );
         if ( prop )
-          bsize->width = (FT_Short)( ( prop->value.integer + 5 ) / 10 );
+          bsize->width = (FT_Short)( ( prop->value.l + 5 ) / 10 );
         else
           bsize->width = (FT_Short)( bsize->height * 2/3 );
 
@@ -1206,19 +1213,19 @@ THE SOFTWARE.
         if ( prop )
           /* convert from 722.7 decipoints to 72 points per inch */
           bsize->size =
-            (FT_Pos)( ( prop->value.integer * 64 * 7200 + 36135L ) / 72270L );
+            (FT_Pos)( ( prop->value.l * 64 * 7200 + 36135L ) / 72270L );
 
         prop = pcf_find_property( face, "PIXEL_SIZE" );
         if ( prop )
-          bsize->y_ppem = (FT_Short)prop->value.integer << 6;
+          bsize->y_ppem = (FT_Short)prop->value.l << 6;
 
         prop = pcf_find_property( face, "RESOLUTION_X" );
         if ( prop )
-          resolution_x = (FT_Short)prop->value.integer;
+          resolution_x = (FT_Short)prop->value.l;
 
         prop = pcf_find_property( face, "RESOLUTION_Y" );
         if ( prop )
-          resolution_y = (FT_Short)prop->value.integer;
+          resolution_y = (FT_Short)prop->value.l;
 
         if ( bsize->y_ppem == 0 )
         {

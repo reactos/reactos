@@ -1478,6 +1478,12 @@ MUI_ERROR jaJPErrorEntries[] =
         "ENTER = ºÝËß­°ÀÉ »²·ÄÞ³"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1614,7 +1620,7 @@ MUI_STRING jaJPStrings[] =
     {STRING_TXTSETUPFAILED,
     "¾¯Ä±¯ÌßÊ TXTSETUP.SIF É '%S' ¾¸¼®ÝÉ ¹Ý¼­ÂÆ\n¼¯Êß² ¼Ï¼À¡\n"},
     {STRING_COPYING,
-     "\xB3 ºËß° Á­³É Ì§²Ù: %S"},
+     "   ºËß° Á­³É Ì§²Ù: %S"},
     {STRING_SETUPCOPYINGFILES,
      "¾¯Ä±¯ÌßÊ Ì§²Ù¦ ºËß° ¼Ã ²Ï½..."},
     {STRING_REGHIVEUPDATE,

@@ -11,6 +11,10 @@ Signature = "$ReactOS$"
 6 = Fonts
 7 = bin
 
+[DiskSpaceRequirements]
+; Required free system partition disk space in MB
+FreeSysPartDiskSpace=350
+
 [SourceDisksFiles]
 acpi.sys=,,,,,,,,,,,,4
 uniata.sys=,,,,,,x,,,,,,4
@@ -54,7 +58,7 @@ Cabinet=reactos.cab
 [SetupData]
 DefaultPath = \ReactOS
 OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1 /FIRSTCHANCE /KDSERIAL"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
 ;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 

@@ -400,8 +400,8 @@ ReleaseEntrypointMutex(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter);
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
@@ -413,20 +413,20 @@ MmeGetSoundDeviceCapabilities(
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle);
+    OUT DWORD_PTR* PrivateHandle);
 
 MMRESULT
 MmeCloseDevice(
-    IN  DWORD PrivateHandle);
+    IN  DWORD_PTR PrivateHandle);
 
 MMRESULT
 MmeGetPosition(
     IN  MMDEVICE_TYPE DeviceType,
     IN  DWORD DeviceId,
-    IN  DWORD PrivateHandle,
+    IN  DWORD_PTR PrivateHandle,
     IN  MMTIME* Time,
     IN  DWORD Size);
 
@@ -441,7 +441,7 @@ MmeGetDeviceInterfaceString(
 
 MMRESULT
 MmeSetState(
-    IN  DWORD PrivateHandle,
+    IN  DWORD_PTR PrivateHandle,
     IN  BOOL bStart);
 
 
@@ -456,7 +456,7 @@ MmeSetState(
 
 MMRESULT
 MmeResetWavePlayback(
-    IN  DWORD PrivateHandle);
+    IN  DWORD_PTR PrivateHandle);
 
 
 /*

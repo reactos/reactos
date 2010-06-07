@@ -1128,7 +1128,7 @@ IntMouseInput(MOUSEINPUT *mi)
 
    if(mi->dwFlags & MOUSEEVENTF_MOVE)
    {
-      UserSetCursorPos(MousePos.x, MousePos.y);
+      UserSetCursorPos(MousePos.x, MousePos.y, TRUE);
    }
    if(mi->dwFlags & MOUSEEVENTF_LEFTDOWN)
    {

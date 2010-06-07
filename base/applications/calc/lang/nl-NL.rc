@@ -639,6 +639,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TIME_DAYS         "Dagen"
     IDS_TIME_HOURS        "Uren"
+    IDS_TIME_NANOSECONDS  "Nanoseconds"
     IDS_TIME_MICROSECONDS "Microseconden"
     IDS_TIME_MILLISECONDS "Milliseconden"
     IDS_TIME_MINUTES      "Minuten"

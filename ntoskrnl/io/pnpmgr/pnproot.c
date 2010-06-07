@@ -1085,7 +1085,6 @@ PnpRootPdoPnpControl(
 
         default:
             DPRINT1("IRP_MJ_PNP / Unknown minor function 0x%lx\n", IrpSp->MinorFunction);
-            Status = STATUS_NOT_IMPLEMENTED;
             break;
     }
 

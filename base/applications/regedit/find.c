@@ -684,7 +684,7 @@ BOOL FindNext(HWND hWnd)
         free(pszFoundValueName);
         SetFocus(g_pChildWnd->hListWnd);
     }
-    return fSuccess;
+    return fSuccess || s_bAbort;
 }
 
 static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -807,7 +807,7 @@ void FindDialog(HWND hWnd)
     if (DialogBoxParam(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_FIND),
         hWnd, FindDialogProc, 0) != 0)
     {
-        if (FindNext(hWnd) == FALSE)
+        if (!FindNext(hWnd))
         {
            TCHAR msg[128], caption[128];
 

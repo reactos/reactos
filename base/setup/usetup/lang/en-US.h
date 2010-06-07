@@ -93,7 +93,7 @@ static MUI_ENTRY enUSWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Press L to view the ReactOS Licensing Terms and Conditions",
+        "\x07  Press L to view the ReactOS Licensing Terms and Conditions.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1477,6 +1477,12 @@ MUI_ERROR enUSErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1613,7 +1619,7 @@ MUI_STRING enUSStrings[] =
     {STRING_TXTSETUPFAILED,
     "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Copying file: %S"},
+     "   Copying file: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Setup is copying files..."},
     {STRING_REGHIVEUPDATE,

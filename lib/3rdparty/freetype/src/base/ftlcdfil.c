@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for color filtering of subpixel bitmap glyphs (body).   */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006, 2008, 2009 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -161,7 +161,7 @@
 
 #ifdef USE_LEGACY
 
-  /* FIR filter used by the default and light filters */
+  /* intra-pixel filter used by the legacy filter */
   static void
   _ft_lcd_filter_legacy( FT_Bitmap*      bitmap,
                          FT_Render_Mode  mode,
@@ -181,7 +181,7 @@
     FT_UNUSED( library );
 
 
-    /* horizontal in-place FIR filter */
+    /* horizontal in-place intra-pixel filter */
     if ( mode == FT_RENDER_MODE_LCD && width >= 3 )
     {
       FT_Byte*  line = bitmap->buffer;
@@ -266,7 +266,7 @@
 #endif /* USE_LEGACY */
 
 
-  FT_EXPORT( FT_Error )
+  FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdFilter( FT_Library     library,
                            FT_LcdFilter   filter )
   {
@@ -296,13 +296,13 @@
 
 #elif defined( FT_FORCE_LIGHT_LCD_FILTER )
 
-      memcpy( library->lcd_weights, light_filter, 5 );
+      ft_memcpy( library->lcd_weights, light_filter, 5 );
       library->lcd_filter_func = _ft_lcd_filter_fir;
       library->lcd_extra       = 2;
 
 #else
 
-      memcpy( library->lcd_weights, default_filter, 5 );
+      ft_memcpy( library->lcd_weights, default_filter, 5 );
       library->lcd_filter_func = _ft_lcd_filter_fir;
       library->lcd_extra       = 2;
 
@@ -311,7 +311,7 @@
       break;
 
     case FT_LCD_FILTER_LIGHT:
-      memcpy( library->lcd_weights, light_filter, 5 );
+      ft_memcpy( library->lcd_weights, light_filter, 5 );
       library->lcd_filter_func = _ft_lcd_filter_fir;
       library->lcd_extra       = 2;
       break;
@@ -335,7 +335,7 @@
 
 #else /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
 
-  FT_EXPORT( FT_Error )
+  FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdFilter( FT_Library    library,
                            FT_LcdFilter  filter )
   {

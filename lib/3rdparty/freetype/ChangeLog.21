@@ -922,7 +922,7 @@
 	(tt_driver_class): Updated.
 
 	* src/truetype/ttgload.c (TT_Get_Metrics): Renamed to...
-	(tt_face_get_metrics): This. Provide version for FT_OPTIMIZE_MEMORY.
+	(tt_face_get_metrics): This.  Provide version for FT_OPTIMIZE_MEMORY.
 	Update all callers.
 	(Get_Advance_Widths): Replaced with...
 	(Get_Advance_WidthPtr): This.  Provide version for
@@ -1221,7 +1221,7 @@
 2004-11-16  Owen Taylor  <otaylor@redhat.com>
 
 	* builds/unix/freetype-config.in: Suppress -L$libdir for
-	/usr/lib64 as well as /usr/lib. (Reported by Dan Winship -
+	/usr/lib64 as well as /usr/lib.  (Reported by Dan Winship -
 	https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=139199)
 
 2004-11-11  Werner Lemberg  <wl@gnu.org>
@@ -3554,7 +3554,7 @@
 	    - the image and sbit cache are now abstract classes, that
 	      can be extended much more easily by client applications
 
-	    - better performance in certain areas. Further optimizations
+	    - better performance in certain areas.  Further optimizations
 	      to come shortly anyway...
 
 	    - the FTC_CMapCache_Lookup function has changed its signature,
@@ -9423,7 +9423,7 @@
 
 ----------------------------------------------------------------------------
 
-Copyright 2002, 2003, 2004, 2005, 2007 by
+Copyright 2002, 2003, 2004, 2005, 2007, 2008 by
 David Turner, Robert Wilhelm, and Werner Lemberg.
 
 This file is part of the FreeType project, and may only be used, modified,

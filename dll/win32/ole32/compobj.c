@@ -4156,7 +4156,6 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 	break;
 
     case DLL_PROCESS_DETACH:
-        OLEDD_UnInitialize();
         COMPOBJ_UninitProcess();
         RPC_UnregisterAllChannelHooks();
         COMPOBJ_DllList_Free();

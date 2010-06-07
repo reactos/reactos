@@ -1484,6 +1484,12 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Перезавантажити комп'ютер"
     },
     {
+        //ERROR_INSUFFICIENT_DISKSPACE,
+        "Not enough free space in the selected partition.\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
         NULL,
         NULL
     }
@@ -1620,7 +1626,7 @@ MUI_STRING ukUAStrings[] =
     {STRING_TXTSETUPFAILED,
     "Встановлювач не змiг знайти секцiю '%S' \nв файлi TXTSETUP.SIF.\n"},
     {STRING_COPYING,
-     "\xB3 Копiювання: %S"},
+     "   Копiювання: %S"},
     {STRING_SETUPCOPYINGFILES,
      "Встановлювач копiює файли..."},
     {STRING_REGHIVEUPDATE,

@@ -1605,25 +1605,25 @@ static BOOL FASTCALL MenuShowPopup(HWND hwndOwner, HMENU hmenu, UINT id, UINT fl
     if( flags & TPM_BOTTOMALIGN ) y -= height;
     if( flags & TPM_VCENTERALIGN ) y -= height / 2;
 
-    if( x + width > info.rcWork.right)
+    if( x + width > info.rcMonitor.right)
     {
         if( xanchor && x >= width - xanchor )
             x -= width - xanchor;
 
-        if( x + width > info.rcWork.right)
-            x = info.rcWork.right - width;
+        if( x + width > info.rcMonitor.right)
+            x = info.rcMonitor.right - width;
     }
-    if( x < info.rcWork.left ) x = info.rcWork.left;
+    if( x < info.rcMonitor.left ) x = info.rcMonitor.left;
 
-    if( y + height > info.rcWork.bottom)
+    if( y + height > info.rcMonitor.bottom)
     {
         if( yanchor && y >= height + yanchor )
             y -= height + yanchor;
 
-        if( y + height > info.rcWork.bottom)
-            y = info.rcWork.bottom - height;
+        if( y + height > info.rcMonitor.bottom)
+            y = info.rcMonitor.bottom - height;
     }
-    if( y < info.rcWork.top ) y = info.rcWork.top;
+    if( y < info.rcMonitor.top ) y = info.rcMonitor.top;
 
     /* NOTE: In Windows, top menu popup is not owned. */
     MenuInfo.Wnd = CreateWindowExW( 0, POPUPMENU_CLASS_ATOMW, NULL,

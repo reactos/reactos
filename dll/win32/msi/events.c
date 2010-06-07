@@ -226,7 +226,7 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument, 
                                    msi_dialog* dialog)
 {
-    LPWSTR path = msi_dup_property( package, argument );
+    LPWSTR path = msi_dup_property( package->db, argument );
     MSIRECORD *rec = MSI_CreateRecord( 1 );
     UINT r;
 
@@ -380,7 +380,13 @@ static UINT ControlEvent_DirectoryListUp(MSIPACKAGE *package, LPCWSTR argument,
 static UINT ControlEvent_ReinstallMode(MSIPACKAGE *package, LPCWSTR argument,
                                        msi_dialog *dialog)
 {
-    return MSI_SetPropertyW( package, szReinstallMode, argument );
+    return msi_set_property( package->db, szReinstallMode, argument );
+}
+
+static UINT ControlEvent_Reinstall( MSIPACKAGE *package, LPCWSTR argument,
+                                    msi_dialog *dialog )
+{
+    return msi_set_property( package->db, szReinstall, argument );
 }
 
 static UINT ControlEvent_ValidateProductID(MSIPACKAGE *package, LPCWSTR argument,
@@ -389,13 +395,13 @@ static UINT ControlEvent_ValidateProductID(MSIPACKAGE *package, LPCWSTR argument
     LPWSTR key, template;
     UINT ret = ERROR_SUCCESS;
 
-    template = msi_dup_property( package, szPIDTemplate );
-    key = msi_dup_property( package, szPIDKEY );
+    template = msi_dup_property( package->db, szPIDTemplate );
+    key = msi_dup_property( package->db, szPIDKEY );
 
     if (key && template)
     {
         FIXME( "partial stub: template %s key %s\n", debugstr_w(template), debugstr_w(key) );
-        ret = MSI_SetPropertyW( package, szProductID, key );
+        ret = msi_set_property( package->db, szProductID, key );
     }
     msi_free( template );
     msi_free( key );
@@ -417,6 +423,7 @@ static const struct _events Events[] = {
     { "DirectoryListUp",ControlEvent_DirectoryListUp },
     { "SelectionBrowse",ControlEvent_SpawnDialog },
     { "ReinstallMode",ControlEvent_ReinstallMode },
+    { "Reinstall",ControlEvent_Reinstall },
     { "ValidateProductID",ControlEvent_ValidateProductID },
     { NULL,NULL },
 };

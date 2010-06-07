@@ -460,19 +460,19 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 switch (activeTool)
                 {
-                    case 4:
+                    case TOOL_FILL:
                         SetCursor(hCurFill);
                         break;
-                    case 5:
+                    case TOOL_COLOR:
                         SetCursor(hCurColor);
                         break;
-                    case 6:
+                    case TOOL_ZOOM:
                         SetCursor(hCurZoom);
                         break;
-                    case 7:
+                    case TOOL_PEN:
                         SetCursor(hCurPen);
                         break;
-                    case 9:
+                    case TOOL_AIRBRUSH:
                         SetCursor(hCurAirbrush);
                         break;
                     default:
@@ -486,7 +486,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
             if (hwnd == hImageArea)
             {
-                if ((!drawing) || (activeTool == 5))
+                if ((!drawing) || (activeTool == TOOL_COLOR))
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
@@ -499,7 +499,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     undo();
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
-                if ((activeTool == 6) && (zoom < 8000))
+                if ((activeTool == TOOL_ZOOM) && (zoom < 8000))
                     zoomTo(zoom * 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
             }
             break;
@@ -507,7 +507,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_RBUTTONDOWN:
             if (hwnd == hImageArea)
             {
-                if ((!drawing) || (activeTool == 5))
+                if ((!drawing) || (activeTool == TOOL_COLOR))
                 {
                     SetCapture(hImageArea);
                     drawing = TRUE;
@@ -520,7 +520,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     undo();
                 }
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
-                if ((activeTool == 6) && (zoom > 125))
+                if ((activeTool == TOOL_ZOOM) && (zoom > 125))
                     zoomTo(zoom / 2, (short)LOWORD(lParam), (short)HIWORD(lParam));
             }
             break;
@@ -533,7 +533,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 endPaintingL(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom, fgColor,
                              bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
-                if (activeTool == 5)
+                if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
                         GetPixel(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom);
@@ -553,7 +553,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                 endPaintingR(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom, fgColor,
                              bgColor);
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
-                if (activeTool == 5)
+                if (activeTool == TOOL_COLOR)
                 {
                     int tempColor =
                         GetPixel(hDrawingDC, LOWORD(lParam) * 1000 / zoom, HIWORD(lParam) * 1000 / zoom);
@@ -568,16 +568,13 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         case WM_MOUSEMOVE:
             if (hwnd == hImageArea)
             {
-                if ((!drawing) || (activeTool <= 9))
+                short xNow = (short)LOWORD(lParam) * 1000 / zoom;
+                short yNow = (short)HIWORD(lParam) * 1000 / zoom;
+                if ((!drawing) || (activeTool <= TOOL_AIRBRUSH))
                 {
                     TRACKMOUSEEVENT tme;
 
-                    TCHAR coordStr[100];
-                    _stprintf(coordStr, _T("%d, %d"), (short)LOWORD(lParam) * 1000 / zoom,
-                              (short)HIWORD(lParam) * 1000 / zoom);
-                    SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
-
-                    if (activeTool == 6)
+                    if (activeTool == TOOL_ZOOM)
                     {
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
                         drawZoomFrame((short)LOWORD(lParam), (short)HIWORD(lParam));
@@ -588,32 +585,73 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     tme.hwndTrack = hImageArea;
                     tme.dwHoverTime = 0;
                     TrackMouseEvent(&tme);
+
+                    if (!drawing)
+                    {
+                        TCHAR coordStr[100];
+                        _stprintf(coordStr, _T("%d, %d"), xNow, yNow);
+                        SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
+                    }
                 }
                 if (drawing)
                 {
+                    /* values displayed in statusbar */
+                    short xRel = xNow - startX;
+                    short yRel = yNow - startY;
+                    /* freesel, rectsel and text tools always show numbers limited to fit into image area */
+                    if ((activeTool == TOOL_FREESEL) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_TEXT))
+                    {
+                        if (xRel < 0)
+                            xRel = (xNow < 0) ? -startX : xRel;
+                        else if (xNow > imgXRes)
+                            xRel = imgXRes-startX;
+                        if (yRel < 0)
+                            yRel = (yNow < 0) ? -startY : yRel;
+                        else if (yNow > imgYRes)
+                             yRel = imgYRes-startY;
+                    }
+                    /* rectsel and shape tools always show non-negative numbers when drawing */
+                    if ((activeTool == TOOL_RECTSEL) || (activeTool == TOOL_SHAPE))
+                    {
+                        if (xRel < 0)
+                            xRel = -xRel;
+                        if (yRel < 0)
+                            yRel =  -yRel;
+                    }
+                    /* while drawing, update cursor coordinates only for tools 3, 7, 8, 9, 14 */
+                    switch(activeTool)
+                    {
+                        case TOOL_RUBBER:
+                        case TOOL_PEN:
+                        case TOOL_BRUSH:
+                        case TOOL_AIRBRUSH:
+                        case TOOL_SHAPE:
+                        {
+                            TCHAR coordStr[100];
+                            _stprintf(coordStr, _T("%d, %d"), xNow, yNow);
+                            SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) coordStr);
+                            break;
+                        }
+                    }
                     if ((wParam & MK_LBUTTON) != 0)
                     {
-                        whilePaintingL(hDrawingDC, (short)LOWORD(lParam) * 1000 / zoom,
-                                       (short)HIWORD(lParam) * 1000 / zoom, fgColor, bgColor);
+                        whilePaintingL(hDrawingDC, xNow, yNow, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
-                        if ((activeTool >= 10) || (activeTool == 2))
+                        if ((activeTool >= TOOL_TEXT) || (activeTool == TOOL_RECTSEL) || (activeTool == TOOL_FREESEL))
                         {
                             TCHAR sizeStr[100];
-                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam) * 1000 / zoom - startX,
-                                      (short)HIWORD(lParam) * 1000 / zoom - startY);
+                            _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
                     }
                     if ((wParam & MK_RBUTTON) != 0)
                     {
-                        whilePaintingR(hDrawingDC, (short)LOWORD(lParam) * 1000 / zoom,
-                                       (short)HIWORD(lParam) * 1000 / zoom, fgColor, bgColor);
+                        whilePaintingR(hDrawingDC, xNow, yNow, fgColor, bgColor);
                         SendMessage(hImageArea, WM_PAINT, 0, 0);
-                        if (activeTool >= 10)
+                        if (activeTool >= TOOL_TEXT)
                         {
                             TCHAR sizeStr[100];
-                            _stprintf(sizeStr, _T("%d x %d"), (short)LOWORD(lParam) * 1000 / zoom - startX,
-                                      (short)HIWORD(lParam) * 1000 / zoom - startY);
+                            _stprintf(sizeStr, _T("%d x %d"), xRel, yRel);
                             SendMessage(hStatusBar, SB_SETTEXT, 2, (LPARAM) sizeStr);
                         }
                     }
@@ -623,7 +661,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_MOUSELEAVE:
             SendMessage(hStatusBar, SB_SETTEXT, 1, (LPARAM) _T(""));
-            if (activeTool == 6)
+            if (activeTool == TOOL_ZOOM)
                 SendMessage(hImageArea, WM_PAINT, 0, 0);
             break;
 
@@ -747,7 +785,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     /* remove selection window and already painted content using undo(),
                     paint Rect for rectangular selections and nothing for freeform selections */
                     undo();
-                    if (activeTool == 2)
+                    if (activeTool == TOOL_RECTSEL)
                     {
                         newReversible();
                         Rect(hDrawingDC, rectSel_dest[0], rectSel_dest[1], rectSel_dest[2] + rectSel_dest[0],
@@ -756,7 +794,7 @@ WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                     break;
                 }
                 case IDM_EDITSELECTALL:
-                    if (activeTool == 2)
+                    if (activeTool == TOOL_RECTSEL)
                     {
                         startPaintingL(hDrawingDC, 0, 0, fgColor, bgColor);
                         whilePaintingL(hDrawingDC, imgXRes, imgYRes, fgColor, bgColor);

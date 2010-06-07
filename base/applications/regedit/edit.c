@@ -276,7 +276,6 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
 {
     WNDPROC oldproc;
     HWND hwndValue;
-    int len;
     TCHAR ValueString[32];
     LPTSTR Remainder;
     DWORD Base;
@@ -319,7 +318,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 dwordEditMode = EDIT_MODE_HEX;
                 if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
                 {
-                    if ((len = GetWindowTextLength(hwndValue)))
+                    if (GetWindowTextLength(hwndValue))
                     {
                         if (GetWindowText(hwndValue, ValueString, 32))
                         {
@@ -339,7 +338,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
                 dwordEditMode = EDIT_MODE_DEC;
                 if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
                 {
-                    if ((len = GetWindowTextLength(hwndValue)))
+                    if (GetWindowTextLength(hwndValue))
                     {
                         if (GetWindowText(hwndValue, ValueString, 32))
                         {
@@ -356,7 +355,7 @@ INT_PTR CALLBACK modify_dword_dlgproc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LP
         case IDOK:
             if ((hwndValue = GetDlgItem(hwndDlg, IDC_VALUE_DATA)))
             {
-                if ((len = GetWindowTextLength(hwndValue)))
+                if (GetWindowTextLength(hwndValue))
                 {
                     if (!GetWindowText(hwndValue, ValueString, 32))
                     {

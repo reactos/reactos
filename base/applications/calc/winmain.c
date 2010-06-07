@@ -861,18 +861,18 @@ static INT_PTR CALLBACK DlgStatProc(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp)
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
             if (n == (DWORD)-1)
                 return TRUE;
-			PostMessage(GetParent(hWnd), WM_LOAD_STAT, (WPARAM)n, 0);
+            PostMessage(GetParent(hWnd), WM_LOAD_STAT, (WPARAM)n, 0);
             return TRUE;
         case IDC_BUTTON_CD:
             n = SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_GETCURSEL, 0, 0);
             if (n == (DWORD)-1)
                 return TRUE;
-			SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_DELETESTRING, (WPARAM)n, 0);
+            SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_DELETESTRING, (WPARAM)n, 0);
             update_n_stats_items(hWnd, buffer);
             delete_stat_item(n);
             return TRUE;
         case IDC_BUTTON_CAD:
-			SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_RESETCONTENT, 0, 0);
+            SendDlgItemMessage(hWnd, IDC_LIST_STAT, LB_RESETCONTENT, 0, 0);
             clean_stat_list();
             update_n_stats_items(hWnd, buffer);
             return TRUE;
@@ -910,20 +910,20 @@ static WPARAM idm_2_idc(int idm)
 static void CopyMemToClipboard(void *ptr)
 {
     if(OpenClipboard(NULL)) {
-	    HGLOBAL  clipbuffer;
-	    TCHAR   *buffer;
+        HGLOBAL  clipbuffer;
+        TCHAR   *buffer;
 
-	    EmptyClipboard();
-	    clipbuffer = GlobalAlloc(GMEM_DDESHARE, (_tcslen(ptr)+1)*sizeof(TCHAR));
-	    buffer = (TCHAR *)GlobalLock(clipbuffer);
-	    _tcscpy(buffer, ptr);
-	    GlobalUnlock(clipbuffer);
+        EmptyClipboard();
+        clipbuffer = GlobalAlloc(GMEM_DDESHARE, (_tcslen(ptr)+1)*sizeof(TCHAR));
+        buffer = (TCHAR *)GlobalLock(clipbuffer);
+        _tcscpy(buffer, ptr);
+        GlobalUnlock(clipbuffer);
 #ifdef UNICODE
-	    SetClipboardData(CF_UNICODETEXT,clipbuffer);
+        SetClipboardData(CF_UNICODETEXT,clipbuffer);
 #else
-	    SetClipboardData(CF_TEXT,clipbuffer);
+        SetClipboardData(CF_TEXT,clipbuffer);
 #endif
-	    CloseClipboard();
+        CloseClipboard();
     }
 }
 
@@ -942,16 +942,16 @@ static char *ReadClipboard(void)
     char *buffer = NULL;
 
     if (OpenClipboard(NULL)) {
-	    HANDLE  hData = GetClipboardData(CF_TEXT);
+        HANDLE  hData = GetClipboardData(CF_TEXT);
         char   *fromClipboard;
 
         if (hData != NULL) {
             fromClipboard = (char *)GlobalLock(hData);
             if (strlen(fromClipboard))
-    	        buffer = _strupr(_strdup(fromClipboard));
-	        GlobalUnlock( hData );
+                buffer = _strupr(_strdup(fromClipboard));
+            GlobalUnlock( hData );
         }
-	    CloseClipboard();
+        CloseClipboard();
     }
     return buffer;
 }
@@ -1110,20 +1110,20 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
 {
     TCHAR text[64];
     HMENU hMenu = CreatePopupMenu();
-    DWORD idm;
+    BOOL idm;
 
     LoadString(calc.hInstance, IDS_QUICKHELP, text, SIZEOF(text));
     AppendMenu(hMenu, MF_STRING | MF_ENABLED, IDM_HELP_HELP, text);
-    idm = (DWORD)TrackPopupMenu(hMenu,
-                                TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
-                                LOWORD(lp),
-                                HIWORD(lp),
-                                0,
-                                hWnd,
-                                NULL);
+    idm = TrackPopupMenu( hMenu,
+                          TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RETURNCMD | TPM_RIGHTBUTTON,
+                          LOWORD(lp),
+                          HIWORD(lp),
+                          0,
+                          hWnd,
+                          NULL);
     DestroyMenu(hMenu);
 #ifndef DISABLE_HTMLHELP_SUPPORT
-    if (idm != 0) {
+    if (idm) {
         HH_POPUP popup;
 
         memset(&popup, 0, sizeof(popup));
@@ -1139,6 +1139,8 @@ static void handle_context_menu(HWND hWnd, WPARAM wp, LPARAM lp)
         popup.idString = GetWindowLongPtr((HWND)wp, GWL_ID);
         HtmlHelp((HWND)wp, HTMLHELP_PATH("/popups.txt"), HH_DISPLAY_TEXT_POPUP, (DWORD_PTR)&popup);
     }
+#else
+    (void)idm;
 #endif
 } 
 
