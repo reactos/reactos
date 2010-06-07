@@ -533,16 +533,70 @@ HalpGetPciBridgeConfig(IN ULONG PciType,
                        IN PUCHAR MaxPciBus)
 {
     /* Not yet implemented */
-    if (!WarningsGiven[3]++)  DbgPrint("HAL: Not checking for PCI-to-PCI Bridges. Your hardware may malfunction!\n");
+    if (!WarningsGiven[2]++)  DbgPrint("HAL: Not checking for PCI-to-PCI Bridges. Your hardware may malfunction!\n");
     return FALSE; 
 }
 
 VOID
 NTAPI
-HalpFixupPciSupportedRanges(IN ULONG MaxBuses)
+HalpFixupPciSupportedRanges(IN ULONG BusCount)
 {
-    /* Not yet implemented */
-    if (!WarningsGiven[4]++) DbgPrint("HAL: Not adjusting Bridge-to-Child PCI Address Ranges. Your hardware may malfunction!\n");  
+    ULONG i;
+    PBUS_HANDLER Bus, ParentBus;
+
+    /* Loop all buses */
+    for (i = 0; i < BusCount; i++)
+    {
+        /* Get PCI bus handler */
+        Bus = HalHandlerForBus(PCIBus, i);
+        
+        /* Loop all parent buses */
+        ParentBus = Bus->ParentHandler;
+        while (ParentBus)
+        {
+            /* Should merge addresses */
+            if (!WarningsGiven[0]++) DPRINT1("Found parent bus (indicating PCI Bridge). This is not supported!\n");
+
+            /* Check the next parent */
+            ParentBus = ParentBus->ParentHandler;
+        }
+    }
+
+    /* Loop all buses again */
+    for (i = 0; i < BusCount; i++)
+    {
+        /* Get PCI bus handler */
+        Bus = HalHandlerForBus(PCIBus, i);
+        
+        /* Check if this is a PCI 2.2 Bus with Subtractive Decode */
+        if (!((PPCIPBUSDATA)Bus->BusData)->Subtractive)
+        {
+            /* Loop all parent buses */
+            ParentBus = Bus->ParentHandler;
+            while (ParentBus)
+            {
+                /* But check only PCI parent buses specifically */
+                if (ParentBus->InterfaceType == PCIBus)
+                {
+                    /* Should trim addresses */
+                    if (!WarningsGiven[1]++) DPRINT1("Found parent PCI Bus (indicating PCI-to-PCI Bridge). This is not supported!\n");
+                }
+            
+                /* Check the next parent */
+                ParentBus = ParentBus->ParentHandler;
+            }
+        }
+    }
+
+    /* Loop buses one last time */
+    for (i = 0; i < BusCount; i++)
+    {
+        /* Get the PCI bus handler */
+        Bus = HalHandlerForBus(PCIBus, i);
+        
+        /* Sort and combine (trim) bus address range information */
+        DPRINT("Warning: Bus addresses not being optimized!\n");
+    }
 }
 #endif
 
@@ -671,12 +725,12 @@ HalpInitializePciBus(VOID)
                         if (PciData->u.type1.InterruptLine < 16)
                         {
                             /* Is this an IDE device? */
-                            DbgPrint("HAL: Found PCI device with IRQ line\n");
                             if (!HalpIsIdeDevice(PciData))
                             {
                                 /* We'll mask out this interrupt then */
-                                DbgPrint("HAL: Device is not an IDE Device. Should be masking IRQ %d! This is not supported!\n",
-                                         PciData->u.type1.InterruptLine);
+                                DPRINT1("HAL: Device %lx:%lx is not an IDE Device. Should be masking IRQ %d! This is not supported!\n",
+                                        PciData->VendorID, PciData->DeviceID,
+                                        PciData->u.type1.InterruptLine);
                                 HalpPciIrqMask |= (1 << PciData->u.type1.InterruptLine);
                             }
                         }
@@ -722,7 +776,8 @@ HalpInitializePciBus(VOID)
                                              HALP_CARD_FEATURE_FULL_DECODE))
                     {
                         /* We'll do chipset checks later */
-                        DbgPrint("HAL: Recognized a PCI Card with Extended Address Decoding. This is not supported!\n");
+                        DPRINT1("Your %lx:%lx PCI device has Extended Address Decoding. This is not supported!\n",
+                                PciData->VendorID, PciData->DeviceID);
                         ExtendedAddressDecoding = TRUE;
                     }
                 }
