@@ -486,6 +486,18 @@ HalpHardwareInterruptLevel(
 );
 
 //
+// Feature flags
+//
+#define HALP_CARD_FEATURE_FULL_DECODE   0x0001
+
+//
+// Match Flags
+//
+#define HALP_CHECK_CARD_REVISION_ID     0x10000
+#define HALP_CHECK_CARD_SUBVENDOR_ID    0x20000
+#define HALP_CHECK_CARD_SUBSYSTEM_ID    0x40000
+
+//
 // Mm PTE/PDE to Hal PTE/PDE
 //
 #define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)

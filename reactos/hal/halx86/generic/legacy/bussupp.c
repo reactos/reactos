@@ -352,8 +352,77 @@ HalpIsRecognizedCard(IN PPCI_REGISTRY_INFO_INTERNAL PciRegistryInfo,
                      IN PPCI_COMMON_CONFIG PciData,
                      IN ULONG Flags)
 {
-    /* Not yet implemented */
-    if (!WarningsGiven[1]++) DbgPrint("HAL: Not checking for PCI Cards with Extended Addressing. Your hardware may malfunction!\n");
+    ULONG ElementCount, i;
+    PPCI_CARD_DESCRIPTOR CardDescriptor;
+    
+    /* How many PCI Cards that we know about? */
+    ElementCount = PciRegistryInfo->ElementCount;
+    if (!ElementCount) return FALSE;
+
+    /* Loop all descriptors */
+    CardDescriptor = &PciRegistryInfo->CardList[0];
+    for (i = 0; i < ElementCount; i++, CardDescriptor++)
+    {
+        /* Check for flag match */
+        if (CardDescriptor->Flags != Flags) continue;
+        
+        /* Check for VID-PID match */
+        if ((CardDescriptor->VendorID != PciData->VendorID) ||
+            (CardDescriptor->DeviceID != PciData->DeviceID))
+        {
+            /* Skip */
+            continue;
+        }
+
+        /* Check for revision match, if requested */
+        if ((CardDescriptor->Flags & HALP_CHECK_CARD_REVISION_ID) &&
+            (CardDescriptor->RevisionID != PciData->RevisionID))
+        {
+            /* Skip */
+            continue;
+        }
+        
+        /* Check what kind of device this is */
+        switch (PCI_CONFIGURATION_TYPE(PciData))
+        {
+            /* CardBUS Bridge */
+            case PCI_CARDBUS_BRIDGE_TYPE:
+                
+                /* This means the real device header is in the device-specific data */
+                PciData = (PPCI_COMMON_CONFIG)PciData->DeviceSpecific;
+                
+            /* Normal PCI device */
+            case PCI_DEVICE_TYPE:
+
+                /* Check for subvendor match, if requested */
+                if ((CardDescriptor->Flags & HALP_CHECK_CARD_SUBVENDOR_ID) &&
+                    (CardDescriptor->SubsystemVendorID != PciData->u.type0.SubVendorID))
+                {
+                    /* Skip */
+                    continue;
+                }
+                
+                /* Check for subsystem match, if requested */
+                if ((CardDescriptor->Flags & HALP_CHECK_CARD_SUBSYSTEM_ID) &&
+                    (CardDescriptor->SubsystemID != PciData->u.type0.SubSystemID))
+                {
+                    /* Skip */
+                    continue;
+                }
+                
+                /* You made it! */
+                return TRUE;
+                
+            /* PCI Bridge -- don't bother */
+            case PCI_BRIDGE_TYPE:
+            default:
+             
+                /* Recognize it */
+                return TRUE;
+        }
+    }
+    
+    /* This means the card isn't recognized */
     return FALSE;
 }
 
@@ -598,7 +667,9 @@ HalpInitializePciBus(VOID)
                 if (!ExtendedAddressDecoding)
                 {
                     /* Check for it */
-                    if (HalpIsRecognizedCard(PciRegistryInfo, PciData, 1))
+                    if (HalpIsRecognizedCard(PciRegistryInfo,
+                                             PciData,
+                                             HALP_CARD_FEATURE_FULL_DECODE))
                     {
                         /* We'll do chipset checks later */
                         DbgPrint("HAL: Recognized a PCI Card with Extended Address Decoding. This is not supported!\n");
