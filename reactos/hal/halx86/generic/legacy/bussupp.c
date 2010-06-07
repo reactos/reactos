@@ -1152,50 +1152,75 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
 
 BOOLEAN
 NTAPI
-HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
-                        IN ULONG BusNumber,
-                        IN PHYSICAL_ADDRESS BusAddress,
-                        IN OUT PULONG AddressSpace,
-                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
-{
-    /* Translation is easy */
-    TranslatedAddress->QuadPart = BusAddress.QuadPart;
-    return TRUE;
-}
-
-ULONG
-NTAPI
-HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
-                                  IN ULONG BusInterruptLevel,
-                                  IN ULONG BusInterruptVector,
-                                  OUT PKIRQL Irql,
-                                  OUT PKAFFINITY Affinity)
-{
-    ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
-    *Irql = (KIRQL)VECTOR2IRQL(Vector);
-    *Affinity = 0xFFFFFFFF;
-    return Vector;
-}
-
-BOOLEAN
-NTAPI
-HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
+HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                               IN OUT PULONG AddressSpace,
                               OUT PPHYSICAL_ADDRESS TranslatedAddress,
                               IN OUT PULONG_PTR Context,
                               IN BOOLEAN NextBus)
 {
+    PHAL_BUS_HANDLER BusHandler;
+    PBUS_HANDLER Handler;
+    PLIST_ENTRY NextEntry;
+    ULONG ContextValue;
+
     /* Make sure we have a context */
     if (!Context) return FALSE;
-
-    /* If we have data in the context, then this shouldn't be a new lookup */
-    if ((*Context) && (NextBus == TRUE)) return FALSE;
-
-    /* Return bus data */
-    TranslatedAddress->QuadPart = BusAddress.QuadPart;
-
-    /* Set context value and return success */
-    *Context = 1;
+    ASSERT((*Context) || (NextBus == TRUE));
+    
+    /* Read the context */
+    ContextValue = *Context;
+    
+    /* Find the bus handler */
+    Handler = HalpContextToBusHandler(ContextValue);
+    if (!Handler) return FALSE;
+    
+    /* Check if this is an ongoing lookup */
+    if (NextBus)
+    {
+        /* Get the HAL bus handler */
+        BusHandler = CONTAINING_RECORD(Handler, HAL_BUS_HANDLER, Handler);
+        NextEntry = &BusHandler->AllHandlers;
+        
+        /* Get the next one if we were already with one */
+        if (ContextValue) NextEntry = NextEntry->Flink;
+        
+        /* Start scanning */
+        while (TRUE)
+        {
+            /* Check if this is the last one */
+            if (NextEntry == &HalpAllBusHandlers)
+            {
+                /* Quit */
+                *Context = 1;
+                return FALSE;
+            }
+            
+            /* Call this translator */
+            BusHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
+            if (HalTranslateBusAddress(BusHandler->Handler.InterfaceType,
+                                       BusHandler->Handler.BusNumber,
+                                       BusAddress,
+                                       AddressSpace,
+                                       TranslatedAddress)) break;
+            
+            /* Try the next one */
+            NextEntry = NextEntry->Flink;
+        }
+        
+        /* If we made it, we're done */
+        *Context = (ULONG_PTR)Handler;
+        return TRUE;
+    }
+    
+    /* Try the first one through */
+    if (!HalTranslateBusAddress(Handler->InterfaceType,
+                                Handler->BusNumber,
+                                BusAddress,
+                                AddressSpace,
+                                TranslatedAddress)) return FALSE;
+    
+    /* Remember for next time */
+    *Context = (ULONG_PTR)Handler;
     return TRUE;
 }
 

@@ -201,6 +201,41 @@ HaliReferenceHandlerForConfigSpace(IN BUS_DATA_TYPE ConfigType,
     return HalpLookupHandler(HalpConfigTable, ConfigType, BusNumber, TRUE);
 }
 
+PBUS_HANDLER
+NTAPI
+HalpContextToBusHandler(IN ULONG_PTR ContextValue)
+{
+    PLIST_ENTRY NextEntry;
+    PHAL_BUS_HANDLER BusHandler, ThisHandler;
+    
+    /* Start lookup */
+    NextEntry = HalpAllBusHandlers.Flink;
+    ThisHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
+    if (ContextValue)
+    {
+        /* If the list is empty, quit */
+        if (IsListEmpty(&HalpAllBusHandlers)) return NULL;
+
+        /* Otherwise, scan the list */
+        BusHandler = CONTAINING_RECORD(ContextValue, HAL_BUS_HANDLER, Handler);
+        do
+        {
+            /* Check if we've reached the right one */
+            ThisHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
+            if (ThisHandler == BusHandler) break;
+            
+            /* Try the next one */
+            NextEntry = NextEntry->Flink;
+        } while (NextEntry != &HalpAllBusHandlers);
+    }
+    
+    /* If we looped back to the end, we didn't find anything */
+    if (NextEntry == &HalpAllBusHandlers) return NULL;
+    
+    /* Otherwise return the handler */
+    return &ThisHandler->Handler;
+}
+
 #ifndef _MINIHAL_
 NTSTATUS
 NTAPI
@@ -408,13 +443,7 @@ HalpInitBusHandler(VOID)
 #endif
     HalPciAssignSlotResources = HalpAssignSlotResources;
     HalPciTranslateBusAddress = HaliTranslateBusAddress; /* PCI Driver can override */
-    /* FIXME: Fix later */
-#if 0
     if (!HalFindBusAddressTranslation) HalFindBusAddressTranslation = HaliFindBusAddressTranslation;
-#else
-    /* These should be written by the PCI driver later, but we give defaults */
-    HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
-#endif
 }
 
 /* EOF */

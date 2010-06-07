@@ -376,16 +376,6 @@ HalpTranslateBusAddress(
     OUT PPHYSICAL_ADDRESS TranslatedAddress
 );
 
-BOOLEAN
-NTAPI
-HaliTranslateBusAddress(
-    IN INTERFACE_TYPE InterfaceType,
-    IN ULONG BusNumber,
-    IN PHYSICAL_ADDRESS BusAddress,
-    IN OUT PULONG AddressSpace,
-    OUT PPHYSICAL_ADDRESS TranslatedAddress
-);
-
 NTSTATUS
 NTAPI
 HalpAssignSlotResources(
@@ -416,6 +406,26 @@ HalpRegisterPciDebuggingDeviceInfo(
 );
 
 /* LEGACY */
+
+BOOLEAN
+NTAPI
+HaliTranslateBusAddress(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+BOOLEAN
+NTAPI
+HaliFindBusAddressTranslation(
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress,
+    IN OUT PULONG_PTR Context,
+    IN BOOLEAN NextBus
+);
 
 NTSTATUS
 NTAPI
@@ -457,6 +467,12 @@ VOID
 NTAPI
 HalpInitBusHandler(
     VOID
+);
+
+PBUS_HANDLER
+NTAPI
+HalpContextToBusHandler(
+    IN ULONG_PTR ContextValue
 );
 
 PBUS_HANDLER
@@ -534,5 +550,6 @@ extern ULONG HalpBusType;
 extern BOOLEAN HalpPCIConfigInitialized;
 extern BUS_HANDLER HalpFakePciBusHandler;
 extern ULONG HalpMinPciBus, HalpMaxPciBus;
+extern LIST_ENTRY HalpAllBusHandlers;
 
 /* EOF */
