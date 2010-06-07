@@ -361,9 +361,52 @@ BOOLEAN
 NTAPI
 HalpIsIdeDevice(IN PPCI_COMMON_CONFIG PciData)
 {
-    /* Not yet implemented */
-    if (!WarningsGiven[2]++) DbgPrint("HAL: Not checking for PCI Cards that are IDE devices. Your hardware may malfunction!\n");
-    return FALSE;  
+    /* Simple test first */
+    if ((PciData->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+        (PciData->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
+    {
+        /* The device is nice enough to admit it */
+        return TRUE;
+    }
+    
+    /* Symphony 82C101 */
+    if (PciData->VendorID == 0x1C1C) return TRUE;
+    
+    /* ALi MS4803 or M5219 */
+    if ((PciData->VendorID == 0x10B9) &&
+        ((PciData->DeviceID == 0x5215) || (PciData->DeviceID == 0x5219)))
+    {
+        return TRUE;
+    }
+    
+    /* Appian Technology */
+    if ((PciData->VendorID == 0x1097) && (PciData->DeviceID == 0x38)) return TRUE;
+    
+    /* Compaq Triflex Dual EIDE Controller */
+    if ((PciData->VendorID == 0xE11) && (PciData->DeviceID == 0xAE33)) return TRUE;
+    
+    /* Micron PC Tech RZ1000 */
+    if ((PciData->VendorID == 0x1042) && (PciData->DeviceID == 0x1000)) return TRUE;
+    
+    /* SiS 85C601 or 5513 [IDE] */
+    if ((PciData->VendorID == 0x1039) &&
+        ((PciData->DeviceID == 0x601) || (PciData->DeviceID == 0x5513)))
+    {
+        return TRUE;
+    }
+    
+    /* Symphony Labs W83769F */
+    if ((PciData->VendorID == 0x10AD) &&
+        ((PciData->DeviceID == 0x1) || (PciData->DeviceID == 0x150)))
+    {
+        return TRUE;
+    }
+    
+    /* UMC UM8673F */
+    if ((PciData->VendorID == 0x1060) && (PciData->DeviceID == 0x101)) return TRUE;
+    
+    /* You've survived */
+    return FALSE;
 }
 
 BOOLEAN
