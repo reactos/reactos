@@ -881,6 +881,24 @@ HalpInitializePciBus(VOID)
 
 VOID
 NTAPI
+HalpInitNonBusHandler(VOID)
+{
+    /* These should be written by the PCI driver later, but we give defaults */
+    HalPciTranslateBusAddress = HalpTranslateBusAddress;
+    HalPciAssignSlotResources = HalpAssignSlotResources;
+    HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
+}
+
+VOID
+NTAPI
+HalpInitBusHandlers(VOID)
+{
+    /* On ACPI, we only have a fake PCI bus to worry about */
+    HalpInitNonBusHandler();
+}
+
+VOID
+NTAPI
 HalpBuildAddressMap(VOID)
 {
     /* ACPI is magic baby */

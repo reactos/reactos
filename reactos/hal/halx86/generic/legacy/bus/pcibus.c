@@ -14,6 +14,8 @@
 
 /* GLOBALS *******************************************************************/
 
+ULONG HalpBusType;
+
 PCI_TYPE1_CFG_CYCLE_BITS HalpPciDebuggingDevice[2] = {{{{0}}}};
 
 BOOLEAN HalpPCIConfigInitialized;

@@ -155,7 +155,7 @@ HalInitSystem(IN ULONG BootPhase,
     else if (BootPhase == 1)
     {
         /* Initialize bus handlers */
-        HalpInitBusHandler();
+        HalpInitBusHandlers();
 
 #ifndef _MINIHAL_
         /* Enable IRQ 0 */

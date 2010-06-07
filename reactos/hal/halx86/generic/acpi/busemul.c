@@ -1,22 +1,20 @@
 /*
  * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/bus/halbus.c
- * PURPOSE:         Bus Support Routines
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * LICENSE:         BSD - See COPYING.ARM in the top level directory
+ * FILE:            hal/halx86/generic/acpi/busemul.c
+ * PURPOSE:         ACPI HAL Bus Handler Emulation Code
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS *******************************************************************/
+/* GLOBALS ********************************************************************/
 
-ULONG HalpBusType;
-
-/* PRIVATE FUNCTIONS *********************************************************/
+/* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
 NTAPI
@@ -83,11 +81,11 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
 
 ULONG
 NTAPI
-HalpGetSystemInterruptVector(IN ULONG BusNumber,
-                             IN ULONG BusInterruptLevel,
-                             IN ULONG BusInterruptVector,
-                             OUT PKIRQL Irql,
-                             OUT PKAFFINITY Affinity)
+HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
+                                 IN ULONG BusInterruptLevel,
+                                 IN ULONG BusInterruptVector,
+                                 OUT PKIRQL Irql,
+                                 OUT PKAFFINITY Affinity)
 {
     ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
     *Irql = (KIRQL)VECTOR2IRQL(Vector);
@@ -250,11 +248,11 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                       OUT PKAFFINITY Affinity)
 {
     /* Call the system bus translator */
-    return HalpGetSystemInterruptVector(BusNumber,
-                                        BusInterruptLevel,
-                                        BusInterruptVector,
-                                        Irql,
-                                        Affinity);
+    return HalpGetSystemInterruptVector_Acpi(BusNumber,
+                                             BusInterruptLevel,
+                                             BusInterruptVector,
+                                             Irql,
+                                             Affinity);
 }
 
 /*

@@ -7,14 +7,6 @@
 		<define name="_NTHALDLL_" />
 		<define name="_NTHAL_" />
 		<directory name="generic">
-			<directory name="bus">
-				<file>bushndlr.c</file>
-				<file>isabus.c</file>
-				<file>halbus.c</file>
-				<file>pcibus.c</file>
-				<file>pcidata.c</file>
-				<file>sysbus.c</file>
-			</directory>
 			<file>beep.c</file>
 			<file>cmos.c</file>
 			<file>display.c</file>
