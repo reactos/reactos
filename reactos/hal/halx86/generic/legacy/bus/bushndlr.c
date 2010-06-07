@@ -407,13 +407,12 @@ HalpInitBusHandler(VOID)
     HalDereferenceBusHandler = HaliDereferenceBusHandler;
 #endif
     HalPciAssignSlotResources = HalpAssignSlotResources;
+    HalPciTranslateBusAddress = HaliTranslateBusAddress; /* PCI Driver can override */
     /* FIXME: Fix later */
 #if 0
-    HalPciTranslateBusAddress = HaliTranslateBusAddress;
     if (!HalFindBusAddressTranslation) HalFindBusAddressTranslation = HaliFindBusAddressTranslation;
 #else
     /* These should be written by the PCI driver later, but we give defaults */
-    HalPciTranslateBusAddress = HalpTranslateBusAddress;
     HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
 #endif
 }

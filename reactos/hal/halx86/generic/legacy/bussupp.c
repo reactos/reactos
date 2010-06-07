@@ -1196,6 +1196,37 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     return TRUE;
 }
 
+BOOLEAN
+NTAPI
+HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
+                        IN ULONG BusNumber,
+                        IN PHYSICAL_ADDRESS BusAddress,
+                        IN OUT PULONG AddressSpace,
+                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
+{
+    PBUS_HANDLER Handler;
+    BOOLEAN Status;
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
+    if (!(Handler) || !(Handler->TranslateBusAddress))
+    {
+        DPRINT1("No translator!\n");
+        return FALSE;
+    }
+    
+    /* Do the assignment */
+    Status = Handler->TranslateBusAddress(Handler,
+                                          Handler,
+                                          BusAddress,
+                                          AddressSpace,
+                                          TranslatedAddress);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
@@ -1423,9 +1454,12 @@ HalTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     }
     else
     {
-        /* Translation is easy */
-        TranslatedAddress->QuadPart = BusAddress.QuadPart;
-        return TRUE;
+        /* Call the bus handler */
+        return HaliTranslateBusAddress(InterfaceType,
+                                       BusNumber,
+                                       BusAddress,
+                                       AddressSpace,
+                                       TranslatedAddress);
     }
 }
 

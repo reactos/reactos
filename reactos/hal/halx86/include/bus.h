@@ -368,7 +368,7 @@ HalpInitializePciStubs(
 
 BOOLEAN
 NTAPI
-HalpTranslateBusAddress(
+HaliTranslateBusAddress(
     IN INTERFACE_TYPE InterfaceType,
     IN ULONG BusNumber,
     IN PHYSICAL_ADDRESS BusAddress,
