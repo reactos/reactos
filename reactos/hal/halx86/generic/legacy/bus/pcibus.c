@@ -507,6 +507,55 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     return Len;
 }
 
+ULONG
+NTAPI
+HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN ULONG BusInterruptLevel,
+                      IN ULONG BusInterruptVector,
+                      OUT PKIRQL Irql,
+                      OUT PKAFFINITY Affinity)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return 0;
+}
+
+VOID
+NTAPI
+HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciData)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+        
+VOID
+NTAPI
+HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciNewData,
+                   IN PPCI_COMMON_CONFIG PciOldData)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+NTSTATUS
+NTAPI
+HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN PCI_SLOT_NUMBER PciSlot,
+                      OUT PSUPPORTED_RANGE *Range)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 HalpSetupPciDeviceForDebugging(IN PVOID LoaderBlock,
@@ -558,6 +607,18 @@ PciSize(ULONG Base, ULONG Mask)
     ULONG Size = Mask & Base; /* Find the significant bits */
     Size = Size & ~(Size - 1); /* Get the lowest of them to find the decode size */
     return Size;
+}
+
+NTSTATUS
+NTAPI
+HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
+                          IN PBUS_HANDLER RootHandler,
+                          IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList)
+{
+    /* Not yet supported */
+    DbgPrint("HAL: PCI Resource List Adjustment not implemented!");
+    while (TRUE);
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -1062,4 +1123,6 @@ HalpInitializePciStubs(VOID)
     /* We're done */
     HalpPCIConfigInitialized = TRUE;
 }
+
+/* EOF */
 
