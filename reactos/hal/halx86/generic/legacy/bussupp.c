@@ -1163,10 +1163,10 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
 ULONG
 NTAPI
 HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
-                                 IN ULONG BusInterruptLevel,
-                                 IN ULONG BusInterruptVector,
-                                 OUT PKIRQL Irql,
-                                 OUT PKAFFINITY Affinity)
+                                  IN ULONG BusInterruptLevel,
+                                  IN ULONG BusInterruptVector,
+                                  OUT PKIRQL Irql,
+                                  OUT PKAFFINITY Affinity)
 {
     ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
     *Irql = (KIRQL)VECTOR2IRQL(Vector);
@@ -1314,12 +1314,38 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                       OUT PKIRQL Irql,
                       OUT PKAFFINITY Affinity)
 {
-    /* Call the system bus translator */
-    return HalpGetSystemInterruptVector_Acpi(BusNumber,
-                                             BusInterruptLevel,
-                                             BusInterruptVector,
-                                             Irql,
-                                             Affinity);
+    PBUS_HANDLER Handler;
+    ULONG Vector;
+    PAGED_CODE();
+    
+    /* Defaults */
+    *Irql = 0;
+    *Affinity = 0;
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Vector = Handler->GetInterruptVector(Handler,
+                                         Handler,
+                                         BusInterruptLevel,
+                                         BusInterruptVector,
+                                         Irql,
+                                         Affinity);
+    if ((Vector != IRQ2VECTOR(BusInterruptLevel)) ||
+        (*Irql != VECTOR2IRQL(IRQ2VECTOR(BusInterruptLevel))))
+    {
+        DPRINT1("Returning IRQL %lx, Vector %lx for Level/Vector: %lx/%lx\n",
+                *Irql, Vector, BusInterruptLevel, BusInterruptVector);
+        DPRINT1("Old HAL would've returned IRQL %lx and Vector %lx\n",
+                VECTOR2IRQL(IRQ2VECTOR(BusInterruptLevel)),
+                IRQ2VECTOR(BusInterruptLevel));
+    }
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Vector;
 }
 
 /*
