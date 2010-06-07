@@ -207,6 +207,16 @@ typedef struct _HAL_BUS_HANDLER
 
 /* SHARED (Fake PCI-BUS HANDLER) */
 
+extern PCI_CONFIG_HANDLER PCIConfigHandler;
+extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
+extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
+
+PPCI_REGISTRY_INFO_INTERNAL
+NTAPI
+HalpQueryPciRegistryInfo(
+    VOID
+);
+
 VOID
 NTAPI
 HalpPCISynchronizeType1(
@@ -397,6 +407,42 @@ HalpRegisterPciDebuggingDeviceInfo(
 
 /* LEGACY */
 
+NTSTATUS
+NTAPI
+HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
+                          IN PBUS_HANDLER RootHandler,
+                          IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList);
+                          
+ULONG
+NTAPI
+HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN ULONG BusInterruptLevel,
+                      IN ULONG BusInterruptVector,
+                      OUT PKIRQL Irql,
+                      OUT PKAFFINITY Affinity);
+VOID
+NTAPI
+HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciData);
+        
+VOID
+NTAPI
+HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciNewData,
+                   IN PPCI_COMMON_CONFIG PciOldData);
+
+NTSTATUS
+NTAPI
+HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN PCI_SLOT_NUMBER PciSlot,
+                      OUT PSUPPORTED_RANGE *Range);
+                      
 VOID
 NTAPI
 HalpInitBusHandler(
