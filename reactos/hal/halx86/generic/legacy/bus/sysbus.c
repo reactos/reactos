@@ -24,8 +24,89 @@ HalpTranslateSystemBusAddress(IN PBUS_HANDLER BusHandler,
                               IN OUT PULONG AddressSpace,
                               OUT PPHYSICAL_ADDRESS TranslatedAddress)
 {
-    DPRINT1("SYSTEM Translate\n");
-    while (TRUE);
+    PSUPPORTED_RANGE Range = NULL;
+    
+    /* Check what kind of address space this is */
+    switch (*AddressSpace)
+    {
+        /* Memory address */
+        case 0:
+            
+            /* Loop all prefetech memory */
+            for (Range = &BusHandler->BusAddresses->PrefetchMemory;
+                 Range;
+                 Range = Range->Next)
+            {
+                /* Check if it's in a valid range */
+                if ((BusAddress.QuadPart >= Range->Base) &&
+                    (BusAddress.QuadPart <= Range->Limit))
+                {
+                    /* Get out */
+                    break;
+                }
+            }
+            
+            /* Check if we haven't found anything yet */
+            if (!Range)
+            {
+                /* Loop all bus memory */
+                for (Range = &BusHandler->BusAddresses->Memory;
+                     Range;
+                     Range = Range->Next)
+                {
+                    /* Check if it's in a valid range */
+                    if ((BusAddress.QuadPart >= Range->Base) &&
+                        (BusAddress.QuadPart <= Range->Limit))
+                    {
+                        /* Get out */
+                        break;
+                    }
+                }
+            }
+            
+            /* Done */
+            break;
+            
+        /* I/O Space */
+        case 1:
+
+            /* Loop all bus I/O memory */
+            for (Range = &BusHandler->BusAddresses->IO;
+                 Range;
+                 Range = Range->Next)
+            {
+                /* Check if it's in a valid range */
+                if ((BusAddress.QuadPart >= Range->Base) &&
+                    (BusAddress.QuadPart <= Range->Limit))
+                {
+                    /* Get out */
+                    break;
+                }
+            }
+            
+            /* Done */
+            break;
+    }
+    
+    /* Check if we found a range */
+    if (Range)
+    {
+        /* Do the translation and return the kind of address space this is */
+        TranslatedAddress->QuadPart = BusAddress.QuadPart + Range->SystemBase;
+        if ((TranslatedAddress->QuadPart != BusAddress.QuadPart) ||
+            (*AddressSpace != Range->SystemAddressSpace))
+        {
+            /* Different than what the old HAL would do */
+            DPRINT1("Translation of %I64x is %I64x %s\n",
+                    BusAddress.QuadPart, TranslatedAddress->QuadPart,
+                    Range->SystemAddressSpace ? "In I/O Space" : "In RAM");
+        }
+        *AddressSpace = Range->SystemAddressSpace;
+        return TRUE;
+    }
+    
+    /* Nothing found */
+    DPRINT1("Translation of %I64x failed!\n", BusAddress.QuadPart);
     return FALSE;
 }
 
