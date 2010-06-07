@@ -5,7 +5,7 @@
  *
  * FIXME : Obsolete header.. Use usb.h instead.
  *
- * This file is part of the w32api package.
+ * This file is part of the ReactOS PSDK package.
  *
  * Contributors:
  *   Created by Casper S. Hornstrup <chorns@users.sourceforge.net>
