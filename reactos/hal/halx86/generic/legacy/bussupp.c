@@ -374,10 +374,10 @@ HalpGetChipHacks(IN USHORT VendorId,
     if (NT_SUCCESS(Status))
     {
         /* Return the flags */
-        DPRINT1("Found HackFlags for your %lx:%lx device\n", VendorId, DeviceId);
+        DbgPrint("\tFound HackFlags for your chipset\n");
         *HackFlags = *(PULONG)PartialInfo.Data;
-        DPRINT1("Hack Flags: %lx (Hack Revision: %lx\tYour Revision: %lx)\n",
-                *HackFlags, HALP_REVISION_FROM_HACK_FLAGS(*HackFlags), RevisionId);
+        DbgPrint("\t\tHack Flags: %lx (Hack Revision: %lx-Your Revision: %lx)\n",
+                 *HackFlags, HALP_REVISION_FROM_HACK_FLAGS(*HackFlags), RevisionId);
         
         /* Does it apply to this revision? */
         if ((RevisionId) && (RevisionId >= (HALP_REVISION_FROM_HACK_FLAGS(*HackFlags))))
@@ -388,6 +388,7 @@ HalpGetChipHacks(IN USHORT VendorId,
 
         /* Throw out revision data */
         *HackFlags = HALP_HACK_FLAGS(*HackFlags);
+        if (!*HackFlags) DbgPrint("\tNo HackFlags for your chipset's revision!\n");
     }
     
     /* Close the handle and return */
@@ -657,6 +658,179 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
 
 VOID
 NTAPI
+ShowSize(ULONG x)
+{
+    if (!x) return;
+    DbgPrint(" [size=");
+    if (x < 1024)
+    {
+        DbgPrint("%d", (int) x);
+    }
+    else if (x < 1048576)
+    {   
+        DbgPrint("%dK", (int)(x / 1024));
+    }
+    else if (x < 0x80000000)
+    {
+        DbgPrint("%dM", (int)(x / 1048576));
+    }
+    else
+    {
+        DbgPrint("%d", x);
+    }
+    DbgPrint("]\n");
+}
+
+VOID
+NTAPI
+HalpDebugPciBus(IN ULONG i,
+                IN ULONG j,
+                IN ULONG k,
+                IN PPCI_COMMON_CONFIG PciData)
+{   
+    extern CHAR ClassTable[3922];
+    extern CHAR VendorTable[642355];
+    PCHAR p, ClassName, SubClassName, VendorName, ProductName, SubVendorName;
+    ULONG Length;
+    CHAR LookupString[16] = "";
+    CHAR bSubClassName[32] = "";
+    CHAR bVendorName[32] = "";
+    CHAR bProductName[32] = "Unknown device";
+    CHAR bSubVendorName[32] = "Unknown";
+    ULONG Size, Mem, b;
+
+    /* Isolate the class name */
+    sprintf(LookupString, "C %02x", PciData->BaseClass);
+    ClassName = strstr(ClassTable, LookupString);
+    if (ClassName)
+    {
+        /* Isolate the subclass name */
+        ClassName += 6;
+        sprintf(LookupString, "\t%02x", PciData->SubClass);
+        SubClassName = strstr(ClassName, LookupString);
+        if (SubClassName)
+        {
+            /* Copy the subclass into our buffer */
+            SubClassName += 5;
+            p = strchr(SubClassName, '\r');
+            Length = p - SubClassName;
+            if (Length > sizeof(bSubClassName)) Length = sizeof(bSubClassName);
+            strncpy(bSubClassName, SubClassName, Length);
+            bSubClassName[Length] = '\0';
+        }
+    }
+
+    /* Isolate the vendor name */
+    sprintf(LookupString, "\n%04x  ", PciData->VendorID);
+    VendorName = strstr(VendorTable, LookupString);
+    if (VendorName)
+    {
+        /* Copy the vendor name into our buffer */
+        VendorName += 7;
+        p = strchr(VendorName, '\r');
+        Length = p - VendorName;
+        if (Length > sizeof(bVendorName)) Length = sizeof(bVendorName);
+        strncpy(bVendorName, VendorName, Length);
+        bVendorName[Length ] = '\0';
+        
+        /* Isolate the product name */
+        sprintf(LookupString, "\t%04x", PciData->DeviceID);
+        ProductName = strstr(VendorName, LookupString);
+        if (ProductName)
+        {
+            /* Copy the product name into our buffer */
+            ProductName += 7;
+            p = strchr(ProductName, '\r');
+            Length = p - ProductName;
+            if (Length > sizeof(bProductName)) Length = sizeof(bProductName);
+            strncpy(bProductName, ProductName, Length);
+            bProductName[Length] = '\0';
+            
+            /* Isolate the subvendor and subsystem name */
+            sprintf(LookupString,
+                    "\t\t%04x %04x  ",
+                    PciData->u.type0.SubVendorID,
+                    PciData->u.type0.SubSystemID);
+            SubVendorName = strstr(ProductName, LookupString);
+            if (SubVendorName)
+            {
+                /* Copy the subvendor name into our buffer */
+                SubVendorName += 13;
+                p = strchr(SubVendorName, '\r');
+                Length = p - SubVendorName;
+                if (Length > sizeof(bSubVendorName)) Length = sizeof(bSubVendorName);
+                strncpy(bSubVendorName, SubVendorName, Length);
+                bSubVendorName[Length] = '\0';
+            }
+        }
+    }
+
+    /* Print out the data */
+    DbgPrint("%02x:%02x.%x %s [%02x%02x]: %s %s [%04x:%04x] (rev %02x)\n"
+             "\tSubsystem: %s [%04x:%04x]\n",
+             i,
+             j,
+             k,
+             bSubClassName,
+             PciData->BaseClass,
+             PciData->SubClass,
+             bVendorName,
+             bProductName,
+             PciData->VendorID,
+             PciData->DeviceID,
+             PciData->RevisionID,
+             bSubVendorName,
+             PciData->u.type0.SubVendorID,
+             PciData->u.type0.SubSystemID);
+    
+    /* Print out and decode flags */
+    DbgPrint("\tFlags:");
+    if (PciData->Command & PCI_ENABLE_BUS_MASTER) DbgPrint(" bus master,");
+    if (PciData->Status & PCI_STATUS_66MHZ_CAPABLE) DbgPrint(" 66MHz,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x200) DbgPrint(" medium devsel,");
+    if ((PciData->Status & PCI_STATUS_DEVSEL) == 0x400) DbgPrint(" fast devsel,");
+    DbgPrint(" latency %d", PciData->LatencyTimer);
+    if (PciData->u.type0.InterruptLine) DbgPrint(", IRQ %02d", PciData->u.type0.InterruptLine);
+    DbgPrint("\n");
+    
+    /* Scan addresses */
+    Size = 0;
+    for (b = 0; b < PCI_TYPE0_ADDRESSES; b++)
+    {
+        /* Check for a BAR */
+        Mem = PciData->u.type0.BaseAddresses[b];
+        if (Mem)
+        {   
+            /* Decode the address type */
+            if (Mem & PCI_ADDRESS_IO_SPACE)
+            {
+                /* Decode the size */
+                Size = 1 << 2;
+                while (!(Mem & Size) && (Size)) Size <<= 1;
+                
+                /* Print it out */
+                DbgPrint("\tI/O ports at %04lx", Mem & PCI_ADDRESS_IO_ADDRESS_MASK);
+                ShowSize(Size);
+            }
+            else
+            {
+                /* Decode the size */
+                Size = 1 << 8;
+                while (!(Mem & Size) && (Size)) Size <<= 1;
+                
+                /* Print it out */
+                DbgPrint("\tMemory at %08lx (%d-bit, %sprefetchable)",
+                         Mem & PCI_ADDRESS_MEMORY_ADDRESS_MASK,
+                         (Mem & PCI_ADDRESS_MEMORY_TYPE_MASK) == PCI_TYPE_32BIT ? 32 : 64,
+                         (Mem & PCI_ADDRESS_MEMORY_PREFETCHABLE) ? "" : "non-");
+                ShowSize(Size);
+            }
+        }
+    }
+}
+
+VOID
+NTAPI
 HalpInitializePciBus(VOID)
 {
 #ifndef _MINIHAL_
@@ -735,6 +909,7 @@ HalpInitializePciBus(VOID)
     HalpFixupPciSupportedRanges(PciRegistryInfo->NoBuses);
     
     /* Loop every bus */
+    DbgPrint("\n====== PCI BUS HARDWARE DETECTION =======\n\n");
     PciSlot.u.bits.Reserved = 0;
     for (i = 0; i < PciRegistryInfo->NoBuses; i++)
     {
@@ -761,11 +936,14 @@ HalpInitializePciBus(VOID)
                 /* Skip if this is an invalid function */
                 if (PciData->VendorID == PCI_INVALID_VENDORID) continue;
                 
+                /* Print out the entry */
+                HalpDebugPciBus(i, j, k, PciData);
+                
                 /* Check if this is a Cardbus bridge */
                 if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
                 {
                     /* Not supported */
-                    DPRINT1("Your machine has a PCI Cardbus Bridge. This device will not work!\n");
+                    DbgPrint("\tDevice is a PCI Cardbus Bridge. It will not work!\n");
                     continue;
                 }
                 
@@ -783,9 +961,8 @@ HalpInitializePciBus(VOID)
                             if (!HalpIsIdeDevice(PciData))
                             {
                                 /* We'll mask out this interrupt then */
-                                DPRINT1("Device %lx:%lx is using IRQ %d! ISA Cards using that IRQ may fail!\n",
-                                        PciData->VendorID, PciData->DeviceID,
-                                        PciData->u.type1.InterruptLine);
+                                DbgPrint("\tDevice is using IRQ %d! ISA Cards using that IRQ may fail!\n",
+                                         PciData->u.type1.InterruptLine);
                                 HalpPciIrqMask |= (1 << PciData->u.type1.InterruptLine);
                             }
                         }
@@ -800,7 +977,7 @@ HalpInitializePciBus(VOID)
                         (PciData->RevisionID < 0x11))
                     {
                         /* Skip */
-                        DPRINT1("Your machine has a broken Intel 82430 PCI Controller. This device will not work!\n");
+                        DbgPrint("\tDevice is a broken Intel 82430 PCI Controller. It will not work!\n\n");
                         continue;
                     }
                     
@@ -809,7 +986,7 @@ HalpInitializePciBus(VOID)
                         (PciData->RevisionID <= 3))
                     {
                         /* Skip */
-                        DPRINT1("Your machine has a broken Intel 82378 PCI-to-ISA Bridge. This device will not work!\n");
+                        DbgPrint("\tDevice is a broken Intel 82378 PCI-to-ISA Bridge. It will not work!\n\n");
                         continue;
                     }
                     
@@ -817,7 +994,7 @@ HalpInitializePciBus(VOID)
                     if ((PciData->DeviceID == 0x84C4) &&
                         (PciData->RevisionID <= 4))
                     {
-                        DPRINT1("Your machine has an Intel Orion 82450 PCI Bridge. This device will not work!\n");
+                        DbgPrint("\tDevice is a Intel Orion 82450 PCI Bridge. It will not work!\n\n");
                         continue;
                     }
                 }
@@ -831,8 +1008,7 @@ HalpInitializePciBus(VOID)
                                              HALP_CARD_FEATURE_FULL_DECODE))
                     {
                         /* We'll do chipset checks later */
-                        DPRINT1("Your %lx:%lx PCI device has Extended Address Decoding. This device may fail to work on older BIOSes!\n",
-                                PciData->VendorID, PciData->DeviceID);
+                        DbgPrint("\tDevice has Extended Address Decoding. It may fail to work on older BIOSes!\n");
                         ExtendedAddressDecoding = TRUE;
                     }
                 }
@@ -844,21 +1020,21 @@ HalpInitializePciBus(VOID)
                     /* Check if this is an OHCI controller */
                     if (PciData->ProgIf == 0x10)
                     {
-                        DPRINT1("Your machine has an OHCI (USB) PCI Expansion Card. Turn off Legacy USB in your BIOS!\n");
+                        DbgPrint("\tDevice is an OHCI (USB) PCI Expansion Card. Turn off Legacy USB in your BIOS!\n\n");
                         continue;
                     }
                     
                     /* Check for Intel UHCI controller */
                     if (PciData->VendorID == 0x8086)
                     {
-                        DPRINT1("Your machine has an Intel UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n");
+                        DbgPrint("\tDevice is an Intel UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n\n");
                         continue;
                     }
                     
                     /* Check for VIA UHCI controller */
                     if (PciData->VendorID == 0x1106)
                     {
-                        DPRINT1("Your machine has a VIA UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n");
+                        DbgPrint("\tDevice is a VIA UHCI (USB) Controller. Turn off Legacy USB in your BIOS!\n\n");
                         continue;
                     }
                 }
@@ -873,31 +1049,34 @@ HalpInitializePciBus(VOID)
                     /* Check for broken ACPI routing */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_ACPI_IRQ_ROUTING)
                     {
-                        DPRINT1("Your hardware has broken ACPI IRQ Routing! Be aware!\n");
+                        DbgPrint("This chipset has broken ACPI IRQ Routing! Be aware!\n\n");
                         continue;
                     }
                     
                     /* Check for broken ACPI timer */
                     if (HackFlags & HAL_PCI_CHIP_HACK_BROKEN_ACPI_TIMER)
                     {
-                         DPRINT1("Your hardware has a broken ACPI timer! Be aware!\n");
+                         DbgPrint("This chipset has a broken ACPI timer! Be aware!\n\n");
                          continue;
                     }
                     
                     /* Check for hibernate-disable */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_HIBERNATE)
                     {
-                        DPRINT1("Your machine has a broken PCI device which is incompatible with hibernation. Be aware!\n");
+                        DbgPrint("This chipset has a broken PCI device which is incompatible with hibernation. Be aware!\n\n");
                         continue;
                     }
                     
                     /* Check for USB controllers that generate SMIs */
                     if (HackFlags & HAL_PCI_CHIP_HACK_USB_SMI_DISABLE)
                     {
-                        DPRINT1("Your machine has a USB controller which generates SMIs. ReactOS will likely fail to boot!\n");
+                        DbgPrint("This chipset has a USB controller which generates SMIs. ReactOS will likely fail to boot!\n\n");
                         continue;
                     }
                 }
+                
+                /* Terminate the entry */
+                DbgPrint("\n");
             }
         }
     }
@@ -910,7 +1089,7 @@ HalpInitializePciBus(VOID)
     
     /* Tell PnP if this hard supports correct decoding */
     HalpMarkChipsetDecode(ExtendedAddressDecoding);
-    DPRINT1("PCI BUS Setup complete\n");
+    DbgPrint("====== PCI BUS DETECTION COMPLETE =======\n\n");
 #endif
 }
 
