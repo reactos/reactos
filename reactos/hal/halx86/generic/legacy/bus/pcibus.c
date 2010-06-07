@@ -516,9 +516,16 @@ HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
                       OUT PKIRQL Irql,
                       OUT PKAFFINITY Affinity)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return 0;
+    /* Validate the level first */
+    if (BusInterruptLevel < 1) return 0;
+
+    /* PCI has its IRQs on top of ISA IRQs, so pass it on to the ISA handler */
+    return HalGetInterruptVector(Isa,
+                                 0,
+                                 BusInterruptLevel,
+                                 0,
+                                 Irql,
+                                 Affinity);
 }
 
 VOID
