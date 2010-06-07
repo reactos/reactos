@@ -60,7 +60,7 @@ WSPSocket(int AddressFamily,
     ULONG                       SizeOfEA;
     PAFD_CREATE_PACKET          AfdPacket;
     HANDLE                      Sock;
-    PSOCKET_INFORMATION         Socket = NULL, PrevSocket = NULL;
+    PSOCKET_INFORMATION         Socket = NULL;
     PFILE_FULL_EA_INFORMATION   EABuffer = NULL;
     PHELPER_DATA                HelperData;
     PVOID                       HelperDLLContext;
@@ -259,17 +259,6 @@ WSPSocket(int AddressFamily,
 
     /* Save Handle */
     Socket->Handle = (SOCKET)Sock;
-
-    /* XXX See if there's a structure we can reuse -- We need to do this
-    * more properly. */
-    PrevSocket = GetSocketStructure( (SOCKET)Sock );
-
-    if( PrevSocket )
-    {
-        RtlCopyMemory( PrevSocket, Socket, sizeof(*Socket) );
-        RtlFreeHeap( GlobalHeap, 0, Socket );
-        Socket = PrevSocket;
-    }
 
     /* Save Group Info */
     if (g != 0)
@@ -2325,15 +2314,8 @@ GetSocketStructure(SOCKET Handle)
 {
     PSOCKET_INFORMATION CurrentSocket;
 
-    if (!SocketListHead)
-        return NULL;
-
-    /* This is a special case */
-    if (SocketListHead->Handle == Handle)
-        return SocketListHead;
-
     CurrentSocket = SocketListHead;
-    while (CurrentSocket->NextSocket)
+    while (CurrentSocket)
     {
         if (CurrentSocket->Handle == Handle)
             return CurrentSocket;
