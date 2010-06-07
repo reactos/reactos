@@ -262,7 +262,7 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     ConfigBusNumberArray = HalpAllocateArray(BusNumber);
     
     /* Only proceed if all allocations succeeded */
-    if (InterfaceArray && InterfaceBusNumberArray && ConfigArray && ConfigBusNumberArray)
+    if ((InterfaceArray) && (InterfaceBusNumberArray) && (ConfigArray) && (ConfigBusNumberArray))
     {
         /* Find the parent handler if any */
         ParentHandler = HaliReferenceHandlerForBus(ParentBusType, ParentBusNumber);

@@ -82,7 +82,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering Internal Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -97,7 +96,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering CMOS Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -112,7 +110,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering CMOS Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -127,7 +124,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  Internal,
                                  0,
                                  0);
-    DPRINT1("Registering ISA Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -1286,38 +1282,24 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
-    if (BusDataType == Cmos)
-    {
-        /* Call CMOS Function */
-        return HalpGetCmosData(0, SlotNumber, Buffer, Length);
-    }
-    else if (BusDataType == EisaConfiguration)
-    {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
-    }
-    else if ((BusDataType == PCIConfiguration) &&
-             (HalpPCIConfigInitialized) &&
-             ((BusNumber >= HalpMinPciBus) && (BusNumber <= HalpMaxPciBus)))
-    {
-        /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-        BusHandler.BusNumber = BusNumber;
-
-        /* Call PCI function */
-        return HalpGetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
-    }
-
-    /* Invalid bus */
-    return 0;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    
+    /* Find the handler */
+    Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Status = Handler->GetBusData(Handler,
+                                 Handler,
+                                 SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*

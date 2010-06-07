@@ -449,6 +449,13 @@ HalpInitBusHandler(
     VOID
 );
 
+PBUS_HANDLER
+FASTCALL
+HaliReferenceHandlerForConfigSpace(
+    IN BUS_DATA_TYPE ConfigType,
+    IN ULONG BusNumber
+);
+
 ULONG
 NTAPI
 HalpNoBusData(
