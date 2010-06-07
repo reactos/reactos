@@ -36,6 +36,12 @@ WSPEventSelect(
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
+	if (!Socket)
+	{
+		NtClose(SockEvent);
+		*lpErrno = WSAENOTSOCK;
+		return SOCKET_ERROR;
+	}
 
 	/* Set Socket to Non-Blocking */
 	BlockMode = 1;
@@ -152,6 +158,12 @@ WSPEnumNetworkEvents(
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       NtClose(SockEvent);
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     EnumReq.Event = hEventObject;
 

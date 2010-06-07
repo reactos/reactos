@@ -29,6 +29,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
 
     /* Get the Socket Structure associated to this Socket */
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     /* Allocate the Async Data Structure to pass on to the Thread later */
     AsyncData = HeapAlloc(GetProcessHeap(), 0, sizeof(*AsyncData));
@@ -111,6 +116,11 @@ WSPRecv(SOCKET Handle,
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
                             NULL, 1, FALSE );
@@ -261,6 +271,11 @@ WSPRecvFrom(SOCKET Handle,
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
                             NULL, 1, FALSE );
@@ -399,6 +414,11 @@ WSPSend(SOCKET Handle,
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
                             NULL, 1, FALSE );
@@ -523,6 +543,11 @@ WSPSendTo(SOCKET Handle,
 
     /* Get the Socket Structure associate to this Socket */
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     /* Bind us First */
     if (Socket->SharedData.State == SocketOpen)
