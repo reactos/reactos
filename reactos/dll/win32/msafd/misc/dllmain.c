@@ -22,7 +22,6 @@ DWORD DebugTraceLevel = 0;
 HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
-ULONG SocketCount = 0;
 PSOCKET_INFORMATION SocketListHead = NULL;
 LIST_ENTRY SockHelpersListHead = { NULL, NULL };
 ULONG SockAsyncThreadRefCount;
@@ -2266,6 +2265,9 @@ PSOCKET_INFORMATION
 GetSocketStructure(SOCKET Handle)
 {
     PSOCKET_INFORMATION CurrentSocket;
+
+    if (!SocketListHead)
+        return NULL;
 
     /* This is a special case */
     if (SocketListHead->Handle == Handle)
