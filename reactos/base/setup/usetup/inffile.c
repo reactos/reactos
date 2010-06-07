@@ -32,7 +32,7 @@
 #include <infros.h>
 #endif
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/

@@ -27,7 +27,7 @@
 
 #include "usetup.h"
 
-#define NDEBUG
+#define YDEBUG
 #include <debug.h>
 
 static PPROGRESSBAR ChkdskProgressBar = NULL;
