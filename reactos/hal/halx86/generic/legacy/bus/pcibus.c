@@ -648,6 +648,7 @@ HalpAssignPCISlotResources(IN PBUS_HANDLER BusHandler,
     PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor;
     PCI_SLOT_NUMBER SlotNumber;
     ULONG WriteBuffer;
+    DPRINT1("WARNING: PCI Slot Resource Assignment is FOOBAR\n");
 
     /* FIXME: Should handle 64-bit addresses */
 

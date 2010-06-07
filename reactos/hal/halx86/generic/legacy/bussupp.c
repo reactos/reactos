@@ -1126,25 +1126,28 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                         IN ULONG SlotNumber,
                         IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
-    BUS_HANDLER BusHandler;
+    PBUS_HANDLER Handler;
+    NTSTATUS Status;
     PAGED_CODE();
+    DPRINT1("Slot assignment for %d on bus %d\n", BusType, BusNumber);
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(BusType, BusNumber);
+    if (!Handler) return STATUS_NOT_FOUND;
 
-    /* Only PCI is supported */
-    if (BusType != PCIBus) return STATUS_NOT_IMPLEMENTED;
-
-    /* Setup fake PCI Bus handler */
-    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-    BusHandler.BusNumber = BusNumber;
-
-    /* Call the PCI function */
-    return HalpAssignPCISlotResources(&BusHandler,
-                                      &BusHandler,
-                                      RegistryPath,
-                                      DriverClassName,
-                                      DriverObject,
-                                      DeviceObject,
-                                      SlotNumber,
-                                      AllocatedResources);
+    /* Do the assignment */
+    Status = Handler->AssignSlotResources(Handler,
+                                          Handler,
+                                          RegistryPath,
+                                          DriverClassName,
+                                          DriverObject,
+                                          DeviceObject,
+                                          SlotNumber,
+                                          AllocatedResources);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 BOOLEAN
@@ -1238,6 +1241,7 @@ HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
 {
     PBUS_HANDLER Handler;
     ULONG Status;
+    PAGED_CODE();
     
     /* Find the handler */
     Handler = HalReferenceHandlerForBus((*ResourceList)->InterfaceType,
@@ -1268,6 +1272,8 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                        IN ULONG SlotNumber,
                        IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
+    PAGED_CODE();
+    
     /* Check the bus type */
     if (BusType != PCIBus)
     {
