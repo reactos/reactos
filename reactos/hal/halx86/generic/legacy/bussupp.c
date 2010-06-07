@@ -1234,10 +1234,24 @@ HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
  */
 NTSTATUS
 NTAPI
-HalAdjustResourceList(IN PCM_RESOURCE_LIST Resources)
+HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
 {
-    /* Deprecated, return success */
-    return STATUS_SUCCESS;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus((*ResourceList)->InterfaceType,
+                                        (*ResourceList)->BusNumber);
+    if (!Handler) return STATUS_SUCCESS;
+    
+    /* Do the assignment */
+    Status = Handler->AdjustResourceList(Handler,
+                                         Handler,
+                                         ResourceList);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*
