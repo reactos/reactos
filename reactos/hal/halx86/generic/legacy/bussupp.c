@@ -340,10 +340,59 @@ HalpGetChipHacks(IN USHORT VendorId,
                  IN UCHAR RevisionId,
                  IN PULONG HackFlags)
 {
-    /* Not yet implemented */
-    if (!WarningsGiven[0]++) DbgPrint("HAL: Not checking for PCI Chipset Hacks. Your hardware may malfunction!\n");
-    *HackFlags = 0;
-    return STATUS_UNSUCCESSFUL;
+    UNICODE_STRING KeyName, ValueName;
+    NTSTATUS Status;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE KeyHandle;
+    WCHAR Buffer[32];
+    KEY_VALUE_PARTIAL_INFORMATION PartialInfo;
+    ULONG ResultLength;
+    
+    /* Setup the object attributes for the key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\REGISTRY\\MACHINE\\SYSTEM\\CURRENTCONTROLSET\\"
+                         L"Control\\HAL");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    
+    /* Open the key */
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Query value */
+    swprintf(Buffer, L"%04X%04X", VendorId, DeviceId);
+    RtlInitUnicodeString(&ValueName, Buffer);
+    Status = ZwQueryValueKey(KeyHandle,
+                             &ValueName,
+                             KeyValuePartialInformation,
+                             &PartialInfo,
+                             sizeof(PartialInfo),
+                             &ResultLength);
+    if (NT_SUCCESS(Status))
+    {
+        /* Return the flags */
+        DPRINT1("Found HackFlags for your %lx:%lx device\n", VendorId, DeviceId);
+        *HackFlags = *(PULONG)PartialInfo.Data;
+        DPRINT1("Hack Flags: %lx (Hack Revision: %lx\tYour Revision: %lx)\n",
+                *HackFlags, HALP_REVISION_FROM_HACK_FLAGS(*HackFlags), RevisionId);
+        
+        /* Does it apply to this revision? */
+        if ((RevisionId) && (RevisionId >= (HALP_REVISION_FROM_HACK_FLAGS(*HackFlags))))
+        {
+            /* Read the revision flags */
+            *HackFlags = HALP_REVISION_HACK_FLAGS(*HackFlags);
+        }
+
+        /* Throw out revision data */
+        *HackFlags = HALP_HACK_FLAGS(*HackFlags);
+    }
+    
+    /* Close the handle and return */
+    ZwClose(KeyHandle);
+    return Status;
 }
 
 BOOLEAN
@@ -511,6 +560,7 @@ HalpInitializePciBus(VOID)
     PBUS_HANDLER BusHandler;
     ULONG HackFlags;
     BOOLEAN ExtendedAddressDecoding = FALSE;
+    NTSTATUS Status;
     
     /* Query registry information */
     PciRegistryInfo = HalpQueryPciRegistryInfo();
@@ -704,22 +754,37 @@ HalpInitializePciBus(VOID)
                 }
                 
                 /* Now check the registry for chipset hacks */
-                if (NT_SUCCESS(HalpGetChipHacks(PciData->VendorID,
-                                                PciData->DeviceID,
-                                                PciData->RevisionID,
-                                                &HackFlags)))
+                Status = HalpGetChipHacks(PciData->VendorID,
+                                          PciData->DeviceID,
+                                          PciData->RevisionID,
+                                          &HackFlags);
+                if (NT_SUCCESS(Status))
                 {
+                    /* Check for broken ACPI routing */
+                    if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_ACPI_IRQ_ROUTING)
+                    {
+                        DPRINT1("Your hardware has broken ACPI IRQ Routing! This is not supported!\n");
+                        continue;
+                    }
+                    
+                    /* Check for broken ACPI timer */
+                    if (HackFlags & HAL_PCI_CHIP_HACK_BROKEN_ACPI_TIMER)
+                    {
+                         DPRINT1("Your hardware has a broken ACPI timer! This is not supported!\n");
+                         continue;
+                    }
+                    
                     /* Check for hibernate-disable */
                     if (HackFlags & HAL_PCI_CHIP_HACK_DISABLE_HIBERNATE)
                     {
-                        DbgPrint("HAL: Your machine has a broken PCI device which is incompatible with hibernation. This is not supported!\n");
+                        DPRINT1("Your machine has a broken PCI device which is incompatible with hibernation. This is not supported!\n");
                         continue;
                     }
                     
                     /* Check for USB controllers that generate SMIs */
                     if (HackFlags & HAL_PCI_CHIP_HACK_USB_SMI_DISABLE)
                     {
-                        DbgPrint("HAL: Your machine has a USB controller which generates SMIs. This is not supported!\n");
+                        DPRINT1("Your machine has a USB controller which generates SMIs. This is not supported!\n");
                         continue;
                     }
                 }

@@ -486,6 +486,13 @@ HalpHardwareInterruptLevel(
 );
 
 //
+// Hack Flags
+//
+#define HALP_REVISION_FROM_HACK_FLAGS(x)    ((x) >> 24)
+#define HALP_REVISION_HACK_FLAGS(x)         ((x) >> 12)
+#define HALP_HACK_FLAGS(x)                  ((x) & 0xFFF)
+
+//
 // Feature flags
 //
 #define HALP_CARD_FEATURE_FULL_DECODE   0x0001
