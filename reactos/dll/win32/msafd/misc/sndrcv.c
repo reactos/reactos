@@ -51,7 +51,11 @@ WSPAsyncSelect(IN  SOCKET Handle,
     /* Deactive WSPEventSelect */
     if (Socket->SharedData.AsyncEvents)
     {
-        WSPEventSelect(Handle, NULL, 0, NULL);
+        if (WSPEventSelect(Handle, NULL, 0, lpErrno) == SOCKET_ERROR)
+        {
+            HeapFree(GetProcessHeap(), 0, AsyncData);
+            return SOCKET_ERROR;
+        }
     }
 
     /* Create the Asynch Thread if Needed */  
