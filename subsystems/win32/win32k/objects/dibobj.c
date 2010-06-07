@@ -1492,12 +1492,14 @@ DIB_CreateDIBSection(
     // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
     Size.cy = abs(bm.bmHeight);
-    res = IntCreateBitmap(Size,
-                          bm.bmWidthBytes,
-                          BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
-                          BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                          (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
-                          bm.bmBits);
+    res = GreCreateBitmapEx(bm.bmWidth,
+                            abs(bm.bmHeight),
+                            bm.bmWidthBytes,
+                            BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
+                            BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
+                              (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
+                            bi->biSizeImage,
+                            bm.bmBits);
     if (!res)
     {
         if (lpRGB != bmi->bmiColors)

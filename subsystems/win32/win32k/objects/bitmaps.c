@@ -69,11 +69,13 @@ UnsafeSetBitmapBits(
 
 HBITMAP
 APIENTRY
-GreCreateBitmap(
+GreCreateBitmapEx(
     IN INT nWidth,
     IN INT nHeight,
-    IN UINT cPlanes,
-    IN UINT cBitsPixel,
+    IN ULONG cjWidthBytes,
+    IN ULONG iFormat,
+    IN USHORT fjBitmap,
+    IN ULONG cjSizeImage,
     IN OPTIONAL PVOID pvBits)
 {
     PSURFACE psurf;
@@ -82,10 +84,6 @@ GreCreateBitmap(
     PVOID pvCompressedBits;
     SIZEL sizl;
     FLONG fl = 0;
-    ULONG iFormat;
-
-    /* Calculate bitmap format */
-    iFormat = BitmapFormat(cBitsPixel * cPlanes, BI_RGB);
 
     /* Verify format */
     if (iFormat < BMF_1BPP || iFormat > BMF_PNG) return NULL;
@@ -121,7 +119,7 @@ GreCreateBitmap(
     }
 
     /* Set the bitmap bits */
-    if (!SURFACE_bSetBitmapBits(psurf, fl, 0, pvBits))
+    if (!SURFACE_bSetBitmapBits(psurf, fjBitmap, cjWidthBytes, pvBits))
     {
         /* Bail out if that failed */
         DPRINT1("SURFACE_bSetBitmapBits failed.\n");
@@ -135,6 +133,25 @@ GreCreateBitmap(
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
     return hbmp;
+}
+
+HBITMAP
+APIENTRY
+GreCreateBitmap(
+    IN INT nWidth,
+    IN INT nHeight,
+    IN UINT cPlanes,
+    IN UINT cBitsPixel,
+    IN OPTIONAL PVOID pvBits)
+{
+    /* Call the extended function */
+    return GreCreateBitmapEx(nWidth,
+                             nHeight,
+                             0, /* auto width */
+                             BitmapFormat(cBitsPixel * cPlanes, BI_RGB),
+                             0, /* no bitmap flags */
+                             0, /* auto size */
+                             pvBits);
 }
 
 HBITMAP

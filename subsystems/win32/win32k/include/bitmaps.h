@@ -11,7 +11,6 @@ HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 UINT    FASTCALL BITMAP_GetRealBitsPixel(UINT nBitsPixel);
 INT     FASTCALL BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
 
-
 HBITMAP
 APIENTRY
 GreCreateBitmap(
@@ -20,3 +19,15 @@ GreCreateBitmap(
     IN UINT cPlanes,
     IN UINT cBitsPixel,
     IN OPTIONAL PVOID pvBits);
+
+HBITMAP
+APIENTRY
+GreCreateBitmapEx(
+    IN INT nWidth,
+    IN INT nHeight,
+    IN ULONG cjWidthBytes,
+    IN ULONG iFormat,
+    IN USHORT fjBitmap,
+    IN ULONG cjBits,
+    IN OPTIONAL PVOID pvBits);
+
