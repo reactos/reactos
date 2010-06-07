@@ -654,7 +654,6 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
         DPRINT("Warning: Bus addresses not being optimized!\n");
     }
 }
-#endif
 
 VOID
 NTAPI
@@ -828,6 +827,7 @@ HalpDebugPciBus(IN ULONG i,
         }
     }
 }
+#endif
 
 VOID
 NTAPI
