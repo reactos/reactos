@@ -24,7 +24,7 @@ static LONG TimeLast = 0;
 #define MAX_ELAPSE_TIME 0x7FFFFFFF
 
 /* Windows 2000 has room for 32768 window-less timers */
-#define NUM_WINDOW_LESS_TIMERS   1024
+#define NUM_WINDOW_LESS_TIMERS   32768
 
 static FAST_MUTEX     Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
@@ -94,6 +94,13 @@ RemoveTimer(PTIMER pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
+     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
+     {
+        DPRINT("Clearing Bit %d)\n", pTmr->nID);
+        IntLockWindowlessTimerBitmap();
+        RtlClearBit(&WindowLessTimersBitMap, pTmr->nID);
+        IntUnlockWindowlessTimerBitmap();
+     }
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
@@ -224,9 +231,15 @@ IntSetTimer( PWINDOW_OBJECT Window,
      Elapse = 10;
   }
 
-  if ((Window == NULL) && (!(Type & TMRF_SYSTEM)))
+  if ((Window) && (IDEvent == 0))
+     IDEvent = 1;
+
+  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
+
+  if ((!pTmr) && (Window == NULL) && (!(Type & TMRF_SYSTEM)))
   {
       IntLockWindowlessTimerBitmap();
+
       IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
 
       if (IDEvent == (UINT_PTR) -1)
@@ -237,15 +250,11 @@ IntSetTimer( PWINDOW_OBJECT Window,
          return 0;
       }
 
-      HintIndex = ++IDEvent;
-      IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
+      //HintIndex = IDEvent + 1;
+      IntUnlockWindowlessTimerBitmap();
   }
 
-  if ((Window) && (IDEvent == 0))
-     IDEvent = 1;
-
-  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
   if (!pTmr)
   {
      pTmr = CreateTimer();
