@@ -215,13 +215,11 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
 {
     PHAL_BUS_HANDLER Bus, OldHandler = NULL;
     PHAL_BUS_HANDLER* BusEntry;
-    PVOID CodeHandle;
+    //PVOID CodeHandle;
     PARRAY InterfaceArray, InterfaceBusNumberArray, ConfigArray, ConfigBusNumberArray;
     PBUS_HANDLER ParentHandler;
     KIRQL OldIrql;
     NTSTATUS Status;
-    DPRINT1("HAL BUS REGISTRATION: %d.%d on bus %d with parent %d on bus %d\n",
-            InterfaceType, ConfigType, BusNumber, ParentBusType, ParentBusNumber);
     
     /* Make sure we have a valid handler */
     ASSERT((InterfaceType != InterfaceTypeUndefined) ||
@@ -236,8 +234,8 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     /* Return the handler */
     *ReturnedBusHandler = &Bus->Handler;
     
-    /* Don't page us out */
-    CodeHandle = MmLockPagableDataSection(&HaliRegisterBusHandler);
+    /* FIXME: Fix the kernel first. Don't page us out */
+    //CodeHandle = MmLockPagableDataSection(&HaliRegisterBusHandler);
 
     /* Synchronize with anyone else */
     KeWaitForSingleObject(&HalpBusDatabaseEvent,
@@ -367,8 +365,8 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     /* Signal the event */
     KeSetEvent(&HalpBusDatabaseEvent, 0, FALSE);
     
-    /* Re-page the function */
-    MmUnlockPagableImageSection(CodeHandle);
+    /* FIXME: Fix the kernel first. Re-page the function */
+    //MmUnlockPagableImageSection(CodeHandle);
 
     /* Free all allocations */
     if (Bus) ExFreePool(Bus);
@@ -378,7 +376,6 @@ HaliRegisterBusHandler(IN INTERFACE_TYPE InterfaceType,
     if (ConfigBusNumberArray) ExFreePool(ConfigBusNumberArray);
 
     /* And we're done */
-    DPRINT1("Bus handler has been registered: %p\n", *ReturnedBusHandler);
     return Status;
 }
 #endif
