@@ -1354,31 +1354,24 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
-    if (BusDataType == Cmos)
-    {
-        /* Call CMOS Function */
-        return HalpSetCmosData(0, SlotNumber, Buffer, Length);
-    }
-    else if ((BusDataType == PCIConfiguration) && (HalpPCIConfigInitialized))
-    {
-        /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-        BusHandler.BusNumber = BusNumber;
-
-        /* Call PCI function */
-        return HalpSetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
-    }
-
-    /* Invalid bus */
-    return 0;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    
+    /* Find the handler */
+    Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Status = Handler->SetBusData(Handler,
+                                 Handler,
+                                 SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*
