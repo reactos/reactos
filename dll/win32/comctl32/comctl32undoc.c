@@ -885,9 +885,11 @@ INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     } else {
         lenA = WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&witem->datastart, -1,
 				   NULL, 0, NULL, NULL);
-	datasize = min( witem->size, nBufferSize );
+	datasize = min( lenA, nBufferSize );
 	WideCharToMultiByte(CP_ACP, 0, (LPWSTR)&witem->datastart, -1,
 			    lpBuffer, datasize, NULL, NULL);
+        ((char *)lpBuffer)[ datasize - 1 ] = '\0';
+        datasize = lenA - 1;
     }
     TRACE("(%p, %d, %p, %d): returning len=%d\n",
 	  hList, nItemPos, lpBuffer, nBufferSize, datasize);

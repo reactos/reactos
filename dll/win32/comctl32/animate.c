@@ -717,7 +717,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 
     TRACE("(%s)\n", debugstr_w(lpszName));
 
-    if (HIWORD(lpszName))
+    if (!IS_INTRESOURCE(lpszName))
     {
 	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName)) 
         {
@@ -775,7 +775,7 @@ static BOOL ANIMATE_OpenA(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPSTR lpsz
     LRESULT result;
     INT len;
 
-    if (!HIWORD(lpszName))
+    if (IS_INTRESOURCE(lpszName))
         return ANIMATE_OpenW(infoPtr, hInstance, (LPWSTR)lpszName);
 
     len = MultiByteToWideChar(CP_ACP, 0, lpszName, -1, NULL, 0);

@@ -208,6 +208,7 @@ TuiWriteStream(PCSRSS_CONSOLE Console, SMALL_RECT *Region, LONG CursorStartX, LO
 static BOOL WINAPI
 TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 {
+    CONSOLE_CURSOR_INFO Info;
     DWORD BytesReturned;
 
     if (ActiveConsole->ActiveBuffer != Buff)
@@ -215,9 +216,11 @@ TuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
         return TRUE;
     }
 
+    Info.dwSize = ConioEffectiveCursorSize(Console, 100);
+    Info.bVisible = Buff->CursorInfo.bVisible;
+
     if (! DeviceIoControl(ConsoleDeviceHandle, IOCTL_CONSOLE_SET_CURSOR_INFO,
-                          &Buff->CursorInfo, sizeof(Buff->CursorInfo), NULL, 0,
-                          &BytesReturned, NULL))
+                          &Info, sizeof(Info), NULL, 0, &BytesReturned, NULL))
     {
         DPRINT1( "Failed to set cursor info\n" );
         return FALSE;

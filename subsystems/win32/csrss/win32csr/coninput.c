@@ -37,13 +37,18 @@ CSR_API(CsrReadConsole)
 
     CharSize = (Request->Data.ReadConsoleRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    /* truncate length to CSRSS_MAX_READ_CONSOLE_REQUEST */
-    nNumberOfCharsToRead = min(Request->Data.ReadConsoleRequest.NrCharactersToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
+    nNumberOfCharsToRead = Request->Data.ReadConsoleRequest.NrCharactersToRead;
     Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
     Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
     Buffer = (PCHAR)Request->Data.ReadConsoleRequest.Buffer;
     UnicodeBuffer = (PWCHAR)Buffer;
+    if (!Win32CsrValidateBuffer(ProcessData, Buffer, nNumberOfCharsToRead, CharSize))
+        return STATUS_ACCESS_VIOLATION;
+
+    if (Request->Data.ReadConsoleRequest.NrCharactersRead * sizeof(WCHAR) > nNumberOfCharsToRead * CharSize)
+        return STATUS_INVALID_PARAMETER;
+
     Status = ConioLockConsole(ProcessData, Request->Data.ReadConsoleRequest.ConsoleHandle,
                               &Console, GENERIC_READ);
     if (! NT_SUCCESS(Status))
@@ -58,7 +63,7 @@ CSR_API(CsrReadConsole)
         if (Console->LineBuffer == NULL)
         {
             /* Starting a new line */
-            Console->LineMaxSize = max(256, Request->Data.ReadConsoleRequest.FullReadSize);
+            Console->LineMaxSize = max(256, nNumberOfCharsToRead);
             Console->LineBuffer = HeapAlloc(Win32CsrApiHeap, 0, Console->LineMaxSize * sizeof(WCHAR));
             if (Console->LineBuffer == NULL)
             {
@@ -66,9 +71,19 @@ CSR_API(CsrReadConsole)
                 goto done;
             }
             Console->LineComplete = FALSE;
-            Console->LineSize = 0;
-            Console->LinePos = 0;
             Console->LineUpPressed = FALSE;
+            Console->LineInsertToggle = 0;
+            Console->LineWakeupMask = Request->Data.ReadConsoleRequest.CtrlWakeupMask;
+            Console->LineSize = Request->Data.ReadConsoleRequest.NrCharactersRead;
+            Console->LinePos = Console->LineSize;
+            /* pre-filling the buffer is only allowed in the Unicode API,
+             * so we don't need to worry about conversion */
+            memcpy(Console->LineBuffer, Buffer, Console->LineSize * sizeof(WCHAR));
+            if (Console->LineSize == Console->LineMaxSize)
+            {
+                Console->LineComplete = TRUE;
+                Console->LinePos = 0;
+            }
         }
 
         /* If we don't have a complete line yet, process the pending input */
@@ -87,6 +102,7 @@ CSR_API(CsrReadConsole)
                     && Input->InputEvent.Event.KeyEvent.bKeyDown)
             {
                 LineInputKeyDown(Console, &Input->InputEvent.Event.KeyEvent);
+                Request->Data.ReadConsoleRequest.ControlKeyState = Input->InputEvent.Event.KeyEvent.dwControlKeyState;
             }
             HeapFree(Win32CsrApiHeap, 0, Input);
         }
@@ -104,10 +120,11 @@ CSR_API(CsrReadConsole)
             }
             if (Console->LinePos == Console->LineSize)
             {
+                /* Entire line has been read */
                 HeapFree(Win32CsrApiHeap, 0, Console->LineBuffer);
                 Console->LineBuffer = NULL;
-                Status = STATUS_SUCCESS; /* Entire line has been read */
             }
+            Status = STATUS_SUCCESS;
         }
     }
     else
@@ -141,12 +158,6 @@ CSR_API(CsrReadConsole)
 done:
     Request->Data.ReadConsoleRequest.NrCharactersRead = i;
     ConioUnlockConsole(Console);
-
-    if (CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE) + i * CharSize > sizeof(CSR_API_MESSAGE))
-    {
-        Request->Header.u1.s1.TotalLength = CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE) + i * CharSize;
-        Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
-    }
 
     return Status;
 }
@@ -354,6 +365,12 @@ ConioProcessKey(MSG *msg, PCSRSS_CONSOLE Console, BOOL TextMode)
             current = CONTAINING_RECORD(current_entry, CSRSS_PROCESS_DATA, ProcessEntry);
             current_entry = current_entry->Flink;
             ConioConsoleCtrlEvent((DWORD)CTRL_C_EVENT, current);
+        }
+        if (Console->LineBuffer && !Console->LineComplete)
+        {
+            /* Line input is in progress; end it */
+            Console->LinePos = Console->LineSize = 0;
+            Console->LineComplete = TRUE;
         }
         return;
     }

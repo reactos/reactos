@@ -816,3 +816,8 @@ extern KAFFINITY HalpActiveProcessors;
 extern BOOLEAN HalDisableFirmwareMapper;
 extern PWCHAR HalHardwareIdString;
 extern PWCHAR HalName;
+
+extern KAFFINITY HalpDefaultInterruptAffinity;
+
+extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
+

@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "comctl32.h"
+
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 IDD_PROPSHEET DIALOG DISCARDABLE 0, 0, 220, 140
@@ -75,7 +77,7 @@ STRINGTABLE DISCARDABLE
 STRINGTABLE DISCARDABLE
 {
     IDM_TODAY    "Vandaag:"
-    IDM_GOTODAY  "Ga vandaag naar"
+    IDM_GOTODAY  "Ga naar vandaag"
 }
 
 STRINGTABLE DISCARDABLE

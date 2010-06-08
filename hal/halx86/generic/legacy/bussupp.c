@@ -82,7 +82,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering Internal Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -97,7 +96,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering CMOS Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -112,7 +110,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  InterfaceTypeUndefined,
                                  0,
                                  0);
-    DPRINT1("Registering CMOS Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -127,7 +124,6 @@ HalpRegisterInternalBusHandlers(VOID)
                                  Internal,
                                  0,
                                  0);
-    DPRINT1("Registering ISA Bus: %p\n", Bus);
     if (Bus)
     {
         /* Set it up */
@@ -654,7 +650,6 @@ HalpFixupPciSupportedRanges(IN ULONG BusCount)
         DPRINT("Warning: Bus addresses not being optimized!\n");
     }
 }
-#endif
 
 VOID
 NTAPI
@@ -828,6 +823,7 @@ HalpDebugPciBus(IN ULONG i,
         }
     }
 }
+#endif
 
 VOID
 NTAPI
@@ -1130,74 +1126,133 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                         IN ULONG SlotNumber,
                         IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
-    BUS_HANDLER BusHandler;
+    PBUS_HANDLER Handler;
+    NTSTATUS Status;
     PAGED_CODE();
+    DPRINT1("Slot assignment for %d on bus %d\n", BusType, BusNumber);
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(BusType, BusNumber);
+    if (!Handler) return STATUS_NOT_FOUND;
 
-    /* Only PCI is supported */
-    if (BusType != PCIBus) return STATUS_NOT_IMPLEMENTED;
-
-    /* Setup fake PCI Bus handler */
-    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-    BusHandler.BusNumber = BusNumber;
-
-    /* Call the PCI function */
-    return HalpAssignPCISlotResources(&BusHandler,
-                                      &BusHandler,
-                                      RegistryPath,
-                                      DriverClassName,
-                                      DriverObject,
-                                      DeviceObject,
-                                      SlotNumber,
-                                      AllocatedResources);
+    /* Do the assignment */
+    Status = Handler->AssignSlotResources(Handler,
+                                          Handler,
+                                          RegistryPath,
+                                          DriverClassName,
+                                          DriverObject,
+                                          DeviceObject,
+                                          SlotNumber,
+                                          AllocatedResources);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 BOOLEAN
 NTAPI
-HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
-                        IN ULONG BusNumber,
-                        IN PHYSICAL_ADDRESS BusAddress,
-                        IN OUT PULONG AddressSpace,
-                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
-{
-    /* Translation is easy */
-    TranslatedAddress->QuadPart = BusAddress.QuadPart;
-    return TRUE;
-}
-
-ULONG
-NTAPI
-HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
-                                 IN ULONG BusInterruptLevel,
-                                 IN ULONG BusInterruptVector,
-                                 OUT PKIRQL Irql,
-                                 OUT PKAFFINITY Affinity)
-{
-    ULONG Vector = IRQ2VECTOR(BusInterruptLevel);
-    *Irql = (KIRQL)VECTOR2IRQL(Vector);
-    *Affinity = 0xFFFFFFFF;
-    return Vector;
-}
-
-BOOLEAN
-NTAPI
-HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
+HaliFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
                               IN OUT PULONG AddressSpace,
                               OUT PPHYSICAL_ADDRESS TranslatedAddress,
                               IN OUT PULONG_PTR Context,
                               IN BOOLEAN NextBus)
 {
+    PHAL_BUS_HANDLER BusHandler;
+    PBUS_HANDLER Handler;
+    PLIST_ENTRY NextEntry;
+    ULONG ContextValue;
+
     /* Make sure we have a context */
     if (!Context) return FALSE;
-
-    /* If we have data in the context, then this shouldn't be a new lookup */
-    if ((*Context) && (NextBus == TRUE)) return FALSE;
-
-    /* Return bus data */
-    TranslatedAddress->QuadPart = BusAddress.QuadPart;
-
-    /* Set context value and return success */
-    *Context = 1;
+    ASSERT((*Context) || (NextBus == TRUE));
+    
+    /* Read the context */
+    ContextValue = *Context;
+    
+    /* Find the bus handler */
+    Handler = HalpContextToBusHandler(ContextValue);
+    if (!Handler) return FALSE;
+    
+    /* Check if this is an ongoing lookup */
+    if (NextBus)
+    {
+        /* Get the HAL bus handler */
+        BusHandler = CONTAINING_RECORD(Handler, HAL_BUS_HANDLER, Handler);
+        NextEntry = &BusHandler->AllHandlers;
+        
+        /* Get the next one if we were already with one */
+        if (ContextValue) NextEntry = NextEntry->Flink;
+        
+        /* Start scanning */
+        while (TRUE)
+        {
+            /* Check if this is the last one */
+            if (NextEntry == &HalpAllBusHandlers)
+            {
+                /* Quit */
+                *Context = 1;
+                return FALSE;
+            }
+            
+            /* Call this translator */
+            BusHandler = CONTAINING_RECORD(NextEntry, HAL_BUS_HANDLER, AllHandlers);
+            if (HalTranslateBusAddress(BusHandler->Handler.InterfaceType,
+                                       BusHandler->Handler.BusNumber,
+                                       BusAddress,
+                                       AddressSpace,
+                                       TranslatedAddress)) break;
+            
+            /* Try the next one */
+            NextEntry = NextEntry->Flink;
+        }
+        
+        /* If we made it, we're done */
+        *Context = (ULONG_PTR)Handler;
+        return TRUE;
+    }
+    
+    /* Try the first one through */
+    if (!HalTranslateBusAddress(Handler->InterfaceType,
+                                Handler->BusNumber,
+                                BusAddress,
+                                AddressSpace,
+                                TranslatedAddress)) return FALSE;
+    
+    /* Remember for next time */
+    *Context = (ULONG_PTR)Handler;
     return TRUE;
+}
+
+BOOLEAN
+NTAPI
+HaliTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
+                        IN ULONG BusNumber,
+                        IN PHYSICAL_ADDRESS BusAddress,
+                        IN OUT PULONG AddressSpace,
+                        OUT PPHYSICAL_ADDRESS TranslatedAddress)
+{
+    PBUS_HANDLER Handler;
+    BOOLEAN Status;
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
+    if (!(Handler) || !(Handler->TranslateBusAddress))
+    {
+        DPRINT1("No translator!\n");
+        return FALSE;
+    }
+    
+    /* Do the assignment */
+    Status = Handler->TranslateBusAddress(Handler,
+                                          Handler,
+                                          BusAddress,
+                                          AddressSpace,
+                                          TranslatedAddress);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -1207,10 +1262,25 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
  */
 NTSTATUS
 NTAPI
-HalAdjustResourceList(IN PCM_RESOURCE_LIST Resources)
+HalAdjustResourceList(IN PIO_RESOURCE_REQUIREMENTS_LIST *ResourceList)
 {
-    /* Deprecated, return success */
-    return STATUS_SUCCESS;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    PAGED_CODE();
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus((*ResourceList)->InterfaceType,
+                                        (*ResourceList)->BusNumber);
+    if (!Handler) return STATUS_SUCCESS;
+    
+    /* Do the assignment */
+    Status = Handler->AdjustResourceList(Handler,
+                                         Handler,
+                                         ResourceList);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*
@@ -1227,6 +1297,8 @@ HalAssignSlotResources(IN PUNICODE_STRING RegistryPath,
                        IN ULONG SlotNumber,
                        IN OUT PCM_RESOURCE_LIST *AllocatedResources)
 {
+    PAGED_CODE();
+    
     /* Check the bus type */
     if (BusType != PCIBus)
     {
@@ -1286,38 +1358,24 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
-    if (BusDataType == Cmos)
-    {
-        /* Call CMOS Function */
-        return HalpGetCmosData(0, SlotNumber, Buffer, Length);
-    }
-    else if (BusDataType == EisaConfiguration)
-    {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
-    }
-    else if ((BusDataType == PCIConfiguration) &&
-             (HalpPCIConfigInitialized) &&
-             ((BusNumber >= HalpMinPciBus) && (BusNumber <= HalpMaxPciBus)))
-    {
-        /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-        BusHandler.BusNumber = BusNumber;
-
-        /* Call PCI function */
-        return HalpGetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
-    }
-
-    /* Invalid bus */
-    return 0;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    
+    /* Find the handler */
+    Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Status = Handler->GetBusData(Handler,
+                                 Handler,
+                                 SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*
@@ -1332,12 +1390,38 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                       OUT PKIRQL Irql,
                       OUT PKAFFINITY Affinity)
 {
-    /* Call the system bus translator */
-    return HalpGetSystemInterruptVector_Acpi(BusNumber,
-                                             BusInterruptLevel,
-                                             BusInterruptVector,
-                                             Irql,
-                                             Affinity);
+    PBUS_HANDLER Handler;
+    ULONG Vector;
+    PAGED_CODE();
+    
+    /* Defaults */
+    *Irql = 0;
+    *Affinity = 0;
+    
+    /* Find the handler */
+    Handler = HalReferenceHandlerForBus(InterfaceType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Vector = Handler->GetInterruptVector(Handler,
+                                         Handler,
+                                         BusInterruptLevel,
+                                         BusInterruptVector,
+                                         Irql,
+                                         Affinity);
+    if ((Vector != IRQ2VECTOR(BusInterruptLevel)) ||
+        (*Irql != VECTOR2IRQL(IRQ2VECTOR(BusInterruptLevel))))
+    {
+        DPRINT1("Returning IRQL %lx, Vector %lx for Level/Vector: %lx/%lx\n",
+                *Irql, Vector, BusInterruptLevel, BusInterruptVector);
+        DPRINT1("Old HAL would've returned IRQL %lx and Vector %lx\n",
+                VECTOR2IRQL(IRQ2VECTOR(BusInterruptLevel)),
+                IRQ2VECTOR(BusInterruptLevel));
+    }
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Vector;
 }
 
 /*
@@ -1372,31 +1456,24 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
                       IN ULONG Offset,
                       IN ULONG Length)
 {
-    BUS_HANDLER BusHandler;
-
-    /* Look as the bus type */
-    if (BusDataType == Cmos)
-    {
-        /* Call CMOS Function */
-        return HalpSetCmosData(0, SlotNumber, Buffer, Length);
-    }
-    else if ((BusDataType == PCIConfiguration) && (HalpPCIConfigInitialized))
-    {
-        /* Setup fake PCI Bus handler */
-        RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BUS_HANDLER));
-        BusHandler.BusNumber = BusNumber;
-
-        /* Call PCI function */
-        return HalpSetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
-    }
-
-    /* Invalid bus */
-    return 0;
+    PBUS_HANDLER Handler;
+    ULONG Status;
+    
+    /* Find the handler */
+    Handler = HaliReferenceHandlerForConfigSpace(BusDataType, BusNumber);
+    if (!Handler) return 0;
+    
+    /* Do the assignment */
+    Status = Handler->SetBusData(Handler,
+                                 Handler,
+                                 SlotNumber,
+                                 Buffer,
+                                 Offset,
+                                 Length);
+    
+    /* Dereference the handler and return */
+    HalDereferenceBusHandler(Handler);
+    return Status;
 }
 
 /*
@@ -1422,9 +1499,12 @@ HalTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     }
     else
     {
-        /* Translation is easy */
-        TranslatedAddress->QuadPart = BusAddress.QuadPart;
-        return TRUE;
+        /* Call the bus handler */
+        return HaliTranslateBusAddress(InterfaceType,
+                                       BusNumber,
+                                       BusAddress,
+                                       AddressSpace,
+                                       TranslatedAddress);
     }
 }
 

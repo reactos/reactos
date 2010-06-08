@@ -457,14 +457,15 @@ WdmAudReadWrite(
         Status = KsProbeStreamIrp(Irp, KSPROBE_STREAMREAD | KSPROBE_ALLOCATEMDL | KSPROBE_PROBEANDLOCK, Length);
     }
 
-    /* now free the mdl */
-    IoFreeMdl(Mdl);
-
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("KsProbeStreamIrp failed with Status %x Cancel %u\n", Status, Irp->Cancel);
+        Irp->MdlAddress = Mdl;
         return SetIrpIoStatus(Irp, Status, 0);
     }
+
+    /* now free the mdl */
+    IoFreeMdl(Mdl);
 
     /* get device info */
     DeviceInfo = (PWDMAUD_DEVICE_INFO)Irp->AssociatedIrp.SystemBuffer;

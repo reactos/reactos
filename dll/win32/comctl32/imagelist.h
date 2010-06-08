@@ -27,32 +27,35 @@
 #include "winbase.h"
 #include "wingdi.h"
 
-/* the ones with offsets at the end are the same as in Windows */
 struct _IMAGELIST
 {
-    DWORD       magic;                  /* 00: 'SAMX' */
-    INT         cCurImage;              /* 04: ImageCount */
-    INT         cMaxImage;              /* 08: maximages */
-    INT         cGrow;                  /* 0c: cGrow */
-    INT         cx;                     /* 10: cx */
-    INT         cy;                     /* 14: cy */
+    const struct IImageListVtbl *lpVtbl; /* 00: IImageList vtable */
+
+    INT         cCurImage;               /* 04: ImageCount */
+    INT         cMaxImage;               /* 08: maximages */
+    INT         cGrow;                   /* 0C: cGrow */
+    INT         cx;                      /* 10: cx */
+    INT         cy;                      /* 14: cy */
     DWORD       x4;
-    UINT        flags;                  /* 1c: flags */
-    COLORREF    clrFg;                  /* 20: foreground color */
-    COLORREF    clrBk;                  /* 24: background color */
+    UINT        flags;                   /* 1C: flags */
+    COLORREF    clrFg;                   /* 20: foreground color */
+    COLORREF    clrBk;                   /* 24: background color */
 
 
-    HBITMAP     hbmImage;               /* 30: images Bitmap */
-    HBITMAP     hbmMask;                /* 34: masks  Bitmap */
-    HDC         hdcImage;               /* 38: images MemDC  */
-    HDC         hdcMask;                /* 3C: masks  MemDC  */
-    INT         nOvlIdx[15];            /* 40: overlay images index */
+    HBITMAP     hbmImage;                /* 28: images Bitmap */
+    HBITMAP     hbmMask;                 /* 2C: masks  Bitmap */
+    HDC         hdcImage;                /* 30: images MemDC  */
+    HDC         hdcMask;                 /* 34: masks  MemDC  */
+    INT         nOvlIdx[15];             /* 38: overlay images index */
 
     /* not yet found out */
     HBRUSH  hbrBlend25;
     HBRUSH  hbrBlend50;
     INT     cInitial;
     UINT    uBitsPixel;
+    char   *has_alpha;
+
+    LONG        ref;                     /* reference count */
 };
 
 #define IMAGELIST_MAGIC 0x53414D58

@@ -67,8 +67,6 @@ typedef struct
     HWND         hwndNotify;       /* my parent hwnd */
     HWND         hwndCombo;
     HWND         hwndEdit;
-    WNDPROC      prevEditWndProc;  /* previous Edit WNDPROC value */
-    WNDPROC      prevComboWndProc; /* previous Combo WNDPROC value */
     DWORD        dwExtStyle;
     INT          selected;         /* index of selected item */
     DWORD        flags;            /* WINE internal flags */
@@ -121,17 +119,15 @@ typedef struct
 /* Offset between image and text */
 #define CBE_SEP			4
 
-static const WCHAR COMBOEX_SUBCLASS_PROP[] = {
-    'C','C','C','o','m','b','o','E','x','3','2',
-    'S','u','b','c','l','a','s','s','I','n','f','o',0
-};
+#define COMBO_SUBCLASSID  1
+#define EDIT_SUBCLASSID   2
 
 #define COMBOEX_GetInfoPtr(hwnd) ((COMBOEX_INFO *)GetWindowLongPtrW (hwnd, 0))
 
-
-/* Things common to the entire DLL */
-static LRESULT WINAPI COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-static LRESULT WINAPI COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                             UINT_PTR uId, DWORD_PTR ref_data);
+static LRESULT CALLBACK COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                                              UINT_PTR uId, DWORD_PTR ref_data);
 static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr);
 typedef INT (WINAPI *cmp_func_t)(LPCWSTR, LPCWSTR);
 
@@ -177,7 +173,7 @@ static void COMBOEX_DumpInput (COMBOBOXEXITEMW const *input)
 static inline CBE_ITEMDATA *get_item_data(const COMBOEX_INFO *infoPtr, INT index)
 {
     return (CBE_ITEMDATA *)SendMessageW (infoPtr->hwndCombo, CB_GETITEMDATA,
-		                         (WPARAM)index, 0);
+                                         index, 0);
 }
 
 static inline cmp_func_t get_cmp_func(COMBOEX_INFO const *infoPtr)
@@ -455,10 +451,7 @@ static void COMBOEX_ReSize (const COMBOEX_INFO *infoPtr)
 static void COMBOEX_SetEditText (const COMBOEX_INFO *infoPtr, CBE_ITEMDATA *item)
 {
     if (!infoPtr->hwndEdit) return;
-    /* native issues the following messages to the {Edit} control */
-    /*      WM_SETTEXT (0,addr)     */
-    /*      EM_SETSEL32 (0,0)       */
-    /*      EM_SETSEL32 (0,-1)      */
+
     if (item->mask & CBEIF_TEXT) {
 	SendMessageW (infoPtr->hwndEdit, WM_SETTEXT, 0, (LPARAM)COMBOEX_GetText(infoPtr, item));
 	SendMessageW (infoPtr->hwndEdit, EM_SETSEL, 0, 0);
@@ -491,13 +484,6 @@ static CBE_ITEMDATA * COMBOEX_FindItem(const COMBOEX_INFO *infoPtr, INT_PTR inde
     return item;
 }
 
-
-static inline BOOL COMBOEX_HasEdit(COMBOEX_INFO const *infoPtr)
-{
-    return infoPtr->hwndEdit ? TRUE : FALSE;
-}
-
-
 /* ***  CBEM_xxx message support  *** */
 
 static UINT COMBOEX_GetListboxText(const COMBOEX_INFO *infoPtr, INT_PTR n, LPWSTR buf)
@@ -510,6 +496,17 @@ static UINT COMBOEX_GetListboxText(const COMBOEX_INFO *infoPtr, INT_PTR n, LPWST
         return 0;
 
     str = COMBOEX_GetText(infoPtr, item);
+    if (!str)
+    {
+        if (buf)
+        {
+            if (infoPtr->unicode)
+                buf[0] = 0;
+            else
+                *((LPSTR)buf) = 0;
+        }
+        return 0;
+    }
 
     if (infoPtr->unicode)
     {
@@ -536,7 +533,7 @@ static INT COMBOEX_DeleteItem (const COMBOEX_INFO *infoPtr, INT_PTR index)
     if (!COMBOEX_FindItem(infoPtr, index)) return CB_ERR;
 
     /* doing this will result in WM_DELETEITEM being issued */
-    SendMessageW (infoPtr->hwndCombo, CB_DELETESTRING, (WPARAM)index, 0);
+    SendMessageW (infoPtr->hwndCombo, CB_DELETESTRING, index, 0);
 
     return infoPtr->nb_items;
 }
@@ -547,13 +544,13 @@ static BOOL COMBOEX_GetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     INT_PTR index = cit->iItem;
     CBE_ITEMDATA *item;
 
-    TRACE("(...)\n");
+    TRACE("\n");
 
     /* if item number requested does not exist then return failure */
     if ((index >= infoPtr->nb_items) || (index < -1)) return FALSE;
 
     /* if the item is the edit control and there is no edit control, skip */
-    if ((index == -1) && !COMBOEX_HasEdit(infoPtr)) return FALSE;
+    if ((index == -1) && !infoPtr->hwndEdit) return FALSE;
 
     if (!(item = COMBOEX_FindItem(infoPtr, index))) return FALSE;
 
@@ -567,7 +564,7 @@ static BOOL COMBOEX_GetItemA (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
 {
     COMBOBOXEXITEMW tmpcit;
 
-    TRACE("(...)\n");
+    TRACE("\n");
 
     tmpcit.mask = cit->mask;
     tmpcit.iItem = cit->iItem;
@@ -600,8 +597,7 @@ static BOOL COMBOEX_GetItemA (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMA *cit)
 
 static inline BOOL COMBOEX_HasEditChanged (COMBOEX_INFO const *infoPtr)
 {
-    return COMBOEX_HasEdit(infoPtr) &&
-	   (infoPtr->flags & WCBE_EDITHASCHANGED) == WCBE_EDITHASCHANGED;
+    return infoPtr->hwndEdit && (infoPtr->flags & WCBE_EDITHASCHANGED) == WCBE_EDITHASCHANGED;
 }
 
 
@@ -678,8 +674,7 @@ static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW const *ci
 
     if (TRACE_ON(comboex)) COMBOEX_DumpItem (item);
 
-    SendMessageW (infoPtr->hwndCombo, CB_INSERTSTRING,
-		  (WPARAM)cit->iItem, (LPARAM)item);
+    SendMessageW (infoPtr->hwndCombo, CB_INSERTSTRING, cit->iItem, (LPARAM)item);
 
     memset (&nmcit.ceItem, 0, sizeof(nmcit.ceItem));
     COMBOEX_CopyItem (item, &nmcit.ceItem);
@@ -751,7 +746,7 @@ static HIMAGELIST COMBOEX_SetImageList (COMBOEX_INFO *infoPtr, HIMAGELIST himl)
 {
     HIMAGELIST himlTemp = infoPtr->himl;
 
-    TRACE("(...)\n");
+    TRACE("\n");
 
     infoPtr->himl = himl;
 
@@ -774,7 +769,7 @@ static BOOL COMBOEX_SetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     if ((index >= infoPtr->nb_items) || (index < -1)) return FALSE;
 
     /* if the item is the edit control and there is no edit control, skip */
-    if ((index == -1) && !COMBOEX_HasEdit(infoPtr)) return FALSE;
+    if ((index == -1) && !infoPtr->hwndEdit) return FALSE;
 
     if (!(item = COMBOEX_FindItem(infoPtr, index))) return FALSE;
 
@@ -802,7 +797,7 @@ static BOOL COMBOEX_SetItemW (const COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     if (cit->mask & CBEIF_INDENT)
         item->iIndent = cit->iIndent;
     if (cit->mask & CBEIF_LPARAM)
-        cit->lParam = cit->lParam;
+        item->lParam = cit->lParam;
 
     if (TRACE_ON(comboex)) COMBOEX_DumpItem (item);
 
@@ -968,12 +963,10 @@ static INT COMBOEX_SetItemHeight (COMBOEX_INFO const *infoPtr, INT index, UINT h
 
 static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
 {
-    static const WCHAR COMBOBOX[] = { 'C', 'o', 'm', 'b', 'o', 'B', 'o', 'x', 0 };
-    static const WCHAR EDIT[] = { 'E', 'D', 'I', 'T', 0 };
     static const WCHAR NIL[] = { 0 };
     COMBOEX_INFO *infoPtr;
     LOGFONTW mylogfont;
-    RECT wnrc1, clrc1, cmbwrc;
+    RECT win_rect;
     INT i;
 
     /* allocate memory for info structure */
@@ -998,11 +991,13 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
 
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
 
-    /* create combo box */
-    GetWindowRect(hwnd, &wnrc1);
-    GetClientRect(hwnd, &clrc1);
-    TRACE("EX window=(%s), client=(%s)\n",
-          wine_dbgstr_rect(&wnrc1), wine_dbgstr_rect(&clrc1));
+    if (TRACE_ON(comboex)) {
+	RECT client, rect;
+	GetWindowRect(hwnd, &rect);
+	GetClientRect(hwnd, &client);
+	TRACE("EX window=(%s), client=(%s)\n",
+		wine_dbgstr_rect(&rect), wine_dbgstr_rect(&client));
+    }
 
     /* Native version of ComboEx creates the ComboBox with DROPDOWNLIST */
     /* specified. It then creates it's own version of the EDIT control  */
@@ -1011,7 +1006,7 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
     /* We also need to place the edit control at the proper location    */
     /* (allow space for the icons).                                     */
 
-    infoPtr->hwndCombo = CreateWindowW (COMBOBOX, NIL,
+    infoPtr->hwndCombo = CreateWindowW (WC_COMBOBOXW, NIL,
 			 /* following line added to match native */
                          WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_VSCROLL |
                          CBS_NOINTEGRALHEIGHT | CBS_DROPDOWNLIST |
@@ -1030,22 +1025,16 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
      *  GetCurrentProcessId()
      */
 
-    /*
-     * Setup a property to hold the pointer to the COMBOBOXEX
-     * data structure.
-     */
-    SetPropW(infoPtr->hwndCombo, COMBOEX_SUBCLASS_PROP, hwnd);
-    infoPtr->prevComboWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndCombo,
-	                        GWLP_WNDPROC, (DWORD_PTR)COMBOEX_ComboWndProc);
+    SetWindowSubclass(infoPtr->hwndCombo, COMBOEX_ComboWndProc, COMBO_SUBCLASSID,
+                      (DWORD_PTR)hwnd);
     infoPtr->font = (HFONT)SendMessageW (infoPtr->hwndCombo, WM_GETFONT, 0, 0);
-
 
     /*
      * Now create our own EDIT control so we can position it.
      * It is created only for CBS_DROPDOWN style
      */
     if ((cs->style & CBS_DROPDOWNLIST) == CBS_DROPDOWN) {
-	infoPtr->hwndEdit = CreateWindowExW (0, EDIT, NIL,
+	infoPtr->hwndEdit = CreateWindowExW (0, WC_EDITW, NIL,
 		    WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | ES_AUTOHSCROLL,
 		    0, 0, 0, 0,  /* will set later */
 		    infoPtr->hwndCombo,
@@ -1058,14 +1047,9 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
 	 *  GetWindowThreadProcessId(hwndEdit, &???)
 	 *  GetCurrentProcessId()
 	 */
+	SetWindowSubclass(infoPtr->hwndEdit, COMBOEX_EditWndProc, EDIT_SUBCLASSID,
+	                  (DWORD_PTR)hwnd);
 
-	/*
-	 * Setup a property to hold the pointer to the COMBOBOXEX
-	 * data structure.
-	 */
-        SetPropW(infoPtr->hwndEdit, COMBOEX_SUBCLASS_PROP, hwnd);
-	infoPtr->prevEditWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hwndEdit,
-				 GWLP_WNDPROC, (DWORD_PTR)COMBOEX_EditWndProc);
 	infoPtr->font = (HFONT)SendMessageW(infoPtr->hwndCombo, WM_GETFONT, 0, 0);
     }
 
@@ -1081,27 +1065,31 @@ static LRESULT COMBOEX_Create (HWND hwnd, CREATESTRUCTA const *cs)
     SendMessageW (infoPtr->hwndCombo, WM_SETFONT, (WPARAM)infoPtr->font, 0);
     if (infoPtr->hwndEdit) {
 	SendMessageW (infoPtr->hwndEdit, WM_SETFONT, (WPARAM)infoPtr->font, 0);
-	SendMessageW (infoPtr->hwndEdit, EM_SETMARGINS, (WPARAM)EC_USEFONTINFO, 0);
+       SendMessageW (infoPtr->hwndEdit, EM_SETMARGINS, EC_USEFONTINFO, 0);
     }
 
     COMBOEX_ReSize (infoPtr);
 
     /* Above is fairly certain, below is much less certain. */
 
-    GetWindowRect(hwnd, &wnrc1);
-    GetClientRect(hwnd, &clrc1);
-    GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("EX window=(%s) client=(%s) CB wnd=(%s)\n",
-          wine_dbgstr_rect(&wnrc1), wine_dbgstr_rect(&clrc1),
-          wine_dbgstr_rect(&cmbwrc));
-    SetWindowPos(infoPtr->hwndCombo, HWND_TOP,
-		 0, 0, wnrc1.right-wnrc1.left, wnrc1.bottom-wnrc1.top,
+    GetWindowRect(hwnd, &win_rect);
+
+    if (TRACE_ON(comboex)) {
+	RECT client, rect;
+	GetClientRect(hwnd, &client);
+	GetWindowRect(infoPtr->hwndCombo, &rect);
+	TRACE("EX window=(%s) client=(%s) CB wnd=(%s)\n",
+		wine_dbgstr_rect(&win_rect), wine_dbgstr_rect(&client),
+		wine_dbgstr_rect(&rect));
+    }
+    SetWindowPos(infoPtr->hwndCombo, HWND_TOP, 0, 0,
+		 win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
 		 SWP_NOACTIVATE | SWP_NOREDRAW);
 
-    GetWindowRect(infoPtr->hwndCombo, &cmbwrc);
-    TRACE("CB window=(%s)\n", wine_dbgstr_rect(&cmbwrc));
-    SetWindowPos(hwnd, HWND_TOP,
-		 0, 0, cmbwrc.right-cmbwrc.left, cmbwrc.bottom-cmbwrc.top,
+    GetWindowRect(infoPtr->hwndCombo, &win_rect);
+    TRACE("CB window=(%s)\n", wine_dbgstr_rect(&win_rect));
+    SetWindowPos(hwnd, HWND_TOP, 0, 0,
+		 win_rect.right - win_rect.left, win_rect.bottom - win_rect.top,
 		 SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE);
 
     COMBOEX_AdjustEditPos (infoPtr);
@@ -1158,7 +1146,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam)
 	 */
 	ShowWindow (infoPtr->hwndEdit, SW_SHOW);
 	InvalidateRect (infoPtr->hwndCombo, 0, TRUE);
-	InvalidateRect (infoPtr->hwndEdit, 0, TRUE);
+	if (infoPtr->hwndEdit) InvalidateRect (infoPtr->hwndEdit, 0, TRUE);
 	cursel = SendMessageW (infoPtr->hwndCombo, CB_GETCURSEL, 0, 0);
 	if (cursel == -1) {
             cmp_func_t cmptext = get_cmp_func(infoPtr);
@@ -1173,8 +1161,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam)
 	    if ((cursel == n) || ((INT_PTR)item == CB_ERR)) {
 		TRACE("failed to find match??? item=%p cursel=%d\n",
 		      item, cursel);
-		if (infoPtr->hwndEdit)
-		    SetFocus(infoPtr->hwndEdit);
+		if (infoPtr->hwndEdit) SetFocus(infoPtr->hwndEdit);
 		return 0;
 	    }
 	}
@@ -1183,8 +1170,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam)
 	    if ((INT_PTR)item == CB_ERR) {
 		TRACE("failed to find match??? item=%p cursel=%d\n",
 		      item, cursel);
-		if (infoPtr->hwndEdit)
-		    SetFocus(infoPtr->hwndEdit);
+		if (infoPtr->hwndEdit) SetFocus(infoPtr->hwndEdit);
 		return 0;
 	    }
 	}
@@ -1280,8 +1266,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam)
 	 * after passing the command to the parent of the ComboEx.
 	 */
 	lret = SendMessageW (parent, WM_COMMAND, wParam, (LPARAM)infoPtr->hwndSelf);
-	if (infoPtr->hwndEdit)
-	    SetFocus(infoPtr->hwndEdit);
+	if (infoPtr->hwndEdit) SetFocus(infoPtr->hwndEdit);
 	return lret;
     }
     return 0;
@@ -1377,14 +1362,12 @@ static LRESULT COMBOEX_DrawItem (const COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT con
 		 (dis->itemAction == ODA_DRAWENTIRE)) {
 	    /* draw of edit control data */
 
-	    /* testing */
-	    {
+	    if (TRACE_ON(comboex)) {
 		RECT exrc, cbrc, edrc;
 		GetWindowRect (infoPtr->hwndSelf, &exrc);
 		GetWindowRect (infoPtr->hwndCombo, &cbrc);
-		edrc.left=edrc.top=edrc.right=edrc.bottom=-1;
-		if (infoPtr->hwndEdit)
-		    GetWindowRect (infoPtr->hwndEdit, &edrc);
+		edrc.left = edrc.top = edrc.right = edrc.bottom = -1;
+		if (infoPtr->hwndEdit) GetWindowRect (infoPtr->hwndEdit, &edrc);
                 TRACE("window rects ex=(%s), cb=(%s), ed=(%s)\n",
                       wine_dbgstr_rect(&exrc), wine_dbgstr_rect(&cbrc),
                       wine_dbgstr_rect(&edrc));
@@ -1595,8 +1578,12 @@ static void COMBOEX_ResetContent (COMBOEX_INFO *infoPtr)
 static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 {
     if (infoPtr->hwndCombo)
-	DestroyWindow (infoPtr->hwndCombo);
+        RemoveWindowSubclass(infoPtr->hwndCombo, COMBOEX_ComboWndProc, COMBO_SUBCLASSID);
 
+    if (infoPtr->hwndEdit)
+        RemoveWindowSubclass(infoPtr->hwndEdit, COMBOEX_EditWndProc, EDIT_SUBCLASSID);
+
+    COMBOEX_FreeText (infoPtr->edit);
     Free (infoPtr->edit);
     infoPtr->edit = 0;
 
@@ -1720,11 +1707,11 @@ static LRESULT COMBOEX_WindowPosChanging (const COMBOEX_INFO *infoPtr, WINDOWPOS
     return 0;
 }
 
-static LRESULT WINAPI
-COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                     UINT_PTR uId, DWORD_PTR ref_data)
 {
-    HWND hwndComboex = GetPropW(hwnd, COMBOEX_SUBCLASS_PROP);
-    COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr (hwndComboex);
+    COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr ((HWND)ref_data);
     NMCBEENDEDITW cbeend;
     WCHAR edit_text[260];
     COLORREF obkc;
@@ -1744,8 +1731,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    /* handle (ignore) the return character */
 	    if (wParam == VK_RETURN) return 0;
 	    /* all other characters pass into the real Edit */
-	    return CallWindowProcW (infoPtr->prevEditWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
 	case WM_ERASEBKGND:
 	    /*
@@ -1757,8 +1743,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);
-	    return CallWindowProcW (infoPtr->prevEditWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
 	case WM_KEYDOWN: {
 	    INT_PTR oldItem, selected, step = 1;
@@ -1864,8 +1849,7 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		oldItem = SendMessageW (infoPtr->hwndCombo,CB_GETCURSEL, 0, 0);
 		if (oldItem != -1) {
 		    /* if something is selected, then deselect it */
-		    SendMessageW (infoPtr->hwndCombo, CB_SETCURSEL,
-				  (WPARAM)-1, 0);
+                    SendMessageW (infoPtr->hwndCombo, CB_SETCURSEL, -1, 0);
 		}
 		InvalidateRect (infoPtr->hwndCombo, 0, 0);
 		SetFocus(infoPtr->hwndEdit);
@@ -1880,16 +1864,14 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    SendMessageW (infoPtr->hwndSelf, CB_SETCURSEL, oldItem + step, 0);
 	    	return 0;
 	    default:
-		return CallWindowProcW (infoPtr->prevEditWndProc,
-				       hwnd, uMsg, wParam, lParam);
+		return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 	    }
 	    return 0;
             }
 
 	case WM_SETFOCUS:
 	    /* remember the focus to set state of icon */
-	    lret = CallWindowProcW (infoPtr->prevEditWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    lret = DefSubclassProc(hwnd, uMsg, wParam, lParam);
 	    infoPtr->flags |= WCBE_EDITFOCUSED;
 	    return lret;
 
@@ -1912,17 +1894,16 @@ COMBOEX_EditWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    /* fall through */
 
 	default:
-	    return CallWindowProcW (infoPtr->prevEditWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
     }
 }
 
 
-static LRESULT WINAPI
-COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK
+COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                      UINT_PTR uId, DWORD_PTR ref_data)
 {
-    HWND hwndComboex = GetPropW(hwnd, COMBOEX_SUBCLASS_PROP);
-    COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr (hwndComboex);
+    COMBOEX_INFO *infoPtr = COMBOEX_GetInfoPtr ((HWND)ref_data);
     NMCBEENDEDITW cbeend;
     NMMOUSE nmmse;
     COLORREF obkc;
@@ -1947,8 +1928,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	     * that ComboEx knows this is listbox.
 	     */
 	    ((DRAWITEMSTRUCT *)lParam)->itemState |= ODS_COMBOEXLBOX;
-	    return CallWindowProcW (infoPtr->prevComboWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
     case WM_ERASEBKGND:
 	    /*
@@ -1960,8 +1940,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             TRACE("erasing (%s)\n", wine_dbgstr_rect(&rect));
 	    ExtTextOutW (hDC, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
             SetBkColor (hDC, obkc);
-	    return CallWindowProcW (infoPtr->prevComboWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
     case WM_SETCURSOR:
 	    /*
@@ -1975,8 +1954,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    nmmse.pt.y = 0;
 	    nmmse.dwHitInfo = lParam;
 	    COMBOEX_Notify (infoPtr, NM_SETCURSOR, (NMHDR *)&nmmse);
-	    return CallWindowProcW (infoPtr->prevComboWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
     case WM_LBUTTONDOWN:
 	    GetClientRect (hwnd, &rect);
@@ -1986,16 +1964,16 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    pt.x = (short)LOWORD(lParam);
 	    pt.y = (short)HIWORD(lParam);
 	    if (PtInRect(&rect, pt))
-		return CallWindowProcW (infoPtr->prevComboWndProc,
-				        hwnd, uMsg, wParam, lParam);
+		return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+
 	    infoPtr->flags |= WCBE_MOUSECAPTURED;
 	    SetCapture(hwnd);
 	    break;
 
     case WM_LBUTTONUP:
 	    if (!(infoPtr->flags & WCBE_MOUSECAPTURED))
-		return CallWindowProcW (infoPtr->prevComboWndProc,
-				        hwnd, uMsg, wParam, lParam);
+		return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+
 	    ReleaseCapture();
 	    infoPtr->flags &= ~WCBE_MOUSECAPTURED;
 	    if (infoPtr->flags & WCBE_MOUSEDRAGGED) {
@@ -2012,8 +1990,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		COMBOEX_NotifyDragBegin(infoPtr, edit_text);
 		infoPtr->flags |= WCBE_MOUSEDRAGGED;
 	    }
-	    return CallWindowProcW (infoPtr->prevComboWndProc,
-			            hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 
     case WM_COMMAND:
 	    switch (HIWORD(wParam)) {
@@ -2157,8 +2134,7 @@ COMBOEX_ComboWndProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 	    }/* fall through */
     default:
-	    return CallWindowProcW (infoPtr->prevComboWndProc,
-				   hwnd, uMsg, wParam, lParam);
+	    return DefSubclassProc(hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }

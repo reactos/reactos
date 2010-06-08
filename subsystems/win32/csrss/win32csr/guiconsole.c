@@ -946,11 +946,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
         if (LeftChar <= CursorX && CursorX <= RightChar &&
                 TopLine <= CursorY && CursorY <= BottomLine)
         {
-            CursorHeight = (GuiData->CharHeight * Buff->CursorInfo.dwSize) / 100;
-            if (CursorHeight < 1)
-            {
-                CursorHeight = 1;
-            }
+            CursorHeight = ConioEffectiveCursorSize(Console, GuiData->CharHeight);
             From = ConioCoordToPointer(Buff, Buff->CurrentX, Buff->CurrentY) + 1;
 
             if (*From != DEFAULT_ATTRIB)
