@@ -631,8 +631,8 @@ NtGdiGetDIBitsInternal(
 
     /* Copy palette information
      * Always create a palette for 15 & 16 bit. */
-    if ((Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat) &&
-         Info->bmiHeader.biBitCount != 15 && Info->bmiHeader.biBitCount != 16) ||
+    if ((bmiLocal.bmiHeader.bV5BitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat) &&
+         bmiLocal.bmiHeader.bV5BitCount != 15 && bmiLocal.bmiHeader.bV5BitCount != 16) ||
          !ChkBits)
     {
         ppalDst = psurf->ppal;
@@ -674,7 +674,7 @@ NtGdiGetDIBitsInternal(
                 else
                 {
                     for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount);
+                         Index < (1 << bmiLocal.bmiHeader.bV5BitCount);
                          Index++)
                     {
                         ((WORD*)bmiLocal.bmiColors)[Index] = Index;
@@ -686,16 +686,16 @@ NtGdiGetDIBitsInternal(
                 if (Usage == DIB_PAL_COLORS)
                 {
                     for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount);
+                         Index < (1 << bmiLocal.bmiHeader.bV5BitCount);
                          Index++)
                     {
                         ((WORD*)bmiLocal.bmiColors)[Index] = (WORD)Index;
                     }
                 }
-                else if (Info->bmiHeader.biBitCount > 1  && bPaletteMatch)
+                else if (bmiLocal.bmiHeader.bV5BitCount > 1  && bPaletteMatch)
                 {
                     for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount) && Index < ppalDst->NumColors;
+                         Index < (1 << bmiLocal.bmiHeader.bV5BitCount) && Index < ppalDst->NumColors;
                          Index++)
                     {
                         bmiLocal.bmiColors[Index].rgbRed   = ppalDst->IndexedColors[Index].peRed;
@@ -755,7 +755,7 @@ NtGdiGetDIBitsInternal(
             break;
 
         case 16:
-            if (Info->bmiHeader.biCompression == BI_BITFIELDS)
+            if (bmiLocal.bmiHeader.bV5Compression == BI_BITFIELDS)
             {
                 bmiLocal.bmiHeader.bV5RedMask = 0xf800;
                 bmiLocal.bmiHeader.bV5GreenMask = 0x07e0;
@@ -765,7 +765,7 @@ NtGdiGetDIBitsInternal(
 
         case 24:
         case 32:
-            if (Info->bmiHeader.biCompression == BI_BITFIELDS)
+            if (bmiLocal.bmiHeader.bV5Compression == BI_BITFIELDS)
             {
                 bmiLocal.bmiHeader.bV5RedMask = 0xff0000;
                 bmiLocal.bmiHeader.bV5GreenMask = 0x00ff00;
@@ -778,7 +778,11 @@ NtGdiGetDIBitsInternal(
     if (!ChkBits)
     {
         bmiLocal.bmiHeader.bV5Width = psurf->SurfObj.sizlBitmap.cx;
-        bmiLocal.bmiHeader.bV5Height = psurf->SurfObj.sizlBitmap.cy;
+        /* Report negative height for top-down bitmaps. */
+        if (psurf->SurfObj.fjBitmap & BMF_TOPDOWN)
+            bmiLocal.bmiHeader.bV5Height = - psurf->SurfObj.sizlBitmap.cy;
+        else
+            bmiLocal.bmiHeader.bV5Height = psurf->SurfObj.sizlBitmap.cy;
         bmiLocal.bmiHeader.bV5Planes = 1;
         bmiLocal.bmiHeader.bV5BitCount = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
         switch (psurf->SurfObj.iBitmapFormat)
@@ -805,16 +809,12 @@ NtGdiGetDIBitsInternal(
                 bmiLocal.bmiHeader.bV5Compression = BI_PNG;
                 break;
         }
-        /* Image size has to be calculated */
-        bmiLocal.bmiHeader.bV5SizeImage = DIB_GetDIBWidthBytes(Info->bmiHeader.biWidth,
-                                      Info->bmiHeader.biBitCount) * Info->bmiHeader.biHeight;
-        bmiLocal.bmiHeader.bV5XPelsPerMeter = 0; /* FIXME */
-        bmiLocal.bmiHeader.bV5YPelsPerMeter = 0; /* FIXME */
+
+        bmiLocal.bmiHeader.bV5SizeImage = psurf->SurfObj.cjBits;
+        bmiLocal.bmiHeader.bV5XPelsPerMeter = psurf->sizlDim.cx; /* FIXME */
+        bmiLocal.bmiHeader.bV5YPelsPerMeter = psurf->sizlDim.cy; /* FIXME */
         bmiLocal.bmiHeader.bV5ClrUsed = 0;
-        bmiLocal.bmiHeader.bV5ClrImportant = 1 << Info->bmiHeader.biBitCount; /* FIXME */
-        /* Report negative height for top-down bitmaps. */
-        if (psurf->SurfObj.lDelta > 0)
-            bmiLocal.bmiHeader.bV5Height *= -1;
+        bmiLocal.bmiHeader.bV5ClrImportant = 1 << bmiLocal.bmiHeader.bV5BitCount; /* FIXME */
         Result = psurf->SurfObj.sizlBitmap.cy;
     }
     else
@@ -839,12 +839,14 @@ NtGdiGetDIBitsInternal(
             hDestBitmap = NULL;
 
             bmiLocal.bmiHeader.bV5SizeImage = DIB_GetDIBWidthBytes(DestSize.cx,
-                                              Info->bmiHeader.biBitCount) * DestSize.cy;
+                                              bmiLocal.bmiHeader.bV5BitCount) * DestSize.cy;
 
             hDestBitmap = EngCreateBitmap(DestSize,
-                                          DIB_GetDIBWidthBytes(DestSize.cx, Info->bmiHeader.biBitCount),
-                                          BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
-                                          0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
+                                          DIB_GetDIBWidthBytes(DestSize.cx, 
+                                                               bmiLocal.bmiHeader.bV5BitCount),
+                                          BitmapFormat(bmiLocal.bmiHeader.bV5BitCount,
+                                                       bmiLocal.bmiHeader.bV5Compression),
+                                          bmiLocal.bmiHeader.bV5Height > 0 ? 0 : BMF_TOPDOWN,
                                           Bits);
 
             if (hDestBitmap == NULL)
@@ -877,7 +879,7 @@ NtGdiGetDIBitsInternal(
                                &DestRect,
                                &SourcePoint))
             {
-                DPRINT("GetDIBits %d \n",abs(Info->bmiHeader.biHeight) - StartScan);
+                DPRINT("GetDIBits %d \n",abs(bmiLocal.bmiHeader.bV5Height) - StartScan);
                 Result = ScanLines;
             }
 
@@ -885,9 +887,19 @@ NtGdiGetDIBitsInternal(
             EngUnlockSurface(DestSurfObj);
         }
     }
+
     /* Now that everything is over, get back the information to caller */
-    /* Note : Info has already been probed */
-    GetBMIFromBitmapV5Info(&bmiLocal, Info, Usage);
+    _SEH2_TRY
+    {
+        /* Note : Info has already been probed */
+        GetBMIFromBitmapV5Info(&bmiLocal, Info, Usage);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* FIXME: fail or something */
+    }
+    _SEH2_END
+
 cleanup:
 
     if (hDestBitmap != NULL)
