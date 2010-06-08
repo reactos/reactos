@@ -374,8 +374,7 @@ HEADER_DrawItem (HEADER_INFO *infoPtr, HDC hdc, INT iItem, BOOL bHotTrack, LRESU
 	dis.rcItem     = phdi->rect;
 	dis.itemData   = phdi->lParam;
         oldBkMode = SetBkMode(hdc, TRANSPARENT);
-	SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM,
-			(WPARAM)dis.CtlID, (LPARAM)&dis);
+        SendMessageW (infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
         if (oldBkMode != TRANSPARENT)
             SetBkMode(hdc, oldBkMode);
     }
@@ -1214,20 +1213,64 @@ HEADER_GetOrderArray(const HEADER_INFO *infoPtr, INT size, LPINT order)
     return TRUE;
 }
 
+/* Returns index of first duplicate 'value' from [0,to) range,
+   or -1 if there isn't any */
+static INT has_duplicate(INT *array, INT to, INT value)
+{
+    INT i;
+    for(i = 0; i < to; i++)
+        if (array[i] == value) return i;
+    return -1;
+}
+
+/* returns next available value from [0,max] not to duplicate in [0,to) */
+static INT get_nextvalue(INT *array, INT to, INT max)
+{
+    INT i;
+    for(i = 0; i < max; i++)
+        if (has_duplicate(array, to, i) == -1) return i;
+    return 0;
+}
+
 static LRESULT
 HEADER_SetOrderArray(HEADER_INFO *infoPtr, INT size, const INT *order)
 {
-    INT i;
     HEADER_ITEM *lpItem;
+    INT i;
 
-    if ((UINT)size <infoPtr->uNumItem)
+    if ((UINT)size != infoPtr->uNumItem)
       return FALSE;
-    memcpy(infoPtr->order, order, infoPtr->uNumItem * sizeof(INT));
+
     for (i=0; i<size; i++)
-      {
-        lpItem = &infoPtr->items[*order++];
-	lpItem->iOrder=i;
-      }
+    {
+        if (order[i] >= size || order[i] < 0)
+           /* on invalid index get next available */
+           /* FIXME: if i==0 array item is out of range behaviour is
+                     different, see tests */
+           infoPtr->order[i] = get_nextvalue(infoPtr->order, i, size);
+        else
+        {
+           INT j, dup;
+
+           infoPtr->order[i] = order[i];
+           j = i;
+           /* remove duplicates */
+           while ((dup = has_duplicate(infoPtr->order, j, order[j])) != -1)
+           {
+               INT next;
+
+               next = get_nextvalue(infoPtr->order, j, size);
+               infoPtr->order[dup] = next;
+               j--;
+           }
+        }
+    }
+    /* sync with item data */
+    for (i=0; i<size; i++)
+    {
+        lpItem = &infoPtr->items[infoPtr->order[i]];
+        lpItem->iOrder = i;
+    }
     HEADER_SetItemBounds(infoPtr);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     return TRUE;
@@ -1704,7 +1747,7 @@ HEADER_NotifyFormat (HEADER_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	case NF_REQUERY:
 	    infoPtr->nNotifyFormat =
 		SendMessageW ((HWND)wParam, WM_NOTIFYFORMAT,
-			      (WPARAM)infoPtr->hwndSelf, (LPARAM)NF_QUERY);
+                             (WPARAM)infoPtr->hwndSelf, NF_QUERY);
 	    return infoPtr->nNotifyFormat;
     }
 

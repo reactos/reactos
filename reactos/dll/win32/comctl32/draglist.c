@@ -334,7 +334,7 @@ INT WINAPI LBItemFromPt (HWND hwndLB, POINT pt, BOOL bAutoScroll)
 
         dwLastScrollTime = dwScrollTime;
 
-        SendMessageW (hwndLB, LB_SETTOPINDEX, (WPARAM)nIndex, 0);
+        SendMessageW (hwndLB, LB_SETTOPINDEX, nIndex, 0);
     }
 
     return -1;

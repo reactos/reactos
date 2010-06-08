@@ -426,12 +426,27 @@ BOOL WINAPI DPA_Destroy (const HDPA hdpa)
  */
 BOOL WINAPI DPA_Grow (HDPA hdpa, INT nGrow)
 {
+    INT items;
     TRACE("(%p %d)\n", hdpa, nGrow);
 
     if (!hdpa)
         return FALSE;
 
-    hdpa->nGrow = max(8, nGrow);
+    nGrow = max( 8, nGrow );
+    items = nGrow * (((hdpa->nMaxCount - 1) / nGrow) + 1);
+    if (items > hdpa->nMaxCount)
+    {
+        void *ptr;
+
+        if (hdpa->ptrs)
+            ptr = HeapReAlloc( hdpa->hHeap, HEAP_ZERO_MEMORY, hdpa->ptrs, items * sizeof(LPVOID) );
+        else
+            ptr = HeapAlloc( hdpa->hHeap, HEAP_ZERO_MEMORY, items * sizeof(LPVOID) );
+        if (!ptr) return FALSE;
+        hdpa->nMaxCount = items;
+        hdpa->ptrs = ptr;
+    }
+    hdpa->nGrow = nGrow;
 
     return TRUE;
 }
