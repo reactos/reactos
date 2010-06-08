@@ -15,6 +15,32 @@
 #endif
 #endif
 
+#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#error Old MSVC compiler version.
+#endif
+
+#ifdef _MAC
+#error Not supported.
+#endif
+
+#if !defined(MIDL_PASS) && !defined(RC_INVOKED)
+ #define POINTER_64 __ptr64
+ #if defined(_WIN64)
+  #define POINTER_32 __ptr32
+ #else
+  #define POINTER_32
+ #endif
+#else
+ #define POINTER_64
+ #define POINTER_32
+#endif /* !defined(MIDL_PASS) && !defined(RC_INVOKED) */
+
+#if defined(_M_MRX000) || defined(_M_AMD64) || defined(_M_IA64)
+ typedef unsigned __int64 POINTER_64_INT;
+#else
+ typedef unsigned long POINTER_64_INT;
+#endif
+
 #if defined(_WIN64)
 #define __int3264   __int64
 #define ADDRESS_TAG_BIT 0x40000000000UI64

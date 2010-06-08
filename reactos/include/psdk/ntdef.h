@@ -20,8 +20,6 @@
 #endif
 #endif
 
-typedef unsigned long POINTER_64; // FIXME! HACK!!!
-
 /* Pseudo Modifiers for Input Parameters */
 
 #ifndef IN
