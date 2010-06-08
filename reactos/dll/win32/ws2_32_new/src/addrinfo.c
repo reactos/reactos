@@ -91,7 +91,7 @@ ParseV4Address(IN PCWSTR AddressString,
     LPWSTR Ip = 0;
 
     /* Do the conversion, don't accept wildcard */
-    RtlIpv4StringToAddressW((LPWSTR)AddressString, 0, Ip, (IN_ADDR *)&Address);
+    RtlIpv4StringToAddressW((LPWSTR)AddressString, 0, &Ip, (IN_ADDR *)&Address);
 
     /* Return the address and success */
     *pAddress = Address;

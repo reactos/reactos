@@ -103,9 +103,9 @@ RtlIpv4StringToAddressExA(IN PCHAR AddressString,
 */
 NTSTATUS
 NTAPI
-RtlIpv4StringToAddressW(IN PWCHAR String,
-                        IN UCHAR Strict,
-                        OUT PWCHAR Terminator,
+RtlIpv4StringToAddressW(IN PCWSTR String,
+                        IN BOOLEAN Strict,
+                        OUT LPWSTR *Terminator,
                         OUT struct in_addr *Addr)
 {
     UNIMPLEMENTED;
