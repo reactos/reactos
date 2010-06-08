@@ -757,7 +757,7 @@ GreStretchBltMask(
     }
     else if(DCSrc)
     {
-        DPRINT1("Getting a valid Source handle without using source!!!");
+        DPRINT1("Getting a valid Source handle without using source!!!\n");
         GDIOBJ_UnlockObjByPtr(&DCSrc->BaseObject);
         DCSrc = NULL ;
     }
