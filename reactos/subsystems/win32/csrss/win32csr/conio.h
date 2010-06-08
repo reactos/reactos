@@ -81,6 +81,8 @@ typedef struct tagCSRSS_CONSOLE
   WORD LinePos;                         /* current position within line */
   BOOLEAN LineComplete;                 /* user pressed enter, ready to send back to client */
   BOOLEAN LineUpPressed;
+  BOOLEAN LineInsertToggle;             /* replace character over cursor instead of inserting */
+  ULONG LineWakeupMask;                 /* bitmap of which control characters will end line input */
   LIST_ENTRY HistoryBuffers;
   WORD HistoryBufferSize;               /* size for newly created history buffers */
   WORD NumberOfHistoryBuffers;          /* maximum number of history buffers allowed */
@@ -192,6 +194,7 @@ NTSTATUS FASTCALL ConioWriteConsole(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER
                                     CHAR *Buffer, DWORD Length, BOOL Attrib);
 NTSTATUS FASTCALL CsrInitConsoleScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer);
 VOID WINAPI ConioDeleteScreenBuffer(PCSRSS_SCREEN_BUFFER Buffer);
+DWORD FASTCALL ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale);
 
 CSR_API(CsrWriteConsole);
 CSR_API(CsrGetScreenBufferInfo);

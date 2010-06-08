@@ -459,6 +459,11 @@ LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
                 LineInputEdit(Console, 0, 1, &Entry.Buffer[Pos]);
         }
         return;
+    case VK_INSERT:
+        /* Toggle between insert and overstrike */
+        Console->LineInsertToggle = !Console->LineInsertToggle;
+        ConioSetCursorInfo(Console, Console->ActiveBuffer);
+        return;
     case VK_DELETE:
         /* Remove character to right of cursor */
         if (Pos != Console->LineSize)
@@ -555,7 +560,12 @@ LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
         Console->LineBuffer[Console->LineSize++] = L'\r';
         if (Console->Mode & ENABLE_ECHO_INPUT)
             ConioWriteConsole(Console, Console->ActiveBuffer, "\r", 1, TRUE);
-        if (Console->Mode & ENABLE_PROCESSED_INPUT)
+
+        /* Add \n if processed input. There should usually be room for it,
+         * but an exception to the rule exists: the buffer could have been 
+         * pre-filled with LineMaxSize - 1 characters. */
+        if (Console->Mode & ENABLE_PROCESSED_INPUT &&
+            Console->LineSize < Console->LineMaxSize)
         {
             Console->LineBuffer[Console->LineSize++] = L'\n';
             if (Console->Mode & ENABLE_ECHO_INPUT)
@@ -566,8 +576,21 @@ LineInputKeyDown(PCSRSS_CONSOLE Console, KEY_EVENT_RECORD *KeyEvent)
     }
     else if (KeyEvent->uChar.UnicodeChar != L'\0')
     {
-        /* Normal character */
-        LineInputEdit(Console, 0, 1, &KeyEvent->uChar.UnicodeChar);
+        if (KeyEvent->uChar.UnicodeChar < 0x20 &&
+            Console->LineWakeupMask & (1 << KeyEvent->uChar.UnicodeChar))
+        {
+            /* Control key client wants to handle itself (e.g. for tab completion) */
+            Console->LineBuffer[Console->LineSize++] = L' ';
+            Console->LineBuffer[Console->LinePos] = KeyEvent->uChar.UnicodeChar;
+            Console->LineComplete = TRUE;
+            Console->LinePos = 0;
+        }
+        else
+        {
+            /* Normal character */
+            BOOL Overstrike = Console->LineInsertToggle && Console->LinePos != Console->LineSize;
+            LineInputEdit(Console, Overstrike, 1, &KeyEvent->uChar.UnicodeChar);
+        }
     }
 }
 

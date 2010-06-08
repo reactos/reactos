@@ -1698,37 +1698,45 @@ IntReadConsole(HANDLE hConsoleInput,
                PVOID lpBuffer,
                DWORD nNumberOfCharsToRead,
                LPDWORD lpNumberOfCharsRead,
-               PCONSOLE_READCONSOLE_CONTROL lpReserved,
+               PCONSOLE_READCONSOLE_CONTROL pInputControl,
                BOOL bUnicode)
 {
-    PCSR_API_MESSAGE Request;
-    ULONG CsrRequest;
-    NTSTATUS Status;
-    ULONG CharSize, CharsRead = 0;
+    CSR_API_MESSAGE Request;
+    PCSR_CAPTURE_BUFFER CaptureBuffer;
+    ULONG CsrRequest = MAKE_CSR_API(READ_CONSOLE, CSR_CONSOLE);
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
 
-    CharSize = (bUnicode ? sizeof(WCHAR) : sizeof(CHAR));
-    Request = RtlAllocateHeap(RtlGetProcessHeap(),
-                              0,
-                              max(sizeof(CSR_API_MESSAGE),
-                              CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE) + min(nNumberOfCharsToRead,
-                              CSRSS_MAX_READ_CONSOLE / CharSize) * CharSize));
-    if (Request == NULL)
+    CaptureBuffer = CsrAllocateCaptureBuffer(1, nNumberOfCharsToRead * CharSize);
+    if (CaptureBuffer == NULL)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
         return FALSE;
     }
 
-    Request->Status = STATUS_SUCCESS;
-    Request->Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
-    Request->Data.ReadConsoleRequest.Unicode = bUnicode;
-    Request->Data.ReadConsoleRequest.FullReadSize = (WORD)nNumberOfCharsToRead;
-    CsrRequest = MAKE_CSR_API(READ_CONSOLE, CSR_CONSOLE);
+    CsrAllocateMessagePointer(CaptureBuffer,
+                              nNumberOfCharsToRead * CharSize,
+                              &Request.Data.ReadConsoleRequest.Buffer);
+
+    Request.Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
+    Request.Data.ReadConsoleRequest.Unicode = bUnicode;
+    Request.Data.ReadConsoleRequest.NrCharactersToRead = (WORD)nNumberOfCharsToRead;
+    Request.Data.ReadConsoleRequest.NrCharactersRead = 0;
+    Request.Data.ReadConsoleRequest.CtrlWakeupMask = 0;
+    if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+    {
+        Request.Data.ReadConsoleRequest.NrCharactersRead = pInputControl->nInitialChars;
+        memcpy(Request.Data.ReadConsoleRequest.Buffer,
+               lpBuffer,
+               pInputControl->nInitialChars * sizeof(WCHAR));
+        Request.Data.ReadConsoleRequest.CtrlWakeupMask = pInputControl->dwCtrlWakeupMask;
+    }
 
     do
     {
-        if (Request->Status == STATUS_PENDING)
+        if (Status == STATUS_PENDING)
         {
-            Status = NtWaitForSingleObject(Request->Data.ReadConsoleRequest.EventHandle,
+            Status = NtWaitForSingleObject(Request.Data.ReadConsoleRequest.EventHandle,
                                            FALSE,
                                            0);
             if (!NT_SUCCESS(Status))
@@ -1738,37 +1746,28 @@ IntReadConsole(HANDLE hConsoleInput,
             }
         }
 
-        Request->Data.ReadConsoleRequest.NrCharactersToRead = (WORD)min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
-
-        Status = CsrClientCallServer(Request,
-                                     NULL,
-                                     CsrRequest,
-                                     max(sizeof(CSR_API_MESSAGE),
-                                     CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE)
-                                       + Request->Data.ReadConsoleRequest.NrCharactersToRead * CharSize));
-
-        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request->Status))
+        Status = CsrClientCallServer(&Request, CaptureBuffer, CsrRequest, sizeof(CSR_API_MESSAGE));
+        if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
         {
             DPRINT1("CSR returned error in ReadConsole\n");
-            RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+            CsrFreeCaptureBuffer(CaptureBuffer);
             SetLastErrorByStatus(Status);
             return FALSE;
         }
-
-        nNumberOfCharsToRead -= Request->Data.ReadConsoleRequest.NrCharactersRead;
-        memcpy((PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)(CharsRead * CharSize)),
-               Request->Data.ReadConsoleRequest.Buffer,
-               Request->Data.ReadConsoleRequest.NrCharactersRead * CharSize);
-        CharsRead += Request->Data.ReadConsoleRequest.NrCharactersRead;
     }
-    while (Request->Status == STATUS_PENDING && nNumberOfCharsToRead > 0);
+    while (Status == STATUS_PENDING);
+
+    memcpy(lpBuffer,
+           Request.Data.ReadConsoleRequest.Buffer,
+           Request.Data.ReadConsoleRequest.NrCharactersRead * CharSize);
 
     if (lpNumberOfCharsRead != NULL)
-    {
-        *lpNumberOfCharsRead = CharsRead;
-    }
+        *lpNumberOfCharsRead = Request.Data.ReadConsoleRequest.NrCharactersRead;
 
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
+    if (pInputControl && pInputControl->nLength == sizeof(CONSOLE_READCONSOLE_CONTROL))
+        pInputControl->dwControlKeyState = Request.Data.ReadConsoleRequest.ControlKeyState;
+
+    CsrFreeCaptureBuffer(CaptureBuffer);
 
     return TRUE;
 }
@@ -1791,7 +1790,7 @@ ReadConsoleA(HANDLE hConsoleInput,
                           lpBuffer,
                           nNumberOfCharsToRead,
                           lpNumberOfCharsRead,
-                          pInputControl,
+                          NULL,
                           FALSE);
 }
 

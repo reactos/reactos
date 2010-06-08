@@ -865,6 +865,16 @@ CSR_API(CsrFillOutputAttrib)
     return STATUS_SUCCESS;
 }
 
+DWORD FASTCALL
+ConioEffectiveCursorSize(PCSRSS_CONSOLE Console, DWORD Scale)
+{
+    DWORD Size = (Console->ActiveBuffer->CursorInfo.dwSize * Scale + 99) / 100;
+    /* If line input in progress, perhaps adjust for insert toggle */
+    if (Console->LineBuffer && !Console->LineComplete && Console->LineInsertToggle)
+        return (Size * 2 <= Scale) ? (Size * 2) : (Size / 2);
+    return Size;
+}
+
 CSR_API(CsrGetCursorInfo)
 {
     PCSRSS_SCREEN_BUFFER Buff;
