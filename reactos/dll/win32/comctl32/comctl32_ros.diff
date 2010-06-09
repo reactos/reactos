@@ -120,22 +120,3 @@ Index: tooltips.c
 +    }
      return 0;
  }
- 
-Index: treeview.c
-===================================================================
---- treeview.c	(revision 38890)
-+++ treeview.c	(working copy)
-@@ -2830,7 +2830,12 @@
- 	}
-     }
- 
--    TREEVIEW_UpdateScrollBars(infoPtr);
-+    //
-+    // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
-+    // in continuous painting of the scroll bar in reactos. Comment out until the real
-+    // bug is found
-+    // 
-+    //TREEVIEW_UpdateScrollBars(infoPtr);
- 
-     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
- 	infoPtr->cdmode =
