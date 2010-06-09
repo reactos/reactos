@@ -1951,15 +1951,21 @@ GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
     else
     {
         INT i;
+        ULONG cColorsUsed;
+
+        cColorsUsed = pbmiSrc->bmiHeader.bV5ClrUsed;
+        if (cColorsUsed == 0) 
+            cColorsUsed = (1 << pbmiSrc->bmiHeader.bV5BitCount);
+
         if(dwColorUse == DIB_PAL_COLORS)
         {
             RtlCopyMemory(pbmiDst->bmiColors,
                           pbmiSrc->bmiColors,
-                          pbmiSrc->bmiHeader.bV5ClrUsed * sizeof(WORD));
+                          cColorsUsed * sizeof(WORD));
         }
         else
         {
-            for(i = 0; i < pbmiSrc->bmiHeader.bV5ClrUsed; i++)
+            for(i = 0; i < cColorsUsed; i++)
             {
                 SetBMIColor(pbmiDst, (DWORD*)pbmiSrc->bmiColors + i, i);
             }
