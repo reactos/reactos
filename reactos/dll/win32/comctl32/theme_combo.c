@@ -69,7 +69,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
         if( (pText = HeapAlloc( GetProcessHeap(), 0, (size + 1) * sizeof(WCHAR))) )
         {
             /* size from LB_GETTEXTLEN may be too large, from LB_GETTEXT is accurate */
-            size=SendMessageW (cbi->hwndList, LB_GETTEXT, (WPARAM)id, (LPARAM)pText);
+            size = SendMessageW (cbi->hwndList, LB_GETTEXT, id, (LPARAM)pText);
             pText[size] = '\0'; /* just in case */
         } else return;
     }
@@ -116,8 +116,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
        dis.itemState    = itemState;
        dis.hDC          = hdc;
        dis.rcItem       = rectEdit;
-       dis.itemData     = SendMessageW(cbi->hwndList, LB_GETITEMDATA,
-                                        (WPARAM)id, 0 );
+       dis.itemData     = SendMessageW(cbi->hwndList, LB_GETITEMDATA, id, 0);
 
        /*
         * Clip the DC and have the parent draw the item.
