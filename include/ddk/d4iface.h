@@ -1,5 +1,7 @@
 #pragma once
 
+#define _DOT4_IFACE_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif

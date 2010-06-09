@@ -54,7 +54,7 @@
 
 #pragma once
 
-#define _REACTOS_CSQ_H
+#define _CSQ_H_
 
 #ifdef __cplusplus
 extern "C" {

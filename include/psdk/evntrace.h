@@ -1,5 +1,7 @@
 #pragma once
 
+#define _EVNTRACE_
+
 #ifndef WMIAPI
 #ifndef MIDL_PASS
 #ifdef _WMI_SOURCE_

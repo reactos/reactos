@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define _WS2SAN_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif

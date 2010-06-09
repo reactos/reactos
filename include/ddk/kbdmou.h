@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define _KBDMOU_
+
 #include <ntddkbd.h>
 #include <ntddmou.h>
 

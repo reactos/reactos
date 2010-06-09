@@ -11,6 +11,8 @@
 
 #pragma once
 
+#define _MSWSOCK_
+
 #ifdef __cplusplus
 extern "C" {
 #endif

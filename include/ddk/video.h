@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define __VIDEO_H__
+
 #include "ntddvdeo.h"
 #include "videoagp.h"
 

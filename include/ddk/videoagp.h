@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define __VIDEOAGP_H__
+
 #ifdef __cplusplus
 extern "C" {
 #endif

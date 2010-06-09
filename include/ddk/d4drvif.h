@@ -22,6 +22,8 @@
 
 #pragma once
 
+#define _DOT4DRVIF_H
+
 #ifdef __cplusplus
 extern "C" {
 #endif
