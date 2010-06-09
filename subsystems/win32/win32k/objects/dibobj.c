@@ -1746,13 +1746,16 @@ FORCEINLINE
 VOID
 SetBMIColor(CONST BITMAPINFO* pbmi, DWORD* color, INT i)
 {
+    PVOID pvColors = ((PBYTE)pbmi + pbmi->bmiHeader.biSize);
     if(pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
-        *(RGBTRIPLE*)((PBYTE)pbmi + pbmi->bmiHeader.biSize + i*sizeof(RGBTRIPLE)) = *(RGBTRIPLE*)color;
+        RGBTRIPLE *pColor = pvColors;
+        pColor[i] = *(RGBTRIPLE*)color;
     }
     else
     {
-        *(RGBQUAD*)((PBYTE)pbmi + pbmi->bmiHeader.biSize + i*sizeof(RGBQUAD)) = *(RGBQUAD*)color;
+        RGBQUAD *pColor = pvColors;
+        pColor[i] = *(RGBQUAD*)color;
     }
 }
 
@@ -1954,7 +1957,7 @@ GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
         ULONG cColorsUsed;
 
         cColorsUsed = pbmiSrc->bmiHeader.bV5ClrUsed;
-        if (cColorsUsed == 0) 
+        if (cColorsUsed == 0 && pbmiSrc->bmiHeader.bV5BitCount <= 8) 
             cColorsUsed = (1 << pbmiSrc->bmiHeader.bV5BitCount);
 
         if(dwColorUse == DIB_PAL_COLORS)
