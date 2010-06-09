@@ -354,7 +354,8 @@ NtGdiSetDIBits(
 
     _SEH2_TRY
     {
-        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, ColorUse);
+        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, ColorUse, 0);
+        /* Don't check Bits and hope we won't die */
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -427,7 +428,8 @@ NtGdiSetDIBitsToDeviceInternal(
 
     _SEH2_TRY
     {
-        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, ColorUse);
+        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, ColorUse, cjMaxInfo);
+        ProbeForRead(Bits, cjMaxBits, 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -595,7 +597,7 @@ NtGdiGetDIBitsInternal(
 
     _SEH2_TRY
     {
-        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, Info, Usage);
+        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, Info, Usage, MaxInfo);
         if (ChkBits) ProbeForWrite(ChkBits, MaxBits, 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -842,7 +844,7 @@ NtGdiGetDIBitsInternal(
                                               bmiLocal.bmiHeader.bV5BitCount) * DestSize.cy;
 
             hDestBitmap = EngCreateBitmap(DestSize,
-                                          DIB_GetDIBWidthBytes(DestSize.cx, 
+                                          DIB_GetDIBWidthBytes(DestSize.cx,
                                                                bmiLocal.bmiHeader.bV5BitCount),
                                           BitmapFormat(bmiLocal.bmiHeader.bV5BitCount,
                                                        bmiLocal.bmiHeader.bV5Compression),
@@ -942,7 +944,8 @@ NtGdiStretchDIBitsInternal(
     HDC hdcMem;
     HPALETTE hPal = NULL;
     PDC pDC;
-    BOOL Hit = FALSE;
+    NTSTATUS Status;
+    BITMAPV5INFO bmiLocal ;
 
     if (!Bits || !BitsInfo)
     {
@@ -952,16 +955,16 @@ NtGdiStretchDIBitsInternal(
 
     _SEH2_TRY
     {
-        ProbeForRead(BitsInfo, cjMaxInfo, 1);
+        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, BitsInfo, Usage, cjMaxInfo);
         ProbeForRead(Bits, cjMaxBits, 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Hit = TRUE;
+        Status = _SEH2_GetExceptionCode();
     }
     _SEH2_END
 
-    if (Hit)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtGdiStretchDIBitsInternal fail to read BitMapInfo: %x or Bits: %x\n",BitsInfo,Bits);
         return 0;
@@ -975,8 +978,8 @@ NtGdiStretchDIBitsInternal(
     }
 
     hBitmap = NtGdiCreateCompatibleBitmap(hDC,
-                                          abs(BitsInfo->bmiHeader.biWidth),
-                                          abs(BitsInfo->bmiHeader.biHeight));
+                                          abs(bmiLocal.bmiHeader.bV5Width),
+                                          abs(bmiLocal.bmiHeader.bV5Height));
     if (hBitmap == NULL)
     {
         DPRINT1("NtGdiCreateCompatibleBitmap fail create bitmap\n");
@@ -995,15 +998,15 @@ NtGdiStretchDIBitsInternal(
         hPal = GdiSelectPalette(hdcMem, hPal, FALSE);
     }
 
-    if (BitsInfo->bmiHeader.biCompression == BI_RLE4 ||
-            BitsInfo->bmiHeader.biCompression == BI_RLE8)
+    if (bmiLocal.bmiHeader.bV5Compression == BI_RLE4 ||
+            bmiLocal.bmiHeader.bV5Compression == BI_RLE8)
     {
         /* copy existing bitmap from destination dc */
         if (SrcWidth == DestWidth && SrcHeight == DestHeight)
-            NtGdiBitBlt(hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+            NtGdiBitBlt(hdcMem, XSrc, abs(bmiLocal.bmiHeader.bV5Height) - SrcHeight - YSrc,
                         SrcWidth, SrcHeight, hDC, XDest, YDest, ROP, 0, 0);
         else
-            NtGdiStretchBlt(hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+            NtGdiStretchBlt(hdcMem, XSrc, abs(bmiLocal.bmiHeader.bV5Height) - SrcHeight - YSrc,
                             SrcWidth, SrcHeight, hDC, XDest, YDest, DestWidth, DestHeight,
                             ROP, 0);
     }
@@ -1015,8 +1018,8 @@ NtGdiStretchDIBitsInternal(
          * if it negitve we getting to many scanline for scanline is UINT not
          * a INT, so we need make the negtive value to positve and that make the
          * count correct for negtive bitmap, TODO : we need testcase for this api */
-        IntSetDIBits(pDC, hBitmap, 0, abs(BitsInfo->bmiHeader.biHeight), Bits,
-                     BitsInfo, Usage);
+        IntSetDIBits(pDC, hBitmap, 0, abs(bmiLocal.bmiHeader.bV5Height), Bits,
+                     (PBITMAPINFO)&bmiLocal, Usage);
 
         DC_UnlockDc(pDC);
     }
@@ -1026,11 +1029,11 @@ NtGdiStretchDIBitsInternal(
        left (negative biHeight) */
     if (SrcWidth == DestWidth && SrcHeight == DestHeight)
         NtGdiBitBlt(hDC, XDest, YDest, DestWidth, DestHeight,
-                    hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+                    hdcMem, XSrc, abs(bmiLocal.bmiHeader.bV5Height) - SrcHeight - YSrc,
                     ROP, 0, 0);
     else
         NtGdiStretchBlt(hDC, XDest, YDest, DestWidth, DestHeight,
-                        hdcMem, XSrc, abs(BitsInfo->bmiHeader.biHeight) - SrcHeight - YSrc,
+                        hdcMem, XSrc, abs(bmiLocal.bmiHeader.bV5Height) - SrcHeight - YSrc,
                         SrcWidth, SrcHeight, ROP, 0);
 
     /* cleanup */
@@ -1057,7 +1060,7 @@ IntCreateDIBitmap(
     UINT bpp,
     DWORD init,
     LPBYTE bits,
-    PBITMAPINFO data,
+    PBITMAPV5INFO data,
     DWORD coloruse)
 {
     HBITMAP handle;
@@ -1070,40 +1073,19 @@ IntCreateDIBitmap(
     else if ((coloruse != DIB_RGB_COLORS) || (init != CBM_INIT) || !data) fColor = FALSE;
     else
     {
-        if (data->bmiHeader.biSize == sizeof(BITMAPINFOHEADER))
-        {
-            const RGBQUAD *rgb = data->bmiColors;
-            DWORD col = RGB(rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue);
+        const RGBQUAD *rgb = data->bmiColors;
+        DWORD col = RGB(rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue);
 
-            // Check if the first color of the colormap is black
-            if ((col == RGB(0, 0, 0)))
-            {
-                rgb++;
-                col = RGB(rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue);
-
-                // If the second color is white, create a monochrome bitmap
-                fColor = (col != RGB(0xff,0xff,0xff));
-            }
-            else fColor = TRUE;
-        }
-        else if (data->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+        // Check if the first color of the colormap is black
+        if ((col == RGB(0, 0, 0)))
         {
-            RGBTRIPLE *rgb = ((BITMAPCOREINFO *)data)->bmciColors;
-            DWORD col = RGB(rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
+            rgb++;
+            col = RGB(rgb->rgbRed, rgb->rgbGreen, rgb->rgbBlue);
 
-            if ((col == RGB(0,0,0)))
-            {
-                rgb++;
-                col = RGB(rgb->rgbtRed, rgb->rgbtGreen, rgb->rgbtBlue);
-                fColor = (col != RGB(0xff,0xff,0xff));
-            }
-            else fColor = TRUE;
+            // If the second color is white, create a monochrome bitmap
+            fColor = (col != RGB(0xff,0xff,0xff));
         }
-        else
-        {
-            DPRINT("(%ld): wrong size for data\n", data->bmiHeader.biSize);
-            return 0;
-        }
+        else fColor = TRUE;
     }
 
     // Now create the bitmap
@@ -1125,7 +1107,7 @@ IntCreateDIBitmap(
 
     if (NULL != handle && CBM_INIT == init)
     {
-        IntSetDIBits(Dc, handle, 0, height, bits, data, coloruse);
+        IntSetDIBits(Dc, handle, 0, height, bits, (BITMAPINFO*)data, coloruse);
     }
 
     return handle;
@@ -1151,6 +1133,25 @@ NtGdiCreateDIBitmapInternal(
     PDC Dc;
     HBITMAP Bmp;
     UINT bpp;
+    BITMAPV5INFO bmiLocal ;
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    _SEH2_TRY
+    {
+        if(pbmi) Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, pbmi, iUsage, cjMaxInitInfo);
+        if(pjInit && (fInit == CBM_INIT)) ProbeForRead(pjInit, cjMaxBits, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
 
     if (!hDc) // CreateBitmap
     {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
@@ -1169,7 +1170,7 @@ NtGdiCreateDIBitmapInternal(
             return NULL;
         }
         bpp = 1;
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
+        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi ? &bmiLocal : NULL, iUsage);
 
         DC_UnlockDc(Dc);
         NtGdiDeleteObjectApp(hDc);
@@ -1187,7 +1188,7 @@ NtGdiCreateDIBitmapInternal(
            should match that of the hdc and not that supplied in bmih.
          */
         if (pbmi)
-            bpp = pbmi->bmiHeader.biBitCount;
+            bpp = bmiLocal.bmiHeader.bV5BitCount;
         else
         {
             if (Dc->dctype != DC_TYPE_MEMORY)
@@ -1211,7 +1212,7 @@ NtGdiCreateDIBitmapInternal(
                 }
             }
         }
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
+        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi ? &bmiLocal : NULL, iUsage);
         DC_UnlockDc(Dc);
     }
     return Bmp;
@@ -1760,7 +1761,8 @@ FASTCALL
 ProbeAndConvertToBitmapV5Info(
     OUT PBITMAPV5INFO pbmiDst,
     IN CONST BITMAPINFO* pbmiUnsafe,
-    IN DWORD dwColorUse)
+    IN DWORD dwColorUse,
+    IN UINT MaxSize)
 {
     DWORD dwSize;
     ULONG ulWidthBytes;
@@ -1769,7 +1771,8 @@ ProbeAndConvertToBitmapV5Info(
     /* Get the size and probe */
     ProbeForRead(&pbmiUnsafe->bmiHeader.biSize, sizeof(DWORD), 1);
     dwSize = pbmiUnsafe->bmiHeader.biSize;
-    ProbeForRead(pbmiUnsafe, dwSize, 1);
+    /* At least dwSize bytes must be valids */
+    ProbeForRead(pbmiUnsafe, max(dwSize, MaxSize), 1);
 
     /* Check the size */
     // FIXME: are intermediate sizes allowed? As what are they interpreted?

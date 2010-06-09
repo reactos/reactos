@@ -199,7 +199,8 @@ UserLoadImage(PCWSTR pwszName)
     {
         Status = ProbeAndConvertToBitmapV5Info(&bmiLocal,
                                                pbmi,
-                                               DIB_RGB_COLORS);
+                                               DIB_RGB_COLORS,
+                                               0);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
