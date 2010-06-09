@@ -205,24 +205,27 @@ KsTopologyPropertyHandler(
             {
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_INSUFFICIENT_RESOURCES;
+                RtlFreeUnicodeString(&GuidString);
                 break;
             }
 
             RtlAppendUnicodeStringToString(&KeyName, &LocalMachine);
             RtlAppendUnicodeStringToString(&KeyName, &GuidString);
 
+            RtlFreeUnicodeString(&GuidString);
 
             InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
             Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
+            ExFreePool(KeyName.Buffer);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
-                ExFreePool(KeyName.Buffer);
                 Irp->IoStatus.Information = 0;
                 break;
             }
-            ExFreePool(KeyName.Buffer);
+
             Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
             if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
             {
@@ -231,6 +234,7 @@ KsTopologyPropertyHandler(
                 break;
             }
 
+            ASSERT(Size);
             KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(NonPagedPool, Size);
             if (!KeyInfo)
             {
