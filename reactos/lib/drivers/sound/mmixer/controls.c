@@ -385,6 +385,8 @@ MMixerAddMixerSourceLine(
         SrcLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
         SrcLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
         InitializeListHead(&SrcLine->LineControlsExtraData);
+
+        ASSERT(MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] == L'\0');
         wcscpy(SrcLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
     }

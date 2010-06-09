@@ -472,6 +472,13 @@ MMixerInitialize(
                 // enumeration has finished
                 break;
             }
+            else
+            {
+                DPRINT1("Failed to enumerate device %lu\n", DeviceIndex);
+
+                // TODO cleanup
+                return Status;
+            }
         }
         else
         {
