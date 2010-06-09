@@ -140,45 +140,6 @@ SURFACE_Cleanup(PVOID ObjectBody)
     return TRUE;
 }
 
-static
-void
-SURFACE_vSetDefaultPalette(
-    PSURFACE psurfBmp)
-{
-    ULONG cBitsPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-
-    /* Find a suitable palette for this bitmap
-     * Increment internal objects share count
-     * so we can call PALETTE_ShareUnlockPalette
-     * or GDIOBJ_IncrementShareCount safely */
-    switch(cBitsPixel)
-    {
-        case 1:
-            psurfBmp->ppal = &gpalMono;
-            GDIOBJ_IncrementShareCount(&gpalMono.BaseObject);
-            break;
-        case 4:
-        case 8:
-            psurfBmp->ppal = PALETTE_ShareLockPalette(StockObjects[DEFAULT_PALETTE]);
-            break;
-        case 15:
-            psurfBmp->ppal = &gpalRGB555;
-            GDIOBJ_IncrementShareCount(&gpalRGB555.BaseObject);
-            break;
-        case 16:
-            psurfBmp->ppal = &gpalRGB565;
-            GDIOBJ_IncrementShareCount(&gpalRGB565.BaseObject);
-            break;
-        case 24:
-        case 32:
-            psurfBmp->ppal = &gpalBGR;
-            GDIOBJ_IncrementShareCount(&gpalBGR.BaseObject);
-            break;
-        default:
-            DPRINT1("Could not determine palette for bit depth %u.\n", cBitsPixel);
-            break;
-    }
-}
 
 PSURFACE
 NTAPI
@@ -190,7 +151,14 @@ SURFACE_AllocSurface(
 {
     PSURFACE psurf;
     SURFOBJ *pso;
-    
+
+    /* Verify format */
+    if (iFormat < BMF_1BPP || iFormat > BMF_PNG)
+    {
+        DPRINT1("Invalid bitmap format: %ld\n", iFormat);
+        return NULL;
+    }
+
     /* Allocate a SURFACE object */
     psurf = (PSURFACE)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_BITMAP);
 
@@ -205,7 +173,9 @@ SURFACE_AllocSurface(
         pso->iType = iType;
         pso->iUniq = InterlockedIncrement((PLONG)&giUniqueSurface);
 
-        SURFACE_vSetDefaultPalette(psurf);
+        /* Assign a default palette amd increment its reference count */
+        psurf->ppal = appalSurfaceDefault[iFormat];
+        GDIOBJ_IncrementShareCount(&psurf->ppal->BaseObject);
     }
 
     return psurf;

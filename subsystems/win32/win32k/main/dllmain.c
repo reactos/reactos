@@ -439,6 +439,9 @@ DriverEntry (
       return STATUS_UNSUCCESSFUL;
   }
 
+  /* Initialize default palettes */
+  PALETTE_Init();
+
   /* Create stock objects, ie. precreated objects commonly
      used by win32 applications */
   CreateStockObjects();

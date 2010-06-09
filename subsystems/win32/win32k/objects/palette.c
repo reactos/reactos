@@ -14,7 +14,8 @@
 
 static UINT SystemPaletteUse = SYSPAL_NOSTATIC;  /* the program need save the pallete and restore it */
 
-PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565;
+PALETTE gpalRGB, gpalBGR, gpalMono, gpalRGB555, gpalRGB565, *gppalDefault;
+PPALETTE appalSurfaceDefault[11];
 
 const PALETTEENTRY g_sysPalTemplate[NB_RESERVED_COLORS] =
 {
@@ -132,6 +133,19 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
     gpalMono.Mode = PAL_MONOCHROME;
     gpalMono.BaseObject.ulShareCount = 0;
     gpalMono.BaseObject.BaseFlags = 0 ;
+
+    /* Initialize default surface palettes */
+    gppalDefault = PALETTE_ShareLockPalette(hpalette);
+    appalSurfaceDefault[BMF_1BPP] = &gpalMono;
+    appalSurfaceDefault[BMF_4BPP] = gppalDefault;
+    appalSurfaceDefault[BMF_8BPP] = gppalDefault;
+    appalSurfaceDefault[BMF_16BPP] = &gpalRGB565;
+    appalSurfaceDefault[BMF_24BPP] = &gpalRGB;
+    appalSurfaceDefault[BMF_32BPP] = &gpalRGB;
+    appalSurfaceDefault[BMF_4RLE] = gppalDefault;
+    appalSurfaceDefault[BMF_8RLE] = gppalDefault;
+    appalSurfaceDefault[BMF_JPEG] = &gpalRGB;
+    appalSurfaceDefault[BMF_PNG] = &gpalRGB;
 
     return hpalette;
 }
