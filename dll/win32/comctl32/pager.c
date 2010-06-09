@@ -841,7 +841,6 @@ static LRESULT
 PAGER_NCCalcSize(PAGER_INFO* infoPtr, WPARAM wParam, LPRECT lpRect)
 {
     RECT rcChild, rcWindow;
-    INT scrollRange;
 
     /*
      * lpRect points to a RECT struct.  On entry, the struct
@@ -863,8 +862,6 @@ PAGER_NCCalcSize(PAGER_INFO* infoPtr, WPARAM wParam, LPRECT lpRect)
 	infoPtr->nWidth = lpRect->right - lpRect->left;
 	PAGER_CalcSize (infoPtr, &infoPtr->nWidth, TRUE);
 
-	scrollRange = infoPtr->nWidth - (rcWindow.right - rcWindow.left);
-
 	if (infoPtr->TLbtnState && (lpRect->left + infoPtr->nButtonSize < lpRect->right))
 	    lpRect->left += infoPtr->nButtonSize;
 	if (infoPtr->BRbtnState && (lpRect->right - infoPtr->nButtonSize > lpRect->left))
@@ -874,8 +871,6 @@ PAGER_NCCalcSize(PAGER_INFO* infoPtr, WPARAM wParam, LPRECT lpRect)
     {
 	infoPtr->nHeight = lpRect->bottom - lpRect->top;
 	PAGER_CalcSize (infoPtr, &infoPtr->nHeight, FALSE);
-
-	scrollRange = infoPtr->nHeight - (rcWindow.bottom - rcWindow.top);
 
 	if (infoPtr->TLbtnState && (lpRect->top + infoPtr->nButtonSize < lpRect->bottom))
 	    lpRect->top += infoPtr->nButtonSize;

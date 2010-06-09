@@ -1560,7 +1560,7 @@ KsStreamPointerClone(
     Size = sizeof(KSISTREAM_POINTER) + ContextSize;
 
     /* allocate new stream pointer */
-    NewFrame = (PKSISTREAM_POINTER)ExAllocatePool(NonPagedPool, Size);
+    NewFrame = (PKSISTREAM_POINTER)AllocateItem(NonPagedPool, Size);
 
     if (!NewFrame)
         return STATUS_INSUFFICIENT_RESOURCES;

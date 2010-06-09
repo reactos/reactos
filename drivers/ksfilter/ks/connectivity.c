@@ -239,7 +239,7 @@ KspReadMediaCategory(
     /* allocate buffer for the registry key */
     Path.Length = 0;
     Path.MaximumLength = MediaPath.MaximumLength + GuidString.MaximumLength;
-    Path.Buffer = ExAllocatePool(NonPagedPool, Path.MaximumLength);
+    Path.Buffer = AllocateItem(NonPagedPool, Path.MaximumLength);
     if (!Path.Buffer)
     {
         /* not enough memory */
@@ -262,7 +262,7 @@ KspReadMediaCategory(
     DPRINT("ZwOpenKey() status 0x%08lx %S\n", Status, Path.Buffer);
 
     /* free path buffer */
-    ExFreePool(Path.Buffer);
+    FreeItem(Path.Buffer);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -281,7 +281,7 @@ KspReadMediaCategory(
     }
 
     /* allocate buffer to read key info */
-    KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(NonPagedPool, Size);
+    KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) AllocateItem(NonPagedPool, Size);
     if (!KeyInfo)
     {
         /* not enough memory */
@@ -298,7 +298,7 @@ KspReadMediaCategory(
     if (!NT_SUCCESS(Status))
     {
         /* failed to read key */
-        ExFreePool(KeyInfo);
+        FreeItem(KeyInfo);
         return Status;
     }
 
@@ -545,13 +545,13 @@ KspPinPropertyHandler(
             if (KeyInfo->DataLength + sizeof(WCHAR) > IoStack->Parameters.DeviceIoControl.OutputBufferLength)
             {
                 Status = STATUS_BUFFER_OVERFLOW;
-                ExFreePool(KeyInfo);
+                FreeItem(KeyInfo);
                 break;
             }
 
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
-            ExFreePool(KeyInfo);
+            FreeItem(KeyInfo);
             break;
         case KSPROPERTY_PIN_PROPOSEDATAFORMAT:
             Size = sizeof(KSDATAFORMAT);

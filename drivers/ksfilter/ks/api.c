@@ -530,7 +530,7 @@ KsAllocateDeviceHeader(
         return STATUS_INVALID_PARAMETER;
 
     /* allocate a device header */
-    Header = ExAllocatePoolWithTag(PagedPool, sizeof(KSIDEVICE_HEADER), TAG_DEVICE_HEADER);
+    Header = AllocateItem(PagedPool, sizeof(KSIDEVICE_HEADER));
 
     /* check for success */
     if (!Header)
@@ -597,7 +597,7 @@ KsFreeDeviceHeader(
         return;
 
     KspFreeCreateItems(&Header->ItemList);
-    ExFreePoolWithTag(Header, TAG_DEVICE_HEADER);
+    FreeItem(Header);
 }
 
 /*
@@ -641,7 +641,7 @@ KsAllocateObjectHeader(
     /* check for an file object */
 
     /* allocate the object header */
-    ObjectHeader = ExAllocatePoolWithTag(NonPagedPool, sizeof(KSIOBJECT_HEADER), TAG_DEVICE_HEADER);
+    ObjectHeader = AllocateItem(NonPagedPool, sizeof(KSIOBJECT_HEADER));
     if (!ObjectHeader)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -659,10 +659,10 @@ KsAllocateObjectHeader(
     {
         /* copy object class */
         ObjectHeader->ObjectClass.MaximumLength = IoStack->FileObject->FileName.MaximumLength;
-        ObjectHeader->ObjectClass.Buffer = ExAllocatePoolWithTag(NonPagedPool, ObjectHeader->ObjectClass.MaximumLength, TAG_DEVICE_HEADER);
+        ObjectHeader->ObjectClass.Buffer = AllocateItem(NonPagedPool, ObjectHeader->ObjectClass.MaximumLength);
         if (!ObjectHeader->ObjectClass.Buffer)
         {
-            ExFreePoolWithTag(ObjectHeader, TAG_DEVICE_HEADER);
+            FreeItem(ObjectHeader);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         RtlCopyUnicodeString(&ObjectHeader->ObjectClass, &IoStack->FileObject->FileName);
@@ -726,7 +726,7 @@ KsFreeObjectHeader(
     if (ObjectHeader->ObjectClass.Buffer)
     {
         /* release object class buffer */
-        ExFreePoolWithTag(ObjectHeader->ObjectClass.Buffer, TAG_DEVICE_HEADER);
+        FreeItem(ObjectHeader->ObjectClass.Buffer);
     }
 
     if (ObjectHeader->Unknown)
@@ -739,7 +739,7 @@ KsFreeObjectHeader(
     KspFreeCreateItems(&ObjectHeader->ItemList);
 
     /* free object header */
-    ExFreePoolWithTag(ObjectHeader, TAG_DEVICE_HEADER);
+    FreeItem(ObjectHeader);
 
 }
 
@@ -914,11 +914,11 @@ KsAllocateObjectCreateItem(
     if (AllocateEntry)
     {
         /* allocate create item */
-        Item = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+        Item = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
         if (!Item)
         {
             /* no memory */
-            ExFreePool(CreateEntry);
+            FreeItem(CreateEntry);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -931,7 +931,7 @@ KsAllocateObjectCreateItem(
         Item->ObjectClass.MaximumLength = CreateItem->ObjectClass.MaximumLength;
 
         /* copy object class */
-        Item->ObjectClass.Buffer = ExAllocatePool(NonPagedPool, Item->ObjectClass.MaximumLength);
+        Item->ObjectClass.Buffer = AllocateItem(NonPagedPool, Item->ObjectClass.MaximumLength);
         if (!Item->ObjectClass.Buffer)
         {
             /* release resources */
@@ -1747,7 +1747,7 @@ KsCreateBusEnumObject(
     Length = wcslen(BusIdentifier) * sizeof(WCHAR);
     Length += sizeof(BUS_ENUM_DEVICE_EXTENSION);
 
-    BusDeviceExtension = ExAllocatePool(NonPagedPool, Length);
+    BusDeviceExtension = AllocateItem(NonPagedPool, Length);
     if (!BusDeviceExtension)
     {
         /* not enough memory */
@@ -1772,12 +1772,12 @@ KsCreateBusEnumObject(
 
     BusDeviceExtension->ServicePath.Length = 0;
     BusDeviceExtension->ServicePath.MaximumLength = Length;
-    BusDeviceExtension->ServicePath.Buffer = ExAllocatePool(NonPagedPool, Length);
+    BusDeviceExtension->ServicePath.Buffer = AllocateItem(NonPagedPool, Length);
 
     if (!BusDeviceExtension->ServicePath.Buffer)
     {
         /* not enough memory */
-        ExFreePool(BusDeviceExtension);
+        FreeItem(BusDeviceExtension);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -1798,8 +1798,8 @@ KsCreateBusEnumObject(
         /* check for success */
         if (!NT_SUCCESS(Status))
         {
-            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
-            ExFreePool(BusDeviceExtension);
+            FreeItem(BusDeviceExtension->ServicePath.Buffer);
+            FreeItem(BusDeviceExtension);
             return Status;
         }
 
@@ -1808,8 +1808,8 @@ KsCreateBusEnumObject(
 
         if (!NT_SUCCESS(Status))
         {
-            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
-            ExFreePool(BusDeviceExtension);
+            FreeItem(BusDeviceExtension->ServicePath.Buffer);
+            FreeItem(BusDeviceExtension);
             return Status;
         }
 
@@ -1836,8 +1836,8 @@ KsCreateBusEnumObject(
             }
 
             /* free device extension */
-            ExFreePool(BusDeviceExtension->ServicePath.Buffer);
-            ExFreePool(BusDeviceExtension);
+            FreeItem(BusDeviceExtension->ServicePath.Buffer);
+            FreeItem(BusDeviceExtension);
 
             return STATUS_DEVICE_REMOVED;
         }
@@ -2795,7 +2795,7 @@ KsRegisterFilterWithNoKSPins(
         }
 
         /* free the symbolic link list */
-        ExFreePool(SymbolicLinkList);
+        FreeItem(SymbolicLinkList);
     }
 
     return Status;

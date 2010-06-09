@@ -30,7 +30,7 @@ KspCreateObjectType(
     Name.MaximumLength = wcslen(ObjectType) * sizeof(WCHAR) + CreateParametersSize +  2 * sizeof(WCHAR);
     Name.MaximumLength += sizeof(WCHAR);
     /* acquire request buffer */
-    Name.Buffer = ExAllocatePool(NonPagedPool, Name.MaximumLength);
+    Name.Buffer = AllocateItem(NonPagedPool, Name.MaximumLength);
     /* check for success */
     if (!Name.Buffer)
     {
@@ -68,7 +68,7 @@ KspCreateObjectType(
                           IO_NO_PARAMETER_CHECKING | IO_FORCE_ACCESS_CHECK);
 
     /* free request buffer */
-    ExFreePool(Name.Buffer);
+    FreeItem(Name.Buffer);
     return Status;
 }
 
@@ -200,29 +200,32 @@ KsTopologyPropertyHandler(
 
             KeyName.Length = 0;
             KeyName.MaximumLength = LocalMachine.Length + GuidString.Length + sizeof(WCHAR);
-            KeyName.Buffer = ExAllocatePool(PagedPool, KeyName.MaximumLength);
+            KeyName.Buffer = AllocateItem(PagedPool, KeyName.MaximumLength);
             if (!KeyName.Buffer)
             {
                 Irp->IoStatus.Information = 0;
                 Status = STATUS_INSUFFICIENT_RESOURCES;
+                RtlFreeUnicodeString(&GuidString);
                 break;
             }
 
             RtlAppendUnicodeStringToString(&KeyName, &LocalMachine);
             RtlAppendUnicodeStringToString(&KeyName, &GuidString);
 
+            RtlFreeUnicodeString(&GuidString);
 
             InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE, NULL, NULL);
             Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
+            FreeItem(KeyName.Buffer);
+
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
-                ExFreePool(KeyName.Buffer);
                 Irp->IoStatus.Information = 0;
                 break;
             }
-            ExFreePool(KeyName.Buffer);
+
             Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
             if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
             {
@@ -231,7 +234,8 @@ KsTopologyPropertyHandler(
                 break;
             }
 
-            KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) ExAllocatePool(NonPagedPool, Size);
+            ASSERT(Size);
+            KeyInfo = (PKEY_VALUE_PARTIAL_INFORMATION) AllocateItem(NonPagedPool, Size);
             if (!KeyInfo)
             {
                 Status = STATUS_NO_MEMORY;
@@ -241,7 +245,7 @@ KsTopologyPropertyHandler(
             Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, (PVOID)KeyInfo, Size, &Size);
             if (!NT_SUCCESS(Status))
             {
-                ExFreePool(KeyInfo);
+                FreeItem(KeyInfo);
                 ZwClose(hKey);
                 Irp->IoStatus.Information = 0;
                 break;
@@ -252,14 +256,14 @@ KsTopologyPropertyHandler(
             {
                 Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
                 Status = STATUS_MORE_ENTRIES;
-                ExFreePool(KeyInfo);
+                FreeItem(KeyInfo);
                 break;
             }
 
             RtlMoveMemory(Irp->UserBuffer, &KeyInfo->Data, KeyInfo->DataLength);
             ((LPWSTR)Irp->UserBuffer)[KeyInfo->DataLength / sizeof(WCHAR)] = L'\0';
              Irp->IoStatus.Information = KeyInfo->DataLength + sizeof(WCHAR);
-            ExFreePool(KeyInfo);
+            FreeItem(KeyInfo);
             break;
         default:
              Irp->IoStatus.Information = 0;

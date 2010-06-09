@@ -118,11 +118,22 @@ PortClsPnp(
             // Clean up
             DPRINT("IRP_MN_REMOVE_DEVICE\n");
 
-            DeviceExt->resources->Release();
-            IoDeleteDevice(DeviceObject);
+            // sanity check
+            PC_ASSERT(DeviceExt);
+
+            // FIXME more cleanup */
+            if (DeviceExt->resources)
+            {
+                // free resource list */
+                DeviceExt->resources->Release();
+
+                // set to null
+                DeviceExt->resources = NULL;
+            }
 
             // Forward request
             Status = PcForwardIrpSynchronous(DeviceObject, Irp);
+
             return PcCompleteIrp(DeviceObject, Irp, Status);
 
         case IRP_MN_QUERY_INTERFACE:

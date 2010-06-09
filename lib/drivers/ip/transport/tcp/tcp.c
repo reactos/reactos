@@ -25,7 +25,6 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
         NTSTATUS Status;
         PIRP Irp;
         PMDL Mdl;
-        ULONG SocketError = 0;
         KIRQL OldIrql;
         PTCP_COMPLETION_ROUTINE Complete;
 
@@ -34,69 +33,6 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
         TI_DbgPrint(MID_TRACE,("Handling signalled state on %x (%x)\n",
                                Connection, Connection->SocketContext));
-
-        if( Connection->SignalState & SEL_FIN ) {
-            TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
-
-            /* If OskitTCP initiated the disconnect, try to read the socket error that occurred */
-            if (Connection->SocketContext)
-                SocketError = TCPTranslateError(OskitTCPGetSocketError(Connection->SocketContext));
-
-            /* Default to STATUS_CANCELLED if we initiated the disconnect or no socket error was reported */
-            if (!Connection->SocketContext || !SocketError)
-                SocketError = STATUS_CANCELLED;
-
-            while (!IsListEmpty(&Connection->ReceiveRequest))
-            {
-               Entry = RemoveHeadList( &Connection->ReceiveRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Bucket->Status = SocketError;
-               Bucket->Information = 0;
-
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-            }
-
-            while (!IsListEmpty(&Connection->SendRequest))
-            {
-               Entry = RemoveHeadList( &Connection->SendRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Bucket->Status = SocketError;
-               Bucket->Information = 0;
-
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-            }
-
-            while (!IsListEmpty(&Connection->ListenRequest))
-            {
-               Entry = RemoveHeadList( &Connection->ListenRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Bucket->Status = SocketError;
-               Bucket->Information = 0;
-               DereferenceObject(Bucket->AssociatedEndpoint);
-
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-            }
-
-            while (!IsListEmpty(&Connection->ConnectRequest))
-            {
-               Entry = RemoveHeadList( &Connection->ConnectRequest );
-
-               Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-
-               Bucket->Status = SocketError;
-               Bucket->Information = 0;
-
-               InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
-            }
-
-            Connection->SignalState = SEL_FIN;
-        }
 
         /* Things that can happen when we try the initial connection */
         if( Connection->SignalState & SEL_CONNECT ) {
@@ -140,11 +76,11 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                TI_DbgPrint(DEBUG_TCP,("Socket: Status: %x\n"));
 
-               if( Status == STATUS_PENDING ) {
+               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
                    InsertHeadList( &Connection->ListenRequest, &Bucket->Entry );
                    break;
                } else {
-                   Bucket->Status = Status;
+                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
                    Bucket->Information = 0;
                    DereferenceObject(Bucket->AssociatedEndpoint);
 
@@ -194,7 +130,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
 
-               if( Status == STATUS_PENDING ) {
+               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
                    InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
                    break;
                } else {
@@ -202,8 +138,8 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                ("Completing Receive request: %x %x\n",
                                 Bucket->Request, Status));
 
-                   Bucket->Status = Status;
-                   Bucket->Information = (Status == STATUS_SUCCESS) ? Received : 0;
+                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
+                   Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Received : 0;
 
                    InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
                }
@@ -248,7 +184,7 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
 
                TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Sent));
 
-               if( Status == STATUS_PENDING ) {
+               if( Status == STATUS_PENDING && !(Connection->SignalState & SEL_FIN) ) {
                    InsertHeadList( &Connection->SendRequest, &Bucket->Entry );
                    break;
                } else {
@@ -256,8 +192,8 @@ VOID HandleSignalledConnection(PCONNECTION_ENDPOINT Connection)
                                ("Completing Send request: %x %x\n",
                                Bucket->Request, Status));
 
-                   Bucket->Status = Status;
-                   Bucket->Information = (Status == STATUS_SUCCESS) ? Sent : 0;
+                   Bucket->Status = (Status == STATUS_PENDING) ? STATUS_CANCELLED : Status;
+                   Bucket->Information = (Bucket->Status == STATUS_SUCCESS) ? Sent : 0;
 
                    InsertTailList(&Connection->CompletionQueue, &Bucket->Entry);
                }
@@ -737,7 +673,7 @@ NTSTATUS TCPClose
     Connection->SocketContext = NULL;
 
     /* Don't try to close again if the other side closed us already */
-    if (Connection->SignalState != SEL_FIN)
+    if (!(Connection->SignalState & SEL_FIN))
     {
        /* We need to close here otherwise oskit will never indicate
         * SEL_FIN and we will never fully close the connection */
