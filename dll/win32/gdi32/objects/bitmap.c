@@ -34,7 +34,7 @@ DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
 
 UINT
 FASTCALL
-DIB_BitmapBitsSize( PBITMAPINFO Info )
+DIB_BitmapBitsSize( CONST BITMAPINFO* Info )
 {
   UINT Ret;
 
@@ -476,7 +476,8 @@ CreateDIBitmap( HDC hDC,
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
 
-  cjBmpScanSize = DIB_BitmapBitsSize((LPBITMAPINFO)Header);
+  /* Mmmh, this is not really safe */
+  cjBmpScanSize = DIB_BitmapBitsSize(Data);
   DPRINT("pBMI %x, Size bpp %d, dibsize %d, Conv %d, BSS %d\n", Data,bpp,dibsize,ConvertedInfoSize,cjBmpScanSize);
 
   if ( !width || !height )
