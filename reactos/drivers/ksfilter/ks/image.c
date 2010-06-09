@@ -45,7 +45,7 @@ KsLoadResource(
             if (NT_SUCCESS(Status))
             {
                 /* allocate resource buffer */
-                Result = ExAllocatePool(PoolType, Size);
+                Result = AllocateItem(PoolType, Size);
                 if (Result)
                 {
                     /* copy resource */
@@ -75,7 +75,7 @@ KsLoadResource(
         if (Result)
         {
             /* free resource buffer in case of a failure */
-            ExFreePool(Result);
+            FreeItem(Result);
         }
     }
     /* done */
@@ -127,7 +127,7 @@ KsGetImageNameAndResourceId(
 
     /* allocate image name buffer */
     ImageName->MaximumLength = sizeof(ImagePath) + ImageLength;
-    ImageName->Buffer = ExAllocatePool(PagedPool, ImageName->MaximumLength);
+    ImageName->Buffer = AllocateItem(PagedPool, ImageName->MaximumLength);
 
     /* check for success */
     if (!ImageName->Buffer)
@@ -145,7 +145,7 @@ KsGetImageNameAndResourceId(
     if (!NT_SUCCESS(Status))
     {
         /* unexpected error */
-        ExFreePool(ImageName->Buffer);
+        FreeItem(ImageName->Buffer);
         return Status;
     }
 
@@ -154,13 +154,13 @@ KsGetImageNameAndResourceId(
    Status = KspQueryRegValue(RegKey, L"ResourceId", NULL, &ImageLength, ValueType);
 
     /* allocate resource id buffer*/
-    *ResourceId = (ULONG_PTR)ExAllocatePool(PagedPool, ImageLength);
+    *ResourceId = (ULONG_PTR)AllocateItem(PagedPool, ImageLength);
 
     /* check for success */
     if (!*ResourceId)
     {
         /* insufficient memory */
-        ExFreePool(ImageName->Buffer);
+        FreeItem(ImageName->Buffer);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
     /* now query for resource id */
@@ -169,8 +169,8 @@ KsGetImageNameAndResourceId(
     if (!NT_SUCCESS(Status))
     {
         /* unexpected error */
-        ExFreePool(ImageName->Buffer);
-        ExFreePool((PVOID)*ResourceId);
+        FreeItem(ImageName->Buffer);
+        FreeItem((PVOID)*ResourceId);
     }
 
     /* return result */
@@ -209,7 +209,7 @@ KsMapModuleName(
     /* initialize subkey buffer */
     SubKeyName.Length = 0;
     SubKeyName.MaximumLength = Modules.MaximumLength + ModuleName->MaximumLength;
-    SubKeyName.Buffer = ExAllocatePool(PagedPool, SubKeyName.MaximumLength);
+    SubKeyName.Buffer = AllocateItem(PagedPool, SubKeyName.MaximumLength);
 
     /* check for success */
     if (!SubKeyName.Buffer)
@@ -240,7 +240,7 @@ KsMapModuleName(
     }
 
     /* free subkey string */
-    ExFreePool(SubKeyName.Buffer);
+    FreeItem(SubKeyName.Buffer);
 
     /* close device key */
     ZwClose(hKey);
