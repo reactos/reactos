@@ -644,6 +644,37 @@ Bus_PDO_QueryResources(
 	ACPI_RESOURCE* resource;
 	ULONG ResourceListSize;
 	ULONG i;
+	ULONGLONG BusNumber;
+
+    /* A bus number resource is not included in the list of current resources
+     * for the root PCI bus so we manually query one here and if we find it
+     * we create a resource list and add a bus number descriptor to it */
+    AcpiStatus = acpi_evaluate_integer(DeviceData->AcpiHandle, "_BBN", NULL, &BusNumber);
+    if (AcpiStatus == AE_OK)
+    {
+        DPRINT1("Found PCI root hub: %d\n", BusNumber);
+
+	ResourceListSize = sizeof(CM_RESOURCE_LIST);
+	ResourceList = (PCM_RESOURCE_LIST)ExAllocatePool(PagedPool, ResourceListSize);
+	if (!ResourceList)
+		return STATUS_INSUFFICIENT_RESOURCES;
+
+	ResourceList->Count = 1;
+	ResourceList->List[0].InterfaceType = Internal;
+	ResourceList->List[0].BusNumber = 0;
+	ResourceList->List[0].PartialResourceList.Version = 1;
+	ResourceList->List[0].PartialResourceList.Revision = 1;
+	ResourceList->List[0].PartialResourceList.Count = 1;
+	ResourceDescriptor = ResourceList->List[0].PartialResourceList.PartialDescriptors;
+
+	ResourceDescriptor->Type = CmResourceTypeBusNumber;
+	ResourceDescriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+	ResourceDescriptor->u.BusNumber.Start = BusNumber;
+	ResourceDescriptor->u.BusNumber.Length = 1;
+
+	Irp->IoStatus.Information = (ULONG_PTR)ResourceList;
+	return STATUS_SUCCESS;
+    }
 
     /* Get current resources */
     Buffer.Length = 0;
