@@ -243,6 +243,7 @@ IopCreateResourceListFromRequirements(
                   if (ReqDesc->Option == 0)
                   {
                       ExFreePool(*ResourceList);
+                      *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
               }
@@ -258,6 +259,7 @@ IopCreateResourceListFromRequirements(
                   if (ReqDesc->Option == 0)
                   {
                       ExFreePool(*ResourceList);
+                      *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
               }
@@ -273,6 +275,7 @@ IopCreateResourceListFromRequirements(
                   if (ReqDesc->Option == 0)
                   {
                       ExFreePool(*ResourceList);
+                      *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
               }
@@ -288,6 +291,7 @@ IopCreateResourceListFromRequirements(
                   if (ReqDesc->Option == 0)
                   {
                       ExFreePool(*ResourceList);
+                      *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
               }
@@ -302,6 +306,7 @@ IopCreateResourceListFromRequirements(
                   if (ReqDesc->Option == 0)
                   {
                       ExFreePool(*ResourceList);
+                      *ResourceList = NULL;
                       return STATUS_CONFLICTING_ADDRESSES;
                   }
               }
@@ -852,6 +857,7 @@ IopAssignDeviceResources(
       {
           DPRINT1("Boot resources for %wZ cause a resource conflict!\n", &DeviceNode->InstancePath);
           ExFreePool(DeviceNode->ResourceList);
+          DeviceNode->ResourceList = NULL;
       }
    }
 
