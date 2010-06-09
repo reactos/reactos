@@ -1,4 +1,5 @@
 <module name="localui_winetest" type="win32cui" installbase="bin" installname="localui_winetest.exe" allowwarnings="true">
+	<include base="ReactOS">include/reactos/wine</include>
 	<include base="localui_winetest">.</include>
 	<define name="__ROS_LONG64__" />
 	<file>localui.c</file>
