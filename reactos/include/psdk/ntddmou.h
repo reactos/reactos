@@ -20,8 +20,7 @@
  *
  */
 
-#ifndef __NTDDMOU_H
-#define __NTDDMOU_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,8 +32,13 @@ extern "C" {
 #define IOCTL_MOUSE_QUERY_ATTRIBUTES \
   CTL_CODE(FILE_DEVICE_MOUSE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
+#define IOCTL_MOUSE_INSERT_DATA \
+  CTL_CODE(FILE_DEVICE_MOUSE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
 DEFINE_GUID(GUID_DEVINTERFACE_MOUSE, \
   0x378de44c, 0x56ef, 0x11d1, 0xbc, 0x8c, 0x00, 0xa0, 0xc9, 0x14, 0x05, 0xdd);
+
+#define GUID_CLASS_MOUSE GUID_DEVINTERFACE_MOUSE /* Obsolete */
 
 #define MOUSE_ERROR_VALUE_BASE            20000
 
@@ -50,6 +54,7 @@ DEFINE_GUID(GUID_DEVINTERFACE_MOUSE, \
 #define MOUSE_BUTTON_5_DOWN               0x0100
 #define MOUSE_BUTTON_5_UP                 0x0200
 #define MOUSE_WHEEL                       0x0400
+#define MOUSE_HWHEEL                      0x0800
 
 #define MOUSE_BUTTON_1_DOWN               MOUSE_LEFT_BUTTON_DOWN
 #define MOUSE_BUTTON_1_UP                 MOUSE_LEFT_BUTTON_UP
@@ -63,25 +68,29 @@ DEFINE_GUID(GUID_DEVINTERFACE_MOUSE, \
 #define MOUSE_MOVE_ABSOLUTE               1
 #define MOUSE_VIRTUAL_DESKTOP             0x02
 #define MOUSE_ATTRIBUTES_CHANGED          0x04
+#if(_WIN32_WINNT >= 0x0600)
+#define MOUSE_MOVE_NOCOALESCE             0x08
+#endif
+#define MOUSE_TERMSRV_SRC_SHADOW          0x100
 
 typedef struct _MOUSE_INPUT_DATA {
-	USHORT  UnitId;
-	USHORT  Flags;
-	_ANONYMOUS_UNION union {
-		ULONG Buttons;
-		_ANONYMOUS_STRUCT struct  {
-			USHORT  ButtonFlags;
-			USHORT  ButtonData;
-		} DUMMYSTRUCTNAME;
-	} DUMMYUNIONNAME;
-	ULONG  RawButtons;
-	LONG  LastX;
-	LONG  LastY;
-	ULONG  ExtraInformation;
+  USHORT UnitId;
+  USHORT Flags;
+  _ANONYMOUS_UNION union {
+    ULONG Buttons;
+    _ANONYMOUS_STRUCT struct {
+      USHORT ButtonFlags;
+      USHORT ButtonData;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  ULONG RawButtons;
+  LONG LastX;
+  LONG LastY;
+  ULONG ExtraInformation;
 } MOUSE_INPUT_DATA, *PMOUSE_INPUT_DATA;
 
 typedef struct _MOUSE_UNIT_ID_PARAMETER {
-  USHORT  UnitId;
+  USHORT UnitId;
 } MOUSE_UNIT_ID_PARAMETER, *PMOUSE_UNIT_ID_PARAMETER;
 
 /* MOUSE_ATTRIBUTES.MouseIdentifier constants */
@@ -94,16 +103,15 @@ typedef struct _MOUSE_UNIT_ID_PARAMETER {
 #define WHEELMOUSE_SERIAL_HARDWARE        0x0040
 #define MOUSE_HID_HARDWARE                0x0080
 #define WHEELMOUSE_HID_HARDWARE           0x0100
+#define HORIZONTAL_WHEEL_PRESENT          0x8000
 
 typedef struct _MOUSE_ATTRIBUTES {
-  USHORT  MouseIdentifier;
-  USHORT  NumberOfButtons;
-  USHORT  SampleRate;
-  ULONG  InputDataQueueLength;
+  USHORT MouseIdentifier;
+  USHORT NumberOfButtons;
+  USHORT SampleRate;
+  ULONG InputDataQueueLength;
 } MOUSE_ATTRIBUTES, *PMOUSE_ATTRIBUTES;
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __NTDDMOU_H */

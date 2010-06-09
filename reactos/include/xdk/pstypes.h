@@ -19,7 +19,7 @@ $if (_WDMDDK_)
 #define THREAD_SET_LIMITED_INFORMATION   0x0400
 #define THREAD_QUERY_LIMITED_INFORMATION 0x0800
 
-#define PROCESS_DUP_HANDLE                 (0x0040)
+#define PROCESS_DUP_HANDLE               (0x0040)
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 #define PROCESS_ALL_ACCESS  (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0xFFFF)
@@ -58,7 +58,7 @@ typedef struct _QUOTA_LIMITS {
 
 typedef union _RATE_QUOTA_LIMIT {
   ULONG RateData;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG RatePercent:7;
     ULONG Reserved0:25;
   } DUMMYSTRUCTNAME;
@@ -164,13 +164,13 @@ typedef VOID
 
 typedef struct _PS_CREATE_NOTIFY_INFO {
   IN SIZE_T Size;
-  union {
+  _ANONYMOUS_UNION union {
     IN ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       IN ULONG FileOpenNameAvailable:1;
       IN ULONG Reserved:31;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   IN HANDLE ParentProcessId;
   IN CLIENT_ID CreatingThreadId;
   IN OUT struct _FILE_OBJECT *FileObject;
@@ -247,10 +247,10 @@ typedef struct _NT_TIB32 {
   ULONG StackBase;
   ULONG StackLimit;
   ULONG SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG ArbitraryUserPointer;
   ULONG Self;
 } NT_TIB32,*PNT_TIB32;
@@ -260,10 +260,10 @@ typedef struct _NT_TIB64 {
   ULONG64 StackBase;
   ULONG64 StackLimit;
   ULONG64 SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG64 FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG64 ArbitraryUserPointer;
   ULONG64 Self;
 } NT_TIB64,*PNT_TIB64;
@@ -382,9 +382,9 @@ typedef struct _PROCESS_BASIC_INFORMATION {
 typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
   SIZE_T Size;
   PROCESS_BASIC_INFORMATION BasicInfo;
-  union {
+  _ANONYMOUS_UNION union {
     ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG IsProtectedProcess:1;
       ULONG IsWow64Process:1;
       ULONG IsProcessDeleting:1;
@@ -395,7 +395,7 @@ typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
 } PROCESS_EXTENDED_BASIC_INFORMATION, *PPROCESS_EXTENDED_BASIC_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION {
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;
@@ -403,11 +403,11 @@ typedef struct _PROCESS_DEVICEMAP_INFORMATION {
       ULONG DriveMap;
       UCHAR DriveType[32];
     } Query;
-  };
+  } DUMMYUNIONNAME;
 } PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION_EX {
-  union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;

@@ -287,7 +287,7 @@
 #define XML_SOCKLEN_T int
 
 /* Using the Win32 Socket implementation */
-#define _WINSOCKAPI_ 1
+//#define _WINSOCKAPI_ 1
 
 /* Define like PROTOTYPES; this can be used by system headers. */
 #define __PROTOTYPES 1
@@ -300,4 +300,8 @@
 
 #if !defined(__MINGW32__) || defined(__NO_ISOCEXT)
 #define vsnprintf _vsnprintf
+#endif
+
+#if defined(__MINGW32__)
+#include <windows.h>
 #endif

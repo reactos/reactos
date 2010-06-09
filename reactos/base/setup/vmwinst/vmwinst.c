@@ -111,7 +111,7 @@ DetectVMware(int *Version)
 
 /* try to open the file */
 static BOOL
-FileExists(WCHAR *Path, WCHAR *File)
+DoesFileExist(WCHAR *Path, WCHAR *File)
 {
     WCHAR FileName[MAX_PATH + 1];
     HANDLE FileHandle;
@@ -195,9 +195,9 @@ IsVMwareCDInDrive(WCHAR *Drv)
                 continue;
             }
 
-            if(FileExists(SrcPath, vmx_fb) &&
-                (FileExists(SrcPath, vmx_mode) || FileExists(SrcPath, vmx_mode_v6)) &&
-                FileExists(SrcPath, vmx_svga))
+            if(DoesFileExist(SrcPath, vmx_fb) &&
+                (DoesFileExist(SrcPath, vmx_mode) || DoesFileExist(SrcPath, vmx_mode_v6)) &&
+                DoesFileExist(SrcPath, vmx_svga))
             {
                 *Drv = Current;
                 return TRUE;
@@ -1070,9 +1070,9 @@ wWinMain(HINSTANCE hInstance,
 
     SetCurrentDirectory(DestinationPath);
 
-    DriverFilesFound = FileExists(DestinationPath, vmx_fb) &&
-        FileExists(DestinationPath, vmx_mode) &&
-        FileExists(DestinationDriversPath, vmx_svga);
+    DriverFilesFound = DoesFileExist(DestinationPath, vmx_fb) &&
+        DoesFileExist(DestinationPath, vmx_mode) &&
+        DoesFileExist(DestinationDriversPath, vmx_svga);
 
     StartVMwConfigWizard = DriverFilesFound && IsVmwSVGAEnabled();
 

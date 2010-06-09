@@ -46,18 +46,6 @@ typedef struct _EMULATOR_ACCESS_ENTRY {
   PVOID  Routine;
 } EMULATOR_ACCESS_ENTRY, *PEMULATOR_ACCESS_ENTRY;
 
-#ifndef VIDEO_ACCESS_RANGE_DEFINED /* also in video.h */
-#define VIDEO_ACCESS_RANGE_DEFINED
-typedef struct _VIDEO_ACCESS_RANGE {
-  PHYSICAL_ADDRESS  RangeStart;
-  ULONG  RangeLength;
-  UCHAR  RangeInIoSpace;
-  UCHAR  RangeVisible;
-  UCHAR  RangeShareable;
-  UCHAR  RangePassive;
-} VIDEO_ACCESS_RANGE, *PVIDEO_ACCESS_RANGE;
-#endif
-
 typedef VOID
 (NTAPI *PBANKED_SECTION_ROUTINE)(
   IN ULONG  ReadBank,

@@ -52,8 +52,13 @@
  * source if you're curious about the inner workings of these routines.
  */
 
-#ifndef _REACTOS_CSQ_H
-#define _REACTOS_CSQ_H
+#pragma once
+
+#define _CSQ_H_
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * Prevent including the CSQ definitions twice. They're present in NTDDK
@@ -61,8 +66,26 @@
  */
 #ifndef IO_TYPE_CSQ_IRP_CONTEXT
 
-struct _IO_CSQ;
+typedef struct _IO_CSQ IO_CSQ, *PIO_CSQ;
 
+/*
+ * STRUCTURES
+ *
+ * NOTE:  Please do not use these directly.  You will make incompatible code
+ * if you do.  Always only use the documented IoCsqXxx() interfaces and you
+ * will amass much Good Karma.
+ */
+#define IO_TYPE_CSQ_IRP_CONTEXT 1
+#define IO_TYPE_CSQ 2
+
+/*
+ * IO_CSQ_IRP_CONTEXT - Context used to track an IRP in the CSQ
+ */
+typedef struct _IO_CSQ_IRP_CONTEXT {
+  ULONG Type;
+  PIRP Irp;
+  PIO_CSQ Csq;
+} IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
 
 /*
  * CSQ Callbacks
@@ -80,54 +103,62 @@ struct _IO_CSQ;
  *
  * Sample implementation:
  *
-	VOID NTAPI CsqInsertIrp(PIO_CSQ Csq, PIRP Irp)
-	{
-		KdPrint(("Inserting IRP 0x%x into CSQ\n", Irp));
-		InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
-	}
+  VOID NTAPI CsqInsertIrp(PIO_CSQ Csq, PIRP Irp)
+  {
+    KdPrint(("Inserting IRP 0x%x into CSQ\n", Irp));
+    InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
+  }
  *
  */
-typedef VOID (NTAPI *PIO_CSQ_INSERT_IRP) (struct _IO_CSQ *Csq,
-                                          PIRP Irp);
-
+typedef VOID
+(NTAPI IO_CSQ_INSERT_IRP)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
+typedef IO_CSQ_INSERT_IRP *PIO_CSQ_INSERT_IRP;
 
 /*
  * Function to remove an IRP from the queue.
  *
  * Sample:
  *
-	VOID NTAPI CsqRemoveIrp(PIO_CSQ Csq, PIRP Irp)
-	{
-		KdPrint(("Removing IRP 0x%x from CSQ\n", Irp));
-		RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-	}
+  VOID NTAPI CsqRemoveIrp(PIO_CSQ Csq, PIRP Irp)
+  {
+    KdPrint(("Removing IRP 0x%x from CSQ\n", Irp));
+    RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+  }
  *
  */
-typedef VOID (NTAPI *PIO_CSQ_REMOVE_IRP) (struct _IO_CSQ *Csq,
-                                          PIRP Irp);
+typedef VOID
+(NTAPI IO_CSQ_REMOVE_IRP)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
+typedef IO_CSQ_REMOVE_IRP *PIO_CSQ_REMOVE_IRP;
 
 /*
  * Function to look for an IRP in the queue
  *
  * Sample:
  *
-	PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq, PIRP Irp, PVOID PeekContext)
-	{
-		KdPrint(("Peeking for next IRP\n"));
+  PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq, PIRP Irp, PVOID PeekContext)
+  {
+    KdPrint(("Peeking for next IRP\n"));
 
-		if(Irp)
-			return CONTAINING_RECORD(&Irp->Tail.Overlay.ListEntry.Flink, IRP, Tail.Overlay.ListEntry);
+    if(Irp)
+      return CONTAINING_RECORD(&Irp->Tail.Overlay.ListEntry.Flink, IRP, Tail.Overlay.ListEntry);
 
-		if(IsListEmpty(&IrpQueue))
-			return NULL;
+    if(IsListEmpty(&IrpQueue))
+      return NULL;
 
-		return CONTAINING_RECORD(IrpQueue.Flink, IRP, Tail.Overlay.ListEntry);
-	}
+    return CONTAINING_RECORD(IrpQueue.Flink, IRP, Tail.Overlay.ListEntry);
+  }
  *
  */
-typedef PIRP (NTAPI *PIO_CSQ_PEEK_NEXT_IRP) (struct _IO_CSQ *Csq,
-                                             PIRP Irp,
-                                             PVOID PeekContext);
+typedef PIRP
+(NTAPI IO_CSQ_PEEK_NEXT_IRP)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp,
+  IN PVOID PeekContext);
+typedef IO_CSQ_PEEK_NEXT_IRP *PIO_CSQ_PEEK_NEXT_IRP;
 
 /*
  * Lock the queue.  This can be a spinlock, a mutex, or whatever
@@ -135,28 +166,34 @@ typedef PIRP (NTAPI *PIO_CSQ_PEEK_NEXT_IRP) (struct _IO_CSQ *Csq,
  *
  * Sample:
  *
-	VOID NTAPI CsqAcquireLock(PIO_CSQ Csq, PKIRQL Irql)
-	{
-		KdPrint(("Acquiring spin lock\n"));
-		KeAcquireSpinLock(&IrpQueueLock, Irql);
-	}
+  VOID NTAPI CsqAcquireLock(PIO_CSQ Csq, PKIRQL Irql)
+  {
+    KdPrint(("Acquiring spin lock\n"));
+    KeAcquireSpinLock(&IrpQueueLock, Irql);
+  }
  *
  */
-typedef VOID (NTAPI *PIO_CSQ_ACQUIRE_LOCK) (struct _IO_CSQ *Csq,
-                                            PKIRQL Irql);
+typedef VOID
+(NTAPI IO_CSQ_ACQUIRE_LOCK)(
+  IN struct _IO_CSQ *Csq,
+  OUT PKIRQL Irql);
+typedef IO_CSQ_ACQUIRE_LOCK *PIO_CSQ_ACQUIRE_LOCK;
 
 /*
  * Unlock the queue:
  *
-	VOID NTAPI CsqReleaseLock(PIO_CSQ Csq, KIRQL Irql)
-	{
-		KdPrint(("Releasing spin lock\n"));
-		KeReleaseSpinLock(&IrpQueueLock, Irql);
-	}
+  VOID NTAPI CsqReleaseLock(PIO_CSQ Csq, KIRQL Irql)
+  {
+    KdPrint(("Releasing spin lock\n"));
+    KeReleaseSpinLock(&IrpQueueLock, Irql);
+  }
  *
  */
-typedef VOID (NTAPI *PIO_CSQ_RELEASE_LOCK) (struct _IO_CSQ *Csq,
-                                            KIRQL Irql);
+typedef VOID
+(NTAPI IO_CSQ_RELEASE_LOCK)(
+  IN struct _IO_CSQ *Csq,
+  IN KIRQL Irql);
+typedef IO_CSQ_RELEASE_LOCK *PIO_CSQ_RELEASE_LOCK;
 
 /*
  * Finally, this is called by the queue library when it wants to complete
@@ -164,53 +201,38 @@ typedef VOID (NTAPI *PIO_CSQ_RELEASE_LOCK) (struct _IO_CSQ *Csq,
  *
  * Sample:
  *
-	VOID NTAPI CsqCompleteCancelledIrp(PIO_CSQ Csq, PIRP Irp)
-	{
-		KdPrint(("cancelling irp 0x%x\n", Irp));
-		Irp->IoStatus.Status = STATUS_CANCELLED;
-		Irp->IoStatus.Information = 0;
-		IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	}
+  VOID NTAPI CsqCompleteCancelledIrp(PIO_CSQ Csq, PIRP Irp)
+  {
+    KdPrint(("cancelling irp 0x%x\n", Irp));
+    Irp->IoStatus.Status = STATUS_CANCELLED;
+    Irp->IoStatus.Information = 0;
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  }
  *
  */
-typedef VOID (NTAPI *PIO_CSQ_COMPLETE_CANCELED_IRP) (struct _IO_CSQ *Csq,
-                                                     PIRP Irp);
-
-
-/*
- * STRUCTURES
- *
- * NOTE:  Please do not use these directly.  You will make incompatible code
- * if you do.  Always only use the documented IoCsqXxx() interfaces and you
- * will amass much Good Karma.
- */
-#define IO_TYPE_CSQ_IRP_CONTEXT 1
-#define IO_TYPE_CSQ 2
+typedef VOID
+(NTAPI IO_CSQ_COMPLETE_CANCELED_IRP)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp);
+typedef IO_CSQ_COMPLETE_CANCELED_IRP *PIO_CSQ_COMPLETE_CANCELED_IRP;
 
 /*
  * IO_CSQ - Queue control structure
  */
 typedef struct _IO_CSQ {
-	ULONG                          Type;
-	PIO_CSQ_INSERT_IRP             CsqInsertIrp;
-	PIO_CSQ_REMOVE_IRP             CsqRemoveIrp;
-	PIO_CSQ_PEEK_NEXT_IRP          CsqPeekNextIrp;
-	PIO_CSQ_ACQUIRE_LOCK           CsqAcquireLock;
-	PIO_CSQ_RELEASE_LOCK           CsqReleaseLock;
-	PIO_CSQ_COMPLETE_CANCELED_IRP  CsqCompleteCanceledIrp;
-	PVOID                          ReservePointer;	/* must be NULL */
+  ULONG Type;
+  PIO_CSQ_INSERT_IRP CsqInsertIrp;
+  PIO_CSQ_REMOVE_IRP CsqRemoveIrp;
+  PIO_CSQ_PEEK_NEXT_IRP CsqPeekNextIrp;
+  PIO_CSQ_ACQUIRE_LOCK CsqAcquireLock;
+  PIO_CSQ_RELEASE_LOCK CsqReleaseLock;
+  PIO_CSQ_COMPLETE_CANCELED_IRP CsqCompleteCanceledIrp;
+  PVOID ReservePointer; /* must be NULL */
 } IO_CSQ, *PIO_CSQ;
 
-/*
- * IO_CSQ_IRP_CONTEXT - Context used to track an IRP in the CSQ
- */
-typedef struct _IO_CSQ_IRP_CONTEXT {
-	ULONG   Type;
-	PIRP    Irp;
-	PIO_CSQ Csq;
-} IO_CSQ_IRP_CONTEXT, *PIO_CSQ_IRP_CONTEXT;
-
 #endif /* IO_TYPE_CSQ_IRP_CONTEXT */
+
+#ifndef IO_TYPE_CSQ_EX
 
 /* See IO_TYPE_CSQ_* above */
 #define IO_TYPE_CSQ_EX 3
@@ -222,18 +244,21 @@ typedef struct _IO_CSQ_IRP_CONTEXT {
  *
  * Same deal as above; sample implementation:
  *
-	NTSTATUS NTAPI CsqInsertIrpEx(PIO_CSQ Csq, PIRP Irp, PVOID InsertContext)
-	{
-		CsqInsertIrp(Csq, Irp);
-		return STATUS_PENDING;
-	}
+  NTSTATUS NTAPI CsqInsertIrpEx(PIO_CSQ Csq, PIRP Irp, PVOID InsertContext)
+  {
+    CsqInsertIrp(Csq, Irp);
+    return STATUS_PENDING;
+  }
  *
  */
-#ifndef IO_TYPE_CSQ_EX
-typedef NTSTATUS (NTAPI *PIO_CSQ_INSERT_IRP_EX) (struct _IO_CSQ *Csq,
-                                                 PIRP Irp,
-                                                 PVOID InsertContext);
-#endif
+typedef NTSTATUS
+(NTAPI IO_CSQ_INSERT_IRP_EX)(
+  IN struct _IO_CSQ *Csq,
+  IN PIRP Irp,
+  IN PVOID InsertContext);
+typedef IO_CSQ_INSERT_IRP_EX *PIO_CSQ_INSERT_IRP_EX;
+
+#endif /* IO_TYPE_CSQ_EX */
 
 /*
  * CANCEL-SAFE QUEUE DDIs
@@ -304,4 +329,6 @@ NTKERNELAPI
 PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
                               PVOID PeekContext);
 
-#endif /* _REACTOS_CSQ_H */
+#ifdef __cplusplus
+}
+#endif

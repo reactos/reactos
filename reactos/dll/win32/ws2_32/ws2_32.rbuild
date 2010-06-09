@@ -3,6 +3,7 @@
 	<include base="ws2_32">include</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="LE" />
+	<define name="WINSOCK_API_LINKAGE">DECLSPEC_EXPORT</define>
 	<library>wine</library>
 	<library>ntdll</library>
 	<library>user32</library>

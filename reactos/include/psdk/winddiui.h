@@ -21,7 +21,7 @@
 #ifndef __WINE_WINDDIUI_H
 #define __WINE_WINDDIUI_H
 
-#include <ddk/compstui.h>
+#include <compstui.h>
 
 #ifdef __cplusplus
 extern "C" {

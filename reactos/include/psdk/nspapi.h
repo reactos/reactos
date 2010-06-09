@@ -36,9 +36,9 @@ extern "C" {
 
 #ifndef RC_INVOKED
 
-#if defined (_WINSOCK_H) || defined (_WINSOCK2_H) /* needed for LPSOCKADDR */
-#ifndef __CSADDR_T_DEFINED /* also in winsock2.h, but not in winsock.h */
-#define __CSADDR_T_DEFINED
+#if defined (_WINSOCKAPI_) || defined (_WINSOCK2API_) /* needed for LPSOCKADDR */
+#ifndef __CSADDR_DEFINED__ /* also in winsock2.h, but not in winsock.h */
+#define __CSADDR_DEFINED__
 typedef struct _SOCKET_ADDRESS {
 	LPSOCKADDR lpSockaddr;
 	INT iSockaddrLength;

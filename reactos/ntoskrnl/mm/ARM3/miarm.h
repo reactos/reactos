@@ -43,10 +43,9 @@
 #define _1MB (1024 * _1KB)
 
 /* Area mapped by a PDE */
-#define PDE_MAPPED_VA   (PTE_COUNT * PAGE_SIZE)
+#define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
 
-/* Size of a PDE directory, and size of a page table */
-#define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
+/* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
@@ -353,7 +352,7 @@ typedef struct _MI_LARGE_PAGE_RANGES
 } MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
 
 extern MMPTE HyperTemplatePte;
-extern MMPTE ValidKernelPde;
+extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;

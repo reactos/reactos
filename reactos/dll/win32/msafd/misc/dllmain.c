@@ -800,12 +800,12 @@ WSPListen(SOCKET Handle,
 
 int
 WSPAPI
-WSPSelect(int nfds,
-          fd_set *readfds,
-          fd_set *writefds,
-          fd_set *exceptfds,
-          const LPTIMEVAL timeout,
-          LPINT lpErrno)
+WSPSelect(IN int nfds,
+          IN OUT fd_set *readfds OPTIONAL,
+          IN OUT fd_set *writefds OPTIONAL,
+          IN OUT fd_set *exceptfds OPTIONAL,
+          IN const struct timeval *timeout OPTIONAL,
+          OUT LPINT lpErrno)
 {
     IO_STATUS_BLOCK     IOSB;
     PAFD_POLL_INFO      PollInfo;

@@ -12,16 +12,16 @@
 		<xi:include href="freeldr/freeldr_main.rbuild" />
 		<xi:include href="freeldr/freeldr.rbuild" />
 		<if property="ARCH" value="i386">
-		    <xi:include href="freeldr/setupldr_main.rbuild" />
-		    <xi:include href="freeldr/setupldr.rbuild" />		
+			<xi:include href="freeldr/setupldr_main.rbuild" />
+			<xi:include href="freeldr/setupldr.rbuild" />
 		</if>
 		<if property="ARCH" value="ppc">
-		    <xi:include href="freeldr/setupldr_main.rbuild" />
-		    <xi:include href="freeldr/setupldr.rbuild" />		
+			<xi:include href="freeldr/setupldr_main.rbuild" />
+			<xi:include href="freeldr/setupldr.rbuild" />
 		</if>
 		<if property="ARCH" value="amd64">
-		    <xi:include href="freeldr/setupldr_main.rbuild" />
-		    <xi:include href="freeldr/setupldr.rbuild" />		
+			<xi:include href="freeldr/setupldr_main.rbuild" />
+			<xi:include href="freeldr/setupldr.rbuild" />
 		</if>
 	</directory>
 </group>

@@ -1,22 +1,10 @@
+$if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                         I/O Manager Types                                  *
  ******************************************************************************/
+$endif
 
 $if (_WDMDDK_)
-#define WDM_MAJORVERSION        0x06
-#define WDM_MINORVERSION        0x00
-
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
 
 #define STATUS_CONTINUE_COMPLETION      STATUS_SUCCESS
 
@@ -53,6 +41,8 @@ $if (_WDMDDK_)
 #define IO_RESOURCE_DEFAULT               0x02
 #define IO_RESOURCE_ALTERNATIVE           0x08
 
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
 #define FILE_DEVICE_CD_ROM_FILE_SYSTEM    0x00000003
@@ -121,6 +111,8 @@ $if (_WDMDDK_)
 #define FILE_DEVICE_BIOMETRIC             0x00000044
 #define FILE_DEVICE_PMI                   0x00000045
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
+$if (_WDMDDK_)
 #if defined(NT_PROCESSOR_GROUPS)
 
 typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
@@ -207,9 +199,9 @@ typedef struct _WAIT_CONTEXT_BLOCK {
   PKDPC BufferChainingDpc;
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
 
-$endif
-/* DEVICE_OBJECT.Flags */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
+/* DEVICE_OBJECT.Flags */
 #define DO_DEVICE_HAS_NAME                0x00000040
 #define DO_SYSTEM_BOOT_PARTITION          0x00000100
 #define DO_LONG_TERM_REQUESTS             0x00000200
@@ -221,8 +213,10 @@ $if (_NTDDK_)
 #define DO_SYSTEM_SYSTEM_PARTITION        0x00200000
 #define DO_SYSTEM_CRITICAL_PARTITION      0x00400000
 #define DO_DISALLOW_EXECUTE               0x00800000
+
 $endif
 $if (_WDMDDK_)
+/* DEVICE_OBJECT.Flags */
 #define DO_VERIFY_VOLUME                  0x00000002
 #define DO_BUFFERED_IO                    0x00000004
 #define DO_EXCLUSIVE                      0x00000008
@@ -260,9 +254,13 @@ $if (_WDMDDK_)
 #define FILE_256_BYTE_ALIGNMENT         0x000000ff
 #define FILE_512_BYTE_ALIGNMENT         0x000001ff
 
+$endif
+$if (_WDMDDK_ || _DEVIOCTL_)
 /* DEVICE_OBJECT.DeviceType */
 #define DEVICE_TYPE ULONG
 
+$endif
+$if (_WDMDDK_)
 typedef struct _DEVICE_OBJECT {
   CSHORT Type;
   USHORT Size;
@@ -371,11 +369,11 @@ typedef struct _IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS {
 
 typedef struct _IO_CONNECT_INTERRUPT_PARAMETERS {
   IN OUT ULONG Version;
-  union {
+  _ANONYMOUS_UNION union {
     IO_CONNECT_INTERRUPT_FULLY_SPECIFIED_PARAMETERS FullySpecified;
     IO_CONNECT_INTERRUPT_LINE_BASED_PARAMETERS LineBased;
     IO_CONNECT_INTERRUPT_MESSAGE_BASED_PARAMETERS MessageBased;
-  };
+  } DUMMYUNIONNAME;
 } IO_CONNECT_INTERRUPT_PARAMETERS, *PIO_CONNECT_INTERRUPT_PARAMETERS;
 
 typedef struct _IO_DISCONNECT_INTERRUPT_PARAMETERS {
@@ -495,6 +493,80 @@ typedef struct _SHARE_ACCESS {
   ULONG SharedDelete;
 } SHARE_ACCESS, *PSHARE_ACCESS;
 
+/* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
+   inheritance, even from a struct renders the type non-POD. So we use
+   this hack */
+#define PCI_COMMON_HEADER_LAYOUT                \
+  USHORT VendorID;                              \
+  USHORT DeviceID;                              \
+  USHORT Command;                               \
+  USHORT Status;                                \
+  UCHAR RevisionID;                             \
+  UCHAR ProgIf;                                 \
+  UCHAR SubClass;                               \
+  UCHAR BaseClass;                              \
+  UCHAR CacheLineSize;                          \
+  UCHAR LatencyTimer;                           \
+  UCHAR HeaderType;                             \
+  UCHAR BIST;                                   \
+  union {                                       \
+    struct _PCI_HEADER_TYPE_0 {                 \
+      ULONG BaseAddresses[PCI_TYPE0_ADDRESSES]; \
+      ULONG CIS;                                \
+      USHORT SubVendorID;                       \
+      USHORT SubSystemID;                       \
+      ULONG ROMBaseAddress;                     \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved1[3];                       \
+      ULONG Reserved2;                          \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      UCHAR MinimumGrant;                       \
+      UCHAR MaximumLatency;                     \
+    } type0;                                    \
+    struct _PCI_HEADER_TYPE_1 {                 \
+      ULONG BaseAddresses[PCI_TYPE1_ADDRESSES]; \
+      UCHAR PrimaryBus;                         \
+      UCHAR SecondaryBus;                       \
+      UCHAR SubordinateBus;                     \
+      UCHAR SecondaryLatency;                   \
+      UCHAR IOBase;                             \
+      UCHAR IOLimit;                            \
+      USHORT SecondaryStatus;                   \
+      USHORT MemoryBase;                        \
+      USHORT MemoryLimit;                       \
+      USHORT PrefetchBase;                      \
+      USHORT PrefetchLimit;                     \
+      ULONG PrefetchBaseUpper32;                \
+      ULONG PrefetchLimitUpper32;               \
+      USHORT IOBaseUpper16;                     \
+      USHORT IOLimitUpper16;                    \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved1[3];                       \
+      ULONG ROMBaseAddress;                     \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      USHORT BridgeControl;                     \
+    } type1;                                    \
+    struct _PCI_HEADER_TYPE_2 {                 \
+      ULONG SocketRegistersBaseAddress;         \
+      UCHAR CapabilitiesPtr;                    \
+      UCHAR Reserved;                           \
+      USHORT SecondaryStatus;                   \
+      UCHAR PrimaryBus;                         \
+      UCHAR SecondaryBus;                       \
+      UCHAR SubordinateBus;                     \
+      UCHAR SecondaryLatency;                   \
+      struct {                                  \
+        ULONG Base;                             \
+        ULONG Limit;                            \
+      } Range[PCI_TYPE2_ADDRESSES-1];           \
+      UCHAR InterruptLine;                      \
+      UCHAR InterruptPin;                       \
+      USHORT BridgeControl;                     \
+    } type2;                                    \
+  } u;
+
 typedef enum _CREATE_FILE_TYPE {
   CreateFileTypeNone,
   CreateFileTypeNamedPipe,
@@ -598,10 +670,10 @@ typedef struct _BOOTDISK_INFORMATION_EX {
 typedef struct _LOADER_PARTITION_INFORMATION_EX {
   ULONG PartitionStyle;
   ULONG PartitionNumber;
-  union {
+  _ANONYMOUS_UNION union {
     ULONG Signature;
     GUID DeviceId;
-  };
+  } DUMMYUNIONNAME;
   ULONG Flags;
 } LOADER_PARTITION_INFORMATION_EX, *PLOADER_PARTITION_INFORMATION_EX;
 
@@ -1694,6 +1766,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 #define SL_ALLOW_RAW_MOUNT                0x01
 
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _DEVIOCTL_)
 #define CTL_CODE(DeviceType, Function, Method, Access) \
   (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
 
@@ -1701,6 +1775,8 @@ typedef struct _IO_COMPLETION_CONTEXT {
 
 #define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
+$if (_WDMDDK_)
 #define IRP_NOCACHE                     0x00000001
 #define IRP_PAGING_IO                   0x00000002
 #define IRP_MOUNT_COMPLETION            0x00000002
@@ -2752,6 +2828,8 @@ typedef struct _IO_STACK_LOCATION {
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
 
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _DEVIOCTL_)
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
 #define METHOD_OUT_DIRECT                 2
@@ -2760,6 +2838,8 @@ typedef struct _IO_STACK_LOCATION {
 #define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
 #define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
+$if (_WDMDDK_)
 #define FILE_SUPERSEDED                   0x00000000
 #define FILE_OPENED                       0x00000001
 #define FILE_CREATED                      0x00000002
@@ -2848,11 +2928,15 @@ typedef struct _IO_STACK_LOCATION {
 #define FILE_OPEN_NO_RECALL               0x00400000
 #define FILE_OPEN_FOR_FREE_SPACE_QUERY    0x00800000
 
+$endif (_WDMDDK_)
+$if (_WDMDDK_ || _DEVIOCTL_)
 #define FILE_ANY_ACCESS                   0x00000000
 #define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
 #define FILE_READ_ACCESS                  0x00000001
 #define FILE_WRITE_ACCESS                 0x00000002
 
+$endif (_WDMDDK_ || _DEVIOCTL_)
+$if (_WDMDDK_)
 #define FILE_ALL_ACCESS \
   (STANDARD_RIGHTS_REQUIRED | \
    SYNCHRONIZE | \
@@ -2914,95 +2998,21 @@ typedef struct _PCI_SLOT_NUMBER {
 #define PCI_TYPE1_ADDRESSES               2
 #define PCI_TYPE2_ADDRESSES               5
 
-/* While MS WDK uses inheritance in C++, we cannot do this with gcc, as
-   inheritance, even from a struct renders the type non-POD. So we use
-   this hack */
-
-    struct _PCI_HEADER_TYPE_0 {
-      ULONG BaseAddresses[PCI_TYPE0_ADDRESSES];
-      ULONG CIS;
-      USHORT SubVendorID;
-      USHORT SubSystemID;
-      ULONG ROMBaseAddress;
-      UCHAR CapabilitiesPtr;
-      UCHAR Reserved1[3];
-      ULONG Reserved2;
-      UCHAR InterruptLine;
-      UCHAR InterruptPin;
-      UCHAR MinimumGrant;
-      UCHAR MaximumLatency;
-    };
-
-    struct _PCI_HEADER_TYPE_1 {
-      ULONG BaseAddresses[PCI_TYPE1_ADDRESSES];
-      UCHAR PrimaryBus;
-      UCHAR SecondaryBus;
-      UCHAR SubordinateBus;
-      UCHAR SecondaryLatency;
-      UCHAR IOBase;
-      UCHAR IOLimit;
-      USHORT SecondaryStatus;
-      USHORT MemoryBase;
-      USHORT MemoryLimit;
-      USHORT PrefetchBase;
-      USHORT PrefetchLimit;
-      ULONG PrefetchBaseUpper32;
-      ULONG PrefetchLimitUpper32;
-      USHORT IOBaseUpper16;
-      USHORT IOLimitUpper16;
-      UCHAR CapabilitiesPtr;
-      UCHAR Reserved1[3];
-      ULONG ROMBaseAddress;
-      UCHAR InterruptLine;
-      UCHAR InterruptPin;
-      USHORT BridgeControl;
-    };
-
-    struct _PCI_HEADER_TYPE_2 {
-      ULONG SocketRegistersBaseAddress;
-      UCHAR CapabilitiesPtr;
-      UCHAR Reserved;
-      USHORT SecondaryStatus;
-      UCHAR PrimaryBus;
-      UCHAR SecondaryBus;
-      UCHAR SubordinateBus;
-      UCHAR SecondaryLatency;
-      struct {
-        ULONG Base;
-        ULONG Limit;
-      } Range[PCI_TYPE2_ADDRESSES-1];
-      UCHAR InterruptLine;
-      UCHAR InterruptPin;
-      USHORT BridgeControl;
-    };
-
-#define PCI_COMMON_HEADER_LAYOUT \
-  USHORT VendorID; \
-  USHORT DeviceID; \
-  USHORT Command; \
-  USHORT Status; \
-  UCHAR RevisionID; \
-  UCHAR ProgIf; \
-  UCHAR SubClass; \
-  UCHAR BaseClass; \
-  UCHAR CacheLineSize; \
-  UCHAR LatencyTimer; \
-  UCHAR HeaderType; \
-  UCHAR BIST; \
-  union { \
-    struct _PCI_HEADER_TYPE_0 type0; \
-    struct _PCI_HEADER_TYPE_1 type1; \
-    struct _PCI_HEADER_TYPE_2 type2; \
-  } u;
-
 typedef struct _PCI_COMMON_HEADER {
   PCI_COMMON_HEADER_LAYOUT
 } PCI_COMMON_HEADER, *PPCI_COMMON_HEADER;
 
+#ifdef __cplusplus
 typedef struct _PCI_COMMON_CONFIG {
   PCI_COMMON_HEADER_LAYOUT
   UCHAR DeviceSpecific[192];
 } PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+#else
+typedef struct _PCI_COMMON_CONFIG {
+  PCI_COMMON_HEADER DUMMYSTRUCTNAME;
+  UCHAR DeviceSpecific[192];
+} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+#endif
 
 #define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET(PCI_COMMON_CONFIG, DeviceSpecific))
 
@@ -3188,7 +3198,7 @@ typedef struct _PCI_EXPRESS_SERIAL_NUMBER_CAPABILITY {
 } PCI_EXPRESS_SERIAL_NUMBER_CAPABILITY, *PPCI_EXPRESS_SERIAL_NUMBER_CAPABILITY;
 
 typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_STATUS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG Undefined:1;
     ULONG Reserved1:3;
     ULONG DataLinkProtocolError:1;
@@ -3209,7 +3219,7 @@ typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_STATUS {
 } PCI_EXPRESS_UNCORRECTABLE_ERROR_STATUS, *PPCI_EXPRESS_UNCORRECTABLE_ERROR_STATUS;
 
 typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_MASK {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG Undefined:1;
     ULONG Reserved1:3;
     ULONG DataLinkProtocolError:1;
@@ -3230,7 +3240,7 @@ typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_MASK {
 } PCI_EXPRESS_UNCORRECTABLE_ERROR_MASK, *PPCI_EXPRESS_UNCORRECTABLE_ERROR_MASK;
 
 typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_SEVERITY {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG Undefined:1;
     ULONG Reserved1:3;
     ULONG DataLinkProtocolError:1;
@@ -3251,7 +3261,7 @@ typedef union _PCI_EXPRESS_UNCORRECTABLE_ERROR_SEVERITY {
 } PCI_EXPRESS_UNCORRECTABLE_ERROR_SEVERITY, *PPCI_EXPRESS_UNCORRECTABLE_ERROR_SEVERITY;
 
 typedef union _PCI_EXPRESS_CORRECTABLE_ERROR_STATUS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG ReceiverError:1;
     ULONG Reserved1:5;
     ULONG BadTLP:1;
@@ -3266,7 +3276,7 @@ typedef union _PCI_EXPRESS_CORRECTABLE_ERROR_STATUS {
 } PCI_EXPRESS_CORRECTABLE_ERROR_STATUS, *PPCI_CORRECTABLE_ERROR_STATUS;
 
 typedef union _PCI_EXPRESS_CORRECTABLE_ERROR_MASK {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG ReceiverError:1;
     ULONG Reserved1:5;
     ULONG BadTLP:1;
@@ -3281,7 +3291,7 @@ typedef union _PCI_EXPRESS_CORRECTABLE_ERROR_MASK {
 } PCI_EXPRESS_CORRECTABLE_ERROR_MASK, *PPCI_CORRECTABLE_ERROR_MASK;
 
 typedef union _PCI_EXPRESS_AER_CAPABILITIES {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG FirstErrorPointer:5;
     ULONG ECRCGenerationCapable:1;
     ULONG ECRCGenerationEnable:1;
@@ -3293,7 +3303,7 @@ typedef union _PCI_EXPRESS_AER_CAPABILITIES {
 } PCI_EXPRESS_AER_CAPABILITIES, *PPCI_EXPRESS_AER_CAPABILITIES;
 
 typedef union _PCI_EXPRESS_ROOT_ERROR_COMMAND {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG CorrectableErrorReportingEnable:1;
     ULONG NonFatalErrorReportingEnable:1;
     ULONG FatalErrorReportingEnable:1;
@@ -3303,7 +3313,7 @@ typedef union _PCI_EXPRESS_ROOT_ERROR_COMMAND {
 } PCI_EXPRESS_ROOT_ERROR_COMMAND, *PPCI_EXPRESS_ROOT_ERROR_COMMAND;
 
 typedef union _PCI_EXPRESS_ROOT_ERROR_STATUS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG CorrectableErrorReceived:1;
     ULONG MultipleCorrectableErrorsReceived:1;
     ULONG UncorrectableErrorReceived:1;
@@ -3318,7 +3328,7 @@ typedef union _PCI_EXPRESS_ROOT_ERROR_STATUS {
 } PCI_EXPRESS_ROOT_ERROR_STATUS, *PPCI_EXPRESS_ROOT_ERROR_STATUS;
 
 typedef union _PCI_EXPRESS_ERROR_SOURCE_ID {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableSourceIdFun:3;
     USHORT CorrectableSourceIdDev:5;
     USHORT CorrectableSourceIdBus:8;
@@ -3330,7 +3340,7 @@ typedef union _PCI_EXPRESS_ERROR_SOURCE_ID {
 } PCI_EXPRESS_ERROR_SOURCE_ID, *PPCI_EXPRESS_ERROR_SOURCE_ID;
 
 typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_STATUS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG TargetAbortOnSplitCompletion:1;
     ULONG MasterAbortOnSplitCompletion:1;
     ULONG ReceivedTargetAbort:1;
@@ -3351,7 +3361,7 @@ typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_STATUS {
 } PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_STATUS, *PPCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_STATUS;
 
 typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_MASK {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG TargetAbortOnSplitCompletion:1;
     ULONG MasterAbortOnSplitCompletion:1;
     ULONG ReceivedTargetAbort:1;
@@ -3372,7 +3382,7 @@ typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_MASK {
 } PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_MASK, *PPCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_MASK;
 
 typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_SEVERITY {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG TargetAbortOnSplitCompletion:1;
     ULONG MasterAbortOnSplitCompletion:1;
     ULONG ReceivedTargetAbort:1;
@@ -3393,7 +3403,7 @@ typedef union _PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_SEVERITY {
 } PCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_SEVERITY, *PPCI_EXPRESS_SEC_UNCORRECTABLE_ERROR_SEVERITY;
 
 typedef union _PCI_EXPRESS_SEC_AER_CAPABILITIES {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG SecondaryUncorrectableFirstErrorPtr:5;
     ULONG Reserved:27;
   } DUMMYSTRUCTNAME;
@@ -3456,7 +3466,7 @@ typedef struct _PCI_EXPRESS_BRIDGE_AER_CAPABILITY {
 } PCI_EXPRESS_BRIDGE_AER_CAPABILITY, *PPCI_EXPRESS_BRIDGE_AER_CAPABILITY;
 
 typedef union _PCI_EXPRESS_SRIOV_CAPS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG VFMigrationCapable:1;
     ULONG Reserved1:20;
     ULONG VFMigrationInterruptNumber:11;
@@ -3465,7 +3475,7 @@ typedef union _PCI_EXPRESS_SRIOV_CAPS {
 } PCI_EXPRESS_SRIOV_CAPS, *PPCI_EXPRESS_SRIOV_CAPS;
 
 typedef union _PCI_EXPRESS_SRIOV_CONTROL {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT VFEnable:1;
     USHORT VFMigrationEnable:1;
     USHORT VFMigrationInterruptEnable:1;
@@ -3477,7 +3487,7 @@ typedef union _PCI_EXPRESS_SRIOV_CONTROL {
 } PCI_EXPRESS_SRIOV_CONTROL, *PPCI_EXPRESS_SRIOV_CONTROL;
 
 typedef union _PCI_EXPRESS_SRIOV_STATUS {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT VFMigrationStatus:1;
     USHORT Reserved1:15;
   } DUMMYSTRUCTNAME;
@@ -3485,7 +3495,7 @@ typedef union _PCI_EXPRESS_SRIOV_STATUS {
 } PCI_EXPRESS_SRIOV_STATUS, *PPCI_EXPRESS_SRIOV_STATUS;
 
 typedef union _PCI_EXPRESS_SRIOV_MIGRATION_STATE_ARRAY {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG VFMigrationStateBIR:3;
     ULONG VFMigrationStateOffset:29;
   } DUMMYSTRUCTNAME;
@@ -3747,9 +3757,9 @@ typedef struct _PCI_MSIX_TABLE_CONFIG_INTERFACE {
 
 #define PCI_MSIX_TABLE_CONFIG_MINIMUM_SIZE \
         RTL_SIZEOF_THROUGH_FIELD(PCI_MSIX_TABLE_CONFIG_INTERFACE, UnmaskTableEntry)
-$endif
-$if (_NTDDK_)
 
+$endif (_WDMDDK_)
+$if (_NTDDK_)
 #ifndef _ARC_DDK_
 #define _ARC_DDK_
 typedef enum _CONFIGURATION_TYPE {
@@ -3835,8 +3845,7 @@ typedef enum _CONFIGURATION_TYPE {
 #define IO_ATTACH_DEVICE                0x0400
 #define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID Context,
   IN PUNICODE_STRING PathName,
@@ -4203,7 +4212,7 @@ typedef struct PCI_AGP_EXTENDED_CAPABILITY {
 typedef struct _PCIX_BRIDGE_CAPABILITY {
   PCI_CAPABILITIES_HEADER Header;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       USHORT Bus64Bit:1;
       USHORT Bus133MHzCapable:1;
       USHORT SplitCompletionDiscarded:1;
@@ -4219,7 +4228,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT AsUSHORT;
   } SecondaryStatus;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG FunctionNumber:3;
       ULONG DeviceNumber:5;
       ULONG BusNumber:8;
@@ -4241,7 +4250,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT DownstreamSplitTransactionCapacity;
   USHORT DownstreamSplitTransactionLimit;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG SelectSecondaryRegisters:1;
       ULONG ErrorPresentInOtherBank:1;
       ULONG AdditionalCorrectableError:1;
@@ -4280,7 +4289,7 @@ typedef struct _PCI_SUBSYSTEM_IDS_CAPABILITY {
 
 typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExtendedConfigOpRegions:1;
       ULONG ActiveStatePowerManagement:1;
       ULONG ClockPowerManagement:1;
@@ -4295,7 +4304,7 @@ typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
 
 typedef struct _PCI_ROOT_BUS_OSC_CONTROL_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExpressNativeHotPlug:1;
       ULONG ShpcNativeHotPlug:1;
       ULONG ExpressNativePME:1;
@@ -4321,7 +4330,7 @@ typedef enum {
 
 typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
   PCI_HARDWARE_INTERFACE SecondaryInterface;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     BOOLEAN BusCapabilitiesFound;
     ULONG CurrentSpeedAndMode;
     ULONG SupportedSpeedsAndModes;
@@ -4334,7 +4343,7 @@ typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
 } PCI_ROOT_BUS_HARDWARE_CAPABILITY, *PPCI_ROOT_BUS_HARDWARE_CAPABILITY;
 
 typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CapabilityVersion:4;
     USHORT DeviceType:4;
     USHORT SlotImplemented:1;
@@ -4345,7 +4354,7 @@ typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_CAPABILITIES_REGISTER, *PPCI_EXPRESS_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaxPayloadSizeSupported:3;
     ULONG PhantomFunctionsSupported:2;
     ULONG ExtendedTagSupported:1;
@@ -4364,7 +4373,7 @@ typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
 
 typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorEnable:1;
     USHORT NonFatalErrorEnable:1;
     USHORT FatalErrorEnable:1;
@@ -4384,7 +4393,7 @@ typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
 
 typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorDetected:1;
     USHORT NonFatalErrorDetected:1;
     USHORT FatalErrorDetected:1;
@@ -4397,7 +4406,7 @@ typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
 } PCI_EXPRESS_DEVICE_STATUS_REGISTER, *PPCI_EXPRESS_DEVICE_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaximumLinkSpeed:4;
     ULONG MaximumLinkWidth:6;
     ULONG ActiveStatePMSupport:2;
@@ -4413,7 +4422,7 @@ typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_LINK_CAPABILITIES_REGISTER, *PPCI_EXPRESS_LINK_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT ActiveStatePMControl:2;
     USHORT Rsvd1:1;
     USHORT ReadCompletionBoundary:1;
@@ -4428,7 +4437,7 @@ typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
 } PCI_EXPRESS_LINK_CONTROL_REGISTER, *PPCI_EXPRESS_LINK_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT LinkSpeed:4;
     USHORT LinkWidth:6;
     USHORT Undefined:1;
@@ -4441,7 +4450,7 @@ typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
 } PCI_EXPRESS_LINK_STATUS_REGISTER, *PPCI_EXPRESS_LINK_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG AttentionButtonPresent:1;
     ULONG PowerControllerPresent:1;
     ULONG MRLSensorPresent:1;
@@ -4459,7 +4468,7 @@ typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_SLOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonEnable:1;
     USHORT PowerFaultDetectEnable:1;
     USHORT MRLSensorEnable:1;
@@ -4477,7 +4486,7 @@ typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
 } PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonPressed:1;
     USHORT PowerFaultDetected:1;
     USHORT MRLSensorChanged:1;
@@ -4493,7 +4502,7 @@ typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
 } PCI_EXPRESS_SLOT_STATUS_REGISTER, *PPCI_EXPRESS_SLOT_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableSerrEnable:1;
     USHORT NonFatalSerrEnable:1;
     USHORT FatalSerrEnable:1;
@@ -4505,7 +4514,7 @@ typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
 } PCI_EXPRESS_ROOT_CONTROL_REGISTER, *PPCI_EXPRESS_ROOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CRSSoftwareVisibility:1;
     USHORT Rsvd:15;
   } DUMMYSTRUCTNAME;
@@ -4513,7 +4522,7 @@ typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_ROOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG PMERequestorId:16;
     ULONG PMEStatus:1;
     ULONG PMEPending:1;
@@ -4616,25 +4625,13 @@ typedef enum {
 } PCI_EXPRESS_MAX_PAYLOAD_SIZE;
 
 typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT FunctionNumber:3;
     USHORT DeviceNumber:5;
     USHORT BusNumber:8;
   } DUMMYSTRUCTNAME;
   USHORT AsUSHORT;
 } PCI_EXPRESS_PME_REQUESTOR_ID, *PPCI_EXPRESS_PME_REQUESTOR_ID;
-
-#if defined(_WIN64)
-
-#ifndef USE_DMA_MACROS
-#define USE_DMA_MACROS
-#endif
-
-#ifndef NO_LEGACY_DRIVERS
-#define NO_LEGACY_DRIVERS
-#endif
-
-#endif /* defined(_WIN64) */
 
 typedef enum _PHYSICAL_COUNTER_RESOURCE_DESCRIPTOR_TYPE {
   ResourceTypeSingle = 0,
@@ -4755,8 +4752,8 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
 #define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
-    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
-     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
+  (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
+   FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
 
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
@@ -4774,11 +4771,11 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
-                                            FILE_READ_ONLY_DEVICE  | \
-                                            FILE_FLOPPY_DISKETTE   | \
-                                            FILE_WRITE_ONCE_MEDIA  | \
-                                            FILE_DEVICE_SECURE_OPEN  )
+#define FILE_CHARACTERISTICS_PROPAGATED (FILE_REMOVABLE_MEDIA  | \
+                                         FILE_READ_ONLY_DEVICE | \
+                                         FILE_FLOPPY_DISKETTE  | \
+                                         FILE_WRITE_ONCE_MEDIA | \
+                                         FILE_DEVICE_SECURE_OPEN)
 
 typedef struct _FILE_ALIGNMENT_INFORMATION {
   ULONG AlignmentRequirement;
@@ -4865,5 +4862,2013 @@ typedef enum _BUS_DATA_TYPE {
   SgiInternalConfiguration,
   MaximumBusDataType
 } BUS_DATA_TYPE, *PBUS_DATA_TYPE;
-$endif
 
+/* Some Server 2003 DDK definitions */
+#define PCI_INT_ROUTE_INTRF_STANDARD_VER 1
+
+typedef NTSTATUS
+(NTAPI *PLEGACY_DEVICE_DETECTION_HANDLER)(
+  IN PVOID Context,
+  IN INTERFACE_TYPE LegacyBusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PDEVICE_OBJECT *PhysicalDeviceObject);
+
+typedef struct _ROUTING_TOKEN {
+  PVOID LinkNode;
+  ULONG StaticVector;
+  UCHAR Flags;
+} ROUTING_TOKEN, *PROUTING_TOKEN;
+
+typedef NTSTATUS
+(NTAPI *PGET_INTERRUPT_ROUTING)(
+  IN PDEVICE_OBJECT Pdo,
+  OUT ULONG *Bus,
+  OUT ULONG *PciSlot,
+  OUT UCHAR *InterruptLine,
+  OUT UCHAR *InterruptPin,
+  OUT UCHAR *ClassCode,
+  OUT UCHAR *SubClassCode,
+  OUT PDEVICE_OBJECT *ParentPdo,
+  OUT ROUTING_TOKEN *RoutingToken,
+  OUT UCHAR *Flags);
+
+typedef NTSTATUS
+(NTAPI *PSET_INTERRUPT_ROUTING_TOKEN)(
+  IN PDEVICE_OBJECT Pdo,
+  IN PROUTING_TOKEN RoutingToken);
+
+typedef VOID
+(NTAPI *PUPDATE_INTERRUPT_LINE)(
+  IN PDEVICE_OBJECT Pdo,
+  IN UCHAR LineRegister);
+
+typedef struct _INT_ROUTE_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_INTERRUPT_ROUTING GetInterruptRouting;
+  PSET_INTERRUPT_ROUTING_TOKEN SetInterruptRoutingToken;
+  PUPDATE_INTERRUPT_LINE UpdateInterruptLine;
+} INT_ROUTE_INTERFACE_STANDARD, *PINT_ROUTE_INTERFACE_STANDARD;
+
+typedef struct _LEGACY_DEVICE_DETECTION_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PLEGACY_DEVICE_DETECTION_HANDLER LegacyDeviceDetection;
+} LEGACY_DEVICE_DETECTION_INTERFACE, *PLEGACY_DEVICE_DETECTION_INTERFACE;
+
+/* FIXME : These definitions don't exist in public headers */
+
+#define PCI_CB_INTRF_VERSION             1
+#define PCI_PME_INTRF_STANDARD_VER       1
+#define PNP_LOCATION_INTERFACE_VERSION   1
+
+DEFINE_GUID(GUID_PCI_CARDBUS_INTERFACE_PRIVATE, 0xcca82f31, 0x54d6, 0x11d1, 0x82, 0x24, 0x00, 0xa0, 0xc9, 0x32, 0x43, 0x85);
+DEFINE_GUID(GUID_PCI_PME_INTERFACE, 0xaac7e6ac, 0xbb0b, 0x11d2, 0xb4, 0x84, 0x00, 0xc0, 0x4f, 0x72, 0xde, 0x8b);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSADD)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN OUT PVOID *DeviceContext);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSDELETE)(
+  IN PVOID DeviceContext);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSPCIDISPATCH)(
+  IN PVOID DeviceContext,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *PPME_SET_PME_ENABLE)(
+  IN PDEVICE_OBJECT Pdo,
+  IN BOOLEAN PmeEnable);
+
+typedef VOID
+(NTAPI *PPME_CLEAR_PME_STATUS)(
+  IN PDEVICE_OBJECT Pdo);
+
+typedef VOID
+(NTAPI *PPME_GET_INFORMATION)(
+  IN PDEVICE_OBJECT Pdo,
+  OUT PBOOLEAN PmeCapable,
+  OUT PBOOLEAN PmeStatus,
+  OUT PBOOLEAN PmeEnable);
+
+typedef struct _PCI_CARDBUS_INTERFACE_PRIVATE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PDRIVER_OBJECT DriverObject;
+  PCARDBUSADD AddCardBus;
+  PCARDBUSDELETE DeleteCardBus;
+  PCARDBUSPCIDISPATCH DispatchPnp;
+} PCI_CARDBUS_INTERFACE_PRIVATE, *PPCI_CARDBUS_INTERFACE_PRIVATE;
+
+typedef struct _PCI_PME_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PPME_GET_INFORMATION GetPmeInformation;
+  PPME_CLEAR_PME_STATUS ClearPmeStatus;
+  PPME_SET_PME_ENABLE UpdateEnable;
+} PCI_PME_INTERFACE, *PPCI_PME_INTERFACE;
+
+$endif (_NTDDK_)
+$if (_NTIFS_)
+
+#define FILE_OPLOCK_BROKEN_TO_LEVEL_2   0x00000007
+#define FILE_OPLOCK_BROKEN_TO_NONE      0x00000008
+#define FILE_OPBATCH_BREAK_UNDERWAY     0x00000009
+
+/* also in winnt.h */
+#define FILE_NOTIFY_CHANGE_FILE_NAME    0x00000001
+#define FILE_NOTIFY_CHANGE_DIR_NAME     0x00000002
+#define FILE_NOTIFY_CHANGE_NAME         0x00000003
+#define FILE_NOTIFY_CHANGE_ATTRIBUTES   0x00000004
+#define FILE_NOTIFY_CHANGE_SIZE         0x00000008
+#define FILE_NOTIFY_CHANGE_LAST_WRITE   0x00000010
+#define FILE_NOTIFY_CHANGE_LAST_ACCESS  0x00000020
+#define FILE_NOTIFY_CHANGE_CREATION     0x00000040
+#define FILE_NOTIFY_CHANGE_EA           0x00000080
+#define FILE_NOTIFY_CHANGE_SECURITY     0x00000100
+#define FILE_NOTIFY_CHANGE_STREAM_NAME  0x00000200
+#define FILE_NOTIFY_CHANGE_STREAM_SIZE  0x00000400
+#define FILE_NOTIFY_CHANGE_STREAM_WRITE 0x00000800
+#define FILE_NOTIFY_VALID_MASK          0x00000fff
+
+#define FILE_ACTION_ADDED                   0x00000001
+#define FILE_ACTION_REMOVED                 0x00000002
+#define FILE_ACTION_MODIFIED                0x00000003
+#define FILE_ACTION_RENAMED_OLD_NAME        0x00000004
+#define FILE_ACTION_RENAMED_NEW_NAME        0x00000005
+#define FILE_ACTION_ADDED_STREAM            0x00000006
+#define FILE_ACTION_REMOVED_STREAM          0x00000007
+#define FILE_ACTION_MODIFIED_STREAM         0x00000008
+#define FILE_ACTION_REMOVED_BY_DELETE       0x00000009
+#define FILE_ACTION_ID_NOT_TUNNELLED        0x0000000A
+#define FILE_ACTION_TUNNELLED_ID_COLLISION  0x0000000B
+/* end  winnt.h */
+
+#define FILE_PIPE_BYTE_STREAM_TYPE          0x00000000
+#define FILE_PIPE_MESSAGE_TYPE              0x00000001
+
+#define FILE_PIPE_ACCEPT_REMOTE_CLIENTS     0x00000000
+#define FILE_PIPE_REJECT_REMOTE_CLIENTS     0x00000002
+
+#define FILE_PIPE_ACCEPT_REMOTE_CLIENTS     0x00000000
+#define FILE_PIPE_REJECT_REMOTE_CLIENTS     0x00000002
+#define FILE_PIPE_TYPE_VALID_MASK           0x00000003
+
+#define FILE_PIPE_BYTE_STREAM_MODE          0x00000000
+#define FILE_PIPE_MESSAGE_MODE              0x00000001
+
+#define FILE_PIPE_QUEUE_OPERATION           0x00000000
+#define FILE_PIPE_COMPLETE_OPERATION        0x00000001
+
+#define FILE_PIPE_INBOUND                   0x00000000
+#define FILE_PIPE_OUTBOUND                  0x00000001
+#define FILE_PIPE_FULL_DUPLEX               0x00000002
+
+#define FILE_PIPE_DISCONNECTED_STATE        0x00000001
+#define FILE_PIPE_LISTENING_STATE           0x00000002
+#define FILE_PIPE_CONNECTED_STATE           0x00000003
+#define FILE_PIPE_CLOSING_STATE             0x00000004
+
+#define FILE_PIPE_CLIENT_END                0x00000000
+#define FILE_PIPE_SERVER_END                0x00000001
+
+#define FILE_CASE_SENSITIVE_SEARCH          0x00000001
+#define FILE_CASE_PRESERVED_NAMES           0x00000002
+#define FILE_UNICODE_ON_DISK                0x00000004
+#define FILE_PERSISTENT_ACLS                0x00000008
+#define FILE_FILE_COMPRESSION               0x00000010
+#define FILE_VOLUME_QUOTAS                  0x00000020
+#define FILE_SUPPORTS_SPARSE_FILES          0x00000040
+#define FILE_SUPPORTS_REPARSE_POINTS        0x00000080
+#define FILE_SUPPORTS_REMOTE_STORAGE        0x00000100
+#define FILE_VOLUME_IS_COMPRESSED           0x00008000
+#define FILE_SUPPORTS_OBJECT_IDS            0x00010000
+#define FILE_SUPPORTS_ENCRYPTION            0x00020000
+#define FILE_NAMED_STREAMS                  0x00040000
+#define FILE_READ_ONLY_VOLUME               0x00080000
+#define FILE_SEQUENTIAL_WRITE_ONCE          0x00100000
+#define FILE_SUPPORTS_TRANSACTIONS          0x00200000
+#define FILE_SUPPORTS_HARD_LINKS            0x00400000
+#define FILE_SUPPORTS_EXTENDED_ATTRIBUTES   0x00800000
+#define FILE_SUPPORTS_OPEN_BY_FILE_ID       0x01000000
+#define FILE_SUPPORTS_USN_JOURNAL           0x02000000
+
+#define FILE_NEED_EA                    0x00000080
+
+#define FILE_EA_TYPE_BINARY             0xfffe
+#define FILE_EA_TYPE_ASCII              0xfffd
+#define FILE_EA_TYPE_BITMAP             0xfffb
+#define FILE_EA_TYPE_METAFILE           0xfffa
+#define FILE_EA_TYPE_ICON               0xfff9
+#define FILE_EA_TYPE_EA                 0xffee
+#define FILE_EA_TYPE_MVMT               0xffdf
+#define FILE_EA_TYPE_MVST               0xffde
+#define FILE_EA_TYPE_ASN1               0xffdd
+#define FILE_EA_TYPE_FAMILY_IDS         0xff01
+
+typedef struct _FILE_NOTIFY_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG Action;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
+
+typedef struct _FILE_DIRECTORY_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
+
+typedef struct _FILE_FULL_DIR_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  ULONG EaSize;
+  WCHAR FileName[1];
+} FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
+
+typedef struct _FILE_ID_FULL_DIR_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  ULONG EaSize;
+  LARGE_INTEGER FileId;
+  WCHAR FileName[1];
+} FILE_ID_FULL_DIR_INFORMATION, *PFILE_ID_FULL_DIR_INFORMATION;
+
+typedef struct _FILE_BOTH_DIR_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  ULONG EaSize;
+  CCHAR ShortNameLength;
+  WCHAR ShortName[12];
+  WCHAR FileName[1];
+} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_ID_BOTH_DIR_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  ULONG EaSize;
+  CCHAR ShortNameLength;
+  WCHAR ShortName[12];
+  LARGE_INTEGER FileId;
+  WCHAR FileName[1];
+} FILE_ID_BOTH_DIR_INFORMATION, *PFILE_ID_BOTH_DIR_INFORMATION;
+
+typedef struct _FILE_NAMES_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;
+
+typedef struct _FILE_ID_GLOBAL_TX_DIR_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  LARGE_INTEGER CreationTime;
+  LARGE_INTEGER LastAccessTime;
+  LARGE_INTEGER LastWriteTime;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER EndOfFile;
+  LARGE_INTEGER AllocationSize;
+  ULONG FileAttributes;
+  ULONG FileNameLength;
+  LARGE_INTEGER FileId;
+  GUID LockingTransactionId;
+  ULONG TxInfoFlags;
+  WCHAR FileName[1];
+} FILE_ID_GLOBAL_TX_DIR_INFORMATION, *PFILE_ID_GLOBAL_TX_DIR_INFORMATION;
+
+#define FILE_ID_GLOBAL_TX_DIR_INFO_FLAG_WRITELOCKED         0x00000001
+#define FILE_ID_GLOBAL_TX_DIR_INFO_FLAG_VISIBLE_TO_TX       0x00000002
+#define FILE_ID_GLOBAL_TX_DIR_INFO_FLAG_VISIBLE_OUTSIDE_TX  0x00000004
+
+typedef struct _FILE_OBJECTID_INFORMATION {
+  LONGLONG FileReference;
+  UCHAR ObjectId[16];
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      UCHAR BirthVolumeId[16];
+      UCHAR BirthObjectId[16];
+      UCHAR DomainId[16];
+    } DUMMYSTRUCTNAME;
+    UCHAR ExtendedInfo[48];
+  } DUMMYUNIONNAME;
+} FILE_OBJECTID_INFORMATION, *PFILE_OBJECTID_INFORMATION;
+
+#define ANSI_DOS_STAR                   ('<')
+#define ANSI_DOS_QM                     ('>')
+#define ANSI_DOS_DOT                    ('"')
+
+#define DOS_STAR                        (L'<')
+#define DOS_QM                          (L'>')
+#define DOS_DOT                         (L'"')
+
+typedef struct _FILE_INTERNAL_INFORMATION {
+  LARGE_INTEGER IndexNumber;
+} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
+
+typedef struct _FILE_EA_INFORMATION {
+  ULONG EaSize;
+} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
+
+typedef struct _FILE_ACCESS_INFORMATION {
+  ACCESS_MASK AccessFlags;
+} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
+
+typedef struct _FILE_MODE_INFORMATION {
+  ULONG Mode;
+} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
+
+typedef struct _FILE_ALL_INFORMATION {
+  FILE_BASIC_INFORMATION BasicInformation;
+  FILE_STANDARD_INFORMATION StandardInformation;
+  FILE_INTERNAL_INFORMATION InternalInformation;
+  FILE_EA_INFORMATION EaInformation;
+  FILE_ACCESS_INFORMATION AccessInformation;
+  FILE_POSITION_INFORMATION PositionInformation;
+  FILE_MODE_INFORMATION ModeInformation;
+  FILE_ALIGNMENT_INFORMATION AlignmentInformation;
+  FILE_NAME_INFORMATION NameInformation;
+} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
+
+typedef struct _FILE_ALLOCATION_INFORMATION {
+  LARGE_INTEGER AllocationSize;
+} FILE_ALLOCATION_INFORMATION, *PFILE_ALLOCATION_INFORMATION;
+
+typedef struct _FILE_COMPRESSION_INFORMATION {
+  LARGE_INTEGER CompressedFileSize;
+  USHORT CompressionFormat;
+  UCHAR CompressionUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR Reserved[3];
+} FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
+
+typedef struct _FILE_LINK_INFORMATION {
+  BOOLEAN ReplaceIfExists;
+  HANDLE RootDirectory;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
+
+typedef struct _FILE_MOVE_CLUSTER_INFORMATION {
+  ULONG ClusterCount;
+  HANDLE RootDirectory;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_MOVE_CLUSTER_INFORMATION, *PFILE_MOVE_CLUSTER_INFORMATION;
+
+typedef struct _FILE_RENAME_INFORMATION {
+  BOOLEAN ReplaceIfExists;
+  HANDLE RootDirectory;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
+
+typedef struct _FILE_STREAM_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG StreamNameLength;
+  LARGE_INTEGER StreamSize;
+  LARGE_INTEGER StreamAllocationSize;
+  WCHAR StreamName[1];
+} FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
+
+typedef struct _FILE_TRACKING_INFORMATION {
+  HANDLE DestinationFile;
+  ULONG ObjectInformationLength;
+  CHAR ObjectInformation[1];
+} FILE_TRACKING_INFORMATION, *PFILE_TRACKING_INFORMATION;
+
+typedef struct _FILE_COMPLETION_INFORMATION {
+  HANDLE Port;
+  PVOID Key;
+} FILE_COMPLETION_INFORMATION, *PFILE_COMPLETION_INFORMATION;
+
+typedef struct _FILE_PIPE_INFORMATION {
+  ULONG ReadMode;
+  ULONG CompletionMode;
+} FILE_PIPE_INFORMATION, *PFILE_PIPE_INFORMATION;
+
+typedef struct _FILE_PIPE_LOCAL_INFORMATION {
+  ULONG NamedPipeType;
+  ULONG NamedPipeConfiguration;
+  ULONG MaximumInstances;
+  ULONG CurrentInstances;
+  ULONG InboundQuota;
+  ULONG ReadDataAvailable;
+  ULONG OutboundQuota;
+  ULONG WriteQuotaAvailable;
+  ULONG NamedPipeState;
+  ULONG NamedPipeEnd;
+} FILE_PIPE_LOCAL_INFORMATION, *PFILE_PIPE_LOCAL_INFORMATION;
+
+typedef struct _FILE_PIPE_REMOTE_INFORMATION {
+  LARGE_INTEGER CollectDataTime;
+  ULONG MaximumCollectionCount;
+} FILE_PIPE_REMOTE_INFORMATION, *PFILE_PIPE_REMOTE_INFORMATION;
+
+typedef struct _FILE_MAILSLOT_QUERY_INFORMATION {
+  ULONG MaximumMessageSize;
+  ULONG MailslotQuota;
+  ULONG NextMessageSize;
+  ULONG MessagesAvailable;
+  LARGE_INTEGER ReadTimeout;
+} FILE_MAILSLOT_QUERY_INFORMATION, *PFILE_MAILSLOT_QUERY_INFORMATION;
+
+typedef struct _FILE_MAILSLOT_SET_INFORMATION {
+  PLARGE_INTEGER ReadTimeout;
+} FILE_MAILSLOT_SET_INFORMATION, *PFILE_MAILSLOT_SET_INFORMATION;
+
+typedef struct _FILE_REPARSE_POINT_INFORMATION {
+  LONGLONG FileReference;
+  ULONG Tag;
+} FILE_REPARSE_POINT_INFORMATION, *PFILE_REPARSE_POINT_INFORMATION;
+
+typedef struct _FILE_LINK_ENTRY_INFORMATION {
+  ULONG NextEntryOffset;
+  LONGLONG ParentFileId;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_LINK_ENTRY_INFORMATION, *PFILE_LINK_ENTRY_INFORMATION;
+
+typedef struct _FILE_LINKS_INFORMATION {
+  ULONG BytesNeeded;
+  ULONG EntriesReturned;
+  FILE_LINK_ENTRY_INFORMATION Entry;
+} FILE_LINKS_INFORMATION, *PFILE_LINKS_INFORMATION;
+
+typedef struct _FILE_NETWORK_PHYSICAL_NAME_INFORMATION {
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FILE_NETWORK_PHYSICAL_NAME_INFORMATION, *PFILE_NETWORK_PHYSICAL_NAME_INFORMATION;
+
+typedef struct _FILE_STANDARD_LINK_INFORMATION {
+  ULONG NumberOfAccessibleLinks;
+  ULONG TotalNumberOfLinks;
+  BOOLEAN DeletePending;
+  BOOLEAN Directory;
+} FILE_STANDARD_LINK_INFORMATION, *PFILE_STANDARD_LINK_INFORMATION;
+
+typedef struct _FILE_GET_EA_INFORMATION {
+  ULONG NextEntryOffset;
+  UCHAR EaNameLength;
+  CHAR  EaName[1];
+} FILE_GET_EA_INFORMATION, *PFILE_GET_EA_INFORMATION;
+
+#define REMOTE_PROTOCOL_FLAG_LOOPBACK       0x00000001
+#define REMOTE_PROTOCOL_FLAG_OFFLINE        0x00000002
+
+typedef struct _FILE_REMOTE_PROTOCOL_INFORMATION {
+  USHORT StructureVersion;
+  USHORT StructureSize;
+  ULONG  Protocol;
+  USHORT ProtocolMajorVersion;
+  USHORT ProtocolMinorVersion;
+  USHORT ProtocolRevision;
+  USHORT Reserved;
+  ULONG  Flags;
+  struct {
+    ULONG Reserved[8];
+  } GenericReserved;
+  struct {
+    ULONG Reserved[16];
+  } ProtocolSpecificReserved;
+} FILE_REMOTE_PROTOCOL_INFORMATION, *PFILE_REMOTE_PROTOCOL_INFORMATION;
+
+typedef struct _FILE_GET_QUOTA_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG SidLength;
+  SID Sid;
+} FILE_GET_QUOTA_INFORMATION, *PFILE_GET_QUOTA_INFORMATION;
+
+typedef struct _FILE_QUOTA_INFORMATION {
+  ULONG NextEntryOffset;
+  ULONG SidLength;
+  LARGE_INTEGER ChangeTime;
+  LARGE_INTEGER QuotaUsed;
+  LARGE_INTEGER QuotaThreshold;
+  LARGE_INTEGER QuotaLimit;
+  SID Sid;
+} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
+
+typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
+  ULONG FileSystemAttributes;
+  ULONG MaximumComponentNameLength;
+  ULONG FileSystemNameLength;
+  WCHAR FileSystemName[1];
+} FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
+
+typedef struct _FILE_FS_DRIVER_PATH_INFORMATION {
+  BOOLEAN DriverInPath;
+  ULONG DriverNameLength;
+  WCHAR DriverName[1];
+} FILE_FS_DRIVER_PATH_INFORMATION, *PFILE_FS_DRIVER_PATH_INFORMATION;
+
+typedef struct _FILE_FS_VOLUME_FLAGS_INFORMATION {
+  ULONG Flags;
+} FILE_FS_VOLUME_FLAGS_INFORMATION, *PFILE_FS_VOLUME_FLAGS_INFORMATION;
+
+#define FILE_VC_QUOTA_NONE              0x00000000
+#define FILE_VC_QUOTA_TRACK             0x00000001
+#define FILE_VC_QUOTA_ENFORCE           0x00000002
+#define FILE_VC_QUOTA_MASK              0x00000003
+#define FILE_VC_CONTENT_INDEX_DISABLED  0x00000008
+#define FILE_VC_LOG_QUOTA_THRESHOLD     0x00000010
+#define FILE_VC_LOG_QUOTA_LIMIT         0x00000020
+#define FILE_VC_LOG_VOLUME_THRESHOLD    0x00000040
+#define FILE_VC_LOG_VOLUME_LIMIT        0x00000080
+#define FILE_VC_QUOTAS_INCOMPLETE       0x00000100
+#define FILE_VC_QUOTAS_REBUILDING       0x00000200
+#define FILE_VC_VALID_MASK              0x000003ff
+
+typedef struct _FILE_FS_CONTROL_INFORMATION {
+  LARGE_INTEGER FreeSpaceStartFiltering;
+  LARGE_INTEGER FreeSpaceThreshold;
+  LARGE_INTEGER FreeSpaceStopFiltering;
+  LARGE_INTEGER DefaultQuotaThreshold;
+  LARGE_INTEGER DefaultQuotaLimit;
+  ULONG FileSystemControlFlags;
+} FILE_FS_CONTROL_INFORMATION, *PFILE_FS_CONTROL_INFORMATION;
+
+#ifndef _FILESYSTEMFSCTL_
+#define _FILESYSTEMFSCTL_
+
+#define FSCTL_REQUEST_OPLOCK_LEVEL_1    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  0, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_REQUEST_OPLOCK_LEVEL_2    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  1, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_REQUEST_BATCH_OPLOCK      CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_OPLOCK_BREAK_ACKNOWLEDGE  CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  3, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_OPBATCH_ACK_CLOSE_PENDING CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  4, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_OPLOCK_BREAK_NOTIFY       CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  5, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_LOCK_VOLUME               CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  6, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_UNLOCK_VOLUME             CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  7, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_DISMOUNT_VOLUME           CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  8, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_IS_VOLUME_MOUNTED         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 10, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_IS_PATHNAME_VALID         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 11, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_MARK_VOLUME_DIRTY         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 12, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_QUERY_RETRIEVAL_POINTERS  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 14, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_GET_COMPRESSION           CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 15, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SET_COMPRESSION           CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 16, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_SET_BOOTLOADER_ACCESSED   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 19, METHOD_NEITHER,  FILE_ANY_ACCESS)
+
+#define FSCTL_OPLOCK_BREAK_ACK_NO_2     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 20, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_INVALIDATE_VOLUMES        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 21, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_QUERY_FAT_BPB             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 22, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_REQUEST_FILTER_OPLOCK     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 23, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_FILESYSTEM_GET_STATISTICS CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 24, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#if (_WIN32_WINNT >= 0x0400)
+
+#define FSCTL_GET_NTFS_VOLUME_DATA      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 25, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_GET_NTFS_FILE_RECORD      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 26, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_GET_VOLUME_BITMAP         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 27, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_GET_RETRIEVAL_POINTERS    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 28, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_MOVE_FILE                 CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 29, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_IS_VOLUME_DIRTY           CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 30, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_ALLOW_EXTENDED_DASD_IO    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 32, METHOD_NEITHER,  FILE_ANY_ACCESS)
+
+#endif
+
+#if (_WIN32_WINNT >= 0x0500)
+
+#define FSCTL_FIND_FILES_BY_SID         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 35, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_SET_OBJECT_ID             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 38, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_GET_OBJECT_ID             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 39, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_DELETE_OBJECT_ID          CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 40, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_SET_REPARSE_POINT         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 41, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_GET_REPARSE_POINT         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 42, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_DELETE_REPARSE_POINT      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 43, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_ENUM_USN_DATA             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 44, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_SECURITY_ID_CHECK         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 45, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_READ_USN_JOURNAL          CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 46, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_SET_OBJECT_ID_EXTENDED    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 47, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_CREATE_OR_GET_OBJECT_ID   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 48, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SET_SPARSE                CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 49, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_SET_ZERO_DATA             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 50, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_QUERY_ALLOCATED_RANGES    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 51, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_ENABLE_UPGRADE            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 52, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_SET_ENCRYPTION            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 53, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_ENCRYPTION_FSCTL_IO       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 54, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_WRITE_RAW_ENCRYPTED       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 55, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_READ_RAW_ENCRYPTED        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 56, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_CREATE_USN_JOURNAL        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 57, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_READ_FILE_USN_DATA        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 58, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_WRITE_USN_CLOSE_RECORD    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 59, METHOD_NEITHER,  FILE_READ_DATA)
+#define FSCTL_EXTEND_VOLUME             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 60, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_QUERY_USN_JOURNAL         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 61, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_DELETE_USN_JOURNAL        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 62, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_MARK_HANDLE               CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SIS_COPYFILE              CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 64, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SIS_LINK_FILES            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 65, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_RECALL_FILE               CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 69, METHOD_NEITHER, FILE_ANY_ACCESS)
+#define FSCTL_READ_FROM_PLEX            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 71, METHOD_OUT_DIRECT, FILE_READ_DATA)
+#define FSCTL_FILE_PREFETCH             CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 72, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+
+#endif
+
+#if (_WIN32_WINNT >= 0x0600)
+
+#define FSCTL_MAKE_MEDIA_COMPATIBLE         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 76, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_SET_DEFECT_MANAGEMENT         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 77, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_QUERY_SPARING_INFO            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 78, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_QUERY_ON_DISK_VOLUME_INFO     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 79, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SET_VOLUME_COMPRESSION_STATE  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 80, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define FSCTL_TXFS_MODIFY_RM                CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 81, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_QUERY_RM_INFORMATION     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 82, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_TXFS_ROLLFORWARD_REDO         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 84, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_ROLLFORWARD_UNDO         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 85, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_START_RM                 CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 86, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_SHUTDOWN_RM              CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 87, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_READ_BACKUP_INFORMATION  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 88, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_TXFS_WRITE_BACKUP_INFORMATION CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 89, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_CREATE_SECONDARY_RM      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 90, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_GET_METADATA_INFO        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 91, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_TXFS_GET_TRANSACTED_VERSION   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 92, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_TXFS_SAVEPOINT_INFORMATION    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 94, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_CREATE_MINIVERSION       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 95, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_TXFS_TRANSACTION_ACTIVE       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 99, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_SET_ZERO_ON_DEALLOCATION      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 101, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define FSCTL_SET_REPAIR                    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 102, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_GET_REPAIR                    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 103, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_WAIT_FOR_REPAIR               CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 104, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_INITIATE_REPAIR               CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 106, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_CSC_INTERNAL                  CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 107, METHOD_NEITHER,  FILE_ANY_ACCESS)
+#define FSCTL_SHRINK_VOLUME                 CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 108, METHOD_BUFFERED, FILE_SPECIAL_ACCESS)
+#define FSCTL_SET_SHORT_NAME_BEHAVIOR       CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 109, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_DFSR_SET_GHOST_HANDLE_STATE   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 110, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define FSCTL_TXFS_LIST_TRANSACTION_LOCKED_FILES \
+                                            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 120, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_TXFS_LIST_TRANSACTIONS        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 121, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_QUERY_PAGEFILE_ENCRYPTION     CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 122, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_RESET_VOLUME_ALLOCATION_HINTS CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 123, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_TXFS_READ_BACKUP_INFORMATION2 CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 126, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#endif
+
+#if (_WIN32_WINNT >= 0x0601)
+
+#define FSCTL_QUERY_DEPENDENT_VOLUME        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 124, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SD_GLOBAL_CHANGE              CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 125, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_LOOKUP_STREAM_FROM_CLUSTER    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 127, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_TXFS_WRITE_BACKUP_INFORMATION2 CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 128, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_FILE_TYPE_NOTIFICATION        CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 129, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_GET_BOOT_AREA_INFO            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 140, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_GET_RETRIEVAL_POINTER_BASE    CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 141, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_SET_PERSISTENT_VOLUME_STATE   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 142, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_QUERY_PERSISTENT_VOLUME_STATE CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 143, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define FSCTL_REQUEST_OPLOCK                CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 144, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define FSCTL_CSV_TUNNEL_REQUEST            CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 145, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_IS_CSV_FILE                   CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 146, METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+#define FSCTL_QUERY_FILE_SYSTEM_RECOGNITION CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 147, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_CSV_GET_VOLUME_PATH_NAME      CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 148, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_CSV_GET_VOLUME_NAME_FOR_VOLUME_MOUNT_POINT CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 149, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_CSV_GET_VOLUME_PATH_NAMES_FOR_VOLUME_NAME CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 150,  METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_IS_FILE_ON_CSV_VOLUME         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 151,  METHOD_BUFFERED, FILE_ANY_ACCESS)
+
+typedef struct _CSV_NAMESPACE_INFO {
+  ULONG Version;
+  ULONG DeviceNumber;
+  LARGE_INTEGER StartingOffset;
+  ULONG SectorSize;
+} CSV_NAMESPACE_INFO, *PCSV_NAMESPACE_INFO;
+
+#define CSV_NAMESPACE_INFO_V1 (sizeof(CSV_NAMESPACE_INFO))
+#define CSV_INVALID_DEVICE_NUMBER 0xFFFFFFFF
+
+#endif
+
+#define FSCTL_MARK_AS_SYSTEM_HIVE           FSCTL_SET_BOOTLOADER_ACCESSED
+
+typedef struct _PATHNAME_BUFFER {
+  ULONG PathNameLength;
+  WCHAR Name[1];
+} PATHNAME_BUFFER, *PPATHNAME_BUFFER;
+
+typedef struct _FSCTL_QUERY_FAT_BPB_BUFFER {
+  UCHAR First0x24BytesOfBootSector[0x24];
+} FSCTL_QUERY_FAT_BPB_BUFFER, *PFSCTL_QUERY_FAT_BPB_BUFFER;
+
+#if (_WIN32_WINNT >= 0x0400)
+
+typedef struct _NTFS_VOLUME_DATA_BUFFER {
+  LARGE_INTEGER VolumeSerialNumber;
+  LARGE_INTEGER NumberSectors;
+  LARGE_INTEGER TotalClusters;
+  LARGE_INTEGER FreeClusters;
+  LARGE_INTEGER TotalReserved;
+  ULONG BytesPerSector;
+  ULONG BytesPerCluster;
+  ULONG BytesPerFileRecordSegment;
+  ULONG ClustersPerFileRecordSegment;
+  LARGE_INTEGER MftValidDataLength;
+  LARGE_INTEGER MftStartLcn;
+  LARGE_INTEGER Mft2StartLcn;
+  LARGE_INTEGER MftZoneStart;
+  LARGE_INTEGER MftZoneEnd;
+} NTFS_VOLUME_DATA_BUFFER, *PNTFS_VOLUME_DATA_BUFFER;
+
+typedef struct _NTFS_EXTENDED_VOLUME_DATA {
+  ULONG ByteCount;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+} NTFS_EXTENDED_VOLUME_DATA, *PNTFS_EXTENDED_VOLUME_DATA;
+
+typedef struct _STARTING_LCN_INPUT_BUFFER {
+  LARGE_INTEGER StartingLcn;
+} STARTING_LCN_INPUT_BUFFER, *PSTARTING_LCN_INPUT_BUFFER;
+
+typedef struct _VOLUME_BITMAP_BUFFER {
+  LARGE_INTEGER StartingLcn;
+  LARGE_INTEGER BitmapSize;
+  UCHAR Buffer[1];
+} VOLUME_BITMAP_BUFFER, *PVOLUME_BITMAP_BUFFER;
+
+typedef struct _STARTING_VCN_INPUT_BUFFER {
+  LARGE_INTEGER StartingVcn;
+} STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
+
+typedef struct _RETRIEVAL_POINTERS_BUFFER {
+  ULONG ExtentCount;
+  LARGE_INTEGER StartingVcn;
+  struct {
+    LARGE_INTEGER NextVcn;
+    LARGE_INTEGER Lcn;
+  } Extents[1];
+} RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
+
+typedef struct _NTFS_FILE_RECORD_INPUT_BUFFER {
+  LARGE_INTEGER FileReferenceNumber;
+} NTFS_FILE_RECORD_INPUT_BUFFER, *PNTFS_FILE_RECORD_INPUT_BUFFER;
+
+typedef struct _NTFS_FILE_RECORD_OUTPUT_BUFFER {
+  LARGE_INTEGER FileReferenceNumber;
+  ULONG FileRecordLength;
+  UCHAR FileRecordBuffer[1];
+} NTFS_FILE_RECORD_OUTPUT_BUFFER, *PNTFS_FILE_RECORD_OUTPUT_BUFFER;
+
+typedef struct _MOVE_FILE_DATA {
+  HANDLE FileHandle;
+  LARGE_INTEGER StartingVcn;
+  LARGE_INTEGER StartingLcn;
+  ULONG ClusterCount;
+} MOVE_FILE_DATA, *PMOVE_FILE_DATA;
+
+typedef struct _MOVE_FILE_RECORD_DATA {
+  HANDLE FileHandle;
+  LARGE_INTEGER SourceFileRecord;
+  LARGE_INTEGER TargetFileRecord;
+} MOVE_FILE_RECORD_DATA, *PMOVE_FILE_RECORD_DATA;
+
+#if defined(_WIN64)
+typedef struct _MOVE_FILE_DATA32 {
+  UINT32 FileHandle;
+  LARGE_INTEGER StartingVcn;
+  LARGE_INTEGER StartingLcn;
+  ULONG ClusterCount;
+} MOVE_FILE_DATA32, *PMOVE_FILE_DATA32;
+#endif
+
+#endif /* (_WIN32_WINNT >= 0x0400) */
+
+#if (_WIN32_WINNT >= 0x0500)
+
+typedef struct _FIND_BY_SID_DATA {
+  ULONG Restart;
+  SID Sid;
+} FIND_BY_SID_DATA, *PFIND_BY_SID_DATA;
+
+typedef struct _FIND_BY_SID_OUTPUT {
+  ULONG NextEntryOffset;
+  ULONG FileIndex;
+  ULONG FileNameLength;
+  WCHAR FileName[1];
+} FIND_BY_SID_OUTPUT, *PFIND_BY_SID_OUTPUT;
+
+typedef struct _MFT_ENUM_DATA {
+  ULONGLONG StartFileReferenceNumber;
+  USN LowUsn;
+  USN HighUsn;
+} MFT_ENUM_DATA, *PMFT_ENUM_DATA;
+
+typedef struct _CREATE_USN_JOURNAL_DATA {
+  ULONGLONG MaximumSize;
+  ULONGLONG AllocationDelta;
+} CREATE_USN_JOURNAL_DATA, *PCREATE_USN_JOURNAL_DATA;
+
+typedef struct _READ_USN_JOURNAL_DATA {
+  USN StartUsn;
+  ULONG ReasonMask;
+  ULONG ReturnOnlyOnClose;
+  ULONGLONG Timeout;
+  ULONGLONG BytesToWaitFor;
+  ULONGLONG UsnJournalID;
+} READ_USN_JOURNAL_DATA, *PREAD_USN_JOURNAL_DATA;
+
+typedef struct _USN_RECORD {
+  ULONG RecordLength;
+  USHORT MajorVersion;
+  USHORT MinorVersion;
+  ULONGLONG FileReferenceNumber;
+  ULONGLONG ParentFileReferenceNumber;
+  USN Usn;
+  LARGE_INTEGER TimeStamp;
+  ULONG Reason;
+  ULONG SourceInfo;
+  ULONG SecurityId;
+  ULONG FileAttributes;
+  USHORT FileNameLength;
+  USHORT FileNameOffset;
+  WCHAR FileName[1];
+} USN_RECORD, *PUSN_RECORD;
+
+#define USN_PAGE_SIZE                    (0x1000)
+
+#define USN_REASON_DATA_OVERWRITE        (0x00000001)
+#define USN_REASON_DATA_EXTEND           (0x00000002)
+#define USN_REASON_DATA_TRUNCATION       (0x00000004)
+#define USN_REASON_NAMED_DATA_OVERWRITE  (0x00000010)
+#define USN_REASON_NAMED_DATA_EXTEND     (0x00000020)
+#define USN_REASON_NAMED_DATA_TRUNCATION (0x00000040)
+#define USN_REASON_FILE_CREATE           (0x00000100)
+#define USN_REASON_FILE_DELETE           (0x00000200)
+#define USN_REASON_EA_CHANGE             (0x00000400)
+#define USN_REASON_SECURITY_CHANGE       (0x00000800)
+#define USN_REASON_RENAME_OLD_NAME       (0x00001000)
+#define USN_REASON_RENAME_NEW_NAME       (0x00002000)
+#define USN_REASON_INDEXABLE_CHANGE      (0x00004000)
+#define USN_REASON_BASIC_INFO_CHANGE     (0x00008000)
+#define USN_REASON_HARD_LINK_CHANGE      (0x00010000)
+#define USN_REASON_COMPRESSION_CHANGE    (0x00020000)
+#define USN_REASON_ENCRYPTION_CHANGE     (0x00040000)
+#define USN_REASON_OBJECT_ID_CHANGE      (0x00080000)
+#define USN_REASON_REPARSE_POINT_CHANGE  (0x00100000)
+#define USN_REASON_STREAM_CHANGE         (0x00200000)
+#define USN_REASON_TRANSACTED_CHANGE     (0x00400000)
+#define USN_REASON_CLOSE                 (0x80000000)
+
+typedef struct _USN_JOURNAL_DATA {
+  ULONGLONG UsnJournalID;
+  USN FirstUsn;
+  USN NextUsn;
+  USN LowestValidUsn;
+  USN MaxUsn;
+  ULONGLONG MaximumSize;
+  ULONGLONG AllocationDelta;
+} USN_JOURNAL_DATA, *PUSN_JOURNAL_DATA;
+
+typedef struct _DELETE_USN_JOURNAL_DATA {
+  ULONGLONG UsnJournalID;
+  ULONG DeleteFlags;
+} DELETE_USN_JOURNAL_DATA, *PDELETE_USN_JOURNAL_DATA;
+
+#define USN_DELETE_FLAG_DELETE              (0x00000001)
+#define USN_DELETE_FLAG_NOTIFY              (0x00000002)
+#define USN_DELETE_VALID_FLAGS              (0x00000003)
+
+typedef struct _MARK_HANDLE_INFO {
+  ULONG UsnSourceInfo;
+  HANDLE VolumeHandle;
+  ULONG HandleInfo;
+} MARK_HANDLE_INFO, *PMARK_HANDLE_INFO;
+
+#if defined(_WIN64)
+typedef struct _MARK_HANDLE_INFO32 {
+  ULONG UsnSourceInfo;
+  UINT32 VolumeHandle;
+  ULONG HandleInfo;
+} MARK_HANDLE_INFO32, *PMARK_HANDLE_INFO32;
+#endif
+
+#define USN_SOURCE_DATA_MANAGEMENT          (0x00000001)
+#define USN_SOURCE_AUXILIARY_DATA           (0x00000002)
+#define USN_SOURCE_REPLICATION_MANAGEMENT   (0x00000004)
+
+#define MARK_HANDLE_PROTECT_CLUSTERS        (0x00000001)
+#define MARK_HANDLE_TXF_SYSTEM_LOG          (0x00000004)
+#define MARK_HANDLE_NOT_TXF_SYSTEM_LOG      (0x00000008)
+
+typedef struct _BULK_SECURITY_TEST_DATA {
+  ACCESS_MASK DesiredAccess;
+  ULONG SecurityIds[1];
+} BULK_SECURITY_TEST_DATA, *PBULK_SECURITY_TEST_DATA;
+
+#define VOLUME_IS_DIRTY                  (0x00000001)
+#define VOLUME_UPGRADE_SCHEDULED         (0x00000002)
+#define VOLUME_SESSION_OPEN              (0x00000004)
+
+typedef struct _FILE_PREFETCH {
+  ULONG Type;
+  ULONG Count;
+  ULONGLONG Prefetch[1];
+} FILE_PREFETCH, *PFILE_PREFETCH;
+
+typedef struct _FILE_PREFETCH_EX {
+  ULONG Type;
+  ULONG Count;
+  PVOID Context;
+  ULONGLONG Prefetch[1];
+} FILE_PREFETCH_EX, *PFILE_PREFETCH_EX;
+
+#define FILE_PREFETCH_TYPE_FOR_CREATE       0x1
+#define FILE_PREFETCH_TYPE_FOR_DIRENUM      0x2
+#define FILE_PREFETCH_TYPE_FOR_CREATE_EX    0x3
+#define FILE_PREFETCH_TYPE_FOR_DIRENUM_EX   0x4
+
+#define FILE_PREFETCH_TYPE_MAX              0x4
+
+typedef struct _FILE_OBJECTID_BUFFER {
+  UCHAR ObjectId[16];
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      UCHAR BirthVolumeId[16];
+      UCHAR BirthObjectId[16];
+      UCHAR DomainId[16];
+    } DUMMYSTRUCTNAME;
+    UCHAR ExtendedInfo[48];
+  } DUMMYUNIONNAME;
+} FILE_OBJECTID_BUFFER, *PFILE_OBJECTID_BUFFER;
+
+typedef struct _FILE_SET_SPARSE_BUFFER {
+  BOOLEAN SetSparse;
+} FILE_SET_SPARSE_BUFFER, *PFILE_SET_SPARSE_BUFFER;
+
+typedef struct _FILE_ZERO_DATA_INFORMATION {
+  LARGE_INTEGER FileOffset;
+  LARGE_INTEGER BeyondFinalZero;
+} FILE_ZERO_DATA_INFORMATION, *PFILE_ZERO_DATA_INFORMATION;
+
+typedef struct _FILE_ALLOCATED_RANGE_BUFFER {
+  LARGE_INTEGER FileOffset;
+  LARGE_INTEGER Length;
+} FILE_ALLOCATED_RANGE_BUFFER, *PFILE_ALLOCATED_RANGE_BUFFER;
+
+typedef struct _ENCRYPTION_BUFFER {
+  ULONG EncryptionOperation;
+  UCHAR Private[1];
+} ENCRYPTION_BUFFER, *PENCRYPTION_BUFFER;
+
+#define FILE_SET_ENCRYPTION         0x00000001
+#define FILE_CLEAR_ENCRYPTION       0x00000002
+#define STREAM_SET_ENCRYPTION       0x00000003
+#define STREAM_CLEAR_ENCRYPTION     0x00000004
+
+#define MAXIMUM_ENCRYPTION_VALUE    0x00000004
+
+typedef struct _DECRYPTION_STATUS_BUFFER {
+  BOOLEAN NoEncryptedStreams;
+} DECRYPTION_STATUS_BUFFER, *PDECRYPTION_STATUS_BUFFER;
+
+#define ENCRYPTION_FORMAT_DEFAULT        (0x01)
+
+#define COMPRESSION_FORMAT_SPARSE        (0x4000)
+
+typedef struct _REQUEST_RAW_ENCRYPTED_DATA {
+  LONGLONG FileOffset;
+  ULONG Length;
+} REQUEST_RAW_ENCRYPTED_DATA, *PREQUEST_RAW_ENCRYPTED_DATA;
+
+typedef struct _ENCRYPTED_DATA_INFO {
+  ULONGLONG StartingFileOffset;
+  ULONG OutputBufferOffset;
+  ULONG BytesWithinFileSize;
+  ULONG BytesWithinValidDataLength;
+  USHORT CompressionFormat;
+  UCHAR DataUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR EncryptionFormat;
+  USHORT NumberOfDataBlocks;
+  ULONG DataBlockSize[ANYSIZE_ARRAY];
+} ENCRYPTED_DATA_INFO, *PENCRYPTED_DATA_INFO;
+
+typedef struct _PLEX_READ_DATA_REQUEST {
+  LARGE_INTEGER ByteOffset;
+  ULONG ByteLength;
+  ULONG PlexNumber;
+} PLEX_READ_DATA_REQUEST, *PPLEX_READ_DATA_REQUEST;
+
+typedef struct _SI_COPYFILE {
+  ULONG SourceFileNameLength;
+  ULONG DestinationFileNameLength;
+  ULONG Flags;
+  WCHAR FileNameBuffer[1];
+} SI_COPYFILE, *PSI_COPYFILE;
+
+#define COPYFILE_SIS_LINK       0x0001
+#define COPYFILE_SIS_REPLACE    0x0002
+#define COPYFILE_SIS_FLAGS      0x0003
+
+#endif /* (_WIN32_WINNT >= 0x0500) */
+
+#if (_WIN32_WINNT >= 0x0600)
+
+typedef struct _FILE_MAKE_COMPATIBLE_BUFFER {
+  BOOLEAN CloseDisc;
+} FILE_MAKE_COMPATIBLE_BUFFER, *PFILE_MAKE_COMPATIBLE_BUFFER;
+
+typedef struct _FILE_SET_DEFECT_MGMT_BUFFER {
+  BOOLEAN Disable;
+} FILE_SET_DEFECT_MGMT_BUFFER, *PFILE_SET_DEFECT_MGMT_BUFFER;
+
+typedef struct _FILE_QUERY_SPARING_BUFFER {
+  ULONG SparingUnitBytes;
+  BOOLEAN SoftwareSparing;
+  ULONG TotalSpareBlocks;
+  ULONG FreeSpareBlocks;
+} FILE_QUERY_SPARING_BUFFER, *PFILE_QUERY_SPARING_BUFFER;
+
+typedef struct _FILE_QUERY_ON_DISK_VOL_INFO_BUFFER {
+  LARGE_INTEGER DirectoryCount;
+  LARGE_INTEGER FileCount;
+  USHORT FsFormatMajVersion;
+  USHORT FsFormatMinVersion;
+  WCHAR FsFormatName[12];
+  LARGE_INTEGER FormatTime;
+  LARGE_INTEGER LastUpdateTime;
+  WCHAR CopyrightInfo[34];
+  WCHAR AbstractInfo[34];
+  WCHAR FormattingImplementationInfo[34];
+  WCHAR LastModifyingImplementationInfo[34];
+} FILE_QUERY_ON_DISK_VOL_INFO_BUFFER, *PFILE_QUERY_ON_DISK_VOL_INFO_BUFFER;
+
+#define SET_REPAIR_ENABLED                                      (0x00000001)
+#define SET_REPAIR_VOLUME_BITMAP_SCAN                           (0x00000002)
+#define SET_REPAIR_DELETE_CROSSLINK                             (0x00000004)
+#define SET_REPAIR_WARN_ABOUT_DATA_LOSS                         (0x00000008)
+#define SET_REPAIR_DISABLED_AND_BUGCHECK_ON_CORRUPT             (0x00000010)
+#define SET_REPAIR_VALID_MASK                                   (0x0000001F)
+
+typedef enum _SHRINK_VOLUME_REQUEST_TYPES {
+  ShrinkPrepare = 1,
+  ShrinkCommit,
+  ShrinkAbort
+} SHRINK_VOLUME_REQUEST_TYPES, *PSHRINK_VOLUME_REQUEST_TYPES;
+
+typedef struct _SHRINK_VOLUME_INFORMATION {
+  SHRINK_VOLUME_REQUEST_TYPES ShrinkRequestType;
+  ULONGLONG Flags;
+  LONGLONG NewNumberOfSectors;
+} SHRINK_VOLUME_INFORMATION, *PSHRINK_VOLUME_INFORMATION;
+
+#define TXFS_RM_FLAG_LOGGING_MODE                           0x00000001
+#define TXFS_RM_FLAG_RENAME_RM                              0x00000002
+#define TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX                0x00000004
+#define TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN                0x00000008
+#define TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS    0x00000010
+#define TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT           0x00000020
+#define TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE             0x00000040
+#define TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX             0x00000080
+#define TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN             0x00000100
+#define TXFS_RM_FLAG_GROW_LOG                               0x00000400
+#define TXFS_RM_FLAG_SHRINK_LOG                             0x00000800
+#define TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                   0x00001000
+#define TXFS_RM_FLAG_PRESERVE_CHANGES                       0x00002000
+#define TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                 0x00004000
+#define TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START          0x00008000
+#define TXFS_RM_FLAG_PREFER_CONSISTENCY                     0x00010000
+#define TXFS_RM_FLAG_PREFER_AVAILABILITY                    0x00020000
+
+#define TXFS_LOGGING_MODE_SIMPLE        (0x0001)
+#define TXFS_LOGGING_MODE_FULL          (0x0002)
+
+#define TXFS_TRANSACTION_STATE_NONE         0x00
+#define TXFS_TRANSACTION_STATE_ACTIVE       0x01
+#define TXFS_TRANSACTION_STATE_PREPARED     0x02
+#define TXFS_TRANSACTION_STATE_NOTACTIVE    0x03
+
+#define TXFS_MODIFY_RM_VALID_FLAGS (TXFS_RM_FLAG_LOGGING_MODE                        | \
+                                    TXFS_RM_FLAG_RENAME_RM                           | \
+                                    TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MAX             | \
+                                    TXFS_RM_FLAG_LOG_CONTAINER_COUNT_MIN             | \
+                                    TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS | \
+                                    TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT        | \
+                                    TXFS_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE          | \
+                                    TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX          | \
+                                    TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN          | \
+                                    TXFS_RM_FLAG_SHRINK_LOG                          | \
+                                    TXFS_RM_FLAG_GROW_LOG                            | \
+                                    TXFS_RM_FLAG_ENFORCE_MINIMUM_SIZE                | \
+                                    TXFS_RM_FLAG_PRESERVE_CHANGES                    | \
+                                    TXFS_RM_FLAG_RESET_RM_AT_NEXT_START              | \
+                                    TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START       | \
+                                    TXFS_RM_FLAG_PREFER_CONSISTENCY                  | \
+                                    TXFS_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_MODIFY_RM {
+  ULONG Flags;
+  ULONG LogContainerCountMax;
+  ULONG LogContainerCountMin;
+  ULONG LogContainerCount;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONGLONG Reserved;
+  USHORT LoggingMode;
+} TXFS_MODIFY_RM, *PTXFS_MODIFY_RM;
+
+#define TXFS_RM_STATE_NOT_STARTED       0
+#define TXFS_RM_STATE_STARTING          1
+#define TXFS_RM_STATE_ACTIVE            2
+#define TXFS_RM_STATE_SHUTTING_DOWN     3
+
+#define TXFS_QUERY_RM_INFORMATION_VALID_FLAGS                           \
+                (TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS   |   \
+                 TXFS_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT          |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX            |   \
+                 TXFS_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN            |   \
+                 TXFS_RM_FLAG_RESET_RM_AT_NEXT_START                |   \
+                 TXFS_RM_FLAG_DO_NOT_RESET_RM_AT_NEXT_START         |   \
+                 TXFS_RM_FLAG_PREFER_CONSISTENCY                    |   \
+                 TXFS_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_QUERY_RM_INFORMATION {
+  ULONG BytesRequired;
+  ULONGLONG TailLsn;
+  ULONGLONG CurrentLsn;
+  ULONGLONG ArchiveTailLsn;
+  ULONGLONG LogContainerSize;
+  LARGE_INTEGER HighestVirtualClock;
+  ULONG LogContainerCount;
+  ULONG LogContainerCountMax;
+  ULONG LogContainerCountMin;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONG Flags;
+  USHORT LoggingMode;
+  USHORT Reserved;
+  ULONG RmState;
+  ULONGLONG LogCapacity;
+  ULONGLONG LogFree;
+  ULONGLONG TopsSize;
+  ULONGLONG TopsUsed;
+  ULONGLONG TransactionCount;
+  ULONGLONG OnePCCount;
+  ULONGLONG TwoPCCount;
+  ULONGLONG NumberLogFileFull;
+  ULONGLONG OldestTransactionAge;
+  GUID RMName;
+  ULONG TmLogPathOffset;
+} TXFS_QUERY_RM_INFORMATION, *PTXFS_QUERY_RM_INFORMATION;
+
+#define TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_REDO_LSN        0x01
+#define TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_VIRTUAL_CLOCK   0x02
+
+#define TXFS_ROLLFORWARD_REDO_VALID_FLAGS                               \
+                (TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_REDO_LSN |         \
+                 TXFS_ROLLFORWARD_REDO_FLAG_USE_LAST_VIRTUAL_CLOCK)
+
+typedef struct _TXFS_ROLLFORWARD_REDO_INFORMATION {
+  LARGE_INTEGER LastVirtualClock;
+  ULONGLONG LastRedoLsn;
+  ULONGLONG HighestRecoveryLsn;
+  ULONG Flags;
+} TXFS_ROLLFORWARD_REDO_INFORMATION, *PTXFS_ROLLFORWARD_REDO_INFORMATION;
+
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MAX              0x00000001
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MIN              0x00000002
+#define TXFS_START_RM_FLAG_LOG_CONTAINER_SIZE                   0x00000004
+#define TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS  0x00000008
+#define TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT         0x00000010
+#define TXFS_START_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE           0x00000020
+#define TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX           0x00000040
+#define TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MIN           0x00000080
+
+#define TXFS_START_RM_FLAG_RECOVER_BEST_EFFORT                  0x00000200
+#define TXFS_START_RM_FLAG_LOGGING_MODE                         0x00000400
+#define TXFS_START_RM_FLAG_PRESERVE_CHANGES                     0x00000800
+
+#define TXFS_START_RM_FLAG_PREFER_CONSISTENCY                   0x00001000
+#define TXFS_START_RM_FLAG_PREFER_AVAILABILITY                  0x00002000
+
+#define TXFS_START_RM_VALID_FLAGS                                           \
+                (TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MAX             |   \
+                 TXFS_START_RM_FLAG_LOG_CONTAINER_COUNT_MIN             |   \
+                 TXFS_START_RM_FLAG_LOG_CONTAINER_SIZE                  |   \
+                 TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_NUM_CONTAINERS |   \
+                 TXFS_START_RM_FLAG_LOG_GROWTH_INCREMENT_PERCENT        |   \
+                 TXFS_START_RM_FLAG_LOG_AUTO_SHRINK_PERCENTAGE          |   \
+                 TXFS_START_RM_FLAG_RECOVER_BEST_EFFORT                 |   \
+                 TXFS_START_RM_FLAG_LOG_NO_CONTAINER_COUNT_MAX          |   \
+                 TXFS_START_RM_FLAG_LOGGING_MODE                        |   \
+                 TXFS_START_RM_FLAG_PRESERVE_CHANGES                    |   \
+                 TXFS_START_RM_FLAG_PREFER_CONSISTENCY                  |   \
+                 TXFS_START_RM_FLAG_PREFER_AVAILABILITY)
+
+typedef struct _TXFS_START_RM_INFORMATION {
+  ULONG Flags;
+  ULONGLONG LogContainerSize;
+  ULONG LogContainerCountMin;
+  ULONG LogContainerCountMax;
+  ULONG LogGrowthIncrement;
+  ULONG LogAutoShrinkPercentage;
+  ULONG TmLogPathOffset;
+  USHORT TmLogPathLength;
+  USHORT LoggingMode;
+  USHORT LogPathLength;
+  USHORT Reserved;
+  WCHAR LogPath[1];
+} TXFS_START_RM_INFORMATION, *PTXFS_START_RM_INFORMATION;
+
+typedef struct _TXFS_GET_METADATA_INFO_OUT {
+  struct {
+    LONGLONG LowPart;
+    LONGLONG HighPart;
+  } TxfFileId;
+  GUID LockingTransaction;
+  ULONGLONG LastLsn;
+  ULONG TransactionState;
+} TXFS_GET_METADATA_INFO_OUT, *PTXFS_GET_METADATA_INFO_OUT;
+
+#define TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY_FLAG_CREATED   0x00000001
+#define TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY_FLAG_DELETED   0x00000002
+
+typedef struct _TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY {
+  ULONGLONG Offset;
+  ULONG NameFlags;
+  LONGLONG FileId;
+  ULONG Reserved1;
+  ULONG Reserved2;
+  LONGLONG Reserved3;
+  WCHAR FileName[1];
+} TXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY, *PTXFS_LIST_TRANSACTION_LOCKED_FILES_ENTRY;
+
+typedef struct _TXFS_LIST_TRANSACTION_LOCKED_FILES {
+  GUID KtmTransaction;
+  ULONGLONG NumberOfFiles;
+  ULONGLONG BufferSizeRequired;
+  ULONGLONG Offset;
+} TXFS_LIST_TRANSACTION_LOCKED_FILES, *PTXFS_LIST_TRANSACTION_LOCKED_FILES;
+
+typedef struct _TXFS_LIST_TRANSACTIONS_ENTRY {
+  GUID TransactionId;
+  ULONG TransactionState;
+  ULONG Reserved1;
+  ULONG Reserved2;
+  LONGLONG Reserved3;
+} TXFS_LIST_TRANSACTIONS_ENTRY, *PTXFS_LIST_TRANSACTIONS_ENTRY;
+
+typedef struct _TXFS_LIST_TRANSACTIONS {
+  ULONGLONG NumberOfTransactions;
+  ULONGLONG BufferSizeRequired;
+} TXFS_LIST_TRANSACTIONS, *PTXFS_LIST_TRANSACTIONS;
+
+typedef struct _TXFS_READ_BACKUP_INFORMATION_OUT {
+  _ANONYMOUS_UNION union {
+    ULONG BufferLength;
+    UCHAR Buffer[1];
+  } DUMMYUNIONNAME;
+} TXFS_READ_BACKUP_INFORMATION_OUT, *PTXFS_READ_BACKUP_INFORMATION_OUT;
+
+typedef struct _TXFS_WRITE_BACKUP_INFORMATION {
+  UCHAR Buffer[1];
+} TXFS_WRITE_BACKUP_INFORMATION, *PTXFS_WRITE_BACKUP_INFORMATION;
+
+#define TXFS_TRANSACTED_VERSION_NONTRANSACTED   0xFFFFFFFE
+#define TXFS_TRANSACTED_VERSION_UNCOMMITTED     0xFFFFFFFF
+
+typedef struct _TXFS_GET_TRANSACTED_VERSION {
+  ULONG ThisBaseVersion;
+  ULONG LatestVersion;
+  USHORT ThisMiniVersion;
+  USHORT FirstMiniVersion;
+  USHORT LatestMiniVersion;
+} TXFS_GET_TRANSACTED_VERSION, *PTXFS_GET_TRANSACTED_VERSION;
+
+#define TXFS_SAVEPOINT_SET                      0x00000001
+#define TXFS_SAVEPOINT_ROLLBACK                 0x00000002
+#define TXFS_SAVEPOINT_CLEAR                    0x00000004
+#define TXFS_SAVEPOINT_CLEAR_ALL                0x00000010
+
+typedef struct _TXFS_SAVEPOINT_INFORMATION {
+  HANDLE KtmTransaction;
+  ULONG ActionCode;
+  ULONG SavepointId;
+} TXFS_SAVEPOINT_INFORMATION, *PTXFS_SAVEPOINT_INFORMATION;
+
+typedef struct _TXFS_CREATE_MINIVERSION_INFO {
+  USHORT StructureVersion;
+  USHORT StructureLength;
+  ULONG BaseVersion;
+  USHORT MiniVersion;
+} TXFS_CREATE_MINIVERSION_INFO, *PTXFS_CREATE_MINIVERSION_INFO;
+
+typedef struct _TXFS_TRANSACTION_ACTIVE_INFO {
+  BOOLEAN TransactionsActiveAtSnapshot;
+} TXFS_TRANSACTION_ACTIVE_INFO, *PTXFS_TRANSACTION_ACTIVE_INFO;
+
+#endif /* (_WIN32_WINNT >= 0x0600) */
+
+#if (_WIN32_WINNT >= 0x0601)
+
+#define MARK_HANDLE_REALTIME                (0x00000020)
+#define MARK_HANDLE_NOT_REALTIME            (0x00000040)
+
+#define NO_8DOT3_NAME_PRESENT               (0x00000001)
+#define REMOVED_8DOT3_NAME                  (0x00000002)
+
+#define PERSISTENT_VOLUME_STATE_SHORT_NAME_CREATION_DISABLED        (0x00000001)
+
+typedef struct _BOOT_AREA_INFO {
+  ULONG BootSectorCount;
+  struct {
+    LARGE_INTEGER Offset;
+  } BootSectors[2];
+} BOOT_AREA_INFO, *PBOOT_AREA_INFO;
+
+typedef struct _RETRIEVAL_POINTER_BASE {
+  LARGE_INTEGER FileAreaOffset;
+} RETRIEVAL_POINTER_BASE, *PRETRIEVAL_POINTER_BASE;
+
+typedef struct _FILE_FS_PERSISTENT_VOLUME_INFORMATION {
+  ULONG VolumeFlags;
+  ULONG FlagMask;
+  ULONG Version;
+  ULONG Reserved;
+} FILE_FS_PERSISTENT_VOLUME_INFORMATION, *PFILE_FS_PERSISTENT_VOLUME_INFORMATION;
+
+typedef struct _FILE_SYSTEM_RECOGNITION_INFORMATION {
+  CHAR FileSystem[9];
+} FILE_SYSTEM_RECOGNITION_INFORMATION, *PFILE_SYSTEM_RECOGNITION_INFORMATION;
+
+#define OPLOCK_LEVEL_CACHE_READ         (0x00000001)
+#define OPLOCK_LEVEL_CACHE_HANDLE       (0x00000002)
+#define OPLOCK_LEVEL_CACHE_WRITE        (0x00000004)
+
+#define REQUEST_OPLOCK_INPUT_FLAG_REQUEST               (0x00000001)
+#define REQUEST_OPLOCK_INPUT_FLAG_ACK                   (0x00000002)
+#define REQUEST_OPLOCK_INPUT_FLAG_COMPLETE_ACK_ON_CLOSE (0x00000004)
+
+#define REQUEST_OPLOCK_CURRENT_VERSION          1
+
+typedef struct _REQUEST_OPLOCK_INPUT_BUFFER {
+  USHORT StructureVersion;
+  USHORT StructureLength;
+  ULONG RequestedOplockLevel;
+  ULONG Flags;
+} REQUEST_OPLOCK_INPUT_BUFFER, *PREQUEST_OPLOCK_INPUT_BUFFER;
+
+#define REQUEST_OPLOCK_OUTPUT_FLAG_ACK_REQUIRED     (0x00000001)
+#define REQUEST_OPLOCK_OUTPUT_FLAG_MODES_PROVIDED   (0x00000002)
+
+typedef struct _REQUEST_OPLOCK_OUTPUT_BUFFER {
+  USHORT StructureVersion;
+  USHORT StructureLength;
+  ULONG OriginalOplockLevel;
+  ULONG NewOplockLevel;
+  ULONG Flags;
+  ACCESS_MASK AccessMode;
+  USHORT ShareMode;
+} REQUEST_OPLOCK_OUTPUT_BUFFER, *PREQUEST_OPLOCK_OUTPUT_BUFFER;
+
+#define SD_GLOBAL_CHANGE_TYPE_MACHINE_SID   1
+
+typedef struct _SD_CHANGE_MACHINE_SID_INPUT {
+  USHORT CurrentMachineSIDOffset;
+  USHORT CurrentMachineSIDLength;
+  USHORT NewMachineSIDOffset;
+  USHORT NewMachineSIDLength;
+} SD_CHANGE_MACHINE_SID_INPUT, *PSD_CHANGE_MACHINE_SID_INPUT;
+
+typedef struct _SD_CHANGE_MACHINE_SID_OUTPUT {
+  ULONGLONG NumSDChangedSuccess;
+  ULONGLONG NumSDChangedFail;
+  ULONGLONG NumSDUnused;
+  ULONGLONG NumSDTotal;
+  ULONGLONG NumMftSDChangedSuccess;
+  ULONGLONG NumMftSDChangedFail;
+  ULONGLONG NumMftSDTotal;
+} SD_CHANGE_MACHINE_SID_OUTPUT, *PSD_CHANGE_MACHINE_SID_OUTPUT;
+
+typedef struct _SD_GLOBAL_CHANGE_INPUT {
+  ULONG Flags;
+  ULONG ChangeType;
+  _ANONYMOUS_UNION union {
+    SD_CHANGE_MACHINE_SID_INPUT SdChange;
+  } DUMMYUNIONNAME;
+} SD_GLOBAL_CHANGE_INPUT, *PSD_GLOBAL_CHANGE_INPUT;
+
+typedef struct _SD_GLOBAL_CHANGE_OUTPUT {
+  ULONG Flags;
+  ULONG ChangeType;
+  _ANONYMOUS_UNION union {
+    SD_CHANGE_MACHINE_SID_OUTPUT SdChange;
+  } DUMMYUNIONNAME;
+} SD_GLOBAL_CHANGE_OUTPUT, *PSD_GLOBAL_CHANGE_OUTPUT;
+
+#define ENCRYPTED_DATA_INFO_SPARSE_FILE    1
+
+typedef struct _EXTENDED_ENCRYPTED_DATA_INFO {
+  ULONG ExtendedCode;
+  ULONG Length;
+  ULONG Flags;
+  ULONG Reserved;
+} EXTENDED_ENCRYPTED_DATA_INFO, *PEXTENDED_ENCRYPTED_DATA_INFO;
+
+typedef struct _LOOKUP_STREAM_FROM_CLUSTER_INPUT {
+  ULONG Flags;
+  ULONG NumberOfClusters;
+  LARGE_INTEGER Cluster[1];
+} LOOKUP_STREAM_FROM_CLUSTER_INPUT, *PLOOKUP_STREAM_FROM_CLUSTER_INPUT;
+
+typedef struct _LOOKUP_STREAM_FROM_CLUSTER_OUTPUT {
+  ULONG Offset;
+  ULONG NumberOfMatches;
+  ULONG BufferSizeRequired;
+} LOOKUP_STREAM_FROM_CLUSTER_OUTPUT, *PLOOKUP_STREAM_FROM_CLUSTER_OUTPUT;
+
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_FLAG_PAGE_FILE          0x00000001
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_FLAG_DENY_DEFRAG_SET    0x00000002
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_FLAG_FS_SYSTEM_FILE     0x00000004
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_FLAG_TXF_SYSTEM_FILE    0x00000008
+
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_ATTRIBUTE_MASK          0xff000000
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_ATTRIBUTE_DATA          0x01000000
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_ATTRIBUTE_INDEX         0x02000000
+#define LOOKUP_STREAM_FROM_CLUSTER_ENTRY_ATTRIBUTE_SYSTEM        0x03000000
+
+typedef struct _LOOKUP_STREAM_FROM_CLUSTER_ENTRY {
+  ULONG OffsetToNext;
+  ULONG Flags;
+  LARGE_INTEGER Reserved;
+  LARGE_INTEGER Cluster;
+  WCHAR FileName[1];
+} LOOKUP_STREAM_FROM_CLUSTER_ENTRY, *PLOOKUP_STREAM_FROM_CLUSTER_ENTRY;
+
+typedef struct _FILE_TYPE_NOTIFICATION_INPUT {
+  ULONG Flags;
+  ULONG NumFileTypeIDs;
+  GUID FileTypeID[1];
+} FILE_TYPE_NOTIFICATION_INPUT, *PFILE_TYPE_NOTIFICATION_INPUT;
+
+#define FILE_TYPE_NOTIFICATION_FLAG_USAGE_BEGIN     0x00000001
+#define FILE_TYPE_NOTIFICATION_FLAG_USAGE_END       0x00000002
+
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_PAGE_FILE,         0x0d0a64a1, 0x38fc, 0x4db8, 0x9f, 0xe7, 0x3f, 0x43, 0x52, 0xcd, 0x7c, 0x5c);
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_HIBERNATION_FILE,  0xb7624d64, 0xb9a3, 0x4cf8, 0x80, 0x11, 0x5b, 0x86, 0xc9, 0x40, 0xe7, 0xb7);
+DEFINE_GUID(FILE_TYPE_NOTIFICATION_GUID_CRASHDUMP_FILE,    0x9d453eb7, 0xd2a6, 0x4dbd, 0xa2, 0xe3, 0xfb, 0xd0, 0xed, 0x91, 0x09, 0xa9);
+
+#ifndef _VIRTUAL_STORAGE_TYPE_DEFINED
+#define _VIRTUAL_STORAGE_TYPE_DEFINED
+typedef struct _VIRTUAL_STORAGE_TYPE {
+  ULONG DeviceId;
+  GUID VendorId;
+} VIRTUAL_STORAGE_TYPE, *PVIRTUAL_STORAGE_TYPE;
+#endif
+
+typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_REQUEST {
+  ULONG RequestLevel;
+  ULONG RequestFlags;
+} STORAGE_QUERY_DEPENDENT_VOLUME_REQUEST, *PSTORAGE_QUERY_DEPENDENT_VOLUME_REQUEST;
+
+#define QUERY_DEPENDENT_VOLUME_REQUEST_FLAG_HOST_VOLUMES    0x1
+#define QUERY_DEPENDENT_VOLUME_REQUEST_FLAG_GUEST_VOLUMES   0x2
+
+typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY {
+  ULONG EntryLength;
+  ULONG DependencyTypeFlags;
+  ULONG ProviderSpecificFlags;
+  VIRTUAL_STORAGE_TYPE VirtualStorageType;
+} STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY, *PSTORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY;
+
+typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY {
+  ULONG EntryLength;
+  ULONG DependencyTypeFlags;
+  ULONG ProviderSpecificFlags;
+  VIRTUAL_STORAGE_TYPE VirtualStorageType;
+  ULONG AncestorLevel;
+  ULONG HostVolumeNameOffset;
+  ULONG HostVolumeNameSize;
+  ULONG DependentVolumeNameOffset;
+  ULONG DependentVolumeNameSize;
+  ULONG RelativePathOffset;
+  ULONG RelativePathSize;
+  ULONG DependentDeviceNameOffset;
+  ULONG DependentDeviceNameSize;
+} STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY, *PSTORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY;
+
+typedef struct _STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE {
+  ULONG ResponseLevel;
+  ULONG NumberEntries;
+  _ANONYMOUS_UNION union {
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV1_ENTRY Lev1Depends[];
+    STORAGE_QUERY_DEPENDENT_VOLUME_LEV2_ENTRY Lev2Depends[];
+  } DUMMYUNIONNAME;
+} STORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE, *PSTORAGE_QUERY_DEPENDENT_VOLUME_RESPONSE;
+
+#endif /* (_WIN32_WINNT >= 0x0601) */
+
+typedef struct _FILESYSTEM_STATISTICS {
+  USHORT FileSystemType;
+  USHORT Version;
+  ULONG SizeOfCompleteStructure;
+  ULONG UserFileReads;
+  ULONG UserFileReadBytes;
+  ULONG UserDiskReads;
+  ULONG UserFileWrites;
+  ULONG UserFileWriteBytes;
+  ULONG UserDiskWrites;
+  ULONG MetaDataReads;
+  ULONG MetaDataReadBytes;
+  ULONG MetaDataDiskReads;
+  ULONG MetaDataWrites;
+  ULONG MetaDataWriteBytes;
+  ULONG MetaDataDiskWrites;
+} FILESYSTEM_STATISTICS, *PFILESYSTEM_STATISTICS;
+
+#define FILESYSTEM_STATISTICS_TYPE_NTFS     1
+#define FILESYSTEM_STATISTICS_TYPE_FAT      2
+#define FILESYSTEM_STATISTICS_TYPE_EXFAT    3
+
+typedef struct _FAT_STATISTICS {
+  ULONG CreateHits;
+  ULONG SuccessfulCreates;
+  ULONG FailedCreates;
+  ULONG NonCachedReads;
+  ULONG NonCachedReadBytes;
+  ULONG NonCachedWrites;
+  ULONG NonCachedWriteBytes;
+  ULONG NonCachedDiskReads;
+  ULONG NonCachedDiskWrites;
+} FAT_STATISTICS, *PFAT_STATISTICS;
+
+typedef struct _EXFAT_STATISTICS {
+  ULONG CreateHits;
+  ULONG SuccessfulCreates;
+  ULONG FailedCreates;
+  ULONG NonCachedReads;
+  ULONG NonCachedReadBytes;
+  ULONG NonCachedWrites;
+  ULONG NonCachedWriteBytes;
+  ULONG NonCachedDiskReads;
+  ULONG NonCachedDiskWrites;
+} EXFAT_STATISTICS, *PEXFAT_STATISTICS;
+
+typedef struct _NTFS_STATISTICS {
+  ULONG LogFileFullExceptions;
+  ULONG OtherExceptions;
+  ULONG MftReads;
+  ULONG MftReadBytes;
+  ULONG MftWrites;
+  ULONG MftWriteBytes;
+  struct {
+    USHORT Write;
+    USHORT Create;
+    USHORT SetInfo;
+    USHORT Flush;
+  } MftWritesUserLevel;
+  USHORT MftWritesFlushForLogFileFull;
+  USHORT MftWritesLazyWriter;
+  USHORT MftWritesUserRequest;
+  ULONG Mft2Writes;
+  ULONG Mft2WriteBytes;
+  struct {
+    USHORT Write;
+    USHORT Create;
+    USHORT SetInfo;
+    USHORT Flush;
+  } Mft2WritesUserLevel;
+  USHORT Mft2WritesFlushForLogFileFull;
+  USHORT Mft2WritesLazyWriter;
+  USHORT Mft2WritesUserRequest;
+  ULONG RootIndexReads;
+  ULONG RootIndexReadBytes;
+  ULONG RootIndexWrites;
+  ULONG RootIndexWriteBytes;
+  ULONG BitmapReads;
+  ULONG BitmapReadBytes;
+  ULONG BitmapWrites;
+  ULONG BitmapWriteBytes;
+  USHORT BitmapWritesFlushForLogFileFull;
+  USHORT BitmapWritesLazyWriter;
+  USHORT BitmapWritesUserRequest;
+  struct {
+    USHORT Write;
+    USHORT Create;
+    USHORT SetInfo;
+  } BitmapWritesUserLevel;
+  ULONG MftBitmapReads;
+  ULONG MftBitmapReadBytes;
+  ULONG MftBitmapWrites;
+  ULONG MftBitmapWriteBytes;
+  USHORT MftBitmapWritesFlushForLogFileFull;
+  USHORT MftBitmapWritesLazyWriter;
+  USHORT MftBitmapWritesUserRequest;
+  struct {
+    USHORT Write;
+    USHORT Create;
+    USHORT SetInfo;
+    USHORT Flush;
+  } MftBitmapWritesUserLevel;
+  ULONG UserIndexReads;
+  ULONG UserIndexReadBytes;
+  ULONG UserIndexWrites;
+  ULONG UserIndexWriteBytes;
+  ULONG LogFileReads;
+  ULONG LogFileReadBytes;
+  ULONG LogFileWrites;
+  ULONG LogFileWriteBytes;
+  struct {
+    ULONG Calls;
+    ULONG Clusters;
+    ULONG Hints;
+    ULONG RunsReturned;
+    ULONG HintsHonored;
+    ULONG HintsClusters;
+    ULONG Cache;
+    ULONG CacheClusters;
+    ULONG CacheMiss;
+    ULONG CacheMissClusters;
+  } Allocate;
+} NTFS_STATISTICS, *PNTFS_STATISTICS;
+
+#endif /* _FILESYSTEMFSCTL_ */
+
+#define SYMLINK_FLAG_RELATIVE   1
+
+typedef struct _REPARSE_DATA_BUFFER {
+  ULONG ReparseTag;
+  USHORT ReparseDataLength;
+  USHORT Reserved;
+  _ANONYMOUS_UNION union {
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      ULONG Flags;
+      WCHAR PathBuffer[1];
+    } SymbolicLinkReparseBuffer;
+    struct {
+      USHORT SubstituteNameOffset;
+      USHORT SubstituteNameLength;
+      USHORT PrintNameOffset;
+      USHORT PrintNameLength;
+      WCHAR PathBuffer[1];
+    } MountPointReparseBuffer;
+    struct {
+      UCHAR DataBuffer[1];
+    } GenericReparseBuffer;
+  } DUMMYUNIONNAME;
+} REPARSE_DATA_BUFFER, *PREPARSE_DATA_BUFFER;
+
+#define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
+
+typedef struct _REPARSE_GUID_DATA_BUFFER {
+  ULONG ReparseTag;
+  USHORT ReparseDataLength;
+  USHORT Reserved;
+  GUID ReparseGuid;
+  struct {
+    UCHAR DataBuffer[1];
+  } GenericReparseBuffer;
+} REPARSE_GUID_DATA_BUFFER, *PREPARSE_GUID_DATA_BUFFER;
+
+#define REPARSE_GUID_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_GUID_DATA_BUFFER, GenericReparseBuffer)
+
+#define MAXIMUM_REPARSE_DATA_BUFFER_SIZE      ( 16 * 1024 )
+
+/* Reserved reparse tags */
+#define IO_REPARSE_TAG_RESERVED_ZERO            (0)
+#define IO_REPARSE_TAG_RESERVED_ONE             (1)
+#define IO_REPARSE_TAG_RESERVED_RANGE           IO_REPARSE_TAG_RESERVED_ONE
+
+#define IsReparseTagMicrosoft(_tag)             (((_tag) & 0x80000000))
+#define IsReparseTagNameSurrogate(_tag)         (((_tag) & 0x20000000))
+
+#define IO_REPARSE_TAG_VALID_VALUES             (0xF000FFFF)
+
+#define IsReparseTagValid(tag) (                               \
+                  !((tag) & ~IO_REPARSE_TAG_VALID_VALUES) &&   \
+                  ((tag) > IO_REPARSE_TAG_RESERVED_RANGE)      \
+                )
+
+/* MicroSoft reparse point tags */
+#define IO_REPARSE_TAG_MOUNT_POINT              (0xA0000003L)
+#define IO_REPARSE_TAG_HSM                      (0xC0000004L)
+#define IO_REPARSE_TAG_DRIVE_EXTENDER           (0x80000005L)
+#define IO_REPARSE_TAG_HSM2                     (0x80000006L)
+#define IO_REPARSE_TAG_SIS                      (0x80000007L)
+#define IO_REPARSE_TAG_WIM                      (0x80000008L)
+#define IO_REPARSE_TAG_CSV                      (0x80000009L)
+#define IO_REPARSE_TAG_DFS                      (0x8000000AL)
+#define IO_REPARSE_TAG_FILTER_MANAGER           (0x8000000BL)
+#define IO_REPARSE_TAG_SYMLINK                  (0xA000000CL)
+#define IO_REPARSE_TAG_IIS_CACHE                (0xA0000010L)
+#define IO_REPARSE_TAG_DFSR                     (0x80000012L)
+
+#pragma pack(4)
+typedef struct _REPARSE_INDEX_KEY {
+  ULONG FileReparseTag;
+  LARGE_INTEGER FileId;
+} REPARSE_INDEX_KEY, *PREPARSE_INDEX_KEY;
+#pragma pack()
+
+#define FSCTL_LMR_GET_LINK_TRACKING_INFORMATION   CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM,58,METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define FSCTL_LMR_SET_LINK_TRACKING_INFORMATION   CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM,59,METHOD_BUFFERED,FILE_ANY_ACCESS)
+#define IOCTL_LMR_ARE_FILE_OBJECTS_ON_SAME_SERVER CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM,60,METHOD_BUFFERED,FILE_ANY_ACCESS)
+
+#define FSCTL_PIPE_ASSIGN_EVENT             CTL_CODE(FILE_DEVICE_NAMED_PIPE, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_DISCONNECT               CTL_CODE(FILE_DEVICE_NAMED_PIPE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_LISTEN                   CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_PEEK                     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 3, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_PIPE_QUERY_EVENT              CTL_CODE(FILE_DEVICE_NAMED_PIPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_TRANSCEIVE               CTL_CODE(FILE_DEVICE_NAMED_PIPE, 5, METHOD_NEITHER,  FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_PIPE_WAIT                     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_IMPERSONATE              CTL_CODE(FILE_DEVICE_NAMED_PIPE, 7, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_SET_CLIENT_PROCESS       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 8, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_QUERY_CLIENT_PROCESS     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 9, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_GET_PIPE_ATTRIBUTE       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 10, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_SET_PIPE_ATTRIBUTE       CTL_CODE(FILE_DEVICE_NAMED_PIPE, 11, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_GET_CONNECTION_ATTRIBUTE CTL_CODE(FILE_DEVICE_NAMED_PIPE, 12, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_SET_CONNECTION_ATTRIBUTE CTL_CODE(FILE_DEVICE_NAMED_PIPE, 13, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_GET_HANDLE_ATTRIBUTE     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 14, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_SET_HANDLE_ATTRIBUTE     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 15, METHOD_BUFFERED, FILE_ANY_ACCESS)
+#define FSCTL_PIPE_FLUSH                    CTL_CODE(FILE_DEVICE_NAMED_PIPE, 16, METHOD_BUFFERED, FILE_WRITE_DATA)
+
+#define FSCTL_PIPE_INTERNAL_READ            CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2045, METHOD_BUFFERED, FILE_READ_DATA)
+#define FSCTL_PIPE_INTERNAL_WRITE           CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2046, METHOD_BUFFERED, FILE_WRITE_DATA)
+#define FSCTL_PIPE_INTERNAL_TRANSCEIVE      CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2047, METHOD_NEITHER, FILE_READ_DATA | FILE_WRITE_DATA)
+#define FSCTL_PIPE_INTERNAL_READ_OVFLOW     CTL_CODE(FILE_DEVICE_NAMED_PIPE, 2048, METHOD_BUFFERED, FILE_READ_DATA)
+
+#define FILE_PIPE_READ_DATA                 0x00000000
+#define FILE_PIPE_WRITE_SPACE               0x00000001
+
+typedef struct _FILE_PIPE_ASSIGN_EVENT_BUFFER {
+  HANDLE EventHandle;
+  ULONG KeyValue;
+} FILE_PIPE_ASSIGN_EVENT_BUFFER, *PFILE_PIPE_ASSIGN_EVENT_BUFFER;
+
+typedef struct _FILE_PIPE_EVENT_BUFFER {
+  ULONG NamedPipeState;
+  ULONG EntryType;
+  ULONG ByteCount;
+  ULONG KeyValue;
+  ULONG NumberRequests;
+} FILE_PIPE_EVENT_BUFFER, *PFILE_PIPE_EVENT_BUFFER;
+
+typedef struct _FILE_PIPE_PEEK_BUFFER {
+  ULONG NamedPipeState;
+  ULONG ReadDataAvailable;
+  ULONG NumberOfMessages;
+  ULONG MessageLength;
+  CHAR Data[1];
+} FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
+
+typedef struct _FILE_PIPE_WAIT_FOR_BUFFER {
+  LARGE_INTEGER Timeout;
+  ULONG NameLength;
+  BOOLEAN TimeoutSpecified;
+  WCHAR Name[1];
+} FILE_PIPE_WAIT_FOR_BUFFER, *PFILE_PIPE_WAIT_FOR_BUFFER;
+
+typedef struct _FILE_PIPE_CLIENT_PROCESS_BUFFER {
+#if !defined(BUILD_WOW6432)
+  PVOID ClientSession;
+  PVOID ClientProcess;
+#else
+  ULONGLONG ClientSession;
+  ULONGLONG ClientProcess;
+#endif
+} FILE_PIPE_CLIENT_PROCESS_BUFFER, *PFILE_PIPE_CLIENT_PROCESS_BUFFER;
+
+#define FILE_PIPE_COMPUTER_NAME_LENGTH 15
+
+typedef struct _FILE_PIPE_CLIENT_PROCESS_BUFFER_EX {
+#if !defined(BUILD_WOW6432)
+  PVOID ClientSession;
+  PVOID ClientProcess;
+#else
+  ULONGLONG ClientSession;
+  ULONGLONG ClientProcess;
+#endif
+  USHORT ClientComputerNameLength;
+  WCHAR ClientComputerBuffer[FILE_PIPE_COMPUTER_NAME_LENGTH+1];
+} FILE_PIPE_CLIENT_PROCESS_BUFFER_EX, *PFILE_PIPE_CLIENT_PROCESS_BUFFER_EX;
+
+#define FSCTL_MAILSLOT_PEEK             CTL_CODE(FILE_DEVICE_MAILSLOT, 0, METHOD_NEITHER, FILE_READ_DATA)
+
+typedef enum _LINK_TRACKING_INFORMATION_TYPE {
+  NtfsLinkTrackingInformation,
+  DfsLinkTrackingInformation
+} LINK_TRACKING_INFORMATION_TYPE, *PLINK_TRACKING_INFORMATION_TYPE;
+
+typedef struct _LINK_TRACKING_INFORMATION {
+  LINK_TRACKING_INFORMATION_TYPE Type;
+  UCHAR VolumeId[16];
+} LINK_TRACKING_INFORMATION, *PLINK_TRACKING_INFORMATION;
+
+typedef struct _REMOTE_LINK_TRACKING_INFORMATION {
+  PVOID TargetFileObject;
+  ULONG TargetLinkTrackingInformationLength;
+  UCHAR TargetLinkTrackingInformationBuffer[1];
+} REMOTE_LINK_TRACKING_INFORMATION, *PREMOTE_LINK_TRACKING_INFORMATION;
+
+#define IO_OPEN_PAGING_FILE                 0x0002
+#define IO_OPEN_TARGET_DIRECTORY            0x0004
+#define IO_STOP_ON_SYMLINK                  0x0008
+#define IO_MM_PAGING_FILE                   0x0010
+
+typedef VOID
+(NTAPI *PDRIVER_FS_NOTIFICATION) (
+  IN PDEVICE_OBJECT DeviceObject,
+  IN BOOLEAN FsActive);
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+  SyncTypeOther = 0,
+  SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef enum _FS_FILTER_STREAM_FO_NOTIFICATION_TYPE {
+  NotifyTypeCreate = 0,
+  NotifyTypeRetired
+} FS_FILTER_STREAM_FO_NOTIFICATION_TYPE, *PFS_FILTER_STREAM_FO_NOTIFICATION_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+  struct {
+    PLARGE_INTEGER EndingOffset;
+    PERESOURCE *ResourceToRelease;
+  } AcquireForModifiedPageWriter;
+  struct {
+    PERESOURCE ResourceToRelease;
+  } ReleaseForModifiedPageWriter;
+  struct {
+    FS_FILTER_SECTION_SYNC_TYPE SyncType;
+    ULONG PageProtection;
+  } AcquireForSectionSynchronization;
+  struct {
+    FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType;
+    BOOLEAN POINTER_ALIGNMENT SafeToRecurse;
+  } NotifyStreamFileObject;
+  struct {
+    PVOID Argument1;
+    PVOID Argument2;
+    PVOID Argument3;
+    PVOID Argument4;
+    PVOID Argument5;
+  } Others;
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+#define FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-1
+#define FS_FILTER_RELEASE_FOR_SECTION_SYNCHRONIZATION      (UCHAR)-2
+#define FS_FILTER_ACQUIRE_FOR_MOD_WRITE                    (UCHAR)-3
+#define FS_FILTER_RELEASE_FOR_MOD_WRITE                    (UCHAR)-4
+#define FS_FILTER_ACQUIRE_FOR_CC_FLUSH                     (UCHAR)-5
+#define FS_FILTER_RELEASE_FOR_CC_FLUSH                     (UCHAR)-6
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+  ULONG SizeOfFsFilterCallbackData;
+  UCHAR Operation;
+  UCHAR Reserved;
+  struct _DEVICE_OBJECT *DeviceObject;
+  struct _FILE_OBJECT *FileObject;
+  FS_FILTER_PARAMETERS Parameters;
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef NTSTATUS
+(NTAPI *PFS_FILTER_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  OUT PVOID *CompletionContext);
+
+typedef VOID
+(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
+  IN PFS_FILTER_CALLBACK_DATA Data,
+  IN NTSTATUS OperationStatus,
+  IN PVOID CompletionContext);
+
+typedef struct _FS_FILTER_CALLBACKS {
+  ULONG SizeOfFsFilterCallbacks;
+  ULONG Reserved;
+  PFS_FILTER_CALLBACK PreAcquireForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreReleaseForSectionSynchronization;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForSectionSynchronization;
+  PFS_FILTER_CALLBACK PreAcquireForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForCcFlush;
+  PFS_FILTER_CALLBACK PreReleaseForCcFlush;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForCcFlush;
+  PFS_FILTER_CALLBACK PreAcquireForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostAcquireForModifiedPageWriter;
+  PFS_FILTER_CALLBACK PreReleaseForModifiedPageWriter;
+  PFS_FILTER_COMPLETION_CALLBACK PostReleaseForModifiedPageWriter;
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlRegisterFileSystemFilterCallbacks(
+  IN struct _DRIVER_OBJECT *FilterDriverObject,
+  IN PFS_FILTER_CALLBACKS Callbacks);
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+FsRtlNotifyStreamFileObject(
+  IN struct _FILE_OBJECT * StreamFileObject,
+  IN struct _DEVICE_OBJECT *DeviceObjectHint OPTIONAL,
+  IN FS_FILTER_STREAM_FO_NOTIFICATION_TYPE NotificationType,
+  IN BOOLEAN SafeToRecurse);
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+#define DO_VERIFY_VOLUME                    0x00000002
+#define DO_BUFFERED_IO                      0x00000004
+#define DO_EXCLUSIVE                        0x00000008
+#define DO_DIRECT_IO                        0x00000010
+#define DO_MAP_IO_BUFFER                    0x00000020
+#define DO_DEVICE_HAS_NAME                  0x00000040
+#define DO_DEVICE_INITIALIZING              0x00000080
+#define DO_SYSTEM_BOOT_PARTITION            0x00000100
+#define DO_LONG_TERM_REQUESTS               0x00000200
+#define DO_NEVER_LAST_DEVICE                0x00000400
+#define DO_SHUTDOWN_REGISTERED              0x00000800
+#define DO_BUS_ENUMERATED_DEVICE            0x00001000
+#define DO_POWER_PAGABLE                    0x00002000
+#define DO_POWER_INRUSH                     0x00004000
+#define DO_LOW_PRIORITY_FILESYSTEM          0x00010000
+#define DO_SUPPORTS_TRANSACTIONS            0x00040000
+#define DO_FORCE_NEITHER_IO                 0x00080000
+#define DO_VOLUME_DEVICE_OBJECT             0x00100000
+#define DO_SYSTEM_SYSTEM_PARTITION          0x00200000
+#define DO_SYSTEM_CRITICAL_PARTITION        0x00400000
+#define DO_DISALLOW_EXECUTE                 0x00800000
+
+extern KSPIN_LOCK                   IoStatisticsLock;
+extern ULONG                        IoReadOperationCount;
+extern ULONG                        IoWriteOperationCount;
+extern ULONG                        IoOtherOperationCount;
+extern LARGE_INTEGER                IoReadTransferCount;
+extern LARGE_INTEGER                IoWriteTransferCount;
+extern LARGE_INTEGER                IoOtherTransferCount;
+
+#define IO_FILE_OBJECT_NON_PAGED_POOL_CHARGE    64
+#define IO_FILE_OBJECT_PAGED_POOL_CHARGE        1024
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+typedef struct _IO_PRIORITY_INFO {
+  ULONG Size;
+  ULONG ThreadPriority;
+  ULONG PagePriority;
+  IO_PRIORITY_HINT IoPriority;
+} IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
+#endif
+$endif (_NTIFS_)

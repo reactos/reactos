@@ -28,7 +28,7 @@ typedef small signed8;
 typedef short signed16;
 typedef long signed32;
 typedef unsigned32 boolean32;
-typedef unsigned hyper u_int64;
+//typedef unsigned hyper u_int64;
 typedef unsigned long u_int32;
 typedef unsigned short u_int16;
 typedef unsigned small u_int8;

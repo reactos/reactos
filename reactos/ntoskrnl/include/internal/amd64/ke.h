@@ -116,6 +116,12 @@ extern ULONG KeI386CpuStep;
 #define KeGetContextSwitches(Prcb)  \
     (Prcb->KeContextSwitches)
 
+//
+// Macro to get the second level cache size field name which differs between
+// CISC and RISC architectures, as the former has unified I/D cache
+//
+#define KiGetSecondLevelDCacheSize() ((PKIPCR)KeGetPcr())->SecondLevelCacheSize
+
 #define KeGetExceptionFrame(Thread) \
     (PKEXCEPTION_FRAME)((ULONG_PTR)KeGetTrapFrame(Thread) - \
                         sizeof(KEXCEPTION_FRAME))

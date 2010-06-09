@@ -487,9 +487,13 @@ typedef struct _PERF_BIN {
   DWORD TypeOfBin;
   BIN_RANGE BinsRanges[1];
 } PERF_BIN,*PPERF_BIN;
+
+#ifndef _NTDDSTOR_H_
 typedef struct _PREVENT_MEDIA_REMOVAL {
   BOOLEAN PreventMediaRemoval;
 } PREVENT_MEDIA_REMOVAL,*PPREVENT_MEDIA_REMOVAL;
+#endif
+
 typedef struct RETRIEVAL_POINTERS_BUFFER {
   DWORD ExtentCount;
   LARGE_INTEGER StartingVcn;

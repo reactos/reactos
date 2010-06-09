@@ -3,7 +3,11 @@
  *
  * IOCTL definitions
  *
- * This file is part of the ReactOS ddk.
+ * This file is part of the ReactOS PSDK package.
+ *
+ * Contributors:
+ *   Amine Khaldi
+ *   Timo Kreuzer (timo.kreuzer@reactos.org)
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED
  *
@@ -16,13 +20,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#pragma once
 
 #ifndef _DEVIOCTL_
 #define _DEVIOCTL_
 
-/* DEVICE_OBJECT.DeviceType */
-
-#define DEVICE_TYPE ULONG
 
 #define FILE_DEVICE_BEEP                  0x00000001
 #define FILE_DEVICE_CD_ROM                0x00000002
@@ -81,26 +83,39 @@
 #define FILE_DEVICE_SERENUM               0x00000037
 #define FILE_DEVICE_TERMSRV               0x00000038
 #define FILE_DEVICE_KSEC                  0x00000039
-#define FILE_DEVICE_FIPS                  0x0000003a
+#define FILE_DEVICE_FIPS                  0x0000003A
+#define FILE_DEVICE_INFINIBAND            0x0000003B
+#define FILE_DEVICE_VMBUS                 0x0000003E
+#define FILE_DEVICE_CRYPT_PROVIDER        0x0000003F
+#define FILE_DEVICE_WPD                   0x00000040
+#define FILE_DEVICE_BLUETOOTH             0x00000041
+#define FILE_DEVICE_MT_COMPOSITE          0x00000042
+#define FILE_DEVICE_MT_TRANSPORT          0x00000043
+#define FILE_DEVICE_BIOMETRIC             0x00000044
+#define FILE_DEVICE_PMI                   0x00000045
 
-#define CTL_CODE(DeviceType, Function, Method, Access)( \
-  ((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
+/* DEVICE_OBJECT.DeviceType */
+#define DEVICE_TYPE ULONG
+
+#define CTL_CODE(DeviceType, Function, Method, Access) \
+  (((DeviceType) << 16) | ((Access) << 14) | ((Function) << 2) | (Method))
 
 #define DEVICE_TYPE_FROM_CTL_CODE(ctl) (((ULONG) (ctl & 0xffff0000)) >> 16)
 
-#define METHOD_FROM_CTL_CODE(ctrlCode) ((ULONG)((ctrlCode) & 3))
+#define METHOD_FROM_CTL_CODE(ctrlCode)          ((ULONG)(ctrlCode & 3))
 
 #define METHOD_BUFFERED                   0
 #define METHOD_IN_DIRECT                  1
 #define METHOD_OUT_DIRECT                 2
 #define METHOD_NEITHER                    3
 
-#define METHOD_DIRECT_TO_HARDWARE METHOD_IN_DIRECT
-#define METHOD_DIRECT_FROM_HARDWARE METHOD_OUT_DIRECT
+#define METHOD_DIRECT_TO_HARDWARE       METHOD_IN_DIRECT
+#define METHOD_DIRECT_FROM_HARDWARE     METHOD_OUT_DIRECT
 
 #define FILE_ANY_ACCESS                   0x00000000
 #define FILE_SPECIAL_ACCESS               FILE_ANY_ACCESS
 #define FILE_READ_ACCESS                  0x00000001
 #define FILE_WRITE_ACCESS                 0x00000002
 
-#endif /* !_DEVIOCTL_ */
+
+#endif /*_DEVIOCTL_ */
