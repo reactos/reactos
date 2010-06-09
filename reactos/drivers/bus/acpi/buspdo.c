@@ -744,8 +744,8 @@ Bus_PDO_QueryResources(
 					(irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
 					ResourceDescriptor->Flags =
 					(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					ResourceDescriptor->u.Interrupt.Level = irq_data->Interrupts[i];
-					ResourceDescriptor->u.Interrupt.Vector = 0;
+					ResourceDescriptor->u.Interrupt.Level =
+					ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
 					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
 					ResourceDescriptor++;
@@ -763,8 +763,8 @@ Bus_PDO_QueryResources(
 					(irq_data->Sharable == ACPI_SHARED ? CmResourceShareShared : CmResourceShareDeviceExclusive);
 					ResourceDescriptor->Flags =
 					(irq_data->Triggering == ACPI_LEVEL_SENSITIVE ? CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE : CM_RESOURCE_INTERRUPT_LATCHED);
-					ResourceDescriptor->u.Interrupt.Level = irq_data->Interrupts[i];
-					ResourceDescriptor->u.Interrupt.Vector = 0;
+					ResourceDescriptor->u.Interrupt.Level =
+					ResourceDescriptor->u.Interrupt.Vector = irq_data->Interrupts[i];
 					ResourceDescriptor->u.Interrupt.Affinity = (KAFFINITY)(-1);
 
 					ResourceDescriptor++;
