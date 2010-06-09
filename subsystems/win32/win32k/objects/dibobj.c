@@ -1936,7 +1936,9 @@ GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
     else
     {
         /* Copy valid Fields, keep bmiHeader.biSize safe */
-        RtlCopyMemory((PBYTE)pbmiDst + sizeof(DWORD), pbmiSrc, pbmiDst->bmiHeader.biSize - sizeof(DWORD));
+        RtlCopyMemory(&pbmiDst->bmiHeader.biWidth, 
+                      &pbmiSrc->bmiHeader.bV5Width,
+                      pbmiDst->bmiHeader.biSize - sizeof(DWORD));
     }
     if((pbmiDst->bmiHeader.biSize < sizeof(BITMAPV4HEADER)) &&
         (pbmiSrc->bmiHeader.bV5Compression == BI_BITFIELDS))
