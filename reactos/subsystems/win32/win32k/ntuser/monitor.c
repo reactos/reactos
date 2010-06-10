@@ -551,7 +551,7 @@ NtUserEnumDisplayMonitors(
 
    if (hMonitorList != NULL && listSize != 0)
    {
-      safeHMonitorList = ExAllocatePool(PagedPool, sizeof (HMONITOR) * listSize);
+      safeHMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * listSize, USERTAG_MONITORRECTS);
       if (safeHMonitorList == NULL)
       {
          /* FIXME: SetLastWin32Error? */
@@ -563,7 +563,7 @@ NtUserEnumDisplayMonitors(
       safeRectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * listSize, USERTAG_MONITORRECTS);
       if (safeRectList == NULL)
       {
-         ExFreePool(safeHMonitorList);
+         ExFreePoolWithTag(safeHMonitorList, USERTAG_MONITORRECTS);
          /* FIXME: SetLastWin32Error? */
          return -1;
       }
@@ -589,7 +589,7 @@ NtUserEnumDisplayMonitors(
       ExFreePool(safeHMonitorList);
       if (!NT_SUCCESS(status))
       {
-         ExFreePool(safeRectList);
+         ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
          SetLastNtError(status);
          return -1;
       }
@@ -597,7 +597,7 @@ NtUserEnumDisplayMonitors(
    if (monitorRectList != NULL && listSize != 0)
    {
       status = MmCopyToCaller(monitorRectList, safeRectList, sizeof (RECT) * listSize);
-      ExFreePool(safeRectList);
+      ExFreePoolWithTag(safeRectList, USERTAG_MONITORRECTS);
       if (!NT_SUCCESS(status))
       {
          SetLastNtError(status);
@@ -839,7 +839,7 @@ NtUserMonitorFromRect(
       return (HMONITOR)NULL;
    }
 
-   hMonitorList = ExAllocatePool(PagedPool, sizeof (HMONITOR) * numMonitors);
+   hMonitorList = ExAllocatePoolWithTag(PagedPool, sizeof (HMONITOR) * numMonitors, USERTAG_MONITORRECTS);
    if (hMonitorList == NULL)
    {
       /* FIXME: SetLastWin32Error? */
@@ -848,7 +848,7 @@ NtUserMonitorFromRect(
    rectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * numMonitors, USERTAG_MONITORRECTS);
    if (rectList == NULL)
    {
-      ExFreePool(hMonitorList);
+      ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
       /* FIXME: SetLastWin32Error? */
       return (HMONITOR)NULL;
    }
@@ -858,8 +858,8 @@ NtUserMonitorFromRect(
                                         numMonitors, 0);
    if (numMonitors <= 0)
    {
-      ExFreePool(hMonitorList);
-      ExFreePool(rectList);
+      ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+      ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
       return (HMONITOR)NULL;
    }
 
@@ -874,8 +874,8 @@ NtUserMonitorFromRect(
       }
    }
 
-   ExFreePool(hMonitorList);
-   ExFreePool(rectList);
+   ExFreePoolWithTag(hMonitorList, USERTAG_MONITORRECTS);
+   ExFreePoolWithTag(rectList, USERTAG_MONITORRECTS);
 
    return hMonitor;
 }

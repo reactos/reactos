@@ -688,7 +688,7 @@ UserBuildShellHookHwndList(PDESKTOP Desktop)
 
    if (!entries) return NULL;
 
-   list = ExAllocatePool(PagedPool, sizeof(HWND) * (entries + 1)); /* alloc one extra for nullterm */
+   list = ExAllocatePoolWithTag(PagedPool, sizeof(HWND) * (entries + 1), USERTAG_WINDOWLIST); /* alloc one extra for nullterm */
    if (list)
    {
       HWND* cursor = list;
