@@ -222,10 +222,10 @@ EngLoadImage (LPWSTR DriverName)
 			DPRINT1("ZwSetSystemInformation failed with Status 0x%lx\n", Status);
 		}
 		else {
-			DriverInfo = ExAllocatePool(PagedPool, sizeof(DRIVERS));
+			DriverInfo = ExAllocatePoolWithTag(PagedPool, sizeof(DRIVERS), TAG_DRIVER);
 			DriverInfo->DriverName.MaximumLength = GdiDriverInfo.DriverName.MaximumLength;
 			DriverInfo->DriverName.Length = GdiDriverInfo.DriverName.Length;
-			DriverInfo->DriverName.Buffer = ExAllocatePool(PagedPool, GdiDriverInfo.DriverName.MaximumLength);
+			DriverInfo->DriverName.Buffer = ExAllocatePoolWithTag(PagedPool, GdiDriverInfo.DriverName.MaximumLength, TAG_DRIVER);
 			RtlCopyUnicodeString(&DriverInfo->DriverName, &GdiDriverInfo.DriverName);
 			DriverInfo->SectionPointer = GdiDriverInfo.SectionPointer;
             DriverInfo->BaseAddress = GdiDriverInfo.ImageAddress;

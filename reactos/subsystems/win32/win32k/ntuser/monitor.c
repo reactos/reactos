@@ -560,7 +560,7 @@ NtUserEnumDisplayMonitors(
    }
    if (monitorRectList != NULL && listSize != 0)
    {
-      safeRectList = ExAllocatePool(PagedPool, sizeof (RECT) * listSize);
+      safeRectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * listSize, USERTAG_MONITORRECTS);
       if (safeRectList == NULL)
       {
          ExFreePool(safeHMonitorList);
@@ -845,7 +845,7 @@ NtUserMonitorFromRect(
       /* FIXME: SetLastWin32Error? */
       return (HMONITOR)NULL;
    }
-   rectList = ExAllocatePool(PagedPool, sizeof (RECT) * numMonitors);
+   rectList = ExAllocatePoolWithTag(PagedPool, sizeof (RECT) * numMonitors, USERTAG_MONITORRECTS);
    if (rectList == NULL)
    {
       ExFreePool(hMonitorList);

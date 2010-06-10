@@ -75,7 +75,7 @@ IntAddWindowToChain(PWINDOW_OBJECT window)
     {
         wce = WindowsChain;
 
-        wce = ExAllocatePool(PagedPool, sizeof(CLIPBOARDCHAINELEMENT));
+        wce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDCHAINELEMENT), USERTAG_CLIPBOARD);
         if (wce == NULL)
         {
             SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -167,7 +167,7 @@ intAddFormatedData(UINT format, HANDLE hData, DWORD size)
 {
     PCLIPBOARDELEMENT ce = NULL;
 
-    ce = ExAllocatePool(PagedPool, sizeof(CLIPBOARDELEMENT));
+    ce = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDELEMENT), USERTAG_CLIPBOARD);
     if (ce == NULL)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -889,7 +889,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
             if (!canSinthesize(uFormat))
             {
-                hCBData = ExAllocatePool(PagedPool, size);
+                hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                 memcpy(hCBData, hMem, size);
                 intAddFormatedData(uFormat, hCBData, size);
                 DPRINT1("Data stored\n");
@@ -979,7 +979,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
                     size = bi.bmiHeader.biSizeImage + sizeof(BITMAPINFOHEADER);
 
-                    hCBData = ExAllocatePool(PagedPool, size);
+                    hCBData = ExAllocatePoolWithTag(PagedPool, size, USERTAG_CLIPBOARD);
                     memcpy(hCBData, &bi, sizeof(BITMAPINFOHEADER));
 
                     ret = NtGdiGetDIBitsInternal(hdc, hMem, 0, bm.bmHeight, (LPBYTE)hCBData + sizeof(BITMAPINFOHEADER), &bi, DIB_RGB_COLORS, 0, 0);
