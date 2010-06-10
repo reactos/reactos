@@ -16,12 +16,12 @@ BEGIN
     GROUPBOX "Description", -1, 9, 153, 230, 46, BS_GROUPBOX
     LTEXT "Description du composant...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
     CHECKBOX "&Afficher l'icône dans la barre des tâches", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX "&Notify me when this connection has limited or no connectivity", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX "Me &notifier quand cette connexion n'a pas de connectivité ou une limitée", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -112,7 +112,7 @@ BEGIN
     IDS_NET_REPAIR              "Réparer"
     IDS_NET_CREATELINK          "Créer un raccourci"
     IDS_NET_DELETE              "Supprimer"
-    IDS_NET_RENAME              "Rename"
+    IDS_NET_RENAME              "Renommer"
     IDS_NET_PROPERTIES          "Propriétés"
 
     IDS_FORMAT_BIT              "%u Bit/s"
