@@ -26,10 +26,10 @@
 #if !defined(_X86_) && !defined(_AMD64) && !defined(_IA64_) && !defined(_ALPHA_) && \
     !defined(_ARM_) && !defined(_PPC_) && !defined(_MIPS_) && !defined(_68K_)
 
-#if defined(_M_IX86)
-#define _X86_
-#elif defined(_M_AMD64) || defined(__x86_64__)
+#if defined(_M_AMD64) || defined(__x86_64__)
 #define _AMD64_
+#elif defined(_M_IX86) || defined(__i386__)
+#define _X86_
 #elif defined(_M_IA64) || defined(__ia64__)
 #define _IA64_
 #elif defined(_M_ALPHA) || defined(__alpha__)
