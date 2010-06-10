@@ -1177,68 +1177,39 @@ GreCreateDIBitmapInternal(
     PDC Dc;
     HBITMAP Bmp;
     WORD bpp;
+    HDC hdcDest;
 
-    if (!hDc) // CreateBitmap
+    if (!hDc) /* 1bpp monochrome bitmap */
     {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
-        hDc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
-        if (!hDc)
+        hdcDest = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
+        if(!hdcDest)
         {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
             return NULL;
         }
-
-        Dc = DC_LockDc(hDc);
-        if (!Dc)
-        {
-            NtGdiDeleteObjectApp(hDc);
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            return NULL;
-        }
-        bpp = 1;
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
-
-        DC_UnlockDc(Dc);
-        NtGdiDeleteObjectApp(hDc);
     }
-    else // CreateCompatibleBitmap
+    else
     {
-        Dc = DC_LockDc(hDc);
-        if (!Dc)
-        {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
-            return NULL;
-        }
-        /* pbmi == null
-           First create an un-initialised bitmap.  The depth of the bitmap
-           should match that of the hdc and not that supplied in bmih.
-         */
-        if (pbmi)
-            bpp = pbmi->bmiHeader.bV5BitCount;
-        else
-        {
-            if (Dc->dctype != DC_TYPE_MEMORY)
-                bpp = Dc->ppdev->gdiinfo.cBitsPixel;
-            else
-            {
-                DIBSECTION dibs;
-                INT Count;
-                SURFACE *psurf = Dc->dclevel.pSurface;
-                Count = BITMAP_GetObject(psurf, sizeof(dibs), &dibs);
-                if (!Count)
-                    bpp = 1;
-                else
-                {
-                    if (Count == sizeof(BITMAP))
-                        /* A device-dependent bitmap is selected in the DC */
-                        bpp = dibs.dsBm.bmBitsPixel;
-                    else
-                        /* A DIB section is selected in the DC */
-                        bpp = dibs.dsBmih.biBitCount;
-                }
-            }
-        }
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
-        DC_UnlockDc(Dc);
+        hdcDest = hDc;
+    }
+
+    Dc = DC_LockDc(hdcDest);
+    if (!Dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+    /* It's OK to set bpp=0 here, as IntCreateDIBitmap will create a compatible Bitmap
+     * if bpp != 1 and ignore the real value that was passed */
+    if (pbmi)
+        bpp = pbmi->bmiHeader.bV5BitCount;
+    else
+        bpp = 0;
+    Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
+    DC_UnlockDc(Dc);
+
+    if(!hDc)
+    {
+        NtGdiDeleteObjectApp(hdcDest);
     }
     return Bmp;
 }

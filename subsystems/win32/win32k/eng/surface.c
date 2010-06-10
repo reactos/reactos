@@ -203,12 +203,12 @@ SURFACE_bSetBitmapBits(
     if (ulWidth)
     {
         /* Align the width (Windows compatibility) */
-        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
+        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 15) & ~15) >> 3;
     }
     else
     {
         /* Calculate width from the bitmap width in pixels */
-        ulWidth = ((pso->sizlBitmap.cx * cBitsPixel + 31) & ~31) >> 3;
+        ulWidth = ((pso->sizlBitmap.cx * cBitsPixel + 15) & ~15) >> 3;
     }
 
     /* Calculate the bitmap size in bytes */
@@ -236,7 +236,7 @@ SURFACE_bSetBitmapBits(
                                         (fjBitmap & BMF_NOZEROINIT) ?
                                                 0 : FL_ZERO_MEMORY,
                                         pso->cjBits, TAG_DIB);
-            
+
             /* Free the section already, but keep the mapping */
             if (pvBits) EngFreeSectionMem(pvSection, NULL);
         }

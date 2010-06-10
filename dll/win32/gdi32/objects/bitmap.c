@@ -461,8 +461,8 @@ CreateDIBitmap( HDC hDC,
   LONG width, height, compr, dibsize;
   WORD planes, bpp;
 //  PDC_ATTR pDc_Attr;
-  UINT InfoSize;
-  UINT cjBmpScanSize;
+  UINT InfoSize = 0;
+  UINT cjBmpScanSize = 0;
   HBITMAP hBmp;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -477,17 +477,20 @@ CreateDIBitmap( HDC hDC,
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
 
-  _SEH2_TRY
+  if(Data)
   {
-      cjBmpScanSize = DIB_BitmapBitsSize(Data);
-      CalculateColorTableSize(&Data->bmiHeader, &ColorUse, &InfoSize);
-      InfoSize += Data->bmiHeader.biSize;
+      _SEH2_TRY
+      {
+          cjBmpScanSize = DIB_BitmapBitsSize(Data);
+          CalculateColorTableSize(&Data->bmiHeader, &ColorUse, &InfoSize);
+          InfoSize += Data->bmiHeader.biSize;
+      }
+      _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+      {
+            Status = _SEH2_GetExceptionCode();
+      }
+      _SEH2_END
   }
-  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-  {
-        Status = _SEH2_GetExceptionCode();
-  }
-  _SEH2_END
 
   if(!NT_SUCCESS(Status))
   {
