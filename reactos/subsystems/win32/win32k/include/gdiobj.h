@@ -87,7 +87,7 @@ BOOL FASTCALL IntGdiSetDCOwnerEx( HDC, DWORD, BOOL);
 BOOL FASTCALL IntGdiSetRegionOwner(HRGN,DWORD);
 
 /*!
- * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked. 
+ * Release GDI object. Every object locked by GDIOBJ_LockObj() must be unlocked.
  * You should unlock the object
  * as soon as you don't need to have access to it's data.
 
@@ -112,6 +112,7 @@ GDIOBJ_ShareUnlockObjByPtr(POBJ Object)
     ASSERT(cLocks >= 0);
     if ((flags & BASEFLAG_READY_TO_DIE) && (cLocks == 0))
     {
+        GDIOBJ_SetOwnership(hobj, PsGetCurrentProcess());
         GDIOBJ_FreeObjByHandle(hobj, GDI_OBJECT_TYPE_DONTCARE);
     }
     return cLocks;
