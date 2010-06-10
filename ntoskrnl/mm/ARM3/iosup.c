@@ -90,8 +90,8 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     // Also translate the cache attribute
     //
     Pfn = (PFN_NUMBER)(PhysicalAddress.QuadPart >> PAGE_SHIFT);
-    IsIoMapping = (Pfn > MmHighestPhysicalPage) ? TRUE : FALSE;
-    if (!IsIoMapping) Pfn1 = MiGetPfnEntry(Pfn);
+    Pfn1 = MiGetPfnEntry(Pfn);
+    IsIoMapping = (Pfn1 == NULL) ? TRUE : FALSE;
     CacheAttribute = MiPlatformCacheAttributes[IsIoMapping][CacheType];
     
     //
@@ -172,15 +172,10 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     do
     {
         //
-        // Start out with nothing
-        //
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        
-        //
         // Write the PFN
         //
         TempPte.u.Hard.PageFrameNumber = Pfn++;
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--PageCount);
     
     //
@@ -219,7 +214,7 @@ MmUnmapIoSpace(IN PVOID BaseAddress,
     //
     // Is this an I/O mapping?
     //
-    if (Pfn > MmHighestPhysicalPage)
+    if (!MiGetPfnEntry(Pfn))
     {
         //
         // Destroy the PTE

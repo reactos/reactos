@@ -60,12 +60,9 @@ FormatString(
 static void
 ErrorMsgBox(HWND hParent, DWORD dwCaptionID, DWORD dwMessageId, ...)
 {
-	HMODULE hModule;
 	HLOCAL hMemCaption = NULL;
 	HLOCAL hMemText = NULL;
 	va_list args;
-
-	hModule = GetModuleHandle(NULL);
 
 	va_start(args, dwMessageId);
 	FormatString(FORMAT_MESSAGE_ALLOCATE_BUFFER,

@@ -187,7 +187,7 @@ BEGIN
 	IDS_UPDATES "Uaktualnienia"
 	IDS_APPLICATIONS "Aplikacje"
 	IDS_CHOOSE_FOLDER_TEXT "Wybierz katalog w którym bêda zapisywane pobrane programy:"
-	IDS_CHOOSE_FOLDER_ERROR "Wybra³eœ nieistniej¹cy katalog!"
+	IDS_CHOOSE_FOLDER_ERROR "Wybra³eœ nieistniej¹cy katalog! Czy chcesz utworzyæ nowy?"
 	IDS_USER_NOT_ADMIN "Musisz mieæ uprawnienia administratora aby uruchomiæ ""ReactOS Applications Manager""!"
 	IDS_APP_REG_REMOVE "Czy na pewno chcesz usun¹æ wpis tego programu z rejestru?"
 	IDS_INFORMATION "Informacja"

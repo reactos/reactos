@@ -8,7 +8,7 @@
 
 #pragma once
 
-//#define TRAP_DEBUG 1
+#define TRAP_DEBUG 0
 
 //
 // Unreachable code hint for GCC 4.5.x, older GCC versions, and MSVC
@@ -81,7 +81,7 @@ KiDumpTrapFrame(IN PKTRAP_FRAME TrapFrame)
     DbgPrint("V86Gs: %x\n", TrapFrame->V86Gs);
 }
 
-#ifdef TRAP_DEBUG
+#if TRAP_DEBUG
 VOID
 FORCEINLINE
 KiFillTrapFrameDebug(IN PKTRAP_FRAME TrapFrame)
@@ -168,7 +168,7 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
                          0,
                          0);
         }
-#if 0
+
         /* Make sure we're not attached and that APCs are not disabled */
         if ((KeGetCurrentThread()->ApcStateIndex != CurrentApcEnvironment) ||
             (KeGetCurrentThread()->CombinedApcDisable != 0))
@@ -180,7 +180,6 @@ KiExitSystemCallDebugChecks(IN ULONG SystemCall,
                          KeGetCurrentThread()->CombinedApcDisable,
                          0);
         }
-#endif
     }
 }
 #else
@@ -200,9 +199,11 @@ DECLSPEC_NORETURN VOID FASTCALL KiTrapReturn(IN PKTRAP_FRAME TrapFrame);
 DECLSPEC_NORETURN VOID FASTCALL KiTrapReturnNoSegments(IN PKTRAP_FRAME TrapFrame);
 
 typedef
+DECLSPEC_NORETURN
 VOID
-(FASTCALL
-*PFAST_SYSTEM_CALL_EXIT)(IN PKTRAP_FRAME TrapFrame);
+(FASTCALL *PFAST_SYSTEM_CALL_EXIT)(
+    IN PKTRAP_FRAME TrapFrame
+);
 
 extern PFAST_SYSTEM_CALL_EXIT KiFastCallExitHandler;
 
@@ -222,7 +223,7 @@ KiExitV86Trap(IN PKTRAP_FRAME TrapFrame)
     while (TRUE)
     {
         /* Return if this isn't V86 mode anymore */
-        if (!(TrapFrame->EFlags & EFLAGS_V86_MASK)) KiEoiHelper(TrapFrame);;
+        if (!(TrapFrame->EFlags & EFLAGS_V86_MASK)) KiEoiHelper(TrapFrame);
 
         /* Turn off the alerted state for kernel mode */
         Thread->Alerted[KernelMode] = FALSE;

@@ -683,6 +683,7 @@
 @ stdcall SHCreateStreamOnFileEx(wstr long long long ptr ptr)
 @ stdcall SHCreateStreamOnFileW(wstr long ptr)
 @ stdcall SHCreateStreamWrapper(ptr ptr long ptr)
+@ stdcall SHCreateThreadRef(ptr ptr)
 @ stdcall SHDeleteEmptyKeyA(long ptr)
 @ stdcall SHDeleteEmptyKeyW(long ptr)
 @ stdcall SHDeleteKeyA(long str)

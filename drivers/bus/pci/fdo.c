@@ -551,10 +551,6 @@ FdoPnpControl(
   case IRP_MN_QUERY_STOP_DEVICE:
     Status = STATUS_NOT_IMPLEMENTED;
     break;
-
-  case IRP_MN_REMOVE_DEVICE:
-    Status = STATUS_NOT_IMPLEMENTED;
-    break;
 #endif
   case IRP_MN_START_DEVICE:
     DPRINT("IRP_MN_START_DEVICE received\n");
@@ -579,7 +575,14 @@ FdoPnpControl(
   case IRP_MN_FILTER_RESOURCE_REQUIREMENTS:
     break;
   case IRP_MN_REMOVE_DEVICE:
-    DPRINT1("IRP_MN_REMOVE_DEVICE is UNIMPLEMENTED!\n");
+    /* Detach the device object from the device stack */
+    IoDetachDevice(DeviceExtension->Ldo);
+
+    /* Delete the device object */
+    IoDeleteDevice(DeviceObject);
+
+    /* Return success */
+    Status = STATUS_SUCCESS;
     break;
   default:
     DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);

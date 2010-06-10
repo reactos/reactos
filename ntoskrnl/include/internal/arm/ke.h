@@ -56,6 +56,12 @@
     CONTAINING_RECORD(Prcb, KIPCR, PrcbData)->ContextSwitches
 
 //
+// Macro to get the second level cache size field name which differs between
+// CISC and RISC architectures, as the former has unified I/D cache
+//
+#define KiGetSecondLevelDCacheSize() ((PKIPCR)KeGetPcr())->SecondLevelDcacheSize
+
+//
 // Returns the Interrupt State from a Trap Frame.
 // ON = TRUE, OFF = FALSE
 //

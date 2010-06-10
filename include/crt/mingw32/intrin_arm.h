@@ -35,6 +35,10 @@
 #define _ReturnAddress() (__builtin_return_address(0))
 #define _ReadWriteBarrier() __sync_synchronize()
 
+__INTRIN_INLINE void __yield(void) { __asm__ __volatile__("yield"); }
+
+__INTRIN_INLINE void __break(unsigned int value) { __asm__ __volatile__("bkpt %0": : "M" (value)); }
+
 __INTRIN_INLINE unsigned short _byteswap_ushort(unsigned short value)
 {
 	return (value >> 8) || (value << 8);

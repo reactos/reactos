@@ -25,6 +25,8 @@ co_WinPosSetWindowPos(PWINDOW_OBJECT Wnd, HWND WndInsertAfter, INT x, INT y, INT
 		   INT cy, UINT flags);
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);
+void FASTCALL
+co_WinPosSendSizeMove(PWINDOW_OBJECT Window);
 USHORT FASTCALL
 co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
 		      PWINDOW_OBJECT* Window);

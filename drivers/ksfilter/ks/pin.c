@@ -1332,7 +1332,9 @@ IKsPin_PrepareStreamHeader(
     else
     StreamPointer->StreamPointer.Offset = &StreamPointer->StreamPointer.OffsetOut;
 
+#ifndef _WIN64
     StreamPointer->StreamPointer.Offset->Alignment = 0;
+#endif
     StreamPointer->StreamPointer.Offset->Count = 0;
     StreamPointer->StreamPointer.Offset->Data = NULL;
     StreamPointer->StreamPointer.Offset->Remaining = 0;
@@ -1352,7 +1354,9 @@ IKsPin_PrepareStreamHeader(
     /* FIXME */
     ASSERT(Length);
 
+#ifndef _WIN64
     StreamPointer->StreamPointer.Offset->Alignment = 0;
+#endif
     StreamPointer->StreamPointer.Context = NULL;
     StreamPointer->StreamPointer.Pin = &This->Pin;
     StreamPointer->StreamPointer.Offset->Count = Length;
@@ -1543,7 +1547,7 @@ KsStreamPointerClone(
     IKsPinImpl * This;
     PKSISTREAM_POINTER CurFrame;
     PKSISTREAM_POINTER NewFrame;
-    ULONG RefCount;
+    ULONG_PTR RefCount;
     NTSTATUS Status;
     ULONG Size;
 
@@ -1556,13 +1560,13 @@ KsStreamPointerClone(
     Size = sizeof(KSISTREAM_POINTER) + ContextSize;
 
     /* allocate new stream pointer */
-    NewFrame = (PKSISTREAM_POINTER)ExAllocatePool(NonPagedPool, Size);
+    NewFrame = (PKSISTREAM_POINTER)AllocateItem(NonPagedPool, Size);
 
     if (!NewFrame)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* get current irp stack location */
-    RefCount = (ULONG)CurFrame->Irp->Tail.Overlay.DriverContext[0];
+    RefCount = (ULONG_PTR)CurFrame->Irp->Tail.Overlay.DriverContext[0];
 
     /* increment reference count */
     RefCount++;

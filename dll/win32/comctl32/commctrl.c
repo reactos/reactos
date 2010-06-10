@@ -784,7 +784,7 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
     if(hwndTB) {
 	TBADDBITMAP tbab;
 
-        SendMessageW (hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM)uStructSize, 0);
+        SendMessageW (hwndTB, TB_BUTTONSTRUCTSIZE, uStructSize, 0);
 
        /* set bitmap and button size */
        /*If CreateToolbarEx receives 0, windows sets default values*/
@@ -811,12 +811,11 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
 	    tbab.hInst = hBMInst;
 	    tbab.nID   = wBMID;
 
-	    SendMessageW (hwndTB, TB_ADDBITMAP, (WPARAM)nBitmaps, (LPARAM)&tbab);
+            SendMessageW (hwndTB, TB_ADDBITMAP, nBitmaps, (LPARAM)&tbab);
 	}
 	/* add buttons */
 	if(iNumButtons > 0)
-	SendMessageW (hwndTB, TB_ADDBUTTONSW,
-			(WPARAM)iNumButtons, (LPARAM)lpButtons);
+        SendMessageW (hwndTB, TB_ADDBUTTONSW, iNumButtons, (LPARAM)lpButtons);
     }
 
     return hwndTB;
@@ -923,8 +922,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
     if (hbm) {
 	HDC hdcDst = CreateCompatibleDC (hdcScreen);
 	HBITMAP hbmOld = SelectObject (hdcDst, hbm);
-	const BYTE *lpBits = (const BYTE *)(lpBitmap + 1);
-	lpBits += nColorTableSize * sizeof(RGBQUAD);
+	const BYTE *lpBits = (const BYTE *)lpBitmap + nSize;
 	StretchDIBits (hdcDst, 0, 0, nWidth, nHeight, 0, 0, nWidth, nHeight,
 		         lpBits, (LPBITMAPINFO)lpBitmapInfo, DIB_RGB_COLORS,
 		         SRCCOPY);
@@ -1403,9 +1401,8 @@ COMCTL32_CreateToolTip(HWND hwndOwner)
 	nmttc.hdr.code = NM_TOOLTIPSCREATED;
 	nmttc.hwndToolTips = hwndToolTip;
 
-       SendMessageW(GetParent(hwndTrueOwner), WM_NOTIFY,
-                    (WPARAM)GetWindowLongPtrW(hwndTrueOwner, GWLP_ID),
-		    (LPARAM)&nmttc);
+        SendMessageW(GetParent(hwndTrueOwner), WM_NOTIFY,
+                     GetWindowLongPtrW(hwndTrueOwner, GWLP_ID), (LPARAM)&nmttc);
     }
 
     return hwndToolTip;

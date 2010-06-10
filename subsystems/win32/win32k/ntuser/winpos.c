@@ -151,7 +151,7 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
    }
 
    /* If this is popup window, try to activate the owner first. */
-   if ((Wnd->style & WS_POPUP) && (WndTo = IntGetOwner(Window)))
+   if ((Wnd->style & WS_POPUP) && (WndTo = Window->spwndOwner))
    {
       WndTo = UserGetAncestor( WndTo, GA_ROOT );
       if (can_activate_window(WndTo)) goto done;
@@ -741,10 +741,14 @@ HWND FASTCALL
 WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 {
    HWND *List = NULL;
-   HWND Owner = UserGetWindow(hWnd, GW_OWNER);
-   LONG Style = UserGetWindowLong(hWnd, GWL_STYLE, FALSE);
-   PWINDOW_OBJECT DesktopWindow, ChildObject;
+   HWND Owner;
+   LONG Style;
+   PWINDOW_OBJECT Window ,DesktopWindow, ChildObject;
    int i;
+
+   Window = UserGetWindowObject(hWnd);
+   Owner = Window->spwndOwner ? Window->spwndOwner->hSelf : NULL;
+   Style = Window->Wnd->style;
 
    if ((Style & WS_POPUP) && Owner)
    {
@@ -804,8 +808,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
          if (!(Wnd = UserGetWindowObject(List[i])))
             continue;
 
-         if ((Wnd->Wnd->style & WS_POPUP) &&
-               UserGetWindow(List[i], GW_OWNER) == hWnd)
+         if (Wnd->Wnd->style & WS_POPUP && Wnd->spwndOwner == Window)
          {
             USER_REFERENCE_ENTRY Ref;
             UserRefObjectCo(Wnd, &Ref);
@@ -958,7 +961,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
              * itself.
              */
             if ((WinPos->hwnd == WinPos->hwndInsertAfter) ||
-                  (WinPos->hwnd == UserGetWindow(WinPos->hwndInsertAfter, GW_HWNDNEXT)))
+                (WinPos->hwnd == InsAfterWnd->spwndNext->hSelf))
             {
                WinPos->flags |= SWP_NOZORDER;
             }
@@ -1463,6 +1466,33 @@ co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientR
    return Result;
 }
 
+void FASTCALL
+co_WinPosSendSizeMove(PWINDOW_OBJECT Window)
+{
+    WPARAM wParam = SIZE_RESTORED;
+    PWND Wnd = Window->Wnd;
+
+    Window->state &= ~WINDOWOBJECT_NEED_SIZE;
+    if (Wnd->style & WS_MAXIMIZE)
+    {
+        wParam = SIZE_MAXIMIZED;
+    }
+    else if (Wnd->style & WS_MINIMIZE)
+    {
+        wParam = SIZE_MINIMIZED;
+    }
+
+    co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
+                        MAKELONG(Wnd->rcClient.right -
+                                 Wnd->rcClient.left,
+                                 Wnd->rcClient.bottom -
+                                 Wnd->rcClient.top));
+    co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
+                        MAKELONG(Wnd->rcClient.left,
+                                 Wnd->rcClient.top));
+    IntEngWindowChanged(Window, WOC_RGN_CLIENT);
+}
+
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 {
@@ -1621,28 +1651,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    if ((Window->state & WINDOWOBJECT_NEED_SIZE) &&
        !(Window->state & WINDOWSTATUS_DESTROYING))
    {
-      WPARAM wParam = SIZE_RESTORED;
-
-      Window->state &= ~WINDOWOBJECT_NEED_SIZE;
-      if (Wnd->style & WS_MAXIMIZE)
-      {
-         wParam = SIZE_MAXIMIZED;
-      }
-      else if (Wnd->style & WS_MINIMIZE)
-      {
-         wParam = SIZE_MINIMIZED;
-      }
-
-      co_IntSendMessageNoWait(Window->hSelf, WM_SIZE, wParam,
-                        MAKELONG(Wnd->rcClient.right -
-                                 Wnd->rcClient.left,
-                                 Wnd->rcClient.bottom -
-                                 Wnd->rcClient.top));
-      co_IntSendMessageNoWait(Window->hSelf, WM_MOVE, 0,
-                        MAKELONG(Wnd->rcClient.left,
-                                 Wnd->rcClient.top));
-      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-
+        co_WinPosSendSizeMove(Window);
    }
 
    /* Activate the window if activation is not requested and the window is not minimized */

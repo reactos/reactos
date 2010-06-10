@@ -103,7 +103,7 @@ Display_DrawText(HDC hDC, DISPLAYDATA* pData, int nYPos)
 	/* TODO: Output font info */
 
 	/* Output Character set */
-	hOldFont = SelectObject(hDC, pData->hCharSetFont);
+	SelectObject(hDC, pData->hCharSetFont);
 	GetTextMetrics(hDC, &tm);
 	swprintf(szCaption, L"abcdefghijklmnopqrstuvwxyz");
 	TextOutW(hDC, 0, y, szCaption, wcslen(szCaption));

@@ -232,40 +232,34 @@ HRESULT WINAPI ParseURLW(LPCWSTR x, PARSEDURLW *y)
 HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
 	LPDWORD pcchCanonicalized, DWORD dwFlags)
 {
-    LPWSTR base, canonical;
+    LPWSTR url, canonical;
     HRESULT ret;
-    DWORD   len, len2;
+    DWORD   len;
 
     TRACE("(%s, %p, %p, 0x%08x) *pcchCanonicalized: %d\n", debugstr_a(pszUrl), pszCanonicalized,
         pcchCanonicalized, dwFlags, pcchCanonicalized ? *pcchCanonicalized : -1);
 
-    if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
+    if(!pszUrl || !pszCanonicalized || !pcchCanonicalized || !*pcchCanonicalized)
 	return E_INVALIDARG;
 
-    base = HeapAlloc(GetProcessHeap(), 0,
-			      (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
-    canonical = base + INTERNET_MAX_URL_LENGTH;
-
-    MultiByteToWideChar(0, 0, pszUrl, -1, base, INTERNET_MAX_URL_LENGTH);
-    len = INTERNET_MAX_URL_LENGTH;
-
-    ret = UrlCanonicalizeW(base, canonical, &len, dwFlags);
-    if (ret != S_OK) {
-        *pcchCanonicalized = len * 2;
-        HeapFree(GetProcessHeap(), 0, base);
-        return ret;
+    len = strlen(pszUrl)+1;
+    url = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    canonical = HeapAlloc(GetProcessHeap(), 0, *pcchCanonicalized*sizeof(WCHAR));
+    if(!url || !canonical) {
+        HeapFree(GetProcessHeap(), 0, url);
+        HeapFree(GetProcessHeap(), 0, canonical);
+        return E_OUTOFMEMORY;
     }
 
-    len2 = WideCharToMultiByte(0, 0, canonical, -1, 0, 0, 0, 0);
-    if (len2 > *pcchCanonicalized) {
-        *pcchCanonicalized = len2;
-        HeapFree(GetProcessHeap(), 0, base);
-        return E_POINTER;
-    }
-    WideCharToMultiByte(0, 0, canonical, -1, pszCanonicalized, *pcchCanonicalized, 0, 0);
-    *pcchCanonicalized = len;
-    HeapFree(GetProcessHeap(), 0, base);
-    return S_OK;
+    MultiByteToWideChar(0, 0, pszUrl, -1, url, len);
+
+    ret = UrlCanonicalizeW(url, canonical, pcchCanonicalized, dwFlags);
+    if(ret == S_OK)
+        WideCharToMultiByte(0, 0, canonical, -1, pszCanonicalized,
+                *pcchCanonicalized+1, 0, 0);
+
+    HeapFree(GetProcessHeap(), 0, canonical);
+    return ret;
 }
 
 /*************************************************************************
@@ -287,11 +281,12 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     static const WCHAR wszFile[] = {'f','i','l','e',':'};
     static const WCHAR wszRes[] = {'r','e','s',':'};
     static const WCHAR wszLocalhost[] = {'l','o','c','a','l','h','o','s','t'};
+    static const WCHAR wszFilePrefix[] = {'f','i','l','e',':','/','/','/'};
 
     TRACE("(%s, %p, %p, 0x%08x) *pcchCanonicalized: %d\n", debugstr_w(pszUrl), pszCanonicalized,
         pcchCanonicalized, dwFlags, pcchCanonicalized ? *pcchCanonicalized : -1);
 
-    if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
+    if(!pszUrl || !pszCanonicalized || !pcchCanonicalized || !*pcchCanonicalized)
 	return E_INVALIDARG;
 
     if(!*pszUrl) {
@@ -300,8 +295,9 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     }
 
     nByteLen = (strlenW(pszUrl) + 1) * sizeof(WCHAR); /* length in bytes */
+    /* Allocate memory for simplified URL (before escaping) */
     lpszUrlCpy = HeapAlloc(GetProcessHeap(), 0,
-                           INTERNET_MAX_URL_LENGTH * sizeof(WCHAR));
+            nByteLen+sizeof(wszFilePrefix)+sizeof(WCHAR));
 
     if((dwFlags & URL_FILE_USE_PATHURL) && nByteLen >= sizeof(wszFile)
             && !memcmp(wszFile, pszUrl, sizeof(wszFile)))
@@ -328,8 +324,6 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     state = 0;
 
     if(pszUrl[1] == ':') { /* Assume path */
-        static const WCHAR wszFilePrefix[] = {'f','i','l','e',':','/','/','/'};
-
         memcpy(wk2, wszFilePrefix, sizeof(wszFilePrefix));
         wk2 += sizeof(wszFilePrefix)/sizeof(WCHAR);
         if (dwFlags & URL_FILE_USE_PATHURL)
@@ -833,6 +827,8 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 
     if (ret == S_OK) {
 	/* Reuse mrelative as temp storage as its already allocated and not needed anymore */
+        if(*pcchCombined == 0)
+            *pcchCombined = 1;
 	ret = UrlCanonicalizeW(preliminary, mrelative, pcchCombined, (dwFlags & ~URL_FILE_USE_PATHURL));
 	if(SUCCEEDED(ret) && pszCombined) {
 	    lstrcpyW(pszCombined, mrelative);

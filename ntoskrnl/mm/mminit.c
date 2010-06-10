@@ -109,7 +109,7 @@ MiInitSystemMemoryAreas()
     //
     // Protect the PFN database
     //
-    BaseAddress = MmPfnDatabase[0];
+    BaseAddress = MmPfnDatabase;
     Status = MmCreateMemoryArea(MmGetKernelAddressSpace(),
                                 MEMORY_AREA_OWNED_BY_ARM3 | MEMORY_AREA_STATIC,
                                 &BaseAddress,
@@ -292,8 +292,8 @@ MiDbgDumpAddressSpace(VOID)
             (ULONG_PTR)MmPagedPoolBase + MmPagedPoolSize,
             "Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmPfnDatabase[0],
-            (ULONG_PTR)MmPfnDatabase[0] + (MxPfnAllocation << PAGE_SHIFT),
+            MmPfnDatabase,
+            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
             "PFN Database");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
@@ -371,18 +371,8 @@ MmInitSystem(IN ULONG Phase,
         /* Dump memory descriptors */
         if (MiDbgEnableMdDump) MiDbgDumpMemoryDescriptors();
         
-        //
-        // Initialize ARM³ in phase 0
-        //
+        /* Initialize ARM³ in phase 0 */
         MmArmInitSystem(0, KeLoaderBlock);    
-
-#if defined(_WINKD_)
-        //
-        // Everything required for the debugger to read and write
-        // physical memory is now set up
-        //
-        MiDbgReadyForPhysical = TRUE;
-#endif
         
         /* Put the paged pool after the loaded modules */
         MmPagedPoolBase = (PVOID)PAGE_ROUND_UP((ULONG_PTR)MmSystemRangeStart +
@@ -394,15 +384,10 @@ MmInitSystem(IN ULONG Phase,
 
         /* Dump the address space */
         MiDbgDumpAddressSpace();
-        
-        /* Initialize paged pool */
-        MmInitializePagedPool();
-        
-        /* Initialize the loaded module list */
-        MiInitializeLoadedModuleList(LoaderBlock);
     }
     else if (Phase == 1)
     {
+        MmInitializePagedPool();
         MiInitializeUserPfnBitmap();
         MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
         MmInitializeRmapList();
@@ -453,7 +438,9 @@ MmInitSystem(IN ULONG Phase,
     }
     else if (Phase == 2)
     {
-
+        /* Enough fun for now */
+        extern BOOLEAN AllowPagedPool;
+        AllowPagedPool = FALSE;
     }
 
     return TRUE;

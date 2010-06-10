@@ -122,14 +122,10 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread);
 
 HWND FASTCALL UserGetShellWindow(VOID);
 
-HWND FASTCALL UserGetWindow(HWND hWnd, UINT Relationship);
-
 HDC FASTCALL
 UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags);
 
 BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Wnd);
-
-LONG FASTCALL UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
 PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 

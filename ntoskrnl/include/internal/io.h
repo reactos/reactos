@@ -496,9 +496,7 @@ typedef struct _DEVICETREE_TRAVERSE_CONTEXT
 //
 ULONG
 NTAPI
-IopCalculateResourceListSize(
-    IN PCM_RESOURCE_LIST ResourceList
-);
+PnpDetermineResourceListSize(IN PCM_RESOURCE_LIST ResourceList);
 
 NTSTATUS
 NTAPI

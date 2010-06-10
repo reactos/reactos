@@ -590,10 +590,20 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 		/* Start the search for all the files */
 		GetFullPathName(szBaseWord, MAX_PATH, szSearchPath, NULL);
+
+		/* Got a device path? Fallback to the the current dir plus the short path */
+		if (szSearchPath[0] == _T('\\') && szSearchPath[1] == _T('\\') &&
+		    szSearchPath[2] == _T('.') && szSearchPath[3] == _T('\\'))
+		{
+			GetCurrentDirectory(MAX_PATH, szSearchPath);
+			_tcscat(szSearchPath, _T("\\"));
+			_tcscat(szSearchPath, szBaseWord);
+		}
+
 		if(StartLength > 0)
-    {
+		{
 			_tcscat(szSearchPath,_T("*"));
-    }
+		}
 		_tcscpy(LastSearch,szSearchPath);
 		_tcscpy(LastPrefix,szPrefix);
 	}

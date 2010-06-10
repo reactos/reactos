@@ -1530,8 +1530,7 @@ HKCU,"Control Panel\Accessibility\Keyboard Preference","On",2,"0"
 ; Internet Explorer
 
 HKCU,Software\Wine\MSHTML,"GeckoUrl",,"http://source.winehq.org/winegecko.php"
-;HKCU,Software\Wine\MSHTML,"GeckoCabDir",0x00020000,"%SystemRoot%\"
-HKCU,Software\Wine\MSHTML,"GeckoCabDir",,"C:\ReactOS\"
+HKCU,Software\Wine\MSHTML,"GeckoCabDir",0x00020000,"%SystemRoot%\"
 
 ; Sound Schemes
 HKCU,"AppEvents",,0x00000012

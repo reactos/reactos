@@ -18,7 +18,7 @@
 #define NDEBUG
 #include <debug.h>
 
-KAFFINITY HalpActiveProcessors;
+KAFFINITY HalpActiveProcessors, HalpDefaultInterruptAffinity;
  
 /* PRIVATE FUNCTIONS *********************************************************/
 

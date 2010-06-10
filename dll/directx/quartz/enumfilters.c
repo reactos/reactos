@@ -126,6 +126,9 @@ static HRESULT WINAPI IEnumFiltersImpl_Next(IEnumFilters * iface, ULONG cFilters
 
     TRACE("(%p)->(%u, %p, %p)\n", iface, cFilters, ppFilters, pcFetched);
 
+    if (!ppFilters)
+        return E_POINTER;
+
     for (i = 0; i < cFetched; i++)
     {
 	ppFilters[i] = This->ppFilters[This->uIndex + i];

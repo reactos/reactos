@@ -889,8 +889,25 @@ static HRESULT WINAPI HTMLDocument_close(IHTMLDocument2 *iface)
 static HRESULT WINAPI HTMLDocument_clear(IHTMLDocument2 *iface)
 {
     HTMLDocument *This = HTMLDOC_THIS(iface);
-    FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    nsIDOMNSHTMLDocument *nsdoc;
+    nsresult nsres;
+
+    TRACE("(%p)\n", This);
+
+    nsres = nsIDOMHTMLDocument_QueryInterface(This->doc_node->nsdoc, &IID_nsIDOMNSHTMLDocument, (void**)&nsdoc);
+    if(NS_FAILED(nsres)) {
+        ERR("Could not get nsIDOMNSHTMLDocument iface: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    nsres = nsIDOMNSHTMLDocument_Clear(nsdoc);
+    nsIDOMNSHTMLDocument_Release(nsdoc);
+    if(NS_FAILED(nsres)) {
+        ERR("Clear failed: %08x\n", nsres);
+        return E_FAIL;
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI HTMLDocument_queryCommandSupported(IHTMLDocument2 *iface, BSTR cmdID,

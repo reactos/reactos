@@ -1167,16 +1167,6 @@ static void store_key_container_keys(KEYCONTAINER *pKeyContainer)
 static void store_key_container_permissions(KEYCONTAINER *pKeyContainer)
 {
     HKEY hKey;
-    DWORD dwFlags;
-
-    /* On WinXP, persistent keys are stored in a file located at:
-     * $AppData$\\Microsoft\\Crypto\\RSA\\$SID$\\some_hex_string
-     */
-
-    if (pKeyContainer->dwFlags & CRYPT_MACHINE_KEYSET)
-        dwFlags = CRYPTPROTECT_LOCAL_MACHINE;
-    else
-        dwFlags = 0;
 
     if (create_container_key(pKeyContainer, KEY_WRITE, &hKey))
     {
@@ -1426,7 +1416,7 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
         ALG_ID aiAlgid;
         DWORD dwLen;
         CONST BYTE abOID[19];
-    } aOIDDescriptor[8] = {
+    } aOIDDescriptor[] = {
         { CALG_MD2, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48,
                           0x86, 0xf7, 0x0d, 0x02, 0x02, 0x05, 0x00, 0x04, 0x10 } },
         { CALG_MD4, 18, { 0x30, 0x20, 0x30, 0x0c, 0x06, 0x08, 0x2a, 0x86, 0x48, 
@@ -1444,6 +1434,7 @@ static BOOL build_hash_signature(BYTE *pbSignature, DWORD dwLen, ALG_ID aiAlgid,
         { CALG_SHA_384, 19, { 0x30, 0x51, 0x30, 0x0d, 0x06, 0x09, 0x60, 0x86,
                               0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01,
                               0x05, 0x00, 0x04, 0x40 } },
+        { CALG_SSL3_SHAMD5, 0, { 0 } },
         { 0,        0,  { 0 } }
     };
     DWORD dwIdxOID, i, j;

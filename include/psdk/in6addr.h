@@ -1,12 +1,10 @@
 #ifndef s6_addr
 
-typedef struct in6_addr
-{
-    union
-    {
-        UCHAR Byte[16];
-        USHORT Word[8];
-    } u;
+typedef struct in6_addr {
+  union {
+    UCHAR Byte[16];
+    USHORT Word[8];
+  } u;
 } IN6_ADDR, *PIN6_ADDR, FAR *LPIN6_ADDR;
 
 #define in_addr6    in6_addr

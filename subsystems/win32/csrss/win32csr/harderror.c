@@ -84,8 +84,8 @@ CsrpGetClientFileName(
 
     ClientFileNameU->MaximumLength = ModuleData.BaseDllName.MaximumLength;
     ClientFileNameU->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                              HEAP_ZERO_MEMORY,
-                                              ClientFileNameU->MaximumLength);
+                              HEAP_ZERO_MEMORY,
+                              ClientFileNameU->MaximumLength);
 
     Status = NtReadVirtualMemory(hProcess,
                                  ModuleData.BaseDllName.Buffer,
@@ -123,9 +123,9 @@ CsrpCaptureStringParameters(
     UnicodeStringParameterMask = HardErrorMessage->UnicodeStringParameterMask;
 
     /* Read all strings from client space */
-    for (nParam = 0; 
-         nParam < HardErrorMessage->NumberOfParameters; 
-         nParam++, UnicodeStringParameterMask >>= 1)
+    for (nParam = 0;
+            nParam < HardErrorMessage->NumberOfParameters;
+            nParam++, UnicodeStringParameterMask >>= 1)
     {
         Parameters[nParam] = 0;
 
@@ -194,9 +194,9 @@ CsrpFreeStringParameters(
     UnicodeStringParameterMask = HardErrorMessage->UnicodeStringParameterMask;
 
     /* Loop all parameters */
-    for (nParam = 0; 
-         nParam < HardErrorMessage->NumberOfParameters; 
-         nParam++, UnicodeStringParameterMask >>= 1)
+    for (nParam = 0;
+            nParam < HardErrorMessage->NumberOfParameters;
+            nParam++, UnicodeStringParameterMask >>= 1)
     {
         /* Check if the current parameter is a string */
         if (UnicodeStringParameterMask & 0x01)
@@ -292,8 +292,8 @@ CsrpFormatMessages(
 
     /* Allocate a buffer for the caption */
     CaptionStringU->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
-                                             HEAP_ZERO_MEMORY,
-                                             CaptionStringU->MaximumLength);
+                             HEAP_ZERO_MEMORY,
+                             CaptionStringU->MaximumLength);
 
     /* Append the file name, seperator and the caption text */
     CaptionStringU->Length = 0;
@@ -383,13 +383,13 @@ CsrpFormatMessages(
     {
         /* Print the string into the buffer */
         StringCbPrintfW(TextStringU->Buffer,
-                        TextStringU->MaximumLength,
-                        FormatString,
-                        Parameters[0],
-                        Parameters[1],
-                        Parameters[2],
-                        Parameters[3],
-                        Parameters[4]);
+        TextStringU->MaximumLength,
+        FormatString,
+        Parameters[0],
+        Parameters[1],
+        Parameters[2],
+        Parameters[3],
+        Parameters[4]);
         Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -424,30 +424,30 @@ CsrpMessageBox(
     /* Set the message box type */
     switch (ValidResponseOptions)
     {
-        case OptionAbortRetryIgnore:
-            Type = MB_ABORTRETRYIGNORE;
-            break;
-        case OptionOk:
-            Type = MB_OK;
-            break;
-        case OptionOkCancel:
-            Type = MB_OKCANCEL;
-            break;
-        case OptionRetryCancel:
-            Type = MB_RETRYCANCEL;
-            break;
-        case OptionYesNo:
-            Type = MB_YESNO;
-            break;
-        case OptionYesNoCancel:
-            Type = MB_YESNOCANCEL;
-            break;
-        case OptionShutdownSystem:
-            Type = MB_RETRYCANCEL; // FIXME???
-            break;
+    case OptionAbortRetryIgnore:
+        Type = MB_ABORTRETRYIGNORE;
+        break;
+    case OptionOk:
+        Type = MB_OK;
+        break;
+    case OptionOkCancel:
+        Type = MB_OKCANCEL;
+        break;
+    case OptionRetryCancel:
+        Type = MB_RETRYCANCEL;
+        break;
+    case OptionYesNo:
+        Type = MB_YESNO;
+        break;
+    case OptionYesNoCancel:
+        Type = MB_YESNOCANCEL;
+        break;
+    case OptionShutdownSystem:
+        Type = MB_RETRYCANCEL; // FIXME???
+        break;
         /* Anything else is invalid */
-        default:
-            return ResponseNotHandled;
+    default:
+        return ResponseNotHandled;
     }
 
     /* Set severity */
@@ -457,7 +457,7 @@ CsrpMessageBox(
 
     Type |= MB_SYSTEMMODAL | MB_SETFOREGROUND;
 
-    DPRINT("Text = '%S', Caption = '%S', Severity = %d, Type = 0x%lx\n", 
+    DPRINT("Text = '%S', Caption = '%S', Severity = %d, Type = 0x%lx\n",
            Text, Caption, Severity, Type);
 
     /* Display a message box */
@@ -466,15 +466,15 @@ CsrpMessageBox(
     /* Return response value */
     switch (MessageBoxResponse)
     {
-        case IDOK:       return ResponseOk;
-        case IDCANCEL:   return ResponseCancel;
-        case IDYES:      return ResponseYes;
-        case IDNO:       return ResponseNo;
-        case IDABORT:    return ResponseAbort;
-        case IDIGNORE:   return ResponseIgnore;
-        case IDRETRY:    return ResponseRetry;
-        case IDTRYAGAIN: return ResponseTryAgain;
-        case IDCONTINUE: return ResponseContinue;
+    case IDOK:       return ResponseOk;
+    case IDCANCEL:   return ResponseCancel;
+    case IDYES:      return ResponseYes;
+    case IDNO:       return ResponseNo;
+    case IDABORT:    return ResponseAbort;
+    case IDIGNORE:   return ResponseIgnore;
+    case IDRETRY:    return ResponseRetry;
+    case IDTRYAGAIN: return ResponseTryAgain;
+    case IDCONTINUE: return ResponseContinue;
     }
 
     return ResponseNotHandled;
@@ -537,7 +537,7 @@ Win32CsrHardError(
 
     if (!NT_SUCCESS(Status))
     {
-       return FALSE;
+        return FALSE;
     }
 
     /* Display the message box */

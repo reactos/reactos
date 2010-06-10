@@ -501,7 +501,7 @@ HRESULT WINAPI CoRevokeMallocSpy(void)
         }
 	LeaveCriticalSection(&IMalloc32_SpyCS);
 
-	return S_OK;
+	return hres;
 }
 
 /******************************************************************************

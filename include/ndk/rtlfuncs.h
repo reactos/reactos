@@ -2042,12 +2042,12 @@ RtlRemoteCall(
 );
 
 NTSYSAPI
-VOID
+NTSTATUS
 NTAPI
 RtlSetProcessIsCritical(
     IN BOOLEAN NewValue,
     OUT PBOOLEAN OldValue OPTIONAL,
-    IN BOOLEAN IsWinlogon
+    IN BOOLEAN NeedBreaks
 );
 
 NTSYSAPI
@@ -3185,9 +3185,9 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 RtlIpv4StringToAddressW(
-    IN PWCHAR String,
-    IN UCHAR Strict,
-    OUT PWCHAR Terminator,
+    IN PCWSTR String,
+    IN BOOLEAN Strict,
+    OUT LPWSTR *Terminator,
     OUT struct in_addr *Addr
 );
 

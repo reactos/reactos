@@ -11,10 +11,10 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 IDD_END_NOW DIALOGEX DISCARDABLE  0, 0, 200, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Fine del programma - "
+CAPTION "Arresto del programma - "
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Fine del programma... Attendere",IDC_STATIC,7,7,186,11
+    LTEXT           "Arresto del programma... Attendere",IDC_STATIC,7,7,186,11
     CONTROL         "Progresso",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
                     7,20,186,13
     LTEXT           "Se si sceglie di terminare il programma immediatamente, si perderanno tutti i dati non salvati. Per terminare il programma ora, selezionare Termina ora.",
@@ -24,7 +24,7 @@ END
 
 IDD_NOT_RESPONDING DIALOGEX DISCARDABLE 0, 0, 192, 122
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "End Program - "
+CAPTION "Arresto del programma - "
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Annulla",IDCANCEL,142,98,43,17

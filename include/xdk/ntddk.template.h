@@ -40,11 +40,8 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 #include <mce.h>
-
-/* FIXME
 #include <bugcodes.h>
 #include <ntiologc.h>
-*/
 
 #include <stdarg.h> // FIXME
 #include <basetyps.h> // FIXME
@@ -136,9 +133,9 @@ $include (zwfuncs.h)
 
 /* UNSORTED */
 
-#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
-        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
-        (TypeBitMask), (ComparisonType)))
+#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType) \
+  ((ConditionMask) = VerSetConditionMask((ConditionMask),             \
+  (TypeBitMask), (ComparisonType)))
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
@@ -209,28 +206,28 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V  0x3
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED    \
-    (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SPARE_V                     0x4
 #define SHARED_GLOBAL_FLAGS_SPARE                       \
-    (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
 
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V      0x5
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V    0x6
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
 
 #define EX_INIT_BITS(Flags, Bit) \
-    *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
+  *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
 
 #define EX_TEST_SET_BIT(Flags, Bit) \
-    InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
 
 #define EX_TEST_CLEAR_BIT(Flags, Bit) \
-    InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
 
 #define PCCARD_MAP_ERROR               0x01
 #define PCCARD_DEVICE_PCI              0x10
@@ -254,8 +251,6 @@ NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS Status);
 #endif
-
-/* FIXME : These definitions below doesn't belong to NTDDK */
 
 #ifdef __cplusplus
 }

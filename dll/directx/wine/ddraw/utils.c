@@ -171,7 +171,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u2.dwRBitMask = 0x00E0;
             DDPixelFormat->u3.dwGBitMask = 0x001C;
             DDPixelFormat->u4.dwBBitMask = 0x0003;
-            DDPixelFormat->u5.dwRGBAlphaBitMask = 0xF000;
+            DDPixelFormat->u5.dwRGBAlphaBitMask = 0xFF00;
             break;
 
         case WINED3DFMT_B4G4R4X4_UNORM:
@@ -182,7 +182,7 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u3.dwGBitMask = 0x00F0;
             DDPixelFormat->u4.dwBBitMask = 0x000F;
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
-            return;
+            break;
 
         /* How are Z buffer bit depth and Stencil buffer bit depth related?
          */
@@ -236,8 +236,8 @@ PixelFormat_WineD3DtoDD(DDPIXELFORMAT *DDPixelFormat,
             DDPixelFormat->u3.dwZBitMask = 0x00FFFFFFFF;
             DDPixelFormat->u4.dwStencilBitMask = 0x00000000;
             DDPixelFormat->u5.dwRGBAlphaBitMask = 0x0;
-
             break;
+
         case WINED3DFMT_S1_UINT_D15_UNORM:
             DDPixelFormat->dwFlags = DDPF_ZBUFFER | DDPF_STENCILBUFFER;
             DDPixelFormat->dwFourCC = 0;

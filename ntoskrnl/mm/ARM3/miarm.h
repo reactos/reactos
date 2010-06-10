@@ -43,10 +43,9 @@
 #define _1MB (1024 * _1KB)
 
 /* Area mapped by a PDE */
-#define PDE_MAPPED_VA   (PTE_COUNT * PAGE_SIZE)
+#define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
 
-/* Size of a PDE directory, and size of a page table */
-#define PDE_SIZE (PDE_COUNT * sizeof(MMPDE))
+/* Size of a page table */
 #define PT_SIZE  (PTE_COUNT * sizeof(MMPTE))
 
 /* Architecture specific count of PDEs in a directory, and count of PTEs in a PT */
@@ -90,6 +89,90 @@
 #define MM_NOACCESS            (MM_DECOMMIT | MM_NOCACHE)
 
 //
+// Specific PTE Definitions that map to the Memory Manager's Protection Mask Bits
+// The Memory Manager's definition define the attributes that must be preserved
+// and these PTE definitions describe the attributes in the hardware sense. This
+// helps deal with hardware differences between the actual boolean expression of
+// the argument.
+//
+// For example, in the logical attributes, we want to express read-only as a flag
+// but on x86, it is writability that must be set. On the other hand, on x86, just
+// like in the kernel, it is disabling the caches that requires a special flag, 
+// while on certain architectures such as ARM, it is enabling the cache which
+// requires a flag.
+//
+#if defined(_M_IX86) || defined(_M_AMD64)
+//
+// Access Flags
+//
+#define PTE_READONLY            0
+#define PTE_EXECUTE             0 // Not worrying about NX yet
+#define PTE_EXECUTE_READ        0 // Not worrying about NX yet
+#define PTE_READWRITE           0x2
+#define PTE_WRITECOPY           0x200
+#define PTE_EXECUTE_READWRITE   0x0
+#define PTE_EXECUTE_WRITECOPY   0x200
+//
+// Cache flags
+//
+#define PTE_ENABLE_CACHE        0
+#define PTE_DISABLE_CACHE       0x10
+#define PTE_WRITECOMBINED_CACHE 0x10
+#elif defined(_M_ARM)
+#else
+#error Define these please!
+#endif
+static const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
+ 
+//
 // Assertions for session images, addresses, and PTEs
 //
 #define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
@@ -120,6 +203,12 @@
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
 
 //
+// Marks a PTE as deleted
+//
+#define MI_SET_PFN_DELETED(x)               ((x)->PteAddress = (PMMPTE)((ULONG_PTR)(x)->PteAddress | 1))
+#define MI_IS_PFN_DELETED(x)                ((ULONG_PTR)((x)->PteAddress) & 1)
+
+//
 // Special values for LoadedImports
 //
 #define MM_SYSLDR_NO_IMPORTS   (PVOID)0xFFFFFFFE
@@ -135,13 +224,18 @@
 // Special IRQL value (found in assertions)
 //
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
-    
+
 //
 // FIXFIX: These should go in ex.h after the pool merge
 //
-#define POOL_LISTS_PER_PAGE (PAGE_SIZE / sizeof(LIST_ENTRY))
+#ifdef _M_AMD64
+#define POOL_BLOCK_SIZE 16
+#else
+#define POOL_BLOCK_SIZE  8
+#endif
+#define POOL_LISTS_PER_PAGE (PAGE_SIZE / POOL_BLOCK_SIZE)
 #define BASE_POOL_TYPE_MASK 1
-#define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + sizeof(LIST_ENTRY)))
+#define POOL_MAX_ALLOC (PAGE_SIZE - (sizeof(POOL_HEADER) + POOL_BLOCK_SIZE))
 
 typedef struct _POOL_DESCRIPTOR
 {
@@ -166,16 +260,30 @@ typedef struct _POOL_HEADER
     {
         struct
         {
+#ifdef _M_AMD64
+            ULONG PreviousSize:8;
+            ULONG PoolIndex:8;
+            ULONG BlockSize:8;
+            ULONG PoolType:8;
+#else
             USHORT PreviousSize:9;
             USHORT PoolIndex:7;
             USHORT BlockSize:9;
             USHORT PoolType:7;
+#endif
         };
         ULONG Ulong1;
     };
+#ifdef _M_AMD64
+    ULONG PoolTag;
+#endif
     union
     {
+#ifdef _M_AMD64
+        PEPROCESS ProcessBilled;
+#else
         ULONG PoolTag;
+#endif
         struct
         {
             USHORT AllocatorBackTraceIndex;
@@ -184,11 +292,8 @@ typedef struct _POOL_HEADER
     };
 } POOL_HEADER, *PPOOL_HEADER;
 
-//
-// Everything depends on this
-//
-C_ASSERT(sizeof(POOL_HEADER) == 8);
-C_ASSERT(sizeof(POOL_HEADER) == sizeof(LIST_ENTRY));
+C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
+C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
 
 extern ULONG ExpNumberOfPagedPools;
 extern POOL_DESCRIPTOR NonPagedPoolDescriptor;
@@ -247,7 +352,7 @@ typedef struct _MI_LARGE_PAGE_RANGES
 } MI_LARGE_PAGE_RANGES, *PMI_LARGE_PAGE_RANGES;
 
 extern MMPTE HyperTemplatePte;
-extern MMPTE ValidKernelPde;
+extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
@@ -356,6 +461,29 @@ extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
 //
+// Creates a valid kernel PTE with the given protection
+//
+FORCEINLINE
+VOID
+MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
+                     IN PMMPTE MappingPte,
+                     IN ULONG ProtectionMask,
+                     IN PFN_NUMBER PageFrameNumber)
+{
+    /* Only valid for kernel, non-session PTEs */
+    ASSERT(MappingPte > MiHighestUserPte);
+    ASSERT(!MI_IS_SESSION_PTE(MappingPte));
+    ASSERT((MappingPte < (PMMPTE)PDE_BASE) || (MappingPte > (PMMPTE)PDE_TOP));
+    
+    /* Start fresh */
+    *NewPte = ValidKernelPte;
+    
+    /* Set the protection and page */
+    NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
+    NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+}
+
+//
 // Returns if the page is physically resident (ie: a large page)
 // FIXFIX: CISC/x86 only?
 //
@@ -368,6 +496,33 @@ MI_IS_PHYSICAL_ADDRESS(IN PVOID Address)
     /* Large pages are never paged out, always physically resident */
     PointerPde = MiAddressToPde(Address);
     return ((PointerPde->u.Hard.LargePage) && (PointerPde->u.Hard.Valid));
+}
+
+//
+// Writes a valid PTE
+//
+VOID
+FORCEINLINE
+MI_WRITE_VALID_PTE(IN PMMPTE PointerPte,
+                   IN MMPTE TempPte)
+{
+    /* Write the valid PTE */
+    ASSERT(PointerPte->u.Hard.Valid == 0);
+    ASSERT(TempPte.u.Hard.Valid == 1);
+    *PointerPte = TempPte;
+}
+
+//
+// Writes an invalid PTE
+//
+VOID
+FORCEINLINE
+MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
+                     IN MMPTE InvalidPte)
+{
+    /* Write the invalid PTE */
+    ASSERT(InvalidPte.u.Hard.Valid == 0);
+    *PointerPte = InvalidPte;
 }
 
 NTSTATUS
@@ -585,9 +740,38 @@ MiAllocatePfn(
     IN ULONG Protection
 );
 
+VOID
+NTAPI
+MiInitializePfn(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN BOOLEAN Modified
+);
+
+VOID
+NTAPI
+MiInitializePfnForOtherProcess(
+    IN PFN_NUMBER PageFrameIndex,
+    IN PMMPTE PointerPte,
+    IN PFN_NUMBER PteFrame
+);
+
+VOID
+NTAPI
+MiDecrementShareCount(
+    IN PMMPFN Pfn1,
+    IN PFN_NUMBER PageFrameIndex
+);
+
 PFN_NUMBER
 NTAPI
 MiRemoveAnyPage(
+    IN ULONG Color
+);
+
+PFN_NUMBER
+NTAPI
+MiRemoveZeroPage(
     IN ULONG Color
 );
 
@@ -597,6 +781,15 @@ MiInsertPageInFreeList(
     IN PFN_NUMBER PageFrameIndex
 );
 
+PFN_NUMBER
+NTAPI
+MiDeleteSystemPageableVm(
+    IN PMMPTE PointerPte,
+    IN PFN_NUMBER PageCount,
+    IN ULONG Flags,
+    OUT PPFN_NUMBER ValidPages
+);
+                         
 PLDR_DATA_TABLE_ENTRY
 NTAPI
 MiLookupDataTableEntry(

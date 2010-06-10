@@ -397,6 +397,7 @@
 			<file>iosup.c</file>
 			<file>largepag.c</file>
 			<file>mdlsup.c</file>
+			<file>mmdbg.c</file>
 			<file>mminit.c</file>
 			<file>mmsup.c</file>
 			<file>ncache.c</file>
@@ -404,6 +405,7 @@
 			<file>pfnlist.c</file>
 			<file>pool.c</file>
 			<file>procsup.c</file>
+			<file>sysldr.c</file>
 			<file>syspte.c</file>
 			<file>virtual.c</file>
 		</directory>
@@ -411,9 +413,6 @@
 		<file>balance.c</file>
 		<file>freelist.c</file>
 		<file>marea.c</file>
-		<if property="_WINKD_" value ="1">
-			<file>mmdbg.c</file>
-		</if>
 		<file>mmfault.c</file>
 		<file>mminit.c</file>
 		<file>mpw.c</file>
@@ -425,7 +424,6 @@
 		<file>region.c</file>
 		<file>rmap.c</file>
 		<file>section.c</file>
-		<file>sysldr.c</file>
 		<file>virtual.c</file>
 		<if property="_ELF_" value="1">
 			<file>elf32.c</file>

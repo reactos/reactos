@@ -1485,15 +1485,15 @@ MUI_ERROR frFRErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup could not set the geo id.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Not enough free space in the selected partition.\n"
         "  * Press any key to continue.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "Setup could not set the geo id.\n"
-        "ENTER = Reboot computer"
     },
     {
         NULL,

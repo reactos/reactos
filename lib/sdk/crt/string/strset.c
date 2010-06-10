@@ -1,14 +1,14 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/crt/??????
- * PURPOSE:     Unknown
+ * FILE:        lib/crt/strset.c
+ * PURPOSE:     Implementation of _strnset and _strset
  * PROGRAMER:   Unknown
  * UPDATE HISTORY:
  *              25/11/05: Added license header
  */
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) && !defined(__clang__)
 #define __int64 long long
 #endif
 

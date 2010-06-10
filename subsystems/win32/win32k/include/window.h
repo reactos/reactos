@@ -37,11 +37,8 @@ typedef struct _WINDOW_OBJECT
   struct _WINDOW_OBJECT* spwndChild;
   struct _WINDOW_OBJECT* spwndNext;
   struct _WINDOW_OBJECT* spwndPrev;
-  /* Handle to the parent window. */
   struct _WINDOW_OBJECT* spwndParent;
-  /* Handle to the owner window. */
-  HWND hOwner; // Use spwndOwner
-
+  struct _WINDOW_OBJECT* spwndOwner;
 
   /* Scrollbar info */
   PSBINFOEX pSBInfo; // convert to PSBINFO
@@ -125,10 +122,6 @@ IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 PWINDOW_OBJECT FASTCALL
 IntGetParent(PWINDOW_OBJECT Wnd);
 
-PWINDOW_OBJECT FASTCALL
-IntGetOwner(PWINDOW_OBJECT Wnd);
-
-
 INT FASTCALL
 IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);
 
@@ -142,9 +135,6 @@ VOID FASTCALL
 IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, UINT *cx, UINT *cy);
 
 BOOL FASTCALL
-IntAnyPopup(VOID);
-
-BOOL FASTCALL
 IntIsWindowInDestroy(PWINDOW_OBJECT Window);
 
 BOOL FASTCALL
@@ -155,7 +145,7 @@ IntDefWindowProc( PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
 
 VOID FASTCALL IntNotifyWinEvent(DWORD, PWND, LONG, LONG);
 
-PWND APIENTRY co_IntCreateWindowEx(DWORD,PUNICODE_STRING,PLARGE_STRING,DWORD,LONG,LONG,LONG,LONG,HWND,HMENU,HINSTANCE,LPVOID,DWORD,BOOL);
+PWND FASTCALL co_UserCreateWindowEx(CREATESTRUCTW*, PUNICODE_STRING, PLARGE_STRING);
 WNDPROC FASTCALL IntGetWindowProc(PWND,BOOL);
 
 /* EOF */

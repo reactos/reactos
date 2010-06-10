@@ -1500,15 +1500,15 @@ MUI_ERROR nlNLErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Setup kan de geografische positie niet instellen.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Not enough free space in the selected partition.\n"
         "  * Press any key to continue.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "Setup kan de geografische positie niet instellen.\n"
-        "ENTER = Reboot computer"
     },
     {
         NULL,

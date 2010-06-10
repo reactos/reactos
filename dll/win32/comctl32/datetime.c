@@ -31,7 +31,6 @@
  * TODO:
  *    -- DTS_APPCANPARSE
  *    -- DTS_SHORTDATECENTURYFORMAT
- *    -- DTN_CLOSEUP
  *    -- DTN_FORMAT
  *    -- DTN_FORMATQUERY
  *    -- DTN_USERSTRING
@@ -88,6 +87,7 @@ typedef struct
 
 /* in monthcal.c */
 extern int MONTHCAL_MonthLength(int month, int year);
+extern int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace);
 
 /* this list of defines is closely related to `allowedformatchars' defined
  * in datetime.c; the high nibble indicates the `base type' of the format
@@ -125,10 +125,11 @@ extern int MONTHCAL_MonthLength(int month, int year);
 
 #define DTHT_DATEFIELD  0xff      /* for hit-testing */
 
-#define DTHT_NONE     0
-#define DTHT_CHECKBOX 0x200	/* these should end at '00' , to make */
-#define DTHT_MCPOPUP  0x300     /* & DTHT_DATEFIELD 0 when DATETIME_KeyDown */
-#define DTHT_GOTFOCUS 0x400     /* tests for date-fields */
+#define DTHT_NONE       0x1000
+#define DTHT_CHECKBOX   0x2000  /* these should end at '00' , to make */
+#define DTHT_MCPOPUP    0x3000  /* & DTHT_DATEFIELD 0 when DATETIME_KeyDown */
+#define DTHT_GOTFOCUS   0x4000  /* tests for date-fields */
+#define DTHT_NODATEMASK 0xf000  /* to mask check and drop down from others */
 
 static BOOL DATETIME_SendSimpleNotify (const DATETIME_INFO *infoPtr, UINT code);
 static BOOL DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr);
@@ -138,43 +139,45 @@ static const int maxrepetition [] = {4,2,2,2,4,2,2,4,-1};
 
 
 static DWORD
-DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *lprgSysTimeArray)
+DATETIME_GetSystemTime (const DATETIME_INFO *infoPtr, SYSTEMTIME *systime)
 {
-    if (!lprgSysTimeArray) return GDT_NONE;
+    if (!systime) return GDT_NONE;
 
     if ((infoPtr->dwStyle & DTS_SHOWNONE) &&
         (SendMessageW (infoPtr->hwndCheckbut, BM_GETCHECK, 0, 0) == BST_UNCHECKED))
         return GDT_NONE;
 
-    MONTHCAL_CopyTime (&infoPtr->date, lprgSysTimeArray);
+    *systime = infoPtr->date;
 
     return GDT_VALID;
 }
 
 
 static BOOL
-DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *lprgSysTimeArray)
+DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *systime)
 {
-    if (!lprgSysTimeArray) return 0;
+    if (!systime) return 0;
 
     TRACE("%04d/%02d/%02d %02d:%02d:%02d\n",
-          lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay,
-          lprgSysTimeArray->wHour, lprgSysTimeArray->wMinute, lprgSysTimeArray->wSecond);
+          systime->wYear, systime->wMonth, systime->wDay,
+          systime->wHour, systime->wMinute, systime->wSecond);
 
     if (flag == GDT_VALID) {
-      if (lprgSysTimeArray->wYear < 1601 || lprgSysTimeArray->wYear > 30827 ||
-          lprgSysTimeArray->wMonth < 1 || lprgSysTimeArray->wMonth > 12 ||
-          lprgSysTimeArray->wDayOfWeek > 6 ||
-          lprgSysTimeArray->wDay < 1 || lprgSysTimeArray->wDay > 31 ||
-          lprgSysTimeArray->wHour > 23 ||
-          lprgSysTimeArray->wMinute > 59 ||
-          lprgSysTimeArray->wSecond > 59 ||
-          lprgSysTimeArray->wMilliseconds > 999
+      if (systime->wYear < 1601 || systime->wYear > 30827 ||
+          systime->wMonth < 1 || systime->wMonth > 12 ||
+          systime->wDay < 1 || systime->wDay > 31 ||
+          systime->wHour > 23 ||
+          systime->wMinute > 59 ||
+          systime->wSecond > 59 ||
+          systime->wMilliseconds > 999
           )
-        return 0;
+        return FALSE;
 
         infoPtr->dateValid = TRUE;
-        MONTHCAL_CopyTime (lprgSysTimeArray, &infoPtr->date);
+        infoPtr->date = *systime;
+        /* always store a valid day of week */
+        MONTHCAL_CalculateDayOfWeek(&infoPtr->date, TRUE);
+
         SendMessageW (infoPtr->hMonthCal, MCM_SETCURSEL, 0, (LPARAM)(&infoPtr->date));
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, BST_CHECKED, 0);
     } else if ((infoPtr->dwStyle & DTS_SHOWNONE) && (flag == GDT_NONE)) {
@@ -182,7 +185,7 @@ DATETIME_SetSystemTime (DATETIME_INFO *infoPtr, DWORD flag, const SYSTEMTIME *lp
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, BST_UNCHECKED, 0);
     }
     else
-        return 0;
+        return FALSE;
 
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     return TRUE;
@@ -286,7 +289,7 @@ DATETIME_SetFormatW (DATETIME_INFO *infoPtr, LPCWSTR lpszFormat)
 	    format_item = LOCALE_STIMEFORMAT;
         else /* DTS_SHORTDATEFORMAT */
 	    format_item = LOCALE_SSHORTDATE;
-	GetLocaleInfoW( GetSystemDefaultLCID(), format_item, format_buf, sizeof(format_buf)/sizeof(format_buf[0]));
+	GetLocaleInfoW(LOCALE_USER_DEFAULT, format_item, format_buf, sizeof(format_buf)/sizeof(format_buf[0]));
 	lpszFormat = format_buf;
     }
 
@@ -407,12 +410,12 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	    wsprintfW (result, fmt__2dW, date.wMonth);
 	    break;
 	case THREECHARMONTH:
-	    GetLocaleInfoW(GetSystemDefaultLCID(), LOCALE_SMONTHNAME1+date.wMonth -1, 
+	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1,
 			   buffer, sizeof(buffer)/sizeof(buffer[0]));
 	    wsprintfW (result, fmt__3sW, buffer);
 	    break;
 	case FULLMONTH:
-	    GetLocaleInfoW(GetSystemDefaultLCID(),LOCALE_SMONTHNAME1+date.wMonth -1,
+	    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+date.wMonth -1,
                            result, resultSize);
 	    break;
 	case ONELETTERAMPM:
@@ -444,19 +447,6 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
     TRACE ("arg%d=%x->[%s]\n", count, infoPtr->fieldspec[count], debugstr_w(result));
 }
 
-/* Offsets of days in the week to the weekday of january 1 in a leap year. */
-static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-
-/* returns the day in the week(0 == sunday, 6 == saturday) */
-/* day(1 == 1st, 2 == 2nd... etc), year is the  year value */
-static int DATETIME_CalculateDayOfWeek(DWORD day, DWORD month, DWORD year)
-{
-    year-=(month < 3);
-    
-    return((year + year/4 - year/100 + year/400 +
-         DayOfWeekTable[month-1] + day ) % 7);
-}
-
 static int wrap(int val, int delta, int minVal, int maxVal)
 {
     val += delta;
@@ -480,14 +470,14 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 	case TWODIGITYEAR:
 	case FULLYEAR:
 	    date->wYear = wrap(date->wYear, delta, 1752, 9999);
-	    date->wDayOfWeek = DATETIME_CalculateDayOfWeek(date->wDay,date->wMonth,date->wYear);
+	    MONTHCAL_CalculateDayOfWeek(date, TRUE);
 	    break;
 	case ONEDIGITMONTH:
 	case TWODIGITMONTH:
 	case THREECHARMONTH:
 	case FULLMONTH:
 	    date->wMonth = wrap(date->wMonth, delta, 1, 12);
-	    date->wDayOfWeek = DATETIME_CalculateDayOfWeek(date->wDay,date->wMonth,date->wYear);
+	    MONTHCAL_CalculateDayOfWeek(date, TRUE);
 	    delta = 0;
 	    /* fall through */
 	case ONEDIGITDAY:
@@ -495,7 +485,7 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 	case THREECHARDAY:
 	case FULLDAY:
 	    date->wDay = wrap(date->wDay, delta, 1, MONTHCAL_MonthLength(date->wMonth, date->wYear));
-	    date->wDayOfWeek = DATETIME_CalculateDayOfWeek(date->wDay,date->wMonth,date->wYear);
+	    MONTHCAL_CalculateDayOfWeek(date, TRUE);
 	    break;
 	case ONELETTERAMPM:
 	case TWOLETTERAMPM:
@@ -537,7 +527,7 @@ DATETIME_IncreaseField (DATETIME_INFO *infoPtr, int number, int delta)
 
 
 static void
-DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHORT *fieldWidthPtr)
+DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHORT *width)
 {
     /* fields are a fixed width, determined by the largest possible string */
     /* presumably, these widths should be language dependent */
@@ -546,10 +536,6 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
     static const WCHAR fld_d4W[] = { '2', '2', '2', '2', 0 };
     static const WCHAR fld_am1[] = { 'A', 0 };
     static const WCHAR fld_am2[] = { 'A', 'M', 0 };
-    static const WCHAR fld_day[] = { 'W', 'e', 'd', 'n', 'e', 's', 'd', 'a', 'y', 0 };
-    static const WCHAR fld_day3[] = { 'W', 'e', 'd', 0 };
-    static const WCHAR fld_mon[] = { 'S', 'e', 'p', 't', 'e', 'm', 'b', 'e', 'r', 0 };
-    static const WCHAR fld_mon3[] = { 'D', 'e', 'c', 0 };
     int spec;
     WCHAR buffer[80];
     LPCWSTR bufptr;
@@ -596,18 +582,64 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
 	    case FULLYEAR:
 	        bufptr = fld_d4W;
 	        break;
-	    case THREECHARDAY:
-	        bufptr = fld_day3;
-	        break;
-	    case FULLDAY:
-	        bufptr = fld_day;
-	        break;
 	    case THREECHARMONTH:
-	        bufptr = fld_mon3;
-	        break;
 	    case FULLMONTH:
-	        bufptr = fld_mon;
-	        break;
+	    case THREECHARDAY:
+	    case FULLDAY:
+	    {
+		static const WCHAR fld_day[] = {'W','e','d','n','e','s','d','a','y',0};
+		static const WCHAR fld_abbrday[] = {'W','e','d',0};
+		static const WCHAR fld_mon[] = {'S','e','p','t','e','m','b','e','r',0};
+		static const WCHAR fld_abbrmon[] = {'D','e','c',0};
+
+		const WCHAR *fall;
+		LCTYPE lctype;
+		INT i, max_count;
+		LONG cx;
+
+		/* choose locale data type and fallback string */
+		switch (spec) {
+		case THREECHARDAY:
+		    fall   = fld_abbrday;
+		    lctype = LOCALE_SABBREVDAYNAME1;
+		    max_count = 7;
+		    break;
+		case FULLDAY:
+		    fall   = fld_day;
+		    lctype = LOCALE_SDAYNAME1;
+		    max_count = 7;
+		    break;
+		case THREECHARMONTH:
+		    fall   = fld_abbrmon;
+		    lctype = LOCALE_SABBREVMONTHNAME1;
+		    max_count = 12;
+		    break;
+		default: /* FULLMONTH */
+		    fall   = fld_mon;
+		    lctype = LOCALE_SMONTHNAME1;
+		    max_count = 12;
+		    break;
+		}
+
+		cx = 0;
+		for (i = 0; i < max_count; i++)
+		{
+		    if(GetLocaleInfoW(LOCALE_USER_DEFAULT, lctype + i,
+			buffer, lstrlenW(buffer)))
+		    {
+			GetTextExtentPoint32W(hdc, buffer, lstrlenW(buffer), &size);
+			if (size.cx > cx) cx = size.cx;
+		    }
+		    else /* locale independent fallback on failure */
+		    {
+		        GetTextExtentPoint32W(hdc, fall, lstrlenW(fall), &size);
+			cx = size.cx;
+		        break;
+		    }
+		}
+		*width = cx;
+		return;
+	    }
 	    case ONELETTERAMPM:
 	        bufptr = fld_am1;
 	        break;
@@ -620,25 +652,21 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
         }
     }
     GetTextExtentPoint32W (hdc, bufptr, strlenW(bufptr), &size);
-    *fieldWidthPtr = size.cx;
+    *width = size.cx;
 }
 
 static void 
 DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
 {
-    int i,prevright;
-    RECT *field;
-    RECT *rcDraw = &infoPtr->rcDraw;
-    RECT *calbutton = &infoPtr->calbutton;
-    RECT *checkbox = &infoPtr->checkbox;
-    SIZE size;
-    COLORREF oldTextColor;
-    SHORT fieldWidth = 0;
-
-    /* draw control edge */
     TRACE("\n");
 
     if (infoPtr->dateValid) {
+        int i, prevright;
+        RECT *field;
+        RECT *rcDraw = &infoPtr->rcDraw;
+        SIZE size;
+        COLORREF oldTextColor;
+        SHORT fieldWidth = 0;
         HFONT oldFont = SelectObject (hdc, infoPtr->hFont);
         INT oldBkMode = SetBkMode (hdc, TRANSPARENT);
         WCHAR txt[80];
@@ -647,25 +675,36 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
         GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
         rcDraw->bottom = size.cy + 2;
 
-        prevright = checkbox->right = ((infoPtr->dwStyle & DTS_SHOWNONE) ? 18 : 2);
+        prevright = infoPtr->checkbox.right = ((infoPtr->dwStyle & DTS_SHOWNONE) ? 18 : 2);
 
         for (i = 0; i < infoPtr->nrFields; i++) {
             DATETIME_ReturnTxt (infoPtr, i, txt, sizeof(txt)/sizeof(txt[0]));
             GetTextExtentPoint32W (hdc, txt, strlenW(txt), &size);
             DATETIME_ReturnFieldWidth (infoPtr, hdc, i, &fieldWidth);
             field = &infoPtr->fieldRect[i];
-            field->left  = prevright;
-            field->right = prevright + fieldWidth;
-            field->top   = rcDraw->top;
+            field->left   = prevright;
+            field->right  = prevright + fieldWidth;
+            field->top    = rcDraw->top;
             field->bottom = rcDraw->bottom;
             prevright = field->right;
 
             if (infoPtr->dwStyle & WS_DISABLED)
                 oldTextColor = SetTextColor (hdc, comctl32_color.clrGrayText);
             else if ((infoPtr->haveFocus) && (i == infoPtr->select)) {
-                /* fill if focussed */
+                RECT selection;
+
+                /* fill if focused */
                 HBRUSH hbr = CreateSolidBrush (comctl32_color.clrActiveCaption);
-                FillRect(hdc, field, hbr);
+
+                selection.left   = 0;
+                selection.top    = 0;
+                selection.right  = size.cx;
+                selection.bottom = size.cy;
+                /* center rectangle */
+                OffsetRect(&selection, (field->right  + field->left - size.cx)/2,
+                                       (field->bottom - size.cy)/2);
+
+                FillRect(hdc, &selection, hbr);
                 DeleteObject (hbr);
                 oldTextColor = SetTextColor (hdc, comctl32_color.clrWindow);
             }
@@ -673,7 +712,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
                 oldTextColor = SetTextColor (hdc, comctl32_color.clrWindowText);
 
             /* draw the date text using the colour set above */
-            DrawTextW (hdc, txt, strlenW(txt), field, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+            DrawTextW (hdc, txt, strlenW(txt), field, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             SetTextColor (hdc, oldTextColor);
         }
         SetBkMode (hdc, oldBkMode);
@@ -681,7 +720,7 @@ DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
     }
 
     if (!(infoPtr->dwStyle & DTS_UPDOWN)) {
-        DrawFrameControl(hdc, calbutton, DFC_SCROLL,
+        DrawFrameControl(hdc, &infoPtr->calbutton, DFC_SCROLL,
                          DFCS_SCROLLDOWN | (infoPtr->bCalDepressed ? DFCS_PUSHED : 0) |
                          (infoPtr->dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0) );
     }
@@ -698,29 +737,53 @@ DATETIME_HitTest (const DATETIME_INFO *infoPtr, POINT pt)
     if (PtInRect (&infoPtr->calbutton, pt)) return DTHT_MCPOPUP;
     if (PtInRect (&infoPtr->checkbox, pt)) return DTHT_CHECKBOX;
 
-    for (i=0; i < infoPtr->nrFields; i++) {
+    for (i = 0; i < infoPtr->nrFields; i++) {
         if (PtInRect (&infoPtr->fieldRect[i], pt)) return i;
     }
 
     return DTHT_NONE;
 }
 
+/* Returns index of a closest date field from given counting to left
+   or -1 if there's no such fields at left */
+static int DATETIME_GetPrevDateField(const DATETIME_INFO *infoPtr, int i)
+{
+    for(--i; i >= 0; i--)
+    {
+        if (infoPtr->fieldspec[i] & DTHT_DATEFIELD) return i;
+    }
+    return -1;
+}
 
 static LRESULT
 DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
 {
     POINT pt;
-    int old, new;
+    int new;
 
     pt.x = x;
     pt.y = y;
-    old = infoPtr->select;
     new = DATETIME_HitTest (infoPtr, pt);
 
-    /* FIXME: might be conditions where we don't want to update infoPtr->select */
-    infoPtr->select = new;
-
     SetFocus(infoPtr->hwndSelf);
+
+    if (!(new & DTHT_NODATEMASK) || (new == DTHT_NONE))
+    {
+        if (new == DTHT_NONE)
+            new = infoPtr->nrFields - 1;
+        else
+        {
+            /* hitting string part moves selection to next date field to left */
+            if (infoPtr->fieldspec[new] & DT_STRING)
+            {
+                new = DATETIME_GetPrevDateField(infoPtr, new);
+                if (new == -1) return 0;
+            }
+            /* never select full day of week */
+            if (infoPtr->fieldspec[new] == FULLDAY) return 0;
+        }
+    }
+    infoPtr->select = new;
 
     if (infoPtr->select == DTHT_MCPOPUP) {
         RECT rcMonthCal;
@@ -746,20 +809,23 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, INT x, INT y)
 
         if(IsWindowVisible(infoPtr->hMonthCal)) {
             ShowWindow(infoPtr->hMonthCal, SW_HIDE);
+            infoPtr->bDropdownEnabled = FALSE;
+            DATETIME_SendSimpleNotify (infoPtr, DTN_CLOSEUP);
         } else {
             const SYSTEMTIME *lprgSysTimeArray = &infoPtr->date;
             TRACE("update calendar %04d/%02d/%02d\n", 
             lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay);
             SendMessageW(infoPtr->hMonthCal, MCM_SETCURSEL, 0, (LPARAM)(&infoPtr->date));
 
-            if (infoPtr->bDropdownEnabled)
+            if (infoPtr->bDropdownEnabled) {
                 ShowWindow(infoPtr->hMonthCal, SW_SHOW);
+                DATETIME_SendSimpleNotify (infoPtr, DTN_DROPDOWN);
+            }
             infoPtr->bDropdownEnabled = TRUE;
         }
 
         TRACE ("dt:%p mc:%p mc parent:%p, desktop:%p\n",
                infoPtr->hwndSelf, infoPtr->hMonthCal, infoPtr->hwndNotify, GetDesktopWindow ());
-        DATETIME_SendSimpleNotify (infoPtr, DTN_DROPDOWN);
     }
 
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
@@ -865,7 +931,7 @@ DATETIME_EraseBackground (const DATETIME_INFO *infoPtr, HDC hdc)
 
 
 static LRESULT
-DATETIME_Notify (DATETIME_INFO *infoPtr, LPNMHDR lpnmh)
+DATETIME_Notify (DATETIME_INFO *infoPtr, const NMHDR *lpnmh)
 {
     TRACE ("Got notification %x from %p\n", lpnmh->code, lpnmh->hwndFrom);
     TRACE ("info: %p %p %p\n", infoPtr->hwndSelf, infoPtr->hMonthCal, infoPtr->hUpdown);
@@ -879,9 +945,10 @@ DATETIME_Notify (DATETIME_INFO *infoPtr, LPNMHDR lpnmh)
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, BST_CHECKED, 0);
         InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
         DATETIME_SendDateTimeChangeNotify (infoPtr);
+        DATETIME_SendSimpleNotify(infoPtr, DTN_CLOSEUP);
     }
     if ((lpnmh->hwndFrom == infoPtr->hUpdown) && (lpnmh->code == UDN_DELTAPOS)) {
-        LPNMUPDOWN lpnmud = (LPNMUPDOWN)lpnmh;
+        const NM_UPDOWN *lpnmud = (const NM_UPDOWN*)lpnmh;
         TRACE("Delta pos %d\n", lpnmud->iDelta);
         infoPtr->pendingUpdown = lpnmud->iDelta;
     }
@@ -964,15 +1031,14 @@ DATETIME_Char (DATETIME_INFO *infoPtr, WPARAM vkCode)
             case TWODIGITYEAR:
                 date->wYear = date->wYear - (date->wYear%100) +
                         (date->wYear%10)*10 + num;
-                date->wDayOfWeek = DATETIME_CalculateDayOfWeek(
-                        date->wDay,date->wMonth,date->wYear);
+                MONTHCAL_CalculateDayOfWeek(date, TRUE);
                 DATETIME_SendDateTimeChangeNotify (infoPtr);
                 break;
             case INVALIDFULLYEAR:
             case FULLYEAR:
-                date->wYear = (date->wYear%1000)*10 + num;
-                date->wDayOfWeek = DATETIME_CalculateDayOfWeek(
-                        date->wDay,date->wMonth,date->wYear);
+                /* reset current year initialy */
+                date->wYear = ((date->wYear/1000) ? 0 : 1)*(date->wYear%1000)*10 + num;
+                MONTHCAL_CalculateDayOfWeek(date, TRUE);
                 DATETIME_SendDateTimeChangeNotify (infoPtr);
                 break;
             case ONEDIGITMONTH:
@@ -981,8 +1047,7 @@ DATETIME_Char (DATETIME_INFO *infoPtr, WPARAM vkCode)
                     date->wMonth = num;
                 else
                     date->wMonth = (date->wMonth%10)*10+num;
-                date->wDayOfWeek = DATETIME_CalculateDayOfWeek(
-                        date->wDay,date->wMonth,date->wYear);
+                MONTHCAL_CalculateDayOfWeek(date, TRUE);
                 DATETIME_SendDateTimeChangeNotify (infoPtr);
                 break;
             case ONEDIGITDAY:
@@ -992,8 +1057,7 @@ DATETIME_Char (DATETIME_INFO *infoPtr, WPARAM vkCode)
                     date->wDay = num;
                 else
                     date->wDay = newDays;
-                date->wDayOfWeek = DATETIME_CalculateDayOfWeek(
-                        date->wDay,date->wMonth,date->wYear);
+                MONTHCAL_CalculateDayOfWeek(date, TRUE);
                 DATETIME_SendDateTimeChangeNotify (infoPtr);
                 break;
             case ONEDIGIT12HOUR:
@@ -1126,9 +1190,9 @@ DATETIME_SendDateTimeChangeNotify (const DATETIME_INFO *infoPtr)
     dtdtc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
     dtdtc.nmhdr.code     = DTN_DATETIMECHANGE;
 
-    dtdtc.dwFlags = (infoPtr->dwStyle & DTS_SHOWNONE) ? GDT_NONE : GDT_VALID;
+    dtdtc.dwFlags = infoPtr->dateValid ? GDT_VALID : GDT_NONE;
 
-    MONTHCAL_CopyTime (&infoPtr->date, &dtdtc.st);
+    dtdtc.st = infoPtr->date;
     return (BOOL) SendMessageW (infoPtr->hwndNotify, WM_NOTIFY,
                                 dtdtc.nmhdr.idFrom, (LPARAM)&dtdtc);
 }
@@ -1186,12 +1250,27 @@ DATETIME_Size (DATETIME_INFO *infoPtr, INT width, INT height)
     return 0;
 }
 
+static LRESULT
+DATETIME_StyleChanging(DATETIME_INFO *infoPtr, WPARAM wStyleType, STYLESTRUCT *lpss)
+{
+    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
+          wStyleType, lpss->styleOld, lpss->styleNew);
+
+    /* block DTS_SHOWNONE change */
+    if ((lpss->styleNew ^ lpss->styleOld) & DTS_SHOWNONE)
+    {
+        if (lpss->styleOld & DTS_SHOWNONE)
+            lpss->styleNew |= DTS_SHOWNONE;
+        else
+            lpss->styleNew &= ~DTS_SHOWNONE;
+    }
+
+    return 0;
+}
 
 static LRESULT 
 DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lpss)
 {
-    static const WCHAR buttonW[] = { 'b', 'u', 't', 't', 'o', 'n', 0 };
-
     TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
           wStyleType, lpss->styleOld, lpss->styleNew);
 
@@ -1200,7 +1279,7 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
     infoPtr->dwStyle = lpss->styleNew;
 
     if ( !(lpss->styleOld & DTS_SHOWNONE) && (lpss->styleNew & DTS_SHOWNONE) ) {
-        infoPtr->hwndCheckbut = CreateWindowExW (0, buttonW, 0, WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+        infoPtr->hwndCheckbut = CreateWindowExW (0, WC_BUTTONW, 0, WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
          					 2, 2, 13, 13, infoPtr->hwndSelf, 0, 
 						(HINSTANCE)GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_HINSTANCE), 0);
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, 1, 0);
@@ -1235,7 +1314,6 @@ DATETIME_SetFont (DATETIME_INFO *infoPtr, HFONT font, BOOL repaint)
 static LRESULT
 DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
 {
-    static const WCHAR SysMonthCal32W[] = { 'S', 'y', 's', 'M', 'o', 'n', 't', 'h', 'C', 'a', 'l', '3', '2', 0 };
     DATETIME_INFO *infoPtr = Alloc (sizeof(DATETIME_INFO));
     STYLESTRUCT ss = { 0, lpcs->style };
 
@@ -1256,7 +1334,7 @@ DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     DATETIME_SetFormatW (infoPtr, 0);
 
     /* create the monthcal control */
-    infoPtr->hMonthCal = CreateWindowExW (0, SysMonthCal32W, 0, WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS, 
+    infoPtr->hMonthCal = CreateWindowExW (0, MONTHCAL_CLASSW, 0, WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS,
 					  0, 0, 0, 0, infoPtr->hwndSelf, 0, 0, 0);
 
     /* initialize info structure */
@@ -1281,8 +1359,31 @@ DATETIME_Destroy (DATETIME_INFO *infoPtr)
     if (infoPtr->hMonthCal) 
         DestroyWindow(infoPtr->hMonthCal);
     SetWindowLongPtrW( infoPtr->hwndSelf, 0, 0 ); /* clear infoPtr */
+    Free (infoPtr->buflen);
+    Free (infoPtr->fieldRect);
+    Free (infoPtr->fieldspec);
     Free (infoPtr);
     return 0;
+}
+
+
+static INT
+DATETIME_GetText (DATETIME_INFO *infoPtr, INT count, LPWSTR dst)
+{
+    WCHAR buf[80];
+    int i;
+
+    if (!dst || (count <= 0)) return 0;
+
+    dst[0] = 0;
+    for (i = 0; i < infoPtr->nrFields; i++)
+    {
+        DATETIME_ReturnTxt(infoPtr, i, buf, sizeof(buf)/sizeof(buf[0]));
+        if ((strlenW(dst) + strlenW(buf)) < count)
+            strcatW(dst, buf);
+        else break;
+    }
+    return strlenW(dst);
 }
 
 
@@ -1385,6 +1486,9 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         return DATETIME_Command (infoPtr, wParam, lParam);
 
+    case WM_STYLECHANGING:
+        return DATETIME_StyleChanging(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
+
     case WM_STYLECHANGED:
         return DATETIME_StyleChanged(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
 
@@ -1393,6 +1497,12 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_GETFONT:
         return (LRESULT) infoPtr->hFont;
+
+    case WM_GETTEXT:
+        return (LRESULT) DATETIME_GetText(infoPtr, wParam, (LPWSTR)lParam);
+
+    case WM_SETTEXT:
+        return CB_ERR;
 
     default:
 	if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))

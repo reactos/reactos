@@ -171,6 +171,15 @@ NdisMAllocateSharedMemory(
 
   NDIS_DbgPrint(MAX_TRACE,("Called.\n"));
 
+  if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+  {
+      KeBugCheckEx(BUGCODE_ID_DRIVER,
+                   (ULONG_PTR)MiniportAdapterHandle,
+                   Length,
+                   0,
+                   1);
+  }
+
   *VirtualAddress = Adapter->NdisMiniportBlock.SystemAdapterObject->DmaOperations->AllocateCommonBuffer(
       Adapter->NdisMiniportBlock.SystemAdapterObject, Length, PhysicalAddress, Cached);
 }

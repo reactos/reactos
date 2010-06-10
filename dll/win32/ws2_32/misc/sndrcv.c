@@ -410,6 +410,8 @@ WSASendTo(IN  SOCKET s,
 
     if (Code == SOCKET_ERROR)
         WSASetLastError(Errno);
+    else
+        WSASetLastError(0);
 
     return Code;
 }

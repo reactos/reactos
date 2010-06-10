@@ -292,7 +292,7 @@ KspEnableEvent(
     else
     {
         /* allocate it from nonpaged pool */
-        EventEntry = ExAllocatePool(NonPagedPool, Size);
+        EventEntry = AllocateItem(NonPagedPool, Size);
     }
 
     if (!EventEntry)
@@ -529,7 +529,7 @@ KsDiscardEvent(
     }
 
     /* free event entry */
-    ExFreePool(EventEntry);
+    FreeItem(EventEntry);
 }
 
 

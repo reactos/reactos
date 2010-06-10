@@ -296,8 +296,11 @@ AfdEventSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    FCB->EventSelect = NULL;
 	else
 	    FCB->EventSelectTriggers = EventSelectInfo->Events;
-    } else
-	Status = STATUS_INVALID_PARAMETER;
+    } else {
+        FCB->EventSelect = NULL;
+        FCB->EventSelectTriggers = 0;
+	Status = STATUS_SUCCESS;
+    }
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
@@ -325,7 +328,9 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     }
 
     EnumReq->PollEvents = FCB->PollState;
-    RtlZeroMemory( EnumReq->EventStatus, sizeof(EnumReq->EventStatus) );
+    RtlCopyMemory( EnumReq->EventStatus,
+                   FCB->PollStatus,
+                   sizeof(EnumReq->EventStatus) );
 
     return UnlockAndMaybeComplete( FCB, STATUS_SUCCESS, Irp,
 				   0 );

@@ -2177,8 +2177,7 @@ xmldoc_SetSite( IObjectWithSite *iface, IUnknown *punk )
         return S_OK;
     }
 
-    if ( punk )
-        IUnknown_AddRef( punk );
+    IUnknown_AddRef( punk );
 
     if(This->site)
         IUnknown_Release( This->site );

@@ -255,7 +255,7 @@ ExInterlockedPopEntryList(IN PSINGLE_LIST_ENTRY ListHead,
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
     KeAcquireSpinLock(Lock, &OldIrql);
-    if (!ListHead->Next) OldHead = PopEntryList(ListHead);
+    OldHead = PopEntryList(ListHead);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }
@@ -269,7 +269,8 @@ ExInterlockedPushEntryList(IN PSINGLE_LIST_ENTRY ListHead,
     KIRQL OldIrql;
     PSINGLE_LIST_ENTRY OldHead = NULL;
     KeAcquireSpinLock(Lock, &OldIrql);
-    if (!ListHead->Next) OldHead = PushEntryList(ListHead, ListEntry);
+    OldHead = ListHead->Next;
+    PushEntryList(ListHead, ListEntry);
     KeReleaseSpinLock(Lock, OldIrql);
     return OldHead;
 }

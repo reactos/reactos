@@ -13,7 +13,6 @@
 
 /* Not defined in any header file */
 extern VOID WINAPI PrivateCsrssManualGuiCheck(LONG Check);
-extern VOID WINAPI PrivateCsrssInitialized();
 extern VOID WINAPI InitializeAppSwitchHook();
 
 /* GLOBALS *******************************************************************/
@@ -23,7 +22,7 @@ HINSTANCE Win32CsrDllHandle = NULL;
 static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
-  {
+{
     CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetHandle),
     CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetHandle),
     CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
@@ -82,38 +81,68 @@ static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
     CSRSS_DEFINE_API(GENERATE_CTRL_EVENT,          CsrGenerateCtrlEvent),
     CSRSS_DEFINE_API(SET_SCREEN_BUFFER_SIZE,       CsrSetScreenBufferSize),
     CSRSS_DEFINE_API(GET_CONSOLE_SELECTION_INFO,   CsrGetConsoleSelectionInfo),
+    CSRSS_DEFINE_API(GET_COMMAND_HISTORY_LENGTH,   CsrGetCommandHistoryLength),
+    CSRSS_DEFINE_API(GET_COMMAND_HISTORY,          CsrGetCommandHistory),
+    CSRSS_DEFINE_API(EXPUNGE_COMMAND_HISTORY,      CsrExpungeCommandHistory),
+    CSRSS_DEFINE_API(SET_HISTORY_NUMBER_COMMANDS,  CsrSetHistoryNumberCommands),
+    CSRSS_DEFINE_API(GET_HISTORY_INFO,             CsrGetHistoryInfo),
+    CSRSS_DEFINE_API(SET_HISTORY_INFO,             CsrSetHistoryInfo),
     { 0, 0, NULL }
-  };
+};
 
 /* FUNCTIONS *****************************************************************/
 
 BOOL WINAPI
 DllMain(HANDLE hDll,
-	DWORD dwReason,
-	LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-  if (DLL_PROCESS_ATTACH == dwReason)
+    if (DLL_PROCESS_ATTACH == dwReason)
     {
-      Win32CsrDllHandle = hDll;
-      InitializeAppSwitchHook();
+        Win32CsrDllHandle = hDll;
+        InitializeAppSwitchHook();
     }
 
-  return TRUE;
+    return TRUE;
+}
+
+/* Ensure that a captured buffer is safe to access */
+BOOL FASTCALL
+Win32CsrValidateBuffer(PCSRSS_PROCESS_DATA ProcessData, PVOID Buffer,
+                       SIZE_T NumElements, SIZE_T ElementSize)
+{
+    /* Check that the following conditions are true:
+     * 1. The start of the buffer is somewhere within the process's
+     *    shared memory section view.
+     * 2. The remaining space in the view is at least as large as the buffer.
+     *    (NB: Please don't try to "optimize" this by using multiplication
+     *    instead of division; remember that 2147483648 * 2 = 0.)
+     * 3. The buffer is DWORD-aligned.
+     */
+    ULONG_PTR Offset = (BYTE *)Buffer - (BYTE *)ProcessData->CsrSectionViewBase;
+    if (Offset >= ProcessData->CsrSectionViewSize
+            || NumElements > (ProcessData->CsrSectionViewSize - Offset) / ElementSize
+            || (Offset & (sizeof(DWORD) - 1)) != 0)
+    {
+        DPRINT1("Invalid buffer %p(%u*%u); section view is %p(%u)\n",
+                Buffer, NumElements, ElementSize,
+                ProcessData->CsrSectionViewBase, ProcessData->CsrSectionViewSize);
+        return FALSE;
+    }
+    return TRUE;
 }
 
 NTSTATUS FASTCALL
 Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                       PVOID Context)
 {
-  return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
+    return (CsrExports.CsrEnumProcessesProc)(EnumProc, Context);
 }
 
 static BOOL WINAPI
 Win32CsrInitComplete(void)
 {
-  PrivateCsrssInitialized();
-
-  return TRUE;
+    return TRUE;
 }
 
 BOOL WINAPI
@@ -122,22 +151,22 @@ Win32CsrInitialization(PCSRSS_API_DEFINITION *ApiDefinitions,
                        PCSRSS_EXPORTED_FUNCS Exports,
                        HANDLE CsrssApiHeap)
 {
-  NTSTATUS Status;
-  CsrExports = *Exports;
-  Win32CsrApiHeap = CsrssApiHeap;
+    NTSTATUS Status;
+    CsrExports = *Exports;
+    Win32CsrApiHeap = CsrssApiHeap;
 
-  Status = NtUserInitialize(0 ,NULL, NULL);
+    Status = NtUserInitialize(0, NULL, NULL);
 
-  PrivateCsrssManualGuiCheck(0);
-  CsrInitConsoleSupport();
+    PrivateCsrssManualGuiCheck(0);
+    CsrInitConsoleSupport();
 
-  *ApiDefinitions = Win32CsrApiDefinitions;
-  ServerProcs->InitCompleteProc = Win32CsrInitComplete;
-  ServerProcs->HardErrorProc = Win32CsrHardError;
-  ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
-  ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
+    *ApiDefinitions = Win32CsrApiDefinitions;
+    ServerProcs->InitCompleteProc = Win32CsrInitComplete;
+    ServerProcs->HardErrorProc = Win32CsrHardError;
+    ServerProcs->ProcessInheritProc = Win32CsrDuplicateHandleTable;
+    ServerProcs->ProcessDeletedProc = Win32CsrReleaseConsole;
 
-  return TRUE;
+    return TRUE;
 }
 
 /* EOF */

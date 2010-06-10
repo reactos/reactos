@@ -82,9 +82,7 @@ MiMapPageInHyperSpace(IN PEPROCESS Process,
     // Write the current PTE
     //
     PointerPte += Offset;
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPte = TempPte;
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     //
     // Return the address
@@ -176,9 +174,7 @@ MiMapPagesToZeroInHyperSpace(IN PMMPFN *Pages,
         // Set the correct PTE to write to, and set its new value
         //
         PointerPte--;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte, TempPte);
     } while (--NumberOfPages);
     
     //

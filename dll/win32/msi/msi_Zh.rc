@@ -30,7 +30,33 @@ STRINGTABLE DISCARDABLE
 	4 "不能打开所指定的安装软件包. 请检查文件路径后再试."
 	5 "路径 %s 没找到"
 	9 "插入软盘 %s"
-	10 "错误参数"
+	10 "Windows Installer %s\n\n" \
+	"Usage:\n" \
+	"msiexec command {required parameter} [optional parammeter]\n\n" \
+	"Install a product:\n" \
+	"\t/i {package|productcode} [property]\n" \
+	"\t/package {package|productcode} [property]\n" \
+	"\t/a package [property]\n" \
+	"Repair an installation:\n" \
+	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+	"Uninstall a product:\n" \
+	"\t/uninstall {package|productcode} [property]\n" \
+	"\t/x {package|productcode} [property]\n" \
+	"Advertise a product:\n" \
+	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+	"Apply a patch:\n" \
+	"\t/p patchpackage [property]\n" \
+	"\t/p patchpackage /a package [property]\n" \
+	"Log and UI Modifiers for above commands:\n" \
+	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+	"Register MSI Service:\n" \
+	"\t/y\n" \
+	"Unregister MSI Service:\n" \
+	"\t/z\n" \
+	"Display this help:\n" \
+	"\t/help\n" \
+	"\t/?\n"
 	11 "输入包含 %s 的文件夹"
 	12 "本功能的安装源不存在"
 	13 "本功能的网络驱动器不存在"
@@ -45,7 +71,33 @@ STRINGTABLE DISCARDABLE
 	4 "不能開啟所指定的安裝軟件包. 請檢查檔案路徑後再試."
 	5 "路徑 %s 沒找到"
 	9 "插入軟碟 %s"
-	10 "錯誤參數"
+	10 "Windows Installer %s\n\n" \
+	"Usage:\n" \
+	"msiexec command {required parameter} [optional parammeter]\n\n" \
+	"Install a product:\n" \
+	"\t/i {package|productcode} [property]\n" \
+	"\t/package {package|productcode} [property]\n" \
+	"\t/a package [property]\n" \
+	"Repair an installation:\n" \
+	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
+	"Uninstall a product:\n" \
+	"\t/uninstall {package|productcode} [property]\n" \
+	"\t/x {package|productcode} [property]\n" \
+	"Advertise a product:\n" \
+	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
+	"Apply a patch:\n" \
+	"\t/p patchpackage [property]\n" \
+	"\t/p patchpackage /a package [property]\n" \
+	"Log and UI Modifiers for above commands:\n" \
+	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
+	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
+	"Register MSI Service:\n" \
+	"\t/y\n" \
+	"Unregister MSI Service:\n" \
+	"\t/z\n" \
+	"Display this help:\n" \
+	"\t/help\n" \
+	"\t/?\n"
 	11 "輸入包含 %s 的檔案夾"
 	12 "本功能的安裝源不存在"
 	13 "本功能的網路儲存槽不存在"

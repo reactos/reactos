@@ -439,7 +439,7 @@ MiInitializeColorTables(VOID)
     MMPTE TempPte = ValidKernelPte;
     
     /* The color table starts after the ARM3 PFN database */
-    MmFreePagesByColor[0] = (PMMCOLOR_TABLES)&MmPfnDatabase[1][MmHighestPhysicalPage + 1];
+    MmFreePagesByColor[0] = (PMMCOLOR_TABLES)&MmPfnDatabase[MmHighestPhysicalPage + 1];
     
     /* Loop the PTEs. We have two color tables for each secondary color */
     PointerPte = MiAddressToPte(&MmFreePagesByColor[0][0]);
@@ -453,9 +453,8 @@ MiInitializeColorTables(VOID)
         {
             /* Get a page and map it */
             TempPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
-            ASSERT(TempPte.u.Hard.Valid == 1);
-            *PointerPte = TempPte;
-            
+            MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
             /* Zero out the page */
             RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
         }
@@ -585,8 +584,8 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
         
         /* Get the PTEs for this range */
-        PointerPte = MiAddressToPte(&MmPfnDatabase[0][BasePage]);
-        LastPte = MiAddressToPte(((ULONG_PTR)&MmPfnDatabase[0][BasePage + PageCount]) - 1);
+        PointerPte = MiAddressToPte(&MmPfnDatabase[BasePage]);
+        LastPte = MiAddressToPte(((ULONG_PTR)&MmPfnDatabase[BasePage + PageCount]) - 1);
         DPRINT("MD Type: %lx Base: %lx Count: %lx\n", MdBlock->MemoryType, BasePage, PageCount);
         
         /* Loop them */
@@ -614,9 +613,7 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 
                 /* Write out this PTE */
                 PagesLeft++;
-                ASSERT(PointerPte->u.Hard.Valid == 0);
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                *PointerPte = TempPte;
+                MI_WRITE_VALID_PTE(PointerPte, TempPte);
                 
                 /* Zero this page */
                 RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
@@ -625,49 +622,7 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             /* Next! */
             PointerPte++;
         }
-        
-        /* Get the PTEs for this range */
-        PointerPte = MiAddressToPte(&MmPfnDatabase[1][BasePage]);
-        LastPte = MiAddressToPte(((ULONG_PTR)&MmPfnDatabase[1][BasePage + PageCount]) - 1);
-        DPRINT("MD Type: %lx Base: %lx Count: %lx\n", MdBlock->MemoryType, BasePage, PageCount);
-        
-        /* Loop them */
-        while (PointerPte <= LastPte)
-        {
-            /* We'll only touch PTEs that aren't already valid */
-            if (PointerPte->u.Hard.Valid == 0)
-            {
-                /* Use the next free page */
-                TempPte.u.Hard.PageFrameNumber = FreePage;
-                ASSERT(FreePageCount != 0);
-                
-                /* Consume free pages */
-                FreePage++;
-                FreePageCount--;
-                if (!FreePageCount)
-                {
-                    /* Out of memory */
-                    KeBugCheckEx(INSTALL_MORE_MEMORY,
-                                 MmNumberOfPhysicalPages,
-                                 FreePageCount,
-                                 MxOldFreeDescriptor.PageCount,
-                                 1);
-                }
-                
-                /* Write out this PTE */
-                PagesLeft++;
-                ASSERT(PointerPte->u.Hard.Valid == 0);
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                *PointerPte = TempPte;
-                
-                /* Zero this page */
-                RtlZeroMemory(MiPteToAddress(PointerPte), PAGE_SIZE);
-            }
-            
-            /* Next! */
-            PointerPte++;
-        }
-        
+
         /* Do the next address range */
         NextEntry = MdBlock->ListEntry.Flink;
     }
@@ -706,7 +661,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (MiIsRegularMemory(LoaderBlock, PageFrameIndex))
             {
                 /* Yes we do, set it up */
-                Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+                Pfn1 = MiGetPfnEntry(PageFrameIndex);
                 Pfn1->u4.PteFrame = StartupPdIndex;
                 Pfn1->PteAddress = PointerPde;
                 Pfn1->u2.ShareCount++;
@@ -745,7 +700,7 @@ MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                             MmSizeOfNonPagedPoolInBytes)))
                         {
                             /* Get the PFN entry and make sure it too is valid */
-                            Pfn2 = MI_PFN_TO_PFNENTRY(PtePageIndex);
+                            Pfn2 = MiGetPfnEntry(PtePageIndex);
                             if ((MmIsAddressValid(Pfn2)) &&
                                 (MmIsAddressValid(Pfn2 + 1)))
                             {
@@ -785,7 +740,7 @@ MiBuildPfnDatabaseZeroPage(VOID)
     PMMPDE PointerPde;
     
     /* Grab the lowest page and check if it has no real references */
-    Pfn1 = MI_PFN_TO_PFNENTRY(MmLowestPhysicalPage);
+    Pfn1 = MiGetPfnEntry(MmLowestPhysicalPage);
     if (!(MmLowestPhysicalPage) && !(Pfn1->u3.e2.ReferenceCount))
     {
         /* Make it a bogus page to catch errors */
@@ -810,6 +765,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPFN Pfn1;
     PMMPTE PointerPte;
     PMMPDE PointerPde;
+    KIRQL OldIrql;
     
     /* Now loop through the descriptors */
     NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -860,20 +816,27 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
                 /* Get the last page of this descriptor. Note we loop backwards */
                 PageFrameIndex += PageCount - 1;
-                Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+                Pfn1 = MiGetPfnEntry(PageFrameIndex);
+                
+                /* Lock the PFN Database */
+                OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
                 while (PageCount--)
                 {
                     /* If the page really has no references, mark it as free */
                     if (!Pfn1->u3.e2.ReferenceCount)
                     {
+                        /* Add it to the free list */
                         Pfn1->u3.e1.CacheAttribute = MiNonCached;
-                        //MiInsertPageInFreeList(PageFrameIndex);
+                        MiInsertPageInFreeList(PageFrameIndex);
                     }
 
                     /* Go to the next page */
                     Pfn1--;
                     PageFrameIndex--;
                 }
+                
+                /* Release PFN database */
+                KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
                 
                 /* Done with this block */
                 break;
@@ -890,7 +853,7 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
                 /* Map these pages with the KSEG0 mapping that adds 0x80000000 */
                 PointerPte = MiAddressToPte(KSEG0_BASE + (PageFrameIndex << PAGE_SHIFT));
-                Pfn1 = MI_PFN_TO_PFNENTRY(PageFrameIndex);
+                Pfn1 = MiGetPfnEntry(PageFrameIndex);
                 while (PageCount--)
                 {
                     /* Check if the page is really unused */
@@ -940,15 +903,15 @@ MiBuildPfnDatabaseSelf(VOID)
     PMMPFN Pfn1;
     
     /* Loop the PFN database page */
-    PointerPte = MiAddressToPte(MI_PFN_TO_PFNENTRY(MmLowestPhysicalPage));
-    LastPte = MiAddressToPte(MI_PFN_TO_PFNENTRY(MmHighestPhysicalPage));
+    PointerPte = MiAddressToPte(MiGetPfnEntry(MmLowestPhysicalPage));
+    LastPte = MiAddressToPte(MiGetPfnEntry(MmHighestPhysicalPage));
     while (PointerPte <= LastPte)
     {
         /* Make sure the page is valid */
         if (PointerPte->u.Hard.Valid == 1)
         {
             /* Get the PFN entry and just mark it referenced */
-            Pfn1 = MI_PFN_TO_PFNENTRY(PointerPte->u.Hard.PageFrameNumber);
+            Pfn1 = MiGetPfnEntry(PointerPte->u.Hard.PageFrameNumber);
             Pfn1->u2.ShareCount = 1;
             Pfn1->u3.e2.ReferenceCount = 1;
         }
@@ -1258,7 +1221,7 @@ MmDumpArmPfnDatabase(VOID)
     //
     for (i = 0; i <= MmHighestPhysicalPage; i++)
     {
-        Pfn1 = MI_PFN_TO_PFNENTRY(i);
+        Pfn1 = MiGetPfnEntry(i);
         if (!Pfn1) continue;
         
         //
@@ -1516,9 +1479,7 @@ MiBuildPagedPool(VOID)
     TempPte = ValidKernelPte;
     ASSERT(PD_COUNT == 1);
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPte = TempPte;
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     //
     // Let's get back to paged pool work: size it up.
@@ -1586,14 +1547,15 @@ MiBuildPagedPool(VOID)
     //
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
-    //
-    // Allocate a page and map the first paged pool PDE
-    //
-    PageFrameIndex = MmAllocPage(MC_NPPOOL);
+    /* Allocate a page and map the first paged pool PDE */
+    PageFrameIndex = MiRemoveZeroPage(0);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
-    ASSERT(PointerPde->u.Hard.Valid == 0);
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    *PointerPde = TempPte;
+    MI_WRITE_VALID_PTE(PointerPde, TempPte);
+
+    /* Initialize the PFN entry for it */
+    MiInitializePfnForOtherProcess(PageFrameIndex,
+                                   PointerPde,
+                                   MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]);
 
     //
     // Release the PFN database lock
@@ -1845,7 +1807,7 @@ MmArmInitSystem(IN ULONG Phase,
         // Sync us up with ReactOS Mm
         //
         MiSyncARM3WithROS(MmNonPagedSystemStart, (PVOID)((ULONG_PTR)MmNonPagedPoolEnd - 1));
-        MiSyncARM3WithROS(MmPfnDatabase[0], (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
+        MiSyncARM3WithROS(MmPfnDatabase, (PVOID)((ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1));
         MiSyncARM3WithROS((PVOID)HYPER_SPACE, (PVOID)(HYPER_SPACE + PAGE_SIZE - 1));
       
         //
@@ -2026,6 +1988,12 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Size up paged pool and build the shadow system page directory */
         MiBuildPagedPool();
+        
+        /* Debugger physical memory support is now ready to be used */
+        MiDbgReadyForPhysical = TRUE;
+
+        /* Initialize the loaded module list */
+        MiInitializeLoadedModuleList(LoaderBlock);
     }
     
     //

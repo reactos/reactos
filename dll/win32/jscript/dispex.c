@@ -358,6 +358,9 @@ static HRESULT prop_put(DispatchEx *This, dispex_prop_t *prop, VARIANT *val,
 {
     HRESULT hres;
 
+    if(prop->flags & PROPF_CONST)
+        return S_OK;
+
     switch(prop->type) {
     case PROP_BUILTIN:
         if(!(prop->flags & PROPF_METHOD)) {
@@ -972,6 +975,18 @@ HRESULT jsdisp_propput_name(DispatchEx *obj, const WCHAR *name, VARIANT *val, js
         return hres;
 
     return prop_put(obj, prop, val, ei, caller);
+}
+
+HRESULT jsdisp_propput_const(DispatchEx *obj, const WCHAR *name, VARIANT *val)
+{
+    dispex_prop_t *prop;
+    HRESULT hres;
+
+    hres = ensure_prop_name(obj, name, FALSE, PROPF_ENUM|PROPF_CONST, &prop);
+    if(FAILED(hres))
+        return hres;
+
+    return VariantCopy(&prop->u.var, val);
 }
 
 HRESULT jsdisp_propput_idx(DispatchEx *obj, DWORD idx, VARIANT *val, jsexcept_t *ei, IServiceProvider *caller)

@@ -60,6 +60,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
  * content). When a ACK message is generated, the list of pair is searched for a
  * matching pair, so that the client memory handle can be returned.
  */
+
 typedef struct tagDDEPAIR
 {
   HGLOBAL     ClientMem;
@@ -2214,11 +2215,16 @@ SendMessageCallbackA(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
+  CALL_BACK_INFO CallBackInfo;
+
+  CallBackInfo.CallBack = lpCallBack;
+  CallBackInfo.Context = dwData;
+
   return NtUserMessageCall(hWnd,
                             Msg, 
                          wParam,
                          lParam,
-         (ULONG_PTR)&lpCallBack,
+       (ULONG_PTR)&CallBackInfo,
        FNID_SENDMESSAGECALLBACK,
                            TRUE);
 }
@@ -2236,11 +2242,17 @@ SendMessageCallbackW(
   SENDASYNCPROC lpCallBack,
   ULONG_PTR dwData)
 {
+
+  CALL_BACK_INFO CallBackInfo;
+
+  CallBackInfo.CallBack = lpCallBack;
+  CallBackInfo.Context = dwData;
+
   return NtUserMessageCall(hWnd,
                             Msg, 
                          wParam,
                          lParam,
-         (ULONG_PTR)&lpCallBack,
+       (ULONG_PTR)&CallBackInfo,
        FNID_SENDMESSAGECALLBACK,
                           FALSE);
 }

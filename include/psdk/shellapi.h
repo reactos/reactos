@@ -128,6 +128,19 @@ extern "C" {
 #define SHGFI_PIDL	8
 #define SHGFI_USEFILEATTRIBUTES	16
 
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+#define SHIL_LARGE        0x0
+#define SHIL_SMALL        0x1
+#define SHIL_EXTRALARGE   0x2
+#define SHIL_SYSSMALL     0x3
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+#define SHIL_JUMBO        0x4
+#define SHIL_LAST         SHIL_JUMBO
+#else
+#define SHIL_LAST         SHIL_SYSSMALL
+#endif
+#endif
+
 typedef struct _SHCREATEPROCESSINFOW
 {
     DWORD cbSize;

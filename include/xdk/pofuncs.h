@@ -1,3 +1,4 @@
+$if (_WDMDDK_)
 /******************************************************************************
  *                     Power Management Support Functions                     *
  ******************************************************************************/
@@ -73,7 +74,18 @@ PoRequestShutdownEvent(
   OUT PVOID *Event);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+$endif (_WDMDDK_)
 
+$if (_NTIFS_)
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PoQueueShutdownWorkItem(
+  IN OUT PWORK_QUEUE_ITEM WorkItem);
+#endif
+$endif (_NTIFS_)
+$if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
 NTKERNELAPI

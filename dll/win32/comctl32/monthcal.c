@@ -1,11 +1,12 @@
-/* Month calendar control
-
+/*
+ * Month calendar control
  *
  * Copyright 1998, 1999 Eric Kohl (ekohl@abo.rhein-zeitung.de)
  * Copyright 1999 Alex Priem (alexp@sci.kun.nl)
  * Copyright 1999 Chris Morgan <cmorgan@wpi.edu> and
  *		  James Abbatiello <abbeyj@wpi.edu>
  * Copyright 2000 Uwe Bonnes <bon@elektron.ikp.physik.tu-darmstadt.de>
+ * Copyright 2009 Nikolay Sivov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,9 +37,6 @@
  *    -- handle resources better (doesn't work now); 
  *    -- take care of internationalization.
  *    -- keyboard handling.
- *    -- GetRange: At the moment, we copy ranges anyway, regardless of
- *                 infoPtr->rangeValid; an invalid range is simply filled 
- *                 with zeros in SetRange.  Is this the right behavior?
  *    -- search for FIXME
  */
 
@@ -66,13 +64,18 @@ WINE_DEFAULT_DEBUG_CHANNEL(monthcal);
 #define MC_SEL_LBUTDOWN	    2	/* Left button pressed in calendar */
 #define MC_PREVPRESSED      4   /* Prev month button pressed */
 #define MC_NEXTPRESSED      8   /* Next month button pressed */
-#define MC_NEXTMONTHDELAY   350	/* when continuously pressing `next */
-										/* month', wait 500 ms before going */
-										/* to the next month */
-#define MC_NEXTMONTHTIMER   1			/* Timer ID's */
-#define MC_PREVMONTHTIMER   2
+#define MC_PREVNEXTMONTHDELAY   350	/* when continuously pressing `next/prev
+					   month', wait 500 ms before going
+					   to the next/prev month */
+#define MC_TODAYUPDATEDELAY 120000 /* time between today check for update (2 min) */
+
+#define MC_PREVNEXTMONTHTIMER   1	/* Timer ID's */
+#define MC_TODAYUPDATETIMER     2
 
 #define countof(arr) (sizeof(arr)/sizeof(arr[0]))
+
+/* convert from days to 100 nanoseconds unit - used as FILETIME unit */
+#define DAYSTO100NSECS(days) (((ULONGLONG)(days))*24*60*60*10000000)
 
 typedef struct
 {
@@ -90,23 +93,26 @@ typedef struct
     int		textWidth;
     int		height_increment;
     int		width_increment;
-    int		firstDayplace; /* place of the first day of the current month */
     INT		delta;	/* scroll rate; # of months that the */
                         /* control moves when user clicks a scroll button */
     int		visible;	/* # of months visible */
-    int		firstDay;	/* Start month calendar with firstDay's day */
-    int		firstDayHighWord;    /* High word only used externally */
+    int		firstDay;	/* Start month calendar with firstDay's day,
+				   stored in SYSTEMTIME format */
+    BOOL	firstDaySet;    /* first week day differs from locale defined */
+
+    BOOL	isUnicode;      /* value set with MCM_SETUNICODE format */
+
     int		monthRange;
     MONTHDAYSTATE *monthdayState;
     SYSTEMTIME	todaysDate;
-    DWORD	currentMonth;
-    DWORD	currentYear;
+    BOOL	todaySet;       /* Today was forced with MCM_SETTODAY */
     int		status;		/* See MC_SEL flags */
-    int		curSelDay;	/* current selected day */
-    int		firstSelDay;	/* first selected day */
+    SYSTEMTIME	firstSel;	/* first selected day */
     INT		maxSelCount;
     SYSTEMTIME	minSel;
     SYSTEMTIME	maxSel;
+    SYSTEMTIME  curSel;         /* contains currently selected year, month and day */
+    SYSTEMTIME  focusedSel;     /* date currently focused with mouse movement */
     DWORD	rangeValid;
     SYSTEMTIME	minDate;
     SYSTEMTIME	maxDate;
@@ -123,28 +129,64 @@ typedef struct
     HWND hwndNotify;    /* Window to receive the notifications */
     HWND hWndYearEdit;  /* Window Handle of edit box to handle years */
     HWND hWndYearUpDown;/* Window Handle of updown box to handle years */
+    WNDPROC EditWndProc;  /* original Edit window procedure */
 } MONTHCAL_INFO, *LPMONTHCAL_INFO;
 
-
-/* Offsets of days in the week to the weekday of january 1 in a leap year */
-static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
-
 static const WCHAR themeClass[] = { 'S','c','r','o','l','l','b','a','r',0 };
+
+/* empty SYSTEMTIME const */
+static const SYSTEMTIME st_null;
+/* valid date limits */
+static const SYSTEMTIME max_allowed_date = { .wYear = 9999, .wMonth = 12, .wDay = 31 };
+static const SYSTEMTIME min_allowed_date = { .wYear = 1752, .wMonth = 9,  .wDay = 14 };
+
 
 #define MONTHCAL_GetInfoPtr(hwnd) ((MONTHCAL_INFO *)GetWindowLongPtrW(hwnd, 0))
 
 /* helper functions  */
 
+/* send a single MCN_SELCHANGE notification */
+static inline void MONTHCAL_NotifySelectionChange(const MONTHCAL_INFO *infoPtr)
+{
+    NMSELCHANGE nmsc;
+
+    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
+    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
+    nmsc.nmhdr.code     = MCN_SELCHANGE;
+    nmsc.stSelStart     = infoPtr->minSel;
+    nmsc.stSelEnd       = infoPtr->maxSel;
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
+}
+
+/* send a single MCN_SELECT notification */
+static inline void MONTHCAL_NotifySelect(const MONTHCAL_INFO *infoPtr)
+{
+    NMSELCHANGE nmsc;
+
+    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
+    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
+    nmsc.nmhdr.code     = MCN_SELECT;
+    nmsc.stSelStart     = infoPtr->minSel;
+    nmsc.stSelEnd       = infoPtr->maxSel;
+
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
+}
+
 /* returns the number of days in any given month, checking for leap days */
 /* january is 1, december is 12 */
 int MONTHCAL_MonthLength(int month, int year)
 {
-  const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0};
-  /*Wrap around, this eases handling*/
+  const int mdays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+  /* Wrap around, this eases handling. Getting length only we shouldn't care
+     about year change here cause January and December have
+     the same day quantity */
   if(month == 0)
     month = 12;
-  if(month == 13)
+  else if(month == 13)
     month = 1;
+
+  /* special case for calendar transition year */
+  if(month == min_allowed_date.wMonth && year == min_allowed_date.wYear) return 19;
 
   /* if we have a leap year add 1 day to February */
   /* a leap year is a year either divisible by 400 */
@@ -165,17 +207,206 @@ static inline BOOL MONTHCAL_IsDateEqual(const SYSTEMTIME *first, const SYSTEMTIM
          (first->wDay  == second->wDay);
 }
 
-/* make sure that time is valid */
-static BOOL MONTHCAL_ValidateTime(SYSTEMTIME time)
+/* make sure that date fields are valid */
+static BOOL MONTHCAL_ValidateDate(const SYSTEMTIME *time)
 {
-  if(time.wMonth < 1 || time.wMonth > 12 ) return FALSE;
-  if(time.wDayOfWeek > 6) return FALSE;
-  if(time.wDay > MONTHCAL_MonthLength(time.wMonth, time.wYear))
+  if(time->wMonth < 1 || time->wMonth > 12 ) return FALSE;
+  if(time->wDayOfWeek > 6) return FALSE;
+  if(time->wDay > MONTHCAL_MonthLength(time->wMonth, time->wYear))
 	  return FALSE;
 
   return TRUE;
 }
 
+/* Copies timestamp part only.
+ *
+ * PARAMETERS
+ *
+ *  [I] from : source date
+ *  [O] to   : dest date
+ */
+static void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to)
+{
+  to->wHour   = from->wHour;
+  to->wMinute = from->wMinute;
+  to->wSecond = from->wSecond;
+}
+
+/* Copies date part only.
+ *
+ * PARAMETERS
+ *
+ *  [I] from : source date
+ *  [O] to   : dest date
+ */
+static void MONTHCAL_CopyDate(const SYSTEMTIME *from, SYSTEMTIME *to)
+{
+  to->wYear  = from->wYear;
+  to->wMonth = from->wMonth;
+  to->wDay   = from->wDay;
+  to->wDayOfWeek = from->wDayOfWeek;
+}
+
+/* Compares two dates in SYSTEMTIME format
+ *
+ * PARAMETERS
+ *
+ *  [I] first  : pointer to valid first date data to compare
+ *  [I] second : pointer to valid second date data to compare
+ *
+ * RETURN VALUE
+ *
+ *  -1 : first <  second
+ *   0 : first == second
+ *   1 : first >  second
+ *
+ *  Note that no date validation performed, alreadt validated values expected.
+ */
+static LONG MONTHCAL_CompareSystemTime(const SYSTEMTIME *first, const SYSTEMTIME *second)
+{
+  FILETIME ft_first, ft_second;
+
+  SystemTimeToFileTime(first, &ft_first);
+  SystemTimeToFileTime(second, &ft_second);
+
+  return CompareFileTime(&ft_first, &ft_second);
+}
+
+static LONG MONTHCAL_CompareMonths(const SYSTEMTIME *first, const SYSTEMTIME *second)
+{
+  SYSTEMTIME st_first, st_second;
+
+  st_first = st_second = st_null;
+  MONTHCAL_CopyDate(first, &st_first);
+  MONTHCAL_CopyDate(second, &st_second);
+  st_first.wDay = st_second.wDay = 1;
+
+  return MONTHCAL_CompareSystemTime(&st_first, &st_second);
+}
+
+static LONG MONTHCAL_CompareDate(const SYSTEMTIME *first, const SYSTEMTIME *second)
+{
+  SYSTEMTIME st_first, st_second;
+
+  st_first = st_second = st_null;
+  MONTHCAL_CopyDate(first, &st_first);
+  MONTHCAL_CopyDate(second, &st_second);
+
+  return MONTHCAL_CompareSystemTime(&st_first, &st_second);
+}
+
+/* Checks largest possible date range and configured one
+ *
+ * PARAMETERS
+ *
+ *  [I] infoPtr : valid pointer to control data
+ *  [I] date    : pointer to valid date data to check
+ *  [I] fix     : make date fit valid range
+ *
+ * RETURN VALUE
+ *
+ *  TRUE  - date whithin largest and configured range
+ *  FALSE - date is outside largest or configured range
+ */
+static BOOL MONTHCAL_IsDateInValidRange(const MONTHCAL_INFO *infoPtr,
+                                        SYSTEMTIME *date, BOOL fix)
+{
+  const SYSTEMTIME *fix_st = NULL;
+
+  if(MONTHCAL_CompareSystemTime(date, &max_allowed_date) == 1) {
+     fix_st = &max_allowed_date;
+  }
+  else if(MONTHCAL_CompareSystemTime(date, &min_allowed_date) == -1) {
+     fix_st = &min_allowed_date;
+  }
+  else if(infoPtr->rangeValid & GDTR_MAX) {
+     if((MONTHCAL_CompareSystemTime(date, &infoPtr->maxDate) == 1)) {
+       fix_st = &infoPtr->maxDate;
+     }
+  }
+  else if(infoPtr->rangeValid & GDTR_MIN) {
+     if((MONTHCAL_CompareSystemTime(date, &infoPtr->minDate) == -1)) {
+       fix_st = &infoPtr->minDate;
+     }
+  }
+
+  if (fix && fix_st) {
+    date->wYear  = fix_st->wYear;
+    date->wMonth = fix_st->wMonth;
+  }
+
+  return fix_st ? FALSE : TRUE;
+}
+
+/* Checks passed range width with configured maximum selection count
+ *
+ * PARAMETERS
+ *
+ *  [I] infoPtr : valid pointer to control data
+ *  [I] range0  : pointer to valid date data (requested bound)
+ *  [I] range1  : pointer to valid date data (primary bound)
+ *  [O] adjust  : returns adjusted range bound to fit maximum range (optional)
+ *
+ *  Adjust value computed basing on primary bound and current maximum selection
+ *  count. For simple range check (without adjusted value required) (range0, range1)
+ *  relation means nothing.
+ *
+ * RETURN VALUE
+ *
+ *  TRUE  - range is shorter or equal to maximum
+ *  FALSE - range is larger than maximum
+ */
+static BOOL MONTHCAL_IsSelRangeValid(const MONTHCAL_INFO *infoPtr,
+                                     const SYSTEMTIME *range0,
+                                     const SYSTEMTIME *range1,
+                                     SYSTEMTIME *adjust)
+{
+  ULARGE_INTEGER ul_range0, ul_range1, ul_diff;
+  FILETIME ft_range0, ft_range1;
+  LONG cmp;
+
+  SystemTimeToFileTime(range0, &ft_range0);
+  SystemTimeToFileTime(range1, &ft_range1);
+
+  ul_range0.u.LowPart  = ft_range0.dwLowDateTime;
+  ul_range0.u.HighPart = ft_range0.dwHighDateTime;
+  ul_range1.u.LowPart  = ft_range1.dwLowDateTime;
+  ul_range1.u.HighPart = ft_range1.dwHighDateTime;
+
+  cmp = CompareFileTime(&ft_range0, &ft_range1);
+
+  if(cmp == 1)
+     ul_diff.QuadPart = ul_range0.QuadPart - ul_range1.QuadPart;
+  else
+     ul_diff.QuadPart = -ul_range0.QuadPart + ul_range1.QuadPart;
+
+  if(ul_diff.QuadPart >= DAYSTO100NSECS(infoPtr->maxSelCount)) {
+
+     if(adjust) {
+       if(cmp == 1)
+          ul_range0.QuadPart = ul_range1.QuadPart + DAYSTO100NSECS(infoPtr->maxSelCount - 1);
+       else
+          ul_range0.QuadPart = ul_range1.QuadPart - DAYSTO100NSECS(infoPtr->maxSelCount - 1);
+
+       ft_range0.dwLowDateTime  = ul_range0.u.LowPart;
+       ft_range0.dwHighDateTime = ul_range0.u.HighPart;
+       FileTimeToSystemTime(&ft_range0, adjust);
+     }
+
+     return FALSE;
+  }
+  else return TRUE;
+}
+
+/* Used in MCM_SETRANGE/MCM_SETSELRANGE to determine resulting time part.
+   Milliseconds are intentionally not validated. */
+static BOOL MONTHCAL_ValidateTime(const SYSTEMTIME *time)
+{
+  if((time->wHour > 24) || (time->wMinute > 59) || (time->wSecond > 59))
+    return FALSE;
+  else
+    return TRUE;
+}
 
 /* Note:Depending on DST, this may be offset by a day.
    Need to find out if we're on a DST place & adjust the clock accordingly.
@@ -184,14 +415,89 @@ static BOOL MONTHCAL_ValidateTime(SYSTEMTIME time)
    0 = Sunday.
 */
 
-/* returns the day in the week(0 == sunday, 6 == saturday) */
-/* day(1 == 1st, 2 == 2nd... etc), year is the  year value */
-static int MONTHCAL_CalculateDayOfWeek(DWORD day, DWORD month, DWORD year)
+/* Returns the day in the week
+ *
+ * PARAMETERS
+ *  [i] date    : input date
+ *  [I] inplace : set calculated value back to date structure
+ *
+ * RETURN VALUE
+ *   day of week in SYSTEMTIME format: (0 == sunday,..., 6 == saturday)
+ */
+int MONTHCAL_CalculateDayOfWeek(SYSTEMTIME *date, BOOL inplace)
 {
-  year-=(month < 3);
+  SYSTEMTIME st = st_null;
+  FILETIME ft;
 
-  return((year + year/4 - year/100 + year/400 +
-         DayOfWeekTable[month-1] + day ) % 7);
+  MONTHCAL_CopyDate(date, &st);
+
+  SystemTimeToFileTime(&st, &ft);
+  FileTimeToSystemTime(&ft, &st);
+
+  if (inplace) date->wDayOfWeek = st.wDayOfWeek;
+
+  return st.wDayOfWeek;
+}
+
+/* properly updates date to point on next month */
+static inline void MONTHCAL_GetNextMonth(SYSTEMTIME *date)
+{
+  if(++date->wMonth > 12)
+  {
+    date->wMonth = 1;
+    date->wYear++;
+  }
+  MONTHCAL_CalculateDayOfWeek(date, TRUE);
+}
+
+/* properly updates date to point on prev month */
+static inline void MONTHCAL_GetPrevMonth(SYSTEMTIME *date)
+{
+  if(--date->wMonth < 1)
+  {
+    date->wMonth = 12;
+    date->wYear--;
+  }
+  MONTHCAL_CalculateDayOfWeek(date, TRUE);
+}
+
+/* Returns full date for a first currently visible day */
+static void MONTHCAL_GetMinDate(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *date)
+{
+  SYSTEMTIME st_first = infoPtr->curSel;
+  int firstDay;
+
+  st_first.wDay = 1;
+  firstDay = MONTHCAL_CalculateDayOfWeek(&st_first, FALSE);
+
+  *date = infoPtr->curSel;
+  MONTHCAL_GetPrevMonth(date);
+
+  date->wDay = MONTHCAL_MonthLength(date->wMonth, date->wYear) +
+               (infoPtr->firstDay - firstDay) % 7 + 1;
+
+  if(date->wDay > MONTHCAL_MonthLength(date->wMonth, date->wYear))
+    date->wDay -= 7;
+
+  /* fix day of week */
+  MONTHCAL_CalculateDayOfWeek(date, TRUE);
+}
+
+/* Returns full date for a last currently visible day */
+static void MONTHCAL_GetMaxDate(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *date)
+{
+  SYSTEMTIME st;
+
+  *date = infoPtr->curSel;
+  MONTHCAL_GetNextMonth(date);
+
+  MONTHCAL_GetMinDate(infoPtr, &st);
+  /* Use month length to get max day. 42 means max day count in calendar area */
+  date->wDay = 42 - (MONTHCAL_MonthLength(st.wMonth, st.wYear) - st.wDay + 1) -
+                     MONTHCAL_MonthLength(infoPtr->curSel.wMonth, infoPtr->curSel.wYear);
+
+  /* fix day of week */
+  MONTHCAL_CalculateDayOfWeek(date, TRUE);
 }
 
 /* From a given point, calculate the row (weekpos), column(daypos)
@@ -202,6 +508,7 @@ static int MONTHCAL_CalcDayFromPos(const MONTHCAL_INFO *infoPtr, int x, int y,
 {
   int retval, firstDay;
   RECT rcClient;
+  SYSTEMTIME st = infoPtr->curSel;
 
   GetClientRect(infoPtr->hwndSelf, &rcClient);
 
@@ -214,44 +521,53 @@ static int MONTHCAL_CalcDayFromPos(const MONTHCAL_INFO *infoPtr, int x, int y,
   *daypos = (x - infoPtr->days.left ) / infoPtr->width_increment;
   *weekpos = (y - infoPtr->days.top ) / infoPtr->height_increment;
 
-  firstDay = (MONTHCAL_CalculateDayOfWeek(1, infoPtr->currentMonth, infoPtr->currentYear)+6 - infoPtr->firstDay)%7;
+  st.wDay = 1;
+  firstDay = (MONTHCAL_CalculateDayOfWeek(&st, FALSE) + 6 - infoPtr->firstDay) % 7;
   retval = *daypos + (7 * *weekpos) - firstDay;
   return retval;
 }
 
-/* day is the day of the month, 1 == 1st day of the month */
-/* sets x and y to be the position of the day */
-/* x == day, y == week where(0,0) == firstDay, 1st week */
-static void MONTHCAL_CalcDayXY(const MONTHCAL_INFO *infoPtr, int day, int month,
-                                 int *x, int *y)
+/* Sets the RECT struct r to the rectangle around the date
+ *
+ * PARAMETERS
+ *
+ *  [I] infoPtr : pointer to control data
+ *  [I] date : date value
+ *  [O] x : day column (zero based)
+ *  [O] y : week column (zero based)
+ */
+static void MONTHCAL_CalcDayXY(const MONTHCAL_INFO *infoPtr,
+                               const SYSTEMTIME *date, int *x, int *y)
 {
-  int firstDay, prevMonth;
+  SYSTEMTIME st = infoPtr->curSel;
+  LONG cmp;
+  int first;
 
-  firstDay = (MONTHCAL_CalculateDayOfWeek(1, infoPtr->currentMonth, infoPtr->currentYear) +6 - infoPtr->firstDay)%7;
+  st.wDay = 1;
+  first = (MONTHCAL_CalculateDayOfWeek(&st, FALSE) + 6 - infoPtr->firstDay) % 7;
 
-  if(month==infoPtr->currentMonth) {
-    *x = (day + firstDay) % 7;
-    *y = (day + firstDay - *x) / 7;
-    return;
-  }
-  if(month < infoPtr->currentMonth) {
-    prevMonth = month - 1;
-    if(prevMonth==0)
-       prevMonth = 12;
+  cmp = MONTHCAL_CompareMonths(date, &infoPtr->curSel);
 
-    *x = (MONTHCAL_MonthLength(prevMonth, infoPtr->currentYear) - firstDay) % 7;
+  /* previous month */
+  if(cmp == -1) {
+    *x = (first - MONTHCAL_MonthLength(date->wMonth, infoPtr->curSel.wYear) + date->wDay) % 7;
     *y = 0;
     return;
   }
 
-  *y = MONTHCAL_MonthLength(month, infoPtr->currentYear - 1) / 7;
-  *x = (day + firstDay + MONTHCAL_MonthLength(month,
-       infoPtr->currentYear)) % 7;
+  /* next month calculation is same as for current,
+     just add current month length */
+  if(cmp == 1) {
+    first += MONTHCAL_MonthLength(infoPtr->curSel.wMonth, infoPtr->curSel.wYear);
+  }
+
+  *x = (date->wDay + first) % 7;
+  *y = (date->wDay + first - *x) / 7;
 }
 
 
 /* x: column(day), y: row(week) */
-static void MONTHCAL_CalcDayRect(const MONTHCAL_INFO *infoPtr, RECT *r, int x, int y)
+static inline void MONTHCAL_CalcDayRect(const MONTHCAL_INFO *infoPtr, RECT *r, int x, int y)
 {
   r->left = infoPtr->days.left + x * infoPtr->width_increment;
   r->right = r->left + infoPtr->width_increment;
@@ -260,29 +576,67 @@ static void MONTHCAL_CalcDayRect(const MONTHCAL_INFO *infoPtr, RECT *r, int x, i
 }
 
 
-/* sets the RECT struct r to the rectangle around the day and month */
-/* day is the day value of the month(1 == 1st), month is the month */
-/* value(january == 1, december == 12) */
+/* Sets the RECT struct r to the rectangle around the date */
 static inline void MONTHCAL_CalcPosFromDay(const MONTHCAL_INFO *infoPtr,
-                                            int day, int month, RECT *r)
+                                           const SYSTEMTIME *date, RECT *r)
 {
   int x, y;
 
-  MONTHCAL_CalcDayXY(infoPtr, day, month, &x, &y);
+  MONTHCAL_CalcDayXY(infoPtr, date, &x, &y);
   MONTHCAL_CalcDayRect(infoPtr, r, x, y);
 }
 
+/* Focused day helper:
 
-/* day is the day in the month(1 == 1st of the month) */
-/* month is the month value(1 == january, 12 == december) */
-static void MONTHCAL_CircleDay(const MONTHCAL_INFO *infoPtr, HDC hdc, int day, int month)
+   - set focused date to given value;
+   - reset to zero value if NULL passed;
+   - invalidate previous and new day rectangle only if needed.
+
+   Returns TRUE if focused day changed, FALSE otherwise.
+*/
+static BOOL MONTHCAL_SetDayFocus(MONTHCAL_INFO *infoPtr, const SYSTEMTIME *st)
+{
+  RECT r;
+
+  if(st)
+  {
+    /* there's nothing to do if it's the same date,
+       mouse move within same date rectangle case */
+    if(MONTHCAL_IsDateEqual(&infoPtr->focusedSel, st)) return FALSE;
+
+    /* invalidate old focused day */
+    MONTHCAL_CalcPosFromDay(infoPtr, &infoPtr->focusedSel, &r);
+    InvalidateRect(infoPtr->hwndSelf, &r, FALSE);
+
+    infoPtr->focusedSel = *st;
+  }
+
+  MONTHCAL_CalcPosFromDay(infoPtr, &infoPtr->focusedSel, &r);
+
+  if(!st && MONTHCAL_ValidateDate(&infoPtr->focusedSel))
+    infoPtr->focusedSel = st_null;
+
+  /* on set invalidates new day, on reset clears previous focused day */
+  InvalidateRect(infoPtr->hwndSelf, &r, FALSE);
+
+  return TRUE;
+}
+
+/* Draw today day mark rectangle
+ *
+ * [I] hdc : context to draw in
+ * [I] day : day to mark with rectangle
+ *
+ */
+static void MONTHCAL_CircleDay(const MONTHCAL_INFO *infoPtr, HDC hdc,
+                               const SYSTEMTIME *date)
 {
   HPEN hRedPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
   HPEN hOldPen2 = SelectObject(hdc, hRedPen);
   HBRUSH hOldBrush;
   RECT day_rect;
 
-  MONTHCAL_CalcPosFromDay(infoPtr, day, month, &day_rect);
+  MONTHCAL_CalcPosFromDay(infoPtr, date, &day_rect);
 
   hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
   Rectangle(hdc, day_rect.left, day_rect.top, day_rect.right, day_rect.bottom);
@@ -292,78 +646,64 @@ static void MONTHCAL_CircleDay(const MONTHCAL_INFO *infoPtr, HDC hdc, int day, i
   SelectObject(hdc, hOldPen2);
 }
 
-static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, int day, int month,
-                             int x, int y, int bold)
+static void MONTHCAL_DrawDay(const MONTHCAL_INFO *infoPtr, HDC hdc, const SYSTEMTIME *st,
+                             int bold, const PAINTSTRUCT *ps)
 {
   static const WCHAR fmtW[] = { '%','d',0 };
   WCHAR buf[10];
-  RECT r;
-  static BOOL haveBoldFont, haveSelectedDay = FALSE;
+  RECT r, r_temp;
+  static BOOL bold_selected;
+  BOOL selected_day = FALSE;
   HBRUSH hbr;
   COLORREF oldCol = 0;
-  COLORREF oldBk = 0;
-
-  wsprintfW(buf, fmtW, day);
+  COLORREF oldBk  = 0;
 
 /* No need to check styles: when selection is not valid, it is set to zero.
  * 1<day<31, so everything is OK.
  */
 
-  MONTHCAL_CalcDayRect(infoPtr, &r, x, y);
+  MONTHCAL_CalcPosFromDay(infoPtr, st, &r);
+  if(!IntersectRect(&r_temp, &(ps->rcPaint), &r)) return;
 
-  if((day>=infoPtr->minSel.wDay) && (day<=infoPtr->maxSel.wDay)
-       && (month==infoPtr->currentMonth)) {
-    RECT r2;
+  if ((MONTHCAL_CompareDate(st, &infoPtr->minSel) >= 0) &&
+      (MONTHCAL_CompareDate(st, &infoPtr->maxSel) <= 0)) {
 
-    TRACE("%d %d %d\n",day, infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
+    TRACE("%d %d %d\n", st->wDay, infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
     TRACE("%s\n", wine_dbgstr_rect(&r));
     oldCol = SetTextColor(hdc, infoPtr->monthbk);
     oldBk = SetBkColor(hdc, infoPtr->trailingtxt);
     hbr = GetSysColorBrush(COLOR_HIGHLIGHT);
     FillRect(hdc, &r, hbr);
 
-    /* FIXME: this may need to be changed now b/c of the other
-	drawing changes 11/3/99 CMM */
-    r2.left   = r.left - 0.25 * infoPtr->textWidth;
-    r2.top    = r.top;
-    r2.right  = r.left + 0.5 * infoPtr->textWidth;
-    r2.bottom = r.bottom;
-    if(haveSelectedDay) FillRect(hdc, &r2, hbr);
-      haveSelectedDay = TRUE;
-  } else {
-    haveSelectedDay = FALSE;
+    selected_day = TRUE;
   }
 
-  /* need to add some code for multiple selections */
-
-  if((bold) &&(!haveBoldFont)) {
+  if(bold && !bold_selected) {
     SelectObject(hdc, infoPtr->hBoldFont);
-    haveBoldFont = TRUE;
+    bold_selected = TRUE;
   }
-  if((!bold) &&(haveBoldFont)) {
+  if(!bold && bold_selected) {
     SelectObject(hdc, infoPtr->hFont);
-    haveBoldFont = FALSE;
+    bold_selected = FALSE;
   }
 
   SetBkMode(hdc,TRANSPARENT);
+  wsprintfW(buf, fmtW, st->wDay);
   DrawTextW(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
 
-  if(haveSelectedDay) {
+  if(selected_day) {
     SetTextColor(hdc, oldCol);
     SetBkColor(hdc, oldBk);
   }
-
-  /* draw a rectangle around the currently selected days text */
-  if((day==infoPtr->curSelDay) && (month==infoPtr->currentMonth))
-    DrawFocusRect(hdc, &r);
 }
 
 
-static void paint_button (const MONTHCAL_INFO *infoPtr, HDC hdc, BOOL btnNext,
-                          BOOL pressed, RECT* r)
+static void MONTHCAL_PaintButton(MONTHCAL_INFO *infoPtr, HDC hdc, BOOL btnNext)
 {
     HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
-    
+    RECT *r = btnNext ? &infoPtr->titlebtnnext : &infoPtr->titlebtnprev;
+    BOOL pressed = btnNext ? (infoPtr->status & MC_NEXTPRESSED) :
+                             (infoPtr->status & MC_PREVPRESSED);
     if (theme)
     {
         static const int states[] = {
@@ -394,350 +734,305 @@ static void paint_button (const MONTHCAL_INFO *infoPtr, HDC hdc, BOOL btnNext,
         DrawFrameControl(hdc, r, DFC_SCROLL, style);
     }
 }
-
-
-static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
+/* paint a title with buttons and month/year string */
+static void MONTHCAL_PaintTitle(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
 {
-  static const WCHAR todayW[] = { 'T','o','d','a','y',':',0 };
-  static const WCHAR fmt1W[] = { '%','s',' ','%','l','d',0 };
-  static const WCHAR fmt2W[] = { '%','s',' ','%','s',0 };
-  static const WCHAR fmt3W[] = { '%','d',0 };
-  RECT *title=&infoPtr->title;
-  RECT *prev=&infoPtr->titlebtnprev;
-  RECT *next=&infoPtr->titlebtnnext;
-  RECT *titlemonth=&infoPtr->titlemonth;
-  RECT *titleyear=&infoPtr->titleyear;
-  RECT dayrect;
-  RECT *days=&dayrect;
-  RECT rtoday;
-  int i, j, m, mask, day, firstDay, weeknum, weeknum1,prevMonth;
-  int textHeight = infoPtr->textHeight;
-  SIZE size;
+  static const WCHAR fmt_monthW[] = { '%','s',' ','%','l','d',0 };
+  WCHAR buf_month[80], buf_fmt[80];
   HBRUSH hbr;
-  HFONT currentFont;
-  WCHAR buf[20];
-  WCHAR buf1[20];
-  WCHAR buf2[32];
-  COLORREF oldTextColor, oldBkColor;
-  RECT rcTemp;
-  RECT rcDay; /* used in MONTHCAL_CalcDayRect() */
-  SYSTEMTIME localtime;
-  int startofprescal;
+  RECT *title = &infoPtr->title;
+  SIZE sz;
 
-  oldTextColor = SetTextColor(hdc, comctl32_color.clrWindowText);
-
-  /* fill background */
-  hbr = CreateSolidBrush (infoPtr->bk);
-  FillRect(hdc, &ps->rcPaint, hbr);
+  /* fill header box */
+  hbr =  CreateSolidBrush(infoPtr->titlebk);
+  FillRect(hdc, title, hbr);
   DeleteObject(hbr);
 
-  /* draw header */
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), title))
-  {
-    hbr =  CreateSolidBrush(infoPtr->titlebk);
-    FillRect(hdc, title, hbr);
-    DeleteObject(hbr);
-  }
+  /* navigation buttons */
+  MONTHCAL_PaintButton(infoPtr, hdc, FALSE);
+  MONTHCAL_PaintButton(infoPtr, hdc, TRUE);
 
-  /* if the previous button is pressed draw it depressed */
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), prev))
-    paint_button (infoPtr, hdc, FALSE, infoPtr->status & MC_PREVPRESSED, prev);
-
-  /* if next button is depressed draw it depressed */
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), next))
-    paint_button (infoPtr, hdc, TRUE, infoPtr->status & MC_NEXTPRESSED, next);
-
-  oldBkColor = SetBkColor(hdc, infoPtr->titlebk);
+  /* month/year string */
+  SetBkColor(hdc, infoPtr->titlebk);
   SetTextColor(hdc, infoPtr->titletxt);
-  currentFont = SelectObject(hdc, infoPtr->hBoldFont);
+  SelectObject(hdc, infoPtr->hBoldFont);
 
-  GetLocaleInfoW( LOCALE_USER_DEFAULT,LOCALE_SMONTHNAME1+infoPtr->currentMonth -1,
-		  buf1,countof(buf1));
-  wsprintfW(buf, fmt1W, buf1, infoPtr->currentYear);
+  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+infoPtr->curSel.wMonth-1,
+                 buf_month, countof(buf_month));
 
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), title))
-  {
-    DrawTextW(hdc, buf, strlenW(buf), title,
-                        DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-  }
+  wsprintfW(buf_fmt, fmt_monthW, buf_month, infoPtr->curSel.wYear);
+  DrawTextW(hdc, buf_fmt, strlenW(buf_fmt), title,
+                      DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-/* titlemonth left/right contained rect for whole titletxt('June  1999')
-  * MCM_HitTestInfo wants month & year rects, so prepare these now.
-  *(no, we can't draw them separately; the whole text is centered)
+  /* update title rectangles with current month - used while testing hits */
+  GetTextExtentPoint32W(hdc, buf_fmt, strlenW(buf_fmt), &sz);
+  infoPtr->titlemonth.left = title->right / 2 + title->left / 2 - sz.cx / 2;
+  infoPtr->titleyear.right = title->right / 2 + title->left / 2 + sz.cx / 2;
+
+  GetTextExtentPoint32W(hdc, buf_month, strlenW(buf_month), &sz);
+  infoPtr->titlemonth.right = infoPtr->titlemonth.left + sz.cx;
+  infoPtr->titleyear.left   = infoPtr->titlemonth.right;
+}
+
+static void MONTHCAL_PaintWeeknumbers(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
+{
+  static const WCHAR fmt_weekW[] = { '%','d',0 };
+  INT mindays, weeknum, weeknum1, startofprescal;
+  SYSTEMTIME st = infoPtr->curSel;
+  RECT r;
+  WCHAR buf[80];
+  INT i, prev_month;
+
+  if (!(infoPtr->dwStyle & MCS_WEEKNUMBERS)) return;
+
+  MONTHCAL_GetMinDate(infoPtr, &st);
+  startofprescal = st.wDay;
+  st = infoPtr->curSel;
+
+  prev_month = infoPtr->curSel.wMonth - 1;
+  if(prev_month == 0) prev_month = 12;
+
+  /*
+     Rules what week to call the first week of a new year:
+     LOCALE_IFIRSTWEEKOFYEAR == 0 (e.g US?):
+     The week containing Jan 1 is the first week of year
+     LOCALE_IFIRSTWEEKOFYEAR == 2 (e.g. Germany):
+     First week of year must contain 4 days of the new year
+     LOCALE_IFIRSTWEEKOFYEAR == 1  (what contries?)
+     The first week of the year must contain only days of the new year
   */
-  GetTextExtentPoint32W(hdc, buf, strlenW(buf), &size);
-  titlemonth->left = title->right / 2 + title->left / 2 - size.cx / 2;
-  titleyear->right = title->right / 2 + title->left / 2 + size.cx / 2;
-  GetTextExtentPoint32W(hdc, buf1, strlenW(buf1), &size);
-  titlemonth->right = titlemonth->left + size.cx;
-  titleyear->left = titlemonth->right;
-
-  /* draw month area */
-  rcTemp.top=infoPtr->wdays.top;
-  rcTemp.left=infoPtr->wdays.left;
-  rcTemp.bottom=infoPtr->todayrect.bottom;
-  rcTemp.right =infoPtr->todayrect.right;
-  if(IntersectRect(&rcTemp, &(ps->rcPaint), &rcTemp))
+  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTWEEKOFYEAR, buf, countof(buf));
+  weeknum = atoiW(buf);
+  switch (weeknum)
   {
-    hbr =  CreateSolidBrush(infoPtr->monthbk);
-    FillRect(hdc, &rcTemp, hbr);
-    DeleteObject(hbr);
+    case 1: mindays = 6;
+	break;
+    case 2: mindays = 3;
+	break;
+    case 0: mindays = 0;
+        break;
+    default:
+        WARN("Unknown LOCALE_IFIRSTWEEKOFYEAR value %d, defaulting to 0\n", weeknum);
+	mindays = 0;
   }
 
-/* draw line under day abbreviations */
+  if (infoPtr->curSel.wMonth == 1)
+  {
+    /* calculate all those exceptions for january */
+    st.wDay = st.wMonth = 1;
+    weeknum1 = MONTHCAL_CalculateDayOfWeek(&st, FALSE);
+    if ((infoPtr->firstDay - weeknum1) % 7 > mindays)
+	weeknum = 1;
+    else
+    {
+	weeknum = 0;
+	for(i = 0; i < 11; i++)
+	   weeknum += MONTHCAL_MonthLength(i+1, infoPtr->curSel.wYear - 1);
 
-  MoveToEx(hdc, infoPtr->days.left + 3, title->bottom + textHeight + 1, NULL);
-  LineTo(hdc, infoPtr->days.right - 3, title->bottom + textHeight + 1);
+	weeknum  += startofprescal + 7;
+	weeknum  /= 7;
+	st.wYear -= 1;
+	weeknum1  = MONTHCAL_CalculateDayOfWeek(&st, FALSE);
+	if ((infoPtr->firstDay - weeknum1) % 7 > mindays) weeknum++;
+    }
+  }
+  else
+  {
+    weeknum = 0;
+    for(i = 0; i < prev_month - 1; i++)
+	weeknum += MONTHCAL_MonthLength(i+1, infoPtr->curSel.wYear);
 
-  prevMonth = infoPtr->currentMonth - 1;
-  if(prevMonth == 0) /* if currentMonth is january(1) prevMonth is */
-    prevMonth = 12;    /* december(12) of the previous year */
+    weeknum += startofprescal + 7;
+    weeknum /= 7;
+    st.wDay = st.wMonth = 1;
+    weeknum1 = MONTHCAL_CalculateDayOfWeek(&st, FALSE);
+    if ((infoPtr->firstDay - weeknum1) % 7 > mindays) weeknum++;
+  }
 
-  infoPtr->wdays.left   = infoPtr->days.left   = infoPtr->weeknums.right;
-/* draw day abbreviations */
+  r = infoPtr->weeknums;
+  r.bottom = r.top + infoPtr->height_increment;
 
+  for(i = 0; i < 6; i++) {
+    if((i == 0) && (weeknum > 50))
+    {
+        wsprintfW(buf, fmt_weekW, weeknum);
+        weeknum = 0;
+    }
+    else if((i == 5) && (weeknum > 47))
+    {
+	wsprintfW(buf, fmt_weekW, 1);
+    }
+    else
+	wsprintfW(buf, fmt_weekW, weeknum + i);
+
+    DrawTextW(hdc, buf, -1, &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    OffsetRect(&r, 0, infoPtr->height_increment);
+  }
+
+  /* line separator for week numbers column */
+  MoveToEx(hdc, infoPtr->weeknums.right, infoPtr->weeknums.top + 3 , NULL);
+  LineTo(hdc,   infoPtr->weeknums.right, infoPtr->weeknums.bottom);
+}
+
+/* paint a calendar area */
+static void MONTHCAL_PaintCalendar(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
+{
+  INT prev_month, i, j;
+  WCHAR buf[80];
+  HBRUSH hbr;
+  RECT r;
+  int mask;
+  SYSTEMTIME st;
+
+  UnionRect(&r, &infoPtr->wdays, &infoPtr->todayrect);
+
+  hbr =  CreateSolidBrush(infoPtr->monthbk);
+  FillRect(hdc, &r, hbr);
+  DeleteObject(hbr);
+
+  /* draw line under day abbreviations */
+  MoveToEx(hdc, infoPtr->days.left + 3,
+                infoPtr->title.bottom + infoPtr->textHeight + 1, NULL);
+  LineTo(hdc, infoPtr->days.right - 3,
+              infoPtr->title.bottom + infoPtr->textHeight + 1);
+
+  prev_month = infoPtr->curSel.wMonth - 1;
+  if(prev_month == 0) prev_month = 12;
+
+  infoPtr->wdays.left = infoPtr->days.left = infoPtr->weeknums.right;
+
+  /* 1. draw day abbreviations */
   SelectObject(hdc, infoPtr->hFont);
   SetBkColor(hdc, infoPtr->monthbk);
   SetTextColor(hdc, infoPtr->trailingtxt);
-
-  /* copy this rect so we can change the values without changing */
-  /* the original version */
-  days->left = infoPtr->wdays.left;
-  days->right = days->left + infoPtr->width_increment;
-  days->top = infoPtr->wdays.top;
-  days->bottom = infoPtr->wdays.bottom;
+  /* rectangle to draw a single day abbreviation within */
+  r = infoPtr->wdays;
+  r.right = r.left + infoPtr->width_increment;
 
   i = infoPtr->firstDay;
-
-  for(j=0; j<7; j++) {
-    GetLocaleInfoW( LOCALE_USER_DEFAULT,LOCALE_SABBREVDAYNAME1 + (i+j+6)%7, buf, countof(buf));
-    DrawTextW(hdc, buf, strlenW(buf), days, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
-    days->left+=infoPtr->width_increment;
-    days->right+=infoPtr->width_increment;
+  for(j = 0; j < 7; j++) {
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SABBREVDAYNAME1 + (i+j+6)%7, buf, countof(buf));
+    DrawTextW(hdc, buf, strlenW(buf), &r, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    OffsetRect(&r, infoPtr->width_increment, 0);
   }
 
-/* draw day numbers; first, the previous month */
+  /* 2. previous and next months */
+  if (!(infoPtr->dwStyle & MCS_NOTRAILINGDATES))
+  {
+    SYSTEMTIME st_max;
 
-  firstDay = MONTHCAL_CalculateDayOfWeek(1, infoPtr->currentMonth, infoPtr->currentYear);
+    SetTextColor(hdc, infoPtr->trailingtxt);
 
-  day = MONTHCAL_MonthLength(prevMonth, infoPtr->currentYear)  +
-    (infoPtr->firstDay + 7  - firstDay)%7 + 1;
-  if (day > MONTHCAL_MonthLength(prevMonth, infoPtr->currentYear))
-    day -=7;
-  startofprescal = day;
-  mask = 1<<(day-1);
+    MONTHCAL_GetMinDate(infoPtr, &st);
 
-  i = 0;
-  m = 0;
-  while(day <= MONTHCAL_MonthLength(prevMonth, infoPtr->currentYear)) {
-    MONTHCAL_CalcDayRect(infoPtr, &rcDay, i, 0);
-    if(IntersectRect(&rcTemp, &(ps->rcPaint), &rcDay))
-    {
-      MONTHCAL_DrawDay(infoPtr, hdc, day, prevMonth, i, 0,
-          infoPtr->monthdayState[m] & mask);
+    /* draw prev month */
+    mask = 1 << (st.wDay-1);
+    while(st.wDay <= MONTHCAL_MonthLength(prev_month, infoPtr->curSel.wYear)) {
+      MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[0] & mask, ps);
+      mask <<= 1;
+      st.wDay++;
     }
 
-    mask<<=1;
-    day++;
-    i++;
+    /* draw next month */
+    st = infoPtr->curSel;
+    st.wDay = 1;
+    MONTHCAL_GetNextMonth(&st);
+    MONTHCAL_GetMaxDate(infoPtr, &st_max);
+    mask = 1;
+    while(st.wDay <= st_max.wDay) {
+      MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[2] & mask, ps);
+      mask <<= 1;
+      st.wDay++;
+    }
   }
 
-/* draw `current' month  */
-
-  day = 1; /* start at the beginning of the current month */
-
-  infoPtr->firstDayplace = i;
+  /* 3. current month */
   SetTextColor(hdc, infoPtr->txt);
-  m++;
+  st = infoPtr->curSel;
+  st.wDay = 1;
   mask = 1;
-
-  /* draw the first week of the current month */
-  while(i<7) {
-    MONTHCAL_CalcDayRect(infoPtr, &rcDay, i, 0);
-    if(IntersectRect(&rcTemp, &(ps->rcPaint), &rcDay))
-    {
-
-      MONTHCAL_DrawDay(infoPtr, hdc, day, infoPtr->currentMonth, i, 0,
-	infoPtr->monthdayState[m] & mask);
-
-      if((infoPtr->currentMonth==infoPtr->todaysDate.wMonth) &&
-          (day==infoPtr->todaysDate.wDay) &&
-	  (infoPtr->currentYear == infoPtr->todaysDate.wYear)) {
-        if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE))
-	  MONTHCAL_CircleDay(infoPtr, hdc, day, infoPtr->currentMonth);
-      }
-    }
-
-    mask<<=1;
-    day++;
-    i++;
+  while(st.wDay <= MONTHCAL_MonthLength(infoPtr->curSel.wMonth, infoPtr->curSel.wYear)) {
+    MONTHCAL_DrawDay(infoPtr, hdc, &st, infoPtr->monthdayState[1] & mask,
+                     ps);
+    mask <<= 1;
+    st.wDay++;
   }
 
-  j = 1; /* move to the 2nd week of the current month */
-  i = 0; /* move back to sunday */
-  while(day <= MONTHCAL_MonthLength(infoPtr->currentMonth, infoPtr->currentYear)) {
-    MONTHCAL_CalcDayRect(infoPtr, &rcDay, i, j);
-    if(IntersectRect(&rcTemp, &(ps->rcPaint), &rcDay))
-    {
-      MONTHCAL_DrawDay(infoPtr, hdc, day, infoPtr->currentMonth, i, j,
-          infoPtr->monthdayState[m] & mask);
-
-      if((infoPtr->currentMonth==infoPtr->todaysDate.wMonth) &&
-          (day==infoPtr->todaysDate.wDay) &&
-          (infoPtr->currentYear == infoPtr->todaysDate.wYear))
-        if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE))
-	  MONTHCAL_CircleDay(infoPtr, hdc, day, infoPtr->currentMonth);
-    }
-    mask<<=1;
-    day++;
-    i++;
-    if(i>6) { /* past saturday, goto the next weeks sunday */
-      i = 0;
-      j++;
-    }
-  }
-
-/*  draw `next' month */
-
-  day = 1; /* start at the first day of the next month */
-  m++;
-  mask = 1;
-
-  SetTextColor(hdc, infoPtr->trailingtxt);
-  while((i<7) &&(j<6)) {
-    MONTHCAL_CalcDayRect(infoPtr, &rcDay, i, j);
-    if(IntersectRect(&rcTemp, &(ps->rcPaint), &rcDay))
-    {
-      MONTHCAL_DrawDay(infoPtr, hdc, day, infoPtr->currentMonth + 1, i, j,
-		infoPtr->monthdayState[m] & mask);
-    }
-
-    mask<<=1;
-    day++;
-    i++;
-    if(i==7) { /* past saturday, go to next week's sunday */
-      i = 0;
-      j++;
-    }
-  }
-  SetTextColor(hdc, infoPtr->txt);
-
-
-/* draw `today' date if style allows it, and draw a circle before today's
- * date if necessary */
-
+  /* 4. bottom today date */
   if(!(infoPtr->dwStyle & MCS_NOTODAY))  {
-    if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE))  {
-      /*day is the number of days from nextmonth we put on the calendar */
-      MONTHCAL_CircleDay(infoPtr, hdc,
-			 day+MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear),
-			 infoPtr->currentMonth);
+    static const WCHAR todayW[] = { 'T','o','d','a','y',':',0 };
+    static const WCHAR fmt_todayW[] = { '%','s',' ','%','s',0 };
+    WCHAR buf_todayW[30], buf_dateW[20];
+    RECT rtoday;
+
+    if(!(infoPtr->dwStyle & MCS_NOTODAYCIRCLE)) {
+      SYSTEMTIME fake_st;
+
+      MONTHCAL_GetMaxDate(infoPtr, &fake_st);
+      /* this is always safe cause next month will never fully fit calendar */
+      fake_st.wDay += 1;
+      MONTHCAL_CircleDay(infoPtr, hdc, &fake_st);
     }
-    if (!LoadStringW(COMCTL32_hModule,IDM_TODAY,buf1,countof(buf1)))
-      {
+    if (!LoadStringW(COMCTL32_hModule, IDM_TODAY, buf_todayW, countof(buf_todayW)))
+    {
 	WARN("Can't load resource\n");
-	strcpyW(buf1, todayW);
-      }
+	strcpyW(buf_todayW, todayW);
+    }
     MONTHCAL_CalcDayRect(infoPtr, &rtoday, 1, 6);
-    MONTHCAL_CopyTime(&infoPtr->todaysDate,&localtime);
-    GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&localtime,NULL,buf2,countof(buf2));
-    wsprintfW(buf, fmt2W, buf1, buf2);
+    GetDateFormatW(LOCALE_USER_DEFAULT, DATE_SHORTDATE, &infoPtr->todaysDate, NULL,
+                                                        buf_dateW, countof(buf_dateW));
     SelectObject(hdc, infoPtr->hBoldFont);
 
+    wsprintfW(buf, fmt_todayW, buf_todayW, buf_dateW);
     DrawTextW(hdc, buf, -1, &rtoday, DT_CALCRECT | DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    if(IntersectRect(&rcTemp, &(ps->rcPaint), &rtoday))
-    {
-      DrawTextW(hdc, buf, -1, &rtoday, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
-    }
+    DrawTextW(hdc, buf, -1, &rtoday, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+
     SelectObject(hdc, infoPtr->hFont);
   }
 
-/*eventually draw week numbers*/
-  if(infoPtr->dwStyle & MCS_WEEKNUMBERS)  {
-    /* display weeknumbers*/
-    int mindays;
-
-    /* Rules what week to call the first week of a new year:
-       LOCALE_IFIRSTWEEKOFYEAR == 0 (e.g US?):
-       The week containing Jan 1 is the first week of year
-       LOCALE_IFIRSTWEEKOFYEAR == 2 (e.g. Germany):
-       First week of year must contain 4 days of the new year
-       LOCALE_IFIRSTWEEKOFYEAR == 1  (what contries?)
-       The first week of the year must contain only days of the new year
-    */
-    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTWEEKOFYEAR, buf, countof(buf));
-    weeknum = atoiW(buf);
-    switch (weeknum)
-      {
-      case 1: mindays = 6;
-	break;
-      case 2: mindays = 3;
-	break;
-      case 0:
-      default:
-	mindays = 0;
-      }
-    if (infoPtr->currentMonth < 2)
-      {
-	/* calculate all those exceptions for january */
-	weeknum1=MONTHCAL_CalculateDayOfWeek(1,1,infoPtr->currentYear);
-	if ((infoPtr->firstDay +7 - weeknum1)%7 > mindays)
-	    weeknum =1;
-	else
-	  {
-	    weeknum = 0;
-	    for(i=0; i<11; i++)
-	      weeknum+=MONTHCAL_MonthLength(i+1, infoPtr->currentYear-1);
-	    weeknum +=startofprescal+ 7;
-	    weeknum /=7;
-	    weeknum1=MONTHCAL_CalculateDayOfWeek(1,1,infoPtr->currentYear-1);
-	    if ((infoPtr->firstDay + 7 - weeknum1)%7 > mindays)
-	      weeknum++;
-	  }
-      }
-    else
-      {
-	weeknum = 0;
-	for(i=0; i<prevMonth-1; i++)
-	  weeknum+=MONTHCAL_MonthLength(i+1, infoPtr->currentYear);
-	weeknum +=startofprescal+ 7;
-	weeknum /=7;
-	weeknum1=MONTHCAL_CalculateDayOfWeek(1,1,infoPtr->currentYear);
-	if ((infoPtr->firstDay + 7 - weeknum1)%7 > mindays)
-	  weeknum++;
-      }
-    days->left = infoPtr->weeknums.left;
-    days->right = infoPtr->weeknums.right;
-    days->top = infoPtr->weeknums.top;
-    days->bottom = days->top +infoPtr->height_increment;
-    for(i=0; i<6; i++) {
-      if((i==0)&&(weeknum>50))
-	{
-	  wsprintfW(buf, fmt3W, weeknum);
-	  weeknum=0;
-	}
-      else if((i==5)&&(weeknum>47))
-	{
-	  wsprintfW(buf, fmt3W, 1);
-	}
-      else
-	wsprintfW(buf, fmt3W, weeknum + i);
-      DrawTextW(hdc, buf, -1, days, DT_CENTER | DT_VCENTER | DT_SINGLELINE );
-      days->top+=infoPtr->height_increment;
-      days->bottom+=infoPtr->height_increment;
-    }
-
-    MoveToEx(hdc, infoPtr->weeknums.right, infoPtr->weeknums.top + 3 , NULL);
-    LineTo(hdc,   infoPtr->weeknums.right, infoPtr->weeknums.bottom );
-
+  /* 5. today mark + focus */
+  if((infoPtr->curSel.wMonth == infoPtr->todaysDate.wMonth) &&
+     (infoPtr->curSel.wYear  == infoPtr->todaysDate.wYear) &&
+    !(infoPtr->dwStyle & MCS_NOTODAYCIRCLE))
+  {
+    MONTHCAL_CircleDay(infoPtr, hdc, &infoPtr->todaysDate);
   }
-  /* currentFont was font at entering Refresh */
 
-  SetBkColor(hdc, oldBkColor);
-  SelectObject(hdc, currentFont);
-  SetTextColor(hdc, oldTextColor);
+  if(!MONTHCAL_IsDateEqual(&infoPtr->focusedSel, &st_null))
+  {
+    MONTHCAL_CalcPosFromDay(infoPtr, &infoPtr->focusedSel, &r);
+    DrawFocusRect(hdc, &r);
+  }
 }
 
+static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, const PAINTSTRUCT *ps)
+{
+  RECT *title = &infoPtr->title;
+  COLORREF old_text_clr, old_bk_clr;
+  HFONT old_font;
+  RECT r_temp;
+
+  old_text_clr = SetTextColor(hdc, comctl32_color.clrWindowText);
+  old_bk_clr   = GetBkColor(hdc);
+  old_font     = GetCurrentObject(hdc, OBJ_FONT);
+
+  /* draw title, redraw all its elements */
+  if(IntersectRect(&r_temp, &(ps->rcPaint), title))
+    MONTHCAL_PaintTitle(infoPtr, hdc, ps);
+
+  /* draw calendar area */
+  UnionRect(&r_temp, &infoPtr->wdays, &infoPtr->todayrect);
+  if(IntersectRect(&r_temp, &(ps->rcPaint), &r_temp))
+    MONTHCAL_PaintCalendar(infoPtr, hdc, ps);
+
+  /* week numbers */
+  MONTHCAL_PaintWeeknumbers(infoPtr, hdc, ps);
+
+  /* restore context */
+  SetBkColor(hdc, old_bk_clr);
+  SelectObject(hdc, old_font);
+  SetTextColor(hdc, old_text_clr);
+}
 
 static LRESULT
 MONTHCAL_GetMinReqRect(const MONTHCAL_INFO *infoPtr, LPRECT lpRect)
@@ -746,11 +1041,15 @@ MONTHCAL_GetMinReqRect(const MONTHCAL_INFO *infoPtr, LPRECT lpRect)
 
   if(!lpRect) return FALSE;
 
-  lpRect->left = infoPtr->title.left;
-  lpRect->top = infoPtr->title.top;
-  lpRect->right = infoPtr->title.right;
+  lpRect->left   = infoPtr->title.left;
+  lpRect->top    = infoPtr->title.top;
+  lpRect->right  = infoPtr->title.right;
   lpRect->bottom = infoPtr->todayrect.bottom;
+
   AdjustWindowRect(lpRect, infoPtr->dwStyle, FALSE);
+
+  /* minimal rectangle is zero based */
+  OffsetRect(lpRect, -lpRect->left, -lpRect->top);
 
   TRACE("%s\n", wine_dbgstr_rect(lpRect));
 
@@ -845,55 +1144,119 @@ MONTHCAL_SetMonthDelta(MONTHCAL_INFO *infoPtr, INT delta)
 }
 
 
-static LRESULT
+static inline LRESULT
 MONTHCAL_GetFirstDayOfWeek(const MONTHCAL_INFO *infoPtr)
 {
-  return MAKELONG(infoPtr->firstDay, infoPtr->firstDayHighWord);
+  int day;
+
+  /* convert from SYSTEMTIME to locale format */
+  day = (infoPtr->firstDay >= 0) ? (infoPtr->firstDay+6)%7 : infoPtr->firstDay;
+
+  return MAKELONG(day, infoPtr->firstDaySet);
 }
 
 
-/* sets the first day of the week that will appear in the control */
-/* 0 == Sunday, 6 == Saturday */
-/* FIXME: this needs to be implemented properly in MONTHCAL_Refresh() */
-/* FIXME: we need more error checking here */
+/* Sets the first day of the week that will appear in the control
+ *
+ *
+ * PARAMETERS:
+ *  [I] infoPtr : valid pointer to control data
+ *  [I] day : day number to set as new first day (0 == Monday,...,6 == Sunday)
+ *
+ *
+ * RETURN VALUE:
+ *  Low word contains previous first day,
+ *  high word indicates was first day forced with this message before or is
+ *  locale difined (TRUE - was forced, FALSE - wasn't).
+ *
+ * FIXME: this needs to be implemented properly in MONTHCAL_Refresh()
+ * FIXME: we need more error checking here
+ */
 static LRESULT
 MONTHCAL_SetFirstDayOfWeek(MONTHCAL_INFO *infoPtr, INT day)
 {
-  int prev = MAKELONG(infoPtr->firstDay, infoPtr->firstDayHighWord);
-  int localFirstDay;
-  WCHAR buf[40];
+  LRESULT prev = MONTHCAL_GetFirstDayOfWeek(infoPtr);
+  int new_day;
 
-  TRACE("day %d\n", day);
-
-  GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTDAYOFWEEK, buf, countof(buf));
-  TRACE("%s %d\n", debugstr_w(buf), strlenW(buf));
-
-  localFirstDay = atoiW(buf);
+  TRACE("%d\n", day);
 
   if(day == -1)
   {
-    infoPtr->firstDay = localFirstDay;
-    infoPtr->firstDayHighWord = FALSE;
+    WCHAR buf[80];
+
+    GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_IFIRSTDAYOFWEEK, buf, countof(buf));
+    TRACE("%s %d\n", debugstr_w(buf), strlenW(buf));
+
+    new_day = atoiW(buf);
+
+    infoPtr->firstDaySet = FALSE;
   }
   else if(day >= 7)
   {
-    infoPtr->firstDay = 6; /* max first day allowed */
-    infoPtr->firstDayHighWord = TRUE;
+    new_day = 6; /* max first day allowed */
+    infoPtr->firstDaySet = TRUE;
   }
   else
   {
-    infoPtr->firstDay = day;
-    infoPtr->firstDayHighWord = TRUE;
+    /* Native behaviour for that case is broken: invalid date number >31
+       got displayed at (0,0) position, current month starts always from
+       (1,0) position. Should be implemnted here as well. */
+    if (day < -1)
+      FIXME("No bug compatibility for day=%d\n", day);
+
+    new_day = day;
+    infoPtr->firstDaySet = TRUE;
   }
+
+  /* convert from locale to SYSTEMTIME format */
+  infoPtr->firstDay = (new_day >= 0) ? (++new_day) % 7 : new_day;
+
+  InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
 
   return prev;
 }
 
 
 static LRESULT
-MONTHCAL_GetMonthRange(const MONTHCAL_INFO *infoPtr)
+MONTHCAL_GetMonthRange(const MONTHCAL_INFO *infoPtr, DWORD flag, SYSTEMTIME *st)
 {
   TRACE("\n");
+
+  if(st)
+  {
+    switch (flag) {
+    case GMR_VISIBLE:
+    {
+        /*FIXME: currently multicalendar feature isn't implemented, so entirely
+                 visible month is current */
+        st[0] = st[1] = infoPtr->curSel;
+
+        if (infoPtr->curSel.wMonth == min_allowed_date.wMonth &&
+            infoPtr->curSel.wYear  == min_allowed_date.wYear)
+        {
+            st[0].wDay = min_allowed_date.wDay;
+        }
+        else
+            st[0].wDay = 1;
+        MONTHCAL_CalculateDayOfWeek(&st[0], TRUE);
+
+        st[1].wDay = MONTHCAL_MonthLength(st[1].wMonth, st[1].wYear);
+        MONTHCAL_CalculateDayOfWeek(&st[1], TRUE);
+        /* a single current month used */
+        return 1;
+    }
+    case GMR_DAYSTATE:
+    {
+        /*FIXME: currently multicalendar feature isn't implemented,
+                 min date from previous month and max date from next one returned */
+        MONTHCAL_GetMinDate(infoPtr, &st[0]);
+        MONTHCAL_GetMaxDate(infoPtr, &st[1]);
+        break;
+    }
+    default:
+        WARN("Unknown flag value, got %d\n", flag);
+    }
+  }
 
   return infoPtr->monthRange;
 }
@@ -913,29 +1276,35 @@ MONTHCAL_SetRange(MONTHCAL_INFO *infoPtr, SHORT limits, SYSTEMTIME *range)
 
     TRACE("%x %p\n", limits, range);
 
-    if ((limits & GDTR_MIN && !MONTHCAL_ValidateTime(range[0])) ||
-        (limits & GDTR_MAX && !MONTHCAL_ValidateTime(range[1])))
+    if ((limits & GDTR_MIN && !MONTHCAL_ValidateDate(&range[0])) ||
+        (limits & GDTR_MAX && !MONTHCAL_ValidateDate(&range[1])))
         return FALSE;
 
     if (limits & GDTR_MIN)
     {
-        MONTHCAL_CopyTime(&range[0], &infoPtr->minDate);
+        if (!MONTHCAL_ValidateTime(&range[0]))
+            MONTHCAL_CopyTime(&infoPtr->todaysDate, &range[0]);
+
+        infoPtr->minDate = range[0];
         infoPtr->rangeValid |= GDTR_MIN;
     }
     if (limits & GDTR_MAX)
     {
-        MONTHCAL_CopyTime(&range[1], &infoPtr->maxDate);
+        if (!MONTHCAL_ValidateTime(&range[1]))
+            MONTHCAL_CopyTime(&infoPtr->todaysDate, &range[1]);
+
+        infoPtr->maxDate = range[1];
         infoPtr->rangeValid |= GDTR_MAX;
     }
 
     /* Only one limit set - we are done */
     if ((infoPtr->rangeValid & (GDTR_MIN | GDTR_MAX)) != (GDTR_MIN | GDTR_MAX))
         return TRUE;
-    
+
     SystemTimeToFileTime(&infoPtr->maxDate, &ft_max);
     SystemTimeToFileTime(&infoPtr->minDate, &ft_min);
 
-    if (CompareFileTime(&ft_min, &ft_max) > 0)
+    if (CompareFileTime(&ft_min, &ft_max) >= 0)
     {
         if ((limits & (GDTR_MIN | GDTR_MAX)) == (GDTR_MIN | GDTR_MAX))
         {
@@ -946,9 +1315,10 @@ MONTHCAL_SetRange(MONTHCAL_INFO *infoPtr, SHORT limits, SYSTEMTIME *range)
         }
         else
         {
-            /* Reset the other limit. */
-            /* FIXME: native sets date&time to 0. Should we do this too? */
-            infoPtr->rangeValid &= limits & GDTR_MIN ? ~GDTR_MAX : ~GDTR_MIN ;
+            /* reset the other limit */
+            if (limits & GDTR_MIN) infoPtr->maxDate = st_null;
+            if (limits & GDTR_MAX) infoPtr->minDate = st_null;
+            infoPtr->rangeValid &= limits & GDTR_MIN ? ~GDTR_MAX : ~GDTR_MIN;
         }
     }
 
@@ -963,8 +1333,8 @@ MONTHCAL_GetRange(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *range)
 
   if(!range) return FALSE;
 
-  MONTHCAL_CopyTime(&infoPtr->maxDate, &range[1]);
-  MONTHCAL_CopyTime(&infoPtr->minDate, &range[0]);
+  range[1] = infoPtr->maxDate;
+  range[0] = infoPtr->minDate;
 
   return infoPtr->rangeValid;
 }
@@ -991,34 +1361,46 @@ MONTHCAL_GetCurSel(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *curSel)
   if(!curSel) return FALSE;
   if(infoPtr->dwStyle & MCS_MULTISELECT) return FALSE;
 
-  MONTHCAL_CopyTime(&infoPtr->minSel, curSel);
+  *curSel = infoPtr->curSel;
   TRACE("%d/%d/%d\n", curSel->wYear, curSel->wMonth, curSel->wDay);
   return TRUE;
 }
 
-/* FIXME: if the specified date is not visible, make it visible */
-/* FIXME: redraw? */
 static LRESULT
 MONTHCAL_SetCurSel(MONTHCAL_INFO *infoPtr, SYSTEMTIME *curSel)
 {
+  SYSTEMTIME prev = infoPtr->curSel;
+
   TRACE("%p\n", curSel);
   if(!curSel) return FALSE;
   if(infoPtr->dwStyle & MCS_MULTISELECT) return FALSE;
 
-  if(!MONTHCAL_ValidateTime(*curSel)) return FALSE;
-
-  MONTHCAL_CopyTime(curSel, &infoPtr->minSel);
-  MONTHCAL_CopyTime(curSel, &infoPtr->maxSel);
-
+  if(!MONTHCAL_ValidateDate(curSel)) return FALSE;
   /* exit earlier if selection equals current */
-  if (infoPtr->currentMonth == curSel->wMonth &&
-      infoPtr->currentYear  == curSel->wYear  &&
-      infoPtr->curSelDay    == curSel->wDay) return TRUE;
+  if (MONTHCAL_IsDateEqual(&infoPtr->curSel, curSel)) return TRUE;
 
-  infoPtr->currentMonth = curSel->wMonth;
-  infoPtr->currentYear  = curSel->wYear;
+  if(!MONTHCAL_IsDateInValidRange(infoPtr, curSel, FALSE)) return FALSE;
 
-  InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+  infoPtr->minSel = *curSel;
+  infoPtr->maxSel = *curSel;
+
+  /* if selection is still in current month, reduce rectangle */
+  prev.wDay = curSel->wDay;
+  if (MONTHCAL_IsDateEqual(&prev, curSel))
+  {
+    RECT r_prev, r_new;
+
+    /* note that infoPtr->curSel isn't updated yet */
+    MONTHCAL_CalcPosFromDay(infoPtr, &infoPtr->curSel, &r_prev);
+    MONTHCAL_CalcPosFromDay(infoPtr, curSel, &r_new);
+
+    InvalidateRect(infoPtr->hwndSelf, &r_prev, FALSE);
+    InvalidateRect(infoPtr->hwndSelf, &r_new,  FALSE);
+  }
+  else
+    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+
+  infoPtr->curSel = *curSel;
 
   return TRUE;
 }
@@ -1036,9 +1418,10 @@ MONTHCAL_SetMaxSelCount(MONTHCAL_INFO *infoPtr, INT max)
 {
   TRACE("%d\n", max);
 
-  if(infoPtr->dwStyle & MCS_MULTISELECT)  {
-    infoPtr->maxSelCount = max;
-  }
+  if(!(infoPtr->dwStyle & MCS_MULTISELECT)) return FALSE;
+  if(max <= 0) return FALSE;
+
+  infoPtr->maxSelCount = max;
 
   return TRUE;
 }
@@ -1053,8 +1436,8 @@ MONTHCAL_GetSelRange(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *range)
 
   if(infoPtr->dwStyle & MCS_MULTISELECT)
   {
-    MONTHCAL_CopyTime(&infoPtr->maxSel, &range[1]);
-    MONTHCAL_CopyTime(&infoPtr->minSel, &range[0]);
+    range[1] = infoPtr->maxSel;
+    range[0] = infoPtr->minSel;
     TRACE("[min,max]=[%d %d]\n", infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
     return TRUE;
   }
@@ -1072,8 +1455,46 @@ MONTHCAL_SetSelRange(MONTHCAL_INFO *infoPtr, SYSTEMTIME *range)
 
   if(infoPtr->dwStyle & MCS_MULTISELECT)
   {
-    MONTHCAL_CopyTime(&range[1], &infoPtr->maxSel);
-    MONTHCAL_CopyTime(&range[0], &infoPtr->minSel);
+    SYSTEMTIME old_range[2];
+
+    /* adjust timestamps */
+    if(!MONTHCAL_ValidateTime(&range[0]))
+      MONTHCAL_CopyTime(&infoPtr->todaysDate, &range[0]);
+    if(!MONTHCAL_ValidateTime(&range[1]))
+      MONTHCAL_CopyTime(&infoPtr->todaysDate, &range[1]);
+
+    /* maximum range exceeded */
+    if(!MONTHCAL_IsSelRangeValid(infoPtr, &range[0], &range[1], NULL)) return FALSE;
+
+    old_range[0] = infoPtr->minSel;
+    old_range[1] = infoPtr->maxSel;
+
+    /* swap if min > max */
+    if(MONTHCAL_CompareSystemTime(&range[0], &range[1]) <= 0)
+    {
+      infoPtr->minSel = range[0];
+      infoPtr->maxSel = range[1];
+    }
+    else
+    {
+      infoPtr->minSel = range[1];
+      infoPtr->maxSel = range[0];
+    }
+    infoPtr->curSel = infoPtr->minSel;
+
+    /* update day of week */
+    MONTHCAL_CalculateDayOfWeek(&infoPtr->minSel, TRUE);
+    MONTHCAL_CalculateDayOfWeek(&infoPtr->maxSel, TRUE);
+    MONTHCAL_CalculateDayOfWeek(&infoPtr->curSel, TRUE);
+
+    /* redraw if bounds changed */
+    /* FIXME: no actual need to redraw everything */
+    if(!MONTHCAL_IsDateEqual(&old_range[0], &range[0]) ||
+       !MONTHCAL_IsDateEqual(&old_range[1], &range[1]))
+    {
+       InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+    }
+
     TRACE("[min,max]=[%d %d]\n", infoPtr->minSel.wDay, infoPtr->maxSel.wDay);
     return TRUE;
   }
@@ -1088,25 +1509,48 @@ MONTHCAL_GetToday(const MONTHCAL_INFO *infoPtr, SYSTEMTIME *today)
   TRACE("%p\n", today);
 
   if(!today) return FALSE;
-  MONTHCAL_CopyTime(&infoPtr->todaysDate, today);
+  *today = infoPtr->todaysDate;
   return TRUE;
 }
 
+/* Internal helper for MCM_SETTODAY handler and auto update timer handler
+ *
+ * RETURN VALUE
+ *
+ *  TRUE  - today date changed
+ *  FALSE - today date isn't changed
+ */
+static BOOL
+MONTHCAL_UpdateToday(MONTHCAL_INFO *infoPtr, const SYSTEMTIME *today)
+{
+  RECT new_r, old_r;
 
+  if(MONTHCAL_IsDateEqual(today, &infoPtr->todaysDate)) return FALSE;
+
+  MONTHCAL_CalcPosFromDay(infoPtr, &infoPtr->todaysDate, &old_r);
+  MONTHCAL_CalcPosFromDay(infoPtr, today, &new_r);
+
+  infoPtr->todaysDate = *today;
+
+  /* only two days need redrawing */
+  InvalidateRect(infoPtr->hwndSelf, &old_r, FALSE);
+  InvalidateRect(infoPtr->hwndSelf, &new_r, FALSE);
+  return TRUE;
+}
+
+/* MCM_SETTODAT handler */
 static LRESULT
-MONTHCAL_SetToday(MONTHCAL_INFO *infoPtr, SYSTEMTIME *today)
+MONTHCAL_SetToday(MONTHCAL_INFO *infoPtr, const SYSTEMTIME *today)
 {
   TRACE("%p\n", today);
 
   if(!today) return FALSE;
 
-  if(MONTHCAL_IsDateEqual(today, &infoPtr->todaysDate)) return TRUE;
+  /* remember if date was set successfully */
+  if(MONTHCAL_UpdateToday(infoPtr, today)) infoPtr->todaySet = TRUE;
 
-  MONTHCAL_CopyTime(today, &infoPtr->todaysDate);
-  InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
   return TRUE;
 }
-
 
 static LRESULT
 MONTHCAL_HitTest(const MONTHCAL_INFO *infoPtr, MCHITTESTINFO *lpht)
@@ -1115,6 +1559,7 @@ MONTHCAL_HitTest(const MONTHCAL_INFO *infoPtr, MCHITTESTINFO *lpht)
   DWORD retval;
   int day,wday,wnum;
 
+  if(!lpht || lpht->cbSize < MCHITTESTINFO_V1_SIZE) return -1;
 
   x = lpht->pt.x;
   y = lpht->pt.y;
@@ -1160,57 +1605,48 @@ MONTHCAL_HitTest(const MONTHCAL_INFO *infoPtr, MCHITTESTINFO *lpht)
   day = MONTHCAL_CalcDayFromPos(infoPtr,x,y,&wday,&wnum);
   if(PtInRect(&infoPtr->wdays, lpht->pt)) {
     retval = MCHT_CALENDARDAY;
-    lpht->st.wYear  = infoPtr->currentYear;
-    lpht->st.wMonth = (day < 1)? infoPtr->currentMonth -1 : infoPtr->currentMonth;
+    lpht->st.wYear  = infoPtr->curSel.wYear;
+    lpht->st.wMonth = (day < 1)? infoPtr->curSel.wMonth -1 : infoPtr->curSel.wMonth;
     lpht->st.wDay   = (day < 1)?
-      MONTHCAL_MonthLength(infoPtr->currentMonth-1,infoPtr->currentYear) -day : day;
+      MONTHCAL_MonthLength(infoPtr->curSel.wMonth-1, infoPtr->curSel.wYear) -day : day;
     goto done;
   }
   if(PtInRect(&infoPtr->weeknums, lpht->pt)) {
     retval = MCHT_CALENDARWEEKNUM;
-    lpht->st.wYear  = infoPtr->currentYear;
-    lpht->st.wMonth = (day < 1) ? infoPtr->currentMonth -1 :
-      (day > MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear)) ?
-      infoPtr->currentMonth +1 :infoPtr->currentMonth;
+    lpht->st.wYear  = infoPtr->curSel.wYear;
+    lpht->st.wMonth = (day < 1) ? infoPtr->curSel.wMonth -1 :
+      (day > MONTHCAL_MonthLength(infoPtr->curSel.wMonth,infoPtr->curSel.wYear)) ?
+      infoPtr->curSel.wMonth +1 :infoPtr->curSel.wMonth;
     lpht->st.wDay   = (day < 1 ) ?
-      MONTHCAL_MonthLength(infoPtr->currentMonth-1,infoPtr->currentYear) -day :
-      (day > MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear)) ?
-      day - MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear) : day;
+      MONTHCAL_MonthLength(infoPtr->curSel.wMonth-1,infoPtr->curSel.wYear) -day :
+      (day > MONTHCAL_MonthLength(infoPtr->curSel.wMonth,infoPtr->curSel.wYear)) ?
+      day - MONTHCAL_MonthLength(infoPtr->curSel.wMonth,infoPtr->curSel.wYear) : day;
     goto done;
   }
   if(PtInRect(&infoPtr->days, lpht->pt))
-    {
-      lpht->st.wYear  = infoPtr->currentYear;
-      if ( day < 1)
-	{
+  {
+      lpht->st.wYear  = infoPtr->curSel.wYear;
+      lpht->st.wMonth = infoPtr->curSel.wMonth;
+      if (day < 1)
+      {
 	  retval = MCHT_CALENDARDATEPREV;
-	  lpht->st.wMonth = infoPtr->currentMonth - 1;
-	  if (lpht->st.wMonth <1)
-	    {
-	      lpht->st.wMonth = 12;
-	      lpht->st.wYear--;
-	    }
-	  lpht->st.wDay   = MONTHCAL_MonthLength(lpht->st.wMonth,lpht->st.wYear) -day;
-	}
-      else if (day > MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear))
-	{
+	  MONTHCAL_GetPrevMonth(&lpht->st);
+	  lpht->st.wDay = MONTHCAL_MonthLength(lpht->st.wMonth, lpht->st.wYear) + day;
+      }
+      else if (day > MONTHCAL_MonthLength(infoPtr->curSel.wMonth, infoPtr->curSel.wYear))
+      {
 	  retval = MCHT_CALENDARDATENEXT;
-	  lpht->st.wMonth = infoPtr->currentMonth + 1;
-	  if (lpht->st.wMonth <12)
-	    {
-	      lpht->st.wMonth = 1;
-	      lpht->st.wYear++;
-	    }
-	  lpht->st.wDay   = day - MONTHCAL_MonthLength(infoPtr->currentMonth,infoPtr->currentYear) ;
-	}
+	  MONTHCAL_GetNextMonth(&lpht->st);
+	  lpht->st.wDay = day - MONTHCAL_MonthLength(infoPtr->curSel.wMonth, infoPtr->curSel.wYear);
+      }
       else {
 	retval = MCHT_CALENDARDATE;
-	lpht->st.wMonth = infoPtr->currentMonth;
-	lpht->st.wDay   = day;
-	lpht->st.wDayOfWeek   = MONTHCAL_CalculateDayOfWeek(day,lpht->st.wMonth,lpht->st.wYear);
+	lpht->st.wDay = day;
       }
+      /* always update day of week */
+      MONTHCAL_CalculateDayOfWeek(&lpht->st, TRUE);
       goto done;
-    }
+  }
   if(PtInRect(&infoPtr->todayrect, lpht->pt)) {
     retval = MCHT_TODAYLINK;
     goto done;
@@ -1225,20 +1661,12 @@ MONTHCAL_HitTest(const MONTHCAL_INFO *infoPtr, MCHITTESTINFO *lpht)
   return retval;
 }
 
-
-static void MONTHCAL_GoToNextMonth(MONTHCAL_INFO *infoPtr)
+/* MCN_GETDAYSTATE notification helper */
+static void MONTHCAL_NotifyDayState(MONTHCAL_INFO *infoPtr)
 {
-  TRACE("MONTHCAL_GoToNextMonth\n");
-
-  infoPtr->currentMonth++;
-  if(infoPtr->currentMonth > 12) {
-    infoPtr->currentYear++;
-    infoPtr->currentMonth = 1;
-  }
-
   if(infoPtr->dwStyle & MCS_DAYSTATE) {
     NMDAYSTATE nmds;
-    int i;
+    INT i;
 
     nmds.nmhdr.hwndFrom = infoPtr->hwndSelf;
     nmds.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
@@ -1247,51 +1675,58 @@ static void MONTHCAL_GoToNextMonth(MONTHCAL_INFO *infoPtr)
     nmds.prgDayState	= Alloc(infoPtr->monthRange * sizeof(MONTHDAYSTATE));
 
     nmds.stStart = infoPtr->todaysDate;
-    nmds.stStart.wYear = infoPtr->currentYear;
-    nmds.stStart.wMonth = infoPtr->currentMonth;
+    nmds.stStart.wYear  = infoPtr->curSel.wYear;
+    nmds.stStart.wMonth = infoPtr->curSel.wMonth;
     nmds.stStart.wDay = 1;
 
     SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmds.nmhdr.idFrom, (LPARAM)&nmds);
-    for(i=0; i<infoPtr->monthRange; i++)
+    for(i = 0; i < infoPtr->monthRange; i++)
       infoPtr->monthdayState[i] = nmds.prgDayState[i];
+
+    Free(nmds.prgDayState);
   }
 }
 
-
-static void MONTHCAL_GoToPrevMonth(MONTHCAL_INFO *infoPtr)
+static void MONTHCAL_GoToPrevNextMonth(MONTHCAL_INFO *infoPtr, BOOL prev)
 {
-  TRACE("\n");
+  SYSTEMTIME st = infoPtr->curSel;
 
-  infoPtr->currentMonth--;
-  if(infoPtr->currentMonth < 1) {
-    infoPtr->currentYear--;
-    infoPtr->currentMonth = 12;
+  TRACE("%s\n", prev ? "prev" : "next");
+
+  if(prev) MONTHCAL_GetPrevMonth(&st); else MONTHCAL_GetNextMonth(&st);
+
+  if(!MONTHCAL_IsDateInValidRange(infoPtr, &st, FALSE)) return;
+
+  if(infoPtr->dwStyle & MCS_MULTISELECT)
+  {
+    SYSTEMTIME range[2];
+
+    range[0] = infoPtr->minSel;
+    range[1] = infoPtr->maxSel;
+
+    if(prev)
+    {
+      MONTHCAL_GetPrevMonth(&range[0]);
+      MONTHCAL_GetPrevMonth(&range[1]);
+    }
+    else
+    {
+      MONTHCAL_GetNextMonth(&range[0]);
+      MONTHCAL_GetNextMonth(&range[1]);
+    }
+
+    MONTHCAL_SetSelRange(infoPtr, range);
   }
+  else
+    MONTHCAL_SetCurSel(infoPtr, &st);
 
-  if(infoPtr->dwStyle & MCS_DAYSTATE) {
-    NMDAYSTATE nmds;
-    int i;
+  MONTHCAL_NotifyDayState(infoPtr);
 
-    nmds.nmhdr.hwndFrom = infoPtr->hwndSelf;
-    nmds.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
-    nmds.nmhdr.code     = MCN_GETDAYSTATE;
-    nmds.cDayState	= infoPtr->monthRange;
-    nmds.prgDayState	= Alloc
-                        (infoPtr->monthRange * sizeof(MONTHDAYSTATE));
-
-    nmds.stStart = infoPtr->todaysDate;
-    nmds.stStart.wYear = infoPtr->currentYear;
-    nmds.stStart.wMonth = infoPtr->currentMonth;
-    nmds.stStart.wDay = 1;
-
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmds.nmhdr.idFrom, (LPARAM)&nmds);
-    for(i=0; i<infoPtr->monthRange; i++)
-       infoPtr->monthdayState[i] = nmds.prgDayState[i];
-  }
+  MONTHCAL_NotifySelectionChange(infoPtr);
 }
 
 static LRESULT
-MONTHCAL_RButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
+MONTHCAL_RButtonUp(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 {
   static const WCHAR todayW[] = { 'G','o',' ','t','o',' ','T','o','d','a','y',':',0 };
   HMENU hMenu;
@@ -1299,181 +1734,204 @@ MONTHCAL_RButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
   WCHAR buf[32];
 
   hMenu = CreatePopupMenu();
-  if (!LoadStringW(COMCTL32_hModule,IDM_GOTODAY,buf,countof(buf)))
-    {
+  if (!LoadStringW(COMCTL32_hModule, IDM_GOTODAY, buf, countof(buf)))
+  {
       WARN("Can't load resource\n");
       strcpyW(buf, todayW);
-    }
-  AppendMenuW(hMenu, MF_STRING|MF_ENABLED,1, buf);
-  menupoint.x=(short)LOWORD(lParam);
-  menupoint.y=(short)HIWORD(lParam);
+  }
+  AppendMenuW(hMenu, MF_STRING|MF_ENABLED, 1, buf);
+  menupoint.x = (short)LOWORD(lParam);
+  menupoint.y = (short)HIWORD(lParam);
   ClientToScreen(infoPtr->hwndSelf, &menupoint);
-  if( TrackPopupMenu(hMenu,TPM_RIGHTBUTTON| TPM_NONOTIFY|TPM_RETURNCMD,
+  if( TrackPopupMenu(hMenu, TPM_RIGHTBUTTON | TPM_NONOTIFY | TPM_RETURNCMD,
 		     menupoint.x, menupoint.y, 0, infoPtr->hwndSelf, NULL))
-    {
-      infoPtr->currentMonth=infoPtr->todaysDate.wMonth;
-      infoPtr->currentYear=infoPtr->todaysDate.wYear;
+  {
+      infoPtr->curSel = infoPtr->todaysDate;
+      infoPtr->minSel = infoPtr->todaysDate;
+      infoPtr->maxSel = infoPtr->todaysDate;
       InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    }
+  }
+
   return 0;
+}
+
+/***
+ * DESCRIPTION:
+ * Subclassed edit control windproc function
+ *
+ * PARAMETER(S):
+ * [I] hwnd : the edit window handle
+ * [I] uMsg : the message that is to be processed
+ * [I] wParam : first message parameter
+ * [I] lParam : second message parameter
+ *
+ */
+static LRESULT CALLBACK EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    MONTHCAL_INFO *infoPtr = (MONTHCAL_INFO *)GetWindowLongPtrW(GetParent(hwnd), 0);
+
+    TRACE("(hwnd=%p, uMsg=%x, wParam=%lx, lParam=%lx)\n",
+	  hwnd, uMsg, wParam, lParam);
+
+    switch (uMsg)
+    {
+	case WM_GETDLGCODE:
+	  return DLGC_WANTARROWS | DLGC_WANTALLKEYS;
+
+	case WM_DESTROY:
+	{
+	    WNDPROC editProc = infoPtr->EditWndProc;
+	    infoPtr->EditWndProc = NULL;
+	    SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (DWORD_PTR)editProc);
+	    return CallWindowProcW(editProc, hwnd, uMsg, wParam, lParam);
+	}
+
+	case WM_KILLFOCUS:
+	    break;
+
+	case WM_KEYDOWN:
+	    if ((VK_ESCAPE == (INT)wParam) || (VK_RETURN == (INT)wParam))
+		break;
+
+	default:
+	    return CallWindowProcW(infoPtr->EditWndProc, hwnd, uMsg, wParam, lParam);
+    }
+
+    SendMessageW(infoPtr->hWndYearUpDown, WM_CLOSE, 0, 0);
+    SendMessageW(hwnd, WM_CLOSE, 0, 0);
+    return 0;
+}
+
+/* creates updown control and edit box */
+static void MONTHCAL_EditYear(MONTHCAL_INFO *infoPtr)
+{
+    infoPtr->hWndYearEdit =
+	CreateWindowExW(0, WC_EDITW, 0, WS_VISIBLE | WS_CHILD | ES_READONLY,
+			infoPtr->titleyear.left + 3, infoPtr->titlebtnnext.top,
+			infoPtr->titleyear.right - infoPtr->titleyear.left + 4,
+			infoPtr->textHeight, infoPtr->hwndSelf,
+			NULL, NULL, NULL);
+
+    SendMessageW(infoPtr->hWndYearEdit, WM_SETFONT, (WPARAM)infoPtr->hBoldFont, TRUE);
+
+    infoPtr->hWndYearUpDown =
+	CreateWindowExW(0, UPDOWN_CLASSW, 0,
+			WS_VISIBLE | WS_CHILD | UDS_SETBUDDYINT | UDS_NOTHOUSANDS | UDS_ARROWKEYS,
+			infoPtr->titleyear.right + 7, infoPtr->titlebtnnext.top,
+			18, infoPtr->textHeight, infoPtr->hwndSelf,
+			NULL, NULL, NULL);
+
+    /* attach edit box */
+    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETRANGE, 0,
+                 MAKELONG(max_allowed_date.wYear, min_allowed_date.wYear));
+    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETBUDDY, (WPARAM)infoPtr->hWndYearEdit, 0);
+    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETPOS, 0, infoPtr->curSel.wYear);
+
+    /* subclass edit box */
+    infoPtr->EditWndProc = (WNDPROC)SetWindowLongPtrW(infoPtr->hWndYearEdit,
+                                  GWLP_WNDPROC, (DWORD_PTR)EditWndProc);
+
+    SetFocus(infoPtr->hWndYearEdit);
 }
 
 static LRESULT
 MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 {
-  static const WCHAR EditW[] = { 'E','D','I','T',0 };
   MCHITTESTINFO ht;
   DWORD hit;
-  HMENU hMenu;
-  RECT rcDay; /* used in determining area to invalidate */
-  WCHAR buf[32];
-  int i;
-  POINT menupoint;
 
-  TRACE("%lx\n", lParam);
+  /* Actually we don't need input focus for calendar, this is used to kill
+     year updown and its buddy edit box */
+  if (IsWindow(infoPtr->hWndYearUpDown))
+  {
+      SetFocus(infoPtr->hwndSelf);
+      return 0;
+  }
 
-  if (infoPtr->hWndYearUpDown)
-    {
-      infoPtr->currentYear=SendMessageW(infoPtr->hWndYearUpDown, UDM_SETPOS, 0, 0);
-      if(!DestroyWindow(infoPtr->hWndYearUpDown))
-	{
-	  FIXME("Can't destroy Updown Control\n");
-	}
-      else
-	infoPtr->hWndYearUpDown=0;
-      if(!DestroyWindow(infoPtr->hWndYearEdit))
-	{
-	  FIXME("Can't destroy Updown Control\n");
-	}
-      else
-	infoPtr->hWndYearEdit=0;
-      InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    }
+  SetCapture(infoPtr->hwndSelf);
 
+  ht.cbSize = sizeof(MCHITTESTINFO);
   ht.pt.x = (short)LOWORD(lParam);
   ht.pt.y = (short)HIWORD(lParam);
+
   hit = MONTHCAL_HitTest(infoPtr, &ht);
 
-  /* FIXME: these flags should be checked by */
-  /*((hit & MCHT_XXX) == MCHT_XXX) b/c some of the flags are */
-  /* multi-bit */
-  if(hit ==MCHT_TITLEBTNNEXT) {
-    MONTHCAL_GoToNextMonth(infoPtr);
+  TRACE("%x at (%d, %d)\n", hit, ht.pt.x, ht.pt.y);
+
+  switch(hit)
+  {
+  case MCHT_TITLEBTNNEXT:
+    MONTHCAL_GoToPrevNextMonth(infoPtr, FALSE);
     infoPtr->status = MC_NEXTPRESSED;
-    SetTimer(infoPtr->hwndSelf, MC_NEXTMONTHTIMER, MC_NEXTMONTHDELAY, 0);
+    SetTimer(infoPtr->hwndSelf, MC_PREVNEXTMONTHTIMER, MC_PREVNEXTMONTHDELAY, 0);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     return 0;
-  }
-  if(hit == MCHT_TITLEBTNPREV){
-    MONTHCAL_GoToPrevMonth(infoPtr);
+
+  case MCHT_TITLEBTNPREV:
+    MONTHCAL_GoToPrevNextMonth(infoPtr, TRUE);
     infoPtr->status = MC_PREVPRESSED;
-    SetTimer(infoPtr->hwndSelf, MC_PREVMONTHTIMER, MC_NEXTMONTHDELAY, 0);
+    SetTimer(infoPtr->hwndSelf, MC_PREVNEXTMONTHTIMER, MC_PREVNEXTMONTHDELAY, 0);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
     return 0;
-  }
 
-  if(hit == MCHT_TITLEMONTH) {
-    hMenu = CreatePopupMenu();
+  case MCHT_TITLEMONTH:
+  {
+    HMENU hMenu = CreatePopupMenu();
+    WCHAR buf[32];
+    POINT menupoint;
+    INT i;
 
-    for (i=0; i<12;i++)
-      {
-	GetLocaleInfoW(LOCALE_USER_DEFAULT,LOCALE_SMONTHNAME1+i, buf,countof(buf));
-	AppendMenuW(hMenu, MF_STRING|MF_ENABLED,i+1, buf);
-      }
-    menupoint.x=infoPtr->titlemonth.right;
-    menupoint.y=infoPtr->titlemonth.bottom;
-    ClientToScreen(infoPtr->hwndSelf, &menupoint);
-    i= TrackPopupMenu(hMenu,TPM_LEFTALIGN | TPM_NONOTIFY | TPM_RIGHTBUTTON | TPM_RETURNCMD,
-		      menupoint.x, menupoint.y, 0, infoPtr->hwndSelf, NULL);
-    if ((i>0) && (i<13))
-      {
-	infoPtr->currentMonth=i;
-	InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-      }
-  }
-  if(hit == MCHT_TITLEYEAR) {
-    infoPtr->hWndYearEdit=CreateWindowExW(0,
-			 EditW,
-			   0,
-			 WS_VISIBLE | WS_CHILD |UDS_SETBUDDYINT,
-			 infoPtr->titleyear.left+3,infoPtr->titlebtnnext.top,
-			 infoPtr->titleyear.right-infoPtr->titleyear.left+4,
-			 infoPtr->textHeight,
-			 infoPtr->hwndSelf,
-			 NULL,
-			 NULL,
-			 NULL);
-    SendMessageW( infoPtr->hWndYearEdit, WM_SETFONT, (WPARAM) infoPtr->hBoldFont, (LPARAM)TRUE);
-    infoPtr->hWndYearUpDown=CreateWindowExW(0,
-			 UPDOWN_CLASSW,
-			   0,
-			 WS_VISIBLE | WS_CHILD |UDS_SETBUDDYINT|UDS_NOTHOUSANDS|UDS_ARROWKEYS,
-			 infoPtr->titleyear.right+7,infoPtr->titlebtnnext.top,
-			 18,
-			 infoPtr->textHeight,
-			 infoPtr->hwndSelf,
-			 NULL,
-			 NULL,
-			 NULL);
-    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETRANGE, 0, MAKELONG (9999, 1753));
-    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETBUDDY, (WPARAM) infoPtr->hWndYearEdit, 0);
-    SendMessageW(infoPtr->hWndYearUpDown, UDM_SETPOS, 0, infoPtr->currentYear);
-    return 0;
-
-  }
-  if(hit == MCHT_TODAYLINK) {
-    NMSELCHANGE nmsc;
-
-    infoPtr->curSelDay = infoPtr->todaysDate.wDay;
-    infoPtr->firstSelDay = infoPtr->todaysDate.wDay;
-    infoPtr->currentMonth=infoPtr->todaysDate.wMonth;
-    infoPtr->currentYear=infoPtr->todaysDate.wYear;
-    MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->minSel);
-    MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->maxSel);
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-
-    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
-    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
-    nmsc.nmhdr.code     = MCN_SELCHANGE;
-    MONTHCAL_CopyTime(&infoPtr->minSel, &nmsc.stSelStart);
-    MONTHCAL_CopyTime(&infoPtr->maxSel, &nmsc.stSelEnd);
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
-
-    nmsc.nmhdr.code     = MCN_SELECT;
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
-    return 0;
-  }
-  if(hit == MCHT_CALENDARDATE) {
-    SYSTEMTIME selArray[2];
-    NMSELCHANGE nmsc;
-
-    MONTHCAL_CopyTime(&ht.st, &selArray[0]);
-    MONTHCAL_CopyTime(&ht.st, &selArray[1]);
-    MONTHCAL_SetSelRange(infoPtr, selArray);
-    MONTHCAL_SetCurSel(infoPtr, &selArray[0]);
-    TRACE("MCHT_CALENDARDATE\n");
-    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
-    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
-    nmsc.nmhdr.code     = MCN_SELCHANGE;
-    MONTHCAL_CopyTime(&infoPtr->minSel,&nmsc.stSelStart);
-    MONTHCAL_CopyTime(&infoPtr->maxSel,&nmsc.stSelEnd);
-
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
-
-
-    /* redraw both old and new days if the selected day changed */
-    if(infoPtr->curSelDay != ht.st.wDay) {
-      MONTHCAL_CalcPosFromDay(infoPtr, ht.st.wDay, ht.st.wMonth, &rcDay);
-      InvalidateRect(infoPtr->hwndSelf, &rcDay, TRUE);
-
-      MONTHCAL_CalcPosFromDay(infoPtr, infoPtr->curSelDay, infoPtr->currentMonth, &rcDay);
-      InvalidateRect(infoPtr->hwndSelf, &rcDay, TRUE);
+    for (i = 0; i < 12; i++)
+    {
+	GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SMONTHNAME1+i, buf, countof(buf));
+	AppendMenuW(hMenu, MF_STRING|MF_ENABLED, i + 1, buf);
     }
+    menupoint.x = ht.pt.x;
+    menupoint.y = ht.pt.y;
+    ClientToScreen(infoPtr->hwndSelf, &menupoint);
+    i = TrackPopupMenu(hMenu,TPM_LEFTALIGN | TPM_NONOTIFY | TPM_RIGHTBUTTON | TPM_RETURNCMD,
+		       menupoint.x, menupoint.y, 0, infoPtr->hwndSelf, NULL);
 
-    infoPtr->firstSelDay = ht.st.wDay;
-    infoPtr->curSelDay = ht.st.wDay;
-    infoPtr->status = MC_SEL_LBUTDOWN;
+    if ((i > 0) && (i < 13) && infoPtr->curSel.wMonth != i)
+    {
+	infoPtr->curSel.wMonth = i;
+	MONTHCAL_IsDateInValidRange(infoPtr, &infoPtr->curSel, TRUE);
+	InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+    }
     return 0;
+  }
+  case MCHT_TITLEYEAR:
+  {
+    MONTHCAL_EditYear(infoPtr);
+    return 0;
+  }
+  case MCHT_TODAYLINK:
+  {
+    infoPtr->curSel = infoPtr->todaysDate;
+    infoPtr->minSel = infoPtr->todaysDate;
+    infoPtr->maxSel = infoPtr->todaysDate;
+    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+
+    MONTHCAL_NotifySelectionChange(infoPtr);
+    MONTHCAL_NotifySelect(infoPtr);
+    return 0;
+  }
+  case MCHT_CALENDARDATENEXT:
+  case MCHT_CALENDARDATEPREV:
+  case MCHT_CALENDARDATE:
+  {
+    SYSTEMTIME st[2];
+
+    MONTHCAL_CopyDate(&ht.st, &infoPtr->firstSel);
+
+    st[0] = st[1] = ht.st;
+    /* clear selection range */
+    MONTHCAL_SetSelRange(infoPtr, st);
+
+    infoPtr->status = MC_SEL_LBUTDOWN;
+    MONTHCAL_SetDayFocus(infoPtr, &ht.st);
+    return 0;
+  }
   }
 
   return 1;
@@ -1483,89 +1941,89 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 static LRESULT
 MONTHCAL_LButtonUp(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 {
-  NMSELCHANGE nmsc;
   NMHDR nmhdr;
-  BOOL redraw = FALSE;
   MCHITTESTINFO ht;
   DWORD hit;
 
   TRACE("\n");
 
-  if(infoPtr->status & MC_NEXTPRESSED) {
-    KillTimer(infoPtr->hwndSelf, MC_NEXTMONTHTIMER);
-    infoPtr->status &= ~MC_NEXTPRESSED;
-    redraw = TRUE;
-  }
-  if(infoPtr->status & MC_PREVPRESSED) {
-    KillTimer(infoPtr->hwndSelf, MC_PREVMONTHTIMER);
-    infoPtr->status &= ~MC_PREVPRESSED;
-    redraw = TRUE;
+  if(infoPtr->status & (MC_PREVPRESSED | MC_NEXTPRESSED)) {
+    RECT *r;
+
+    KillTimer(infoPtr->hwndSelf, MC_PREVNEXTMONTHTIMER);
+    r = infoPtr->status & MC_PREVPRESSED ? &infoPtr->titlebtnprev : &infoPtr->titlebtnnext;
+    infoPtr->status &= ~(MC_PREVPRESSED | MC_NEXTPRESSED);
+
+    InvalidateRect(infoPtr->hwndSelf, r, FALSE);
   }
 
-  ht.pt.x = (short)LOWORD(lParam);
-  ht.pt.y = (short)HIWORD(lParam);
-  hit = MONTHCAL_HitTest(infoPtr, &ht);
+  ReleaseCapture();
 
-  infoPtr->status = MC_SEL_LBUTUP;
-
-  if(hit ==MCHT_CALENDARDATENEXT) {
-    MONTHCAL_GoToNextMonth(infoPtr);
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    return TRUE;
-  }
-  if(hit == MCHT_CALENDARDATEPREV){
-    MONTHCAL_GoToPrevMonth(infoPtr);
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    return TRUE;
-  }
+  /* always send NM_RELEASEDCAPTURE notification */
   nmhdr.hwndFrom = infoPtr->hwndSelf;
   nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
   nmhdr.code     = NM_RELEASEDCAPTURE;
   TRACE("Sent notification from %p to %p\n", infoPtr->hwndSelf, infoPtr->hwndNotify);
 
   SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmhdr.idFrom, (LPARAM)&nmhdr);
-  /* redraw if necessary */
-  if(redraw)
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-  /* only send MCN_SELECT if currently displayed month's day was selected */
-  if(hit == MCHT_CALENDARDATE) {
-    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
-    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
-    nmsc.nmhdr.code     = MCN_SELECT;
-    MONTHCAL_CopyTime(&infoPtr->minSel, &nmsc.stSelStart);
-    MONTHCAL_CopyTime(&infoPtr->maxSel, &nmsc.stSelEnd);
 
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
+  if(!(infoPtr->status & MC_SEL_LBUTDOWN)) return 0;
 
+  ht.cbSize = sizeof(MCHITTESTINFO);
+  ht.pt.x = (short)LOWORD(lParam);
+  ht.pt.y = (short)HIWORD(lParam);
+  hit = MONTHCAL_HitTest(infoPtr, &ht);
+
+  infoPtr->status = MC_SEL_LBUTUP;
+  MONTHCAL_SetDayFocus(infoPtr, NULL);
+
+  if((hit & MCHT_CALENDARDATE) == MCHT_CALENDARDATE)
+  {
+    SYSTEMTIME sel = infoPtr->curSel;
+
+    /* will be invalidated here */
+    MONTHCAL_SetCurSel(infoPtr, &ht.st);
+
+    /* send MCN_SELCHANGE only if new date selected */
+    if (!MONTHCAL_IsDateEqual(&sel, &ht.st))
+        MONTHCAL_NotifySelectionChange(infoPtr);
+
+    MONTHCAL_NotifySelect(infoPtr);
   }
+
   return 0;
 }
 
 
 static LRESULT
-MONTHCAL_Timer(MONTHCAL_INFO *infoPtr, WPARAM wParam)
+MONTHCAL_Timer(MONTHCAL_INFO *infoPtr, WPARAM id)
 {
-  BOOL redraw = FALSE;
+  TRACE("%ld\n", id);
 
-  TRACE("%ld\n", wParam);
+  switch(id) {
+  case MC_PREVNEXTMONTHTIMER:
+    if(infoPtr->status & MC_NEXTPRESSED) MONTHCAL_GoToPrevNextMonth(infoPtr, FALSE);
+    if(infoPtr->status & MC_PREVPRESSED) MONTHCAL_GoToPrevNextMonth(infoPtr, TRUE);
+    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+    break;
+  case MC_TODAYUPDATETIMER:
+  {
+    SYSTEMTIME st;
 
-  switch(wParam) {
-  case MC_NEXTMONTHTIMER:
-    redraw = TRUE;
-    MONTHCAL_GoToNextMonth(infoPtr);
-    break;
-  case MC_PREVMONTHTIMER:
-    redraw = TRUE;
-    MONTHCAL_GoToPrevMonth(infoPtr);
-    break;
+    if(infoPtr->todaySet) return 0;
+
+    GetLocalTime(&st);
+    MONTHCAL_UpdateToday(infoPtr, &st);
+
+    /* notification sent anyway */
+    MONTHCAL_NotifySelectionChange(infoPtr);
+
+    return 0;
+  }
   default:
-    ERR("got unknown timer\n");
+    ERR("got unknown timer %ld\n", id);
     break;
   }
-
-  /* redraw only if necessary */
-  if(redraw)
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
 
   return 0;
 }
@@ -1575,11 +2033,13 @@ static LRESULT
 MONTHCAL_MouseMove(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 {
   MCHITTESTINFO ht;
-  int oldselday, selday, hit;
+  SYSTEMTIME st_ht;
+  INT hit;
   RECT r;
 
   if(!(infoPtr->status & MC_SEL_LBUTDOWN)) return 0;
 
+  ht.cbSize = sizeof(MCHITTESTINFO);
   ht.pt.x = (short)LOWORD(lParam);
   ht.pt.y = (short)HIWORD(lParam);
 
@@ -1587,58 +2047,46 @@ MONTHCAL_MouseMove(MONTHCAL_INFO *infoPtr, LPARAM lParam)
 
   /* not on the calendar date numbers? bail out */
   TRACE("hit:%x\n",hit);
-  if((hit & MCHT_CALENDARDATE) != MCHT_CALENDARDATE) return 0;
+  if((hit & MCHT_CALENDARDATE) != MCHT_CALENDARDATE)
+  {
+    MONTHCAL_SetDayFocus(infoPtr, NULL);
+    return 0;
+  }
 
-  selday = ht.st.wDay;
-  oldselday = infoPtr->curSelDay;
-  infoPtr->curSelDay = selday;
-  MONTHCAL_CalcPosFromDay(infoPtr, selday, ht.st. wMonth, &r);
+  st_ht = ht.st;
 
-  if(infoPtr->dwStyle & MCS_MULTISELECT)  {
-    SYSTEMTIME selArray[2];
-    int i;
+  /* if pointer is over focused day still there's nothing to do */
+  if(!MONTHCAL_SetDayFocus(infoPtr, &ht.st)) return 0;
 
-    MONTHCAL_GetSelRange(infoPtr, selArray);
-    i = 0;
-    if(infoPtr->firstSelDay==selArray[0].wDay) i=1;
-    TRACE("oldRange:%d %d %d %d\n", infoPtr->firstSelDay, selArray[0].wDay, selArray[1].wDay, i);
-    if(infoPtr->firstSelDay==selArray[1].wDay) {
-      /* 1st time we get here: selArray[0]=selArray[1])  */
-      /* if we're still at the first selected date, return */
-      if(infoPtr->firstSelDay==selday) goto done;
-      if(selday<infoPtr->firstSelDay) i = 0;
-    }
+  MONTHCAL_CalcPosFromDay(infoPtr, &ht.st, &r);
 
-    if(abs(infoPtr->firstSelDay - selday) >= infoPtr->maxSelCount) {
-      if(selday>infoPtr->firstSelDay)
-        selday = infoPtr->firstSelDay + infoPtr->maxSelCount;
-      else
-        selday = infoPtr->firstSelDay - infoPtr->maxSelCount;
-    }
+  if(infoPtr->dwStyle & MCS_MULTISELECT) {
+    SYSTEMTIME st[2];
 
-    if(selArray[i].wDay!=selday) {
-      TRACE("newRange:%d %d %d %d\n", infoPtr->firstSelDay, selArray[0].wDay, selArray[1].wDay, i);
+    MONTHCAL_GetSelRange(infoPtr, st);
 
-      selArray[i].wDay = selday;
+    /* If we're still at the first selected date and range is empty, return.
+       If range isn't empty we should change range to a single firstSel */
+    if(MONTHCAL_IsDateEqual(&infoPtr->firstSel, &st_ht) &&
+       MONTHCAL_IsDateEqual(&st[0], &st[1])) goto done;
 
-      if(selArray[0].wDay>selArray[1].wDay) {
-        DWORD tempday;
-        tempday = selArray[1].wDay;
-        selArray[1].wDay = selArray[0].wDay;
-        selArray[0].wDay = tempday;
-      }
+    MONTHCAL_IsSelRangeValid(infoPtr, &st_ht, &infoPtr->firstSel, &st_ht);
 
-      MONTHCAL_SetSelRange(infoPtr, selArray);
-    }
+    st[0] = infoPtr->firstSel;
+    /* we should overwrite timestamp here */
+    MONTHCAL_CopyDate(&st_ht, &st[1]);
+
+    /* bounds will be swapped here if needed */
+    MONTHCAL_SetSelRange(infoPtr, st);
+
+    return 0;
   }
 
 done:
 
-  /* only redraw if the currently selected day changed */
-  /* FIXME: this should specify a rectangle containing only the days that changed */
-  /* using InvalidateRect */
-  if(oldselday != infoPtr->curSelDay)
-    InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
+  /* FIXME: this should specify a rectangle containing only the days that changed
+     using InvalidateRect */
+  InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
 
   return 0;
 }
@@ -1663,20 +2111,38 @@ MONTHCAL_Paint(MONTHCAL_INFO *infoPtr, HDC hdc_paint)
   return 0;
 }
 
+static LRESULT
+MONTHCAL_EraseBkgnd(const MONTHCAL_INFO *infoPtr, HDC hdc)
+{
+  HBRUSH hbr;
+  RECT rc;
+
+  if (!GetClipBox(hdc, &rc)) return FALSE;
+
+  /* fill background */
+  hbr = CreateSolidBrush (infoPtr->bk);
+  FillRect(hdc, &rc, hbr);
+  DeleteObject(hbr);
+
+  return TRUE;
+}
 
 static LRESULT
-MONTHCAL_KillFocus(const MONTHCAL_INFO *infoPtr, HWND hFocusWnd)
+MONTHCAL_PrintClient(MONTHCAL_INFO *infoPtr, HDC hdc, DWORD options)
 {
-  TRACE("\n");
+  FIXME("Partial Stub: (hdc=%p options=0x%08x)\n", hdc, options);
 
-  if (infoPtr->hwndNotify != hFocusWnd)
-    ShowWindow(infoPtr->hwndSelf, SW_HIDE);
-  else
-    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+  if ((options & PRF_CHECKVISIBLE) && !IsWindowVisible(infoPtr->hwndSelf))
+      return 0;
+
+  if (options & PRF_ERASEBKGND)
+      MONTHCAL_EraseBkgnd(infoPtr, hdc);
+
+  if (options & PRF_CLIENT)
+      MONTHCAL_Paint(infoPtr, hdc);
 
   return 0;
 }
-
 
 static LRESULT
 MONTHCAL_SetFocus(const MONTHCAL_INFO *infoPtr)
@@ -1691,7 +2157,6 @@ MONTHCAL_SetFocus(const MONTHCAL_INFO *infoPtr)
 /* sets the size information */
 static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
 {
-  static const WCHAR SunW[] = { 'S','u','n',0 };
   static const WCHAR O0W[] = { '0','0',0 };
   HDC hdc = GetDC(infoPtr->hwndSelf);
   RECT *title=&infoPtr->title;
@@ -1703,11 +2168,12 @@ static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
   RECT *weeknumrect=&infoPtr->weeknums;
   RECT *days=&infoPtr->days;
   RECT *todayrect=&infoPtr->todayrect;
-  SIZE size;
+  SIZE size, sz;
   TEXTMETRICW tm;
   HFONT currentFont;
-  int xdiv, left_offset;
+  INT xdiv, dx, dy, i;
   RECT rcClient;
+  WCHAR buff[80];
 
   GetClientRect(infoPtr->hwndSelf, &rcClient);
 
@@ -1716,7 +2182,26 @@ static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
   /* get the height and width of each day's text */
   GetTextMetricsW(hdc, &tm);
   infoPtr->textHeight = tm.tmHeight + tm.tmExternalLeading + tm.tmInternalLeading;
-  GetTextExtentPoint32W(hdc, SunW, 3, &size);
+
+  /* find largest abbreviated day name for current locale */
+  size.cx = sz.cx = 0;
+  for (i = 0; i < 7; i++)
+  {
+      if(GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SABBREVDAYNAME1 + i,
+                        buff, countof(buff)))
+      {
+          GetTextExtentPoint32W(hdc, buff, lstrlenW(buff), &sz);
+          if (sz.cx > size.cx) size.cx = sz.cx;
+      }
+      else /* locale independent fallback on failure */
+      {
+          static const WCHAR SunW[] = { 'S','u','n',0 };
+
+          GetTextExtentPoint32W(hdc, SunW, lstrlenW(SunW), &size);
+          break;
+      }
+  }
+
   infoPtr->textWidth = size.cx + 2;
 
   /* recalculate the height and width increments and offsets */
@@ -1724,22 +2209,21 @@ static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
 
   xdiv = (infoPtr->dwStyle & MCS_WEEKNUMBERS) ? 8 : 7;
 
-  infoPtr->width_increment = size.cx * 2 + 4;
+  infoPtr->width_increment  = size.cx * 2 + 4;
   infoPtr->height_increment = infoPtr->textHeight;
-  left_offset = (rcClient.right - rcClient.left) - (infoPtr->width_increment * xdiv);
 
   /* calculate title area */
-  title->top    = rcClient.top;
-  title->bottom = title->top + 3 * infoPtr->height_increment / 2;
-  title->left   = left_offset;
-  title->right  = rcClient.right;
+  title->top    = 0;
+  title->bottom = 3 * infoPtr->height_increment / 2;
+  title->left   = 0;
+  title->right  = infoPtr->width_increment * xdiv;
 
   /* set the dimensions of the next and previous buttons and center */
   /* the month text vertically */
   prev->top    = next->top    = title->top + 4;
   prev->bottom = next->bottom = title->bottom - 4;
   prev->left   = title->left + 4;
-  prev->right  = prev->left + (title->bottom - title->top) ;
+  prev->right  = prev->left + (title->bottom - title->top);
   next->right  = title->right - 4;
   next->left   = next->right - (title->bottom - title->top);
 
@@ -1751,23 +2235,46 @@ static void MONTHCAL_UpdateSize(MONTHCAL_INFO *infoPtr)
 
   /* setup the dimensions of the rectangle we draw the names of the */
   /* days of the week in */
-  weeknumrect->left = left_offset;
+  weeknumrect->left = 0;
+
   if(infoPtr->dwStyle & MCS_WEEKNUMBERS)
-    weeknumrect->right=prev->right;
+    weeknumrect->right = prev->right;
   else
-    weeknumrect->right=weeknumrect->left;
+    weeknumrect->right = weeknumrect->left;
+
   wdays->left   = days->left   = weeknumrect->right;
   wdays->right  = days->right  = wdays->left + 7 * infoPtr->width_increment;
-  wdays->top    = title->bottom ;
+  wdays->top    = title->bottom;
   wdays->bottom = wdays->top + infoPtr->height_increment;
 
-  days->top    = weeknumrect->top = wdays->bottom ;
+  days->top    = weeknumrect->top = wdays->bottom;
   days->bottom = weeknumrect->bottom = days->top + 6 * infoPtr->height_increment;
 
-  todayrect->left   = rcClient.left;
-  todayrect->right  = rcClient.right;
+  todayrect->left   = 0;
+  todayrect->right  = title->right;
   todayrect->top    = days->bottom;
   todayrect->bottom = days->bottom + infoPtr->height_increment;
+
+  /* offset all rectangles to center in client area */
+  dx = (rcClient.right  - title->right) / 2;
+  dy = (rcClient.bottom - todayrect->bottom) / 2;
+
+  /* if calendar doesn't fit client area show it at left/top bounds */
+  if (title->left + dx < 0) dx = 0;
+  if (title->top  + dy < 0) dy = 0;
+
+  if (dx != 0 || dy != 0)
+  {
+    OffsetRect(title, dx, dy);
+    OffsetRect(prev,  dx, dy);
+    OffsetRect(next,  dx, dy);
+    OffsetRect(titlemonth, dx, dy);
+    OffsetRect(titleyear, dx, dy);
+    OffsetRect(wdays, dx, dy);
+    OffsetRect(weeknumrect, dx, dy);
+    OffsetRect(days, dx, dy);
+    OffsetRect(todayrect, dx, dy);
+  }
 
   TRACE("dx=%d dy=%d client[%s] title[%s] wdays[%s] days[%s] today[%s]\n",
 	infoPtr->width_increment,infoPtr->height_increment,
@@ -1841,6 +2348,28 @@ static INT MONTHCAL_StyleChanged(MONTHCAL_INFO *infoPtr, WPARAM wStyleType,
 
     infoPtr->dwStyle = lpss->styleNew;
 
+    /* make room for week numbers */
+    if ((lpss->styleNew ^ lpss->styleOld) & MCS_WEEKNUMBERS)
+        MONTHCAL_UpdateSize(infoPtr);
+
+    return 0;
+}
+
+static INT MONTHCAL_StyleChanging(MONTHCAL_INFO *infoPtr, WPARAM wStyleType,
+                                  STYLESTRUCT *lpss)
+{
+    TRACE("(styletype=%lx, styleOld=0x%08x, styleNew=0x%08x)\n",
+          wStyleType, lpss->styleOld, lpss->styleNew);
+
+    /* block MCS_MULTISELECT change */
+    if ((lpss->styleNew ^ lpss->styleOld) & MCS_MULTISELECT)
+    {
+        if (lpss->styleOld & MCS_MULTISELECT)
+            lpss->styleNew |= MCS_MULTISELECT;
+        else
+            lpss->styleNew &= ~MCS_MULTISELECT;
+    }
+
     return 0;
 }
 
@@ -1869,33 +2398,30 @@ MONTHCAL_Create(HWND hwnd, LPCREATESTRUCTW lpcs)
   /* FIXME: calculate systemtime ->> localtime(substract timezoneinfo) */
 
   GetLocalTime(&infoPtr->todaysDate);
-  infoPtr->firstDayHighWord = FALSE;
   MONTHCAL_SetFirstDayOfWeek(infoPtr, -1);
-  infoPtr->currentMonth = infoPtr->todaysDate.wMonth;
-  infoPtr->currentYear = infoPtr->todaysDate.wYear;
-  MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->minDate);
-  MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->maxDate);
-  infoPtr->maxDate.wYear=2050;
-  infoPtr->minDate.wYear=1950;
-  infoPtr->maxSelCount  = 7;
-  infoPtr->monthRange = 3;
-  infoPtr->monthdayState = Alloc
-                         (infoPtr->monthRange * sizeof(MONTHDAYSTATE));
-  infoPtr->titlebk     = comctl32_color.clrActiveCaption;
-  infoPtr->titletxt    = comctl32_color.clrWindow;
-  infoPtr->monthbk     = comctl32_color.clrWindow;
-  infoPtr->trailingtxt = comctl32_color.clrGrayText;
-  infoPtr->bk          = comctl32_color.clrWindow;
-  infoPtr->txt	       = comctl32_color.clrWindowText;
 
-  /* set the current day for highlighing */
-  infoPtr->minSel.wDay = infoPtr->todaysDate.wDay;
-  infoPtr->maxSel.wDay = infoPtr->todaysDate.wDay;
+  infoPtr->maxSelCount   = (infoPtr->dwStyle & MCS_MULTISELECT) ? 7 : 1;
+  infoPtr->monthRange    = 3;
+  infoPtr->monthdayState = Alloc(infoPtr->monthRange * sizeof(MONTHDAYSTATE));
+  infoPtr->titlebk       = comctl32_color.clrActiveCaption;
+  infoPtr->titletxt      = comctl32_color.clrWindow;
+  infoPtr->monthbk       = comctl32_color.clrWindow;
+  infoPtr->trailingtxt   = comctl32_color.clrGrayText;
+  infoPtr->bk            = comctl32_color.clrWindow;
+  infoPtr->txt	         = comctl32_color.clrWindowText;
+
+  infoPtr->minSel = infoPtr->todaysDate;
+  infoPtr->maxSel = infoPtr->todaysDate;
+  infoPtr->curSel = infoPtr->todaysDate;
+  infoPtr->isUnicode = TRUE;
 
   /* call MONTHCAL_UpdateSize to set all of the dimensions */
   /* of the control */
   MONTHCAL_UpdateSize(infoPtr);
-  
+
+  /* today auto update timer, to be freed only on control destruction */
+  SetTimer(infoPtr->hwndSelf, MC_TODAYUPDATETIMER, MC_TODAYUPDATEDELAY, 0);
+
   OpenThemeData (infoPtr->hwndSelf, themeClass);
 
   return 0;
@@ -1915,6 +2441,45 @@ MONTHCAL_Destroy(MONTHCAL_INFO *infoPtr)
   return 0;
 }
 
+/*
+ * Handler for WM_NOTIFY messages
+ */
+static LRESULT
+MONTHCAL_Notify(MONTHCAL_INFO *infoPtr, NMHDR *hdr)
+{
+  /* notification from year edit updown */
+  if (hdr->code == UDN_DELTAPOS)
+  {
+    NMUPDOWN *nmud = (NMUPDOWN*)hdr;
+
+    if (hdr->hwndFrom == infoPtr->hWndYearUpDown)
+    {
+      /* year value limits are set up explicitly after updown creation */
+      if ((nmud->iDelta + nmud->iPos) != infoPtr->curSel.wYear)
+      {
+        SYSTEMTIME new_date = infoPtr->curSel;
+
+        new_date.wYear = nmud->iDelta + nmud->iPos;
+        MONTHCAL_SetCurSel(infoPtr, &new_date);
+      }
+    }
+  }
+  return 0;
+}
+
+static inline BOOL
+MONTHCAL_SetUnicodeFormat(MONTHCAL_INFO *infoPtr, BOOL isUnicode)
+{
+  BOOL prev = infoPtr->isUnicode;
+  infoPtr->isUnicode = isUnicode;
+  return prev;
+}
+
+static inline BOOL
+MONTHCAL_GetUnicodeFormat(const MONTHCAL_INFO *infoPtr)
+{
+  return infoPtr->isUnicode;
+}
 
 static LRESULT WINAPI
 MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1947,7 +2512,7 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return MONTHCAL_SetSelRange(infoPtr, (LPSYSTEMTIME)lParam);
 
   case MCM_GETMONTHRANGE:
-    return MONTHCAL_GetMonthRange(infoPtr);
+    return MONTHCAL_GetMonthRange(infoPtr, wParam, (SYSTEMTIME*)lParam);
 
   case MCM_SETDAYSTATE:
     return MONTHCAL_SetDayState(infoPtr, (INT)wParam, (LPMONTHDAYSTATE)lParam);
@@ -1991,14 +2556,17 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   case MCM_GETMAXTODAYWIDTH:
     return MONTHCAL_GetMaxTodayWidth(infoPtr);
 
+  case MCM_SETUNICODEFORMAT:
+    return MONTHCAL_SetUnicodeFormat(infoPtr, (BOOL)wParam);
+
+  case MCM_GETUNICODEFORMAT:
+    return MONTHCAL_GetUnicodeFormat(infoPtr);
+
   case WM_GETDLGCODE:
     return DLGC_WANTARROWS | DLGC_WANTCHARS;
 
-  case WM_KILLFOCUS:
-    return MONTHCAL_KillFocus(infoPtr, (HWND)wParam);
-
-  case WM_RBUTTONDOWN:
-    return MONTHCAL_RButtonDown(infoPtr, lParam);
+  case WM_RBUTTONUP:
+    return MONTHCAL_RButtonUp(infoPtr, lParam);
 
   case WM_LBUTTONDOWN:
     return MONTHCAL_LButtonDown(infoPtr, lParam);
@@ -2009,15 +2577,23 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   case WM_LBUTTONUP:
     return MONTHCAL_LButtonUp(infoPtr, lParam);
 
-  case WM_PRINTCLIENT:
   case WM_PAINT:
     return MONTHCAL_Paint(infoPtr, (HDC)wParam);
+
+  case WM_PRINTCLIENT:
+    return MONTHCAL_PrintClient(infoPtr, (HDC)wParam, (DWORD)lParam);
+
+  case WM_ERASEBKGND:
+    return MONTHCAL_EraseBkgnd(infoPtr, (HDC)wParam);
 
   case WM_SETFOCUS:
     return MONTHCAL_SetFocus(infoPtr);
 
   case WM_SIZE:
     return MONTHCAL_Size(infoPtr, (SHORT)LOWORD(lParam), (SHORT)HIWORD(lParam));
+
+  case WM_NOTIFY:
+    return MONTHCAL_Notify(infoPtr, (NMHDR*)lParam);
 
   case WM_CREATE:
     return MONTHCAL_Create(hwnd, (LPCREATESTRUCTW)lParam);
@@ -2043,6 +2619,9 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_STYLECHANGED:
     return MONTHCAL_StyleChanged(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
+
+  case WM_STYLECHANGING:
+    return MONTHCAL_StyleChanging(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
 
   default:
     if ((uMsg >= WM_USER) && (uMsg < WM_APP) && !COMCTL32_IsReflectedMessage(uMsg))

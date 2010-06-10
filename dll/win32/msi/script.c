@@ -62,7 +62,7 @@ static HRESULT create_ActiveScriptSite(IUnknown *pUnkOuter, LPVOID *ppObj)
     if( pUnkOuter )
         return CLASS_E_NOAGGREGATION;
 
-    object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MsiActiveScriptSite));
+    object = msi_alloc_zero( sizeof(MsiActiveScriptSite) );
 
     object->lpVtbl.lpVtbl = &ASS_Vtbl;
     object->ref = 1;
@@ -236,7 +236,7 @@ static ULONG WINAPI MsiActiveScriptSite_Release(IActiveScriptSite* iface)
     TRACE("(%p/%p)\n", iface, This);
 
     if (!ref)
-        HeapFree(GetProcessHeap(), 0, This);
+        msi_free(This);
 
     return ref;
 }

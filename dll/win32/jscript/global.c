@@ -550,7 +550,7 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         VARIANT *retv, jsexcept_t *ei, IServiceProvider *sp)
 {
     LONGLONG d = 0, hlp;
-    int exp = 0, length;
+    int exp = 0;
     VARIANT *arg;
     WCHAR *str;
     BSTR val_str = NULL;
@@ -569,7 +569,6 @@ static HRESULT JSGlobal_parseFloat(script_ctx_t *ctx, vdisp_t *jsthis, WORD flag
         return hres;
 
     str = val_str;
-    length = SysStringLen(val_str);
 
     while(isspaceW(*str)) str++;
 

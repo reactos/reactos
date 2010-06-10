@@ -365,6 +365,15 @@ MiniResetComplete(
 
     KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
 
+    if (Adapter->NdisMiniportBlock.ResetStatus != NDIS_STATUS_PENDING)
+    {
+        KeBugCheckEx(BUGCODE_ID_DRIVER,
+                     (ULONG_PTR)MiniportAdapterHandle,
+                     (ULONG_PTR)Status,
+                     (ULONG_PTR)AddressingReset,
+                     0);
+    }
+
     Adapter->NdisMiniportBlock.ResetStatus = Status;
 
     CurrentEntry = Adapter->ProtocolListHead.Flink;
@@ -1959,6 +1968,22 @@ NdisIPnPStartDevice(
     {
       NDIS_DbgPrint(MIN_TRACE, ("MiniportInitialize() failed for an adapter.\n"));
       ExInterlockedRemoveEntryList( &Adapter->ListEntry, &AdapterListLock );
+      if (Adapter->NdisMiniportBlock.Interrupt)
+      {
+          KeBugCheckEx(BUGCODE_ID_DRIVER,
+                       (ULONG_PTR)Adapter,
+                       (ULONG_PTR)Adapter->NdisMiniportBlock.Interrupt,
+                       (ULONG_PTR)Adapter->NdisMiniportBlock.TimerQueue,
+                       1);
+      }
+      if (Adapter->NdisMiniportBlock.TimerQueue)
+      {
+          KeBugCheckEx(BUGCODE_ID_DRIVER,
+                       (ULONG_PTR)Adapter,
+                       (ULONG_PTR)Adapter->NdisMiniportBlock.Interrupt,
+                       (ULONG_PTR)Adapter->NdisMiniportBlock.TimerQueue,
+                       1);
+      }
       return NdisStatus;
     }
 

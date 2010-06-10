@@ -496,6 +496,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);
+        RtlFreeUnicodeString(&NamedPipeName);
         return FALSE;
     }
 
@@ -538,9 +539,11 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     if (!NT_SUCCESS(Status))
     {
         SetLastErrorByStatus(Status);
+        RtlFreeUnicodeString(&NamedPipeName);
         return FALSE;
     }
 
+    RtlFreeUnicodeString(&NamedPipeName);
     return TRUE;
 }
 #endif

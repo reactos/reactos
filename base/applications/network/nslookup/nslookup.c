@@ -90,11 +90,7 @@ BOOL PerformInternalLookup( PCHAR pAddr, PCHAR pResult )
     BOOL bOk = FALSE;
 
     /* Makes things easier when parsing the response packet. */
-    UCHAR Header1, Header2;
     USHORT NumQuestions;
-    USHORT NumAnswers;
-    USHORT NumAuthority;
-    USHORT NumAdditional;
     USHORT Type;
 
     if( (strlen( pAddr ) + 1) > 255 ) return FALSE;
@@ -198,12 +194,7 @@ BOOL PerformInternalLookup( PCHAR pAddr, PCHAR pResult )
     if( !bOk ) goto cleanup;
 
     /* Start parsing the received packet. */
-    Header1 = RecBuffer[2];
-    Header2 = RecBuffer[3];
     NumQuestions = ntohs( ((PSHORT)&RecBuffer[4])[0] );
-    NumAnswers = ntohs( ((PSHORT)&RecBuffer[6])[0] );
-    NumAuthority = ntohs( ((PUSHORT)&RecBuffer[8])[0] );
-    NumAdditional = ntohs( ((PUSHORT)&RecBuffer[10])[0] );
 
     k = 12;
 
@@ -257,11 +248,10 @@ void PerformLookup( PCHAR pAddr )
     BOOL bOk = FALSE;
 
     /* Makes things easier when parsing the response packet. */
-    UCHAR Header1, Header2;
+    UCHAR Header2;
     USHORT NumQuestions;
     USHORT NumAnswers;
     USHORT NumAuthority;
-    USHORT NumAdditional;
     USHORT Type;
 
     if( (strlen( pAddr ) + 1) > 255 ) return;
@@ -368,19 +358,17 @@ void PerformLookup( PCHAR pAddr )
     ((PSHORT)&Buffer[i])[0] = htons( ClassNametoClassID( State.Class ) );
 
     /* Ship off the request to the DNS server. */
-	bOk = SendRequest( Buffer,
+    bOk = SendRequest( Buffer,
                        BufferLength,
                        RecBuffer,
                        &RecBufferLength );
     if( !bOk ) goto cleanup;
 
     /* Start parsing the received packet. */
-    Header1 = RecBuffer[2];
     Header2 = RecBuffer[3];
     NumQuestions = ntohs( ((PSHORT)&RecBuffer[4])[0] );
     NumAnswers = ntohs( ((PSHORT)&RecBuffer[6])[0] );
     NumAuthority = ntohs( ((PUSHORT)&RecBuffer[8])[0] );
-    NumAdditional = ntohs( ((PUSHORT)&RecBuffer[10])[0] );
     Type = 0;
 
     /* Check the RCODE for failure. */

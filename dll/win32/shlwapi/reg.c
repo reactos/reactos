@@ -331,8 +331,25 @@ LONG WINAPI SHRegEnumUSValueA(HUSKEY hUSKey, DWORD dwIndex, LPSTR pszValueName,
                               LPDWORD pcchValueNameLen, LPDWORD pdwType, LPVOID pvData,
                               LPDWORD pcbData, SHREGENUM_FLAGS enumRegFlags)
 {
-    FIXME("(%p, 0x%08x, %s, %p, %p, %p, %p, 0x%08x) stub\n", hUSKey, dwIndex,
-          debugstr_a(pszValueName), pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+    HKEY dokey;
+
+    TRACE("(%p, 0x%08x, %p, %p, %p, %p, %p, 0x%08x)\n", hUSKey, dwIndex,
+          pszValueName, pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+
+    if (((enumRegFlags == SHREGENUM_HKCU) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
+        return RegEnumValueA(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+
+    if (((enumRegFlags == SHREGENUM_HKLM) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
+        return RegEnumValueA(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+    FIXME("no support for SHREGENUM_BOTH\n");
     return ERROR_INVALID_FUNCTION;
 }
 
@@ -345,8 +362,25 @@ LONG WINAPI SHRegEnumUSValueW(HUSKEY hUSKey, DWORD dwIndex, LPWSTR pszValueName,
                               LPDWORD pcchValueNameLen, LPDWORD pdwType, LPVOID pvData,
                               LPDWORD pcbData, SHREGENUM_FLAGS enumRegFlags)
 {
-    FIXME("(%p, 0x%08x, %s, %p, %p, %p, %p, 0x%08x) stub\n", hUSKey, dwIndex,
-          debugstr_w(pszValueName), pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+    HKEY dokey;
+
+    TRACE("(%p, 0x%08x, %p, %p, %p, %p, %p, 0x%08x)\n", hUSKey, dwIndex,
+          pszValueName, pcchValueNameLen, pdwType, pvData, pcbData, enumRegFlags);
+
+    if (((enumRegFlags == SHREGENUM_HKCU) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKCU))) {
+        return RegEnumValueW(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+
+    if (((enumRegFlags == SHREGENUM_HKLM) ||
+         (enumRegFlags == SHREGENUM_DEFAULT)) &&
+        (dokey = REG_GetHKEYFromHUSKEY(hUSKey,REG_HKLM))) {
+        return RegEnumValueW(dokey, dwIndex, pszValueName, pcchValueNameLen,
+                             NULL, pdwType, pvData, pcbData);
+    }
+    FIXME("no support for SHREGENUM_BOTH\n");
     return ERROR_INVALID_FUNCTION;
 }
 

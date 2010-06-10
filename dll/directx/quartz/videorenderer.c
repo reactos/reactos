@@ -82,8 +82,8 @@ typedef struct VideoRendererImpl
     RECT SourceRect;
     RECT DestRect;
     RECT WindowPos;
-    long VideoWidth;
-    long VideoHeight;
+    LONG VideoWidth;
+    LONG VideoHeight;
     IUnknown * pUnkOuter;
     BOOL bUnkOuterValid;
     BOOL bAggregatable;
@@ -287,7 +287,6 @@ static DWORD VideoRenderer_SendSampleData(VideoRendererImpl* This, LPBYTE data, 
         return VFW_E_RUNTIME_ERROR;
     }
 
-
     TRACE("biSize = %d\n", bmiHeader->biSize);
     TRACE("biWidth = %d\n", bmiHeader->biWidth);
     TRACE("biHeight = %d\n", bmiHeader->biHeight);
@@ -344,7 +343,7 @@ static HRESULT VideoRenderer_Sample(LPVOID iface, IMediaSample * pSample)
 {
     VideoRendererImpl *This = iface;
     LPBYTE pbSrcStream = NULL;
-    long cbSrcStream = 0;
+    LONG cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop;
     HRESULT hr;
 
@@ -396,7 +395,7 @@ static HRESULT VideoRenderer_Sample(LPVOID iface, IMediaSample * pSample)
 
     cbSrcStream = IMediaSample_GetActualDataLength(pSample);
 
-    TRACE("val %p %ld\n", pbSrcStream, cbSrcStream);
+    TRACE("val %p %d\n", pbSrcStream, cbSrcStream);
 
 #if 0 /* For debugging purpose */
     {
@@ -483,6 +482,7 @@ static HRESULT VideoRenderer_QueryAccept(LPVOID iface, const AM_MEDIA_TYPE * pmt
         IsEqualIID(&pmt->subtype, &MEDIASUBTYPE_RGB8))
     {
         VideoRendererImpl* This = iface;
+        LONG height;
 
         if (IsEqualIID(&pmt->formattype, &FORMAT_VideoInfo))
         {
@@ -490,7 +490,11 @@ static HRESULT VideoRenderer_QueryAccept(LPVOID iface, const AM_MEDIA_TYPE * pmt
             This->SourceRect.left = 0;
             This->SourceRect.top = 0;
             This->SourceRect.right = This->VideoWidth = format->bmiHeader.biWidth;
-            This->SourceRect.bottom = This->VideoHeight = format->bmiHeader.biHeight;
+            height = format->bmiHeader.biHeight;
+            if (height < 0)
+                This->SourceRect.bottom = This->VideoHeight = -height;
+            else
+                This->SourceRect.bottom = This->VideoHeight = height;
         }
         else if (IsEqualIID(&pmt->formattype, &FORMAT_VideoInfo2))
         {
@@ -499,7 +503,11 @@ static HRESULT VideoRenderer_QueryAccept(LPVOID iface, const AM_MEDIA_TYPE * pmt
             This->SourceRect.left = 0;
             This->SourceRect.top = 0;
             This->SourceRect.right = This->VideoWidth = format2->bmiHeader.biWidth;
-            This->SourceRect.bottom = This->VideoHeight = format2->bmiHeader.biHeight;
+            height = format2->bmiHeader.biHeight;
+            if (height < 0)
+                This->SourceRect.bottom = This->VideoHeight = -height;
+            else
+                This->SourceRect.bottom = This->VideoHeight = height;
         }
         else
         {
@@ -1176,10 +1184,25 @@ static HRESULT WINAPI Basicvideo_Invoke(IBasicVideo *iface,
 /*** IBasicVideo methods ***/
 static HRESULT WINAPI Basicvideo_get_AvgTimePerFrame(IBasicVideo *iface,
 						     REFTIME *pAvgTimePerFrame) {
+    AM_MEDIA_TYPE *pmt;
     ICOM_THIS_MULTI(VideoRendererImpl, IBasicVideo_vtbl, iface);
 
-    FIXME("(%p/%p)->(%p): stub !!!\n", This, iface, pAvgTimePerFrame);
+    if (!This->pInputPin->pin.pConnectedTo)
+        return VFW_E_NOT_CONNECTED;
 
+    TRACE("(%p/%p)->(%p)\n", This, iface, pAvgTimePerFrame);
+
+    pmt = &This->pInputPin->pin.mtCurrent;
+    if (IsEqualIID(&pmt->formattype, &FORMAT_VideoInfo)) {
+        VIDEOINFOHEADER *vih = (VIDEOINFOHEADER*)pmt->pbFormat;
+        *pAvgTimePerFrame = vih->AvgTimePerFrame;
+    } else if (IsEqualIID(&pmt->formattype, &FORMAT_VideoInfo2)) {
+        VIDEOINFOHEADER2 *vih = (VIDEOINFOHEADER2*)pmt->pbFormat;
+        *pAvgTimePerFrame = vih->AvgTimePerFrame;
+    } else {
+        ERR("Unknown format type %s\n", qzdebugstr_guid(&pmt->formattype));
+        *pAvgTimePerFrame = 0;
+    }
     return S_OK;
 }
 
@@ -1779,9 +1802,6 @@ static HRESULT WINAPI Videowindow_put_WindowStyleEx(IVideoWindow *iface,
 
     TRACE("(%p/%p)->(%d)\n", This, iface, WindowStyleEx);
 
-    if (WindowStyleEx & (WS_DISABLED|WS_HSCROLL|WS_ICONIC|WS_MAXIMIZE|WS_MINIMIZE|WS_VSCROLL))
-        return E_INVALIDARG;
-
     if (!SetWindowLongA(This->hWnd, GWL_EXSTYLE, WindowStyleEx))
         return E_FAIL;
 
@@ -1805,7 +1825,7 @@ static HRESULT WINAPI Videowindow_put_AutoShow(IVideoWindow *iface,
 
     TRACE("(%p/%p)->(%d)\n", This, iface, AutoShow);
 
-    This->AutoShow = 1; /* FIXME: Should be AutoShow */;
+    This->AutoShow = AutoShow;
 
     return S_OK;
 }
@@ -1825,16 +1845,20 @@ static HRESULT WINAPI Videowindow_put_WindowState(IVideoWindow *iface,
                                                   LONG WindowState) {
     ICOM_THIS_MULTI(VideoRendererImpl, IVideoWindow_vtbl, iface);
 
-    FIXME("(%p/%p)->(%d): stub !!!\n", This, iface, WindowState);
-
+    TRACE("(%p/%p)->(%d)\n", This, iface, WindowState);
+    ShowWindow(This->hWnd, WindowState);
     return S_OK;
 }
 
 static HRESULT WINAPI Videowindow_get_WindowState(IVideoWindow *iface,
                                                   LONG *WindowState) {
+    WINDOWPLACEMENT place;
     ICOM_THIS_MULTI(VideoRendererImpl, IVideoWindow_vtbl, iface);
 
-    FIXME("(%p/%p)->(%p): stub !!!\n", This, iface, WindowState);
+    place.length = sizeof(place);
+    GetWindowPlacement(This->hWnd, &place);
+    TRACE("(%p/%p)->(%p)\n", This, iface, WindowState);
+    *WindowState = place.showCmd;
 
     return S_OK;
 }

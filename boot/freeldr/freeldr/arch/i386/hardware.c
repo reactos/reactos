@@ -433,41 +433,22 @@ static LONG DiskOpen(CHAR* Path, OPENMODE OpenMode, ULONG* FileId)
     ULONGLONG SectorOffset = 0;
     ULONGLONG SectorCount = 0;
     PARTITION_TABLE_ENTRY PartitionTableEntry;
-    GEOMETRY Geometry;
-    EXTENDED_GEOMETRY ExtGeometry;
     CHAR FileName[1];
 
     if (!DissectArcPath(Path, FileName, &DriveNumber, &DrivePartition))
         return EINVAL;
 
-    ExtGeometry.Size = sizeof(EXTENDED_GEOMETRY);
-    if (DiskGetExtendedDriveParameters(DriveNumber, &ExtGeometry, ExtGeometry.Size))
+    if (DrivePartition == 0xff)
     {
-        SectorSize = ExtGeometry.BytesPerSector;
-        SectorCount = ExtGeometry.Sectors;
-    }
-    else if (MachDiskGetDriveGeometry(DriveNumber, &Geometry))
-    {
-        SectorSize = Geometry.BytesPerSector;
-        SectorCount = Geometry.Sectors;
+        /* This is a CD-ROM device */
+        SectorSize = 2048;
     }
     else
     {
-        DPRINTM(DPRINT_HWDETECT, "Using legacy sector size detection\n");
-
-        /* Fall back to legacy detection */
-        if (DrivePartition == 0xff)
-        {
-            /* This is a CD-ROM device */
-            SectorSize = 2048;
-        }
-        else
-        {
-            /* This is either a floppy disk device (DrivePartition == 0) or
-             * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
-             * it doesn't matter which one because they both have 512 bytes per sector */
-            SectorSize = 512;
-        }
+        /* This is either a floppy disk device (DrivePartition == 0) or
+         * a hard disk device (DrivePartition != 0 && DrivePartition != 0xFF) but
+         * it doesn't matter which one because they both have 512 bytes per sector */
+        SectorSize = 512;
     }
 
     if (DrivePartition != 0xff && DrivePartition != 0)

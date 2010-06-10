@@ -489,7 +489,7 @@ static void SampleGrabber_callback(SG_Impl *This, IMediaSample *sample)
     REFERENCE_TIME tStart, tEnd;
     if (This->bufferLen >= 0) {
         BYTE *data = 0;
-        long size = IMediaSample_GetActualDataLength(sample);
+        LONG size = IMediaSample_GetActualDataLength(sample);
         if (size >= 0 && SUCCEEDED(IMediaSample_GetPointer(sample, &data))) {
             if (!data)
                 size = 0;
@@ -527,7 +527,7 @@ static void SampleGrabber_callback(SG_Impl *This, IMediaSample *sample)
         case 1:
             {
                 BYTE *data = 0;
-                long size = IMediaSample_GetActualDataLength(sample);
+                LONG size = IMediaSample_GetActualDataLength(sample);
                 if (size && SUCCEEDED(IMediaSample_GetPointer(sample, &data)) && data)
                     ISampleGrabberCB_BufferCB(This->grabberIface, time, data, size);
             }
@@ -535,7 +535,7 @@ static void SampleGrabber_callback(SG_Impl *This, IMediaSample *sample)
         case -1:
             break;
         default:
-            FIXME("unsupported method %ld\n", (long int)This->grabberMethod);
+            FIXME("unsupported method %d\n", This->grabberMethod);
             /* do not bother us again */
             This->grabberMethod = -1;
     }

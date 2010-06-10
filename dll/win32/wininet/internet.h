@@ -160,6 +160,7 @@ struct _object_header_t
     DWORD  dwFlags;
     DWORD_PTR dwContext;
     DWORD  dwError;
+    ULONG  ErrorMask;
     DWORD  dwInternalFlags;
     LONG   refs;
     INTERNET_STATUS_CALLBACK lpfnStatusCB;
@@ -392,7 +393,7 @@ object_header_t *WININET_AddRef( object_header_t *info );
 BOOL WININET_Release( object_header_t *info );
 BOOL WININET_FreeHandle( HINTERNET hinternet );
 
-DWORD INET_QueryOption(DWORD,void*,DWORD*,BOOL);
+DWORD INET_QueryOption( object_header_t *, DWORD, void *, DWORD *, BOOL );
 
 time_t ConvertTimeString(LPCWSTR asctime);
 

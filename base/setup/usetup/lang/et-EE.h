@@ -1469,15 +1469,15 @@ MUI_ERROR etEEErrorEntries[] =
         "ENTER = Taask„ivita arvuti"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "Geograafilist asukohta ei ännestunud seadistada.\n"
+        "ENTER = Taask„ivita arvuti"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Valitud partitsioonil pole piisavalt ruumi.\n"
         "  * Vajuta suvalist klahvi, et j„tkata.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "Geograafilist asukohta ei ännestunud seadistada.\n"
-        "ENTER = Taask„ivita arvuti"
     },
     {
         NULL,

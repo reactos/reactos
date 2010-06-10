@@ -54,7 +54,7 @@ typedef struct _KERNEL32_FIND_DATA_HEADER
 
 /* FUNCTIONS ****************************************************************/
 
-static HANDLE
+static VOID
 InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
                             LPCWSTR lpFileName,
                             ULONG DeviceNameInfo)
@@ -71,11 +71,9 @@ InternalCopyDeviceFindDataW(LPWIN32_FIND_DATAW lpFindFileData,
     RtlCopyMemory(lpFindFileData->cFileName,
                   DeviceName.Buffer,
                   DeviceName.Length);
-
-    return FIND_DEVICE_HANDLE;
 }
 
-static HANDLE
+static VOID
 InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
                             PUNICODE_STRING FileName,
                             ULONG DeviceNameInfo)
@@ -101,8 +99,6 @@ InternalCopyDeviceFindDataA(LPWIN32_FIND_DATAA lpFindFileData,
     RtlCopyMemory(lpFindFileData->cFileName,
                   BufferA.Buffer,
                   BufferA.Length);
-
-    return FIND_DEVICE_HANDLE;
 }
 
 static VOID

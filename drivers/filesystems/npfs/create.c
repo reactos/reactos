@@ -205,8 +205,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     ClientCcb->MaxDataLength = Fcb->OutboundQuota;
     ExInitializeFastMutex(&ClientCcb->DataListLock);
     KeInitializeEvent(&ClientCcb->ConnectEvent, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&ClientCcb->ReadEvent, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&ClientCcb->WriteEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&ClientCcb->ReadEvent, NotificationEvent, FALSE);
+    KeInitializeEvent(&ClientCcb->WriteEvent, NotificationEvent, FALSE);
 
 
     /*
@@ -255,8 +255,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
                 if (ClientCcb->Data)
                 {
                     ExFreePool(ClientCcb->Data);
-                    ClientCcb->Data = NULL;
                 }
+
+                ExFreePool(ClientCcb);
                 KeUnlockMutex(&Fcb->CcbListLock);
                 Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -273,6 +274,14 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     else if (IsListEmpty(&Fcb->ServerCcbListHead))
     {
         DPRINT("No server fcb found!\n");
+
+        if (ClientCcb->Data)
+        {
+            ExFreePool(ClientCcb->Data);
+        }
+
+        ExFreePool(ClientCcb);
+
         KeUnlockMutex(&Fcb->CcbListLock);
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -540,8 +549,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
     DPRINT("CCB: %p\n", Ccb);
 
     KeInitializeEvent(&Ccb->ConnectEvent, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&Ccb->ReadEvent, SynchronizationEvent, FALSE);
-    KeInitializeEvent(&Ccb->WriteEvent, SynchronizationEvent, FALSE);
+    KeInitializeEvent(&Ccb->ReadEvent, NotificationEvent, FALSE);
+    KeInitializeEvent(&Ccb->WriteEvent, NotificationEvent, FALSE);
 
     KeLockMutex(&Fcb->CcbListLock);
     InsertTailList(&Fcb->ServerCcbListHead, &Ccb->CcbListEntry);
@@ -619,7 +628,6 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
             ExAcquireFastMutex(&OtherSide->DataListLock);
             ExAcquireFastMutex(&Ccb->DataListLock);
         }
-        //OtherSide->PipeState = FILE_PIPE_DISCONNECTED_STATE;
         OtherSide->OtherSide = NULL;
         /*
         * Signaling the write event. If is possible that an other
@@ -743,8 +751,11 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
     }
 
     /* Disconnect the pipes */
-    if (Ccb->OtherSide) Ccb->OtherSide->OtherSide = NULL;
-    if (Ccb) Ccb->OtherSide = NULL;
+    if (Ccb->OtherSide)
+    {
+        Ccb->OtherSide->OtherSide = NULL;
+        Ccb->OtherSide = NULL;
+    }
 
     ASSERT(Ccb->PipeState == FILE_PIPE_CLOSING_STATE);
 

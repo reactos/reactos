@@ -882,6 +882,7 @@ NtUserCreateDesktop(
    UNICODE_STRING ClassName, MenuName;
    LARGE_STRING WindowName;
    PWND pWnd = NULL;
+   CREATESTRUCTW Cs;
    DECLARE_RETURN(HDESK);
 
    DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
@@ -1076,20 +1077,14 @@ NtUserCreateDesktop(
    RtlZeroMemory(&MenuName, sizeof(MenuName));
    RtlZeroMemory(&WindowName, sizeof(WindowName));
 
-   pWnd = co_IntCreateWindowEx( 0,
-                               &ClassName,
-                               &WindowName,
-                                (WS_POPUP|WS_CLIPCHILDREN),
-                                0,
-                                0,
-                                100,
-                                100,
-                                NULL,
-                                NULL,
-                                hModClient, 
-                                NULL,
-                                0,
-                                TRUE);
+   RtlZeroMemory(&Cs, sizeof(Cs));
+   Cs.cx = Cs.cy = 100;
+   Cs.style = WS_POPUP|WS_CLIPCHILDREN;
+   Cs.hInstance = hModClient;
+   Cs.lpszName = (LPCWSTR) &WindowName;
+   Cs.lpszClass = (LPCWSTR) &ClassName;
+
+   pWnd = co_UserCreateWindowEx(&Cs, &ClassName, &WindowName);
    if (!pWnd)
    {
       DPRINT1("Failed to create Message window handle\n");
@@ -1425,7 +1420,7 @@ NtUserPaintDesktop(HDC hDC)
       RETURN(FALSE);
    }
 
-   DesktopBrush = (HBRUSH)UserGetClassLongPtr(WndDesktop->Wnd->pcls, GCL_HBRBACKGROUND, FALSE);
+   DesktopBrush = (HBRUSH)WndDesktop->Wnd->pcls->hbrBackground;
 
 
    /*

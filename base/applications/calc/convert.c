@@ -56,35 +56,35 @@ static const conv_t conv_ANGLE[] = {
 
 /*
     1 acre ................ = 4840 square yd = 4046,8564224 mq
-    1 acre brazil ......... = 
-    1 acre france ......... = 
+    1 acre brazil ......... =
+    1 acre france ......... =
     1 acre scots .......... = 5000 mq
     1 acre us ............. = 4840*(36/39.37)^2 m = 6272640/1549.9969 m
     1 are ................. = 100 mq
     1 chou ................ = 108000*(10/33)^2 mq
-    1 danbo ............... = 
+    1 danbo ............... =
     1 ha .................. = 10000 mq
-    1 jeongbo ............. = 
-    1 morgen hungary ...... = 
-    1 mu .................. = 
-    1 ping ................ = 
-    1 pyeong .............. = 
-    1 pyeongbangja ........ = 
-    1 rai ................. = 
+    1 jeongbo ............. =
+    1 morgen hungary ...... =
+    1 mu .................. = 2000/3 mq
+    1 ping ................ =
+    1 pyeong .............. =
+    1 pyeongbangja ........ =
+    1 rai ................. = 1600 mq
     1 se .................. = 1080*(10/33)^2 mq
     1 square cm ........... = 0.0001 mq
-    1 square chr .......... = 
+    1 square chr .......... =
     1 square fathom ....... = 1.8288^2 = 3.34450944 mq
     1 square fathom hungary = 1.8964838^2 = 3.59665080366244 mq
     1 square ft ........... = 0,09290304 mq
     1 square in ........... = 0,00064516 mq
     1 square km ........... = 1000000 mq
-    1 square lar .......... = 
+    1 square lar .......... =
     1 square mile ......... = 1609.344^2 = 2589988.110336 mq
     1 square mm ........... = 0,000001 mq
     1 square shaku ........ = (10/33)^2 mq
-    1 square tsuen ........ = 
-    1 square va ........... = 
+    1 square tsuen ........ =
+    1 square va ........... =
     1 square yard ......... = 0,83612736 mq
     1 tan ................. = 10800*(10/33)^2 mq
     1 tsubo ............... = 36*(10/33)^2 mq
@@ -101,11 +101,11 @@ static const conv_t conv_AREA[] = {
     DECLARE_CONV_UNIT(AREA, HECTARES,               "$*10000",           "$/10000")
 //    DECLARE_CONV_UNIT(AREA, JEONGBO,                "$", "$")
 //    DECLARE_CONV_UNIT(AREA, MORGEN_HUNGARY,         "$", "$")
-//    DECLARE_CONV_UNIT(AREA, MU,                     "$", "$")
+    DECLARE_CONV_UNIT(AREA, MU,                     "$*(2000/3)", "$/(2000/3)")
 //    DECLARE_CONV_UNIT(AREA, PING,                   "$", "$")
 //    DECLARE_CONV_UNIT(AREA, PYEONG,                 "$", "$")
 //    DECLARE_CONV_UNIT(AREA, PYEONGBANGJA,           "$", "$")
-//    DECLARE_CONV_UNIT(AREA, RAI,                    "$", "$")
+    DECLARE_CONV_UNIT(AREA, RAI,                    "$*1600", "$/1600")
     DECLARE_CONV_UNIT(AREA, SE,                     "$*108000/1089",     "$*1089/108000")
     DECLARE_CONV_UNIT(AREA, SQUARE_CENTIMETERS,     "$*0,0001",          "$/0,0001")
 //    DECLARE_CONV_UNIT(AREA, SQUARE_CHR,             "$", "$")
@@ -197,46 +197,47 @@ static const conv_t conv_ENERGY[] = {
     1 barleycorn ..... = 1/3 inch = 0.9144/108 m
     1 cm ............. = 1/100 m
     1 chain uk ....... = 22 yards = 22*0.9144 m
-    1 chi ............ = 
+    1 chi ............ = 1/3 m
     1 chou ........... = 3600/33 m
-    1 chr ............ = 
+    1 chr ............ =
+    1 cun ............ = 1/10 chi = 1/30 m
     1 fathom ......... = 2 yard = 2*0.9144 m
     1 fathom ungary .. = 1.8964838 m (fixed)
     1 feet ........... = 12 inch = 0.9144/3 m
     1 furlong ........ = 10 chains = 220*0.9144 m
-    1 gan ............ = 
+    1 gan ............ =
     1 hand ........... = 4 inches = 0.9144/9 m
-    1 hunh ........... = 
+    1 hunh ........... =
     1 inch ........... = yard/36 = 0.9144/36 m
-    1 ja ............. = 
-    1 jeong .......... = 
-    1 kabiet ......... = 
+    1 ja ............. =
+    1 jeong .......... =
+    1 kabiet ......... =
     1 ken ............ = 60/33 m
-    1 keub ........... = 
+    1 keub ........... =
     1 km ............. = 1000 m
-    1 lar ............ = 
+    1 lar ............ =
     1 light year ..... = 9460730472580800 m
     1 link uk ........ = 0.01 chains = 0.22*0.9144 m
     1 micron ......... = 0.000001 m
     1 mile ........... = 1760 yards = 1609.344 m
     1 millimeter ..... = 1/1000 m
     1 nautical mile .. = 1852 m
-    1 nieu ........... = 
+    1 nieu ........... =
     1 parsec ......... = 30856800000000000 m
     1 pica ........... = yard/216 = 0.9144/216 m
-    1 ri japan ....... = 
-    1 ri korea ....... = 
+    1 ri japan ....... =
+    1 ri korea ....... =
     1 rod ............ = 5.0292 m
-    1 sawk ........... = 
-    1 sen ............ = 
+    1 sawk ........... =
+    1 sen ............ =
     1 shaku .......... = 10/33 m
     1 span ........... = 9 inches = 0.9144/4 m
-    1 sun ............ = 10/330 m
-    1 tsuen .......... = 
-    1 va ............. = 
+    1 sun ............ = 1/33 m
+    1 tsuen .......... =
+    1 va ............. =
     1 yard ........... = 0.9144 m
-    1 yote ........... = 
-    1 zhang .......... = 
+    1 yote ........... =
+    1 zhang .......... =
 */
 static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, ANGSTROMS,            "$*0.0000000001",   "$/0.0000000001")
@@ -244,10 +245,10 @@ static const conv_t conv_LENGTH[] = {
     DECLARE_CONV_UNIT(LENGTH, BARLEYCORNS,          "$*0.9144/108",     "$/0.9144*108")
     DECLARE_CONV_UNIT(LENGTH, CENTIMETERS,          "$/100",            "$*100")
     DECLARE_CONV_UNIT(LENGTH, CHAINS_UK,            "$*20.1168",        "$/20.1168")
-//    DECLARE_CONV_UNIT(LENGTH, CHI,                  "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, CHI,                  "$/3",              "$*3")
     DECLARE_CONV_UNIT(LENGTH, CHOU,                 "$*3600/33",        "$*33/3600")
 //    DECLARE_CONV_UNIT(LENGTH, CHR,                  "$", "$")
-//    DECLARE_CONV_UNIT(LENGTH, CUN,                  "$", "$")
+    DECLARE_CONV_UNIT(LENGTH, CUN,                  "$/30",             "$*30")
     DECLARE_CONV_UNIT(LENGTH, FATHOMS,              "$*1.8288",         "$/1.8288")
     DECLARE_CONV_UNIT(LENGTH, FATHOMS_HUNGARY,      "$*1.8964838",      "$/1.8964838")
     DECLARE_CONV_UNIT(LENGTH, FEET,                 "$*0.3048",         "$/0.3048")
@@ -280,7 +281,7 @@ static const conv_t conv_LENGTH[] = {
 //    DECLARE_CONV_UNIT(LENGTH, SEN,                  "$", "$")
     DECLARE_CONV_UNIT(LENGTH, SHAKU,                "$*10/33",          "$*33/10")
     DECLARE_CONV_UNIT(LENGTH, SPAN,                 "$*0.9144/4",       "$*4/0.9144")
-    DECLARE_CONV_UNIT(LENGTH, SUN,                  "$*10/330",         "$*330/10")
+    DECLARE_CONV_UNIT(LENGTH, SUN,                  "$*1/33",            "$*33")
 //    DECLARE_CONV_UNIT(LENGTH, TSUEN,                "$", "$")
 //    DECLARE_CONV_UNIT(LENGTH, VA,                   "$", "$")
     DECLARE_CONV_UNIT(LENGTH, YARDS,                "$*0.9144",         "$/0.9144")
@@ -312,7 +313,7 @@ static const conv_t conv_POWER[] = {
     1 hPa   = 100 Pa
     1 kPa   = 1000 Pa
     1 mm HG = 133.322 Pa
-    1 psi   = 6894.757 Pa 
+    1 psi   = 6894.757 Pa
 */
 static const conv_t conv_PRESSURE[] = {
     DECLARE_CONV_UNIT(PRESSURE, ATMOSPHERES,   "$*101325",   "$/101325")
@@ -330,18 +331,20 @@ static const conv_t conv_PRESSURE[] = {
     1 hour ...... = 3600 s
     1 microsecond = 0.000001 s
     1 millisecond = 0.001 s
+    1 nanosecond. = 0.000000001 s
     1 minute .... = 60 s
     1 week ...... = 669600 s
 */
 static const conv_t conv_TIME[] = {
-    DECLARE_CONV_UNIT(TIME, MINUTES,      "$*60",       "$/60")
-    DECLARE_CONV_UNIT(TIME, DAYS,         "$*86400",    "$/86400")
-    DECLARE_CONV_UNIT(TIME, HOURS,        "$*3600",     "$/3600")
-    DECLARE_CONV_UNIT(TIME, MILLISECONDS, "$*0.001",    "$/0.001")
-    DECLARE_CONV_UNIT(TIME, MICROSECONDS, "$*0.000001", "$/0.000001")
-    DECLARE_CONV_UNIT(TIME, SECONDS,      "$",          "$")
-    DECLARE_CONV_UNIT(TIME, WEEKS,        "$*604800",   "$/604800")
-    DECLARE_CONV_UNIT(TIME, YEARS,        "$*31556952", "$/31556952")
+    DECLARE_CONV_UNIT(TIME, MINUTES,      "$*60",          "$/60")
+    DECLARE_CONV_UNIT(TIME, DAYS,         "$*86400",       "$/86400")
+    DECLARE_CONV_UNIT(TIME, HOURS,        "$*3600",        "$/3600")
+    DECLARE_CONV_UNIT(TIME, MILLISECONDS, "$*0.001",       "$/0.001")
+    DECLARE_CONV_UNIT(TIME, MICROSECONDS, "$*0.000001",    "$/0.000001")
+    DECLARE_CONV_UNIT(TIME, NANOSECONDS,  "$*0.000000001", "$/0.000000001")
+    DECLARE_CONV_UNIT(TIME, SECONDS,      "$",             "$")
+    DECLARE_CONV_UNIT(TIME, WEEKS,        "$*604800",      "$/604800")
+    DECLARE_CONV_UNIT(TIME, YEARS,        "$*31556952",    "$/31556952")
     DECLARE_CONV_END
 };
 
@@ -382,7 +385,7 @@ static const conv_t conv_VELOCITY[] = {
 /*
     1 barrel uk ...... = 163.65924 l
     1 barrel oil ..... = 158.987295 l
-    1 bun ............ = 
+    1 bun ............ =
     1 bushel uk ...... = 36.36872 l
     1 bushel us ...... = 35.23907017 l
     1 cubic cm  ...... = 0.001 l
@@ -390,17 +393,17 @@ static const conv_t conv_VELOCITY[] = {
     1 cubic inch ..... = 0.016387064 l
     1 cubic meter .... = 1000 l
     1 cubic yard ..... = 764.554857 l
-    1 doe ............ = 
+    1 doe ............ =
     1 fluid ounce uk   = 0.0284130625 l
     1 fluid ounce us   = 0.0295735295625 l
     1 gallon uk ...... = 4.54609 l
     1 gallon dry us .. = 4.40488377086 l
     1 gallon liquid us = 3.785411784 l
     1 gou ............ = 0.1809 l
-    1 hop ............ = 
-    1 icce ........... = 
-    1 kwian .......... = 
-    1 mal ............ = 
+    1 hop ............ =
+    1 icce ........... =
+    1 kwian .......... =
+    1 mal ............ =
     1 milliliter ..... = 0.001 l
     1 pint uk ........ = 0.56826125 l
     1 pint dry us .... = 0.5506104713575 l
@@ -408,10 +411,10 @@ static const conv_t conv_VELOCITY[] = {
     1 quart uk ....... = 1.1365225 l
     1 quart dry us ... = 1.101220942715 l
     1 quart liquid us  = 0.946352946 l
-    1 seki ........... = 
-    1 syou ........... = 
-    1 tananloung ..... = 
-    1 tang ........... = 
+    1 seki ........... =
+    1 syou ........... =
+    1 tananloung ..... =
+    1 tang ........... =
     1 to ............. = 18040 l
 */
 static const conv_t conv_VOLUME[] = {
@@ -455,16 +458,16 @@ static const conv_t conv_VOLUME[] = {
 /*
     1 baht ............ = 12.244 g
     1 carat ........... = 0.2 g
-    1 chung ........... = 
-    1 don ............. = 
-    1 geun ............ = 
-    1 gwan ............ = 
-    1 harb ............ = 
-    1 jin china ....... = 
-    1 jin taiwan ...... = 
-    1 Kan ............. =
+    1 chung ........... =
+    1 don ............. =
+    1 geun ............ =
+    1 gwan ............ =
+    1 harb ............ =
+    1 jin china ....... =
+    1 jin taiwan ...... =
+    1 Kan ............. = 3750 g
     1 Kilograms ....... = 1000 g
-    1 Kin ............. =
+    1 Kin ............. = 600 g
     1 Liang China ..... =
     1 Liang Taiwan .... =
     1 monme ........... = 3.75 g
@@ -472,9 +475,9 @@ static const conv_t conv_VOLUME[] = {
     1 ounce troy ...... = 31.1034768 g
     1 pound ........... = 453.59237 g
     1 quintal metric .. = 100000 g
-    1 saloung ......... = 
+    1 saloung ......... =
     1 stone ........... = 6350.29318 g
-    1 tamlung ......... = 
+    1 tamlung ......... =
     1 ton ............. = 1000000 g
     1 ton uk .......... = 1016046.9088 g  // long ton
     1 ton us .......... = 907184.74 g     // short ton
@@ -490,9 +493,9 @@ static const conv_t conv_WEIGHT[] = {
 //    DECLARE_CONV_UNIT(WEIGHT, HARB,                 "$", "$")
 //    DECLARE_CONV_UNIT(WEIGHT, JIN_CHINA,            "$", "$")
 //    DECLARE_CONV_UNIT(WEIGHT, JIN_TAIWAN,           "$", "$")
-//    DECLARE_CONV_UNIT(WEIGHT, KAN,                  "$", "$")
+    DECLARE_CONV_UNIT(WEIGHT, KAN,                  "$*3750",         "$/3750")
     DECLARE_CONV_UNIT(WEIGHT, KILOGRAMS,            "$*1000",         "$/1000")
-//    DECLARE_CONV_UNIT(WEIGHT, KIN,                  "$", "$")
+    DECLARE_CONV_UNIT(WEIGHT, KIN,                  "$*600",          "$/600")
 //    DECLARE_CONV_UNIT(WEIGHT, LIANG_CHINA,          "$", "$")
 //    DECLARE_CONV_UNIT(WEIGHT, LIANG_TAIWAN,         "$", "$")
     DECLARE_CONV_UNIT(WEIGHT, MONME,                "$*3.75",         "$/3.75")
@@ -548,7 +551,7 @@ void ConvExecute(HWND hWnd)
             break;
         }
     }
-    
+
     /* The units can be sorted, so I must search the exact match */
     item = items;
     SendDlgItemMessage(hWnd, IDC_COMBO_FROM, CB_GETLBTEXT, from, (LPARAM)txt_cb);

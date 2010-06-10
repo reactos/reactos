@@ -265,7 +265,7 @@ NTSTATUS FileOpenAddress(
       !AddrLocateInterface(&AddrFile->Address)) {
 	  ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
 	  TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", A2S(&AddrFile->Address)));
-	  return STATUS_INVALID_PARAMETER;
+	  return STATUS_INVALID_ADDRESS;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
@@ -282,7 +282,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port == 0xffff)
       {
           ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-          return STATUS_INVALID_PARAMETER;
+          return STATUS_ADDRESS_ALREADY_EXISTS;
       }
 
       AddEntity(CO_TL_ENTITY, AddrFile, CO_TL_TCP);
@@ -300,7 +300,7 @@ NTSTATUS FileOpenAddress(
            AddrFile->Port == 0xffff)
       {
           ExFreePoolWithTag(AddrFile, ADDR_FILE_TAG);
-          return STATUS_INVALID_PARAMETER;
+          return STATUS_ADDRESS_ALREADY_EXISTS;
       }
 
       TI_DbgPrint(MID_TRACE,("Setting port %d (wanted %d)\n",

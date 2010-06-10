@@ -1,8 +1,9 @@
+$if (_WDMDDK_ || _NTDDK_)
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
+$endif
 $if (_WDMDDK_)
-
 #define EX_RUNDOWN_ACTIVE                 0x1
 #define EX_RUNDOWN_COUNT_SHIFT            0x1
 #define EX_RUNDOWN_COUNT_INC              (1 << EX_RUNDOWN_COUNT_SHIFT)
@@ -85,40 +86,36 @@ typedef VOID
 typedef CALLBACK_FUNCTION *PCALLBACK_FUNCTION;
 
 #define GENERAL_LOOKASIDE_LAYOUT                \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         SLIST_HEADER ListHead;                  \
         SINGLE_LIST_ENTRY SingleListHead;       \
     } DUMMYUNIONNAME;                           \
     USHORT Depth;                               \
     USHORT MaximumDepth;                        \
     ULONG TotalAllocates;                       \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         ULONG AllocateMisses;                   \
         ULONG AllocateHits;                     \
     } DUMMYUNIONNAME2;                          \
-                                                \
     ULONG TotalFrees;                           \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         ULONG FreeMisses;                       \
         ULONG FreeHits;                         \
     } DUMMYUNIONNAME3;                          \
-                                                \
     POOL_TYPE Type;                             \
     ULONG Tag;                                  \
     ULONG Size;                                 \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         PALLOCATE_FUNCTION_EX AllocateEx;       \
         PALLOCATE_FUNCTION Allocate;            \
     } DUMMYUNIONNAME4;                          \
-                                                \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         PFREE_FUNCTION_EX FreeEx;               \
         PFREE_FUNCTION Free;                    \
     } DUMMYUNIONNAME5;                          \
-                                                \
     LIST_ENTRY ListEntry;                       \
     ULONG LastTotalAllocates;                   \
-    union {                                     \
+    _ANONYMOUS_UNION union {                    \
         ULONG LastAllocateMisses;               \
         ULONG LastAllocateHits;                 \
     } DUMMYUNIONNAME6;                          \
@@ -170,10 +167,10 @@ typedef struct _LOOKASIDE_LIST_EX {
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 typedef struct _EX_RUNDOWN_REF {
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     volatile ULONG_PTR Count;
     volatile PVOID Ptr;
-  };
+  } DUMMYUNIONNAME;
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
 typedef struct _EX_RUNDOWN_REF_CACHE_AWARE *PEX_RUNDOWN_REF_CACHE_AWARE;
@@ -200,14 +197,14 @@ typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY {
   ERESOURCE_THREAD OwnerThread;
-  union {
-    struct {
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
       ULONG IoPriorityBoosted:1;
       ULONG OwnerReferenced:1;
       ULONG OwnerCount:30;
-    };
+    } DUMMYSTRUCTNAME;
     ULONG TableSize;
-  };
+  } DUMMYUNIONNAME;
 } OWNER_ENTRY, *POWNER_ENTRY;
 
 typedef struct _ERESOURCE {
@@ -225,10 +222,10 @@ typedef struct _ERESOURCE {
 #if defined(_WIN64)
   PVOID Reserved2;
 #endif
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     PVOID Address;
     ULONG_PTR CreatorBackTraceIndex;
-  };
+  } DUMMYUNIONNAME;
   KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 
@@ -268,9 +265,8 @@ extern ULONG NtGlobalFlag;
 #define IF_NTOS_DEBUG(FlagName) if(FALSE)
 #endif
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
-
 typedef struct _ZONE_SEGMENT_HEADER {
   SINGLE_LIST_ENTRY SegmentList;
   PVOID Reserved;
@@ -285,5 +281,10 @@ typedef struct _ZONE_HEADER {
 
 #define PROTECTED_POOL                    0x80000000
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
+$if (_NTIFS_)
+#define INVALID_PROCESSOR_INDEX     0xffffffff
 
+#define EX_PUSH_LOCK ULONG_PTR
+#define PEX_PUSH_LOCK PULONG_PTR
+$endif (_NTIFS_)

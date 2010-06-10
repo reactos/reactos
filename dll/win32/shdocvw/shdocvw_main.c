@@ -440,3 +440,24 @@ DWORD WINAPI SHRestricted2W(DWORD res, LPCWSTR url, DWORD reserved)
     FIXME("(%d %s %d) stub\n", res, debugstr_w(url), reserved);
     return 0;
 }
+
+/******************************************************************
+ * SHRestricted2A (SHDOCVW.158)
+ *
+ * See SHRestricted2W
+ */
+DWORD WINAPI SHRestricted2A(DWORD restriction, LPCSTR url, DWORD reserved)
+{
+    LPWSTR urlW = NULL;
+    DWORD res;
+
+    TRACE("(%d, %s, %d)\n", restriction, debugstr_a(url), reserved);
+    if (url) {
+        DWORD len = MultiByteToWideChar(CP_ACP, 0, url, -1, NULL, 0);
+        urlW = heap_alloc(len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, url, -1, urlW, len);
+    }
+    res = SHRestricted2W(restriction, urlW, reserved);
+    heap_free(urlW);
+    return res;
+}

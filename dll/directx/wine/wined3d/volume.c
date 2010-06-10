@@ -25,7 +25,6 @@
 #include "wined3d_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_surface);
-#define GLINFO_LOCATION This->resource.device->adapter->gl_info
 
 /* Context activation is done by the caller. */
 static void volume_bind_and_dirtify(IWineD3DVolume *iface) {
@@ -313,9 +312,11 @@ static HRESULT WINAPI IWineD3DVolumeImpl_SetContainer(IWineD3DVolume *iface, IWi
 }
 
 /* Context activation is done by the caller. */
-static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int gl_level, BOOL srgb_mode) {
-    IWineD3DVolumeImpl *This     = (IWineD3DVolumeImpl *)iface;
-    const struct GlPixelFormatDesc *glDesc = This->resource.format_desc;
+static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int gl_level, BOOL srgb_mode)
+{
+    IWineD3DVolumeImpl *This = (IWineD3DVolumeImpl *)iface;
+    const struct wined3d_gl_info *gl_info = &This->resource.device->adapter->gl_info;
+    const struct wined3d_format_desc *glDesc = This->resource.format_desc;
 
     TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(glDesc->format), glDesc->format);
 
@@ -386,7 +387,7 @@ HRESULT volume_init(IWineD3DVolumeImpl *volume, IWineD3DDeviceImpl *device, UINT
         IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
 {
     const struct wined3d_gl_info *gl_info = &device->adapter->gl_info;
-    const struct GlPixelFormatDesc *format_desc = getFormatDescEntry(format, gl_info);
+    const struct wined3d_format_desc *format_desc = getFormatDescEntry(format, gl_info);
     HRESULT hr;
 
     if (!gl_info->supported[EXT_TEXTURE3D])

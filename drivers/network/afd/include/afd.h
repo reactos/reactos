@@ -192,6 +192,7 @@ typedef struct _AFD_FCB {
     UNICODE_STRING TdiDeviceName;
     PVOID Context;
     DWORD PollState;
+    NTSTATUS PollStatus[FD_MAX_EVENTS];
     UINT ContextSize;
     PVOID ConnectData;
     UINT FilledConnectData;

@@ -31,23 +31,23 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define STATIC_KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF\
     DEFINE_WAVEFORMATEX_GUID(WAVE_FORMAT_DOLBY_AC3_SPDIF)
 DEFINE_GUIDSTRUCT("00000092-0000-0010-8000-00aa00389b71", KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF);
-#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF DEFINE_GUIDNAMED(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
+#define KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF  DEFINE_GUIDNAMED(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF)
+/* Warning - Recursive #define for KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF */
 
 NTSTATUS NTAPI PropertyHandler_ChannelConfig(PPCPROPERTY_REQUEST PropertyRequest);
-
 
 static KSDATARANGE_AUDIO WavePinDataRangesPCMStream[] =
 {
     {
-        {
+        {{
             sizeof(KSDATARANGE_AUDIO),
             0,
             0,
             0,
-            STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-            STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM),
-            STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
-        },
+            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM) },
+            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX) }
+        }},
         MAX_CHANNELS_PCM,
         MIN_BITS_PER_SAMPLE_PCM,
         MAX_BITS_PER_SAMPLE_PCM,
@@ -59,15 +59,15 @@ static KSDATARANGE_AUDIO WavePinDataRangesPCMStream[] =
 static KSDATARANGE_AUDIO WavePinDataRangesAC3Stream[] =
 {
     {
-        {
+        {{
             sizeof(KSDATARANGE_AUDIO),
             0,
             0,
             0,
-            STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-            STATICGUIDOF(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF),
-            STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
-        },
+            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF) },
+            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX) }
+        }},
         MAX_CHANNELS_AC3,
         MIN_BITS_PER_SAMPLE_AC3,
         MAX_BITS_PER_SAMPLE_AC3,
@@ -75,15 +75,15 @@ static KSDATARANGE_AUDIO WavePinDataRangesAC3Stream[] =
         MAX_SAMPLE_RATE_AC3
     },
     {
-        {
+        {{
             sizeof(KSDATARANGE_AUDIO),
             0,
             0,
             0,
-            STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-            STATICGUIDOF(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF),
-            STATICGUIDOF(KSDATAFORMAT_SPECIFIER_DSOUND)
-        },
+            { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+            { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_DOLBY_AC3_SPDIF) },
+            { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_DSOUND) }
+        }},
         MAX_CHANNELS_AC3,
         MIN_BITS_PER_SAMPLE_AC3,
         MAX_BITS_PER_SAMPLE_AC3,
@@ -107,28 +107,28 @@ static PKSDATARANGE WavePinDataRangePointersAC3Stream[] =
 
 static KSDATARANGE WavePinDataRangesPCMBridge[] =
 {
-    {
+    {{
         sizeof(KSDATARANGE),
         0,
         0,
         0,
-        STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG),
-        STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
-    }
+        { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+		{ STATICGUIDOF(KSDATAFORMAT_SUBTYPE_ANALOG) },
+        { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+    }}
 };
 
 static KSDATARANGE WavePinDataRangesAC3Bridge[] =
 {
-	{
+	{{
         sizeof(KSDATARANGE),
         0,
         0,
         0,
-        STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO),
-        STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE)
-    }
+        { STATICGUIDOF(KSDATAFORMAT_TYPE_AUDIO) },
+        { STATICGUIDOF(KSDATAFORMAT_SUBTYPE_AC3_AUDIO) },
+        { STATICGUIDOF(KSDATAFORMAT_SPECIFIER_NONE) }
+    }}
 };
 
 static PKSDATARANGE WavePinDataRangePointersPCMBridge[] =
@@ -160,7 +160,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_SINK,
             &KSCATEGORY_AUDIO,
             &KSAUDFNAME_RECORDING_CONTROL,
-            0
+            { 0 }
         }
     },
 
@@ -181,7 +181,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_NONE,
             &KSCATEGORY_AUDIO,
             NULL,
-            0
+            { 0 }
         }
     },
 
@@ -202,7 +202,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_SINK,
             &KSCATEGORY_AUDIO,
             &KSAUDFNAME_VOLUME_CONTROL,
-            0
+            { 0 }
         }
     },
 
@@ -223,7 +223,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_NONE,
             &KSNODETYPE_SPEAKER,
             NULL,
-            0
+            { 0 }
         }
     },
 
@@ -244,7 +244,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_SINK,
             &KSCATEGORY_AUDIO,
             NULL,
-            0
+            { 0 }
         }
     },
 
@@ -266,7 +266,7 @@ static PCPIN_DESCRIPTOR WaveMiniportPins[] =
             KSPIN_COMMUNICATION_NONE,
             &KSNODETYPE_SPDIF_INTERFACE,
             NULL,
-            0
+            { 0 }
         }
     }
 };

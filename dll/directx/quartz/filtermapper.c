@@ -1778,7 +1778,7 @@ static HRESULT WINAPI AMFilterData_ParseFilterData(IAMFilterData* iface,
     prf2 = CoTaskMemAlloc(sizeof(*prf2));
     if (!prf2)
         return E_OUTOFMEMORY;
-    *ppRegFilter2 = (BYTE *)&prf2;
+    *ppRegFilter2 = (BYTE *)prf2;
 
     hr = FM2_ReadFilterData(pData, prf2);
     if (FAILED(hr))

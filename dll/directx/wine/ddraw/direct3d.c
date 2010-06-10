@@ -1273,6 +1273,7 @@ IDirect3DImpl_GetCaps(IWineD3D *WineD3D,
 
     /* Copy the results into the d3d7 and d3d3 structures */
     Desc7->dwDevCaps = WCaps.DevCaps;
+    Desc7->dpcLineCaps.dwMiscCaps = WCaps.PrimitiveMiscCaps;
     Desc7->dpcLineCaps.dwRasterCaps = WCaps.RasterCaps;
     Desc7->dpcLineCaps.dwZCmpCaps = WCaps.ZCmpCaps;
     Desc7->dpcLineCaps.dwSrcBlendCaps = WCaps.SrcBlendCaps;

@@ -442,6 +442,12 @@
 /* Define to 1 if you have the <openssl/ssl.h> header file. */
 /* #undef HAVE_OPENSSL_SSL_H */
 
+/* Define to 1 if you have the `z' library (-lz). */
+#define HAVE_ZLIB 1
+
+/* Define to 1 if you have the <zlib.h> header file. */
+#define HAVE_ZLIB_H 1
+
 /* Define to 1 if you have the `pclose' function. */
 #define HAVE_PCLOSE 1
 

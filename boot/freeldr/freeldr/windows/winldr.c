@@ -475,6 +475,9 @@ LoadAndBootWindows(PCSTR OperatingSystemName,
 		DPRINTM(DPRINT_WINDOWS,"BootOptions: '%s'\n", BootOptions);
 	}
 
+	/* Append boot-time options */
+	AppendBootTimeOptions(BootOptions);
+
 	//
 	// Check if a ramdisk file was given
 	//

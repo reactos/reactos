@@ -63,6 +63,10 @@ CSR_API(CsrVerifyHandle);
 CSR_API(CsrDuplicateHandle);
 CSR_API(CsrGetInputWaitHandle);
 
+BOOL FASTCALL Win32CsrValidateBuffer(PCSRSS_PROCESS_DATA ProcessData,
+                                     PVOID Buffer,
+                                     SIZE_T NumElements,
+                                     SIZE_T ElementSize);
 NTSTATUS FASTCALL Win32CsrEnumProcesses(CSRSS_ENUM_PROCESS_PROC EnumProc,
                                         PVOID Context);
 

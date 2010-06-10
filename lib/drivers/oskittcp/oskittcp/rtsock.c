@@ -277,7 +277,7 @@ route_output(m, so)
 #ifndef __REACTOS__
 			    ifp = ifa->ifa_ifp;
 #else
-			;
+			(void)0;
 #endif
 			if (ifa) {
 				register struct ifaddr *oifa = rt->rt_ifa;

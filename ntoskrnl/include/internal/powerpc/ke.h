@@ -42,6 +42,12 @@ extern ULONG KePPCCacheAlignment;
 //#define KD_BREAKPOINT_VALUE
 
 //
+// Macro to get the second level cache size field name which differs between
+// CISC and RISC architectures, as the former has unified I/D cache
+//
+#define KiGetSecondLevelDCacheSize() ((PKIPCR)KeGetPcr())->SecondLevelDcacheSize
+
+//
 // Macros for getting and setting special purpose registers in portable code
 //
 #define KeGetContextPc(Context) \

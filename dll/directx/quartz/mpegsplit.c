@@ -246,10 +246,7 @@ static HRESULT MPEGSplitter_process_sample(LPVOID iface, IMediaSample * pSample,
     BYTE *pbSrcStream;
     DWORD cbSrcStream = 0;
     REFERENCE_TIME tStart, tStop, tAviStart = This->position;
-    Parser_OutputPin * pOutputPin;
     HRESULT hr;
-
-    pOutputPin = (Parser_OutputPin*)This->Parser.ppPins[1];
 
     hr = IMediaSample_GetTime(pSample, &tStart, &tStop);
     if (SUCCEEDED(hr))

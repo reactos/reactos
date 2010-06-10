@@ -113,9 +113,21 @@ BOOL WINAPI CertAddCertificateLinkToStore(HCERTSTORE hCertStore,
  PCCERT_CONTEXT pCertContext, DWORD dwAddDisposition,
  PCCERT_CONTEXT *ppCertContext)
 {
-    FIXME("(%p, %p, %08x, %p)\n", hCertStore, pCertContext, dwAddDisposition,
-     ppCertContext);
-    return FALSE;
+    static int calls;
+    PWINECRYPT_CERTSTORE store = (PWINECRYPT_CERTSTORE)hCertStore;
+
+    if (!(calls++))
+        FIXME("(%p, %p, %08x, %p): semi-stub\n", hCertStore, pCertContext,
+         dwAddDisposition, ppCertContext);
+    if (store->dwMagic != WINE_CRYPTCERTSTORE_MAGIC)
+        return FALSE;
+    if (store->type == StoreTypeCollection)
+    {
+        SetLastError(E_INVALIDARG);
+        return FALSE;
+    }
+    return CertAddCertificateContextToStore(hCertStore, pCertContext,
+     dwAddDisposition, ppCertContext);
 }
 
 PCCERT_CONTEXT WINAPI CertCreateCertificateContext(DWORD dwCertEncodingType,

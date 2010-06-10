@@ -2,8 +2,6 @@
 
 #include <include/dc.h>
 
-#define NO_MAPPING
-
 #define PALETTE_FIXED    0x0001 /* read-only colormap - have to use XAllocColor (if not virtual) */
 #define PALETTE_VIRTUAL  0x0002 /* no mapping needed - pixel == pixel color */
 
@@ -79,9 +77,6 @@ BOOL INTERNAL_CALL PALETTE_Cleanup(PVOID ObjectBody);
 
 HPALETTE FASTCALL PALETTE_Init (VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
-#ifndef NO_MAPPING
-INT      APIENTRY  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
-#endif
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
 INT FASTCALL PALETTE_GetObject(PPALETTE pGdiObject, INT cbCount, LPLOGBRUSH lpBuffer);

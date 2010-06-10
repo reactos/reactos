@@ -1710,6 +1710,11 @@ KdbpGetCommandLineSettings(
             p2 += 8;
             KdbDebugState |= KD_DEBUG_KDNOECHO;
         }
+        else if (!_strnicmp(p2, "FIRSTCHANCE", 11))
+        {
+            p2 += 11;
+            KdbpSetEnterCondition(-1, TRUE, KdbEnterAlways);
+        }
 
         p1 = p2;
     }

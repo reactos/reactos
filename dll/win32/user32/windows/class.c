@@ -423,21 +423,14 @@ GetClassLongA(HWND hWnd, int nIndex)
         }
         else
         {
-            /* This is a race condition! Call win32k to make sure we're getting
-               the correct result */
-            Wnd = NULL; /* Make sure we call NtUserGetClassLong */
-
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Wnd = NULL; /* Make sure we call NtUserGetClassLong */
+        Ret = 0;
     }
     _SEH2_END;
-
-    if (Wnd == NULL)
-        Ret = NtUserGetClassLong(hWnd, nIndex, TRUE);
 
     return Ret;
 }
@@ -534,21 +527,13 @@ GetClassLongW ( HWND hWnd, int nIndex )
         }
         else
         {
-            /* This is a race condition! Call win32k to make sure we're getting
-               the correct result */
-            Wnd = NULL; /* Make sure we call NtUserGetClassLong */
-
             WARN("Invalid class for hwnd 0x%p!\n", hWnd);
         }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
-        Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
     _SEH2_END;
-
-    if (Wnd == NULL)
-        Ret = NtUserGetClassLong(hWnd, nIndex, FALSE);
 
     return Ret;
 }
@@ -617,18 +602,28 @@ GetClassNameW(
 WORD
 WINAPI
 GetClassWord(
-  HWND hWnd,
-  int nIndex)
-/*
- * NOTE: Obsoleted in 32-bit windows
- */
+  HWND hwnd,
+  int offset)
 {
-    TRACE("%p %x\n", hWnd, nIndex);
+    PWND Wnd;
+    PCLS class;
+    WORD retvalue = 0;
 
-    if ((nIndex < 0) && (nIndex != GCW_ATOM))
+    if (offset < 0) return GetClassLongA( hwnd, offset );
+
+    Wnd = ValidateHwnd(hwnd);
+    if (!Wnd)
         return 0;
 
-    return (WORD) NtUserGetClassLong ( hWnd, nIndex, TRUE );
+    class = DesktopPtrToUser(Wnd->pcls);
+    if (class == NULL) return 0;
+
+    if (offset <= class->cbclsExtra - sizeof(WORD))
+        memcpy( &retvalue, (char *)(class + 1) + offset, sizeof(retvalue) );
+    else
+        SetLastError( ERROR_INVALID_INDEX );
+
+    return retvalue;
 }
 
 

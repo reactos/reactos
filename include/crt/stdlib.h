@@ -345,11 +345,15 @@ extern "C" {
   void *__cdecl bsearch(const void *_Key,const void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
   void __cdecl qsort(void *_Base,size_t _NumOfElements,size_t _SizeOfElements,int (__cdecl *_PtFuncCompare)(const void *,const void *));
 #endif
+
+#if !defined(__GNUC__) && !defined(__clang)
   unsigned short __cdecl _byteswap_ushort(unsigned short _Short);
-  /*unsigned long __cdecl _byteswap_ulong (unsigned long _Long); */
+  unsigned long __cdecl _byteswap_ulong (unsigned long _Long);
 #if _INTEGRAL_MAX_BITS >= 64
   __MINGW_EXTENSION unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64 _Int64);
 #endif
+#endif
+
   div_t __cdecl div(int _Numerator,int _Denominator);
   char *__cdecl getenv(const char *_VarName);
   _CRTIMP char *__cdecl _itoa(int _Value,char *_Dest,int _Radix);
@@ -478,6 +482,7 @@ extern "C" {
   void __cdecl perror(const char *_ErrMsg);
 #endif
   _CRTIMP int __cdecl _putenv(const char *_EnvString);
+#if !defined(__GNUC__) && !defined(__clang)
   unsigned int __cdecl _rotl(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
   __MINGW_EXTENSION unsigned __int64 __cdecl _rotl64(unsigned __int64 _Val,int _Shift);
@@ -485,6 +490,7 @@ extern "C" {
   unsigned int __cdecl _rotr(unsigned int _Val,int _Shift);
 #if _INTEGRAL_MAX_BITS >= 64
   __MINGW_EXTENSION unsigned __int64 __cdecl _rotr64(unsigned __int64 _Val,int _Shift);
+#endif
 #endif
   _CRTIMP void __cdecl _searchenv(const char *_Filename,const char *_EnvVar,char *_ResultPath);
   _CRTIMP void __cdecl _splitpath(const char *_FullPath,char *_Drive,char *_Dir,char *_Filename,char *_Ext);

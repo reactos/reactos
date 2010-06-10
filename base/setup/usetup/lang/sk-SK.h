@@ -1483,15 +1483,15 @@ MUI_ERROR skSKErrorEntries[] =
         "ENTER = ReÁtart poü°taüa"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "InÁtal†tor nemohol nastaviú geo id.\n"
+        "ENTER = ReÁtart poü°taüa"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "Not enough free space in the selected partition.\n"
         "  * Press any key to continue.",
         NULL
-    },
-    {
-        //ERROR_UPDATE_GEOID,
-        "InÁtal†tor nemohol nastaviú geo id.\n"
-        "ENTER = ReÁtart poü°taüa"
     },
     {
         NULL,

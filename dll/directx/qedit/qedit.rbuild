@@ -1,4 +1,4 @@
-<module name="qedit" type="win32dll" baseaddress="${BASEADDRESS_QEDIT}" installbase="system32" installname="qedit.dll" allowwarnings="true">
+<module name="qedit" type="win32dll" baseaddress="${BASEADDRESS_QEDIT}" installbase="system32" installname="qedit.dll" allowwarnings="true" crt="MSVCRT">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="qedit.spec" />
 	<include base="qedit">.</include>

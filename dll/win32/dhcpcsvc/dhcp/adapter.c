@@ -227,141 +227,168 @@ InterfaceConnected(MIB_IFROW IfEntry)
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
-BOOLEAN AdapterDiscover() {
+DWORD WINAPI AdapterDiscoveryThread(LPVOID Unused) {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
     struct interface_info *ifi = NULL;
     int i;
-    BOOLEAN ret = TRUE;
 
-    DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
+    /* FIXME: Kill this thread when the service is stopped */
 
-    while( (Error = GetIfTable(Table, &Size, 0 )) ==
-           ERROR_INSUFFICIENT_BUFFER ) {
-        DH_DbgPrint(MID_TRACE,("Error %d, New Buffer Size: %d\n", Error, Size));
-        free( Table );
-        Table = (PMIB_IFTABLE) malloc( Size );
-    }
+    do {
+       DH_DbgPrint(MID_TRACE,("Getting Adapter List...\n"));
 
-    if( Error != NO_ERROR ) {
-        ret = FALSE;
-        goto term;
-    }
+       while( (Error = GetIfTable(Table, &Size, 0 )) ==
+               ERROR_INSUFFICIENT_BUFFER ) {
+           DH_DbgPrint(MID_TRACE,("Error %d, New Buffer Size: %d\n", Error, Size));
+           free( Table );
+           Table = (PMIB_IFTABLE) malloc( Size );
+       }
 
-    DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
+       if( Error != NO_ERROR )
+           break;
 
-    for( i = Table->dwNumEntries - 1; i >= 0; i-- ) {
-        DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
-                               Table->table[i].dwIndex));
+       DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
-        if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
-        {
-            /* This is an existing adapter */
-            if (InterfaceConnected(Table->table[i])) {
-                /* We're still active so we stay in the list */
-                ifi = &Adapter->DhclientInfo;
-            } else {
-                /* We've lost our link so out we go */
-                RemoveEntryList(&Adapter->ListEntry);
-                free(Adapter);
-            }
-
-            continue;
-        }
-
-        Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
-
-        if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(Table->table[i])) {
-            memcpy( &Adapter->IfMib, &Table->table[i],
-                    sizeof(Adapter->IfMib) );
-            Adapter->DhclientInfo.client = &Adapter->DhclientState;
-            Adapter->DhclientInfo.rbuf = Adapter->recv_buf;
-            Adapter->DhclientInfo.rbuf_max = Table->table[i].dwMtu;
-            Adapter->DhclientInfo.rbuf_len =
-                Adapter->DhclientInfo.rbuf_offset = 0;
-            memcpy(Adapter->DhclientInfo.hw_address.haddr,
-                   Adapter->IfMib.bPhysAddr,
-                   Adapter->IfMib.dwPhysAddrLen);
-            Adapter->DhclientInfo.hw_address.hlen  =
-                Adapter->IfMib.dwPhysAddrLen;
-            /* I'm not sure where else to set this, but
-               some DHCP servers won't take a zero.
-               We checked the hardware type earlier in
-               the if statement. */
-            Adapter->DhclientInfo.hw_address.htype  =
-                HTYPE_ETHER;
-
-            if( DhcpSocket == INVALID_SOCKET ) {
-                DhcpSocket =
-                    Adapter->DhclientInfo.rfdesc =
-                    Adapter->DhclientInfo.wfdesc =
-                    socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
-
-                if (DhcpSocket != INVALID_SOCKET) {
-                    Adapter->ListenAddr.sin_family = AF_INET;
-                    Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
-                    Adapter->BindStatus =
-                        (bind( Adapter->DhclientInfo.rfdesc,
-                               (struct sockaddr *)&Adapter->ListenAddr,
-                               sizeof(Adapter->ListenAddr) ) == 0) ?
-                        0 : WSAGetLastError();
-                } else {
-                    error("socket() failed: %d\n", WSAGetLastError());
-                }
-            } else {
-                Adapter->DhclientInfo.rfdesc =
-                    Adapter->DhclientInfo.wfdesc = DhcpSocket;
-            }
-
-            Adapter->DhclientConfig.timeout = DHCP_PANIC_TIMEOUT;
-            Adapter->DhclientConfig.initial_interval = DHCP_DISCOVER_INTERVAL;
-            Adapter->DhclientConfig.retry_interval = DHCP_DISCOVER_INTERVAL;
-            Adapter->DhclientConfig.select_interval = 1;
-            Adapter->DhclientConfig.reboot_timeout = DHCP_REBOOT_TIMEOUT;
-            Adapter->DhclientConfig.backoff_cutoff = DHCP_BACKOFF_MAX;
-            Adapter->DhclientState.interval =
-                Adapter->DhclientConfig.retry_interval;
-
-            if( PrepareAdapterForService( Adapter ) ) {
-                Adapter->DhclientInfo.next = ifi;
-                ifi = &Adapter->DhclientInfo;
-
-                read_client_conf(&Adapter->DhclientInfo);
-
-                if (Adapter->DhclientInfo.client->state == S_INIT)
-                {
-                    add_protocol(Adapter->DhclientInfo.name,
-                                 Adapter->DhclientInfo.rfdesc,
-                                 got_one, &Adapter->DhclientInfo);
-
-	            state_init(&Adapter->DhclientInfo);
-                }
-
-                InsertTailList( &AdapterList, &Adapter->ListEntry );
-            } else { free( Adapter ); Adapter = 0; }
-        } else { free( Adapter ); Adapter = 0; }
-
-        if( !Adapter )
-            DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
+       for( i = Table->dwNumEntries - 1; i >= 0; i-- ) {
+            DH_DbgPrint(MID_TRACE,("Getting adapter %d attributes\n",
                                    Table->table[i].dwIndex));
-    }
 
-    DH_DbgPrint(MID_TRACE,("done with AdapterInit\n"));
+            ApiLock();
 
-term:
+            if ((Adapter = AdapterFindByHardwareAddress(Table->table[i].bPhysAddr, Table->table[i].dwPhysAddrLen)))
+            {
+                /* This is an existing adapter */
+                if (InterfaceConnected(Table->table[i])) {
+                    /* We're still active so we stay in the list */
+                    ifi = &Adapter->DhclientInfo;
+                } else {
+                    /* We've lost our link so out we go */
+                    RemoveEntryList(&Adapter->ListEntry);
+                    free(Adapter);
+                }
+
+                ApiUnlock();
+
+                continue;
+            }
+
+            ApiUnlock();
+
+            Adapter = (DHCP_ADAPTER*) calloc( sizeof( DHCP_ADAPTER ) + Table->table[i].dwMtu, 1 );
+
+            if( Adapter && Table->table[i].dwType == MIB_IF_TYPE_ETHERNET && InterfaceConnected(Table->table[i])) {
+                memcpy( &Adapter->IfMib, &Table->table[i],
+                        sizeof(Adapter->IfMib) );
+                Adapter->DhclientInfo.client = &Adapter->DhclientState;
+                Adapter->DhclientInfo.rbuf = Adapter->recv_buf;
+                Adapter->DhclientInfo.rbuf_max = Table->table[i].dwMtu;
+                Adapter->DhclientInfo.rbuf_len =
+                    Adapter->DhclientInfo.rbuf_offset = 0;
+                memcpy(Adapter->DhclientInfo.hw_address.haddr,
+                       Adapter->IfMib.bPhysAddr,
+                       Adapter->IfMib.dwPhysAddrLen);
+                Adapter->DhclientInfo.hw_address.hlen = Adapter->IfMib.dwPhysAddrLen;
+
+                /* I'm not sure where else to set this, but
+                   some DHCP servers won't take a zero.
+                   We checked the hardware type earlier in
+                   the if statement. */
+                Adapter->DhclientInfo.hw_address.htype = HTYPE_ETHER;
+
+                if( DhcpSocket == INVALID_SOCKET ) {
+                    DhcpSocket =
+                        Adapter->DhclientInfo.rfdesc =
+                        Adapter->DhclientInfo.wfdesc =
+                        socket( AF_INET, SOCK_DGRAM, IPPROTO_UDP );
+
+                    if (DhcpSocket != INVALID_SOCKET) {
+                        Adapter->ListenAddr.sin_family = AF_INET;
+                        Adapter->ListenAddr.sin_port = htons(LOCAL_PORT);
+                        Adapter->BindStatus =
+                             (bind( Adapter->DhclientInfo.rfdesc,
+                                    (struct sockaddr *)&Adapter->ListenAddr,
+                                    sizeof(Adapter->ListenAddr) ) == 0) ?
+                             0 : WSAGetLastError();
+                    } else {
+                        error("socket() failed: %d\n", WSAGetLastError());
+                    }
+                } else {
+                    Adapter->DhclientInfo.rfdesc =
+                        Adapter->DhclientInfo.wfdesc = DhcpSocket;
+                }
+
+                Adapter->DhclientConfig.timeout = DHCP_PANIC_TIMEOUT;
+                Adapter->DhclientConfig.initial_interval = DHCP_DISCOVER_INTERVAL;
+                Adapter->DhclientConfig.retry_interval = DHCP_DISCOVER_INTERVAL;
+                Adapter->DhclientConfig.select_interval = 1;
+                Adapter->DhclientConfig.reboot_timeout = DHCP_REBOOT_TIMEOUT;
+                Adapter->DhclientConfig.backoff_cutoff = DHCP_BACKOFF_MAX;
+                Adapter->DhclientState.interval =
+                    Adapter->DhclientConfig.retry_interval;
+
+                if( PrepareAdapterForService( Adapter ) ) {
+                    Adapter->DhclientInfo.next = ifi;
+                    ifi = &Adapter->DhclientInfo;
+
+                    read_client_conf(&Adapter->DhclientInfo);
+
+                    if (Adapter->DhclientInfo.client->state == S_INIT)
+                    {
+                        add_protocol(Adapter->DhclientInfo.name,
+                                     Adapter->DhclientInfo.rfdesc,
+                                     got_one, &Adapter->DhclientInfo);
+
+	                state_init(&Adapter->DhclientInfo);
+                    }
+
+                    ApiLock();
+                    InsertTailList( &AdapterList, &Adapter->ListEntry );
+                    ApiUnlock();
+                } else { free( Adapter ); Adapter = 0; }
+            } else { free( Adapter ); Adapter = 0; }
+
+            if( !Adapter )
+                DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
+                                       Table->table[i].dwIndex));
+        }
+    } while ((Error = NotifyAddrChange(NULL, NULL)) == NO_ERROR);
+
+    DbgPrint("DHCPCSVC: Adapter discovery thread is terminating! (Error: %d)\n", Error);
+
     if( Table ) free( Table );
-    return ret;
+    return Error;
+}
+
+BOOLEAN StartAdapterDiscovery(VOID) {
+    HANDLE ThreadHandle;
+
+    ThreadHandle = CreateThread(NULL,
+                                0,
+                                AdapterDiscoveryThread,
+                                NULL,
+                                0,
+                                NULL);
+
+    if (ThreadHandle == NULL)
+        return FALSE;
+
+    CloseHandle(ThreadHandle);
+
+    return TRUE;
 }
 
 void AdapterStop() {
     PLIST_ENTRY ListEntry;
     PDHCP_ADAPTER Adapter;
+    ApiLock();
     while( !IsListEmpty( &AdapterList ) ) {
         ListEntry = (PLIST_ENTRY)RemoveHeadList( &AdapterList );
         Adapter = CONTAINING_RECORD( ListEntry, DHCP_ADAPTER, ListEntry );
         free( Adapter );
     }
+    ApiUnlock();
     WSACleanup();
 }
 

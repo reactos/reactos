@@ -27,9 +27,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d_texture);
 
-HRESULT basetexture_init(IWineD3DBaseTextureImpl *texture, UINT levels, WINED3DRESOURCETYPE resource_type,
-        IWineD3DDeviceImpl *device, UINT size, DWORD usage, const struct GlPixelFormatDesc *format_desc,
-        WINED3DPOOL pool, IUnknown *parent, const struct wined3d_parent_ops *parent_ops)
+HRESULT basetexture_init(IWineD3DBaseTextureImpl *texture, UINT layer_count, UINT level_count,
+        WINED3DRESOURCETYPE resource_type, IWineD3DDeviceImpl *device, UINT size, DWORD usage,
+        const struct wined3d_format_desc *format_desc, WINED3DPOOL pool, IUnknown *parent,
+        const struct wined3d_parent_ops *parent_ops)
 {
     HRESULT hr;
 
@@ -41,7 +42,17 @@ HRESULT basetexture_init(IWineD3DBaseTextureImpl *texture, UINT levels, WINED3DR
         return hr;
     }
 
-    texture->baseTexture.levels = levels;
+    texture->baseTexture.sub_resources = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            level_count * layer_count * sizeof(*texture->baseTexture.sub_resources));
+    if (!texture->baseTexture.sub_resources)
+    {
+        ERR("Failed to allocate sub-resource array.\n");
+        resource_cleanup((IWineD3DResource *)texture);
+        return E_OUTOFMEMORY;
+    }
+
+    texture->baseTexture.layer_count = layer_count;
+    texture->baseTexture.level_count = level_count;
     texture->baseTexture.filterType = (usage & WINED3DUSAGE_AUTOGENMIPMAP) ? WINED3DTEXF_LINEAR : WINED3DTEXF_NONE;
     texture->baseTexture.LOD = 0;
     texture->baseTexture.texture_rgb.dirty = TRUE;
@@ -66,7 +77,25 @@ HRESULT basetexture_init(IWineD3DBaseTextureImpl *texture, UINT levels, WINED3DR
 void basetexture_cleanup(IWineD3DBaseTexture *iface)
 {
     basetexture_unload(iface);
+    HeapFree(GetProcessHeap(), 0, ((IWineD3DBaseTextureImpl *)iface)->baseTexture.sub_resources);
     resource_cleanup((IWineD3DResource *)iface);
+}
+
+IWineD3DResourceImpl *basetexture_get_sub_resource(IWineD3DBaseTextureImpl *texture, UINT layer, UINT level)
+{
+    if (layer >= texture->baseTexture.layer_count)
+    {
+        WARN("layer %u >= layer_count %u.\n", layer, texture->baseTexture.layer_count);
+        return NULL;
+    }
+
+    if (level >= texture->baseTexture.level_count)
+    {
+        WARN("level %u >= level_count %u.\n", level, texture->baseTexture.level_count);
+        return NULL;
+    }
+
+    return texture->baseTexture.sub_resources[layer * texture->baseTexture.level_count + level];
 }
 
 /* A GL context is provided by the caller */
@@ -86,7 +115,7 @@ void basetexture_unload(IWineD3DBaseTexture *iface)
 
     if (This->baseTexture.texture_rgb.name || This->baseTexture.texture_srgb.name)
     {
-        context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
+        context = context_acquire(device, NULL);
     }
 
     if(This->baseTexture.texture_rgb.name) {
@@ -115,8 +144,8 @@ DWORD basetexture_set_lod(IWineD3DBaseTexture *iface, DWORD LODNew)
         return 0;
     }
 
-    if(LODNew >= This->baseTexture.levels)
-        LODNew = This->baseTexture.levels - 1;
+    if (LODNew >= This->baseTexture.level_count)
+        LODNew = This->baseTexture.level_count - 1;
 
     if(This->baseTexture.LOD != LODNew) {
         This->baseTexture.LOD = LODNew;
@@ -145,8 +174,8 @@ DWORD basetexture_get_lod(IWineD3DBaseTexture *iface)
 DWORD basetexture_get_level_count(IWineD3DBaseTexture *iface)
 {
     IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
-    TRACE("(%p) : returning %d\n", This, This->baseTexture.levels);
-    return This->baseTexture.levels;
+    TRACE("iface %p, returning %u.\n", iface, This->baseTexture.level_count);
+    return This->baseTexture.level_count;
 }
 
 HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType)
@@ -164,7 +193,7 @@ HRESULT basetexture_set_autogen_filter_type(IWineD3DBaseTexture *iface, WINED3DT
        * Or should we delay the applying until the texture is used for drawing? For now, apply
        * immediately.
        */
-      struct wined3d_context *context = context_acquire(device, NULL, CTXUSAGE_RESOURCELOAD);
+      struct wined3d_context *context = context_acquire(device, NULL);
 
       ENTER_GL();
       glBindTexture(textureDimensions, This->baseTexture.texture_rgb.name);
@@ -270,9 +299,7 @@ HRESULT basetexture_bind(IWineD3DBaseTexture *iface, BOOL srgb, BOOL *set_surfac
         gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL]   = 0;
         gl_tex->states[WINED3DTEXSTA_MAXANISOTROPY] = 1;
         gl_tex->states[WINED3DTEXSTA_SRGBTEXTURE]   = 0;
-        gl_tex->states[WINED3DTEXSTA_ELEMENTINDEX]  = 0;
-        gl_tex->states[WINED3DTEXSTA_DMAPOFFSET]    = 0;
-        gl_tex->states[WINED3DTEXSTA_TSSADDRESSW]   = WINED3DTADDRESS_WRAP;
+        gl_tex->states[WINED3DTEXSTA_SHADOW]        = FALSE;
         IWineD3DBaseTexture_SetDirty(iface, TRUE);
         isNewTexture = TRUE;
 
@@ -301,10 +328,11 @@ HRESULT basetexture_bind(IWineD3DBaseTexture *iface, BOOL srgb, BOOL *set_surfac
              * relying on the partial GL_ARB_texture_non_power_of_two emulation with texture rectangles
              * (ie, do not care for cond_np2 here, just look for GL_TEXTURE_RECTANGLE_ARB)
              */
-            if(textureDimensions != GL_TEXTURE_RECTANGLE_ARB) {
-                TRACE("Setting GL_TEXTURE_MAX_LEVEL to %d\n", This->baseTexture.levels - 1);
-                glTexParameteri(textureDimensions, GL_TEXTURE_MAX_LEVEL, This->baseTexture.levels - 1);
-                checkGLcall("glTexParameteri(textureDimensions, GL_TEXTURE_MAX_LEVEL, This->baseTexture.levels)");
+            if (textureDimensions != GL_TEXTURE_RECTANGLE_ARB)
+            {
+                TRACE("Setting GL_TEXTURE_MAX_LEVEL to %u.\n", This->baseTexture.level_count - 1);
+                glTexParameteri(textureDimensions, GL_TEXTURE_MAX_LEVEL, This->baseTexture.level_count - 1);
+                checkGLcall("glTexParameteri(textureDimensions, GL_TEXTURE_MAX_LEVEL, This->baseTexture.level_count)");
             }
             if(textureDimensions==GL_TEXTURE_CUBE_MAP_ARB) {
                 /* Cubemaps are always set to clamp, regardless of the sampler state. */
@@ -444,17 +472,18 @@ void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
         glTexParameteri(textureDimensions, GL_TEXTURE_MIN_FILTER, glValue);
         checkGLcall("glTexParameter GL_TEXTURE_MIN_FILTER, ...");
 
-        if(!cond_np2) {
-            if(gl_tex->states[WINED3DTEXSTA_MIPFILTER] == WINED3DTEXF_NONE) {
+        if (!cond_np2)
+        {
+            if (gl_tex->states[WINED3DTEXSTA_MIPFILTER] == WINED3DTEXF_NONE)
                 glValue = This->baseTexture.LOD;
-            } else if(gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] >= This->baseTexture.levels) {
-                glValue = This->baseTexture.levels - 1;
-            } else if(gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] < This->baseTexture.LOD) {
+            else if (gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] >= This->baseTexture.level_count)
+                glValue = This->baseTexture.level_count - 1;
+            else if (gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL] < This->baseTexture.LOD)
                 /* baseTexture.LOD is already clamped in the setter */
                 glValue = This->baseTexture.LOD;
-            } else {
+            else
                 glValue = gl_tex->states[WINED3DTEXSTA_MAXMIPLEVEL];
-            }
+
             /* Note that D3DSAMP_MAXMIPLEVEL specifies the biggest mipmap(default 0), while
              * GL_TEXTURE_MAX_LEVEL specifies the smallest mimap used(default 1000).
              * So D3DSAMP_MAXMIPLEVEL is the same as GL_TEXTURE_BASE_LEVEL.
@@ -487,5 +516,23 @@ void basetexture_apply_state_changes(IWineD3DBaseTexture *iface,
             WARN("Anisotropic filtering not supported.\n");
         }
         gl_tex->states[WINED3DTEXSTA_MAXANISOTROPY] = aniso;
+    }
+
+    if (!(This->resource.format_desc->Flags & WINED3DFMT_FLAG_SHADOW)
+            != !gl_tex->states[WINED3DTEXSTA_SHADOW])
+    {
+        if (This->resource.format_desc->Flags & WINED3DFMT_FLAG_SHADOW)
+        {
+            glTexParameteri(textureDimensions, GL_DEPTH_TEXTURE_MODE_ARB, GL_LUMINANCE);
+            glTexParameteri(textureDimensions, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB);
+            checkGLcall("glTexParameteri(textureDimensions, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB)");
+            gl_tex->states[WINED3DTEXSTA_SHADOW] = TRUE;
+        }
+        else
+        {
+            glTexParameteri(textureDimensions, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
+            checkGLcall("glTexParameteri(textureDimensions, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE)");
+            gl_tex->states[WINED3DTEXSTA_SHADOW] = FALSE;
+        }
     }
 }

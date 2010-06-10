@@ -65,17 +65,15 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
                     IN HINSTANCE hInstance,
                     OUT PCLSMENUNAME pClassMenuName);
 
-ULONG_PTR
-UserGetClassLongPtr(IN PCLS Class,
-                    IN INT Index,
-                    IN BOOL Ansi);
-
 RTL_ATOM
 IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 IN HINSTANCE hInstance  OPTIONAL,
                 IN PPROCESSINFO pi  OPTIONAL,
                 OUT PCLS *BaseClass  OPTIONAL,
                 OUT PCLS **Link  OPTIONAL);
+
+PCLS
+IntGetAndReferenceClass(PUNICODE_STRING ClassName, HINSTANCE hInstance);
 
 PCLS
 FASTCALL

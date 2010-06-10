@@ -1,4 +1,4 @@
-<module name="imaadp32.acm" type="win32dll" baseaddress="${BASEADDRESS_IMAADP32ACM}" installbase="system32" installname="imaadp32.acm" allowwarnings="true" entrypoint="0">
+<module name="imaadp32.acm" type="win32dll" baseaddress="${BASEADDRESS_IMAADP32ACM}" installbase="system32" installname="imaadp32.acm" allowwarnings="true" entrypoint="0" crt="msvcrt">
 	<importlibrary definition="imaadp32.acm.spec" />
 	<include base="imaadp32.acm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

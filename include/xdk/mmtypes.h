@@ -32,16 +32,15 @@ typedef ULONG NODE_REQUIREMENT;
 #define MDL_ALLOCATED_MUST_SUCCEED  0x4000
 #define MDL_INTERNAL                0x8000
 
-#define MDL_MAPPING_FLAGS ( \
-  MDL_MAPPED_TO_SYSTEM_VA     | \
-  MDL_PAGES_LOCKED            | \
-  MDL_SOURCE_IS_NONPAGED_POOL | \
-  MDL_PARTIAL_HAS_BEEN_MAPPED | \
-  MDL_PARENT_MAPPED_SYSTEM_VA | \
-  MDL_SYSTEM_VA               | \
-  MDL_IO_SPACE)
+#define MDL_MAPPING_FLAGS (MDL_MAPPED_TO_SYSTEM_VA     | \
+                           MDL_PAGES_LOCKED            | \
+                           MDL_SOURCE_IS_NONPAGED_POOL | \
+                           MDL_PARTIAL_HAS_BEEN_MAPPED | \
+                           MDL_PARENT_MAPPED_SYSTEM_VA | \
+                           MDL_SYSTEM_VA               | \
+                           MDL_IO_SPACE)
 
-#define FLUSH_MULTIPLE_MAXIMUM 32
+#define FLUSH_MULTIPLE_MAXIMUM       32
 
 /* Section access rights */
 #define SECTION_QUERY                0x0001
@@ -51,17 +50,17 @@ typedef ULONG NODE_REQUIREMENT;
 #define SECTION_EXTEND_SIZE          0x0010
 #define SECTION_MAP_EXECUTE_EXPLICIT 0x0020
 
-#define SECTION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SECTION_QUERY|\
-                            SECTION_MAP_WRITE |      \
-                            SECTION_MAP_READ |       \
-                            SECTION_MAP_EXECUTE |    \
+#define SECTION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SECTION_QUERY| \
+                            SECTION_MAP_WRITE |                     \
+                            SECTION_MAP_READ |                      \
+                            SECTION_MAP_EXECUTE |                   \
                             SECTION_EXTEND_SIZE)
 
-#define SESSION_QUERY_ACCESS  0x0001
-#define SESSION_MODIFY_ACCESS 0x0002
+#define SESSION_QUERY_ACCESS         0x0001
+#define SESSION_MODIFY_ACCESS        0x0002
 
 #define SESSION_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED |  \
-                            SESSION_QUERY_ACCESS |             \
+                            SESSION_QUERY_ACCESS     |  \
                             SESSION_MODIFY_ACCESS)
 
 #define SEGMENT_ALL_ACCESS SECTION_ALL_ACCESS
@@ -145,7 +144,7 @@ typedef enum _MM_SYSTEM_SIZE {
 extern NTKERNELAPI BOOLEAN Mm64BitPhysicalAddress;
 extern PVOID MmBadPointer;
 
-$endif /* _WDMDDK_ */
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 typedef struct _PHYSICAL_MEMORY_RANGE {
@@ -167,5 +166,81 @@ typedef enum _MM_ROTATE_DIRECTION {
   MmMaximumRotateDirection
 } MM_ROTATE_DIRECTION, *PMM_ROTATE_DIRECTION;
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
+$if (_NTIFS_)
+typedef enum _MMFLUSH_TYPE {
+  MmFlushForDelete,
+  MmFlushForWrite
+} MMFLUSH_TYPE;
+
+typedef struct _READ_LIST {
+  PFILE_OBJECT FileObject;
+  ULONG NumberOfEntries;
+  LOGICAL IsImage;
+  FILE_SEGMENT_ELEMENT List[ANYSIZE_ARRAY];
+} READ_LIST, *PREAD_LIST;
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+
+typedef union _MM_PREFETCH_FLAGS {
+  struct {
+    ULONG Priority : SYSTEM_PAGE_PRIORITY_BITS;
+    ULONG RepurposePriority : SYSTEM_PAGE_PRIORITY_BITS;
+  } Flags;
+  ULONG AllFlags;
+} MM_PREFETCH_FLAGS, *PMM_PREFETCH_FLAGS;
+
+#define MM_PREFETCH_FLAGS_MASK ((1 << (2*SYSTEM_PAGE_PRIORITY_BITS)) - 1)
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
+#define HEAP_NO_SERIALIZE               0x00000001
+#define HEAP_GROWABLE                   0x00000002
+#define HEAP_GENERATE_EXCEPTIONS        0x00000004
+#define HEAP_ZERO_MEMORY                0x00000008
+#define HEAP_REALLOC_IN_PLACE_ONLY      0x00000010
+#define HEAP_TAIL_CHECKING_ENABLED      0x00000020
+#define HEAP_FREE_CHECKING_ENABLED      0x00000040
+#define HEAP_DISABLE_COALESCE_ON_FREE   0x00000080
+
+#define HEAP_CREATE_ALIGN_16            0x00010000
+#define HEAP_CREATE_ENABLE_TRACING      0x00020000
+#define HEAP_CREATE_ENABLE_EXECUTE      0x00040000
+
+#define HEAP_SETTABLE_USER_VALUE        0x00000100
+#define HEAP_SETTABLE_USER_FLAG1        0x00000200
+#define HEAP_SETTABLE_USER_FLAG2        0x00000400
+#define HEAP_SETTABLE_USER_FLAG3        0x00000800
+#define HEAP_SETTABLE_USER_FLAGS        0x00000E00
+
+#define HEAP_CLASS_0                    0x00000000
+#define HEAP_CLASS_1                    0x00001000
+#define HEAP_CLASS_2                    0x00002000
+#define HEAP_CLASS_3                    0x00003000
+#define HEAP_CLASS_4                    0x00004000
+#define HEAP_CLASS_5                    0x00005000
+#define HEAP_CLASS_6                    0x00006000
+#define HEAP_CLASS_7                    0x00007000
+#define HEAP_CLASS_8                    0x00008000
+#define HEAP_CLASS_MASK                 0x0000F000
+
+#define HEAP_MAXIMUM_TAG                0x0FFF
+#define HEAP_GLOBAL_TAG                 0x0800
+#define HEAP_PSEUDO_TAG_FLAG            0x8000
+#define HEAP_TAG_SHIFT                  18
+#define HEAP_TAG_MASK                  (HEAP_MAXIMUM_TAG << HEAP_TAG_SHIFT)
+
+#define HEAP_CREATE_VALID_MASK         (HEAP_NO_SERIALIZE             |   \
+                                        HEAP_GROWABLE                 |   \
+                                        HEAP_GENERATE_EXCEPTIONS      |   \
+                                        HEAP_ZERO_MEMORY              |   \
+                                        HEAP_REALLOC_IN_PLACE_ONLY    |   \
+                                        HEAP_TAIL_CHECKING_ENABLED    |   \
+                                        HEAP_FREE_CHECKING_ENABLED    |   \
+                                        HEAP_DISABLE_COALESCE_ON_FREE |   \
+                                        HEAP_CLASS_MASK               |   \
+                                        HEAP_CREATE_ALIGN_16          |   \
+                                        HEAP_CREATE_ENABLE_TRACING    |   \
+                                        HEAP_CREATE_ENABLE_EXECUTE)
+$endif (_NTIFS_)
 

@@ -101,7 +101,7 @@ KsDispatchSetSecurity(
     if (NT_SUCCESS(Status))
     {
         /* free old descriptor */
-        ExFreePool(Descriptor);
+        FreeItem(Descriptor);
 
        /* mark create item as changed */
        CreateItem->Flags |= KSCREATE_ITEM_SECURITYCHANGED;
@@ -896,7 +896,7 @@ ProbeMdl:
     if (Length && ( (!HeaderSize) || (Length % HeaderSize == 0) || ((ProbeFlags & KSPROBE_ALLOWFORMATCHANGE) && (Length == sizeof(KSSTREAM_HEADER))) ) )
     {
         /* allocate stream header buffer */
-        Irp->AssociatedIrp.SystemBuffer = ExAllocatePool(NonPagedPool, Length);
+        Irp->AssociatedIrp.SystemBuffer = AllocateItem(NonPagedPool, Length);
 
         if (!Irp->AssociatedIrp.SystemBuffer)
         {

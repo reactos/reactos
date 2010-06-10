@@ -19,7 +19,7 @@ typedef struct APPSWITCH_ITEM
     BOOL bFocus;
     struct APPSWITCH_ITEM * Next;
     WCHAR szText[1];
-}APPSWITCH_ITEM, *PAPPSWITCH_ITEM;
+} APPSWITCH_ITEM, *PAPPSWITCH_ITEM;
 
 static PAPPSWITCH_ITEM pRoot = NULL;
 static DWORD NumOfWindows = 0;
@@ -30,7 +30,7 @@ UINT WINAPI PrivateExtractIconExW(LPCWSTR,int,HICON*,HICON*,UINT);
 
 
 BOOL
-CALLBACK 
+CALLBACK
 EnumWindowEnumProc(
     HWND hwnd,
     LPARAM lParam
@@ -51,21 +51,21 @@ EnumWindowEnumProc(
     hIcon = (HICON)SendMessage(hwnd, WM_GETICON, ICON_BIG, 0);
     if (!hIcon)
     {
-       GetWindowThreadProcessId(hwnd, &dwPid);
-       hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, dwPid);
-       if (hProcess)
-       {
-           if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
-           {
-               szFileName[MAX_PATH-1] = L'\0';
-               PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
-           }
-       }
+        GetWindowThreadProcessId(hwnd, &dwPid);
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ, FALSE, dwPid);
+        if (hProcess)
+        {
+            if (GetModuleFileNameExW(hProcess, NULL, szFileName, MAX_PATH))
+            {
+                szFileName[MAX_PATH-1] = L'\0';
+                PrivateExtractIconExW(szFileName, 0, &hIcon, NULL, 1);
+            }
+        }
     }
     else
     {
-       /* icons from WM_GETICON need to be copied */
-       hIcon = CopyIcon(hIcon);
+        /* icons from WM_GETICON need to be copied */
+        hIcon = CopyIcon(hIcon);
     }
     /* get the text length */
     Length = SendMessageW(hwnd, WM_GETTEXTLENGTH, 0, 0);
@@ -88,9 +88,9 @@ EnumWindowEnumProc(
 
     if (!pRoot)
     {
-       /* first item */
-       pRoot = pItem;
-       return TRUE;
+        /* first item */
+        pRoot = pItem;
+        return TRUE;
     }
 
     /* enumerate the last item */
@@ -107,16 +107,16 @@ EnumWindowEnumProc(
 VOID
 EnumerateAppWindows(HDESK hDesk, HWND hwndDlg)
 {
-   /* initialize defaults */
-   pRoot = NULL;
-   NumOfWindows = 0;
-   hAppWindowDlg = hwndDlg;
-   /* enumerate all windows */
-   EnumDesktopWindows(hDesk, EnumWindowEnumProc, (LPARAM)NULL);
-   if (NumOfWindows > 7)
-   {
-       /* FIXME resize window */
-   }
+    /* initialize defaults */
+    pRoot = NULL;
+    NumOfWindows = 0;
+    hAppWindowDlg = hwndDlg;
+    /* enumerate all windows */
+    EnumDesktopWindows(hDesk, EnumWindowEnumProc, (LPARAM)NULL);
+    if (NumOfWindows > 7)
+    {
+        /* FIXME resize window */
+    }
 }
 
 VOID
@@ -126,7 +126,7 @@ MarkNextEntryAsActive()
 
     pItem = pRoot;
     if (!pRoot)
-       return;
+        return;
 
     while(pItem)
     {
@@ -153,82 +153,82 @@ KeyboardHookProc(
     LPARAM lParam
 )
 {
-   PKBDLLHOOKSTRUCT hk = (PKBDLLHOOKSTRUCT) lParam;
+    PKBDLLHOOKSTRUCT hk = (PKBDLLHOOKSTRUCT) lParam;
 
-   if (wParam == WM_SYSKEYUP)
-   {
-       /* is tab key pressed */
-       if (hk->vkCode == VK_TAB)
-       {
-          if (hAppWindowDlg == NULL)
-          {
-              /* FIXME 
-               * launch window
-               */
-             DPRINT1("launch alt-tab window\n");
-          }
-          else
-          {
-              MarkNextEntryAsActive();
-          }
-       }
-   }
-   return CallNextHookEx(hhk, nCode, wParam, lParam);
+    if (wParam == WM_SYSKEYUP)
+    {
+        /* is tab key pressed */
+        if (hk->vkCode == VK_TAB)
+        {
+            if (hAppWindowDlg == NULL)
+            {
+                /* FIXME
+                 * launch window
+                 */
+                DPRINT1("launch alt-tab window\n");
+            }
+            else
+            {
+                MarkNextEntryAsActive();
+            }
+        }
+    }
+    return CallNextHookEx(hhk, nCode, wParam, lParam);
 }
 
 VOID
 PaintAppWindows(HWND hwndDlg, HDC hDc)
 {
-   DWORD dwIndex, X, Y;
-   PAPPSWITCH_ITEM pCurItem;
-   RECT Rect;
-   DWORD XSize, YSize, XMax;
-   HBRUSH hBrush;
+    DWORD dwIndex, X, Y;
+    PAPPSWITCH_ITEM pCurItem;
+    RECT Rect;
+    DWORD XSize, YSize, XMax;
+    HBRUSH hBrush;
 
-   X = 10;
-   Y = 10;
-   XSize = GetSystemMetrics(SM_CXICON);
-   YSize = GetSystemMetrics(SM_CYICON);
-   XMax = (XSize+(XSize/2)) * 7 + X;
-   pCurItem = pRoot;
+    X = 10;
+    Y = 10;
+    XSize = GetSystemMetrics(SM_CXICON);
+    YSize = GetSystemMetrics(SM_CYICON);
+    XMax = (XSize+(XSize/2)) * 7 + X;
+    pCurItem = pRoot;
 
-   for (dwIndex = 0; dwIndex < NumOfWindows; dwIndex++)
-   {
-       if (X >= XMax)
-       {
-           X = 10;
-           Y += YSize + (YSize/2);
-       }
-       if (pCurItem->bFocus)
-       {
+    for (dwIndex = 0; dwIndex < NumOfWindows; dwIndex++)
+    {
+        if (X >= XMax)
+        {
+            X = 10;
+            Y += YSize + (YSize/2);
+        }
+        if (pCurItem->bFocus)
+        {
             hBrush = CreateSolidBrush(RGB(30, 30, 255));
             SetRect(&Rect, X-5, Y-5, X + XSize + 5, Y + YSize + 5);
             FillRect(hDc, &Rect, hBrush);
             DeleteObject((HGDIOBJ)hBrush);
             SendDlgItemMessageW(hwndDlg, IDC_STATIC_CUR_APP, WM_SETTEXT, 0, (LPARAM)pCurItem->szText);
-       }
+        }
 
-       DrawIcon(hDc, X, Y, pCurItem->hIcon);
-       pCurItem = pCurItem->Next;
-       X += XSize +(XSize/2);
-   }
+        DrawIcon(hDc, X, Y, pCurItem->hIcon);
+        pCurItem = pCurItem->Next;
+        X += XSize +(XSize/2);
+    }
 }
 VOID
 DestroyAppWindows()
 {
-   PAPPSWITCH_ITEM pCurItem, pNextItem;
+    PAPPSWITCH_ITEM pCurItem, pNextItem;
 
-   pCurItem = pRoot;
-   while(pCurItem)
-   {
-       pNextItem = pCurItem->Next;
-       DestroyIcon(pCurItem->hIcon);
-       HeapFree(Win32CsrApiHeap, 0, pCurItem);
-       pCurItem = pNextItem;
-   }
-   pRoot = NULL;
-   hAppWindowDlg = NULL;
-   NumOfWindows = 0;
+    pCurItem = pRoot;
+    while(pCurItem)
+    {
+        pNextItem = pCurItem->Next;
+        DestroyIcon(pCurItem->hIcon);
+        HeapFree(Win32CsrApiHeap, 0, pCurItem);
+        pCurItem = pNextItem;
+    }
+    pRoot = NULL;
+    hAppWindowDlg = NULL;
+    NumOfWindows = 0;
 }
 
 INT_PTR

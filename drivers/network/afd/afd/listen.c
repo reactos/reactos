@@ -193,11 +193,10 @@ static NTSTATUS NTAPI ListenComplete
     /* Trigger a select return if appropriate */
     if( !IsListEmpty( &FCB->PendingConnections ) ) {
 	FCB->PollState |= AFD_EVENT_ACCEPT;
-    } else {
-	FCB->PollState &= ~AFD_EVENT_ACCEPT;
-    }
-
-    PollReeval( FCB->DeviceExt, FCB->FileObject );
+        FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
+        PollReeval( FCB->DeviceExt, FCB->FileObject );
+    } else
+        FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
     SocketStateUnlock( FCB );
 
@@ -293,12 +292,13 @@ NTSTATUS AfdWaitForListen( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	AFD_DbgPrint(MID_TRACE,("Completed a wait for accept\n"));
 
-        if ( IsListEmpty( &FCB->PendingConnections ) )
-             FCB->PollState &= ~AFD_EVENT_ACCEPT;
-        else
+        if ( !IsListEmpty( &FCB->PendingConnections ) )
+        {
              FCB->PollState |= AFD_EVENT_ACCEPT;
-
-        PollReeval( FCB->DeviceExt, FCB->FileObject );
+             FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
+             PollReeval( FCB->DeviceExt, FCB->FileObject );
+        } else
+             FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
 	SocketStateUnlock( FCB );
 	return Status;
@@ -402,13 +402,12 @@ NTSTATUS AfdAccept( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
 	    ExFreePool( PendingConnObj );
 
-	    if( IsListEmpty( &FCB->PendingConnections ) ) {
-		FCB->PollState &= ~AFD_EVENT_ACCEPT;
-	    } else {
+	    if( !IsListEmpty( &FCB->PendingConnections ) ) {
 		FCB->PollState |= AFD_EVENT_ACCEPT;
-            }
-
-	    PollReeval( FCB->DeviceExt, FCB->FileObject );
+                FCB->PollStatus[FD_ACCEPT_BIT] = STATUS_SUCCESS;
+	        PollReeval( FCB->DeviceExt, FCB->FileObject );
+            } else
+                FCB->PollState &= ~AFD_EVENT_ACCEPT;
 
 	    SocketStateUnlock( FCB );
 	    return Status;

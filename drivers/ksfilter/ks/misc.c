@@ -26,7 +26,6 @@ VOID
 FreeItem(
     IN PVOID Item)
 {
-
     ExFreePool(Item);
 }
 
