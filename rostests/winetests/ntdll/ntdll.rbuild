@@ -12,6 +12,7 @@
 	<file>error.c</file>
 	<file>exception.c</file>
 	<file>file.c</file>
+	<file>generated.c</file>
 	<file>info.c</file>
 	<file>large_int.c</file>
 	<file>om.c</file>

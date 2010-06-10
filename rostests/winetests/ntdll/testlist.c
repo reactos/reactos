@@ -35,7 +35,7 @@ const struct test winetest_testlist[] =
     { "error", func_error },
     { "exception", func_exception },
     { "file", func_file },
-    //{ "generated", func_generated },
+    { "generated", func_generated },
     { "info", func_info },
     { "large_int", func_large_int },
     { "om", func_om },
