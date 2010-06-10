@@ -355,7 +355,7 @@ NtGdiSetDIBits(
     _SEH2_TRY
     {
         Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, ColorUse, 0);
-        /* Don't check Bits and hope we won't die */
+        ProbeForRead(Bits, bmiLocal.bmiHeader.bV5SizeImage, 1);
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -1130,9 +1130,6 @@ NtGdiCreateDIBitmapInternal(
     IN FLONG fl,
     IN HANDLE hcmXform)
 {
-    PDC Dc;
-    HBITMAP Bmp;
-    UINT bpp;
     BITMAPV5INFO bmiLocal ;
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1153,6 +1150,34 @@ NtGdiCreateDIBitmapInternal(
         return NULL;
     }
 
+    return GreCreateDIBitmapInternal(hDc,
+                                     cx,
+                                     cy,
+                                     fInit,
+                                     pjInit,
+                                     pbmi ? &bmiLocal : NULL,
+                                     iUsage,
+                                     fl,
+                                     hcmXform);
+}
+
+HBITMAP
+FASTCALL
+GreCreateDIBitmapInternal(
+    IN HDC hDc,
+    IN INT cx,
+    IN INT cy,
+    IN DWORD fInit,
+    IN OPTIONAL LPBYTE pjInit,
+    IN OPTIONAL PBITMAPV5INFO pbmi,
+    IN DWORD iUsage,
+    IN FLONG fl,
+    IN HANDLE hcmXform)
+{
+    PDC Dc;
+    HBITMAP Bmp;
+    WORD bpp;
+
     if (!hDc) // CreateBitmap
     {  // Should use System Bitmap DC hSystemBM, with CreateCompatibleDC for this.
         hDc = IntGdiCreateDC(NULL, NULL, NULL, NULL,FALSE);
@@ -1170,7 +1195,7 @@ NtGdiCreateDIBitmapInternal(
             return NULL;
         }
         bpp = 1;
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi ? &bmiLocal : NULL, iUsage);
+        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
 
         DC_UnlockDc(Dc);
         NtGdiDeleteObjectApp(hDc);
@@ -1188,7 +1213,7 @@ NtGdiCreateDIBitmapInternal(
            should match that of the hdc and not that supplied in bmih.
          */
         if (pbmi)
-            bpp = bmiLocal.bmiHeader.bV5BitCount;
+            bpp = pbmi->bmiHeader.bV5BitCount;
         else
         {
             if (Dc->dctype != DC_TYPE_MEMORY)
@@ -1212,7 +1237,7 @@ NtGdiCreateDIBitmapInternal(
                 }
             }
         }
-        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi ? &bmiLocal : NULL, iUsage);
+        Bmp = IntCreateDIBitmap(Dc, cx, cy, bpp, fInit, pjInit, pbmi, iUsage);
         DC_UnlockDc(Dc);
     }
     return Bmp;
@@ -1800,7 +1825,9 @@ ProbeAndConvertToBitmapV5Info(
 
         /* Set some default values */
         pbmhDst->bV5Compression = BI_RGB;
-        pbmhDst->bV5SizeImage = 0;
+        pbmhDst->bV5SizeImage = DIB_GetDIBImageBytes(pbch->bcWidth,
+                                                     pbch->bcHeight,
+                                                     pbch->bcPlanes*pbch->bcBitCount) ;
         pbmhDst->bV5XPelsPerMeter = 72;
         pbmhDst->bV5YPelsPerMeter = 72;
         pbmhDst->bV5ClrUsed = 0;
@@ -1810,6 +1837,10 @@ ProbeAndConvertToBitmapV5Info(
     {
         /* Copy valid fields */
         memcpy(pbmiDst, pbmiUnsafe, dwSize);
+        if(!pbmhDst->bV5SizeImage)
+            pbmhDst->bV5SizeImage = DIB_GetDIBImageBytes(pbmhDst->bV5Width,
+                                                         pbmhDst->bV5Height,
+                                                         pbmhDst->bV5Planes*pbmhDst->bV5BitCount) ;
 
         if(dwSize < sizeof(BITMAPV5HEADER))
         {
@@ -1939,7 +1970,7 @@ GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
     else
     {
         /* Copy valid Fields, keep bmiHeader.biSize safe */
-        RtlCopyMemory(&pbmiDst->bmiHeader.biWidth, 
+        RtlCopyMemory(&pbmiDst->bmiHeader.biWidth,
                       &pbmiSrc->bmiHeader.bV5Width,
                       pbmiDst->bmiHeader.biSize - sizeof(DWORD));
     }
@@ -1957,7 +1988,7 @@ GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
         ULONG cColorsUsed;
 
         cColorsUsed = pbmiSrc->bmiHeader.bV5ClrUsed;
-        if (cColorsUsed == 0 && pbmiSrc->bmiHeader.bV5BitCount <= 8) 
+        if (cColorsUsed == 0 && pbmiSrc->bmiHeader.bV5BitCount <= 8)
             cColorsUsed = (1 << pbmiSrc->bmiHeader.bV5BitCount);
 
         if(dwColorUse == DIB_PAL_COLORS)

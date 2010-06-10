@@ -243,31 +243,45 @@ IntEmptyClipboardData(VOID)
 /*==============================================================*/
 
 HANDLE FASTCALL
-renderBITMAPfromDIB(LPBYTE hDIB)
+renderBITMAPfromDIB(LPBYTE pDIB)
 {
     HDC hdc;
     HBITMAP hbitmap;
     unsigned int offset;
-    BITMAPINFOHEADER *ih;
+    BITMAPV5INFO bmi;
+    NTSTATUS Status ;
 
     //hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
     hdc = UserGetDCEx(ClipboardWindow, NULL, DCX_USESTYLE);
 
-    ih = (BITMAPINFOHEADER *)hDIB;
+    /* Probe it */
+    _SEH2_TRY
+    {
+        Status = ProbeAndConvertToBitmapV5Info(&bmi, (BITMAPINFO*)pDIB, DIB_RGB_COLORS, 0);
+        offset = DIB_BitmapInfoSize((BITMAPINFO*)pDIB, DIB_RGB_COLORS);
+        ProbeForRead(pDIB + offset, bmi.bmiHeader.bV5SizeImage, 1);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
 
-    offset = sizeof(BITMAPINFOHEADER) + ((ih->biBitCount <= 8) ? (sizeof(RGBQUAD) * (1 << ih->biBitCount)) : 0);
+    if(!NT_SUCCESS(Status))
+    {
+        UserReleaseDC(ClipboardWindow, hdc, FALSE);
+        return NULL;
+    }
 
-    hbitmap = NtGdiCreateDIBitmapInternal(hdc,
-                                          ih->biWidth,
-                                          ih->biHeight,
-                                          CBM_INIT,
-                                          (LPBYTE)ih+offset,
-                                          (LPBITMAPINFO)ih,
-                                          DIB_RGB_COLORS,
-                                          ih->biBitCount,
-                                          ih->biSizeImage,
-                                          0,
-                                          0);
+    hbitmap = GreCreateDIBitmapInternal(hdc,
+                                        bmi.bmiHeader.bV5Width,
+                                        bmi.bmiHeader.bV5Height,
+                                        CBM_INIT,
+                                        pDIB+offset,
+                                        &bmi,
+                                        DIB_RGB_COLORS,
+                                        0,
+                                        0);
     //UserReleaseDC(NULL, hdc, FALSE);
     UserReleaseDC(ClipboardWindow, hdc, FALSE);
 

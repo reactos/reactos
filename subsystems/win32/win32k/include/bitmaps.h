@@ -36,3 +36,15 @@ GreCreateBitmapEx(
     IN ULONG cjBits,
     IN OPTIONAL PVOID pvBits);
 
+HBITMAP
+FASTCALL
+GreCreateDIBitmapInternal(
+    IN HDC hDc,
+    IN INT cx,
+    IN INT cy,
+    IN DWORD fInit,
+    IN OPTIONAL LPBYTE pjInit,
+    IN OPTIONAL PBITMAPV5INFO pbmi,
+    IN DWORD iUsage,
+    IN FLONG fl,
+    IN HANDLE hcmXform);
