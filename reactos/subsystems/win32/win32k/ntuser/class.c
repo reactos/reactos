@@ -1442,8 +1442,9 @@ UserGetClassName(IN PCLS Class,
                 }
 
                 /* allocate a temporary buffer that can hold the unicode class name */
-                szTemp = ExAllocatePool(PagedPool,
-                                        BufLen);
+                szTemp = ExAllocatePoolWithTag(PagedPool,
+                                               BufLen,
+                                               USERTAG_CLASS);
                 if (szTemp == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

@@ -337,7 +337,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
   if (Process->Win32Process == NULL)
     {
       /* FIXME - lock the process */
-      Process->Win32Process = ExAllocatePool(NonPagedPool, sizeof(PROCESSINFO));
+      Process->Win32Process = ExAllocatePoolWithTag(NonPagedPool, sizeof(PROCESSINFO), USERTAG_PROCESSINFO);
 
       if (Process->Win32Process == NULL)
 	return STATUS_NO_MEMORY;
@@ -350,7 +350,7 @@ Win32kInitWin32Thread(PETHREAD Thread)
 
   if (Thread->Tcb.Win32Thread == NULL)
     {
-      Thread->Tcb.Win32Thread = ExAllocatePool (NonPagedPool, sizeof(THREADINFO));
+      Thread->Tcb.Win32Thread = ExAllocatePoolWithTag(NonPagedPool, sizeof(THREADINFO), USERTAG_THREADINFO);
       if (Thread->Tcb.Win32Thread == NULL)
 	return STATUS_NO_MEMORY;
 
