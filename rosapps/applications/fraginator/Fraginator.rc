@@ -18,3 +18,4 @@
 #include "lang/fr-FR.rc"
 #include "lang/no-NO.rc"
 #include "lang/sk-SK.rc"
+#include "lang/uk-UA.rc"
