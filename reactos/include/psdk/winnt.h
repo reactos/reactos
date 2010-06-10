@@ -11,20 +11,6 @@
 #include <msvctarget.h>
 #endif
 
-#if defined(_M_IX86) && !defined(_X86_)
-#define _X86_
-#elif defined(_M_ALPHA) && !defined(_ALPHA_)
-#define _ALPHA_
-#elif defined(_M_ARM) && !defined(_ARM_)
-#define _ARM_
-#elif defined(_M_PPC) && !defined(_PPC_)
-#define _PPC_
-#elif defined(_M_MRX000) && !defined(_MIPS_)
-#define _MIPS_
-#elif defined(_M_M68K) && !defined(_68K_)
-#define _68K_
-#endif
-
 #ifndef DECLSPEC_ALIGN
 # if defined(_MSC_VER) && (_MSC_VER >= 1300) && !defined(MIDL_PASS)
 #  define DECLSPEC_ALIGN(x) __declspec(align(x))
