@@ -149,7 +149,7 @@ DC_vRestoreDC(
             DC_vCopyState(pdcSave, pdc, FALSE);
 
             /* Only memory DC's change their surface */
-            if (pdcSave->dctype == DCTYPE_MEMORY)
+            if (pdc->dctype == DCTYPE_MEMORY)
                 DC_vSelectSurface(pdc, pdcSave->dclevel.pSurface);
 
             // Restore Path by removing it, if the Save flag is set.
