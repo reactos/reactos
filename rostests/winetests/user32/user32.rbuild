@@ -17,7 +17,7 @@
 	<file>dde.c</file>
 	<file>dialog.c</file>
 	<file>edit.c</file>
-	<!-- <file>generated.c</file> -->
+	<file>generated.c</file>
 	<file>input.c</file>
 	<file>listbox.c</file>
 	<file>menu.c</file>

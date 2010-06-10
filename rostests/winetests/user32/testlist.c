@@ -42,7 +42,7 @@ const struct test winetest_testlist[] =
     { "dde", func_dde },
     { "dialog", func_dialog },
     { "edit", func_edit },
-//  { "generated", func_generated },
+    { "generated", func_generated },
     { "input", func_input },
     { "listbox", func_listbox },
     { "menu", func_menu },
