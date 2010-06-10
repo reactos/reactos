@@ -461,9 +461,10 @@ CreateDIBitmap( HDC hDC,
   LONG width, height, compr, dibsize;
   WORD planes, bpp;
 //  PDC_ATTR pDc_Attr;
-  UINT ConvertedInfoSize;
+  UINT InfoSize;
   UINT cjBmpScanSize;
   HBITMAP hBmp;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   if (!Header) return 0;
 
@@ -476,9 +477,25 @@ CreateDIBitmap( HDC hDC,
 // For Icm support.
 // GdiGetHandleUserData(hdc, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
 
-  /* Mmmh, this is not really safe */
-  cjBmpScanSize = DIB_BitmapBitsSize(Data);
-  DPRINT("pBMI %x, Size bpp %d, dibsize %d, Conv %d, BSS %d\n", Data,bpp,dibsize,ConvertedInfoSize,cjBmpScanSize);
+  _SEH2_TRY
+  {
+      cjBmpScanSize = DIB_BitmapBitsSize(Data);
+      CalculateColorTableSize(&Data->bmiHeader, &ColorUse, &InfoSize);
+      InfoSize += Data->bmiHeader.biSize;
+  }
+  _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+  {
+        Status = _SEH2_GetExceptionCode();
+  }
+  _SEH2_END
+
+  if(!NT_SUCCESS(Status))
+  {
+     GdiSetLastError(ERROR_INVALID_PARAMETER);
+     return NULL;
+  }
+
+  DPRINT("pBMI %x, Size bpp %d, dibsize %d, Conv %d, BSS %d\n", Data,bpp,dibsize,InfoSize,cjBmpScanSize);
 
   if ( !width || !height )
      hBmp = GetStockObject(DEFAULT_BITMAP);
@@ -491,7 +508,7 @@ CreateDIBitmap( HDC hDC,
                                         (LPBYTE)Bits,
                                         (LPBITMAPINFO)Data,
                                         ColorUse,
-                                        ConvertedInfoSize,
+                                        InfoSize,
                                         cjBmpScanSize,
                                         0,
                                         0);
