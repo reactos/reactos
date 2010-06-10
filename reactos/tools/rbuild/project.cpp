@@ -535,7 +535,6 @@ Project::GetCompilerSet () const
 	case MicrosoftC: return "msc";
 	default: assert ( false );
 	}
-    return "";
 }
 
 std::string
@@ -547,5 +546,4 @@ Project::GetLinkerSet () const
 	case MicrosoftLink: return "mslink";
 	default: assert ( false );
 	}
-    return "";
 }
