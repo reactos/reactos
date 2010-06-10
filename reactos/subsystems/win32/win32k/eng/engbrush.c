@@ -272,7 +272,7 @@ BRUSHOBJ_pvAllocRbrush(
     IN BRUSHOBJ *pbo,
     IN ULONG cj)
 {
-    pbo->pvRbrush = EngAllocMem(0, cj, 'rbdG');
+    pbo->pvRbrush = EngAllocMem(0, cj, GDITAG_RBRUSH);
     return pbo->pvRbrush;
 }
 
