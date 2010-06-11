@@ -2310,56 +2310,53 @@ FormatPartitionPage (PINPUT_RECORD Ir)
         {
             CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
-            if (PartEntry->PartInfo[PartNum].PartitionType == PARTITION_ENTRY_UNUSED)
+            if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
             {
-                if (wcscmp(FileSystemList->Selected->FileSystem, L"FAT") == 0)
+                if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (4200LL * 1024LL))
                 {
-                    if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (4200LL * 1024LL))
-                    {
-                        /* FAT12 CHS partition (disk is smaller than 4.1MB) */
-                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT_12;
-                    }
-                    else if (PartEntry->PartInfo[PartNum].StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
-                    {
-                        /* Partition starts below the 8.4GB boundary ==> CHS partition */
+                    /* FAT12 CHS partition (disk is smaller than 4.1MB) */
+                    PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT_12;
+                }
+                else if (PartEntry->PartInfo[PartNum].StartingOffset.QuadPart < (1024LL * 255LL * 63LL * 512LL))
+                {
+                    /* Partition starts below the 8.4GB boundary ==> CHS partition */
 
-                        if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
-                        {
-                            /* FAT16 CHS partition (partiton size < 32MB) */
-                            PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT_16;
-                        }
-                        else if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-                        {
-                            /* FAT16 CHS partition (partition size < 512MB) */
-                            PartEntry->PartInfo[PartNum].PartitionType = PARTITION_HUGE;
-                        }
-                        else
-                        {
-                            /* FAT32 CHS partition (partition size >= 512MB) */
-                            PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT32;
-                        }
+                    if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (32LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 CHS partition (partiton size < 32MB) */
+                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT_16;
+                    }
+                    else if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 CHS partition (partition size < 512MB) */
+                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_HUGE;
                     }
                     else
                     {
-                        /* Partition starts above the 8.4GB boundary ==> LBA partition */
-
-                        if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
-                        {
-                            /* FAT16 LBA partition (partition size < 512MB) */
-                            PartEntry->PartInfo[PartNum].PartitionType = PARTITION_XINT13;
-                        }
-                        else
-                        {
-                            /* FAT32 LBA partition (partition size >= 512MB) */
-                            PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT32_XINT13;
-                        }
+                        /* FAT32 CHS partition (partition size >= 512MB) */
+                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT32;
                     }
                 }
-                else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
-                    PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
-                else if (!FileSystemList->Selected->FormatFunc)
-                    return QUIT_PAGE;
+                else
+                {
+                    /* Partition starts above the 8.4GB boundary ==> LBA partition */
+
+                    if (PartEntry->PartInfo[PartNum].PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+                    {
+                        /* FAT16 LBA partition (partition size < 512MB) */
+                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_XINT13;
+                    }
+                    else
+                    {
+                        /* FAT32 LBA partition (partition size >= 512MB) */
+                        PartEntry->PartInfo[PartNum].PartitionType = PARTITION_FAT32_XINT13;
+                    }
+                }
             }
+            else if (wcscmp(FileSystemList->Selected->FileSystem, L"EXT2") == 0)
+                PartEntry->PartInfo[PartNum].PartitionType = PARTITION_EXT2;
+            else if (!FileSystemList->Selected->FormatFunc)
+                return QUIT_PAGE;
 
             CheckActiveBootPartition (PartitionList);
 
