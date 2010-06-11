@@ -251,7 +251,7 @@ WdmAudGetDeviceInterface(
             RtlMoveMemory(DeviceInfo->u.Interface.DeviceInterfaceString, Device, Length);
         }
 
-        ExFreePool(Device);
+        FreeItem(Device);
         return SetIrpIoStatus(Irp, STATUS_SUCCESS, sizeof(WDMAUD_DEVICE_INFO));
     }
     else if (DeviceInfo->DeviceType == MIXER_DEVICE_TYPE)

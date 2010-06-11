@@ -65,7 +65,7 @@ WdmAudOpenSysAudioDeviceInterfaces(
     while(*SymbolicLinkList)
     {
         Length = wcslen(SymbolicLinkList) + 1;
-        Entry = (SYSAUDIO_ENTRY*)ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
+        Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
         if (!Entry)
         {
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -108,7 +108,7 @@ WdmAudOpenSysAudioDevices(
         if (NT_SUCCESS(Status))
         {
             WdmAudOpenSysAudioDeviceInterfaces(DeviceExtension, SymbolicLinkList);
-            ExFreePool(SymbolicLinkList);
+            FreeItem(SymbolicLinkList);
         }
 
 
@@ -123,7 +123,7 @@ WdmAudOpenSysAudioDevices(
     else
     {
             Length = wcslen(DeviceName.Buffer) + 1;
-            Entry = (SYSAUDIO_ENTRY*)ExAllocatePool(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
+            Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
             if (!Entry)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
@@ -218,7 +218,7 @@ WdmAudOpenSysaudio(
     ASSERT(!IsListEmpty(&DeviceExtension->SysAudioDeviceList));
 
     /* allocate client context struct */
-    Client = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_CLIENT));
+    Client = AllocateItem(NonPagedPool, sizeof(WDMAUD_CLIENT));
 
     /* check for allocation failure */
     if (!Client)
