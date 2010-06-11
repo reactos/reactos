@@ -23,7 +23,7 @@
 #error Not supported.
 #endif
 
-#if !defined(_X86_) && !defined(_AMD64) && !defined(_IA64_) && !defined(_ALPHA_) && \
+#if !defined(_X86_) && !defined(_AMD64_) && !defined(_IA64_) && !defined(_ALPHA_) && \
     !defined(_ARM_) && !defined(_PPC_) && !defined(_MIPS_) && !defined(_68K_)
 
 #if defined(_M_AMD64) || defined(__x86_64__)
