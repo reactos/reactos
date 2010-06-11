@@ -591,8 +591,6 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     AA_Type aa_type = AA_None;
     //DIBSECTION bmp;
     unsigned int idx;
-    double cosEsc, sinEsc;
-    LOGFONTW lf;
     //enum drawable_depth_type depth_type = (physDev->depth == 1) ? mono_drawable : color_drawable;
     //Picture tile_pict = 0;
 
@@ -645,16 +643,6 @@ BOOL FeTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     {
         retv = TRUE;
         goto done_unlock;
-    }
-
-
-    GetObjectW(GetCurrentObject(physDev->hUserDC, OBJ_FONT), sizeof(lf), &lf);
-    if(lf.lfEscapement != 0) {
-        cosEsc = cos(lf.lfEscapement * M_PI / 1800);
-        sinEsc = sin(lf.lfEscapement * M_PI / 1800);
-    } else {
-        cosEsc = 1;
-        sinEsc = 0;
     }
 
     if (flags & ETO_CLIPPED)

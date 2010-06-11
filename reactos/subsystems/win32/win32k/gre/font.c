@@ -135,10 +135,9 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
            const INT *lpDx, gsCacheEntryFormat *formatEntry)
 {
-    INT offset = 0, xoff = 0, yoff = 0;
+    POINT offset = {0, 0};
     AA_Type aa_type = AA_None;
     INT idx;
-    /*double*/ int cosEsc = 1, sinEsc = 0;
     BRUSHGDI *pTextPen;
 
     /* Create pen for text output */
@@ -154,22 +153,31 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
             //sharp_glyph_fn = SharpGlyphGray;
 
         for(idx = 0; idx < count; idx++) {
-            sharp_glyph_fn(pDC, pDC->rcDcRect.left + pDC->rcVport.left + x + xoff,
-                pDC->rcDcRect.top + pDC->rcVport.top + y + yoff,
-                formatEntry->bitmaps[wstr[idx]],
-                &formatEntry->gis[wstr[idx]],
-                pTextPen);
-            if(lpDx) {
-                offset += lpDx[idx];
-                xoff = offset * cosEsc;
-                yoff = offset * -sinEsc;
-            } else {
-                xoff += formatEntry->gis[wstr[idx]].xOff;
-                yoff += formatEntry->gis[wstr[idx]].yOff;
+            sharp_glyph_fn(pDC,
+                           pDC->rcDcRect.left + pDC->rcVport.left + x + offset.x,
+                           pDC->rcDcRect.top + pDC->rcVport.top + y + offset.y,
+                           formatEntry->bitmaps[wstr[idx]],
+                           &formatEntry->gis[wstr[idx]],
+                           pTextPen);
+            if(lpDx)
+            {
+                if(flags & ETO_PDY)
+                {
+                    offset.x += lpDx[idx * 2];
+                    offset.y += lpDx[idx * 2 + 1];
+                }
+                else
+                    offset.x += lpDx[idx];
+            }
+            else
+            {
+                offset.x += formatEntry->gis[wstr[idx]].xOff;
+                offset.y += formatEntry->gis[wstr[idx]].yOff;
             }
         }
     } else {
 #if 0
+        OUTDATED (need to merge 47289 and higher)
         XImage *image;
         int image_x, image_y, image_off_x, image_off_y, image_w, image_h;
         RECT extents = {0, 0, 0, 0};
