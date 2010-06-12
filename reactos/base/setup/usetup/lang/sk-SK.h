@@ -1,7 +1,7 @@
 /* TRANSLATOR:  M†rio Kaüm†r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  22-01-2008
  * Encoding  :  Latin II (852)
- * LastChange:  01-11-2009
+ * LastChange:  31-05-2010
  */
 
 #pragma once
@@ -1489,8 +1489,8 @@ MUI_ERROR skSKErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Na zvolenej part°cii nie je dostatok voñnÇho miesta.\n"
+        "  * Pokraüujte stlaüen°m ñubovoñnÇho kl†vesu.",
         NULL
     },
     {
