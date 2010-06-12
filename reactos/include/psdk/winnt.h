@@ -3335,11 +3335,9 @@ typedef struct _SINGLE_LIST_ENTRY {
 
 #if defined(_WIN64)
 
-typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY *PSLIST_ENTRY;
-
 typedef struct DECLSPEC_ALIGN(16) _SLIST_ENTRY {
-  PSLIST_ENTRY Next;
-} SLIST_ENTRY;
+  struct _SLIST_ENTRY *Next;
+} SLIST_ENTRY, *PSLIST_ENTRY;
 
 typedef struct _SLIST_ENTRY32 {
   DWORD Next;
