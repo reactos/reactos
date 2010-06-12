@@ -7,6 +7,9 @@
 <directory name="battery">
 	<xi:include href="battery/directory.rbuild" />
 </directory>
+<directory name="bluetooth">
+	<xi:include href="bluetooth/directory.rbuild" />
+</directory>
 <directory name="bus">
 	<xi:include href="bus/directory.rbuild" />
 </directory>
