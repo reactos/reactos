@@ -11,15 +11,15 @@
 #include <debug.h>
 
 NTSTATUS NTAPI
-NtfsFormat(PUNICODE_STRING DriveRoot,
-           FMIFS_MEDIA_FLAG MediaFlag,
-           PUNICODE_STRING Label,
-           BOOLEAN QuickFormat,
-           ULONG ClusterSize,
-           PFMIFSCALLBACK Callback)
+NtfsFormat(IN PUNICODE_STRING DriveRoot,
+           IN FMIFS_MEDIA_FLAG MediaFlag,
+           IN PUNICODE_STRING Label,
+           IN BOOLEAN QuickFormat,
+           IN ULONG ClusterSize,
+           IN PFMIFSCALLBACK Callback)
 {
-  UNIMPLEMENTED;
-  return STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 
@@ -31,6 +31,6 @@ NtfsChkdsk(IN PUNICODE_STRING DriveRoot,
            IN BOOLEAN ScanDrive,
            IN PFMIFSCALLBACK Callback)
 {
-  UNIMPLEMENTED;
-  return STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    return STATUS_SUCCESS;
 }
