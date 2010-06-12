@@ -1,7 +1,7 @@
 #ifndef _FBT_HCI_COMMANDS_H
 #define _FBT_HCI_COMMANDS_H
 
-#include "fbtHciOpcodes.h"
+#include "fbtHciOpCodes.h"
 #include "fbtHciSizes.h"
 
 #include "fbtHciCmdStructs.h"
