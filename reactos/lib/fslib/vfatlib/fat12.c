@@ -62,12 +62,12 @@ Fat12WriteBootSector(IN HANDLE FileHandle,
     /* Allocate buffer for new bootsector */
     NewBootSector = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap (),
                                             0,
-                                            SECTORSIZE);
+                                            BootSector->BytesPerSector);
     if (NewBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the new bootsector */
-    memset(NewBootSector, 0, SECTORSIZE);
+    memset(NewBootSector, 0, BootSector->BytesPerSector);
 
     /* Copy FAT16 BPB to new bootsector */
     memcpy((NewBootSector + 3),
@@ -82,7 +82,7 @@ Fat12WriteBootSector(IN HANDLE FileHandle,
                          NULL,
                          &IoStatusBlock,
                          NewBootSector,
-                         SECTORSIZE,
+                         BootSector->BytesPerSector,
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))

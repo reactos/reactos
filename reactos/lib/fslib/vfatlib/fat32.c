@@ -62,12 +62,12 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
     /* Allocate buffer for new bootsector */
     NewBootSector = (PUCHAR)RtlAllocateHeap(RtlGetProcessHeap(),
                                             0,
-                                            SECTORSIZE);
+                                            BootSector->BytesPerSector);
     if (NewBootSector == NULL)
         return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Zero the new bootsector */
-    memset(NewBootSector, 0, SECTORSIZE);
+    memset(NewBootSector, 0, BootSector->BytesPerSector);
 
     /* Copy FAT32 BPB to new bootsector */
     memcpy((NewBootSector + 3),
@@ -82,7 +82,7 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
                          NULL,
                          &IoStatusBlock,
                          NewBootSector,
-                         SECTORSIZE,
+                         BootSector->BytesPerSector,
                          &FileOffset,
                          NULL);
     if (!NT_SUCCESS(Status))
@@ -97,14 +97,14 @@ Fat32WriteBootSector(IN HANDLE FileHandle,
     /* Write backup boot sector */
     if (BootSector->BootBackup != 0x0000)
     {
-        FileOffset.QuadPart = (ULONGLONG)((ULONG) BootSector->BootBackup * SECTORSIZE);
+        FileOffset.QuadPart = (ULONGLONG)((ULONG)BootSector->BootBackup * BootSector->BytesPerSector);
         Status = NtWriteFile(FileHandle,
                              NULL,
                              NULL,
                              NULL,
                              &IoStatusBlock,
                              NewBootSector,
-                             SECTORSIZE,
+                             BootSector->BytesPerSector,
                              &FileOffset,
                              NULL);
         if (!NT_SUCCESS(Status))

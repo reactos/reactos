@@ -19,8 +19,6 @@
 #include "check/file.h"
 #include "check/check.h"
 
-#define SECTORSIZE 512
-
 #include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
 {

@@ -143,9 +143,9 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
         Callback (PROGRESS, 0, (PVOID)&Context.Percent);
     }
 
-    if (PartitionInfo.PartitionLength.QuadPart < (4200LL * 1024LL))
+    if (PartitionInfo.PartitionType == PARTITION_FAT_12)
     {
-        /* FAT12 (volume is smaller than 4.1MB) */
+        /* FAT12 */
         Status = Fat12Format(FileHandle,
                              &PartitionInfo,
                              &DiskGeometry,
@@ -154,10 +154,24 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
                              ClusterSize,
                              &Context);
     }
-    else if (PartitionInfo.PartitionLength.QuadPart < (512LL * 1024LL * 1024LL))
+    else if (PartitionInfo.PartitionType == PARTITION_FAT_16 ||
+             PartitionInfo.PartitionType == PARTITION_HUGE ||
+             PartitionInfo.PartitionType == PARTITION_XINT13)
     {
-        /* FAT16 (volume is smaller than 512MB) */
+        /* FAT16 */
         Status = Fat16Format(FileHandle,
+                             &PartitionInfo,
+                             &DiskGeometry,
+                             Label,
+                             QuickFormat,
+                             ClusterSize,
+                             &Context);
+    }
+    else if (PartitionInfo.PartitionType == PARTITION_FAT32 ||
+             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13)
+    {
+        /* FAT32 */
+        Status = Fat32Format(FileHandle,
                              &PartitionInfo,
                              &DiskGeometry,
                              Label,
@@ -167,14 +181,7 @@ VfatFormat(IN PUNICODE_STRING DriveRoot,
     }
     else
     {
-        /* FAT32 (volume is 512MB or larger) */
-        Status = Fat32Format(FileHandle,
-                             &PartitionInfo,
-                             &DiskGeometry,
-                             Label,
-                             QuickFormat,
-                             ClusterSize,
-                             &Context);
+        Status = STATUS_INVALID_PARAMETER;
     }
 
     NtClose(FileHandle);
