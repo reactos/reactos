@@ -358,7 +358,7 @@ MMixerGetTargetPins(
     {
         for(Index = 0; Index < NodeConnectionCount; Index++)
         {
-            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Pins);
+            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], PinCount, Pins);
             ASSERT(Status == STATUS_SUCCESS);
         }
         MixerContext->Free((PVOID)NodeConnection);
@@ -638,6 +638,7 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
+        ASSERT(Length < MAXPNAMELEN);
         wcscpy(MixerInfo->MixCaps.szPname, Name);
         MixerContext->Free(Name);
         return Status;
@@ -650,6 +651,7 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
+        ASSERT(Length < MAXPNAMELEN);
         wcscpy(MixerInfo->MixCaps.szPname, Name);
         MixerContext->Free(Name);
     }

@@ -122,18 +122,32 @@ WdmAudOpenSysAudioDevices(
     }
     else
     {
-            Length = wcslen(DeviceName.Buffer) + 1;
-            Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY) + Length * sizeof(WCHAR));
+            Entry = (SYSAUDIO_ENTRY*)AllocateItem(NonPagedPool, sizeof(SYSAUDIO_ENTRY));
             if (!Entry)
             {
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            Entry->SymbolicLink.Length = Entry->SymbolicLink.MaximumLength = Length * sizeof(WCHAR);
-            Entry->SymbolicLink.MaximumLength += sizeof(WCHAR);
-            Entry->SymbolicLink.Buffer = (LPWSTR) (Entry + 1);
 
-            wcscpy(Entry->SymbolicLink.Buffer, DeviceName.Buffer);
+            Length = wcslen(DeviceName.Buffer) + 1;
+            Entry->SymbolicLink.Length = 0;
+            Entry->SymbolicLink.MaximumLength = Length * sizeof(WCHAR);
+            Entry->SymbolicLink.Buffer = AllocateItem(NonPagedPool, Entry->SymbolicLink.MaximumLength);
+
+            if (!Entry->SymbolicLink.Buffer)
+            {
+                FreeItem(Entry);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            Status = RtlAppendUnicodeStringToString(&Entry->SymbolicLink, &DeviceName);
+
+            if (!NT_SUCCESS(Status))
+            {
+                FreeItem(Entry->SymbolicLink.Buffer);
+                FreeItem(Entry);
+                return Status;
+            }
 
             InsertTailList(&DeviceExtension->SysAudioDeviceList, &Entry->Entry);
             DeviceExtension->NumSysAudioDevices++;
