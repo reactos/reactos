@@ -42,36 +42,6 @@ struct string_list
 	WCHAR str[1];
 };
 
-static const char UsageStr[] =
-"Usage:\n"
-"  Install a product:\n"
-"    msiexec {package|productcode} [property]\n"
-"    msiexec /i {package|productcode} [property]\n"
-"    msiexec /package {package|productcode} [property]\n"
-"    msiexec /a package [property]\n"
-"  Repair an installation:\n"
-"    msiexec /f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n"
-"  Uninstall a product:\n"
-"    msiexec /x {package|productcode} [property]\n"
-"  Advertise a product:\n"
-"    msiexec /j[u|m] package [/t transform] [/g languageid]\n"
-"    msiexec {u|m} package [/t transform] [/g languageid]\n"
-"  Apply a patch:\n"
-"    msiexec /p patchpackage [property]\n"
-"    msiexec /p patchpackage /a package [property]\n"
-"  Modifiers for above operations:\n"
-"    msiexec /l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n"
-"    msiexec /q{|n|b|r|f|n+|b+|b-}\n"
-"  Register a module:\n"
-"    msiexec /y module\n"
-"  Unregister a module:\n"
-"    msiexec /z module\n"
-"  Display usage and copyright:\n"
-"    msiexec {/h|/?}\n"
-"NOTE: Product code on commandline unimplemented as of yet\n"
-"\n"
-"Copyright 2004 Vincent Béron\n";
-
 static const WCHAR ActionAdmin[] = {
    'A','C','T','I','O','N','=','A','D','M','I','N',0 };
 static const WCHAR RemoveAll[] = {
@@ -87,8 +57,42 @@ static const WCHAR InstallRunOnce[] = {
 
 static void ShowUsage(int ExitCode)
 {
-	printf(UsageStr);
-	ExitProcess(ExitCode);
+    WCHAR msiexec_version[40];
+    WCHAR filename[MAX_PATH];
+    LPWSTR msi_res;
+    LPWSTR msiexec_help;
+    HMODULE hmsi = GetModuleHandleA("msi.dll");
+    DWORD len;
+    DWORD res;
+
+    /* MsiGetFileVersion need the full path */
+    *filename = 0;
+    res = GetModuleFileNameW(hmsi, filename, sizeof(filename) / sizeof(filename[0]));
+    if (!res)
+        WINE_ERR("GetModuleFileName failed: %d\n", GetLastError());
+
+    len = sizeof(msiexec_version) / sizeof(msiexec_version[0]);
+    *msiexec_version = 0;
+    res = MsiGetFileVersionW(filename, msiexec_version, &len, NULL, NULL);
+    if (res)
+        WINE_ERR("MsiGetFileVersion failed with %d\n", res);
+
+    /* Return the length of the resource.
+       No typo: The LPWSTR parameter must be a LPWSTR * for this mode */
+    len = LoadStringW(hmsi, 10, (LPWSTR) &msi_res, 0);
+
+    msi_res = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
+    msiexec_help = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) + sizeof(msiexec_version));
+    if (msi_res && msiexec_help) {
+        *msi_res = 0;
+        LoadStringW(hmsi, 10, msi_res, len + 1);
+
+        sprintfW(msiexec_help, msi_res, msiexec_version);
+        MsiMessageBoxW(0, msiexec_help, NULL, 0, GetUserDefaultLangID(), 0);
+    }
+    HeapFree(GetProcessHeap(), 0, msi_res);
+    HeapFree(GetProcessHeap(), 0, msiexec_help);
+    ExitProcess(ExitCode);
 }
 
 static BOOL IsProductCode(LPWSTR str)
@@ -660,11 +664,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			PackageName = argvW[i];
 		}
-		else if(msi_option_prefix(argvW[i], "x"))
+		else if(msi_option_prefix(argvW[i], "x") || msi_option_equal(argvW[i], "uninstall"))
 		{
 			FunctionInstall = TRUE;
-			PackageName = argvW[i]+2;
-			if (!PackageName[0])
+			if(msi_option_prefix(argvW[i], "x")) PackageName = argvW[i]+2;
+			if(!PackageName || !PackageName[0])
 			{
 				i++;
 				if (i >= argc)
@@ -898,7 +902,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			WINE_TRACE("argvW[%d] = %s\n", i, wine_dbgstr_w(argvW[i]));
 			DllName = argvW[i];
 		}
-		else if(msi_option_equal(argvW[i], "h") || msi_option_equal(argvW[i], "?"))
+		else if(msi_option_equal(argvW[i], "help") || msi_option_equal(argvW[i], "?"))
 		{
 			ShowUsage(0);
 		}

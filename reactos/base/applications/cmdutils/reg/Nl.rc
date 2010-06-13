@@ -30,8 +30,8 @@ STRINGTABLE
     STRING_DELETE_USAGE, "REG DELETE sleutel_naam [/v waarde_naam | /ve | /va] [/f]\n"
     STRING_QUERY_USAGE, "REG QUERY sleutel_naam [/v waarde_naam | /ve] [/s]\n"
     STRING_SUCCESS, "De bewerking is succesvol voltooid\n"
-    STRING_INVALID_KEY, "Fout: Foutieve sleutel naam\n"
-    STRING_INVALID_CMDLINE, "Fout: Foutieve commando regel parameters\n"
+    STRING_INVALID_KEY, "Fout: Foutieve sleutelnaam\n"
+    STRING_INVALID_CMDLINE, "Fout: Foutieve commandoregel-parameters\n"
     STRING_NO_REMOTE, "Fout: Sleutels konden niet toegevoegd worden aan de remote machine\n"
-    STRING_CANNOT_FIND, "Fout: Het systeem kon de gespecificeerde registry sleutel of waarde niet vinden\n"
+    STRING_CANNOT_FIND, "Fout: Het systeem kon de gespecificeerde registersleutel of waarde niet vinden\n"
 }

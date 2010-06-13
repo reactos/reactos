@@ -1,7 +1,5 @@
 /*
- * Help Viewer
- *
- * Copyright 1996 Ulrich Schmid
+ * Copyright 2003 Francois Gouget (for CodeWeavers)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Class names */
+#define WINE_OLESELFREGISTER
+#define WINE_FILEDESCRIPTION_STR "Wine core exe"
+#define WINE_FILENAME_STR "iexplore.exe"
+#define WINE_FILEVERSION 6,0,2900,2180
+#define WINE_FILEVERSION_STR "6.0.2900.2180"
+#define WINE_PRODUCTVERSION 6,0,2900,2180
+#define WINE_PRODUCTVERSION_STR "6.0.2900.2180"
 
-const char MAIN_WIN_CLASS_NAME[]       = "MS_WINHELP";
-const char BUTTON_BOX_WIN_CLASS_NAME[] = "WHButtonBox";
-const char HISTORY_WIN_CLASS_NAME[]    = "WHHistory";
-const char STRING_BUTTON[]             = "BUTTON";
+#include "wine/wine_common_ver.rc"
 
-/* Resource names */
-const char STRING_DIALOG_TEST[]        = "DIALOG_TEST";
-
-/* Local Variables:    */
-/* c-file-style: "GNU" */
-/* End:                */
+/* @makedep: iexplore.ico */
+1 ICON iexplore.ico

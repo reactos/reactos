@@ -1,7 +1,8 @@
 /*
- * Help Viewer
+ * Danish language support
  *
- * Copyright 1996 Ulrich Schmid
+ * Copyright 2010 Thomas Larsen
+ *                Paul Vriens
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/* Class names */
+#include "resources.h"
 
-const char MAIN_WIN_CLASS_NAME[]       = "MS_WINHELP";
-const char BUTTON_BOX_WIN_CLASS_NAME[] = "WHButtonBox";
-const char HISTORY_WIN_CLASS_NAME[]    = "WHHistory";
-const char STRING_BUTTON[]             = "BUTTON";
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-/* Resource names */
-const char STRING_DIALOG_TEST[]        = "DIALOG_TEST";
-
-/* Local Variables:    */
-/* c-file-style: "GNU" */
-/* End:                */
+STRINGTABLE
+{
+    IDS_FAILED, "Kunne ikke starte Wordpad"
+}

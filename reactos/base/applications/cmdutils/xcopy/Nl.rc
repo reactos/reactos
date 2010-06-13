@@ -29,15 +29,15 @@ STRINGTABLE
 {
     STRING_INVPARMS, "Onjuist aantal parameters - Gebruik xcopy /? om hulp te krijgen\n"
     STRING_INVPARM,  "Onjuiste parameter '%s' -  Gebruik xcopy /? om hulp te krijgen\n"
-    STRING_PAUSE,    "Druk op <enter> om te beginnen met copiëren\n"
-    STRING_SIMCOPY,  "%d bestand(en) zouden worden gecopiëerd\n"
-    STRING_COPY,     "%d bestand(en) gecopiëerd\n"
-    STRING_QISDIR,   "Is '%s' een bestand of een directory\n" \
+    STRING_PAUSE,    "Druk op <enter> om te beginnen met kopiëren\n"
+    STRING_SIMCOPY,  "%d bestand(en) zouden worden gekopieerd\n"
+    STRING_COPY,     "%d bestand(en) gekopieerd\n"
+    STRING_QISDIR,   "Is '%s' een bestand of een map\n" \
                      "op de bestemming?\n" \
                      "(B - Bestand, D - Directory)\n"
     STRING_SRCPROMPT,"%s? (Ja|Nee)\n"
     STRING_OVERWRITE,"Overschrijven %s? (Ja|Nee|Alles)\n"
-    STRING_COPYFAIL, "Copiëren van '%s' naar '%s' mislukt met r/c %d\n"
+    STRING_COPYFAIL, "Kopiëren van '%s' naar '%s' mislukt met r/c %d\n"
     STRING_OPENFAIL, "Fout tijdens openen van '%s'\n"
     STRING_READFAIL, "Fout tijdens lezen van '%s'\n"
     STRING_YES_CHAR, "J"
@@ -47,7 +47,7 @@ STRINGTABLE
     STRING_DIR_CHAR, "D"
 
     STRING_HELP,
-"XCOPY - Copiëerd bron bestanden of directory bomen naar een bestemming\n\
+"XCOPY - Kopieert bronbestanden of -mappen naar een bestemming\n\
 \n\
 Gebruik:\n\
 XCOPY bron [bestemming] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
@@ -56,26 +56,26 @@ XCOPY bron [bestemming] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 Parameters:\n\
 \n\
 [/I]  Als bestemming niet bestaat en 2 of meer bestanden worden\n\
-\tgecopiëerd, neem aan dat een directory werd bedoeld\n\
-[/S]  Copiëer directories en subdirectories\n\
-[/E]  Copiëer directories en subdirectories, inclusief lege\n\
-[/Q]  Toon geen namen tijdens copiëren (stil).\n\
-[/F]  Toon volledige bron- en bestemmingnamen tijdens copiëren\n\
-[/L]  Simuleer de actie, toon de namen die gecopiëerd zouden worden\n\
-[/W]  Wacht op gebruiker actie voordat de copiëeractie begint\n\
-[/T]  Creëert de lege directory structuur maar copiëert geen bestanden\n\
+\tgekopieerd, neem aan dat een map werd bedoeld\n\
+[/S]  Kopieer mappen en submappen\n\
+[/E]  Kopieer mappen en submappen, inclusief lege\n\
+[/Q]  Toon geen namen tijdens kopiëren (stil).\n\
+[/F]  Toon volledige bron- en bestemmingnamen tijdens kopiëren\n\
+[/L]  Simuleer de actie, toon de namen die gekopieerd zouden worden\n\
+[/W]  Wacht op actie van de gebruiker voor het kopiëren begint\n\
+[/T]  Creëert een lege mapstructuur, maar kopieert geen bestanden\n\
 [/Y]  Onderdrukt gebruikersactie wanneer bestanden worden overschreven\n\
 [/-Y] Vraagt gebruikersactie wanneer bestanden worden overschreven\n\
-[/P]  Vraagt gebruikersactie voor ieder bron bestand voor copiëren\n\
-[/N]  Copiëer m.b.v korte bestandsnamen\n\
-[/U]  Copiëer alleen bestanden die al bestaan op de bestemming\n\
+[/P]  Vraagt gebruikersactie voor ieder bronbestand voor kopiëren\n\
+[/N]  Kopieer m.b.v korte bestandsnamen\n\
+[/U]  Kopieer alleen bestanden die al bestaan op de bestemming\n\
 [/R]  Overschrijf alle schrijf-beveiligde bestanden\n\
 [/H]  Inclusief verborgen en systeem bestanden\n\
-[/C]  Ga door zelfs als er een fout optreed tijdens het copiëren\n\
-[/A]  Copiëer alleen bestanden met archiverings attribuut aan\n\
-[/M]  Copiëer alleen bestanden met archiverings attribuut aan, verwijderd\n\
-\tdit archiverings attribuut\n\
-[/D | /D:m-d-y] Copiëer nieuwe bestanden of die gewijzigd zijn na de opgegeven\n\
-\t\tdatum. Als geen detum wordt gegeven, copiëer alleen als bron nieuwer is.\n\n"
+[/C]  Ga door zelfs als er een fout optreed tijdens het kopiëren\n\
+[/A]  Kopieer alleen bestanden met archiveringsattribuut aan\n\
+[/M]  Kopieer alleen bestanden met archiveringsattribuut aan, verwijdert\n\
+\tdit archiveringsattribuut\n\
+[/D | /D:m-d-y] Kopieer bestanden die nieuw zijn of gewijzigd zijn na de opgegeven\n\
+\t\tdatum. Als geen datum wordt gegeven, kopieer alleen als bron nieuwer is.\n\n"
 
 }

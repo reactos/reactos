@@ -1,5 +1,7 @@
 /*
- * Copyright 2003 Francois Gouget (for CodeWeavers)
+ * Spanish language support
+ *
+ * Copyright 2010 José Rostagno
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,12 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define WINE_OLESELFREGISTER
-#define WINE_FILEDESCRIPTION_STR "Wine core exe"
-#define WINE_FILENAME_STR "iexplore.exe"
-#define WINE_FILEVERSION 6,0,2900,2180
-#define WINE_FILEVERSION_STR "6.0.2900.2180"
-#define WINE_PRODUCTVERSION 6,0,2900,2180
-#define WINE_PRODUCTVERSION_STR "6.0.2900.2180"
+#include "resources.h"
 
-#include "wine/wine_common_ver.rc"
+/*UTF-8*/
+#pragma code_page(65001)
+
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+{
+    IDS_FAILED, "Fallo inicio Wordpad"
+}

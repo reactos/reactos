@@ -4,6 +4,7 @@
  * Copyright 1997 Henrik Olsen
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2008 Jens Albretsen<jens@albretsen.dk>
+ *           2010 Thomas Larsen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,12 +23,16 @@
 
 #include "winhelp_res.h"
 
+#pragma code_page(65001)
+
+LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
  POPUP "&Filer" {
-  MENUITEM "Å&ben...", MNID_FILE_OPEN
+  MENUITEM "Ã…&ben...", MNID_FILE_OPEN
   MENUITEM SEPARATOR
   MENUITEM "&Udskriv emne", MNID_FILE_PRINT
   MENUITEM "&Indstil printer", MNID_FILE_SETUP
@@ -37,9 +42,9 @@ MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
  POPUP "&Rediger" {
    MENUITEM "K&opier...", MNID_EDIT_COPYDLG
    MENUITEM SEPARATOR
-   MENUITEM "&Anmærk...", MNID_EDIT_ANNOTATE
+   MENUITEM "&AnmÃ¦rk...", MNID_EDIT_ANNOTATE
  }
- POPUP "Bog&mærke" {
+ POPUP "Bog&mÃ¦rke" {
    MENUITEM "&Definer...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
@@ -58,18 +63,18 @@ MAIN_MENU MENU LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
   END
   MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&Hjælp" {
-   MENUITEM "&Brug af Hjælp", MNID_HELP_HELPON
-   MENUITEM "Altid &øverst", MNID_HELP_HELPTOP
+ POPUP "&HjÃ¦lp" {
+   MENUITEM "&Brug af HjÃ¦lp", MNID_HELP_HELPON
+   MENUITEM "Altid &Ã¸verst", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
    MENUITEM "&Information...", MNID_HELP_ABOUT
 #ifdef WINELIB
-   MENUITEM "Om &WINE", MNID_HELP_WINE
+   MENUITEM "Om &Wine", MNID_HELP_WINE
 #endif
  }
 }
 
-IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Index"
@@ -77,21 +82,52 @@ CAPTION "Index"
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
-/* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "SÃ¸g"
 {
-STID_WINE_HELP, 	"WINE Hjælp"
+    LTEXT  "Er ikke blevet implementeret endnu", -1, 10, 10, 180, 150
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE
+{
+STID_WINE_HELP, 	"Wine HjÃ¦lp"
 STID_WHERROR, 		"FEJL"
 STID_WARNING,  		"ADVARSEL"
 STID_INFO,  		"Information"
 STID_NOT_IMPLEMENTED, 	"Ikke implementeret"
-STID_HLPFILE_ERROR_s, 	"Fejl ved indlæsning af filen `%s'"
+STID_HLPFILE_ERROR_s, 	"Fejl ved indlÃ¦sning af filen `%s'"
 STID_INDEX, 		"&Indhold"
 STID_CONTENTS,		"Summary"
 STID_BACK, 		"&Tilbage"
 STID_ALL_FILES, 	"Alle filer (*.*)"
-STID_HELP_FILES_HLP, 	"Hjælpe filer (*.hlp)"
+STID_HELP_FILES_HLP, 	"HjÃ¦lpe filer (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Kan ikke finde '%s'. Vil du selv finde filen?"
 STID_NO_RICHEDIT	"Kan ikke finde en 'richedit' implementering... Afbryder"
 STID_PSH_INDEX,		"Help topics: "
 }
+
+CONTEXT_MENU MENU
+BEGIN
+        POPUP ""
+        BEGIN
+                MENUITEM "Notat...",           MNID_CTXT_ANNOTATE
+                MENUITEM "Kopier",             MNID_CTXT_COPY
+                MENUITEM "Udskriv...",         MNID_CTXT_PRINT
+                POPUP    "Skrifttype"
+                BEGIN
+                        MENUITEM "Lille",      MNID_CTXT_FONTS_SMALL
+                        MENUITEM "Normal",     MNID_CTXT_FONTS_NORMAL
+                        MENUITEM "Stor",       MNID_CTXT_FONTS_LARGE
+                END
+                POPUP   "Bevar HjÃ¦lp Ã¸verst"
+                BEGIN
+                        MENUITEM "Standard",   MNID_CTXT_HELP_DEFAULT
+                        MENUITEM "Synlig",     MNID_CTXT_HELP_VISIBLE
+                        MENUITEM "Usynlig",    MNID_CTXT_HELP_NONVISIBLE
+                END
+                MENUITEM "Benyt systemfarver", MNID_CTXT_SYSTEM_COLORS
+        END
+END

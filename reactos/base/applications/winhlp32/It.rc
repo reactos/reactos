@@ -59,7 +59,7 @@ MAIN_MENU MENU LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
   END
   MENUITEM "Usa colori di sistema",	MNID_OPTS_SYSTEM_COLORS
  }
- POPUP "&?" {
+ POPUP "&Aiuto" {
    MENUITEM "&Aiuto sulla guida", MNID_HELP_HELPON
    MENUITEM "Sempre in primo &piano", MNID_HELP_HELPTOP
    MENUITEM SEPARATOR
@@ -70,8 +70,23 @@ MAIN_MENU MENU LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
  }
 }
 
-/* Strings */
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Indice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
 
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Cerca"
+{
+    LTEXT  "Non implementato.", -1, 10, 10, 180, 150
+}
+
+/* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 {
 STID_WINE_HELP, 	"Guida di WINE"
@@ -89,3 +104,26 @@ STID_FILE_NOT_FOUND_s	"Non è stato possibile trovare '%s'. Vuoi cercare questo 
 STID_NO_RICHEDIT	"Non è stato possibile trovare un'implementazione richedit... Annullando"
 STID_PSH_INDEX,		"Argomenti di aiuto: "
 }
+
+CONTEXT_MENU MENU LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Annotazione...",       MNID_CTXT_ANNOTATE
+        MENUITEM "Copia",                MNID_CTXT_COPY
+        MENUITEM "Stampa...",            MNID_CTXT_PRINT
+        POPUP    "Caratteri"
+        BEGIN
+            MENUITEM "Piccolo",       MNID_CTXT_FONTS_SMALL
+            MENUITEM "Normale",      MNID_CTXT_FONTS_NORMAL
+            MENUITEM "Grande",       MNID_CTXT_FONTS_LARGE
+        END
+        POPUP   "Aiuto sempre visibile"
+        BEGIN
+            MENUITEM "Default",     MNID_CTXT_HELP_DEFAULT
+            MENUITEM "Visibile",     MNID_CTXT_HELP_VISIBLE
+            MENUITEM "Non visibile", MNID_CTXT_HELP_NONVISIBLE
+        END
+        MENUITEM "Usa i colori di sistema",   MNID_CTXT_SYSTEM_COLORS
+    END
+END

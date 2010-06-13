@@ -247,13 +247,12 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Zoom in"
     STRING_PREVIEW_ZOOMOUT,          "Zoom out"
     STRING_PREVIEW_CLOSE,            "Zapri"
-    STRING_PREVIEW_PAGE,             "Page"
-    STRING_PREVIEW_PAGES,            "Pages"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_UNITS_CM,             "cm"
+    STRING_PREVIEW_PAGE,             "Stran"
+    STRING_PREVIEW_PAGES,            "Strani"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "in"
+    STRING_UNITS_INCH,               "inch"
+    STRING_UNITS_PT,                 "pt"
 END
 
 STRINGTABLE DISCARDABLE
