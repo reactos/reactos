@@ -1119,10 +1119,6 @@ extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
 #endif
 #define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
 
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
-#endif
-
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
 typedef enum _NETWORK_OPEN_LOCATION_QUALIFIER {
