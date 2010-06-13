@@ -4,9 +4,9 @@
 	<directory name="amstream">
 		<xi:include href="amstream/amstream.rbuild" />
 	</directory>
-	<directory name="bdaplgin">
+	<!--<directory name="bdaplgin">
 		<xi:include href="bdaplgin/bdaplgin.rbuild" />
-	</directory>
+	</directory>-->
 	<directory name="d3d8thk">
 		<xi:include href="d3d8thk/d3d8thk.rbuild" />
 	</directory>
@@ -43,12 +43,12 @@
 	<directory name="msdmo">
 		<xi:include href="msdmo/msdmo.rbuild" />
 	</directory>
-	<directory name="msdvbnp">
+	<!--<directory name="msdvbnp">
 		<xi:include href="msdvbnp/msdvbnp.rbuild" />
-	</directory>
-	<directory name="msvidctl">
+	</directory>-->
+	<!--<directory name="msvidctl">
 		<xi:include href="msvidctl/msvidctl.rbuild" />
-	</directory>
+	</directory>-->
 	<directory name="qedit">
 		<xi:include href="qedit/qedit.rbuild" />
 	</directory>
