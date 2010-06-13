@@ -27,6 +27,7 @@
 #include <precomp.h>
 #include <stdarg.h>
 
+#include <wine/exception.h>
 #include <internal/wine/msvcrt.h>
 #include <internal/wine/cppexcept.h>
 
@@ -123,7 +124,6 @@ static void dump_function_descr( const cxx_function_descr *descr )
                  descr->tryblock[i].start_level, descr->tryblock[i].end_level,
                  descr->tryblock[i].catch_level, descr->tryblock[i].catchblock,
                  descr->tryblock[i].catchblock_count );
-
         for (j = 0; j < descr->tryblock[i].catchblock_count; j++)
         {
             const catchblock_info *ptr = &descr->tryblock[i].catchblock[j];
@@ -133,6 +133,10 @@ static void dump_function_descr( const cxx_function_descr *descr )
         }
     }
 #endif
+    if (descr->magic <= CXX_FRAME_MAGIC_VC6) return;
+    TRACE( "expect list: %p\n", descr->expect_list );
+    if (descr->magic <= CXX_FRAME_MAGIC_VC7) return;
+    TRACE( "flags: %08x\n", descr->flags );
 }
 
 /* check if the exception type is caught by a given catch block, and return the type that matched */
@@ -194,7 +198,7 @@ static void copy_exception( void *object, cxx_exception_frame *frame,
 /* unwind the local function up to a given trylevel */
 static void cxx_local_unwind( cxx_exception_frame* frame, const cxx_function_descr *descr, int last_level)
 {
-    void (*handler)();
+    void (*handler)(void);
     int trylevel = frame->trylevel;
 
     while (trylevel != last_level)
@@ -358,11 +362,16 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
 {
     cxx_exception_type *exc_type;
 
-    if (descr->magic != CXX_FRAME_MAGIC)
+    if (descr->magic < CXX_FRAME_MAGIC_VC6 || descr->magic > CXX_FRAME_MAGIC_VC8)
     {
         ERR( "invalid frame magic %x\n", descr->magic );
         return ExceptionContinueSearch;
     }
+    if (descr->magic >= CXX_FRAME_MAGIC_VC8 &&
+        (descr->flags & FUNC_DESCR_SYNCHRONOUS) &&
+        (rec->ExceptionCode != CXX_EXCEPTION))
+        return ExceptionContinueSearch;  /* handle only c++ exceptions */
+
     if (rec->ExceptionFlags & (EH_UNWINDING|EH_EXIT_UNWIND))
     {
         if (descr->unwind_count && !nested_trylevel) cxx_local_unwind( frame, descr, -1 );
@@ -374,7 +383,7 @@ DWORD CDECL cxx_frame_handler( PEXCEPTION_RECORD rec, cxx_exception_frame* frame
     {
         exc_type = (cxx_exception_type *)rec->ExceptionInformation[2];
 
-        if (rec->ExceptionInformation[0] > CXX_FRAME_MAGIC &&
+        if (rec->ExceptionInformation[0] > CXX_FRAME_MAGIC_VC8 &&
                 exc_type->custom_handler)
         {
             return exc_type->custom_handler( rec, frame, context, dispatch,
@@ -408,14 +417,22 @@ extern DWORD CDECL __CxxFrameHandler( PEXCEPTION_RECORD rec, EXCEPTION_REGISTRAT
                                       PCONTEXT context, EXCEPTION_REGISTRATION_RECORD** dispatch );
 __ASM_GLOBAL_FUNC( __CxxFrameHandler,
                    "pushl $0\n\t"        /* nested_trylevel */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl $0\n\t"        /* nested_frame */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl %eax\n\t"      /* descr */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl 28(%esp)\n\t"  /* dispatch */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl 28(%esp)\n\t"  /* context */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl 28(%esp)\n\t"  /* frame */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "pushl 28(%esp)\n\t"  /* rec */
+                   __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
                    "call " __ASM_NAME("cxx_frame_handler") "\n\t"
                    "add $28,%esp\n\t"
+                   __ASM_CFI(".cfi_adjust_cfa_offset -28\n\t")
                    "ret" )
 
 
@@ -435,6 +452,17 @@ void __stdcall __CxxLongjmpUnwind( const struct MSVCRT___JUMP_BUFFER *buf )
 
 #endif  /* __i386__ */
 
+
+/*********************************************************************
+ *		__CppXcptFilter (MSVCRT.@)
+ */
+int CDECL __CppXcptFilter(NTSTATUS ex, PEXCEPTION_POINTERS ptr)
+{
+    /* only filter c++ exceptions */
+    if (ex != CXX_EXCEPTION) return EXCEPTION_CONTINUE_SEARCH;
+    return _XcptFilter( ex, ptr );
+}
+
 /*********************************************************************
  *		_CxxThrowException (MSVCRT.@)
  */
@@ -442,7 +470,7 @@ void CDECL _CxxThrowException( exception *object, const cxx_exception_type *type
 {
     ULONG_PTR args[3];
 
-    args[0] = CXX_FRAME_MAGIC;
+    args[0] = CXX_FRAME_MAGIC_VC6;
     args[1] = (ULONG_PTR)object;
     args[2] = (ULONG_PTR)type;
     RaiseException( CXX_EXCEPTION, EH_NONCONTINUABLE, 3, args );
@@ -462,7 +490,7 @@ BOOL CDECL __CxxDetectRethrow(PEXCEPTION_POINTERS ptrs)
 
   if (rec->ExceptionCode == CXX_EXCEPTION &&
       rec->NumberParameters == 3 &&
-      rec->ExceptionInformation[0] == CXX_FRAME_MAGIC &&
+      rec->ExceptionInformation[0] == CXX_FRAME_MAGIC_VC6 &&
       rec->ExceptionInformation[2])
   {
     ptrs->ExceptionRecord = msvcrt_get_thread_data()->exc_record;

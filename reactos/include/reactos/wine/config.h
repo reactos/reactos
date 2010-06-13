@@ -988,7 +988,11 @@
 #define __ASM_CFI(str) str
 
 /* Define to a macro to define an assembly function */
+#ifndef NO_UNDERSCORE_PREFIX
 #define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl _" #name suffix "\n\t.def _" #name suffix "; .scl 2; .type 32; .endef\n_" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
+#else
+#define __ASM_DEFINE_FUNC(name,suffix,code) asm(".text\n\t.align 4\n\t.globl " #name suffix "\n\t.def " #name suffix "; .scl 2; .type 32; .endef\n" #name suffix ":\n\t.cfi_startproc\n\t" code "\n\t.cfi_endproc");
+#endif
 
 /* Define to a macro to generate an assembly function directive */
 #define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
@@ -998,7 +1002,11 @@
 #define __ASM_GLOBAL_FUNC(name,code) __ASM_DEFINE_FUNC(name,"",code)
 
 /* Define to a macro to generate an assembly name from a C symbol */
+#ifndef NO_UNDERSCORE_PREFIX
 #define __ASM_NAME(name) "_" name
+#else
+#define __ASM_NAME(name) name
+#endif
 
 /* Define to a macro to generate an stdcall suffix */
 #define __ASM_STDCALL(args) "@" #args

@@ -56,6 +56,7 @@
 		<file>checkesp.c</file>
 		<file>cpp.c</file>
 		<file>cppexcept.c</file>
+		<file>except.c</file>
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">

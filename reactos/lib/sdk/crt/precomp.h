@@ -34,6 +34,7 @@
 #endif
 
 #include "wine/unicode.h"
+#include "wine/config.h"
 
 /* kernelmode libcnt should not include Wine-debugging crap */
 #ifndef _LIBCNT_
@@ -58,6 +59,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #include <internal/mbstring.h>
 #include <internal/mtdll.h>
 #include <internal/rterror.h>
+#include <internal/safecrt.h>
 #include <internal/time.h>
 #include <internal/tls.h>
 #include <internal/printf.h>

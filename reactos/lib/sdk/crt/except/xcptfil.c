@@ -23,8 +23,8 @@ static const struct
 /*
  * @implemented
  */
-int
-_XcptFilter(DWORD ExceptionCode,
+int CDECL
+_XcptFilter(NTSTATUS ExceptionCode,
             struct _EXCEPTION_POINTERS *  except)
 {
     LONG ret = EXCEPTION_CONTINUE_SEARCH;
@@ -61,7 +61,8 @@ _XcptFilter(DWORD ExceptionCode,
         {
             if (handler != SIG_IGN)
             {
-                int i, float_signal = _FPE_INVALID;
+                unsigned int i;
+                int float_signal = _FPE_INVALID;
 
                 sighandlers[SIGFPE] = SIG_DFL;
                 for (i = 0; i < sizeof(float_exception_map) /
@@ -80,6 +81,7 @@ _XcptFilter(DWORD ExceptionCode,
         }
         break;
     case EXCEPTION_ILLEGAL_INSTRUCTION:
+    case EXCEPTION_PRIV_INSTRUCTION:
         if ((handler = sighandlers[SIGILL]) != SIG_DFL)
         {
             if (handler != SIG_IGN)
@@ -93,15 +95,4 @@ _XcptFilter(DWORD ExceptionCode,
     }
     return ret;
 }
-
-int CDECL __CppXcptFilter(unsigned long ex, PEXCEPTION_POINTERS ptr)
-{
-     /* only filter c++ exceptions */
-     if (ex != CXX_EXCEPTION) return EXCEPTION_CONTINUE_SEARCH;
-     return _XcptFilter( ex, ptr );
-}
-
-
-
-
 
