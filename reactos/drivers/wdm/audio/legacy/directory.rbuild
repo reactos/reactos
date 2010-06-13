@@ -4,8 +4,7 @@
 	<directory name="wdmaud">
 		<xi:include href="wdmaud/wdmaud.rbuild" />
 	</directory>
-	<directory name="stream">
+	<!--<directory name="stream">
 		<xi:include href="stream/stream.rbuild" />
-	</directory>
-
+	</directory>-->
 </group>
