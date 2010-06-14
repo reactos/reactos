@@ -27,7 +27,6 @@ typedef struct _OPENGL_INFO
     WCHAR DriverName[256];  /*!< Driver name */
 } OPENGL_INFO, *POPENGL_INFO;
 
-
 /*! \brief Append OpenGL Rendering Context (GLRC) to list
  *
  * \param glrc [IN] Pointer to GLRC to append to list
@@ -179,8 +178,11 @@ BOOL
 ROSGL_DeleteContext( GLRC *glrc )
 {
     /* unload icd */
-    if (glrc->icd != NULL)
+    if ((glrc->icd != NULL) && (!InterlockedDecrement((LONG*)&glrc->icd->refcount)))
+    {
+        /* This is the last context, remove the ICD*/
         ROSGL_DeleteDCDataForICD( glrc->icd );
+    }
 
     /* remove from list */
     ROSGL_RemoveContext( glrc );
@@ -413,7 +415,7 @@ ROSGL_ICDForHDC( HDC hdc )
                                                   NULL) != NULL)
             {
                 /* Too bad, somebody else was faster... */
-                OPENGL32_UnloadICD(drvdata);
+                DBGTRACE("ICD is already set!\n");
             }
         }
     }
@@ -686,6 +688,9 @@ rosglCreateLayerContext( HDC hdc, int layer )
         /* FIXME: fallback? */
         return NULL;
     }
+    /* Don't forget to refcount it, icd will be released when last context is deleted */
+    InterlockedIncrement((LONG*)&icd->refcount);
+    
 
     /* create context */
     if (icd->DrvCreateLayerContext != NULL)
