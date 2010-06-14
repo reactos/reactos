@@ -22,6 +22,8 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 /* Menu */
 
 IDM_WINEFILE MENU FIXED IMPURE
@@ -29,8 +31,8 @@ IDM_WINEFILE MENU FIXED IMPURE
     POPUP "&Bestand"  {
         MENUITEM "&Openen\tEnter",              ID_ACTIVATE
         MENUITEM "&Verplaatsen...\tF7",         ID_FILE_MOVE
-        MENUITEM "&Kopi�ren...\tF8",            ID_FILE_COPY
-        MENUITEM "Naar &klembord...\tF9",       118
+        MENUITEM "&Kopiëren...\tF8",            ID_FILE_COPY
+        MENUITEM "Naar klem&bord...\tF9",       118
         MENUITEM "Ver&wijderen\tDel",           ID_FILE_DELETE
         MENUITEM "&Naam wijzigen...",           109
         MENUITEM "&Eigenschappen...\tAlt+Enter",ID_EDIT_PROPERTIES
@@ -44,22 +46,22 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM SEPARATOR
         MENUITEM "Nieuwe &map...",              111
         MENUITEM "&Zoeken...",                  104
-        MENUITEM "Bestanden &selecteren...",    116
+        MENUITEM "Bestanden s&electeren...",    116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
-        MENUITEM "A&fsluiten\tAlt+X",           ID_FILE_EXIT
+        MENUITEM "&Afsluiten\tAlt+X",           ID_FILE_EXIT
 #else
-        MENUITEM "A&fsluiten",                  ID_FILE_EXIT
+        MENUITEM "&Afsluiten",                  ID_FILE_EXIT
 #endif
     }
 
     POPUP "&Disk"  {
-        MENUITEM "Disk &kopi�ren...",           201
-        MENUITEM "Disklabel maken...",          202
+        MENUITEM "Schijf &kopiëren...",         201
+        MENUITEM "Schijflabel maken...",        202
         MENUITEM SEPARATOR
-        MENUITEM "Disk &formatteren...",        ID_FORMAT_DISK
+        MENUITEM "Schijf &formatteren...",      ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "Systeemdisk maken...", -1 /*TODO*/
+        MENUITEM "Systeemschijf maken...",      -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
         MENUITEM "Verbinding &maken met netwerkchijf",ID_CONNECT_NETWORK_DRIVE
@@ -81,8 +83,8 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 
     POPUP "&Beeld"  {
-        MENUITEM "&Hierarchie en mapinhoud",    413
-        MENUITEM "&Alleen hierarchie",          411
+        MENUITEM "&Hiërarchie en mapinhoud",    413
+        MENUITEM "Alleen h&iërarchie",          411
         MENUITEM "Alleen &mapinhoud",           412
         MENUITEM SEPARATOR
         MENUITEM "Sp&litsen",                   ID_VIEW_SPLIT
@@ -91,7 +93,7 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Alle details",               ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "&Gedeeltelijke details...",   ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "Sorteer op &naam",            ID_VIEW_SORT_NAME
+        MENUITEM "&Sorteer op naam",            ID_VIEW_SORT_NAME
         MENUITEM "Sorteer op &type",            ID_VIEW_SORT_TYPE
         MENUITEM "Sorteer op &grootte",         ID_VIEW_SORT_SIZE
         MENUITEM "Sorteer op &datum",           ID_VIEW_SORT_DATE
@@ -102,10 +104,10 @@ IDM_WINEFILE MENU FIXED IMPURE
     POPUP "&Opties"  {
         MENUITEM "&Bevestiging...",             501
         MENUITEM "&Lettertype...",              ID_SELECT_FONT
-        MENUITEM "Gereedschappenbalk &aanpassen...", 512
+        MENUITEM "Gereedschapsbalk &aanpassen...", 512
         MENUITEM SEPARATOR
-        MENUITEM "&Gereedschappenbalk",         ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Schijvenbalk",               ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Gereedschapsbalk",           ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "&Schijfbalk",                 ID_VIEW_DRIVE_BAR, CHECKED
         MENUITEM "S&tatusbalk",                 ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
         MENUITEM "&Volledig scherm\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
@@ -123,7 +125,7 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 
     POPUP "&Venster"  {
-        MENUITEM "Nieuw &venster",              ID_WINDOW_NEW
+        MENUITEM "&Nieuw venster",              ID_WINDOW_NEW
         MENUITEM "Trapsgewijs\tCtrl+F5",        ID_WINDOW_CASCADE
         MENUITEM "&Boven elkaar",               ID_WINDOW_TILE_HORZ
         MENUITEM "&Naast elkaar\tCtrl+F4",      ID_WINDOW_TILE_VERT
@@ -164,15 +166,15 @@ BEGIN
     LTEXT           "&Naam:",-1,7,8,22,10
     EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
     GROUPBOX        "Bestandstype",-1,7,23,87,56
-    CONTROL         "&Directories",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+    CONTROL         "&Mappen",IDC_VIEW_TYPE_DIRECTORIES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
     CONTROL         "&Programma's",IDC_VIEW_TYPE_PROGRAMS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
-    CONTROL         "Docu&menten",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+    CONTROL         "Do&cumenten",IDC_VIEW_TYPE_DOCUMENTS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
     CONTROL         "&Overige bestanden",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
-    CONTROL         "Toon Verborgen/&Systeem Bestanden",IDC_VIEW_TYPE_HIDDEN,
+    CONTROL         "Toon verborgen/&systeembestanden",IDC_VIEW_TYPE_HIDDEN,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
     PUSHBUTTON      "Annuleren",IDCANCEL,104,24,50,14
@@ -187,9 +189,9 @@ BEGIN
     PUSHBUTTON      "Annuleren",IDCANCEL,191,29,50,14
     LTEXT           "&Bestandsnaam:",-1,7,7,59,9
     EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Volledig &Pad:",-1,7,18,59,9
+    LTEXT           "Volledig &pad:",-1,7,18,59,9
     EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
-    LTEXT           "Laatste Wijziging:",-1,7,29,59,9
+    LTEXT           "Laatste wijziging:",-1,7,29,59,9
     EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     LTEXT           "Versie:",-1,7,40,59,9
     EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
@@ -198,12 +200,12 @@ BEGIN
     LTEXT           "Grootte:",-1,7,62,59,9
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "Attributen",-1,7,79,158,46
-    CONTROL         "A&lleen Lezen",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "A&lleen-lezen",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
     CONTROL         "V&erborgen",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
     CONTROL         "&Archiveren",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "&Systeem",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
     CONTROL         "Ge&comprimeerd",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
-    GROUPBOX        "&Versie Informatie",-1,7,129,234,79
+    GROUPBOX        "&Versie-informatie",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
 END
@@ -225,7 +227,7 @@ STRINGTABLE
     IDS_SHELL               "Shell"
     IDS_TITLEFMT            "%s - %s"
     IDS_NO_IMPL             "Nog niet geimplementeerd"
-    IDS_WINE_FILE           "Wine File"
+    IDS_WINE_FILE           "Winefile"
 }
 
 STRINGTABLE

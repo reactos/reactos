@@ -4505,7 +4505,6 @@ static void InitInstance(HINSTANCE hinstance)
 
 	WNDCLASSEXW wcFrame;
 	WNDCLASSW wcChild;
-	ATOM hChildClass;
 	int col;
 
 	INITCOMMONCONTROLSEX icc = {
@@ -4551,7 +4550,7 @@ static void InitInstance(HINSTANCE hinstance)
 	wcChild.lpszMenuName  = 0;
 	wcChild.lpszClassName = sWINEFILETREE;
 
-	hChildClass = RegisterClassW(&wcChild);
+	RegisterClassW(&wcChild);
 
 
 	Globals.haccel = LoadAcceleratorsW(hinstance, MAKEINTRESOURCEW(IDA_WINEFILE));
