@@ -638,9 +638,16 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        ASSERT(Length < MAXPNAMELEN);
-        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        // copy device name
+        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+
+        // make sure its null terminated
+        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+        // free device name
         MixerContext->Free(Name);
+
+        // done
         return Status;
     }
 
@@ -651,8 +658,13 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        ASSERT(Length < MAXPNAMELEN);
-        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        // copy device name
+        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+
+        // make sure its null terminated
+        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+        // free device name
         MixerContext->Free(Name);
     }
 
