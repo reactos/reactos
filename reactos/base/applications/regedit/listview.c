@@ -543,7 +543,8 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
     errCode = RegQueryInfoKey(hNewKey, NULL, NULL, NULL, NULL, &max_sub_key_len, NULL,
                               &val_count, &max_val_name_len, &max_val_size, NULL, NULL);
 
-    if (errCode == ERROR_SUCCESS) {
+    if (errCode == ERROR_SUCCESS)
+    {
         TCHAR* ValName = HeapAlloc(GetProcessHeap(), 0, ++max_val_name_len * sizeof(TCHAR));
         DWORD dwValNameLen = max_val_name_len;
         BYTE* ValBuf = HeapAlloc(GetProcessHeap(), 0, max_val_size + sizeof(TCHAR));
@@ -557,9 +558,15 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
         while (RegEnumValue(hNewKey, dwIndex, ValName, &dwValNameLen, NULL, &dwValType, ValBuf, &dwValSize) == ERROR_SUCCESS) {
             /* Remove unwanted path from key name */
             TCHAR *pLastBl = _tcsrchr(ValName, TEXT('\\'));
-            if (pLastBl != NULL) ++pLastBl; else pLastBl = ValName;
+            if (pLastBl != NULL)
+                ++pLastBl;
+            else
+                pLastBl = ValName;
             /* Add a terminating 0 character. Usually this is only necessary for strings. */
-            ((TCHAR*)ValBuf)[dwValSize/sizeof(TCHAR)] = 0;
+            ValBuf[dwValSize] = 0;
+#ifdef UNICODE
+            ValBuf[dwValSize + 1] = 0;
+#endif
             AddEntryToList(hwndLV, pLastBl, dwValType, ValBuf, dwValSize, -1, TRUE);
             dwValNameLen = max_val_name_len;
             dwValSize = max_val_size;
