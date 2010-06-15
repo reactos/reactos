@@ -320,11 +320,15 @@ PcHandleNodePropertyRequest(
         }
     }
 
+    // sanity check
+    PC_ASSERT(SubDeviceDescriptor->UnknownMiniport);
+
     // allocate a property request
     PropertyRequest = (PPCPROPERTY_REQUEST)AllocateItem(NonPagedPool, sizeof(PCPROPERTY_REQUEST), TAG_PORTCLASS);
     if (!PropertyRequest)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+     // initialize property request
      PropertyRequest->MajorTarget = SubDeviceDescriptor->UnknownMiniport;
      PropertyRequest->MinorTarget = SubDeviceDescriptor->UnknownStream;
      PropertyRequest->Irp = Irp;
@@ -546,7 +550,7 @@ PcCreateSubdeviceDescriptor(
        /// FIXME
        /// handle driver properties
 
-       //DumpFilterDescriptor(FilterDescription);
+       DumpFilterDescriptor(FilterDescription);
 
        Descriptor->FilterPropertySet = (PKSPROPERTY_SET)AllocateItem(NonPagedPool, sizeof(KSPROPERTY_SET) * FilterPropertiesCount, TAG_PORTCLASS);
        if (! Descriptor->FilterPropertySet)
@@ -611,7 +615,7 @@ PcCreateSubdeviceDescriptor(
         Descriptor->Factory.PinDescriptorSize = sizeof(KSPIN_DESCRIPTOR);
 
         SrcDescriptor = (PPCPIN_DESCRIPTOR)FilterDescription->Pins;
-        DPRINT("Size %u Expected %u Ex Size %u\n", FilterDescription->PinSize, sizeof(KSPIN_DESCRIPTOR), sizeof(KSPIN_DESCRIPTOR_EX));
+        DPRINT("Size %u Expected %u\n", FilterDescription->PinSize, sizeof(PCPIN_DESCRIPTOR));
 
         // copy pin factories
         for(Index = 0; Index < FilterDescription->PinCount; Index++)
