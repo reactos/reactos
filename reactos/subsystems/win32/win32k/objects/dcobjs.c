@@ -297,10 +297,14 @@ NtGdiSelectBitmap(
     {
 //        pDC->rosdc.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
         pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+        /* Set DIBSECTION attribute */
+        pdcattr->ulDirty_ |= DC_DIBSECTION;
     }
     else
     {
         pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
+        /* Restore DIBSECTION attribute */
+        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
     }
 
     /* FIXME; improve by using a region without a handle and selecting it */

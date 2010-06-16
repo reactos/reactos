@@ -558,7 +558,7 @@ NtGdiSetDIBitsToDeviceInternal(
     EXLATEOBJ_vInitialize(&exlo, ppalDIB, ppalDDB, 0, 0, 0);
 
     /* Copy the bits */
-    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n", 
+    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
         rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
         ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
     Status = IntEngBitBlt(pDestSurf,
@@ -636,7 +636,7 @@ NtGdiGetDIBitsInternal(
     _SEH2_TRY
     {
         ProbeForRead(&Info->bmiHeader.biSize, sizeof(DWORD), 1);
-        
+
         ProbeForWrite(Info, Info->bmiHeader.biSize, 1); // Comp for Core.
         if (ChkBits) ProbeForWrite(ChkBits, MaxBits, 1);
     }
@@ -1347,7 +1347,6 @@ DIB_CreateDIBSection(
     HBITMAP res = 0;
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
-    PDC_ATTR pdcattr;
 
     // Fill BITMAP32 structure with DIB data
     BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1369,8 +1368,6 @@ DIB_CreateDIBSection(
     {
         return (HBITMAP)NULL;
     }
-
-    pdcattr = dc->pdcattr;
 
     effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
     bm.bmType = 0;
@@ -1592,8 +1589,6 @@ DIB_CreateDIBSection(
     {
         *bits = bm.bmBits;
     }
-
-    if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
 
     return res;
 }
