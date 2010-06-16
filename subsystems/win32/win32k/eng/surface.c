@@ -203,12 +203,12 @@ SURFACE_bSetBitmapBits(
     if (ulWidth)
     {
         /* Align the width (Windows compatibility) */
-        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 15) & ~15) >> 3;
+        ulWidth = ((((ulWidth << 3) / cBitsPixel) * cBitsPixel + 31) & ~31) >> 3;
     }
     else
     {
         /* Calculate width from the bitmap width in pixels */
-        ulWidth = ((pso->sizlBitmap.cx * cBitsPixel + 15) & ~15) >> 3;
+        ulWidth = ((pso->sizlBitmap.cx * cBitsPixel + 31) & ~31) >> 3;
     }
 
     /* Calculate the bitmap size in bytes */
