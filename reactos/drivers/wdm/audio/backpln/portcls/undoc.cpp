@@ -133,7 +133,7 @@ PcHandleGuidNullRequest(
      for (Index = 0; Index < Node->AutomationTable->PropertyCount; Index++)
      {
          BOOL Found = FALSE;
-         for (SubIndex = 0; SubIndex < Count; Index++)
+         for (SubIndex = 0; SubIndex < Count; SubIndex++)
          {
              if  (IsEqualGUIDAligned(Buffer[SubIndex], *PropertyItem->Set))
              {
@@ -346,7 +346,7 @@ PcHandleNodePropertyRequest(
      {
          //request completed
          Irp->IoStatus.Information = PropertyRequest->ValueSize;
-         ExFreePool(PropertyRequest);
+         FreeItem(PropertyRequest, TAG_PORTCLASS);
      }
 
      // done
@@ -440,12 +440,12 @@ DumpFilterDescriptor(
 
 
 
-    DPRINT1("======================\n");
-    DPRINT1("Descriptor Automation Table%p\n",FilterDescription->AutomationTable);
+    DPRINT("======================\n");
+    DPRINT("Descriptor Automation Table %p\n",FilterDescription->AutomationTable);
 
     if (FilterDescription->AutomationTable)
     {
-        DPRINT1("FilterPropertiesCount %u FilterPropertySize %u Expected %u Events %u EventItemSize %u expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM),
+        DPRINT("FilterPropertiesCount %u FilterPropertySize %u Expected %u Events %u EventItemSize %u expected %u\n", FilterDescription->AutomationTable->PropertyCount, FilterDescription->AutomationTable->PropertyItemSize, sizeof(PCPROPERTY_ITEM),
                 FilterDescription->AutomationTable->EventCount, FilterDescription->AutomationTable->EventItemSize, sizeof(PCEVENT_ITEM));
         if (FilterDescription->AutomationTable->PropertyCount)
         {
@@ -463,7 +463,7 @@ DumpFilterDescriptor(
             for(Index = 0; Index < FilterDescription->AutomationTable->EventCount; Index++)
             {
                 RtlStringFromGUID(*EventItem->Set, &GuidString);
-                DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+                DPRINT("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
 
                 EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + FilterDescription->AutomationTable->EventItemSize);
             }
@@ -473,7 +473,7 @@ DumpFilterDescriptor(
 
     if (FilterDescription->Nodes)
     {
-        DPRINT1("NodeCount %u NodeSize %u expected %u\n", FilterDescription->NodeCount, FilterDescription->NodeSize, sizeof(PCNODE_DESCRIPTOR));
+        DPRINT("NodeCount %u NodeSize %u expected %u\n", FilterDescription->NodeCount, FilterDescription->NodeSize, sizeof(PCNODE_DESCRIPTOR));
         NodeDescriptor = (PPCNODE_DESCRIPTOR)FilterDescription->Nodes;
         for(Index = 0; Index < FilterDescription->NodeCount; Index++)
         {
@@ -481,12 +481,12 @@ DumpFilterDescriptor(
 
             if (NodeDescriptor->AutomationTable)
             {
-                DPRINT1("Index %u EventCount %u\n", Index, NodeDescriptor->AutomationTable->EventCount);
+                DPRINT(" Index %u EventCount %u\n", Index, NodeDescriptor->AutomationTable->EventCount);
                 EventItem = (PPCEVENT_ITEM)NodeDescriptor->AutomationTable->Events;
                 for(SubIndex = 0; SubIndex < NodeDescriptor->AutomationTable->EventCount; SubIndex++)
                 {
                     RtlStringFromGUID(*EventItem->Set, &GuidString);
-                    DPRINT1("EventIndex %u GUID %S Id %u Flags %x\n", Index, GuidString.Buffer, EventItem->Id, EventItem->Flags);
+                    DPRINT("  EventIndex %u GUID %S Id %u Flags %x\n", SubIndex, GuidString.Buffer, EventItem->Id, EventItem->Flags);
 
                     EventItem = (PPCEVENT_ITEM)((ULONG_PTR)EventItem + NodeDescriptor->AutomationTable->EventItemSize);
                 }
@@ -501,7 +501,21 @@ DumpFilterDescriptor(
 
     }
 
+    DPRINT("ConnectionCount: %lu\n", FilterDescription->ConnectionCount);
 
+    if (FilterDescription->ConnectionCount)
+    {
+        DPRINT("------ Start of Nodes Connections ----------------\n");
+        for(Index = 0; Index < FilterDescription->ConnectionCount; Index++)
+        {
+            DPRINT1("Index %ld FromPin %ld FromNode %ld -> ToPin %ld ToNode %ld\n", Index,
+                                                                                    FilterDescription->Connections[Index].FromNodePin,
+                                                                                    FilterDescription->Connections[Index].FromNode,
+                                                                                    FilterDescription->Connections[Index].ToNodePin,
+                                                                                    FilterDescription->Connections[Index].ToNode);
+        }
+        DPRINT("------ End of Nodes Connections----------------\n");
+    }
 
     DPRINT1("======================\n");
 }
