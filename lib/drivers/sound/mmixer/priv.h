@@ -178,6 +178,7 @@ MMixerGetTargetPinsByNodeConnectionIndex(
     IN PKSMULTIPLE_ITEM NodeTypes,
     IN ULONG bUpDirection,
     IN ULONG NodeConnectionIndex,
+    IN ULONG PinCount,
     OUT PULONG Pins);
 
 MIXER_STATUS

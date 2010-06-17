@@ -1,3 +1,22 @@
+/*
+ * ksuuids.h
+ *
+ * This file is part of the ReactOS PSDK package.
+ *
+ * Contributors:
+ *   Created by Magnus Olsen.
+ *
+ * THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ * This source code is offered for use in the public domain. You may
+ * use, modify or distribute it freely.
+ *
+ * This code is distributed in the hope that it will be useful but
+ * WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ * DISCLAIMED. This includes but is not limited to warranties of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ */
 
 OUR_GUID_ENTRY(MEDIATYPE_MPEG2_PACK, 0x36523B13, 0x8EE5, 0x11D1, 0x8C, 0xA3, 0x00, 0x60, 0xB0, 0x57, 0x66, 0x4A)
 OUR_GUID_ENTRY(MEDIATYPE_MPEG2_PES, 0xE06D8020, 0xDB46, 0x11CF, 0xB4, 0xD1, 0x00, 0x80, 0x5F, 0x6C, 0xBB, 0xEA)

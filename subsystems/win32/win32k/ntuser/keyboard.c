@@ -742,7 +742,7 @@ NtUserToUnicodeEx(
       OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
       if( !OutPwszBuff )
       {
-         DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
+         DPRINT1( "ExAllocatePoolWithTag(%d) failed\n", sizeof(WCHAR) * cchBuff);
          RETURN(0);
       }
       RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );

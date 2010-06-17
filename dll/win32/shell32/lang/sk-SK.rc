@@ -1,7 +1,7 @@
 /* TRANSLATOR :  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * NOTE       :  partially translated
  * TRANSLATED :  26-12-2007
- * LAST CHANGE:  20-09-2009
+ * LAST CHANGE:  31-05-2010
  */   
 
 /*
@@ -671,8 +671,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Naozaj chcete reötartovaù systÈm?"
 	IDS_SHUTDOWN_TITLE          "Vypn˙ù"
 	IDS_SHUTDOWN_PROMPT         "Naozaj chcete vypn˙ù poËÌtaË?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_LOGOFF_TITLE            "Odhl·siù"
+	IDS_LOGOFF_PROMPT           "Naozaj sa chcete odhl·siù?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Ponuka ätart\\Programy"
@@ -758,5 +758,7 @@ BEGIN
 	IDS_DEFAULT_CLUSTER_SIZE    "Predvolen· alokaËn· veækosù" //Default allocation size
 	IDS_COPY_OF                 "KÛpia" //Copy of
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+  // There is no Windows program configured to open this type of file.  
+	IDS_SHLEXEC_NOASSOC         "Neexistuje ûiadny program nakonfigurovan˝ tak, aby otv·ral tento typ s˙borov."
+                          //   Na otv·ranie tohto typu s˙boru nie je nakonfigurovan˝ ûiadny program systÈmu Windows.
 END

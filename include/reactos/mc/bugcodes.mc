@@ -1,4 +1,9 @@
 ;
+; Created by : Marc Piulachs.
+; This source code is offered for use in the public domain.
+;
+
+;
 ; ntoskrnl.exe bug codes 
 ;
 

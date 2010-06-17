@@ -6202,20 +6202,6 @@ typedef VBN *PVBN;
   LARGE_INTEGER FileSize; \
   LARGE_INTEGER ValidDataLength;
 
-#define FSRTL_COMMON_FCB_HEADER_LAYOUT \
-  CSHORT NodeTypeCode; \
-  CSHORT NodeByteSize; \
-  UCHAR Flags; \
-  UCHAR IsFastIoPossible; \
-  UCHAR Flags2; \
-  UCHAR Reserved:4; \
-  UCHAR Version:4; \
-  PERESOURCE Resource; \
-  PERESOURCE PagingIoResource; \
-  LARGE_INTEGER AllocationSize; \
-  LARGE_INTEGER FileSize; \
-  LARGE_INTEGER ValidDataLength;
-
 typedef struct _FSRTL_COMMON_FCB_HEADER {
   FSRTL_COMMON_FCB_HEADER_LAYOUT
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
@@ -6477,6 +6463,10 @@ DEFINE_GUID(GUID_ECP_OPLOCK_KEY, 0x48850596, 0x3050, 0x4be7, 0x98, 0x63, 0xfe, 0
 #endif
 
 typedef PVOID PNOTIFY_SYNC;
+
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
+#endif
 
 typedef BOOLEAN
 (NTAPI *PCHECK_FOR_TRAVERSE_ACCESS) (
@@ -8834,10 +8824,6 @@ extern NTKERNELAPI PUSHORT NlsOemLeadByteInfo;
 #undef NLS_MB_CODE_PAGE_TAG
 #endif
 #define NLS_MB_CODE_PAGE_TAG              NlsMbOemCodePageTag
-
-#if (NTDDI_VERSION >= NTDDI_WIN7)
-typedef struct _ECP_HEADER ECP_HEADER, *PECP_HEADER;
-#endif
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 

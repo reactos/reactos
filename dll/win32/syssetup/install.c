@@ -855,6 +855,7 @@ InstallReactOS(HINSTANCE hInstance)
     DWORD LastError;
     HANDLE token;
     TOKEN_PRIVILEGES privs;
+    HKEY hKey;
 
     InitializeSetupActionLog(FALSE);
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
@@ -901,6 +902,29 @@ InstallReactOS(HINSTANCE hInstance)
 
     if (GetWindowsDirectory(szBuffer, sizeof(szBuffer) / sizeof(TCHAR)))
     {
+        if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                          L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion",
+                          0,
+                          KEY_WRITE,
+                          &hKey) == ERROR_SUCCESS)
+        {
+            RegSetValueExW(hKey,
+                           L"PathName",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+            RegSetValueExW(hKey,
+                           L"SystemRoot",
+                           0,
+                           REG_SZ,
+                           (LPBYTE)szBuffer,
+                           (wcslen(szBuffer) + 1) * sizeof(WCHAR));
+
+            RegCloseKey(hKey);
+        }
+
         PathAddBackslash(szBuffer);
         _tcscat(szBuffer, _T("system"));
         CreateDirectory(szBuffer, NULL);

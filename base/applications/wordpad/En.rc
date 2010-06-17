@@ -240,6 +240,9 @@ BEGIN
     STRING_PREVIEW_PAGE,             "Page"
     STRING_PREVIEW_PAGES,            "Pages"
     STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "in"
+    STRING_UNITS_INCH,               "inch"
+    STRING_UNITS_PT,                 "pt"
 END
 
 STRINGTABLE DISCARDABLE

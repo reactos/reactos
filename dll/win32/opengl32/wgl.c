@@ -27,7 +27,6 @@ typedef struct _OPENGL_INFO
     WCHAR DriverName[256];  /*!< Driver name */
 } OPENGL_INFO, *POPENGL_INFO;
 
-
 /*! \brief Append OpenGL Rendering Context (GLRC) to list
  *
  * \param glrc [IN] Pointer to GLRC to append to list
@@ -179,9 +178,9 @@ BOOL
 ROSGL_DeleteContext( GLRC *glrc )
 {
     /* unload icd */
-    if ((glrc->icd != NULL) && !(InterlockedDecrement((LONG*)&glrc->icd->refcount)))
+    if ((glrc->icd != NULL) && (!InterlockedDecrement((LONG*)&glrc->icd->refcount)))
     {
-        /* This is the last context, remove the ICD */
+        /* This is the last context, remove the ICD*/
         ROSGL_DeleteDCDataForICD( glrc->icd );
     }
 
@@ -272,7 +271,7 @@ ROSGL_GetPrivateDCData( HDC hdc )
     data = OPENGL32_processdata.dcdata_list;
     while (data != NULL)
     {
-        if ((data->hdc == hdc) || (WindowFromDC(data->hdc) == WindowFromDC(hdc))) /* found */
+        if (data->hdc == hdc) /* found */
             break;
         data = data->next;
     }
@@ -416,7 +415,7 @@ ROSGL_ICDForHDC( HDC hdc )
                                                   NULL) != NULL)
             {
                 /* Too bad, somebody else was faster... */
-                DBGTRACE("Uh, Someone beat you to it!\n");
+                DBGTRACE("ICD is already set!\n");
             }
         }
     }
@@ -689,16 +688,9 @@ rosglCreateLayerContext( HDC hdc, int layer )
         /* FIXME: fallback? */
         return NULL;
     }
-    
     /* Don't forget to refcount it, icd will be released when last context is deleted */
     InterlockedIncrement((LONG*)&icd->refcount);
     
-    if(!rosglGetPixelFormat(hdc))
-    {
-        ROSGL_DeleteContext(glrc);
-	SetLastError(ERROR_INVALID_PIXEL_FORMAT);
-	return NULL;
-    }
 
     /* create context */
     if (icd->DrvCreateLayerContext != NULL)
@@ -1002,12 +994,6 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
             glrc->is_current = FALSE;
             OPENGL32_threaddata->glrc = NULL;
         }
-        else if ((GetObjectType(hdc) != OBJ_DC) && (GetObjectType(hdc) != OBJ_MEMDC))
-	{
-	    DBGPRINT("Current context is NULL and requested HDC is invalid.\n");
-	    SetLastError(ERROR_INVALID_HANDLE);
-	    return FALSE;
-	}
     }
     else
     {

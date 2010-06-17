@@ -815,6 +815,34 @@ static void HLPFILE_AddHotSpotLinks(struct RtfData* rd, HLPFILE* file,
                                   file->lpszPath, -1, HLPFILE_Hash(str),
                                   0, 1, -1);
             break;
+
+        case 0xEE:
+        case 0xEF:
+            {
+                const char* win = strchr(str, '>');
+                int wnd = -1;
+                char* tgt = NULL;
+
+                if (win)
+                {
+                    for (wnd = file->numWindows - 1; wnd >= 0; wnd--)
+                    {
+                        if (!strcmp(win + 1, file->windows[wnd].name)) break;
+                    }
+                    if (wnd == -1)
+                        WINE_WARN("Couldn't find window info for %s\n", win);
+                    if ((tgt = HeapAlloc(GetProcessHeap(), 0, win - str + 1)))
+                    {
+                        memcpy(tgt, str, win - str);
+                        tgt[win - str] = '\0';
+                    }
+                }
+                hslink = (HLPFILE_HOTSPOTLINK*)
+                    HLPFILE_AllocLink(rd, (start[7 + 15 * i + 0] & 1) ? hlp_link_link : hlp_link_popup,
+                                      file->lpszPath, -1, HLPFILE_Hash(tgt ? tgt : str), 0, 1, wnd);
+                HeapFree(GetProcessHeap(), 0, tgt);
+                break;
+            }
         default:
             WINE_FIXME("unknown hotsport target 0x%x\n", start[7 + 15 * i + 0]);
         }
@@ -1736,16 +1764,6 @@ BOOL    HLPFILE_BrowsePage(HLPFILE_PAGE* page, struct RtfData* rd,
     if (!HLPFILE_RtfAddControl(rd, "{\\colortbl ;\\red0\\green128\\blue0;")) return FALSE;
     for (index = 0; index < hlpfile->numFonts; index++)
     {
-        const char* family;
-        switch (hlpfile->fonts[index].LogFont.lfPitchAndFamily & 0xF0)
-        {
-        case FF_MODERN:     family = "modern";  break;
-        case FF_ROMAN:      family = "roman";   break;
-        case FF_SWISS:      family = "swiss";   break;
-        case FF_SCRIPT:     family = "script";  break;
-        case FF_DECORATIVE: family = "decor";   break;
-        default:            family = "nil";     break;
-        }
         sprintf(tmp, "\\red%d\\green%d\\blue%d;",
                 GetRValue(hlpfile->fonts[index].color),
                 GetGValue(hlpfile->fonts[index].color),

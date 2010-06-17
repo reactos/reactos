@@ -360,6 +360,8 @@ MMixerInitializeWaveInfo(
     WaveInfo->DeviceId = MixerData->DeviceId;
     WaveInfo->PinId = PinId;
 
+    // sanity check
+    ASSERT(wcslen(DeviceName) < MAXPNAMELEN);
 
     /* copy device name */
     if (bWaveIn)
@@ -419,9 +421,6 @@ MMixerInitializeWaveInfo(
 
     /* free dataranges buffer */
     MixerContext->Free(MultipleItem);
-
-
-
 
     if (bWaveIn)
     {

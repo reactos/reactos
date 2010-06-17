@@ -65,7 +65,7 @@ QueryKeyValue(
         return MM_STATUS_UNSUCCESSFUL;
 
     /* allocate a buffer for key data */
-    PartialInformation = ExAllocatePool(NonPagedPool, Length);
+    PartialInformation = AllocateItem(NonPagedPool, Length);
 
     if (!PartialInformation)
         return MM_STATUS_NO_MEMORY;
@@ -77,7 +77,7 @@ QueryKeyValue(
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(PartialInformation);
+        FreeItem(PartialInformation);
         return MM_STATUS_UNSUCCESSFUL;
     }
 
@@ -93,11 +93,11 @@ QueryKeyValue(
         *ResultLength = PartialInformation->DataLength;
     }
 
-    *ResultBuffer = ExAllocatePool(NonPagedPool, PartialInformation->DataLength);
+    *ResultBuffer = AllocateItem(NonPagedPool, PartialInformation->DataLength);
     if (!*ResultBuffer)
     {
         /* not enough memory */
-        ExFreePool(PartialInformation);
+        FreeItem(PartialInformation);
         return MM_STATUS_NO_MEMORY;
     }
 
@@ -105,7 +105,7 @@ QueryKeyValue(
     RtlMoveMemory(*ResultBuffer, PartialInformation->Data, PartialInformation->DataLength);
 
     /* free key info */
-    ExFreePool(PartialInformation);
+    FreeItem(PartialInformation);
 
     return MM_STATUS_SUCCESS;
 }
@@ -149,12 +149,7 @@ CloseKey(
 
 PVOID Alloc(ULONG NumBytes)
 {
-    PVOID Mem = ExAllocatePool(NonPagedPool, NumBytes);
-    if (!Mem)
-        return Mem;
-
-    RtlZeroMemory(Mem, NumBytes);
-    return Mem;
+    return AllocateItem(NonPagedPool, NumBytes);
 }
 
 MIXER_STATUS
@@ -169,7 +164,7 @@ Close(HANDLE hDevice)
 VOID
 Free(PVOID Block)
 {
-    ExFreePool(Block);
+    FreeItem(Block);
 }
 
 VOID
@@ -277,7 +272,7 @@ Enum(
     {
         /* failed to open key */
         DPRINT("IoOpenDeviceInterfaceRegistryKey failed with %lx\n", Status);
-        ExFreePool(*DeviceName);
+        FreeItem(*DeviceName);
         return MM_STATUS_UNSUCCESSFUL;
     }
 #endif
@@ -297,14 +292,14 @@ PVOID
 AllocEventData(
     IN ULONG ExtraSize)
 {
-    PKSEVENTDATA Data = (PKSEVENTDATA)ExAllocatePool(NonPagedPool, sizeof(KSEVENTDATA) + ExtraSize);
+    PKSEVENTDATA Data = (PKSEVENTDATA)AllocateItem(NonPagedPool, sizeof(KSEVENTDATA) + ExtraSize);
     if (!Data)
         return NULL;
 
-    Data->EventObject.Event = ExAllocatePool(NonPagedPool, sizeof(KEVENT));
+    Data->EventObject.Event = AllocateItem(NonPagedPool, sizeof(KEVENT));
     if (!Data->EventHandle.Event)
     {
-        ExFreePool(Data);
+        FreeItem(Data);
         return NULL;
     }
 
@@ -319,8 +314,8 @@ FreeEventData(IN PVOID EventData)
 {
     PKSEVENTDATA Data = (PKSEVENTDATA)EventData;
 
-    ExFreePool(Data->EventHandle.Event);
-    ExFreePool(Data);
+    FreeItem(Data->EventHandle.Event);
+    FreeItem(Data);
 }
 
 NTSTATUS
@@ -391,14 +386,14 @@ WdmAudControlOpenMixer(
     }
 
 
-    Handles = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
+    Handles = AllocateItem(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
 
     if (Handles)
     {
         if (ClientInfo->NumPins)
         {
             RtlMoveMemory(Handles, ClientInfo->hPins, sizeof(WDMAUD_HANDLE) * ClientInfo->NumPins);
-            ExFreePool(ClientInfo->hPins);
+            FreeItem(ClientInfo->hPins);
         }
 
         ClientInfo->hPins = Handles;

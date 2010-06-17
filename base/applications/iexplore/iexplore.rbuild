@@ -6,5 +6,5 @@
 	<library>gdi32</library>
 	<library>shdocvw</library>
 	<file>main.c</file>
-	<file>version.rc</file>
+	<file>iexplore.rc</file>
 </module>

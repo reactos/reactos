@@ -1109,6 +1109,10 @@ GDIOBJ_ShareLockObj(HGDIOBJ hObj, DWORD ExpectedType)
     POBJ Object = NULL;
     ULONG_PTR HandleType, HandleUpper;
 
+    /* Check for dummy call */
+    if(hObj == NULL)
+        return NULL ;
+
     HandleIndex = GDI_HANDLE_GET_INDEX(hObj);
     HandleType = GDI_HANDLE_GET_TYPE(hObj);
     HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
@@ -1408,6 +1412,19 @@ LockHandle:
                     PPROCESSINFO W32Process;
                     NTSTATUS Status;
 
+                    if (NewOwner != NULL)
+                    {
+                        ProcessId = PsGetProcessId(NewOwner);
+                    }
+                    else
+                        ProcessId = 0;
+
+                    if((ULONG_PTR)ProcessId == ((ULONG_PTR)PrevProcId & ~0x1))
+                    {
+                        DPRINT("Setting same process than previous one, nothing to do\n");
+                        goto done;
+                    }
+
                     /* dereference the process' object counter */
                     /* FIXME */
                     if ((ULONG_PTR)PrevProcId & ~0x1)
@@ -1426,8 +1443,6 @@ LockHandle:
 
                     if (NewOwner != NULL)
                     {
-                        ProcessId = PsGetProcessId(NewOwner);
-
                         /* Increase the new process' object counter */
                         W32Process = (PPROCESSINFO)NewOwner->Win32Process;
                         if (W32Process != NULL)
@@ -1435,9 +1450,8 @@ LockHandle:
                             InterlockedIncrement(&W32Process->GDIHandleCount);
                         }
                     }
-                    else
-                        ProcessId = 0;
 
+                done:
                     /* remove the process id lock and change it to the new process id */
                     (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, ProcessId);
 

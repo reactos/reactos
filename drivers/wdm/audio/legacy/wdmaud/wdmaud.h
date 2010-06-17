@@ -276,3 +276,14 @@ WdmAudGetPnpNameByIndexAndType(
 ULONG
 GetSysAudioDeviceCount(
     IN  PDEVICE_OBJECT DeviceObject);
+
+
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes);
+
+VOID
+FreeItem(
+    IN PVOID Item);
+

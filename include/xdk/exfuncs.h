@@ -305,13 +305,11 @@ ExFreeToZone(
 #define RESULT_POSITIVE 2
 #endif
 
-#if defined(_X86_) || defined(_IA64_) || defined(_M_AMD64) && !defined(RC_INVOKED) && !defined(MIDL_PASS)
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
-#endif
 
 #ifdef _X86_
 

@@ -8,6 +8,28 @@
  */
 #include "wdmaud.h"
 
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    if (!Item)
+        return Item;
+
+    RtlZeroMemory(Item, NumberOfBytes);
+    return Item;
+}
+
+VOID
+FreeItem(
+    IN PVOID Item)
+{
+    ExFreePool(Item);
+}
+
+
+
 ULONG
 GetSysAudioDeviceCount(
     IN  PDEVICE_OBJECT DeviceObject)
@@ -92,7 +114,7 @@ InsertPinHandle(
         return STATUS_SUCCESS;
     }
 
-    Handles = ExAllocatePool(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
+    Handles = AllocateItem(NonPagedPool, sizeof(WDMAUD_HANDLE) * (ClientInfo->NumPins+1));
 
     if (!Handles)
         return STATUS_INSUFFICIENT_RESOURCES;
@@ -100,7 +122,7 @@ InsertPinHandle(
     if (ClientInfo->NumPins)
     {
         RtlMoveMemory(Handles, ClientInfo->hPins, sizeof(WDMAUD_HANDLE) * ClientInfo->NumPins);
-        ExFreePool(ClientInfo->hPins);
+        FreeItem(ClientInfo->hPins);
     }
 
     ClientInfo->hPins = Handles;
@@ -130,7 +152,7 @@ ReadKeyValue(
         return NULL;
 
     /* allocate a buffer for key data */
-    PartialInformation = ExAllocatePool(NonPagedPool, Length);
+    PartialInformation = AllocateItem(NonPagedPool, Length);
 
     if (!PartialInformation)
         return NULL;
@@ -142,14 +164,14 @@ ReadKeyValue(
     /* check for success */
     if (!NT_SUCCESS(Status))
     {
-        ExFreePool(PartialInformation);
+        FreeItem(PartialInformation);
         return NULL;
     }
 
     if (PartialInformation->Type != REG_SZ)
     {
         /* invalid key type */
-        ExFreePool(PartialInformation);
+        FreeItem(PartialInformation);
         return NULL;
     }
 
@@ -189,12 +211,12 @@ CompareProductName(
 
     if (_wcsnicmp((LPWSTR)PartialInformation->Data, &PnpName[4], Length))
     {
-        ExFreePool(PartialInformation);
+        FreeItem(PartialInformation);
         return STATUS_NO_MATCH;
     }
 
     /* free buffer */
-    ExFreePool(PartialInformation);
+    FreeItem(PartialInformation);
 
     /* read DriverDescName value */
     PartialInformation = ReadKeyValue(hSubKey, &DriverDescName);
@@ -213,7 +235,7 @@ CompareProductName(
     ProductName[ProductNameSize-1] = L'\0';
 
     /* free buffer */
-    ExFreePool(PartialInformation);
+    FreeItem(PartialInformation);
 
     return STATUS_SUCCESS;
 }
@@ -265,7 +287,7 @@ FindProductName(
     }
 
     /* allocate key information struct */
-    KeyInformation = ExAllocatePool(NonPagedPool, Length);
+    KeyInformation = AllocateItem(NonPagedPool, Length);
     if (!KeyInformation)
     {
         /* no memory */
@@ -279,7 +301,7 @@ FindProductName(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwQueryKey failed with %x\n", Status);
-        ExFreePool(KeyInformation);
+        FreeItem(KeyInformation);
         ZwClose(hKey);
         return Status;
     }
@@ -314,7 +336,7 @@ FindProductName(
     }
 
     /* free buffer */
-    ExFreePool(KeyInformation);
+    FreeItem(KeyInformation);
 
     /* close key */
     ZwClose(hKey);
@@ -354,7 +376,7 @@ GetSysAudioDevicePnpName(
         return STATUS_UNSUCCESSFUL;
 
     /* allocate buffer for the device */
-    *Device = ExAllocatePool(NonPagedPool, BytesReturned);
+    *Device = AllocateItem(NonPagedPool, BytesReturned);
     if (!Device)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -364,7 +386,7 @@ GetSysAudioDevicePnpName(
     if (!NT_SUCCESS(Status))
     {
         /* failed */
-        ExFreePool(*Device);
+        FreeItem(*Device);
         return Status;
     }
 

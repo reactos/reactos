@@ -219,17 +219,17 @@ IntLoadSystemFonts(VOID)
 
     if (NT_SUCCESS(Status))
     {
-        DirInfoBuffer = ExAllocatePool(PagedPool, 0x4000);
+        DirInfoBuffer = ExAllocatePoolWithTag(PagedPool, 0x4000, TAG_FONT);
         if (DirInfoBuffer == NULL)
         {
             ZwClose(hDirectory);
             return;
         }
 
-        FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH * sizeof(WCHAR));
+        FileName.Buffer = ExAllocatePoolWithTag(PagedPool, MAX_PATH * sizeof(WCHAR), TAG_FONT);
         if (FileName.Buffer == NULL)
         {
-            ExFreePool(DirInfoBuffer);
+            ExFreePoolWithTag(DirInfoBuffer, TAG_FONT);
             ZwClose(hDirectory);
             return;
         }
@@ -273,8 +273,8 @@ IntLoadSystemFonts(VOID)
             bRestartScan = FALSE;
         }
 
-        ExFreePool(FileName.Buffer);
-        ExFreePool(DirInfoBuffer);
+        ExFreePoolWithTag(FileName.Buffer, TAG_FONT);
+        ExFreePoolWithTag(DirInfoBuffer, TAG_FONT);
         ZwClose(hDirectory);
     }
 }

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __MSVCRT_CPPEXCEPT_H
@@ -23,70 +23,18 @@
 
 #include <pseh/pseh2.h>
 
+#define CXX_FRAME_MAGIC_VC6 0x19930520
+#define CXX_FRAME_MAGIC_VC7 0x19930521
+#define CXX_FRAME_MAGIC_VC8 0x19930522
+#define CXX_EXCEPTION       0xe06d7363
+
 /* Macros to define assembler functions somewhat portably */
-
-#define __ASM_FUNC(name) ".def " __ASM_NAME(name) "; .scl 2; .type 32; .endef"
-#define __ASM_NAME(name) "_" name
-
-#ifdef __GNUC__
-# define __ASM_GLOBAL_FUNC(name,code) \
-      __asm__( ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code );
-#else  /* __GNUC__ */
-# define __ASM_GLOBAL_FUNC(name,code) \
-      void __asm_dummy_##name(void) { \
-          asm( ".align 4\n\t" \
-               ".globl " __ASM_NAME(#name) "\n\t" \
-               __ASM_FUNC(#name) "\n" \
-               __ASM_NAME(#name) ":\n\t" \
-               code ); \
-      }
-#endif  /* __GNUC__ */
 
 #define EH_NONCONTINUABLE   0x01
 #define EH_UNWINDING        0x02
 #define EH_EXIT_UNWIND      0x04
 #define EH_STACK_INVALID    0x08
 #define EH_NESTED_CALL      0x10
-
-#ifndef _M_ARM
-
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4733)
-#endif
-
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_push_frame( EXCEPTION_REGISTRATION_RECORD *frame )
-{
-    frame->Next = (struct _EXCEPTION_REGISTRATION_RECORD *)__readfsdword(0);
-	__writefsdword(0, (unsigned long)frame);
-    return frame->Next;
-}
-
-static inline EXCEPTION_REGISTRATION_RECORD *__wine_pop_frame( EXCEPTION_REGISTRATION_RECORD *frame )
-{
-	__writefsdword(0, (unsigned long)frame->Next);
-    return frame->Next;
-}
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
-
-#endif
-
-#define __TRY _SEH2_TRY
-#define __EXCEPT(func) _SEH2_EXCEPT(func(_SEH2_GetExceptionInformation()))
-#define __EXCEPT_PAGE_FAULT _SEH2_EXCEPT(_SEH2_GetExceptionCode() == STATUS_ACCESS_VIOLATION)
-#define __EXCEPT_ALL _SEH2_EXCEPT(_SEH_EXECUTE_HANDLER)
-#define __ENDTRY _SEH2_END
-#define __FINALLY(func) _SEH2_FINALLY { func(!_SEH2_AbnormalTermination()); }
-
-#define CXX_FRAME_MAGIC    0x19930520
-#define CXX_EXCEPTION      0xe06d7363
 
 typedef void (*vtable_ptr)();
 
@@ -117,10 +65,10 @@ typedef struct __cxx_exception_frame
 /* info about a single catch {} block */
 typedef struct __catchblock_info
 {
-    UINT       flags;         /* flags (see below) */
-    type_info *type_info;     /* C++ type caught by this block */
-    int        offset;        /* stack offset to copy exception object to */
-    void     (*handler)();    /* catch block handler code */
+    UINT             flags;         /* flags (see below) */
+    const type_info *type_info;     /* C++ type caught by this block */
+    int              offset;        /* stack offset to copy exception object to */
+    void           (*handler)(void);/* catch block handler code */
 } catchblock_info;
 #define TYPE_FLAG_CONST      1
 #define TYPE_FLAG_VOLATILE   2
@@ -129,30 +77,35 @@ typedef struct __catchblock_info
 /* info about a single try {} block */
 typedef struct __tryblock_info
 {
-    int              start_level;      /* start trylevel of that block */
-    int              end_level;        /* end trylevel of that block */
-    int              catch_level;      /* initial trylevel of the catch block */
-    int              catchblock_count; /* count of catch blocks in array */
-    catchblock_info *catchblock;       /* array of catch blocks */
+    int                    start_level;      /* start trylevel of that block */
+    int                    end_level;        /* end trylevel of that block */
+    int                    catch_level;      /* initial trylevel of the catch block */
+    int                    catchblock_count; /* count of catch blocks in array */
+    const catchblock_info *catchblock;       /* array of catch blocks */
 } tryblock_info;
 
 /* info about the unwind handler for a given trylevel */
 typedef struct __unwind_info
 {
     int    prev;          /* prev trylevel unwind handler, to run after this one */
-    void (*handler)();    /* unwind handler */
+    void (*handler)(void);/* unwind handler */
 } unwind_info;
 
 /* descriptor of all try blocks of a given function */
 typedef struct __cxx_function_descr
 {
-    UINT           magic;          /* must be CXX_FRAME_MAGIC */
-    UINT           unwind_count;   /* number of unwind handlers */
-    unwind_info   *unwind_table;   /* array of unwind handlers */
-    UINT           tryblock_count; /* number of try blocks */
-    tryblock_info *tryblock;       /* array of try blocks */
-    UINT           unknown[3];
+    UINT                 magic;          /* must be CXX_FRAME_MAGIC */
+    UINT                 unwind_count;   /* number of unwind handlers */
+    const unwind_info   *unwind_table;   /* array of unwind handlers */
+    UINT                 tryblock_count; /* number of try blocks */
+    const tryblock_info *tryblock;       /* array of try blocks */
+    UINT                 ipmap_count;
+    const void          *ipmap;
+    const void          *expect_list;    /* expected exceptions list when magic >= VC7 */
+    UINT                 flags;          /* flags when magic >= VC8 */
 } cxx_function_descr;
+
+#define FUNC_DESCR_SYNCHRONOUS  1        /* synchronous exceptions only (built with /EHs) */
 
 typedef void (*cxx_copy_ctor)(void);
 
@@ -192,18 +145,20 @@ typedef DWORD (*cxx_exc_custom_handler)( PEXCEPTION_RECORD, cxx_exception_frame*
 typedef struct __cxx_exception_type
 {
     UINT                       flags;            /* TYPE_FLAG flags */
-    void                     (*destructor)();    /* exception object destructor */
+    void                     (*destructor)(void);/* exception object destructor */
     cxx_exc_custom_handler     custom_handler;   /* custom handler for this exception */
     const cxx_type_info_table *type_info_table;  /* list of types for this exception object */
 } cxx_exception_type;
 
-void _CxxThrowException(exception*,const cxx_exception_type*);
+void CDECL _CxxThrowException(exception*,const cxx_exception_type*);
+int CDECL _XcptFilter(NTSTATUS, PEXCEPTION_POINTERS);
+int CDECL __CppXcptFilter(NTSTATUS, PEXCEPTION_POINTERS);
 
 static inline const char *dbgstr_type_info( const type_info *info )
 {
     if (!info) return "{}";
-    return "{}";/*sprintf( "{vtable=%p name=%s (%s)}",
-                             info->vtable, info->mangled, info->name ? info->name : "" );*/
+    return wine_dbg_sprintf( "{vtable=%p name=%s (%s)}",
+                             info->vtable, info->mangled, info->name ? info->name : "" );
 }
 
 /* compute the this pointer for a base class of a given type */

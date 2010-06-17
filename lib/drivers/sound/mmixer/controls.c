@@ -15,6 +15,7 @@ MMixerGetTargetPinsByNodeConnectionIndex(
     IN PKSMULTIPLE_ITEM NodeTypes,
     IN ULONG bUpDirection,
     IN ULONG NodeConnectionIndex,
+    IN ULONG PinCount,
     OUT PULONG Pins)
 {
     PKSTOPOLOGY_CONNECTION Connection;
@@ -41,6 +42,9 @@ MMixerGetTargetPinsByNodeConnectionIndex(
 
        //DPRINT("GetTargetPinsByNodeIndex FOUND Target Pin %u Parsed %u\n", PinId, Pins[PinId]);
 
+       // sanity check
+       ASSERT(PinId < PinCount);
+
        /* mark pin index as a target pin */
        Pins[PinId] = TRUE;
        return MM_STATUS_SUCCESS;
@@ -61,7 +65,7 @@ MMixerGetTargetPinsByNodeConnectionIndex(
         for(Index = 0; Index < NodeConnectionCount; Index++)
         {
             // iterate recursively into the nodes
-            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Pins);
+            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], PinCount, Pins);
             ASSERT(Status == MM_STATUS_SUCCESS);
         }
         // free node connection indexes
@@ -597,6 +601,8 @@ MMixerCreateDestinationLine(
     DestinationLine->Line.Target.wMid = MixerInfo->MixCaps.wMid;
     DestinationLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
     DestinationLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
+
+    ASSERT(MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] == 0);
     wcscpy(DestinationLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
     // initialize extra line
@@ -736,11 +742,11 @@ MMixerHandlePhysicalConnection(
         return Status;
     }
 
-    /* there should be no split in the bride pin */
+    /* there should be no split in the bridge pin */
     ASSERT(PinConnectionIndexCount == 1);
 
     /* find all target pins of this connection */
-    Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, FALSE, PinConnectionIndex[0], PinsRef);
+    Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, FALSE, PinConnectionIndex[0], PinsRefCount, PinsRef);
     if (Status != MM_STATUS_SUCCESS)
     {
         MixerContext->Free(PinsRef);
@@ -779,7 +785,7 @@ MMixerHandlePhysicalConnection(
             }
 
             // now get all connected source pins
-            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, TRUE, MixerControls[0], PinsSrcRef);
+            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, TRUE, MixerControls[0], PinsRefCount, PinsSrcRef);
             if (Status != MM_STATUS_SUCCESS)
             {
                 // failed */
@@ -856,6 +862,9 @@ MMixerInitializeFilter(
     // initialize line list
     InitializeListHead(&MixerInfo->LineList);
     InitializeListHead(&MixerInfo->EventList);
+
+    // sanity check
+    ASSERT(PinCount);
 
     // now allocate an array which will receive the indices of the pin 
     // which has a ADC / DAC nodetype in its path

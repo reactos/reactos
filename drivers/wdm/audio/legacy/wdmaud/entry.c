@@ -240,10 +240,10 @@ WdmAudCleanup(
 
     /* free pin array */
     if (pClient->hPins)
-        ExFreePool(pClient->hPins);
+        FreeItem(pClient->hPins);
 
     /* free client context struct */
-    ExFreePool(pClient);
+    FreeItem(pClient);
 
     /* clear old client pointer */
     IoStack->FileObject->FsContext = NULL;

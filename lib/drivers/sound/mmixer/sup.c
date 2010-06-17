@@ -358,7 +358,7 @@ MMixerGetTargetPins(
     {
         for(Index = 0; Index < NodeConnectionCount; Index++)
         {
-            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], Pins);
+            Status = MMixerGetTargetPinsByNodeConnectionIndex(MixerContext, NodeConnections, NodeTypes, bUpDirection, NodeConnection[Index], PinCount, Pins);
             ASSERT(Status == STATUS_SUCCESS);
         }
         MixerContext->Free((PVOID)NodeConnection);
@@ -638,8 +638,16 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        // copy device name
+        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+
+        // make sure its null terminated
+        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+        // free device name
         MixerContext->Free(Name);
+
+        // done
         return Status;
     }
 
@@ -650,7 +658,13 @@ MMixerGetDeviceName(
     Status = MixerContext->QueryKeyValue(hKey, L"FriendlyName", (PVOID*)&Name, &Length, &Type);
     if (Status == MM_STATUS_SUCCESS)
     {
-        wcscpy(MixerInfo->MixCaps.szPname, Name);
+        // copy device name
+        MixerContext->Copy(MixerInfo->MixCaps.szPname, Name, min(wcslen(Name), MAXPNAMELEN-1) * sizeof(WCHAR));
+
+        // make sure its null terminated
+        MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = L'\0';
+
+        // free device name
         MixerContext->Free(Name);
     }
 

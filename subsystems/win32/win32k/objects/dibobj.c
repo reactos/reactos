@@ -1277,7 +1277,6 @@ DIB_CreateDIBSection(
     HBITMAP res = 0;
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
-    PDC_ATTR pdcattr;
     HPALETTE hpal ;
 
     // Fill BITMAP32 structure with DIB data
@@ -1300,8 +1299,6 @@ DIB_CreateDIBSection(
     {
         return (HBITMAP)NULL;
     }
-
-    pdcattr = dc->pdcattr;
 
     effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
     bm.bmType = 0;
@@ -1534,8 +1531,6 @@ DIB_CreateDIBSection(
     {
         *bits = bm.bmBits;
     }
-
-    if (res) pdcattr->ulDirty_ |= DC_DIBSECTION;
 
     return res;
 }
