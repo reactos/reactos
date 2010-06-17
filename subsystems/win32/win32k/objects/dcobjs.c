@@ -299,6 +299,16 @@ NtGdiSelectBitmap(
                                    psurfBmp->SurfObj.sizlBitmap.cx,
                                    psurfBmp->SurfObj.sizlBitmap.cy);
 
+    if (psurfBmp->hSecure)
+    {
+        /* Set DIBSECTION attribute */
+        pdcattr->ulDirty_ |= DC_DIBSECTION;
+    }
+    else
+    {
+        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
+    }
+
     /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);
 
