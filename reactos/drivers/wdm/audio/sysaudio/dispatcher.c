@@ -70,7 +70,7 @@ DispatchCreateSysAudio(
     DPRINT("DispatchCreateSysAudio entered\n");
 
     /* allocate create item */
-    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
     {
         Irp->IoStatus.Information = 0;
@@ -105,7 +105,7 @@ SysAudioAllocateDeviceHeader(
     PKSOBJECT_CREATE_ITEM CreateItem;
 
     /* allocate create item */
-    CreateItem = ExAllocatePool(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
+    CreateItem = AllocateItem(NonPagedPool, sizeof(KSOBJECT_CREATE_ITEM));
     if (!CreateItem)
         return STATUS_INSUFFICIENT_RESOURCES;
 

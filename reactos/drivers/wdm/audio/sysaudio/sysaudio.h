@@ -116,3 +116,13 @@ ComputeCompatibleFormat(
     IN ULONG PinId,
     IN PKSDATAFORMAT_WAVEFORMATEX ClientFormat,
     OUT PKSDATAFORMAT_WAVEFORMATEX MixerFormat);
+
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes);
+
+VOID
+FreeItem(
+    IN PVOID Item);
+

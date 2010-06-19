@@ -18,6 +18,25 @@ const GUID KSCATEGORY_PREFERRED_WAVEOUT_DEVICE = {0xD6C5066EL, 0x72C1, 0x11D2, {
 const GUID KSCATEGORY_PREFERRED_WAVEIN_DEVICE  = {0xD6C50671L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
 const GUID KSCATEGORY_PREFERRED_MIDIOUT_DEVICE = {0xD6C50674L, 0x72C1, 0x11D2, {0x97, 0x55, 0x00, 0x00, 0xF8, 0x00, 0x47, 0x88}};
 
+PVOID
+AllocateItem(
+    IN POOL_TYPE PoolType,
+    IN SIZE_T NumberOfBytes)
+{
+    PVOID Item = ExAllocatePool(PoolType, NumberOfBytes);
+    if (!Item)
+        return Item;
+
+    RtlZeroMemory(Item, NumberOfBytes);
+    return Item;
+}
+
+VOID
+FreeItem(
+    IN PVOID Item)
+{
+    ExFreePool(Item);
+}
 
 
 VOID
@@ -58,7 +77,7 @@ SysAudio_Shutdown(
         RtlFreeUnicodeString(&DeviceEntry->DeviceName);
 
         /* free audio device entry */
-        ExFreePool(DeviceEntry);
+        FreeItem(DeviceEntry);
     }
 
     Irp->IoStatus.Information = 0;
