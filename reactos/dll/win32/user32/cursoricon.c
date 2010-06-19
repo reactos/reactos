@@ -2031,11 +2031,11 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
         r.right = cxWidth;
         r.bottom = cxWidth;
 
-        if (!(hdc_dest = CreateCompatibleDC(hdc))) goto done;
+        if (!(hdc_dest = CreateCompatibleDC(hdc))) goto failed;
         if (!(hB_off = CreateCompatibleBitmap(hdc, cxWidth, cyWidth)))
         {
             DeleteDC( hdc_dest );
-            goto done;
+            goto failed;
         }
         SelectObject(hdc_dest, hB_off);
         FillRect(hdc_dest, &r, hbr);
@@ -2053,7 +2053,16 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     oldFg = SetTextColor( hdc, RGB(0,0,0) );
     oldBg = SetBkColor( hdc, RGB(255,255,255) );
 
-    if ((flags & DI_MASK) && (!ptr->alpha || !(flags & DI_IMAGE)))
+    if (ptr->alpha && (flags & DI_IMAGE))
+    {
+        BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+
+        SelectObject( hMemDC, ptr->alpha );
+        if (GdiAlphaBlend( hdc_dest, x, y, cxWidth, cyWidth, hMemDC,
+                           0, 0, ptr->width, ptr->height, pixelblend )) goto done;
+    }
+
+    if (flags & DI_MASK)
     {
         SelectObject( hMemDC, ptr->mask );
         StretchBlt( hdc_dest, x, y, cxWidth, cyWidth,
@@ -2062,15 +2071,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
 
     if (flags & DI_IMAGE)
     {
-        if (ptr->alpha)
-        {
-            BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-
-            SelectObject( hMemDC, ptr->alpha );
-            GdiAlphaBlend( hdc_dest, x, y, cxWidth, cyWidth, hMemDC,
-                           0, 0, ptr->width, ptr->height, pixelblend );
-        }
-        else if (ptr->color)
+        if (ptr->color)
         {
             DWORD rop = (flags & DI_MASK) ? SRCINVERT : SRCCOPY;
             SelectObject( hMemDC, ptr->color );
@@ -2086,6 +2087,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
         }
     }
 
+done:
     if (DoOffscreen) BitBlt( hdc, x0, y0, cxWidth, cyWidth, hdc_dest, 0, 0, SRCCOPY );
 
     SetTextColor( hdc, oldFg );
@@ -2094,7 +2096,7 @@ BOOL WINAPI DrawIconEx( HDC hdc, INT x0, INT y0, HICON hIcon,
     result = TRUE;
     if (hdc_dest != hdc) DeleteDC( hdc_dest );
     if (hB_off) DeleteObject(hB_off);
-done:
+failed:
     DeleteDC( hMemDC );
     release_icon_ptr( hIcon, ptr );
     return result;
@@ -2232,11 +2234,6 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
         if (bmfh->bfOffBits) offbits = bmfh->bfOffBits - sizeof(BITMAPFILEHEADER);
     }
 
-    if (info->bmiHeader.biHeight > 65535 || info->bmiHeader.biWidth > 65535) {
-        WARN("Broken BitmapInfoHeader!\n");
-        goto end_close;
-    }
-
     size = bitmap_info_size(info, DIB_RGB_COLORS);
     fix_info = HeapAlloc(GetProcessHeap(), 0, size);
     scaled_info = HeapAlloc(GetProcessHeap(), 0, size);
@@ -2268,6 +2265,12 @@ static HBITMAP BITMAP_Load( HINSTANCE instance, LPCWSTR name,
     }
     else
     {
+        /* Some sanity checks for BITMAPINFO (not applicable to BITMAPCOREINFO) */
+        if (info->bmiHeader.biHeight > 65535 || info->bmiHeader.biWidth > 65535) {
+            WARN("Broken BitmapInfoHeader!\n");
+            goto end;
+        }
+
         scaled_info->bmiHeader.biWidth = new_width;
         scaled_info->bmiHeader.biHeight = new_height;
     }

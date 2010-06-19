@@ -114,7 +114,7 @@ EMFDRV_ArcChordPie( PHYSDEV dev, INT left, INT top, INT right, INT bottom,
     emr.ptlStart.x    = xstart;
     emr.ptlStart.y    = ystart;
     emr.ptlEnd.x      = xend;
-    emr.ptlEnd.x      = yend;
+    emr.ptlEnd.y      = yend;
 
 
     /* Now calculate the BBox */

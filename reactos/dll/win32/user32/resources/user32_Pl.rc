@@ -1,5 +1,6 @@
 /*
  * Copyright 1997 Mikolaj Zalewski
+ * Copyright 2010 £ukasz Wojni³owicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -42,7 +43,7 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 		MENUITEM "W&ytnij", WM_CUT
 		MENUITEM "&Kopiuj", WM_COPY
 		MENUITEM "&Wklej", WM_PASTE
-		MENUITEM "&Usu\xf1", WM_CLEAR
+		MENUITEM "&Usuñ", WM_CLEAR
 		MENUITEM SEPARATOR
 		MENUITEM "&Zaznacz wszystko", EM_SETSEL
 	END
@@ -60,9 +61,9 @@ BEGIN
 	PUSHBUTTON "&Ignoruj", 5, 215, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	PUSHBUTTON "&Tak", 6, 263, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 	PUSHBUTTON "&Nie", 7, 311, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-	PUSHBUTTON "&Try Again", 10, 359, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-	PUSHBUTTON "&Continue", 11, 407, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-	PUSHBUTTON "Help", 9, 455, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Spróbuj ponownie", 10, 359, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "&Kontynuuj", 11, 407, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+	PUSHBUTTON "Pomoc", 9, 455, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 MDI_MOREWINDOWS DIALOG FIXED IMPURE 20, 20, 232, 122

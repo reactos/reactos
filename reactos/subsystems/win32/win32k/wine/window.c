@@ -597,6 +597,13 @@ int is_window_visible( user_handle_t window )
     return is_visible( win );
 }
 
+int is_window_transparent( user_handle_t window )
+{
+    struct window *win = get_user_object( window, USER_WINDOW );
+    if (!win) return 0;
+    return (win->ex_style & (WS_EX_LAYERED|WS_EX_TRANSPARENT)) == (WS_EX_LAYERED|WS_EX_TRANSPARENT);
+}
+
 /* check if point is inside the window */
 static inline int is_point_in_window( struct window *win, int x, int y )
 {

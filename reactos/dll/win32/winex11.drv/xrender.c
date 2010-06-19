@@ -886,7 +886,7 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
         {
             case ANTIALIASED_QUALITY:
                 entry->aa_default = get_antialias_type( physDev, FALSE, hinter );
-                break;
+                return ret;  /* ignore further configuration */
             case CLEARTYPE_QUALITY:
             case CLEARTYPE_NATURAL_QUALITY:
                 entry->aa_default = get_antialias_type( physDev, subpixel, hinter );
@@ -988,6 +988,9 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
             }
             wine_tsx11_unlock();
         }
+
+        /* we can't support subpixel without xrender */
+        if (!X11DRV_XRender_Installed && entry->aa_default > AA_Grey) entry->aa_default = AA_Grey;
     }
     else
         entry->aa_default = AA_None;

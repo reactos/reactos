@@ -1534,9 +1534,13 @@ UINT WINAPI GetBoundsRect(HDC hdc, LPRECT rect, UINT flags)
 
     if ( !dc ) return 0;
 
-    if (rect) *rect = dc->BoundsRect;
-
-    ret = ((dc->flags & DC_BOUNDS_SET) ? DCB_SET : DCB_RESET);
+    if (rect)
+    {
+        *rect = dc->BoundsRect;
+        ret = ((dc->flags & DC_BOUNDS_SET) ? DCB_SET : DCB_RESET);
+    }
+    else
+        ret = 0;
 
     if (flags & DCB_RESET)
     {

@@ -71,6 +71,7 @@ typedef struct
     WORD                    depth;
     WORD                    infoBpp;
     WORD                    compression;
+    ColorShifts            *shifts;
     RGBQUAD                *colorMap;
     int                     nColorMap;
     Drawable                drawable;
@@ -3541,6 +3542,12 @@ static int X11DRV_DIB_SetImageBits( const X11DRV_DIB_IMAGEBITS_DESCR *descr )
             wine_tsx11_unlock();
             return 0;
         }
+        if (descr->shifts)
+        {
+            bmpImage->red_mask = descr->shifts->physicalRed.max << descr->shifts->physicalRed.shift;
+            bmpImage->green_mask = descr->shifts->physicalGreen.max << descr->shifts->physicalGreen.shift;
+            bmpImage->blue_mask = descr->shifts->physicalBlue.max << descr->shifts->physicalBlue.shift;
+        }
     }
     wine_tsx11_unlock();
 
@@ -3697,6 +3704,12 @@ static int X11DRV_DIB_GetImageBits( const X11DRV_DIB_IMAGEBITS_DESCR *descr )
             XDestroyImage( bmpImage );
             wine_tsx11_unlock();
             return 0;
+        }
+        if (descr->shifts)
+        {
+            bmpImage->red_mask = descr->shifts->physicalRed.max << descr->shifts->physicalRed.shift;
+            bmpImage->green_mask = descr->shifts->physicalGreen.max << descr->shifts->physicalGreen.shift;
+            bmpImage->blue_mask = descr->shifts->physicalBlue.max << descr->shifts->physicalBlue.shift;
         }
     }
 
@@ -3930,6 +3943,7 @@ INT CDECL X11DRV_SetDIBitsToDevice( X11DRV_PDEVICE *physDev, INT xDest, INT yDes
     descr.lines      = top_down ? -lines : lines;
     descr.infoWidth  = width;
     descr.depth      = physDev->depth;
+    descr.shifts     = physDev->color_shifts;
     descr.drawable   = physDev->drawable;
     descr.gc         = physDev->gc;
     descr.xSrc       = xSrc;
@@ -4019,6 +4033,7 @@ INT CDECL X11DRV_SetDIBits( X11DRV_PDEVICE *physDev, HBITMAP hbitmap, UINT start
   descr.infoWidth  = width;
   descr.lines      = tmpheight >= 0 ? lines : -lines;
   descr.depth      = physBitmap->pixmap_depth;
+  descr.shifts     = physBitmap->trueColor ? &physBitmap->pixmap_color_shifts : NULL;
   descr.drawable   = physBitmap->pixmap;
   descr.gc         = get_bitmap_gc(physBitmap->pixmap_depth);
   descr.xSrc       = 0;
@@ -4175,6 +4190,7 @@ INT CDECL X11DRV_GetDIBits( X11DRV_PDEVICE *physDev, HBITMAP hbitmap, UINT start
   descr.infoWidth  = width;
   descr.lines      = lines;
   descr.depth      = physBitmap->pixmap_depth;
+  descr.shifts     = physBitmap->trueColor ? &physBitmap->pixmap_color_shifts : NULL;
   descr.drawable   = physBitmap->pixmap;
   descr.gc         = get_bitmap_gc(physBitmap->pixmap_depth);
   descr.width      = dib.dsBm.bmWidth;
@@ -4250,6 +4266,7 @@ static void X11DRV_DIB_DoCopyDIBSection(X_PHYSBITMAP *physBitmap, BOOL toDIB,
   descr.nColorMap   = nColorMap;
   descr.bits        = dibSection.dsBm.bmBits;
   descr.depth       = physBitmap->pixmap_depth;
+  descr.shifts      = physBitmap->trueColor ? &physBitmap->pixmap_color_shifts : NULL;
   descr.compression = dibSection.dsBmih.biCompression;
   descr.physBitmap  = physBitmap;
 

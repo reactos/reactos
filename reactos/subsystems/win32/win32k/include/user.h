@@ -144,6 +144,7 @@ extern void destroy_thread_windows( PTHREADINFO thread );
 extern int is_child_window( user_handle_t parent, user_handle_t child );
 extern int is_top_level_window( user_handle_t window );
 extern int is_window_visible( user_handle_t window );
+extern int is_window_transparent( user_handle_t window );
 extern int make_window_active( user_handle_t window );
 extern PTHREADINFO get_window_thread( user_handle_t handle );
 extern user_handle_t window_from_point( struct desktop *desktop, int x, int y );
