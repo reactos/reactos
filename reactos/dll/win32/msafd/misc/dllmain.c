@@ -23,6 +23,7 @@ HANDLE GlobalHeap;
 WSPUPCALLTABLE Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST lpWPUCompleteOverlappedRequest;
 PSOCKET_INFORMATION SocketListHead = NULL;
+CRITICAL_SECTION SocketListLock;
 LIST_ENTRY SockHelpersListHead = { NULL, NULL };
 ULONG SockAsyncThreadRefCount;
 HANDLE SockAsyncHelperAfdHandle;
@@ -280,8 +281,10 @@ WSPSocket(int AddressFamily,
                           NULL);
 
     /* Save in Process Sockets List */
+    EnterCriticalSection(&SocketListLock);
     Socket->NextSocket = SocketListHead;
     SocketListHead = Socket;
+    LeaveCriticalSection(&SocketListLock);
 
     /* Create the Socket Context */
     CreateContext(Socket);
@@ -556,6 +559,7 @@ WSPCloseSocket(IN SOCKET Handle,
     NtClose(Socket->TdiConnectionHandle);
     Socket->TdiConnectionHandle = NULL;
 
+    EnterCriticalSection(&SocketListLock);
     if (SocketListHead == Socket)
     {
         SocketListHead = SocketListHead->NextSocket;
@@ -574,6 +578,7 @@ WSPCloseSocket(IN SOCKET Handle,
             CurrentSocket = CurrentSocket->NextSocket;
         }
     }
+    LeaveCriticalSection(&SocketListLock);
 
     HeapFree(GlobalHeap, 0, Socket);
 
@@ -2314,14 +2319,21 @@ GetSocketStructure(SOCKET Handle)
 {
     PSOCKET_INFORMATION CurrentSocket;
 
+    EnterCriticalSection(&SocketListLock);
+
     CurrentSocket = SocketListHead;
     while (CurrentSocket)
     {
         if (CurrentSocket->Handle == Handle)
+        {
+            LeaveCriticalSection(&SocketListLock);
             return CurrentSocket;
+        }
 
         CurrentSocket = CurrentSocket->NextSocket;
     }
+
+    LeaveCriticalSection(&SocketListLock);
 
     return NULL;
 }
@@ -2841,6 +2853,9 @@ DllMain(HANDLE hInstDll,
         /* Heap to use when allocating */
         GlobalHeap = GetProcessHeap();
 
+        /* Initialize the lock that protects our socket list */
+        InitializeCriticalSection(&SocketListLock);
+
         AFD_DbgPrint(MAX_TRACE, ("MSAFD.DLL has been loaded\n"));
 
         break;
@@ -2852,6 +2867,10 @@ DllMain(HANDLE hInstDll,
         break;
 
     case DLL_PROCESS_DETACH:
+
+        /* Delete the socket list lock */
+        DeleteCriticalSection(&SocketListLock);
+
         break;
     }
 
