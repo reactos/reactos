@@ -251,8 +251,13 @@ CPortWavePci::Init(
 
     // increment reference on miniport adapter
     Miniport->AddRef();
-    // increment reference on resource list
-    ResourceList->AddRef();
+
+
+    if (ResourceList)
+    {
+        // increment reference on resource list
+        ResourceList->AddRef();
+    }
 
     Status = Miniport->Init(UnknownAdapter, ResourceList, this, &ServiceGroup);
     if (!NT_SUCCESS(Status))
