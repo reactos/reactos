@@ -903,7 +903,7 @@
 # stub _strupr_s_l
 # stub _strxfrm_l
 @ cdecl _swab(str str long)
-# stub _swprintf
+@ varargs _swprintf(ptr str) swprintf
 # stub _swprintf_c
 # stub _swprintf_c_l
 # stub _swprintf_p_l
