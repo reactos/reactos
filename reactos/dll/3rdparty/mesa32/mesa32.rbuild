@@ -32,20 +32,24 @@
 	<include base="mesa32">src/shader/slang/OSDependent/Linux</include>
 	<include base="mesa32">src/shader/slang/OGLCompilersDLL</include>
 	<directory name="src">
+	<directory name="drivers">
+		<directory name="common">
+			<file>driverfuncs.c</file>
+		</directory>
+		<directory name="windows">
+			<directory name="gdi">
+				<file>wmesa.c</file>
+				<file>wgl.c</file>
+			</directory>
+			<directory name="icd">
+				<file>icd.c</file>
+			</directory>
+		</directory>
+	</directory>
 	<directory name="glapi">
 		<file>glapi_getproc.c</file>
 		<file>glapi.c</file>
 		<file>glthread.c</file>
-	</directory>
-	<directory name="math">
-		<file>m_debug_clip.c</file>
-		<file>m_debug_norm.c</file>
-		<file>m_debug_xform.c</file>
-		<file>m_eval.c</file>
-		<file>m_matrix.c</file>
-		<file>m_translate.c</file>
-		<file>m_vector.c</file>
-		<file>m_xform.c</file>
 	</directory>
 	<directory name="main">
 		<file>accum.c</file>
@@ -104,6 +108,9 @@
 		<file>readpix.c</file>
 		<file>renderbuffer.c</file>
 		<file>scissor.c</file>
+		<file>shaders.c</file>
+		<file>state.c</file>
+		<file>stencil.c</file>
 		<file>texcompress.c</file>
 		<file>texcompress_fxt1.c</file>
 		<file>texcompress_s3tc.c</file>
@@ -118,6 +125,17 @@
 		<file>texstate.c</file>
 		<file>texstore.c</file>
 		<file>varray.c</file>
+		<file>vtxfmt.c</file>
+	</directory>
+	<directory name="math">
+		<file>m_debug_clip.c</file>
+		<file>m_debug_norm.c</file>
+		<file>m_debug_xform.c</file>
+		<file>m_eval.c</file>
+		<file>m_matrix.c</file>
+		<file>m_translate.c</file>
+		<file>m_vector.c</file>
+		<file>m_xform.c</file>
 	</directory>
 	<directory name="shader">
 		<file>arbprogparse.c</file>
@@ -137,6 +155,29 @@
 		<file>prog_uniform.c</file>
 		<file>program.c</file>
 		<file>programopt.c</file>
+		<file>shader_api.c</file>
+		<directory name="slang">
+			<file>slang_builtin.c</file>
+			<file>slang_codegen.c</file>
+			<file>slang_compile.c</file>
+			<file>slang_compile_function.c</file>
+			<file>slang_compile_operation.c</file>
+			<file>slang_compile_struct.c</file>
+			<file>slang_compile_variable.c</file>
+			<file>slang_emit.c</file>
+			<file>slang_ir.c</file>
+			<file>slang_label.c</file>
+			<file>slang_link.c</file>
+			<file>slang_log.c</file>
+			<file>slang_mem.c</file>
+			<file>slang_preprocess.c</file>
+			<file>slang_print.c</file>
+			<file>slang_simplify.c</file>
+			<file>slang_storage.c</file>
+			<file>slang_typeinfo.c</file>
+			<file>slang_utility.c</file>
+			<file>slang_vartable.c</file>
+		</directory>
 		<directory name="grammar">
 			<file>grammar_mesa.c</file>
 		</directory>
@@ -172,41 +213,9 @@
 		<file>s_triangle.c</file>
 		<file>s_zoom.c</file>
 	</directory>
-	<directory name="main">
-		<file>shaders.c</file>
-	</directory>
-	<directory name="shader">
-		<file>shader_api.c</file>
-		<directory name="slang">
-			<file>slang_builtin.c</file>
-			<file>slang_codegen.c</file>
-			<file>slang_compile.c</file>
-			<file>slang_compile_function.c</file>
-			<file>slang_compile_operation.c</file>
-			<file>slang_compile_struct.c</file>
-			<file>slang_compile_variable.c</file>
-			<file>slang_emit.c</file>
-			<file>slang_ir.c</file>
-			<file>slang_label.c</file>
-			<file>slang_link.c</file>
-			<file>slang_log.c</file>
-			<file>slang_mem.c</file>
-			<file>slang_preprocess.c</file>
-			<file>slang_print.c</file>
-			<file>slang_simplify.c</file>
-			<file>slang_storage.c</file>
-			<file>slang_typeinfo.c</file>
-			<file>slang_utility.c</file>
-			<file>slang_vartable.c</file>
-		</directory>
-	</directory>
 	<directory name="swrast_setup">
 		<file>ss_context.c</file>
 		<file>ss_triangle.c</file>
-	</directory>
-	<directory name="main">
-		<file>state.c</file>
-		<file>stencil.c</file>
 	</directory>
 	<directory name="tnl">
 		<file>t_context.c</file>
@@ -246,24 +255,6 @@
 		<file>vbo_split_copy.c</file>
 		<file>vbo_split_inplace.c</file>
 	</directory>
-	<directory name="main">
-		<file>vtxfmt.c</file>
-	</directory>
-	<directory name="drivers">
-		<directory name="common">
-			<file>driverfuncs.c</file>
-		</directory>
-		<directory name="windows">
-			<directory name="gdi">
-				<file>wmesa.c</file>
-				<file>wgl.c</file>
-			</directory>
-			<directory name="icd">
-				<file>icd.c</file>
-			</directory>
-		</directory>
-	</directory>
-
 	<if property="ARCH" value="i386">
 		<directory name="x86">
 			<directory name="rtasm">
