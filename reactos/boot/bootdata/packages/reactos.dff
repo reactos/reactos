@@ -365,6 +365,7 @@ dll\win32\msxml3\msxml3.dll                         1
 dll\win32\nddeapi\nddeapi.dll                       1
 dll\win32\netapi32\netapi32.dll                     1
 dll\win32\netcfgx\netcfgx.dll                       1
+dll\win32\netevent\netevent.dll                     1
 dll\win32\netid\netid.dll                           1
 dll\win32\netshell\netshell.dll                     1
 dll\win32\newdev\newdev.dll                         1
