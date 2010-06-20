@@ -187,6 +187,11 @@ CPortWavePci::QueryInterface(
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
+    else if (IsEqualGUIDAligned(refiid, IID_IDrmPort) ||
+             IsEqualGUIDAligned(refiid, IID_IDrmPort2))
+    {
+        return NewIDrmPort((PDRMPORT2*)Output);
+    }
     else if (IsEqualGUIDAligned(refiid, IID_IPortClsVersion))
     {
         return NewPortClsVersion((PPORTCLSVERSION*)Output);
