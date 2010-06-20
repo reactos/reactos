@@ -29,8 +29,6 @@ typedef struct _ROS_DC_INFO
   HRGN     hVisRgn;      /* Visible region (must never be 0) */
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
-  BYTE   bitsPerPixel;
-
   CLIPOBJ     *CombinedClip; /* Use XCLIPOBJ in DC. */
 
   UNICODE_STRING    DriverName;

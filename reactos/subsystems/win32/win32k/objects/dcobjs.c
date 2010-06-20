@@ -162,10 +162,10 @@ GdiSelectPalette(
         return NULL;
     }
 
-    // FIXME: This looks wrong
     /* Is this a valid palette for this depth? */
-    if ((pdc->rosdc.bitsPerPixel <= 8 && ppal->Mode == PAL_INDEXED) ||
-        (pdc->rosdc.bitsPerPixel > 8))
+	if ((BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) <= 8
+					&& ppal->Mode == PAL_INDEXED) ||
+			(BitsPerFormat(pdc->dclevel.pSurface->SurfObj.iBitmapFormat) > 8))
     {
         /* Get old palette, set new one */
         oldPal = pdc->dclevel.hpal;
@@ -291,27 +291,21 @@ NtGdiSelectBitmap(
     // If Info DC this is zero and pSurface is moved to DC->pSurfInfo.
     psurfBmp->hDC = hDC;
 
-    // if we're working with a DIB, get the palette
-    // [fixme: only create if the selected palette is null]
-    if (psurfBmp->hSecure)
-    {
-//        pDC->rosdc.bitsPerPixel = psurfBmp->dib->dsBmih.biBitCount; ???
-        pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-        /* Set DIBSECTION attribute */
-        pdcattr->ulDirty_ |= DC_DIBSECTION;
-    }
-    else
-    {
-        pDC->rosdc.bitsPerPixel = BitsPerFormat(psurfBmp->SurfObj.iBitmapFormat);
-        /* Restore DIBSECTION attribute */
-        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
-    }
-
     /* FIXME; improve by using a region without a handle and selecting it */
     hVisRgn = IntSysCreateRectRgn( 0,
                                    0,
                                    psurfBmp->SurfObj.sizlBitmap.cx,
                                    psurfBmp->SurfObj.sizlBitmap.cy);
+
+    if(psurfBmp->hSecure)
+    {
+        /* Set DIBSECTION attribute */
+        pdcattr->ulDirty_ |= DC_DIBSECTION;
+    }
+    else
+    {
+        pdcattr->ulDirty_ &= ~DC_DIBSECTION;
+    }
 
     /* Release the exclusive lock */
     SURFACE_UnlockSurface(psurfBmp);

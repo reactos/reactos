@@ -310,10 +310,6 @@ IntGdiCreateDC(
     // ATM we only have one display.
     pdcattr->ulDirty_ |= DC_PRIMARY_DISPLAY;
 
-    pdc->rosdc.bitsPerPixel = pdc->ppdev->gdiinfo.cBitsPixel *
-                              pdc->ppdev->gdiinfo.cPlanes;
-    DPRINT("Bits per pel: %u\n", pdc->rosdc.bitsPerPixel);
-
     pdc->flGraphicsCaps  = PrimarySurface.devinfo.flGraphicsCaps;
     pdc->flGraphicsCaps2 = PrimarySurface.devinfo.flGraphicsCaps2;
 
@@ -713,8 +709,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
     pdcNew->dclevel.hdcSave = hdcNew;
 
     pdcNew->dhpdev = pdcOld->dhpdev;
-
-    pdcNew->rosdc.bitsPerPixel = pdcOld->rosdc.bitsPerPixel;
 
     /* DriverName is copied in the AllocDC routine  */
     pdcattrNew->ptlWindowOrg   = pdcattrOld->ptlWindowOrg;
