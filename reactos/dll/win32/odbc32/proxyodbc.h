@@ -33,6 +33,7 @@ typedef struct dm_func                          /* driver manager functions */
     const char     *name;
     void           *d_func;
     SQLRETURN      (*func)();
+    SQLRETURN      (*funcW)();
 } DM_FUNC;
 
 typedef struct proxyhandle
@@ -44,7 +45,6 @@ typedef struct proxyhandle
 	int  nErrorType;
 	DM_FUNC functions[NUM_SQLFUNC];			/* entry point for driver manager functions */
 	char driverLibName[200];	/* ODBC driver SO name */
-	char dmLibName[200];		/* driver manager library name */
 	char ServerName[200];       /* keep server name */
 	char UserName[50];          /* keep username */
 } PROXYHANDLE;
