@@ -47,6 +47,7 @@
 	<file>treeview.c</file>
 	<file>updown.c</file>
 	<file>rsrc.rc</file>
+	<library>uuid</library>
 	<library>wine</library>
 	<library>user32</library>
 	<library>gdi32</library>

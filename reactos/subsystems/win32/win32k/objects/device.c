@@ -127,7 +127,7 @@ FindDriverFileNames(PUNICODE_STRING DriverFileNames, ULONG DisplayNumber)
  //   DPRINT1("Status: %lx\n", Status);
     if (Length)
     {
-        DriverNames = ExAllocatePool(PagedPool, Length);
+        DriverNames = ExAllocatePoolWithTag(PagedPool, Length, TAG_DRIVER);
        // DPRINT1("Length allocated: %d\n", Length);
         Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
                                         RegistryPath.Buffer,
@@ -1686,7 +1686,7 @@ IntEnumDisplaySettings(
                     PVOID NewBuffer;
 
                     SizeOfCachedDevModes += SizeNeeded;
-                    NewBuffer = ExAllocatePool(PagedPool, SizeOfCachedDevModes);
+                    NewBuffer = ExAllocatePoolWithTag(PagedPool, SizeOfCachedDevModes, GDITAG_DEVMODE);
                     if (NewBuffer == NULL)
                     {
                         /* clean up */
@@ -1745,7 +1745,7 @@ IntEnumDisplaySettings(
         }
         while (iModeNum-- > 0 && CachedMode < CachedDevModesEnd)
         {
-            assert(CachedMode->dmSize > 0);
+            ASSERT(CachedMode->dmSize > 0);
             CachedMode = (DEVMODEW *)((PCHAR)CachedMode + CachedMode->dmSize + CachedMode->dmDriverExtra);
         }
         if (CachedMode >= CachedDevModesEnd)

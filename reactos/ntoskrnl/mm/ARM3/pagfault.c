@@ -65,7 +65,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     if (PointerPde->u.Hard.Valid == 0)
     {
         /* This seems to be making the assumption that one PDE is one page long */
-        ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+        C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
         
         //
         // Copy it from our double-mapped system page directory
@@ -91,7 +91,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
 {
     PFN_NUMBER PageFrameNumber;
     MMPTE TempPte;
-    DPRINT1("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
+    DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
     
@@ -105,11 +105,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
     ASSERT(PointerPte->u.Hard.Valid == 0);
     
-    //
-    // Get a page
-    //
-    PageFrameNumber = MmAllocPage(MC_PPOOL);
+    /* Get a page */
+    PageFrameNumber = MiRemoveAnyPage(0);
     DPRINT("New pool page: %lx\n", PageFrameNumber);
+    
+    /* Initialize it */
+    MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
     
     //
     // Release PFN lock
@@ -124,16 +125,10 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Shouldn't see faults for user PTEs yet */
     ASSERT(PointerPte > MiHighestUserPte);
     
-    //
-    // Build the PTE
-    //
-    TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-    ASSERT(TempPte.u.Hard.Valid == 1);
-    ASSERT(PointerPte->u.Hard.Valid == 0);
-    *PointerPte = TempPte;
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    
+    /* Build the PTE */
+    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, PointerPte->u.Soft.Protection, PageFrameNumber);
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
     //
     // It's all good now
     //

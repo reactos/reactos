@@ -51,12 +51,14 @@ IntGetThreadFocusWindow(VOID)
 VOID FASTCALL
 co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 {
-   if (hWndPrev)
+    PWINDOW_OBJECT WndPrev ;
+
+   if (hWndPrev && (WndPrev = UserGetWindowObject(hWndPrev)))
    {
       co_IntSendMessageNoWait(hWndPrev, WM_NCACTIVATE, FALSE, 0);
       co_IntSendMessageNoWait(hWndPrev, WM_ACTIVATE,
-                              MAKEWPARAM(WA_INACTIVE, UserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
-                              (LPARAM)hWnd);
+                 MAKEWPARAM(WA_INACTIVE, WndPrev->Wnd->style & WS_MINIMIZE),
+                 (LPARAM)hWnd);
    }
 }
 
@@ -83,11 +85,11 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
                           0);
       }
 
-      if (UserGetWindow(hWnd, GW_HWNDPREV) != NULL)
+      if (Window->spwndPrev != NULL)
          co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
                                SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-      if (!IntGetOwner(Window) && !IntGetParent(Window))
+      if (!Window->spwndOwner && !IntGetParent(Window))
       {
          co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
       }
@@ -153,7 +155,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       /* FIXME: WA_CLICKACTIVE */
       co_IntSendMessageNoWait(hWnd, WM_ACTIVATE,
                               MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
-                                         UserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
+                              Window->Wnd->style & WS_MINIMIZE),
                               (LPARAM)hWndPrev);
    }
 }
@@ -184,7 +186,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 
    for(Child = Root->spwndChild; Child; Child = Child->spwndNext)
    {
-      OwnerWnd = UserGetWindowObject(Child->hOwner);
+       OwnerWnd = Child->spwndOwner;
       if(!OwnerWnd)
          continue;
 

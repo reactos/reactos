@@ -57,6 +57,9 @@ MMixerGetFilterTopologyProperty(
     if (Status != MM_STATUS_MORE_ENTRIES)
         return Status;
 
+    //sanity check
+    ASSERT(BytesReturned);
+
     // allocate an result buffer
     MultipleItem = (PKSMULTIPLE_ITEM)MixerContext->Alloc(BytesReturned);
 

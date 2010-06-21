@@ -983,7 +983,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    }
 
    /* free the message */
-   ExFreePool(Message);
+   ExFreePoolWithTag(Message, TAG_USRMSG);
    return(TRUE);
 }
 
@@ -1060,7 +1060,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
          }
 
          /* free the message */
-         ExFreePool(SentMessage);
+         ExFreePoolWithTag(SentMessage, TAG_USRMSG);
 
          CurrentEntry = MessageQueue->SentMessagesListHead.Flink;
       }

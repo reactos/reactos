@@ -146,7 +146,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePool(PagedPool, sizeof(GAMMARAMP));
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -174,7 +174,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   _SEH2_END;
 
   DC_UnlockDc(dc);
-  ExFreePool(SafeRamp);
+  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
 
   if (!NT_SUCCESS(Status))
   {
@@ -377,7 +377,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  SafeRamp = ExAllocatePool(PagedPool, sizeof(GAMMARAMP));
+  SafeRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
   if (!SafeRamp)
   {
       DC_UnlockDc(dc);
@@ -402,14 +402,14 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   if (!NT_SUCCESS(Status))
   {
      DC_UnlockDc(dc);
-     ExFreePool(SafeRamp);
+     ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
      SetLastNtError(Status);
      return FALSE;
   }
 
   Ret = IntSetDeviceGammaRamp((HDEV)dc->ppdev, SafeRamp, TRUE);
   DC_UnlockDc(dc);
-  ExFreePool(SafeRamp);
+  ExFreePoolWithTag(SafeRamp, TAG_GDIICM);
   return Ret;
 }
 

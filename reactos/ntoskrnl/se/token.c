@@ -1806,6 +1806,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     PTOKEN NewToken;
     PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService;
     BOOLEAN QoSPresent;
+    OBJECT_HANDLE_INFORMATION HandleInformation;
     NTSTATUS Status;
 
     PAGED_CODE();
@@ -1843,7 +1844,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
                                        SepTokenObjectType,
                                        PreviousMode,
                                        (PVOID*)&Token,
-                                       NULL);
+                                       &HandleInformation);
     if (!NT_SUCCESS(Status))
     {
         SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
@@ -1870,6 +1871,21 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
         }
     }
 
+    /*
+     * Fail, if a primary token is to be created from an impersonation token
+     * and and the impersonation level of the impersonation token is below SecurityImpersonation.
+     */
+    if (Token->TokenType == TokenImpersonation &&
+        TokenType == TokenPrimary &&
+        Token->ImpersonationLevel < SecurityImpersonation)
+    {
+        ObDereferenceObject(Token);
+        SepReleaseSecurityQualityOfService(CapturedSecurityQualityOfService,
+                                           PreviousMode,
+                                           FALSE);
+        return STATUS_BAD_IMPERSONATION_LEVEL;
+    }
+
     Status = SepDuplicateToken(Token,
                                ObjectAttributes,
                                EffectiveOnly,
@@ -1884,7 +1900,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
     {
         Status = ObInsertObject((PVOID)NewToken,
                                 NULL,
-                                DesiredAccess,
+                                (DesiredAccess ? DesiredAccess : HandleInformation.GrantedAccess),
                                 0,
                                 NULL,
                                 &hToken);

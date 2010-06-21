@@ -10,7 +10,13 @@
     	    <directory name="acpi">
     	        <file>halacpi.c</file>
     	        <file>halpnpdd.c</file>
+    	        <file>busemul.c</file>
     	    </directory>
+    	    <directory name="legacy">
+        		<directory name="bus">
+    				<file>pcibus.c</file>
+    			</directory>
+    		</directory>
 		</directory>
 	</module>
 </group>

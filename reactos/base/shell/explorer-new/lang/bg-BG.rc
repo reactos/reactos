@@ -121,6 +121,7 @@ BEGIN
     IDS_PROPERTIES        "&Свойства"
     IDS_OPEN_ALL_USERS    "&Отваряне на всички потребители"
     IDS_EXPLORE_ALL_USERS "&Разлистване на всички потребители"
+    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE DISCARDABLE

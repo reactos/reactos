@@ -250,11 +250,10 @@ BEGIN
     STRING_PREVIEW_CLOSE,            "Užverti"
     STRING_PREVIEW_PAGE,             "Puslapis"
     STRING_PREVIEW_PAGES,            "Puslapiai"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_UNITS_CM,             "cm"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "col."
+    STRING_UNITS_INCH,               "coliai"
+    STRING_UNITS_PT,                 "tašk."
 END
 
 STRINGTABLE DISCARDABLE

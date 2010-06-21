@@ -156,7 +156,7 @@ BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
-BOOL bChildProcessRunning = FALSE;
+CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bUnicodeOutput = FALSE;
 BOOL bDisableBatchEcho = FALSE;
 BOOL bDelayedExpansion = FALSE;
@@ -436,14 +436,12 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 		{
 			if (IsConsoleProcess(prci.hProcess))
 			{
-				/* FIXME: Protect this with critical section */
-				bChildProcessRunning = TRUE;
+				EnterCriticalSection(&ChildProcessRunningLock);
 				dwChildProcessId = prci.dwProcessId;
 
 				WaitForSingleObject (prci.hProcess, INFINITE);
 
-				/* FIXME: Protect this with critical section */
-				bChildProcessRunning = FALSE;
+				LeaveCriticalSection(&ChildProcessRunningLock);
 
 				GetExitCodeProcess (prci.hProcess, &dwExitCode);
 				nErrorLevel = (INT)dwExitCode;
@@ -665,9 +663,9 @@ ExecutePipeline(PARSED_COMMAND *Cmd)
 	SetStdHandle(STD_INPUT_HANDLE, hOldConIn);
 
 	/* Wait for all processes to complete */
-	bChildProcessRunning = TRUE;
+	EnterCriticalSection(&ChildProcessRunningLock);
 	WaitForMultipleObjects(nProcesses, hProcess, TRUE, INFINITE);
-	bChildProcessRunning = FALSE;
+	LeaveCriticalSection(&ChildProcessRunningLock);
 
 	/* Use the exit code of the last process in the pipeline */
 	GetExitCodeProcess(hProcess[nProcesses - 1], &dwExitCode);
@@ -1439,13 +1437,16 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 		}
 	}
 
-	if (bChildProcessRunning == TRUE)
+	if (!TryEnterCriticalSection(&ChildProcessRunningLock))
 	{
 		SelfGenerated = TRUE;
 		GenerateConsoleCtrlEvent (dwCtrlType, 0);
 		return TRUE;
 	}
-
+	else
+	{
+		LeaveCriticalSection(&ChildProcessRunningLock);
+	}
 
     rec.EventType = KEY_EVENT;
     rec.Event.KeyEvent.bKeyDown = TRUE;
@@ -1797,6 +1798,7 @@ static VOID Cleanup()
 	RemoveBreakHandler ();
 	SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
 			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+	DeleteCriticalSection(&ChildProcessRunningLock);
 }
 
 /*
@@ -1808,6 +1810,7 @@ int cmd_main (int argc, const TCHAR *argv[])
 	TCHAR startPath[MAX_PATH];
 	CONSOLE_SCREEN_BUFFER_INFO Info;
 
+	InitializeCriticalSection(&ChildProcessRunningLock);
 	lpOriginalEnvironment = DuplicateEnvironment();
 
 	GetCurrentDirectory(MAX_PATH,startPath);

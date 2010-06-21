@@ -83,8 +83,6 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
-	bool only_msvc_headers = false;
-
 	while ( m_configurations.size () > 0 )
 	{
 		const MSVCConfiguration* cfg = m_configurations.back();
@@ -92,17 +90,17 @@ void MSVCBackend::Process()
 		delete cfg;
 	}
 
-	m_configurations.push_back ( new MSVCConfiguration( Debug ));
-	m_configurations.push_back ( new MSVCConfiguration( Release ));
-//	m_configurations.push_back ( new MSVCConfiguration( Speed ));
-	m_configurations.push_back ( new MSVCConfiguration( RosBuild ));
-
-	if (!only_msvc_headers)
+	//Don't generate configurations that require WDK if it can't be found
+	if(getenv ( "BASEDIR" ) != NULL)
 	{
-		m_configurations.push_back ( new MSVCConfiguration( Debug, ReactOSHeaders ));
-		m_configurations.push_back ( new MSVCConfiguration( Release, ReactOSHeaders ));
-//		m_configurations.push_back ( new MSVCConfiguration( Speed, ReactOSHeaders ));
+		m_configurations.push_back ( new MSVCConfiguration( Debug ));
+		m_configurations.push_back ( new MSVCConfiguration( Release ));
 	}
+	m_configurations.push_back ( new MSVCConfiguration( RosBuild ));
+	m_configurations.push_back ( new MSVCConfiguration( Debug, ReactOSHeaders ));
+	m_configurations.push_back ( new MSVCConfiguration( Release, ReactOSHeaders ));
+	//	m_configurations.push_back ( new MSVCConfiguration( Speed ));
+	//	m_configurations.push_back ( new MSVCConfiguration( Speed, ReactOSHeaders ));
 
 	if ( configuration.CleanAsYouGo ) {
 		_clean_project_files();
@@ -117,34 +115,45 @@ void MSVCBackend::Process()
 	filename_sln += "_auto.sln";
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 
-	//Write a property page for each configuration
-	for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
+	if (configuration.VSProjectVersion == "10.00")
 	{
-		MSVCConfiguration* cfg = m_configurations[icfg];
-
-		//RosBuild doesn't need a property page
-		if(cfg->optimization == RosBuild)
-			continue;
-
-		string filename_props(  cfg->name );
-		filename_props += ".vsprops";
-		//Write the propery pages files
-		PropsMaker propsMaker( configuration, &ProjectNode, filename_props, cfg );
+		PropsMaker propsMaker( &ProjectNode, "reactos.props", m_configurations );
 		propsMaker._generate_props( _get_solution_version(), _get_studio_version() );
 	}
+	else
+	{
+		//Write a property page for each configuration
+		for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
+		{
+			MSVCConfiguration* cfg = m_configurations[icfg];
 
+			//RosBuild doesn't need a property page
+			if(cfg->optimization == RosBuild)
+				continue;
+
+			//Write the propery pages files
+			string filename_props(  cfg->name );
+
+			filename_props = filename_props + ".vsprops";
+			VSPropsMaker propsMaker( configuration, &ProjectNode, filename_props, cfg );
+			propsMaker._generate_props( _get_solution_version(), _get_studio_version() );
+		}
+	}
 	// Write out the project files
 	ProcessModules();
-
-	// Write the solution file
-	SlnMaker slnMaker( configuration, ProjectNode, m_configurations, filename_sln );
-	slnMaker._generate_sln ( _get_solution_version(), _get_studio_version() );
 
 	printf ( "Done.\n" );
 }
 
 void MSVCBackend::ProcessModules()
 {
+	string filename_sln ( ProjectNode.name );
+
+	filename_sln += "_auto.sln";
+
+	// Write the solution file
+	SlnMaker slnMaker( configuration, m_configurations, filename_sln, _get_solution_version(), _get_studio_version() );
+
 	for(std::map<std::string, Module*>::const_iterator p = ProjectNode.modules.begin(); p != ProjectNode.modules.end(); ++ p)
 	{
 		Module &module = *p->second;
@@ -156,17 +165,21 @@ void MSVCBackend::ProcessModules()
 		if (configuration.VSProjectVersion == "10.00")
 		{
 			string vcxproj_file = VcxprojFileName(module);
-			projMaker = new VCXProjMaker( configuration, m_configurations, vcxproj_file );
+			projMaker = new VCXProjMaker( configuration, m_configurations, vcxproj_file, module );
 		}
 		else
 		{
 			string vcproj_file = VcprojFileName(module);
-			projMaker = new VCProjMaker( configuration, m_configurations, vcproj_file );
+			projMaker = new VCProjMaker( configuration, m_configurations, vcproj_file, module );
 		}
 
 		projMaker->_generate_proj_file ( module );
+
+		slnMaker._add_project(*projMaker, module);
+
 		delete projMaker;
 	}
+
 }
 
 static bool FileExists(string &filename)
@@ -260,6 +273,25 @@ void MSVCBackend::OutputFolders()
 		m_devFile << m_folders[i];
 	}
 #endif
+}
+
+std::string
+MSVCBackend::UserFileName ( const Module& module, std::string vcproj_file ) const
+{
+	string computername;
+	string username;
+
+	if (getenv ( "USERNAME" ) != NULL)
+		username = getenv ( "USERNAME" );
+	if (getenv ( "COMPUTERNAME" ) != NULL)
+		computername = getenv ( "COMPUTERNAME" );
+	else if (getenv ( "HOSTNAME" ) != NULL)
+		computername = getenv ( "HOSTNAME" );
+
+	if ((computername != "") && (username != ""))
+		return vcproj_file + "." + computername + "." + username + ".user";
+	else
+		return "";
 }
 
 std::string
@@ -416,25 +448,10 @@ MSVCBackend::_clean_project_files ( void )
 		vector<string> out;
 		printf("Cleaning project %s %s %s\n", module.name.c_str (), module.output->relative_path.c_str (), NcbFileName ( module ).c_str () );
 
-		string basepath = module.output->relative_path;
-		remove ( NcbFileName ( module ).c_str () );
-		remove ( SlnFileName ( module ).c_str () );
-		remove ( SuoFileName ( module ).c_str () );
+		string vcproj_file_user = UserFileName(module, VcprojFileName ( module ));
+		if(vcproj_file_user != "")
+			remove ( vcproj_file_user.c_str () );
 
-		if ( configuration.VSProjectVersion == "10.00" )
-			remove ( VcxprojFileName ( module ).c_str () );
-		else
-			remove ( VcprojFileName ( module ).c_str () );
-
-		string username = getenv ( "USERNAME" );
-		string computername = getenv ( "COMPUTERNAME" );
-		string vcproj_file_user = "";
-#if 0
-		if ((computername != "") && (username != ""))
-			vcproj_file_user = VcprojFileName ( module ) + "." + computername + "." + username + ".user";
-
-		remove ( vcproj_file_user.c_str () );
-#endif
 		_get_object_files ( module, out );
 		_get_def_files ( module, out );
 		for ( size_t j = 0; j < out.size (); j++)

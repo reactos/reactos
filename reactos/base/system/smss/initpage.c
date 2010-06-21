@@ -225,34 +225,288 @@ Cleanup:
 }
 
 
+static NTSTATUS
+SmpGetFreeDiskSpace(IN PWSTR PageFileName,
+                    OUT PLARGE_INTEGER FreeDiskSpaceInMB)
+{
+    FILE_FS_SIZE_INFORMATION FileFsSize;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+    UNICODE_STRING NtPathU;
+    LARGE_INTEGER FreeBytes;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    WCHAR RootPath[5];
+    NTSTATUS Status;
+
+    /*
+     * copy the drive letter, the colon and the slash,
+     * tack a null on the end
+     */
+    RootPath[0] = PageFileName[0];
+    RootPath[1] = L':';
+    RootPath[2] = L'\\';
+    RootPath[3] = L'\0';
+
+    DPRINT("Root drive X:\\...\"%S\"\n",RootPath);
+
+    if (!RtlDosPathNameToNtPathName_U(RootPath,
+                                      &NtPathU,
+                                      NULL,
+                                      NULL))
+    {
+        DPRINT1("Invalid path to root of drive\n");
+        return STATUS_OBJECT_PATH_INVALID;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtPathU,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    /* Get a handle to the root to find the free space on the drive */
+    Status = NtCreateFile(&hFile,
+                          0,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          NULL,
+                          0,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                NtPathU.Buffer);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not open a handle to the volume.\n");
+        return Status;
+    }
+
+    Status = NtQueryVolumeInformationFile(hFile,
+                                          &IoStatusBlock,
+                                          &FileFsSize,
+                                          sizeof(FILE_FS_SIZE_INFORMATION),
+                                          FileFsSizeInformation);
+
+    NtClose(hFile);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Querying the volume free space failed!\n");
+        return Status;
+    }
+
+    FreeBytes.QuadPart = FileFsSize.BytesPerSector *
+                         FileFsSize.SectorsPerAllocationUnit *
+                         FileFsSize.AvailableAllocationUnits.QuadPart;
+
+    FreeDiskSpaceInMB->QuadPart = FreeBytes.QuadPart >> 20;
+
+    return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+SmpSetDefaultPageFileData(IN PWSTR PageFileName,
+                          IN PLARGE_INTEGER InitialSizeInMB,
+                          IN PLARGE_INTEGER MaximumSizeInMB)
+{
+    WCHAR ValueString[MAX_PATH * 2];
+    ULONG ValueLength;
+
+    /* Format the value string */
+    swprintf(ValueString,
+             L"%s %I64u %I64u",
+             PageFileName,
+             InitialSizeInMB->QuadPart,
+             MaximumSizeInMB->QuadPart);
+
+    /*
+     * Append another zero character because it is a multi string value
+     * (REG_MULTI_SZ) and calculate the total string length.
+     */
+    ValueLength = wcslen(ValueString) + 1;
+    ValueString[ValueLength] = 0;
+    ValueLength++;
+
+    /* Write the page file data */
+    return RtlWriteRegistryValue(RTL_REGISTRY_CONTROL,
+                                 L"\\Session Manager\\Memory Management",
+                                 L"PagingFiles",
+                                 REG_MULTI_SZ,
+                                 ValueString,
+                                 ValueLength * sizeof(WCHAR));
+}
+
+
+static NTSTATUS
+SmpCreatePageFile(IN PWSTR PageFileName,
+                  IN PLARGE_INTEGER InitialSizeInMB,
+                  IN PLARGE_INTEGER MaximumSizeInMB)
+{
+    LARGE_INTEGER InitialSize;
+    LARGE_INTEGER MaximumSize;
+    UNICODE_STRING FileName;
+    NTSTATUS Status;
+
+    /* Get the NT path name of the page file */
+    if (!RtlDosPathNameToNtPathName_U(PageFileName,
+                                      &FileName,
+                                      NULL,
+                                      NULL))
+    {
+        return STATUS_OBJECT_PATH_INVALID;
+    }
+
+    /* Convert sizes in megabytes to sizes in bytes */
+    InitialSize.QuadPart = InitialSizeInMB->QuadPart << 20;
+    MaximumSize.QuadPart = MaximumSizeInMB->QuadPart << 20;
+
+    /* Create the pageing file */
+    Status = NtCreatePagingFile(&FileName,
+                                &InitialSize,
+                                &MaximumSize,
+                                0);
+    if (! NT_SUCCESS(Status))
+    {
+        DPRINT("Creation of paging file %wZ with size %I64d MB failed (status 0x%x)\n",
+               &FileName, InitialSizeInMB->QuadPart, Status);
+    }
+
+    /* Release the file name */
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                FileName.Buffer);
+
+    return Status;
+}
+
+
+static NTSTATUS
+SmpCreateDefaultPagingFile(VOID)
+{
+    SYSTEM_BASIC_INFORMATION SysBasicInfo;
+    LARGE_INTEGER MemorySizeInMB;
+    LARGE_INTEGER FreeDiskSpaceInMB;
+    LARGE_INTEGER InitialSizeInMB;
+    LARGE_INTEGER MaximumSizeInMB;
+    NTSTATUS Status = STATUS_SUCCESS;
+    WCHAR PageFileName[MAX_PATH];
+
+    DPRINT("Creating a default paging file\n");
+
+    Status = NtQuerySystemInformation(SystemBasicInformation,
+                                      &SysBasicInfo,
+                                      sizeof(SysBasicInfo),
+                                      NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not query for physical memory size.\n");
+        return Status;
+    }
+
+    DPRINT("PageSize: %d, PhysicalPages: %d, TotalMem: %d\n",
+           SysBasicInfo.PageSize,
+           SysBasicInfo.NumberOfPhysicalPages,
+           (SysBasicInfo.NumberOfPhysicalPages * SysBasicInfo.PageSize) / 1024);
+
+    MemorySizeInMB.QuadPart = (SysBasicInfo.NumberOfPhysicalPages * SysBasicInfo.PageSize) >> 20;
+
+    DPRINT("MemorySize %I64u MB\n",
+           MemorySizeInMB.QuadPart);
+
+    /* Build the default page file name */
+    PageFileName[0] = SharedUserData->NtSystemRoot[0];
+    PageFileName[1] = 0;
+    wcscat(PageFileName, L":\\pagefile.sys");
+
+    Status = SmpGetFreeDiskSpace(PageFileName,
+                                 &FreeDiskSpaceInMB);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    DPRINT("FreeDiskSpace %I64u MB\n",
+           FreeDiskSpaceInMB.QuadPart);
+
+    InitialSizeInMB.QuadPart = MemorySizeInMB.QuadPart + (MemorySizeInMB.QuadPart / 2);
+    MaximumSizeInMB.QuadPart = InitialSizeInMB.QuadPart * 2;
+
+    if (InitialSizeInMB.QuadPart > (FreeDiskSpaceInMB.QuadPart / 4))
+    {
+        DPRINT("Inital Size took more then 25%% of free disk space\n");
+
+        /*
+         * Set by percentage of free space
+         * intial is 20%, and max is 25%
+         */
+        InitialSizeInMB.QuadPart = FreeDiskSpaceInMB.QuadPart / 5;
+        MaximumSizeInMB.QuadPart = FreeDiskSpaceInMB.QuadPart / 4;
+
+        /* The page file is more then a gig, size it down */
+        if (InitialSizeInMB.QuadPart > 1024)
+        {
+            InitialSizeInMB.QuadPart = 1024; /* 1GB */
+            MaximumSizeInMB.QuadPart = 1536; /* 1.5GB */
+        }
+    }
+
+    DPRINT("InitialSize %I64u MB   MaximumSize %I64u MB\n",
+           InitialSizeInMB.QuadPart,
+           MaximumSizeInMB.QuadPart);
+
+    Status = SmpSetDefaultPageFileData(PageFileName,
+                                       &InitialSizeInMB,
+                                       &MaximumSizeInMB);
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    return SmpCreatePageFile(PageFileName,
+                             &InitialSizeInMB,
+                             &MaximumSizeInMB);
+}
+
+
 NTSTATUS
 SmCreatePagingFiles(VOID)
 {
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
 
-  DPRINT("creating system paging files\n");
-  /*
-   * Disable paging file on MiniNT/Live CD.
-   */
-  if (RtlCheckRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT") == STATUS_SUCCESS)
+    DPRINT("creating system paging files\n");
+
+    /* Disable paging file on MiniNT/Live CD. */
+    if (RtlCheckRegistryKey(RTL_REGISTRY_CONTROL, L"MiniNT") == STATUS_SUCCESS)
     {
-      return STATUS_SUCCESS;
+        return STATUS_SUCCESS;
     }
 
-  RtlZeroMemory(&QueryTable,
-		sizeof(QueryTable));
+    RtlZeroMemory(&QueryTable,
+                  sizeof(QueryTable));
 
-  QueryTable[0].Name = L"PagingFiles";
-  QueryTable[0].QueryRoutine = SmpPagingFilesQueryRoutine;
+    QueryTable[0].Name = L"PagingFiles";
+    QueryTable[0].QueryRoutine = SmpPagingFilesQueryRoutine;
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
 
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-				  L"\\Session Manager\\Memory Management",
-				  QueryTable,
-				  NULL,
-				  NULL);
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"\\Session Manager\\Memory Management",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        Status = SmpCreateDefaultPagingFile();
+    }
 
-  return(Status);
+    return Status;
 }
 
 

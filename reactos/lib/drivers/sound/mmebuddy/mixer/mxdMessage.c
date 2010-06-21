@@ -20,7 +20,7 @@
 
 MMRESULT
 MmeGetLineInfo(
-    IN  DWORD Message,
+    IN  UINT Message,
     IN  DWORD_PTR PrivateHandle,
     IN  DWORD_PTR Parameter1,
     IN  DWORD_PTR Parameter2)
@@ -175,7 +175,7 @@ mxdMessage(
         {
             Result = MmeGetSoundDeviceCapabilities(MIXER_DEVICE_TYPE,
                                                    DeviceId,
-                                                   (PVOID)Parameter1,
+                                                   (PVOID) Parameter1,
                                                    Parameter2);
             break;
         }

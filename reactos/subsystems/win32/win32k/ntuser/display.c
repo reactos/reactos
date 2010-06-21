@@ -53,7 +53,7 @@ NtUserEnumDisplaySettings(
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    pSafeDevMode = ExAllocatePool(PagedPool, Size + ExtraSize);
+    pSafeDevMode = ExAllocatePoolWithTag(PagedPool, Size + ExtraSize, GDITAG_DEVMODE);
     if (pSafeDevMode == NULL)
     {
         return STATUS_NO_MEMORY;

@@ -1,5 +1,6 @@
 /*
  * Copyright 2006-2009 by Jonathan Ernst
+ * Copyright 2010      by Frédéric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -58,11 +59,11 @@ BEGIN
         MENUITEM SEPARATOR
         POPUP "&Avancé"
         BEGIN
-            MENUITEM "&Information sélection",      ID_EDIT_SELECTIONINFO
-            MENUITEM "&Format caractères",          ID_EDIT_CHARFORMAT
-            MENUITEM "&Déf. format car.",           ID_EDIT_DEFCHARFORMAT
-            MENUITEM "Format paragrap&he",          ID_EDIT_PARAFORMAT
-            MENUITEM "Texte &complet",              ID_EDIT_GETTEXT
+            MENUITEM "&Informations sur la sélection",   ID_EDIT_SELECTIONINFO
+            MENUITEM "&Format de caractères",            ID_EDIT_CHARFORMAT
+            MENUITEM "Format de caractères par &défaut", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "Format de &paragraphe",            ID_EDIT_PARAFORMAT
+            MENUITEM "Texte &complet",                   ID_EDIT_GETTEXT
         END
     END
     POPUP "&Affichage"
@@ -129,7 +130,7 @@ BEGIN
         MENUITEM "Fuchsia"     ID_COLOR_FUCHSIA
         MENUITEM "Eau"         ID_COLOR_AQUA
         MENUITEM "Blanc"       ID_COLOR_WHITE
-        MENUITEM "Automatic"   ID_COLOR_AUTOMATIC
+        MENUITEM "Automatique" ID_COLOR_AUTOMATIC
     END
 END
 
@@ -250,11 +251,10 @@ BEGIN
     STRING_PREVIEW_CLOSE,            "Fermer"
     STRING_PREVIEW_PAGE,             "Page"
     STRING_PREVIEW_PAGES,            "Pages"
-END
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    STRING_UNITS_CM,             "cm"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "po"
+    STRING_UNITS_INCH,               "pouces"
+    STRING_UNITS_PT,                 "pt"
 END
 
 STRINGTABLE DISCARDABLE

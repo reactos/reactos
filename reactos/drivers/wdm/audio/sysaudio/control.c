@@ -145,7 +145,7 @@ ComputeCompatibleFormat(
     ULONG Index;
 
     Length = sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM) + ClientFormat->DataFormat.FormatSize;
-    PinRequest = ExAllocatePool(NonPagedPool, Length);
+    PinRequest = AllocateItem(NonPagedPool, Length);
     if (!PinRequest)
         return STATUS_UNSUCCESSFUL;
 
@@ -166,7 +166,7 @@ ComputeCompatibleFormat(
 
     if (NT_SUCCESS(Status))
     {
-        ExFreePool(PinRequest);
+        FreeItem(PinRequest);
         return Status;
     }
 
@@ -181,10 +181,10 @@ ComputeCompatibleFormat(
         return Status;
     }
 
-    MultipleItem = ExAllocatePool(NonPagedPool, BytesReturned);
+    MultipleItem = AllocateItem(NonPagedPool, BytesReturned);
     if (!MultipleItem)
     {
-        ExFreePool(PinRequest);
+        FreeItem(PinRequest);
         return STATUS_NO_MEMORY;
     }
 
@@ -192,8 +192,8 @@ ComputeCompatibleFormat(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("Property Request KSPROPERTY_PIN_DATARANGES failed with %x\n", Status);
-        ExFreePool(MultipleItem);
-        ExFreePool(PinRequest);
+        FreeItem(MultipleItem);
+        FreeItem(PinRequest);
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -253,8 +253,8 @@ ComputeCompatibleFormat(
 
 #endif
 
-    ExFreePool(MultipleItem);
-    ExFreePool(PinRequest);
+    FreeItem(MultipleItem);
+    FreeItem(PinRequest);
 
     if (bFound)
         return STATUS_SUCCESS;

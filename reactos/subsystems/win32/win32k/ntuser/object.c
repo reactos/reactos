@@ -283,7 +283,6 @@ BOOL FASTCALL UserCreateHandleTable(VOID)
    PVOID mem;
 
    //FIXME: dont alloc all at once! must be mapped into umode also...
-   //mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
    mem = UserHeapAlloc(sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {

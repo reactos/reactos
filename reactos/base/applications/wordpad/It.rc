@@ -54,7 +54,7 @@ BEGIN
         MENUITEM "Trova s&uccessivo\tF3",              ID_FIND_NEXT
         MENUITEM "S&ostituisci...\tCtrl+H",         ID_REPLACE
         MENUITEM SEPARATOR
-        MENUITEM "Sola &Lettura",                  ID_EDIT_READONLY
+        MENUITEM "Solo &Lettura",                  ID_EDIT_READONLY
         MENUITEM "&Modificato",                   ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "E&xtra"
@@ -81,7 +81,7 @@ BEGIN
     END
     POPUP "F&ormato"
     BEGIN
-        MENUITEM "&Font...",                     ID_FONTSETTINGS
+        MENUITEM "&Carattere...",                     ID_FONTSETTINGS
         MENUITEM "&Elenco"                ID_BULLET
         MENUITEM "&Paragrafo..."                 ID_PARAFORMAT
         MENUITEM "&Tabulazioni..."                      ID_TABSTOPS
@@ -93,7 +93,7 @@ BEGIN
     END
     POPUP "&Aiuto"
     BEGIN
-        MENUITEM "&Su Wine Wordpad"       ID_ABOUT
+        MENUITEM "&Riguardo A Wine Wordpad"       ID_ABOUT
     END
 END
 
@@ -208,9 +208,9 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_ALL_FILES,              "Tutti i files (*.*)"
-    STRING_TEXT_FILES_TXT,         "Files di testo (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "Files di testo Unicode (*.txt)"
-    STRING_RICHTEXT_FILES_RTF,     "Rich text format (*.rtf)"
+    STRING_TEXT_FILES_TXT,         "File di testo (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "File di testo Unicode (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "Formato rich text (*.rtf)"
     STRING_NEWFILE_RICHTEXT,       "Documento Rich text"
     STRING_NEWFILE_TXT,            "Documento di testo"
     STRING_NEWFILE_TXT_UNICODE,    "Documento di testo Unicode"
@@ -241,9 +241,12 @@ BEGIN
     STRING_PREVIEW_ZOOMIN,           "Ingrandisci"
     STRING_PREVIEW_ZOOMOUT,          "Rimpicciolisci"
     STRING_PREVIEW_CLOSE,            "Chiudi"
-    STRING_PREVIEW_PAGE,             "Page"
-    STRING_PREVIEW_PAGES,            "Pages"
+    STRING_PREVIEW_PAGE,             "Pagina"
+    STRING_PREVIEW_PAGES,            "Pagine"
     STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "po"
+    STRING_UNITS_INCH,               "pollici"
+    STRING_UNITS_PT,                 "pt"
 END
 
 STRINGTABLE DISCARDABLE

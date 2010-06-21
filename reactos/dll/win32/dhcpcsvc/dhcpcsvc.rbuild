@@ -7,6 +7,10 @@
 	<library>iphlpapi</library>
 	<library>advapi32</library>
 	<library>oldnames</library>
+	
+	<!-- FIXME: workarounds until we have a proper oldnames library -->
+    <define name="tzset">_tzset</define>
+    
 	<directory name="dhcp">
 		<file>adapter.c</file>
 		<file>alloc.c</file>

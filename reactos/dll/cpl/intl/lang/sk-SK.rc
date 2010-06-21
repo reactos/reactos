@@ -1,6 +1,6 @@
 /* TRANSLATOR:  M·rio KaËm·r /Mario Kacmar/ aka Kario (kario@szm.sk)
  * DATE OF TR:  28-04-2008
- * LastChange:  21-06-2009
+ * LastChange:  31-05-2010
  */
 
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
@@ -194,8 +194,8 @@ STRINGTABLE
 BEGIN
     IDS_CUSTOMIZE_TITLE "PrispÙsobiù miestne nastavenia"
     IDS_SPAIN "Spanish (Spain)"
-    IDS_METRIC "Metric"
-    IDS_IMPERIAL "Imperial"
+    IDS_METRIC "Metrick˝"
+    IDS_IMPERIAL "Imperi·lny"
 END
 
 STRINGTABLE

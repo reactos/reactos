@@ -238,3 +238,93 @@ ProjMaker::_replace_str(std::string string1, const std::string &find_str, const 
 
 	return string1;
 }
+
+
+std::string
+ProjMaker::_get_file_path( FileLocation* file, std::string relative_path)
+{
+	if (file->directory == SourceDirectory)
+	{
+		// We want the full path here for directory support later on
+		return Path::RelativeFromDirectory (file->relative_path, relative_path );
+	}
+	else if(file->directory == IntermediateDirectory)
+	{
+		return std::string("$(RootIntDir)\\") + file->relative_path;
+	}
+	else if(file->directory == OutputDirectory)
+	{
+		return std::string("$(RootOutDir)\\") + file->relative_path;
+	}
+
+	return std::string("");
+}
+
+void 
+ProjMaker::_collect_files(const Module& module)
+{
+	size_t i;
+	const IfableData& data = module.non_if_data;
+	const vector<File*>& files = data.files;
+	for ( i = 0; i < files.size(); i++ )
+	{
+		string path = _get_file_path(&files[i]->file, module.output->relative_path);
+		string file = path + std::string("\\") + files[i]->file.name;
+
+		if (files[i]->file.directory != SourceDirectory)
+			generated_files.push_back ( file );
+		else if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+			resource_files.push_back ( file );
+		else if ( !stricmp ( Right(file,2).c_str(), ".h" ) )
+			header_files.push_back ( file );
+		else
+			source_files.push_back ( file );
+	}
+	const vector<Include*>& incs = data.includes;
+	for ( i = 0; i < incs.size(); i++ )
+	{
+		includes.push_back ( _get_file_path(incs[i]->directory, module.output->relative_path) );
+	}
+	const vector<Library*>& libs = data.libraries;
+	for ( i = 0; i < libs.size(); i++ )
+	{
+		string libpath = "$(RootOutDir)\\" + libs[i]->importedModule->output->relative_path + "\\" + _get_vc_dir() + "\\$(ConfigurationName)\\" + libs[i]->name + ".lib";
+		libraries.push_back ( libpath );
+	}
+	const vector<Define*>& defs = data.defines;
+	for ( i = 0; i < defs.size(); i++ )
+	{
+		if ( defs[i]->backend != "" && defs[i]->backend != "msvc" )
+			continue;
+
+		if( module.isUnicode && (defs[i]->name == "UNICODE" || defs[i]->name == "_UNICODE"))
+			continue;
+
+		if ( defs[i]->value != "" )
+			defines.push_back( defs[i]->name + "=" + defs[i]->value );
+		else
+			defines.push_back( defs[i]->name );
+	}
+	for ( std::map<std::string, Property*>::const_iterator p = data.properties.begin(); p != data.properties.end(); ++ p )
+	{
+		Property& prop = *p->second;
+		if ( strstr ( module.baseaddress.c_str(), prop.name.c_str() ) )
+			baseaddr = prop.value;
+	}
+
+	if(module.importLibrary)
+	{
+		std::string ImportLibraryPath = _get_file_path(module.importLibrary->source, module.output->relative_path);
+
+		switch (module.IsSpecDefinitionFile())
+		{
+		case PSpec:
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".spec"));
+		case Spec:
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".stubs.c"));
+			generated_files.push_back("$(IntDir)\\" + ReplaceExtension(module.importLibrary->source->name,".def"));
+		default:
+			source_files.push_back(ImportLibraryPath + std::string("\\") + module.importLibrary->source->name);
+		}
+	}
+}

@@ -21,9 +21,9 @@
 //    IN  PVOID  Context1  Context parameter to pass to VidPortInitialize
 //    IN  PVOID  Context2  Context parameter to pass to VidPortInitialize
 //  RETURNS:
-//    VP_STATUS
+//    ULONG
 
-VP_STATUS NTAPI
+ULONG NTAPI
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {

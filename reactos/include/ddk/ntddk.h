@@ -40,11 +40,8 @@
 #include <ntdef.h>
 #include <ntstatus.h>
 #include <mce.h>
-
-/* FIXME
 #include <bugcodes.h>
 #include <ntiologc.h>
-*/
 
 #include <stdarg.h> // FIXME
 #include <basetyps.h> // FIXME
@@ -96,7 +93,6 @@ typedef PIMAGE_NT_HEADERS32 PIMAGE_NT_HEADERS;
 /******************************************************************************
  *                            Executive Types                                 *
  ******************************************************************************/
-
 typedef struct _ZONE_SEGMENT_HEADER {
   SINGLE_LIST_ENTRY SegmentList;
   PVOID Reserved;
@@ -110,7 +106,6 @@ typedef struct _ZONE_HEADER {
 } ZONE_HEADER, *PZONE_HEADER;
 
 #define PROTECTED_POOL                    0x80000000
-
 
 /******************************************************************************
  *                         I/O Manager Types                                  *
@@ -214,8 +209,7 @@ typedef enum _CONFIGURATION_TYPE {
 #define IO_ATTACH_DEVICE                0x0400
 #define IO_IGNORE_SHARE_ACCESS_CHECK    0x0800
 
-typedef
-NTSTATUS
+typedef NTSTATUS
 (NTAPI *PIO_QUERY_DEVICE_ROUTINE)(
   IN PVOID Context,
   IN PUNICODE_STRING PathName,
@@ -343,38 +337,38 @@ typedef struct _ARBITER_CONFLICT_INFO {
 } ARBITER_CONFLICT_INFO, *PARBITER_CONFLICT_INFO;
 
 typedef struct _ARBITER_TEST_ALLOCATION_PARAMETERS {
-      IN OUT PLIST_ENTRY ArbitrationList;
-      IN ULONG AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_TEST_ALLOCATION_PARAMETERS, *PARBITER_TEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_RETEST_ALLOCATION_PARAMETERS {
-      IN OUT PLIST_ENTRY ArbitrationList;
-      IN ULONG AllocateFromCount;
-      IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
+  IN OUT PLIST_ENTRY ArbitrationList;
+  IN ULONG AllocateFromCount;
+  IN PCM_PARTIAL_RESOURCE_DESCRIPTOR AllocateFrom;
 } ARBITER_RETEST_ALLOCATION_PARAMETERS, *PARBITER_RETEST_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_BOOT_ALLOCATION_PARAMETERS {
-      IN OUT PLIST_ENTRY ArbitrationList;
+  IN OUT PLIST_ENTRY ArbitrationList;
 } ARBITER_BOOT_ALLOCATION_PARAMETERS, *PARBITER_BOOT_ALLOCATION_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS {
-      OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
+  OUT PCM_PARTIAL_RESOURCE_LIST *AllocatedResources;
 } ARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS, *PARBITER_QUERY_ALLOCATED_RESOURCES_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_CONFLICT_PARAMETERS {
-      IN PDEVICE_OBJECT PhysicalDeviceObject;
-      IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
-      OUT PULONG ConflictCount;
-      OUT PARBITER_CONFLICT_INFO *Conflicts;
+  IN PDEVICE_OBJECT PhysicalDeviceObject;
+  IN PIO_RESOURCE_DESCRIPTOR ConflictingResource;
+  OUT PULONG ConflictCount;
+  OUT PARBITER_CONFLICT_INFO *Conflicts;
 } ARBITER_QUERY_CONFLICT_PARAMETERS, *PARBITER_QUERY_CONFLICT_PARAMETERS;
 
 typedef struct _ARBITER_QUERY_ARBITRATE_PARAMETERS {
-      IN PLIST_ENTRY ArbitrationList;
+  IN PLIST_ENTRY ArbitrationList;
 } ARBITER_QUERY_ARBITRATE_PARAMETERS, *PARBITER_QUERY_ARBITRATE_PARAMETERS;
 
 typedef struct _ARBITER_ADD_RESERVED_PARAMETERS {
-      IN PDEVICE_OBJECT ReserveDevice;
+  IN PDEVICE_OBJECT ReserveDevice;
 } ARBITER_ADD_RESERVED_PARAMETERS, *PARBITER_ADD_RESERVED_PARAMETERS;
 
 typedef struct _ARBITER_PARAMETERS {
@@ -582,7 +576,7 @@ typedef struct PCI_AGP_EXTENDED_CAPABILITY {
 typedef struct _PCIX_BRIDGE_CAPABILITY {
   PCI_CAPABILITIES_HEADER Header;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       USHORT Bus64Bit:1;
       USHORT Bus133MHzCapable:1;
       USHORT SplitCompletionDiscarded:1;
@@ -598,7 +592,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT AsUSHORT;
   } SecondaryStatus;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG FunctionNumber:3;
       ULONG DeviceNumber:5;
       ULONG BusNumber:8;
@@ -620,7 +614,7 @@ typedef struct _PCIX_BRIDGE_CAPABILITY {
   USHORT DownstreamSplitTransactionCapacity;
   USHORT DownstreamSplitTransactionLimit;
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG SelectSecondaryRegisters:1;
       ULONG ErrorPresentInOtherBank:1;
       ULONG AdditionalCorrectableError:1;
@@ -659,7 +653,7 @@ typedef struct _PCI_SUBSYSTEM_IDS_CAPABILITY {
 
 typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExtendedConfigOpRegions:1;
       ULONG ActiveStatePowerManagement:1;
       ULONG ClockPowerManagement:1;
@@ -674,7 +668,7 @@ typedef struct _PCI_ROOT_BUS_OSC_SUPPORT_FIELD {
 
 typedef struct _PCI_ROOT_BUS_OSC_CONTROL_FIELD {
   union {
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG ExpressNativeHotPlug:1;
       ULONG ShpcNativeHotPlug:1;
       ULONG ExpressNativePME:1;
@@ -700,7 +694,7 @@ typedef enum {
 
 typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
   PCI_HARDWARE_INTERFACE SecondaryInterface;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     BOOLEAN BusCapabilitiesFound;
     ULONG CurrentSpeedAndMode;
     ULONG SupportedSpeedsAndModes;
@@ -713,7 +707,7 @@ typedef struct _PCI_ROOT_BUS_HARDWARE_CAPABILITY {
 } PCI_ROOT_BUS_HARDWARE_CAPABILITY, *PPCI_ROOT_BUS_HARDWARE_CAPABILITY;
 
 typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CapabilityVersion:4;
     USHORT DeviceType:4;
     USHORT SlotImplemented:1;
@@ -724,7 +718,7 @@ typedef union _PCI_EXPRESS_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_CAPABILITIES_REGISTER, *PPCI_EXPRESS_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaxPayloadSizeSupported:3;
     ULONG PhantomFunctionsSupported:2;
     ULONG ExtendedTagSupported:1;
@@ -743,7 +737,7 @@ typedef union _PCI_EXPRESS_DEVICE_CAPABILITIES_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_CONTROL_MASK 0x07;
 
 typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorEnable:1;
     USHORT NonFatalErrorEnable:1;
     USHORT FatalErrorEnable:1;
@@ -763,7 +757,7 @@ typedef union _PCI_EXPRESS_DEVICE_CONTROL_REGISTER {
 #define PCI_EXPRESS_AER_DEVICE_STATUS_MASK 0x0F;
 
 typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableErrorDetected:1;
     USHORT NonFatalErrorDetected:1;
     USHORT FatalErrorDetected:1;
@@ -776,7 +770,7 @@ typedef union _PCI_EXPRESS_DEVICE_STATUS_REGISTER {
 } PCI_EXPRESS_DEVICE_STATUS_REGISTER, *PPCI_EXPRESS_DEVICE_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG MaximumLinkSpeed:4;
     ULONG MaximumLinkWidth:6;
     ULONG ActiveStatePMSupport:2;
@@ -792,7 +786,7 @@ typedef union _PCI_EXPRESS_LINK_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_LINK_CAPABILITIES_REGISTER, *PPCI_EXPRESS_LINK_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT ActiveStatePMControl:2;
     USHORT Rsvd1:1;
     USHORT ReadCompletionBoundary:1;
@@ -807,7 +801,7 @@ typedef union _PCI_EXPRESS_LINK_CONTROL_REGISTER {
 } PCI_EXPRESS_LINK_CONTROL_REGISTER, *PPCI_EXPRESS_LINK_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT LinkSpeed:4;
     USHORT LinkWidth:6;
     USHORT Undefined:1;
@@ -820,7 +814,7 @@ typedef union _PCI_EXPRESS_LINK_STATUS_REGISTER {
 } PCI_EXPRESS_LINK_STATUS_REGISTER, *PPCI_EXPRESS_LINK_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG AttentionButtonPresent:1;
     ULONG PowerControllerPresent:1;
     ULONG MRLSensorPresent:1;
@@ -838,7 +832,7 @@ typedef union _PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_SLOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_SLOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonEnable:1;
     USHORT PowerFaultDetectEnable:1;
     USHORT MRLSensorEnable:1;
@@ -856,7 +850,7 @@ typedef union _PCI_EXPRESS_SLOT_CONTROL_REGISTER {
 } PCI_EXPRESS_SLOT_CONTROL_REGISTER, *PPCI_EXPRESS_SLOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT AttentionButtonPressed:1;
     USHORT PowerFaultDetected:1;
     USHORT MRLSensorChanged:1;
@@ -872,7 +866,7 @@ typedef union _PCI_EXPRESS_SLOT_STATUS_REGISTER {
 } PCI_EXPRESS_SLOT_STATUS_REGISTER, *PPCI_EXPRESS_SLOT_STATUS_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CorrectableSerrEnable:1;
     USHORT NonFatalSerrEnable:1;
     USHORT FatalSerrEnable:1;
@@ -884,7 +878,7 @@ typedef union _PCI_EXPRESS_ROOT_CONTROL_REGISTER {
 } PCI_EXPRESS_ROOT_CONTROL_REGISTER, *PPCI_EXPRESS_ROOT_CONTROL_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT CRSSoftwareVisibility:1;
     USHORT Rsvd:15;
   } DUMMYSTRUCTNAME;
@@ -892,7 +886,7 @@ typedef union _PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER {
 } PCI_EXPRESS_ROOT_CAPABILITIES_REGISTER, *PPCI_EXPRESS_ROOT_CAPABILITIES_REGISTER;
 
 typedef union _PCI_EXPRESS_ROOT_STATUS_REGISTER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG PMERequestorId:16;
     ULONG PMEStatus:1;
     ULONG PMEPending:1;
@@ -995,7 +989,7 @@ typedef enum {
 } PCI_EXPRESS_MAX_PAYLOAD_SIZE;
 
 typedef union _PCI_EXPRESS_PME_REQUESTOR_ID {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     USHORT FunctionNumber:3;
     USHORT DeviceNumber:5;
     USHORT BusNumber:8;
@@ -1122,8 +1116,8 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX     0x00004000
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX    0x00008000
 #define FILE_CHARACTERISTICS_REMOVAL_POLICY_MASK_EX \
-    (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
-     FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
+  (FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_EX | \
+   FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_EX)
 
 #define FILE_CHARACTERISTICS_EXPECT_ORDERLY_REMOVAL_DEPRECATED 0x00000200
 #define FILE_CHARACTERISTICS_EXPECT_SURPRISE_REMOVAL_DEPRECATED 0x00000300
@@ -1141,11 +1135,11 @@ typedef struct _PCI_BUS_INTERFACE_STANDARD {
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-#define FILE_CHARACTERISTICS_PROPAGATED (   FILE_REMOVABLE_MEDIA   | \
-                                            FILE_READ_ONLY_DEVICE  | \
-                                            FILE_FLOPPY_DISKETTE   | \
-                                            FILE_WRITE_ONCE_MEDIA  | \
-                                            FILE_DEVICE_SECURE_OPEN  )
+#define FILE_CHARACTERISTICS_PROPAGATED (FILE_REMOVABLE_MEDIA  | \
+                                         FILE_READ_ONLY_DEVICE | \
+                                         FILE_FLOPPY_DISKETTE  | \
+                                         FILE_WRITE_ONCE_MEDIA | \
+                                         FILE_DEVICE_SECURE_OPEN)
 
 typedef struct _FILE_ALIGNMENT_INFORMATION {
   ULONG AlignmentRequirement;
@@ -1232,6 +1226,128 @@ typedef enum _BUS_DATA_TYPE {
   SgiInternalConfiguration,
   MaximumBusDataType
 } BUS_DATA_TYPE, *PBUS_DATA_TYPE;
+
+/* Some Server 2003 DDK definitions */
+#define PCI_INT_ROUTE_INTRF_STANDARD_VER 1
+
+typedef NTSTATUS
+(NTAPI *PLEGACY_DEVICE_DETECTION_HANDLER)(
+  IN PVOID Context,
+  IN INTERFACE_TYPE LegacyBusType,
+  IN ULONG BusNumber,
+  IN ULONG SlotNumber,
+  OUT PDEVICE_OBJECT *PhysicalDeviceObject);
+
+typedef struct _ROUTING_TOKEN {
+  PVOID LinkNode;
+  ULONG StaticVector;
+  UCHAR Flags;
+} ROUTING_TOKEN, *PROUTING_TOKEN;
+
+typedef NTSTATUS
+(NTAPI *PGET_INTERRUPT_ROUTING)(
+  IN PDEVICE_OBJECT Pdo,
+  OUT ULONG *Bus,
+  OUT ULONG *PciSlot,
+  OUT UCHAR *InterruptLine,
+  OUT UCHAR *InterruptPin,
+  OUT UCHAR *ClassCode,
+  OUT UCHAR *SubClassCode,
+  OUT PDEVICE_OBJECT *ParentPdo,
+  OUT ROUTING_TOKEN *RoutingToken,
+  OUT UCHAR *Flags);
+
+typedef NTSTATUS
+(NTAPI *PSET_INTERRUPT_ROUTING_TOKEN)(
+  IN PDEVICE_OBJECT Pdo,
+  IN PROUTING_TOKEN RoutingToken);
+
+typedef VOID
+(NTAPI *PUPDATE_INTERRUPT_LINE)(
+  IN PDEVICE_OBJECT Pdo,
+  IN UCHAR LineRegister);
+
+typedef struct _INT_ROUTE_INTERFACE_STANDARD {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PGET_INTERRUPT_ROUTING GetInterruptRouting;
+  PSET_INTERRUPT_ROUTING_TOKEN SetInterruptRoutingToken;
+  PUPDATE_INTERRUPT_LINE UpdateInterruptLine;
+} INT_ROUTE_INTERFACE_STANDARD, *PINT_ROUTE_INTERFACE_STANDARD;
+
+typedef struct _LEGACY_DEVICE_DETECTION_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PLEGACY_DEVICE_DETECTION_HANDLER LegacyDeviceDetection;
+} LEGACY_DEVICE_DETECTION_INTERFACE, *PLEGACY_DEVICE_DETECTION_INTERFACE;
+
+/* FIXME : These definitions don't exist in public headers */
+
+#define PCI_CB_INTRF_VERSION             1
+#define PCI_PME_INTRF_STANDARD_VER       1
+#define PNP_LOCATION_INTERFACE_VERSION   1
+
+DEFINE_GUID(GUID_PCI_CARDBUS_INTERFACE_PRIVATE, 0xcca82f31, 0x54d6, 0x11d1, 0x82, 0x24, 0x00, 0xa0, 0xc9, 0x32, 0x43, 0x85);
+DEFINE_GUID(GUID_PCI_PME_INTERFACE, 0xaac7e6ac, 0xbb0b, 0x11d2, 0xb4, 0x84, 0x00, 0xc0, 0x4f, 0x72, 0xde, 0x8b);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSADD)(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN OUT PVOID *DeviceContext);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSDELETE)(
+  IN PVOID DeviceContext);
+
+typedef NTSTATUS
+(NTAPI *PCARDBUSPCIDISPATCH)(
+  IN PVOID DeviceContext,
+  IN PIRP Irp);
+
+typedef VOID
+(NTAPI *PPME_SET_PME_ENABLE)(
+  IN PDEVICE_OBJECT Pdo,
+  IN BOOLEAN PmeEnable);
+
+typedef VOID
+(NTAPI *PPME_CLEAR_PME_STATUS)(
+  IN PDEVICE_OBJECT Pdo);
+
+typedef VOID
+(NTAPI *PPME_GET_INFORMATION)(
+  IN PDEVICE_OBJECT Pdo,
+  OUT PBOOLEAN PmeCapable,
+  OUT PBOOLEAN PmeStatus,
+  OUT PBOOLEAN PmeEnable);
+
+typedef struct _PCI_CARDBUS_INTERFACE_PRIVATE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PDRIVER_OBJECT DriverObject;
+  PCARDBUSADD AddCardBus;
+  PCARDBUSDELETE DeleteCardBus;
+  PCARDBUSPCIDISPATCH DispatchPnp;
+} PCI_CARDBUS_INTERFACE_PRIVATE, *PPCI_CARDBUS_INTERFACE_PRIVATE;
+
+typedef struct _PCI_PME_INTERFACE {
+  USHORT Size;
+  USHORT Version;
+  PVOID Context;
+  PINTERFACE_REFERENCE InterfaceReference;
+  PINTERFACE_DEREFERENCE InterfaceDereference;
+  PPME_GET_INFORMATION GetPmeInformation;
+  PPME_CLEAR_PME_STATUS ClearPmeStatus;
+  PPME_SET_PME_ENABLE UpdateEnable;
+} PCI_PME_INTERFACE, *PPCI_PME_INTERFACE;
 
 /* Hardware Abstraction Layer Types */
 
@@ -1446,7 +1562,7 @@ typedef PVOID
   IN ULONG Signature,
   IN PCSTR OemId OPTIONAL,
   IN PCSTR OemTableId OPTIONAL);
-  
+
 #if defined(_IA64_)
 typedef NTSTATUS
 (*pHalGetErrorCapList)(
@@ -1880,9 +1996,9 @@ typedef struct _KUSER_SHARED_DATA {
   ULONG NumberOfPhysicalPages;
   BOOLEAN SafeBootMode;
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-  union {
+  _ANONYMOUS_UNION union {
     UCHAR TscQpcData;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       UCHAR TscQpcEnabled:1;
       UCHAR TscQpcSpareFlag:1;
       UCHAR TscQpcShift:6;
@@ -1891,9 +2007,9 @@ typedef struct _KUSER_SHARED_DATA {
   UCHAR TscQpcPad[2];
 #endif
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-  union {
+  _ANONYMOUS_UNION union {
     ULONG SharedDataFlags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG DbgErrorPortPresent:1;
       ULONG DbgElevationEnabled:1;
       ULONG DbgVirtEnabled:1;
@@ -2103,7 +2219,7 @@ typedef struct _QUOTA_LIMITS {
 
 typedef union _RATE_QUOTA_LIMIT {
   ULONG RateData;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONG RatePercent:7;
     ULONG Reserved0:25;
   } DUMMYSTRUCTNAME;
@@ -2209,13 +2325,13 @@ typedef VOID
 
 typedef struct _PS_CREATE_NOTIFY_INFO {
   IN SIZE_T Size;
-  union {
+  _ANONYMOUS_UNION union {
     IN ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       IN ULONG FileOpenNameAvailable:1;
       IN ULONG Reserved:31;
-    };
-  };
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
   IN HANDLE ParentProcessId;
   IN CLIENT_ID CreatingThreadId;
   IN OUT struct _FILE_OBJECT *FileObject;
@@ -2292,10 +2408,10 @@ typedef struct _NT_TIB32 {
   ULONG StackBase;
   ULONG StackLimit;
   ULONG SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG ArbitraryUserPointer;
   ULONG Self;
 } NT_TIB32,*PNT_TIB32;
@@ -2305,10 +2421,10 @@ typedef struct _NT_TIB64 {
   ULONG64 StackBase;
   ULONG64 StackLimit;
   ULONG64 SubSystemTib;
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     ULONG64 FiberData;
     ULONG Version;
-  };
+  } DUMMYUNIONNAME;
   ULONG64 ArbitraryUserPointer;
   ULONG64 Self;
 } NT_TIB64,*PNT_TIB64;
@@ -2427,9 +2543,9 @@ typedef struct _PROCESS_BASIC_INFORMATION {
 typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
   SIZE_T Size;
   PROCESS_BASIC_INFORMATION BasicInfo;
-  union {
+  _ANONYMOUS_UNION union {
     ULONG Flags;
-    struct {
+    _ANONYMOUS_STRUCT struct {
       ULONG IsProtectedProcess:1;
       ULONG IsWow64Process:1;
       ULONG IsProcessDeleting:1;
@@ -2440,7 +2556,7 @@ typedef struct _PROCESS_EXTENDED_BASIC_INFORMATION {
 } PROCESS_EXTENDED_BASIC_INFORMATION, *PPROCESS_EXTENDED_BASIC_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION {
-  __GNU_EXTENSION union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;
@@ -2448,11 +2564,11 @@ typedef struct _PROCESS_DEVICEMAP_INFORMATION {
       ULONG DriveMap;
       UCHAR DriveType[32];
     } Query;
-  };
+  } DUMMYUNIONNAME;
 } PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
 
 typedef struct _PROCESS_DEVICEMAP_INFORMATION_EX {
-  union {
+  _ANONYMOUS_UNION union {
     struct {
       HANDLE DirectoryHandle;
     } Set;
@@ -2496,7 +2612,6 @@ extern NTKERNELAPI PEPROCESS PsInitialSystemProcess;
 /******************************************************************************
  *                           Runtime Library Types                            *
  ******************************************************************************/
-
 
 
 #ifndef _RTL_RUN_ONCE_DEF
@@ -2864,8 +2979,6 @@ typedef enum _WELL_KNOWN_SID_TYPE {
   WinThisOrganizationCertificateSid = 82,
 } WELL_KNOWN_SID_TYPE;
 
-
-
 #if defined(_M_IX86)
 
 #define PAUSE_PROCESSOR YieldProcessor();
@@ -2887,7 +3000,7 @@ typedef enum _WELL_KNOWN_SID_TYPE {
 #define CONTEXT_DEBUG_REGISTERS    (CONTEXT_i386|0x00000010L)
 #define CONTEXT_EXTENDED_REGISTERS (CONTEXT_i386|0x00000020L)
 
-#define CONTEXT_FULL  (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
+#define CONTEXT_FULL (CONTEXT_CONTROL|CONTEXT_INTEGER|CONTEXT_SEGMENTS)
 #define CONTEXT_ALL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS |  \
                      CONTEXT_FLOATING_POINT | CONTEXT_DEBUG_REGISTERS |      \
                      CONTEXT_EXTENDED_REGISTERS)
@@ -2996,15 +3109,15 @@ extern NTKERNELAPI PVOID MmHighestUserAddress;
 extern NTKERNELAPI PVOID MmSystemRangeStart;
 extern NTKERNELAPI ULONG MmUserProbeAddress;
 
-#define MM_HIGHEST_USER_ADDRESS           MmHighestUserAddress
-#define MM_SYSTEM_RANGE_START             MmSystemRangeStart
+#define MM_HIGHEST_USER_ADDRESS MmHighestUserAddress
+#define MM_SYSTEM_RANGE_START MmSystemRangeStart
 #if defined(_LOCAL_COPY_USER_PROBE_ADDRESS_)
 #define MM_USER_PROBE_ADDRESS _LOCAL_COPY_USER_PROBE_ADDRESS_
 extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
 #else
-#define MM_USER_PROBE_ADDRESS             MmUserProbeAddress
+#define MM_USER_PROBE_ADDRESS MmUserProbeAddress
 #endif
-#define MM_LOWEST_USER_ADDRESS   (PVOID)0x10000
+#define MM_LOWEST_USER_ADDRESS (PVOID)0x10000
 #define MM_KSEG0_BASE       MM_SYSTEM_RANGE_START
 #define MM_SYSTEM_SPACE_END 0xFFFFFFFF
 #if !defined (_X86PAE_)
@@ -3053,74 +3166,74 @@ extern ULONG _LOCAL_COPY_USER_PROBE_ADDRESS_;
 #define INITIAL_FPCSR                  0x027f
 
 typedef struct DECLSPEC_ALIGN(16) _CONTEXT {
-    ULONG64 P1Home;
-    ULONG64 P2Home;
-    ULONG64 P3Home;
-    ULONG64 P4Home;
-    ULONG64 P5Home;
-    ULONG64 P6Home;
-    ULONG ContextFlags;
-    ULONG MxCsr;
-    USHORT SegCs;
-    USHORT SegDs;
-    USHORT SegEs;
-    USHORT SegFs;
-    USHORT SegGs;
-    USHORT SegSs;
-    ULONG EFlags;
-    ULONG64 Dr0;
-    ULONG64 Dr1;
-    ULONG64 Dr2;
-    ULONG64 Dr3;
-    ULONG64 Dr6;
-    ULONG64 Dr7;
-    ULONG64 Rax;
-    ULONG64 Rcx;
-    ULONG64 Rdx;
-    ULONG64 Rbx;
-    ULONG64 Rsp;
-    ULONG64 Rbp;
-    ULONG64 Rsi;
-    ULONG64 Rdi;
-    ULONG64 R8;
-    ULONG64 R9;
-    ULONG64 R10;
-    ULONG64 R11;
-    ULONG64 R12;
-    ULONG64 R13;
-    ULONG64 R14;
-    ULONG64 R15;
-    ULONG64 Rip;
-   union {
-       XMM_SAVE_AREA32 FltSave;
-       struct {
-           M128A Header[2];
-           M128A Legacy[8];
-           M128A Xmm0;
-           M128A Xmm1;
-           M128A Xmm2;
-           M128A Xmm3;
-           M128A Xmm4;
-           M128A Xmm5;
-           M128A Xmm6;
-           M128A Xmm7;
-           M128A Xmm8;
-           M128A Xmm9;
-           M128A Xmm10;
-           M128A Xmm11;
-           M128A Xmm12;
-           M128A Xmm13;
-           M128A Xmm14;
-           M128A Xmm15;
-      } DUMMYSTRUCTNAME;
-    } DUMMYUNIONNAME;
-    M128A VectorRegister[26];
-    ULONG64 VectorControl;
-    ULONG64 DebugControl;
-    ULONG64 LastBranchToRip;
-    ULONG64 LastBranchFromRip;
-    ULONG64 LastExceptionToRip;
-    ULONG64 LastExceptionFromRip;
+  ULONG64 P1Home;
+  ULONG64 P2Home;
+  ULONG64 P3Home;
+  ULONG64 P4Home;
+  ULONG64 P5Home;
+  ULONG64 P6Home;
+  ULONG ContextFlags;
+  ULONG MxCsr;
+  USHORT SegCs;
+  USHORT SegDs;
+  USHORT SegEs;
+  USHORT SegFs;
+  USHORT SegGs;
+  USHORT SegSs;
+  ULONG EFlags;
+  ULONG64 Dr0;
+  ULONG64 Dr1;
+  ULONG64 Dr2;
+  ULONG64 Dr3;
+  ULONG64 Dr6;
+  ULONG64 Dr7;
+  ULONG64 Rax;
+  ULONG64 Rcx;
+  ULONG64 Rdx;
+  ULONG64 Rbx;
+  ULONG64 Rsp;
+  ULONG64 Rbp;
+  ULONG64 Rsi;
+  ULONG64 Rdi;
+  ULONG64 R8;
+  ULONG64 R9;
+  ULONG64 R10;
+  ULONG64 R11;
+  ULONG64 R12;
+  ULONG64 R13;
+  ULONG64 R14;
+  ULONG64 R15;
+  ULONG64 Rip;
+  union {
+    XMM_SAVE_AREA32 FltSave;
+    struct {
+      M128A Header[2];
+      M128A Legacy[8];
+      M128A Xmm0;
+      M128A Xmm1;
+      M128A Xmm2;
+      M128A Xmm3;
+      M128A Xmm4;
+      M128A Xmm5;
+      M128A Xmm6;
+      M128A Xmm7;
+      M128A Xmm8;
+      M128A Xmm9;
+      M128A Xmm10;
+      M128A Xmm11;
+      M128A Xmm12;
+      M128A Xmm13;
+      M128A Xmm14;
+      M128A Xmm15;
+    } DUMMYSTRUCTNAME;
+  } DUMMYUNIONNAME;
+  M128A VectorRegister[26];
+  ULONG64 VectorControl;
+  ULONG64 DebugControl;
+  ULONG64 LastBranchToRip;
+  ULONG64 LastBranchFromRip;
+  ULONG64 LastExceptionToRip;
+  ULONG64 LastExceptionFromRip;
 } CONTEXT;
 
 #define PCR_MINOR_VERSION 1
@@ -3226,6 +3339,7 @@ extern NTKERNELAPI ULONG64 MmUserProbeAddress;
 /******************************************************************************
  *                          Executive Functions                               *
  ******************************************************************************/
+
 static __inline PVOID
 ExAllocateFromZone(
   IN PZONE_HEADER Zone)
@@ -3237,8 +3351,8 @@ ExAllocateFromZone(
 
 static __inline PVOID
 ExFreeToZone(
-  IN PZONE_HEADER  Zone,
-  IN PVOID  Block)
+  IN PZONE_HEADER Zone,
+  IN PVOID Block)
 {
   ((PSINGLE_LIST_ENTRY) Block)->Next = Zone->FreeList.Next;
   Zone->FreeList.Next = ((PSINGLE_LIST_ENTRY) Block);
@@ -3291,13 +3405,19 @@ ExFreeToZone(
 #define ExIsResourceAcquired ExIsResourceAcquiredSharedLite
 #define ExReleaseResourceForThread ExReleaseResourceForThreadLite
 
-#ifdef _X86_
+#ifndef _M_IX86
+#define RESULT_ZERO     0
+#define RESULT_NEGATIVE 1
+#define RESULT_POSITIVE 2
+#endif
 
 typedef enum _INTERLOCKED_RESULT {
   ResultNegative = RESULT_NEGATIVE,
   ResultZero = RESULT_ZERO,
   ResultPositive = RESULT_POSITIVE
 } INTERLOCKED_RESULT;
+
+#ifdef _X86_
 
 NTKERNELAPI
 INTERLOCKED_RESULT
@@ -3317,8 +3437,8 @@ FASTCALL
 Exfi386InterlockedExchangeUlong(
   IN PULONG  Target,
   IN ULONG  Value);
-#endif
 
+#endif
 
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
@@ -3365,7 +3485,6 @@ DECLSPEC_NORETURN
 VOID
 NTAPI
 ExRaiseDatatypeMisalignment(VOID);
-
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
@@ -3642,10 +3761,10 @@ HalBugCheckSystem(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-
 /******************************************************************************
  *                         I/O Manager Functions                              *
  ******************************************************************************/
+
 /*
  * VOID IoAssignArcName(
  *   IN PUNICODE_STRING  ArcName,
@@ -3671,9 +3790,8 @@ IoInitializeDriverCreateContext(
   DriverContext->Size = sizeof(IO_DRIVER_CREATE_CONTEXT);
 }
 
-
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 #if !(defined(USE_DMA_MACROS) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_))
 NTKERNELAPI
 NTSTATUS
@@ -3872,6 +3990,7 @@ NTAPI
 IoSetThreadHardErrorMode(
   IN BOOLEAN EnableHardErrors);
 
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN2KSP3)
@@ -3892,6 +4011,7 @@ IoSetFileOrigin(
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2KSP3) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTKERNELAPI
 NTSTATUS
 FASTCALL
@@ -4005,8 +4125,8 @@ IoAttachDeviceToDeviceStackSafe(
   IN PDEVICE_OBJECT TargetDevice,
   OUT PDEVICE_OBJECT *AttachedToDeviceObject);
 
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
+#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 NTKERNELAPI
@@ -4016,8 +4136,8 @@ IoGetPagingIoPriority(
   IN PIRP Irp);
 
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
+
 BOOLEAN
 NTAPI
 IoTranslateBusAddress(
@@ -4026,7 +4146,7 @@ IoTranslateBusAddress(
   IN PHYSICAL_ADDRESS BusAddress,
   IN OUT PULONG AddressSpace,
   OUT PPHYSICAL_ADDRESS TranslatedAddress);
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTKERNELAPI
@@ -4084,19 +4204,16 @@ NTAPI
 IoIsFileObjectIgnoringSharing(
   IN PFILE_OBJECT FileObject);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
-
 #if (NTDDI_VERSION >= NTDDI_WIN7)
+
 NTSTATUS
 NTAPI
 IoSetFileObjectIgnoreSharing(
   IN PFILE_OBJECT FileObject);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 
 /******************************************************************************
  *                          Kernel Debugger Functions                         *
@@ -4112,13 +4229,13 @@ DbgPrompt(
 /******************************************************************************
  *                              Kernel Functions                              *
  ******************************************************************************/
+
 NTKERNELAPI
 VOID
 FASTCALL
 KeInvalidateRangeAllCaches(
   IN PVOID BaseAddress,
   IN ULONG Length);
-
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -4160,8 +4277,6 @@ VOID
 NTAPI
 KeBugCheck(
   IN ULONG BugCheckCode);
-
-
 #if defined(SINGLE_GROUP_LEGACY_API)
 
 
@@ -4176,21 +4291,19 @@ NTKERNELAPI
 KAFFINITY
 NTAPI
 KeQueryActiveProcessors(VOID);
-
 #endif /* defined(SINGLE_GROUP_LEGACY_API) */
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
 KeAreApcsDisabled(VOID);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
-
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
 
@@ -4199,9 +4312,7 @@ NTKERNELAPI
 BOOLEAN
 NTAPI
 KeInvalidateAllCaches(VOID);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03) */
-
 #if (NTDDI_VERSION >= NTDDI_WS03SP1)
 
 NTKERNELAPI
@@ -4221,14 +4332,11 @@ NTKERNELAPI
 VOID
 NTAPI
 KeLeaveGuardedRegion(VOID);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WS03SP1) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
-
-
 #if defined(SINGLE_GROUP_LEGACY_API)
+
 NTKERNELAPI
 ULONG
 NTAPI
@@ -4239,11 +4347,9 @@ NTKERNELAPI
 ULONG
 NTAPI
 KeQueryMaximumProcessorCount(VOID);
-
 #endif /* SINGLE_GROUP_LEGACY_API */
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
-
 
 #if (NTDDI_VERSION >= NTDDI_WIN7)
 
@@ -4328,16 +4434,14 @@ KeQueryHardwareCounterConfiguration(
   OUT PHARDWARE_COUNTER CounterArray,
   IN ULONG MaximumCount,
   OUT PULONG Count);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
-
 
 /******************************************************************************
  *                       Memory manager Functions                             *
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTKERNELAPI
 PPHYSICAL_MEMORY_RANGE
 NTAPI
@@ -4512,78 +4616,17 @@ MmFreeContiguousMemorySpecifyCache(
   IN SIZE_T NumberOfBytes,
   IN MEMORY_CACHING_TYPE CacheType);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
-#if (NTDDI_VERSION >= NTDDI_WINXP)
 
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmAdvanceMdl(
-  IN OUT PMDL Mdl,
-  IN ULONG NumberOfBytes);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmAllocateMappingAddress(
-  IN SIZE_T NumberOfBytes,
-  IN ULONG PoolTag);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmFreeMappingAddress(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmIsVerifierEnabled(
-  OUT PULONG VerifierFlags);
-
-NTKERNELAPI
-PVOID
-NTAPI
-MmMapLockedPagesWithReservedMapping(
-  IN PVOID MappingAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList,
-  IN MEMORY_CACHING_TYPE CacheType);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmProtectMdlSystemAddress(
-  IN PMDL MemoryDescriptorList,
-  IN ULONG NewProtect);
-
-NTKERNELAPI
-VOID
-NTAPI
-MmUnmapReservedMapping(
-  IN PVOID BaseAddress,
-  IN ULONG PoolTag,
-  IN PMDL MemoryDescriptorList);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-MmAddVerifierThunks(
-  IN PVOID ThunkBuffer,
-  IN ULONG ThunkBufferSize);
-
-#endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
+
 NTKERNELAPI
 NTSTATUS
 NTAPI
 MmCreateMirror(VOID);
-#endif
-
+#endif /* (NTDDI_VERSION >= NTDDI_WS03) */
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 NTSTATUS
@@ -4595,8 +4638,7 @@ MmRotatePhysicalView(
   IN MM_ROTATE_DIRECTION Direction,
   IN PMM_ROTATE_COPY_CALLBACK_FUNCTION CopyFunction,
   IN PVOID Context OPTIONAL);
-
-#endif
+#endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
 
 /******************************************************************************
  *                          Process Manager Functions                         *
@@ -4661,9 +4703,7 @@ PsGetVersion(
   OUT PULONG MinorVersion OPTIONAL,
   OUT PULONG BuildNumber OPTIONAL,
   OUT PUNICODE_STRING CSDVersion OPTIONAL);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 
 NTKERNELAPI
@@ -4695,7 +4735,6 @@ LONGLONG
 NTAPI
 PsGetProcessCreateTimeQuadPart(
   IN PEPROCESS Process);
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
@@ -4733,8 +4772,8 @@ PsSetCreateProcessNotifyRoutineEx(
  *                         Runtime Library Functions                          *
  ******************************************************************************/
 
-#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 
 #ifndef RTL_USE_AVL_TABLES
@@ -4969,11 +5008,11 @@ RtlWalkFrameChain(
   IN ULONG Flags);
 
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 
 #if (NTDDI_VERSION >= NTDDI_WINXP)
+
 
 
 NTSYSAPI
@@ -5083,8 +5122,8 @@ RtlIsGenericTableEmptyAvl(
   IN PRTL_AVL_TABLE Table);
 
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WINXP) */
+
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
@@ -5129,7 +5168,6 @@ RtlGetProductInfo(
   IN ULONG SpMajorVersion,
   IN ULONG SpMinorVersion,
   OUT PULONG ReturnedProductType);
-
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
@@ -5236,7 +5274,6 @@ BOOLEAN
 NTAPI
 RtlContractHashTable(
   IN PRTL_DYNAMIC_HASH_TABLE HashTable);
-
 
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
@@ -5477,6 +5514,7 @@ RtlActiveEnumeratorsHashTable(
  ******************************************************************************/
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
+
 NTKERNELAPI
 BOOLEAN
 NTAPI
@@ -5484,13 +5522,12 @@ SeSinglePrivilegeCheck(
   IN LUID PrivilegeValue,
   IN KPROCESSOR_MODE PreviousMode);
 
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
 
 /******************************************************************************
  *                            ZwXxx Functions                                 *
  ******************************************************************************/
-
 
 
 NTSYSAPI
@@ -5515,9 +5552,7 @@ ZwOpenProcess(
   IN POBJECT_ATTRIBUTES ObjectAttributes,
   IN PCLIENT_ID ClientId OPTIONAL);
 
-
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
-
 
 NTSTATUS
 NTAPI
@@ -5601,8 +5636,6 @@ ZwDeviceIoControlFile(
   OUT PVOID OutputBuffer OPTIONAL,
   IN ULONG OutputBufferLength);
 
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
 
 
@@ -5615,17 +5648,15 @@ ZwSetTimerEx(
   IN TIMER_SET_INFORMATION_CLASS TimerSetInformationClass,
   IN OUT PVOID TimerSetInformation,
   IN ULONG TimerSetInformationLength);
-
-
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 
 
 /* UNSORTED */
 
-#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType)  \
-        ((ConditionMask) = VerSetConditionMask((ConditionMask), \
-        (TypeBitMask), (ComparisonType)))
+#define VER_SET_CONDITION(ConditionMask, TypeBitMask, ComparisonType) \
+  ((ConditionMask) = VerSetConditionMask((ConditionMask),             \
+  (TypeBitMask), (ComparisonType)))
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 NTSYSAPI
@@ -5696,28 +5727,28 @@ typedef struct _DRIVER_VERIFIER_THUNK_PAIRS {
 
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V  0x3
 #define SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED    \
-    (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_INSTALLER_DETECT_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SPARE_V                     0x4
 #define SHARED_GLOBAL_FLAGS_SPARE                       \
-    (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SPARE_V)
 
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V      0x5
 #define SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_DYNAMIC_PROC_ENABLED_V)
 
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V    0x6
 #define SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED        \
-    (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
+  (1UL << SHARED_GLOBAL_FLAGS_SEH_VALIDATION_ENABLED_V)
 
 #define EX_INIT_BITS(Flags, Bit) \
-    *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
+  *((Flags)) |= (Bit)             // Safe to use before concurrently accessible
 
 #define EX_TEST_SET_BIT(Flags, Bit) \
-    InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndSet ((PLONG)(Flags), (Bit))
 
 #define EX_TEST_CLEAR_BIT(Flags, Bit) \
-    InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
+  InterlockedBitTestAndReset ((PLONG)(Flags), (Bit))
 
 #define PCCARD_MAP_ERROR               0x01
 #define PCCARD_DEVICE_PCI              0x10
@@ -5741,8 +5772,6 @@ NTAPI
 FsRtlIsTotalDeviceFailure(
   IN NTSTATUS Status);
 #endif
-
-/* FIXME : These definitions below doesn't belong to NTDDK */
 
 #ifdef __cplusplus
 }

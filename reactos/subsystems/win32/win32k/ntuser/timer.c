@@ -24,19 +24,33 @@ static LONG TimeLast = 0;
 #define MAX_ELAPSE_TIME 0x7FFFFFFF
 
 /* Windows 2000 has room for 32768 window-less timers */
-#define NUM_WINDOW_LESS_TIMERS   1024
+#define NUM_WINDOW_LESS_TIMERS   32768
 
 static FAST_MUTEX     Mutex;
 static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
 static ULONG          HintIndex = 0;
 
+ERESOURCE TimerLock;
 
 #define IntLockWindowlessTimerBitmap() \
   ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&Mutex)
 
 #define IntUnlockWindowlessTimerBitmap() \
   ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&Mutex)
+
+#define TimerEnterExclusive() \
+{ \
+  KeEnterCriticalRegion(); \
+  ExAcquireResourceExclusiveLite(&TimerLock, TRUE); \
+}
+
+#define TimerLeave() \
+{ \
+  ExReleaseResourceLite(&TimerLock); \
+  KeLeaveCriticalRegion(); \
+}
+
 
 /* FUNCTIONS *****************************************************************/
 static
@@ -49,6 +63,7 @@ CreateTimer(VOID)
 
   if (!FirstpTmr)
   {
+      ExInitializeResourceLite(&TimerLock);
       FirstpTmr = UserCreateObject(gHandleTable, NULL, &Handle, otTimer, sizeof(TIMER));
       if (FirstpTmr)
       {
@@ -79,6 +94,13 @@ RemoveTimer(PTIMER pTmr)
   {
      /* Set the flag, it will be removed when ready */
      RemoveEntryList(&pTmr->ptmrList);
+     if ((pTmr->pWnd == NULL) && (!(pTmr->flags & TMRF_SYSTEM)))
+     {
+        DPRINT("Clearing Bit %d)\n", pTmr->nID);
+        IntLockWindowlessTimerBitmap();
+        RtlClearBit(&WindowLessTimersBitMap, pTmr->nID);
+        IntUnlockWindowlessTimerBitmap();
+     }
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
@@ -96,7 +118,7 @@ FindTimer(PWINDOW_OBJECT Window,
 {
   PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr, RetTmr = NULL;
-  KeEnterCriticalRegion();
+  TimerEnterExclusive();
   do
   {
     if (!pTmr) break;
@@ -116,7 +138,7 @@ FindTimer(PWINDOW_OBJECT Window,
     pLE = pTmr->ptmrList.Flink;
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
-  KeLeaveCriticalRegion();
+  TimerLeave();
 
   return RetTmr;
 }
@@ -127,7 +149,7 @@ FindSystemTimer(PMSG pMsg)
 {
   PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr;
-  KeEnterCriticalRegion();
+  TimerEnterExclusive();
   do
   {
     if (!pTmr) break;
@@ -139,7 +161,7 @@ FindSystemTimer(PMSG pMsg)
     pLE = pTmr->ptmrList.Flink;
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);    
   } while (pTmr != FirstpTmr);
-  KeLeaveCriticalRegion();
+  TimerLeave();
 
   return pTmr;
 }
@@ -156,7 +178,7 @@ ValidateTimerCallback(PTHREADINFO pti,
 
   if (!pTmr) return FALSE;
 
-  KeEnterCriticalRegion();
+  TimerEnterExclusive();
   do
   {
     if ( (lParam == (LPARAM)pTmr->pfn) &&
@@ -167,7 +189,7 @@ ValidateTimerCallback(PTHREADINFO pti,
     pLE = pTmr->ptmrList.Flink;
     pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
-  KeLeaveCriticalRegion();
+  TimerLeave();
 
   if (!pTmr) return FALSE;
 
@@ -209,9 +231,15 @@ IntSetTimer( PWINDOW_OBJECT Window,
      Elapse = 10;
   }
 
-  if ((Window == NULL) && (!(Type & TMRF_SYSTEM)))
+  if ((Window) && (IDEvent == 0))
+     IDEvent = 1;
+
+  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
+
+  if ((!pTmr) && (Window == NULL) && (!(Type & TMRF_SYSTEM)))
   {
       IntLockWindowlessTimerBitmap();
+
       IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
 
       if (IDEvent == (UINT_PTR) -1)
@@ -222,15 +250,11 @@ IntSetTimer( PWINDOW_OBJECT Window,
          return 0;
       }
 
-      HintIndex = ++IDEvent;
-      IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
+      //HintIndex = IDEvent + 1;
+      IntUnlockWindowlessTimerBitmap();
   }
 
-  if ((Window) && (IDEvent == 0))
-     IDEvent = 1;
-
-  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
   if (!pTmr)
   {
      pTmr = CreateTimer();
@@ -320,7 +344,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
   pti = PsGetCurrentThreadWin32Thread();
   ThreadQueue = pti->MessageQueue;
 
-  UserEnterExclusive();
+  TimerEnterExclusive();
 
   do
   {
@@ -343,7 +367,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
      pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
   } while (pTmr != FirstpTmr);
 
-  UserLeave();
+  TimerLeave();
 
   return Hit;
 }
@@ -360,7 +384,7 @@ ProcessTimers(VOID)
 
   if (!pTmr) return;
 
-  UserEnterExclusive();
+  TimerEnterExclusive();
 
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
@@ -423,7 +447,7 @@ ProcessTimers(VOID)
 
   TimeLast = Time;
 
-  UserLeave();
+  TimerLeave();
   DPRINT("TimerCount = %d\n", TimerCount);
 }
 
@@ -533,7 +557,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWINDOW_OBJECT Window)
    if ((FirstpTmr == NULL) || (Window == NULL))
       return FALSE;
 
-   UserEnterExclusive();
+   TimerEnterExclusive();
 
    do
    {
@@ -545,7 +569,7 @@ DestroyTimersForWindow(PTHREADINFO pti, PWINDOW_OBJECT Window)
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
    } while (pTmr != FirstpTmr);
 
-   UserLeave();
+   TimerLeave();
 
    return TimersRemoved;
 }
@@ -560,7 +584,7 @@ DestroyTimersForThread(PTHREADINFO pti)
    if (FirstpTmr == NULL)
       return FALSE;
 
-   UserEnterExclusive();
+   TimerEnterExclusive();
 
    do
    {
@@ -572,7 +596,7 @@ DestroyTimersForThread(PTHREADINFO pti)
       pTmr = CONTAINING_RECORD(pLE, TIMER, ptmrList);
    } while (pTmr != FirstpTmr);
 
-   UserLeave();
+   TimerLeave();
 
    return TimersRemoved;
 }
@@ -667,7 +691,7 @@ InitTimerImpl(VOID)
                        WindowLessTimersBitMapBuffer,
                        BitmapBytes * 8);
 
-   /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
+   /* yes we need this, since ExAllocatePoolWithTag isn't supposed to zero out allocated memory */
    RtlClearAllBits(&WindowLessTimersBitMap);
 
    return STATUS_SUCCESS;
@@ -683,16 +707,19 @@ NtUserSetTimer
    TIMERPROC lpTimerFunc
 )
 {
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(UINT_PTR);
 
    DPRINT("Enter NtUserSetTimer\n");
    UserEnterExclusive();
+   Window = UserGetWindowObject(hWnd);
+   UserLeave();
 
-   RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
+   RETURN(IntSetTimer(Window, nIDEvent, uElapse, lpTimerFunc, TMRF_TIFROMWND));
 
 CLEANUP:
    DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
-   UserLeave();
+
    END_CLEANUP;
 }
 
@@ -710,14 +737,13 @@ NtUserKillTimer
 
    DPRINT("Enter NtUserKillTimer\n");
    UserEnterExclusive();
-
    Window = UserGetWindowObject(hWnd);
+   UserLeave();
 
    RETURN(IntKillTimer(Window, uIDEvent, FALSE));
 
 CLEANUP:
    DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
-   UserLeave();
    END_CLEANUP;
 }
 
@@ -734,14 +760,12 @@ NtUserSetSystemTimer(
    DECLARE_RETURN(UINT_PTR);
 
    DPRINT("Enter NtUserSetSystemTimer\n");
-   UserEnterExclusive();
 
    // This is wrong, lpTimerFunc is NULL!
    RETURN(IntSetTimer(UserGetWindowObject(hWnd), nIDEvent, uElapse, lpTimerFunc, TMRF_SYSTEM));
 
 CLEANUP:
    DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
-   UserLeave();
    END_CLEANUP;
 }
 

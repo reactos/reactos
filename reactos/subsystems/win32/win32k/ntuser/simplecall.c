@@ -110,14 +110,6 @@ NtUserCallNoParam(DWORD Routine)
          Result = (DWORD_PTR)MsqGetMessageExtraInfo();
          break;
 
-      case NOPARAM_ROUTINE_ANYPOPUP:
-         Result = (DWORD_PTR)IntAnyPopup();
-         break;
-
-      case NOPARAM_ROUTINE_CSRSS_INITIALIZED:
-         Result = (DWORD_PTR)CsrInit();
-         break;
-
       case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
          RETURN( (DWORD_PTR)IntMsqClearWakeMask());
 
@@ -525,7 +517,7 @@ NtUserCallHwndLock(
                                 SWP_NOZORDER|
                                 SWP_NOACTIVATE|
                                 SWP_FRAMECHANGED );
-         if (!IntGetOwner(Window) && !IntGetParent(Window))
+         if (!Window->spwndOwner && !IntGetParent(Window))
          {
             co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
          }

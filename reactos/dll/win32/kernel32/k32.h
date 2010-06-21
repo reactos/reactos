@@ -22,10 +22,6 @@
 
 #include <ndk/ntndk.h>
 
-
-#undef NTDDI_WS03SP1
-
-
 /* CSRSS Header */
 #include <csrss/csrss.h>
 

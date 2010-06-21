@@ -65,6 +65,8 @@ MMixerGetCapabilities(
     MixerCaps->vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
     MixerCaps->fdwSupport = MixerInfo->MixCaps.fdwSupport;
     MixerCaps->cDestinations = MixerInfo->MixCaps.cDestinations;
+
+    ASSERT(MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] == 0);
     wcscpy(MixerCaps->szPname, MixerInfo->MixCaps.szPname);
 
     return MM_STATUS_SUCCESS;
@@ -471,6 +473,13 @@ MMixerInitialize(
             {
                 // enumeration has finished
                 break;
+            }
+            else
+            {
+                DPRINT1("Failed to enumerate device %lu\n", DeviceIndex);
+
+                // TODO cleanup
+                return Status;
             }
         }
         else

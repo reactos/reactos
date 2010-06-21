@@ -35,6 +35,7 @@
 		<!-- compilerflag compiler="cc,cxx">-gstabs+</compilerflag -->
 		<!-- compilerflag compiler="as">-gstabs+</compilerflag -->
 		<compilerflag>-U_X86_</compilerflag>
+		<compilerflag>-UWIN32</compilerflag>
 		<compilerflag>-Wno-format</compilerflag>
 	</group>
 
@@ -49,7 +50,26 @@
 
 	<if property="USERMODE" value="1">
 		<directory name="base">
-			<xi:include href="base/base.rbuild" />
+			<directory name="applications">
+				<xi:include href="base/applications/applications.rbuild" />
+			</directory>
+			<directory name="services">
+				<xi:include href="base/services/services.rbuild" />
+			</directory>
+			<directory name="setup">
+				<xi:include href="base/setup/setup.rbuild" />
+			</directory>
+			<directory name="shell">
+				<directory name="cmd">
+					<xi:include href="base/shell/cmd/cmd.rbuild" />
+				</directory>
+				<directory name="explorer-new">
+					<xi:include href="base/shell/explorer-new/explorer.rbuild" />
+				</directory>
+			</directory>
+			<directory name="system">
+				<xi:include href="base/system/system.rbuild" />
+			</directory>
 		</directory>
 		<directory name="dll">
 			<xi:include href="dll/dll.rbuild" />

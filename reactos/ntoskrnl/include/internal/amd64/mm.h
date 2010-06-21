@@ -112,6 +112,8 @@ MiIsPdeForAddressValid(PVOID Address)
 #define ADDR_TO_PDE_OFFSET(v) ((((ULONG_PTR)(v)) / (512 * PAGE_SIZE)))
 #define ADDR_TO_PTE_OFFSET(v)  ((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE)
 
+#define MiGetPdeOffset ADDR_TO_PDE_OFFSET
+
 #define VAtoPXI(va) ((((ULONG64)va) >> PXI_SHIFT) & 0x1FF)
 #define VAtoPPI(va) ((((ULONG64)va) >> PPI_SHIFT) & 0x1FF)
 #define VAtoPDI(va) ((((ULONG64)va) >> PDI_SHIFT) & 0x1FF)

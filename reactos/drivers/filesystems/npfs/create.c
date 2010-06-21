@@ -255,8 +255,9 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
                 if (ClientCcb->Data)
                 {
                     ExFreePool(ClientCcb->Data);
-                    ClientCcb->Data = NULL;
                 }
+
+                ExFreePool(ClientCcb);
                 KeUnlockMutex(&Fcb->CcbListLock);
                 Irp->IoStatus.Status = STATUS_OBJECT_PATH_NOT_FOUND;
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -273,6 +274,14 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
     else if (IsListEmpty(&Fcb->ServerCcbListHead))
     {
         DPRINT("No server fcb found!\n");
+
+        if (ClientCcb->Data)
+        {
+            ExFreePool(ClientCcb->Data);
+        }
+
+        ExFreePool(ClientCcb);
+
         KeUnlockMutex(&Fcb->CcbListLock);
         Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);

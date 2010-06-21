@@ -205,6 +205,18 @@ typedef struct _HAL_BUS_HANDLER
 
 /* FUNCTIONS *****************************************************************/
 
+/* SHARED (Fake PCI-BUS HANDLER) */
+
+extern PCI_CONFIG_HANDLER PCIConfigHandler;
+extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
+extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
+
+PPCI_REGISTRY_INFO_INTERNAL
+NTAPI
+HalpQueryPciRegistryInfo(
+    VOID
+);
+
 VOID
 NTAPI
 HalpPCISynchronizeType1(
@@ -279,34 +291,6 @@ HalpWritePCIConfig(
 
 ULONG
 NTAPI
-HalpGetSystemInterruptVector(
-    ULONG BusNumber,
-    ULONG BusInterruptLevel,
-    ULONG BusInterruptVector,
-    PKIRQL Irql,
-    PKAFFINITY Affinity
-);
-
-ULONG
-NTAPI
-HalpGetCmosData(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Length
-);
-
-ULONG
-NTAPI
-HalpSetCmosData(
-    IN ULONG BusNumber,
-    IN ULONG SlotNumber,
-    IN PVOID Buffer,
-    IN ULONG Length
-);
-
-ULONG
-NTAPI
 HalpGetPCIData(
     IN PBUS_HANDLER BusHandler,
     IN PBUS_HANDLER RootBusHandler,
@@ -340,6 +324,36 @@ HalpAssignPCISlotResources(
     IN OUT PCM_RESOURCE_LIST *pAllocatedResources
 );
 
+/* NON-LEGACY */
+
+ULONG
+NTAPI
+HalpGetSystemInterruptVector_Acpi(
+    ULONG BusNumber,
+    ULONG BusInterruptLevel,
+    ULONG BusInterruptVector,
+    PKIRQL Irql,
+    PKAFFINITY Affinity
+);
+
+ULONG
+NTAPI
+HalpGetCmosData(
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Length
+);
+
+ULONG
+NTAPI
+HalpSetCmosData(
+    IN ULONG BusNumber,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Length
+);
+
 VOID
 NTAPI
 HalpInitializePciBus(
@@ -349,12 +363,6 @@ HalpInitializePciBus(
 VOID
 NTAPI
 HalpInitializePciStubs(
-    VOID
-);
-
-VOID
-NTAPI
-HalpInitBusHandler(
     VOID
 );
 
@@ -397,9 +405,151 @@ HalpRegisterPciDebuggingDeviceInfo(
     VOID
 );
 
+/* LEGACY */
+
+BOOLEAN
+NTAPI
+HaliTranslateBusAddress(
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+BOOLEAN
+NTAPI
+HaliFindBusAddressTranslation(
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress,
+    IN OUT PULONG_PTR Context,
+    IN BOOLEAN NextBus
+);
+
+NTSTATUS
+NTAPI
+HalpAdjustPCIResourceList(IN PBUS_HANDLER BusHandler,
+                          IN PBUS_HANDLER RootHandler,
+                          IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList);
+                          
+ULONG
+NTAPI
+HalpGetPCIIntOnISABus(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN ULONG BusInterruptLevel,
+                      IN ULONG BusInterruptVector,
+                      OUT PKIRQL Irql,
+                      OUT PKAFFINITY Affinity);
+VOID
+NTAPI
+HalpPCIPin2ISALine(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciData);
+        
+VOID
+NTAPI
+HalpPCIISALine2Pin(IN PBUS_HANDLER BusHandler,
+                   IN PBUS_HANDLER RootHandler,
+                   IN PCI_SLOT_NUMBER SlotNumber,
+                   IN PPCI_COMMON_CONFIG PciNewData,
+                   IN PPCI_COMMON_CONFIG PciOldData);
+
+NTSTATUS
+NTAPI
+HalpGetISAFixedPCIIrq(IN PBUS_HANDLER BusHandler,
+                      IN PBUS_HANDLER RootHandler,
+                      IN PCI_SLOT_NUMBER PciSlot,
+                      OUT PSUPPORTED_RANGE *Range);
+                      
+VOID
+NTAPI
+HalpInitBusHandler(
+    VOID
+);
+
+PBUS_HANDLER
+NTAPI
+HalpContextToBusHandler(
+    IN ULONG_PTR ContextValue
+);
+
+PBUS_HANDLER
+FASTCALL
+HaliReferenceHandlerForConfigSpace(
+    IN BUS_DATA_TYPE ConfigType,
+    IN ULONG BusNumber
+);
+
+ULONG
+NTAPI
+HalpNoBusData(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+ULONG
+NTAPI
+HalpcGetCmosData(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+ULONG
+NTAPI
+HalpcSetCmosData(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN ULONG SlotNumber,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+BOOLEAN
+NTAPI
+HalpTranslateSystemBusAddress(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler, 
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+BOOLEAN
+NTAPI
+HalpTranslateIsaBusAddress(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler, 
+    IN PHYSICAL_ADDRESS BusAddress,
+    IN OUT PULONG AddressSpace,
+    OUT PPHYSICAL_ADDRESS TranslatedAddress
+);
+
+ULONG
+NTAPI
+HalpGetSystemInterruptVector(
+    IN PBUS_HANDLER BusHandler,
+    IN PBUS_HANDLER RootHandler,
+    IN ULONG BusInterruptLevel,
+    IN ULONG BusInterruptVector,
+    OUT PKIRQL Irql,
+    OUT PKAFFINITY Affinity
+);
+                     
 extern ULONG HalpBusType;
 extern BOOLEAN HalpPCIConfigInitialized;
 extern BUS_HANDLER HalpFakePciBusHandler;
 extern ULONG HalpMinPciBus, HalpMaxPciBus;
+extern LIST_ENTRY HalpAllBusHandlers;
 
 /* EOF */

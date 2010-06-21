@@ -138,7 +138,7 @@ GetSubPath (
 	return FixSeparator(path + cSep + att_value);
 }
 
-static string
+string
 GetExtension ( const string& filename )
 {
 	size_t index = filename.find_last_of ( '/' );
@@ -1118,18 +1118,18 @@ Module::GetDefaultModuleEntrypoint () const
 		case KeyboardLayout:
 		case KernelModeDLL:
 		case KernelModeDriver:
-            if (Environment::GetArch() == "arm") return "DriverEntry";
-			return "DriverEntry@8";
+            if (Environment::GetArch() == "i386") return "DriverEntry@8";
+			return "DriverEntry";
 		case NativeDLL:
-            if (Environment::GetArch() == "arm") return "DllMainCRTStartup";
-            return "DllMainCRTStartup@12";
+            if (Environment::GetArch() == "i386") return "DllMainCRTStartup@12";
+            return "DllMainCRTStartup";
 		case NativeCUI:
-            if (Environment::GetArch() == "arm") return "NtProcessStartup";
-            return "NtProcessStartup@4";
+            if (Environment::GetArch() == "i386") return "NtProcessStartup@4";
+            return "NtProcessStartup";
 		case Win32DLL:
 		case Win32OCX:
-            if (Environment::GetArch() == "arm") return "DllMain";
-			return "DllMain@12";
+            if (Environment::GetArch() == "i386") return "DllMain@12";
+			return "DllMain";
 		case Win32CUI:
 		case Test:
 			return "mainCRTStartup";

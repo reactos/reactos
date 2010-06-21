@@ -3,8 +3,8 @@
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
 #if defined(USE_DMA_MACROS) && !defined(_NTHAL_) && (defined(_NTDDK_) || defined(_NTDRIVER_)) || defined(_WDM_INCLUDED_)
-$if (_WDMDDK_)
 
+$if (_WDMDDK_)
 FORCEINLINE
 PVOID
 NTAPI
@@ -69,9 +69,8 @@ HalGetDmaAlignment(
   return alignment;
 }
 
-$endif
+$endif  (_WDMDDK_)
 $if (_NTDDK_)
-
 /* Nothing here */
 
 #else /* USE_DMA_MACROS ... */
@@ -141,10 +140,10 @@ HalAllocateAdapterChannel(
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
 #endif /* USE_DMA_MACROS ... */
-$if (_NTDDK_)
 
+$if (_NTDDK_)
 #if !defined(NO_LEGACY_DRIVERS)
 NTHALAPI
 NTSTATUS
@@ -273,10 +272,10 @@ HalPutScatterGatherList(
   IN PSCATTER_GATHER_LIST ScatterGather,
   IN BOOLEAN WriteToDevice);
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
-$if (_NTDDK_)
 
+$if (_NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WINXP)
 NTKERNELAPI
 VOID
@@ -342,5 +341,4 @@ HalBugCheckSystem(
 
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
-$endif /* _NTDDK_ */
-
+$endif (_NTDDK_)

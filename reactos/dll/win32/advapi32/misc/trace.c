@@ -10,9 +10,9 @@
  */
 ULONG CDECL
 TraceMessage(
-    HANDLE       SessionHandle,
+    TRACEHANDLE  SessionHandle,
     ULONG        MessageFlags,
-    LPGUID       MessageGuid,
+    LPCGUID      MessageGuid,
     USHORT       MessageNumber,
     ...)
 {

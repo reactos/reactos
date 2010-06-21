@@ -908,6 +908,7 @@ NdisGetFirstBufferFromPacket(
     }
 }
 
+#undef NdisGetFirstBufferFromPacketSafe
 /*
  * @implemented
  */

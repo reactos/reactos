@@ -31,21 +31,6 @@ typedef struct tagALIAS_HEADER
 
 } ALIAS_HEADER, *PALIAS_HEADER;
 
-/* Ensure that a buffer is contained within the process's shared memory section. */
-static BOOL
-ValidateBuffer(PCSRSS_PROCESS_DATA ProcessData, PVOID Buffer, ULONG Size)
-{
-    ULONG Offset = (BYTE *)Buffer - (BYTE *)ProcessData->CsrSectionViewBase;
-    if (Offset >= ProcessData->CsrSectionViewSize
-            || Size > (ProcessData->CsrSectionViewSize - Offset))
-    {
-        DPRINT1("Invalid buffer %p %d; not within %p %d\n",
-                Buffer, Size, ProcessData->CsrSectionViewBase, ProcessData->CsrSectionViewSize);
-        return FALSE;
-    }
-    return TRUE;
-}
-
 static
 PALIAS_HEADER
 IntFindAliasHeader(PALIAS_HEADER RootHeader, LPCWSTR lpExeName)
@@ -415,7 +400,8 @@ CSR_API(CsrGetConsoleAlias)
         return STATUS_BUFFER_TOO_SMALL;
     }
 
-    if (!ValidateBuffer(ProcessData, lpTarget, Request->Data.GetConsoleAlias.TargetBufferLength))
+    if (!Win32CsrValidateBuffer(ProcessData, lpTarget,
+                                Request->Data.GetConsoleAlias.TargetBufferLength, 1))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
@@ -457,9 +443,10 @@ CSR_API(CsrGetAllConsoleAliases)
         return STATUS_BUFFER_OVERFLOW;
     }
 
-    if (!ValidateBuffer(ProcessData,
-                        Request->Data.GetAllConsoleAlias.AliasBuffer,
-                        Request->Data.GetAllConsoleAlias.AliasBufferLength))
+    if (!Win32CsrValidateBuffer(ProcessData,
+                                Request->Data.GetAllConsoleAlias.AliasBuffer,
+                                Request->Data.GetAllConsoleAlias.AliasBufferLength,
+                                1))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;
@@ -532,9 +519,10 @@ CSR_API(CsrGetConsoleAliasesExes)
         return STATUS_INVALID_PARAMETER;
     }
 
-    if (!ValidateBuffer(ProcessData,
-                        Request->Data.GetConsoleAliasesExes.ExeNames,
-                        Request->Data.GetConsoleAliasesExes.Length))
+    if (!Win32CsrValidateBuffer(ProcessData,
+                                Request->Data.GetConsoleAliasesExes.ExeNames,
+                                Request->Data.GetConsoleAliasesExes.Length,
+                                1))
     {
         ConioUnlockConsole(Console);
         return STATUS_ACCESS_VIOLATION;

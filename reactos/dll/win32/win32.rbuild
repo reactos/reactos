@@ -334,6 +334,9 @@
 <directory name="netcfgx">
 	<xi:include href="netcfgx/netcfgx.rbuild" />
 </directory>
+<directory name="netevent">
+	<xi:include href="netevent/netevent.rbuild" />
+</directory>
 <directory name="netid">
 	<xi:include href="netid/netid.rbuild" />
 </directory>

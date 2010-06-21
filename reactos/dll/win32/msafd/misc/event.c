@@ -36,6 +36,12 @@ WSPEventSelect(
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
+	if (!Socket)
+	{
+		NtClose(SockEvent);
+		*lpErrno = WSAENOTSOCK;
+		return SOCKET_ERROR;
+	}
 
 	/* Set Socket to Non-Blocking */
 	BlockMode = 1;
@@ -104,11 +110,15 @@ WSPEventSelect(
     /* Wait for return */
     if (Status == STATUS_PENDING) {
 	WaitForSingleObject(SockEvent, INFINITE);
+        Status = IOSB.Status;
     }
 
     AFD_DbgPrint(MID_TRACE,("Waited\n"));
 
     NtClose( SockEvent );
+
+    if (Status != STATUS_SUCCESS)
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Closed event\n"));
 
@@ -148,6 +158,12 @@ WSPEnumNetworkEvents(
 
     /* Get the Socket Structure associate to this Socket*/
     Socket = GetSocketStructure(Handle);
+    if (!Socket)
+    {
+       NtClose(SockEvent);
+       *lpErrno = WSAENOTSOCK;
+       return SOCKET_ERROR;
+    }
 
     EnumReq.Event = hEventObject;
 
@@ -168,12 +184,15 @@ WSPEnumNetworkEvents(
     /* Wait for return */
     if (Status == STATUS_PENDING) {
 	WaitForSingleObject(SockEvent, INFINITE);
-	Status = STATUS_SUCCESS;
+	Status = IOSB.Status;
     }
 
     AFD_DbgPrint(MID_TRACE,("Waited\n"));
 
     NtClose( SockEvent );
+
+    if (Status != STATUS_SUCCESS)
+        return MsafdReturnWithErrno(Status, lpErrno, 0, NULL);
 
     AFD_DbgPrint(MID_TRACE,("Closed event\n"));
     AFD_DbgPrint(MID_TRACE,("About to touch struct at %x (%d)\n", 
@@ -226,12 +245,9 @@ WSPEnumNetworkEvents(
 	lpNetworkEvents->iErrorCode[FD_GROUP_QOS_BIT] = TranslateNtStatusError(EnumReq.EventStatus[FD_GROUP_QOS_BIT]);
     }
 
-    if( NT_SUCCESS(Status) ) *lpErrno = 0;
-    else *lpErrno = WSAEINVAL;
-
     AFD_DbgPrint(MID_TRACE,("Leaving\n"));
 
-    return 0;
+    return MsafdReturnWithErrno(STATUS_SUCCESS, lpErrno, 0, NULL);
 }
 
 /* EOF */

@@ -472,8 +472,6 @@ OPENGL32_LoadICD( LPCWSTR driver )
     {
         if (!_wcsicmp( driver, icd->driver_name )) /* found */
         {
-            icd->refcount++;
-
             /* release mutex */
             if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
                 DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
@@ -484,8 +482,6 @@ OPENGL32_LoadICD( LPCWSTR driver )
 
     /* not found - try to load */
     icd = OPENGL32_LoadDriver( driver );
-    if (icd != NULL)
-        icd->refcount = 1;
 
     /* release mutex */
     if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))
@@ -513,7 +509,7 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
         return FALSE; /* FIXME: do we have to expect such an error and handle it? */
     }
 
-    if (--icd->refcount == 0)
+    if (icd->refcount == 0)
         ret = OPENGL32_UnloadDriver( icd );
 
     /* release mutex */

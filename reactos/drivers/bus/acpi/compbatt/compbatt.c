@@ -216,15 +216,6 @@ CompBattSetStatusNotify(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
 
 NTSTATUS
 NTAPI
-CompBattGetBatteryStatus(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
-                         IN ULONG Tag)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 CompBattQueryStatus(IN PCOMPBATT_DEVICE_EXTENSION DeviceExtension,
                     IN ULONG Tag,
                     IN PBATTERY_STATUS BatteryStatus)

@@ -235,7 +235,7 @@ INT WINAPI Str_GetPtrW (LPCWSTR lpSrc, LPWSTR lpDest, INT nMaxLen)
  */
 BOOL WINAPI Str_SetPtrW (LPWSTR *lppDest, LPCWSTR lpSrc)
 {
-    TRACE("(%p %p)\n", lppDest, lpSrc);
+    TRACE("(%p %s)\n", lppDest, debugstr_w(lpSrc));
 
     if (lpSrc) {
         INT len = strlenW (lpSrc) + 1;

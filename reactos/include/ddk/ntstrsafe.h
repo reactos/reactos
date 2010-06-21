@@ -36,7 +36,7 @@ typedef unsigned long DWORD;
 __inline
 NTSTATUS
 NTAPI
-RtlStringLengthWorkerA(IN PCHAR String,
+RtlStringLengthWorkerA(IN LPCSTR String,
                        IN SIZE_T MaxLength,
                        OUT PSIZE_T ReturnLength OPTIONAL)
 {
@@ -69,7 +69,7 @@ RtlStringLengthWorkerA(IN PCHAR String,
 __inline
 NTSTATUS
 NTAPI
-RtlStringValidateDestA(IN PCHAR Destination,
+RtlStringValidateDestA(IN LPSTR Destination,
                        IN SIZE_T Length,
                        OUT PSIZE_T ReturnLength OPTIONAL,
                        IN SIZE_T MaxLength)
@@ -98,7 +98,7 @@ RtlStringValidateDestA(IN PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringExValidateDestA(IN OUT PCHAR *Destination,
+RtlStringExValidateDestA(IN OUT LPSTR *Destination,
                          IN OUT PSIZE_T DestinationLength,
                          OUT PSIZE_T ReturnLength OPTIONAL,
                          IN SIZE_T MaxLength,
@@ -114,7 +114,7 @@ RtlStringExValidateDestA(IN OUT PCHAR *Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringExValidateSrcA(IN OUT PCCHAR *Source OPTIONAL,
+RtlStringExValidateSrcA(IN OUT LPCSTR *Source OPTIONAL,
                         IN OUT PSIZE_T ReturnLength OPTIONAL,
                         IN SIZE_T MaxLength,
                         IN DWORD Flags)
@@ -133,10 +133,10 @@ RtlStringExValidateSrcA(IN OUT PCCHAR *Source OPTIONAL,
 __inline
 NTSTATUS
 NTAPI
-RtlStringVPrintfWorkerA(OUT PCHAR Destination,
+RtlStringVPrintfWorkerA(OUT LPSTR Destination,
                         IN SIZE_T Length,
                         OUT PSIZE_T NewLength OPTIONAL,
-                        IN PCCHAR Format,
+                        IN LPCSTR Format,
                         IN va_list argList)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -174,10 +174,10 @@ RtlStringVPrintfWorkerA(OUT PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCopyWorkerA(OUT PCHAR Destination,
+RtlStringCopyWorkerA(OUT LPSTR Destination,
                      IN SIZE_T Length,
                      OUT PSIZE_T NewLength OPTIONAL,
-                     IN PCCHAR Source,
+                     IN LPCSTR Source,
                      IN SIZE_T CopyLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -211,9 +211,9 @@ RtlStringCopyWorkerA(OUT PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCchCopyA(IN PCHAR Destination,
+RtlStringCchCopyA(IN LPSTR Destination,
                   IN SIZE_T cchDest,
-                  IN PCCHAR pszSrc)
+                  IN LPCSTR pszSrc)
 {
     ASSERTMSG("RtlStringCchCopyA is UNIMPLEMENTED!\n", FALSE);
     return STATUS_NOT_IMPLEMENTED;
@@ -222,9 +222,9 @@ RtlStringCchCopyA(IN PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCbPrintfA(OUT PCHAR Destination,
+RtlStringCbPrintfA(OUT LPSTR Destination,
                    IN SIZE_T Length,
-                   IN PCHAR Format,
+                   IN LPCSTR Format,
                    ...)
 {
     NTSTATUS Status;
@@ -252,12 +252,12 @@ RtlStringCbPrintfA(OUT PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCbPrintfExA(OUT PCHAR Destination,
+RtlStringCbPrintfExA(OUT LPSTR Destination,
                      IN SIZE_T Length,
-                     OUT PCHAR *DestinationEnd OPTIONAL,
+                     OUT LPSTR *DestinationEnd OPTIONAL,
                      OUT PSIZE_T RemainingSize OPTIONAL,
                      IN DWORD Flags,
-                     IN PCCHAR Format,
+                     IN LPCSTR Format,
                      ...)
 {
     NTSTATUS Status;
@@ -333,10 +333,10 @@ RtlStringCbPrintfExA(OUT PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCbCopyExA(OUT PCHAR Destination,
+RtlStringCbCopyExA(OUT LPSTR Destination,
                    IN SIZE_T Length,
-                   IN PCCHAR Source,
-                   OUT PCHAR *DestinationEnd OPTIONAL,
+                   IN LPCSTR Source,
+                   OUT LPSTR *DestinationEnd OPTIONAL,
                    OUT PSIZE_T RemainingSize OPTIONAL,
                    IN DWORD Flags)
 {
@@ -423,10 +423,10 @@ RtlStringCbPrintfW(
 __inline
 NTSTATUS
 NTAPI
-RtlStringCbCatExA(IN OUT PCHAR Destination,
+RtlStringCbCatExA(IN OUT LPSTR Destination,
                   IN SIZE_T Length,
-                  IN PCCHAR Source,
-                  OUT PCHAR *DestinationEnd OPTIONAL,
+                  IN LPCSTR Source,
+                  OUT LPSTR *DestinationEnd OPTIONAL,
                   OUT PSIZE_T RemainingSize OPTIONAL,
                   IN DWORD Flags)
 {
@@ -497,9 +497,9 @@ RtlStringCbCatExA(IN OUT PCHAR Destination,
 __inline
 NTSTATUS
 NTAPI
-RtlStringCbCopyA(OUT PCHAR Destination,
+RtlStringCbCopyA(OUT LPSTR Destination,
                  IN SIZE_T Length,
-                 IN PCCHAR Source)
+                 IN LPCSTR Source)
 {
     NTSTATUS Status;
     SIZE_T CharLength = Length / sizeof(CHAR);

@@ -154,6 +154,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
   int i;
   ENUMLOGFONTEXA EnumLogFontExA;
   NEWTEXTMETRICEXA NewTextMetricExA;
+  LOGFONTW lfW;
 
   Info = RtlAllocateHeap(GetProcessHeap(), 0,
                          INITIAL_FAMILY_COUNT * sizeof(FONTFAMILYINFO));
@@ -161,6 +162,15 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
     {
       return 0;
     }
+
+  if (!LogFont)
+    {
+        lfW.lfCharSet = DEFAULT_CHARSET;
+        lfW.lfPitchAndFamily = 0;
+        lfW.lfFaceName[0] = 0;
+        LogFont = &lfW;
+    }
+
   FontFamilyCount = NtGdiGetFontFamilyInfo(Dc, LogFont, Info, INITIAL_FAMILY_COUNT);
   if (FontFamilyCount < 0)
     {
@@ -464,7 +474,7 @@ NewGetCharacterPlacementW(
      return 0;
   }
 
-  nSet = uCount; 
+  nSet = uCount;
   if ( nSet > lpResults->nGlyphs )
      nSet = lpResults->nGlyphs;
 
@@ -522,7 +532,7 @@ GetCharWidthFloatW(HDC hdc,
                      iFirstChar,
   (ULONG)(iLastChar - iFirstChar + 1),
                   (PWCHAR) NULL,
-                              0, 
+                              0,
 	       (PVOID) pxBuffer);
 }
 
@@ -688,7 +698,7 @@ GetCharWidth32A(
                           wstr[0],
                           (ULONG) count,
                           (PWCHAR) wstr,
-                          GCW_NOFLOAT|GCW_WIN32, 
+                          GCW_NOFLOAT|GCW_WIN32,
                           (PVOID) lpBuffer);
 
     HeapFree(GetProcessHeap(), 0, str);
@@ -772,7 +782,7 @@ GetCharABCWidthsA(
         return FALSE;
     }
 
-    ret = NtGdiGetCharABCWidthsW( hdc, 
+    ret = NtGdiGetCharABCWidthsW( hdc,
                               wstr[0],
                               (ULONG)count,
                               (PWCHAR)wstr,
@@ -890,7 +900,7 @@ GetFontLanguageInfo(
      if ((Ret == ARABIC_CHARSET) || (Ret == HEBREW_CHARSET))
         Ret = (GCP_KASHIDA|GCP_DIACRITIC|GCP_LIGATE|GCP_GLYPHSHAPE|GCP_REORDER);
   }
-  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR); 
+  Gcp = GetDCDWord(hDc, GdiGetFontLanguageInfo, GCP_ERROR);
   if ( Gcp == GCP_ERROR)
      return Gcp;
   else

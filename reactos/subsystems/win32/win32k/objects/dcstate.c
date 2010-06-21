@@ -44,12 +44,6 @@ DC_vCopyState(PDC pdcSrc, PDC pdcDst, BOOL To)
     // FIXME: handle refs
     pdcDst->dclevel.plfnt           = pdcSrc->dclevel.plfnt;
 
-    /* ROS hacks */
-    if (pdcDst->dctype != DC_TYPE_MEMORY)
-    {
-        pdcDst->rosdc.bitsPerPixel = pdcSrc->rosdc.bitsPerPixel;
-    }
-
     /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
     if (To) // Copy "To" SaveDC state.
     {
@@ -76,11 +70,6 @@ IntGdiCleanDC(HDC hDC)
     if (!dc) return FALSE;
     // Clean the DC
     if (defaultDCstate) DC_vCopyState(defaultDCstate, dc, FALSE);
-
-    if (dc->dctype != DC_TYPE_MEMORY)
-    {
-        dc->rosdc.bitsPerPixel = defaultDCstate->rosdc.bitsPerPixel;
-    }
 
     DC_UnlockDc(dc);
 

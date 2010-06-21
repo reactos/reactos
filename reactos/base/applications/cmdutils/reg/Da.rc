@@ -3,6 +3,7 @@
  * Danish language support
  *
  * Copyright 2008 Jens Albretsen <jens@albretsen.dk>
+ *           2010 Thomas Larsen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,12 +22,19 @@
 
 #include "reg.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
     STRING_USAGE, "Syntaksen for dette kommando er:\n\nREG [ ADD | DELETE | QUERY ]\nREG kommando /?\n"
-    STRING_ADD_USAGE, "REG ADD n¯gle_navn [/v vÊrdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE n¯gle_navn [/v vÊrdi | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY n¯gle_navn [/v vÊrdi | /ve] [/s]\n"
+    STRING_ADD_USAGE, "REG ADD n√∏gle_navn [/v v√¶rdi | /ve] [/t type] [/s separator] [/d data] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE n√∏gle_navn [/v v√¶rdi | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY n√∏gle_navn [/v v√¶rdi | /ve] [/s]\n"
+    STRING_SUCCESS, "Operationen blev afsluttet med succes\n"
+    STRING_INVALID_KEY, "Fejl: Ugyldigt n√∏gle navn\n"
+    STRING_INVALID_CMDLINE, "Fejl: Ugyldige kommando linje parametre\n"
+    STRING_NO_REMOTE, "Fejl: Kunne ikke tilf√∏je n√∏gler til fjern maskinen\n"
+    STRING_CANNOT_FIND, "Fejl: Systemet kunne ikke finde, den angivet registrerings n√∏gle eller v√¶rdi\n"
 }

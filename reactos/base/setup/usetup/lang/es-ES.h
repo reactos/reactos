@@ -1479,17 +1479,17 @@ MUI_ERROR esESErrorEntries[] =
         "ENTER = Reiniciar el equipo"
     },
     {
+        //ERROR_UPDATE_GEOID,
+        "El instalador no ha podido configurar el ID geogr fico.\n"
+        "ENTER = Reiniciar el equipo"
+    },
+    {
         //ERROR_INSUFFICIENT_DISKSPACE,
         "No hay suficiente espacio disponible en la partici¢n seleccionada.\n"
         "  * Presione una tecla para continuar.",
         NULL
     },
     {
-        //ERROR_UPDATE_GEOID,
-        "El instalador no ha podido configurar el ID geogr fico.\n"
-        "ENTER = Reiniciar el equipo"
-    },
-{
         NULL,
         NULL
     }

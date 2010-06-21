@@ -25,6 +25,7 @@
 
 #include "windows.h"
 #include "commdlg.h"
+#include "shellapi.h"
 #include "winhelp.h"
 
 #include "wine/debug.h"
@@ -63,6 +64,9 @@ static WINHELP_BUTTON**        MACRO_LookupButton(WINHELP_WINDOW* win, LPCSTR na
         if (!lstrcmpi(name, (*b)->lpszID)) break;
     return b;
 }
+
+/******* some forward declarations *******/
+static void CALLBACK MACRO_JumpID(LPCSTR lpszPathWindow, LPCSTR topic_id);
 
 /******* real macro implementation *******/
 
@@ -352,9 +356,20 @@ static void CALLBACK MACRO_EndMPrint(void)
     WINE_FIXME("()\n");
 }
 
-static void CALLBACK MACRO_ExecFile(LPCSTR str1, LPCSTR str2, LONG u, LPCSTR str3)
+static void CALLBACK MACRO_ExecFile(LPCSTR pgm, LPCSTR args, LONG cmd_show, LPCSTR topic)
 {
-    WINE_FIXME("(\"%s\", \"%s\", %u, \"%s\")\n", str1, str2, u, str3);
+    HINSTANCE ret;
+
+    WINE_TRACE("(%s, %s, %u, %s)\n",
+               wine_dbgstr_a(pgm), wine_dbgstr_a(args), cmd_show, wine_dbgstr_a(topic));
+
+    ret = ShellExecuteA(Globals.active_win ? Globals.active_win->hMainWnd : NULL, "open",
+                        pgm, args, ".", cmd_show);
+    if ((DWORD_PTR)ret < 32)
+    {
+        WINE_WARN("Failed with %p\n", ret);
+        if (topic) MACRO_JumpID(NULL, topic);
+    }
 }
 
 static void CALLBACK MACRO_ExecProgram(LPCSTR str, LONG u)

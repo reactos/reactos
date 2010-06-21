@@ -69,7 +69,7 @@ dispatch(void)
     time_t howlong, cur_time;
     struct timeval timeval;
 
-    if (!AdapterDiscover())
+    if (!StartAdapterDiscovery())
          return;
 
     ApiLock();

@@ -369,7 +369,7 @@ typedef struct _MMPFN
     } u4;
 } MMPFN, *PMMPFN;
 
-extern PMMPFN MmPfnDatabase[2];
+extern PMMPFN MmPfnDatabase;
 
 typedef struct _MMPFNLIST
 {
@@ -1100,7 +1100,7 @@ MiGetPfnEntry(IN PFN_NUMBER Pfn)
     if ((MiPfnBitMap.Buffer) && !(RtlTestBit(&MiPfnBitMap, Pfn))) return NULL;
 
     /* Get the entry */
-    Page = &MmPfnDatabase[0][Pfn];
+    Page = &MmPfnDatabase[Pfn];
 
     /* Return it */
     return Page;
@@ -1113,7 +1113,7 @@ MiGetPfnEntryIndex(IN PMMPFN Pfn1)
     //
     // This will return the Page Frame Number (PFN) from the MMPFN
     //
-    return Pfn1 - MmPfnDatabase[0];
+    return Pfn1 - MmPfnDatabase;
 }
 
 PFN_NUMBER

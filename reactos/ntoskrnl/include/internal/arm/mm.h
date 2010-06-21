@@ -1,10 +1,6 @@
 #pragma once
 
-//
-// Number of bits corresponding to the area that a PDE entry represents (1MB)
-//
 #define PDE_SHIFT 20
-#define PDE_SIZE  (1 << PDE_SHIFT)
 
 //
 // Number of bits corresponding to the area that a coarse page table entry represents (4KB)

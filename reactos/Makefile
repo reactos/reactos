@@ -46,6 +46,10 @@
 #        This is faster than the depends target which does a complete dependency
 #        check of the ReactOS codebase.
 #
+#    bootcdregtest
+#        This target builds an ISO (ReactOS-RegTest.ISO) which is used for unattended
+#        regression testing.
+#
 #
 # Accepted environment variables:
 #

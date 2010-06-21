@@ -327,13 +327,13 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR *lpfilename, PULARGE_INTEGER l
 
     if (SHFileGeneralGetFileTimeString(&accessed_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14017);
+        hDlgCtrl = GetDlgItem(hwndDlg, 14019);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
 
     if (SHFileGeneralGetFileTimeString(&write_time, resultstr))
     {
-        hDlgCtrl = GetDlgItem(hwndDlg, 14019);
+        hDlgCtrl = GetDlgItem(hwndDlg, 14017);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
 

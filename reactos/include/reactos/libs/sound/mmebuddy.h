@@ -400,8 +400,8 @@ ReleaseEntrypointMutex(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter);
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter);
 
 MMRESULT
 MmeGetSoundDeviceCapabilities(
@@ -413,10 +413,10 @@ MmeGetSoundDeviceCapabilities(
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle);
+    OUT DWORD_PTR* PrivateHandle);
 
 MMRESULT
 MmeCloseDevice(

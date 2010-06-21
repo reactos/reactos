@@ -8,6 +8,7 @@
 	<include base="ntoskrnl">include</include>
 	<!-- include base="x86emu">.</include -->
 	<define name="_DISABLE_TIDENTS" />
+	<define name="_NTHALDLL_" />
 	<define name="_NTHAL_" />
 	<define name="_X86BIOS_" />
 	<library>hal_generic</library>
@@ -19,18 +20,14 @@
 		<file>spinlock.c</file>
 	</directory>
 
-	<directory name="up">
+	<directory name="amd64">
+		<file>x86bios.c</file>
+		<file>halinit.c</file>
+		<file>stubs.c</file>
+		<file>systimer.S</file>
 		<file>processor.c</file>
 	</directory>
 
-	<!-- directory name="mp">
-		<file>halinit_mp.c</file>
-		<file>processor_mp.c</file>
-		<file>halmp.rc</file>
-		<directory name="amd64">
-			<file>mps.S</file>
-		</directory>
-	</directory -->
 </module>
 </group>
 

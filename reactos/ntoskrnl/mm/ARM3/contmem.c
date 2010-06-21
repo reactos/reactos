@@ -352,8 +352,8 @@ MiFindContiguousMemory(IN PFN_NUMBER LowestPfn,
     do
     {
         /* Write the PTE address */
-        Pfn1->PteAddress = PointerPte++;
-        Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte));
+        Pfn1->PteAddress = PointerPte;
+        Pfn1->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte++));
     } while (Pfn1++ < EndPfn);
     
     /* Return the address */

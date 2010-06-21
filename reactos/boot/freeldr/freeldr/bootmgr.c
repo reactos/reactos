@@ -125,6 +125,7 @@ VOID RunLoader(VOID)
 		UiMessageBoxCritical("Unable to load additional boot device driver");
 	}
 #endif
+
 	if (!IniFileInitialize())
 	{
 		UiMessageBoxCritical("Error initializing .ini file");

@@ -22,7 +22,7 @@ int __argc = 0;
 
 extern wchar_t **__winitenv;
 
-char* strndup(char* name, size_t len)
+char* strndup(char const* name, size_t len)
 {
    char *s = malloc(len + 1);
    if (s != NULL)

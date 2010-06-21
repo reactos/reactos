@@ -264,6 +264,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
             // Get the page bit count
             //
             i = ((SizeInPages - 1) / 1024) + 1;
+            DPRINT1("Paged pool expansion: %d %x\n", i, SizeInPages);
             
             //
             // Check if there is enougn paged pool expansion space left
@@ -325,23 +326,25 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 ASSERT(PointerPte->u.Hard.Valid == 0);
                 
-                //
-                // Request a paged pool page and write the PFN for it
-                //
-                PageFrameNumber = MmAllocPage(MC_PPOOL);
+                /* Request a page */
+                PageFrameNumber = MiRemoveAnyPage(0);
                 TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
                 
                 //
                 // Save it into our double-buffered system page directory
                 //
                 /* This seems to be making the assumption that one PDE is one page long */
-                ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+                C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
                 MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
                                  sizeof(MMPTE)] = TempPte;
                             
+                /* Initialize the PFN */
+                MiInitializePfnForOtherProcess(PageFrameNumber,
+                                               PointerPte,
+                                               MmSystemPageDirectory[(PointerPte - (PMMPTE)PDE_BASE) / PDE_COUNT]);
+                             
                 /* Write the actual PTE now */
-                ASSERT(TempPte.u.Hard.Valid == 1);
-                *PointerPte++ = TempPte;
+                MI_WRITE_VALID_PTE(PointerPte++, TempPte);
                 
                 //
                 // Move on to the next expansion address
@@ -417,11 +420,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         //
         KeFlushEntireTb(TRUE, TRUE);
         
-        //
-        // Setup a demand-zero writable PTE
-        //
-        TempPte.u.Long = 0;
-        MI_MAKE_WRITE_PAGE(&TempPte);
+        /* Setup a demand-zero writable PTE */
+        MI_MAKE_SOFTWARE_PTE(&TempPte, MM_READWRITE);
         
         //
         // Find the first and last PTE, then loop them all
@@ -590,10 +590,8 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     TempPte = ValidKernelPte;
     do
     {
-        //
-        // Allocate a page
-        //
-        PageFrameNumber = MmAllocPage(MC_NPPOOL);
+        /* Allocate a page */
+        PageFrameNumber = MiRemoveAnyPage(0);
         
         /* Get the PFN entry for it and fill it out */
         Pfn1 = MiGetPfnEntry(PageFrameNumber);
@@ -605,9 +603,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
         
         /* Write the PTE for it */
         TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-        ASSERT(PointerPte->u.Hard.Valid == 0);
-        ASSERT(TempPte.u.Hard.Valid == 1);
-        *PointerPte++ = TempPte;
+        MI_WRITE_VALID_PTE(PointerPte++, TempPte);
     } while (--SizeInPages > 0);
     
     //
@@ -666,6 +662,11 @@ MiFreePoolPages(IN PVOID StartingVa)
         // Now calculate the total number of pages this allocation spans
         //
         NumberOfPages = End - i + 1;
+        
+        /* Delete the actual pages */
+        PointerPte = MmPagedPoolInfo.FirstPteForPagedPool + i;
+        FreePages = MiDeleteSystemPageableVm(PointerPte, NumberOfPages, 0, NULL);
+        ASSERT(FreePages == NumberOfPages);
         
         //
         // Acquire the paged pool lock

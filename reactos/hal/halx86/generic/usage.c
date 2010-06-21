@@ -509,19 +509,13 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN PVOID Handler,
                            IN KINTERRUPT_MODE Mode)
 {
-    UCHAR Entry;
-
-    /* Convert the vector into the IDT entry */
-    Entry = HalVectorToIDTEntry(SystemVector);
-
     /* Register the vector */
     HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
 
 // FIXME use an architecture specific inline function
 #ifdef _M_IX86
     /* Connect the interrupt */
-    ((PKIPCR)KeGetPcr())->IDT[Entry].ExtendedOffset = (USHORT)(((ULONG_PTR)Handler >> 16) & 0xFFFF);
-    ((PKIPCR)KeGetPcr())->IDT[Entry].Offset = (USHORT)((ULONG_PTR)Handler);
+    KeRegisterInterruptHandler(SystemVector, Handler);
 #else
     // TODO
 #endif

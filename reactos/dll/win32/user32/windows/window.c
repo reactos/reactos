@@ -1030,15 +1030,15 @@ GetParent(HWND hWnd)
         _SEH2_TRY
         {
             WndParent = NULL;
-            if (Wnd->style & WS_CHILD)
-            {
-                if (Wnd->spwndParent != NULL)
-                    WndParent = DesktopPtrToUser(Wnd->spwndParent);
-            }
-            else if (Wnd->style & WS_POPUP)
+            if (Wnd->style & WS_POPUP)
             {
                 if (Wnd->spwndOwner != NULL)
                     WndParent = DesktopPtrToUser(Wnd->spwndOwner);
+            }
+            else if (Wnd->style & WS_CHILD)
+            {
+                if (Wnd->spwndParent != NULL)
+                    WndParent = DesktopPtrToUser(Wnd->spwndParent);
             }
 
             if (WndParent != NULL)
@@ -1464,7 +1464,7 @@ BOOL WINAPI
 IsChild(HWND hWndParent,
     HWND hWnd)
 {
-    PWND WndParent, Wnd;
+    PWND WndParent, DesktopWnd,  Wnd;
     BOOL Ret = FALSE;
 
     WndParent = ValidateHwnd(hWndParent);
@@ -1474,6 +1474,10 @@ IsChild(HWND hWndParent,
     if (!Wnd)
         return FALSE;
 
+    DesktopWnd = GetThreadDesktopWnd();
+    if (!DesktopWnd)
+        return FALSE;
+
     _SEH2_TRY
     {
         while (Wnd != NULL)
@@ -1481,6 +1485,10 @@ IsChild(HWND hWndParent,
             if (Wnd->spwndParent != NULL)
             {
                 Wnd = DesktopPtrToUser(Wnd->spwndParent);
+
+                if(Wnd == DesktopWnd)
+                    Wnd = NULL;
+
                 if (Wnd == WndParent)
                 {
                     Ret = TRUE;
@@ -2062,7 +2070,18 @@ ScrollWindowEx(HWND hWnd,
 BOOL WINAPI
 AnyPopup(VOID)
 {
-    return NtUserAnyPopup();
+    int i;
+    BOOL retvalue;
+    HWND *list = WIN_ListChildren( GetDesktopWindow() );
+
+    if (!list) return FALSE;
+    for (i = 0; list[i]; i++)
+    {
+        if (IsWindowVisible( list[i] ) && GetWindow( list[i], GW_OWNER )) break;
+    }
+    retvalue = (list[i] != 0);
+    HeapFree( GetProcessHeap(), 0, list );
+    return retvalue;
 }
 
 /*

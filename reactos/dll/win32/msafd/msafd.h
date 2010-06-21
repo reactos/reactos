@@ -100,6 +100,7 @@ typedef struct _SOCKET_INFORMATION {
 	BOOL TrySAN;
 	SOCKADDR WSLocalAddress;
 	SOCKADDR WSRemoteAddress;
+	struct _SOCKET_INFORMATION *NextSocket;
 } SOCKET_INFORMATION, *PSOCKET_INFORMATION;
 
 
@@ -325,10 +326,10 @@ INT
 WSPAPI
 WSPSelect(
     IN      INT nfds,
-    IN OUT  LPFD_SET readfds,
-    IN OUT  LPFD_SET writefds,
-    IN OUT  LPFD_SET exceptfds,
-    IN      CONST LPTIMEVAL timeout,
+    IN OUT  fd_set *readfds,
+    IN OUT  fd_set *writefds,
+    IN OUT  fd_set *exceptfds,
+    IN      CONST struct timeval *timeout,
     OUT     LPINT lpErrno);
 
 INT

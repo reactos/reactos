@@ -64,8 +64,8 @@ MmeSetState(
 VOID
 NotifyMmeClient(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
-    IN  DWORD Message,
-    IN  DWORD Parameter)
+    IN  UINT Message,
+    IN  DWORD_PTR Parameter)
 {
     SND_ASSERT( SoundDeviceInstance );
 
@@ -121,10 +121,10 @@ MmeGetSoundDeviceCapabilities(
 MMRESULT
 MmeOpenWaveDevice(
     IN  MMDEVICE_TYPE DeviceType,
-    IN  DWORD DeviceId,
+    IN  UINT DeviceId,
     IN  LPWAVEOPENDESC OpenParameters,
     IN  DWORD Flags,
-    OUT DWORD* PrivateHandle)
+    OUT DWORD_PTR* PrivateHandle)
 {
     MMRESULT Result;
 

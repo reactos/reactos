@@ -126,6 +126,7 @@ BEGIN
     IDS_PROPERTIES        "Vl&astnosti"
     IDS_OPEN_ALL_USERS    "Ote&vøít složku All Users"
     IDS_EXPLORE_ALL_USERS "Pro&cházet složku All Users"
+    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE DISCARDABLE

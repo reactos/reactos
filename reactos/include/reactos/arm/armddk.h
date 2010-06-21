@@ -185,9 +185,39 @@ struct _TEB* NtCurrentTeb(VOID)
 }
 
 NTSYSAPI
-PKTHREAD
+struct _KTHREAD*
 NTAPI
 KeGetCurrentThread(VOID);
+
+extern volatile struct _KSYSTEM_TIME KeTickCount;
+
+#ifndef YieldProcessor
+#define YieldProcessor __yield
+#endif
+
+#define ASSERT_BREAKPOINT BREAKPOINT_COMMAND_STRING + 1
+
+#define DbgRaiseAssertionFailure() __break(ASSERT_BREAKPOINT)
+
+#define PCR_MINOR_VERSION 1
+#define PCR_MAJOR_VERSION 1
+
+#define RESULT_ZERO     0
+#define RESULT_NEGATIVE 1
+#define RESULT_POSITIVE 2
+
+DECLSPEC_IMPORT
+VOID
+__fastcall
+KfReleaseSpinLock(
+  IN OUT ULONG_PTR* SpinLock,
+  IN KIRQL NewIrql);
+
+DECLSPEC_IMPORT
+KIRQL
+__fastcall
+KfAcquireSpinLock(
+  IN OUT ULONG_PTR* SpinLock);
 
 #ifndef _WINNT_H
 //

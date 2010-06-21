@@ -69,7 +69,7 @@ wodMessage(
                                        DeviceId,
                                        (LPWAVEOPENDESC) Parameter1,
                                        Parameter2,
-                                       (DWORD*)PrivateHandle);
+                                       (DWORD_PTR*)PrivateHandle);
             break;
         }
 

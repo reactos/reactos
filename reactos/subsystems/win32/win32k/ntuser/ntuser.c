@@ -124,6 +124,8 @@ UserInitialize(
 
     NtUserUpdatePerUserSystemParameters(0, TRUE);
 
+    CsrInit();
+
     return STATUS_SUCCESS;
 }
 

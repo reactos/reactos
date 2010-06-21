@@ -33,9 +33,6 @@
 #define NtUserMsqClearWakeMask() \
   NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK)
 
-#define NtUserAnyPopup() \
-  (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ANYPOPUP)
-
 #define NtUserValidateRgn(hWnd, hRgn) \
   (BOOL)NtUserCallTwoParam((DWORD_PTR)hWnd, (DWORD_PTR)hRgn, TWOPARAM_ROUTINE_VALIDATERGN)
 

@@ -76,7 +76,6 @@ typedef struct tagWinHelp
     HLPFILE_PAGE*       page;
 
     HWND                hMainWnd;
-    HWND                hShadowWnd;
     HWND                hHistoryWnd;
 
     WNDPROC             origRicheditWndProc;

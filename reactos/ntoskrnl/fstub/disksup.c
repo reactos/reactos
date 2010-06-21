@@ -1686,7 +1686,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
         {
             /* Check if this is a container partition, since we skipped them */
-            if (IsContainerPartition(PartitionType))
+            if (IsContainerPartition(PartitionDescriptor->PartitionType))
             {
                 /* Get its offset */
                 Offset.QuadPart = VolumeOffset.QuadPart +

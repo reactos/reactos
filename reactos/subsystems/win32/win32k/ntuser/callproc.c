@@ -185,9 +185,7 @@ UserGetCPD(
       Example:
         If pWnd is created from Ansi and lpfnXxyz is assumed to be Ansi, caller
         will ask for Unicode Proc return Proc or CallProcData handle.
-
-   This function should replaced NtUserGetClassLong and NtUserGetWindowLong.
- */
+*/
 ULONG_PTR
 APIENTRY
 NtUserGetCPD(

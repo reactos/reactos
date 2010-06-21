@@ -486,6 +486,25 @@ HalpHardwareInterruptLevel(
 );
 
 //
+// Hack Flags
+//
+#define HALP_REVISION_FROM_HACK_FLAGS(x)    ((x) >> 24)
+#define HALP_REVISION_HACK_FLAGS(x)         ((x) >> 12)
+#define HALP_HACK_FLAGS(x)                  ((x) & 0xFFF)
+
+//
+// Feature flags
+//
+#define HALP_CARD_FEATURE_FULL_DECODE   0x0001
+
+//
+// Match Flags
+//
+#define HALP_CHECK_CARD_REVISION_ID     0x10000
+#define HALP_CHECK_CARD_SUBVENDOR_ID    0x20000
+#define HALP_CHECK_CARD_SUBSYSTEM_ID    0x40000
+
+//
 // Mm PTE/PDE to Hal PTE/PDE
 //
 #define HalAddressToPde(x) (PHARDWARE_PTE)MiAddressToPde(x)
@@ -769,6 +788,12 @@ KeUpdateSystemTime(
     IN KIRQL OldIrql
 );
 
+VOID
+NTAPI
+HalpInitBusHandlers(
+    VOID
+);
+
 #ifdef _M_AMD64
 #define KfLowerIrql KeLowerIrql
 #ifndef CONFIG_SMP
@@ -795,3 +820,8 @@ extern KAFFINITY HalpActiveProcessors;
 extern BOOLEAN HalDisableFirmwareMapper;
 extern PWCHAR HalHardwareIdString;
 extern PWCHAR HalName;
+
+extern KAFFINITY HalpDefaultInterruptAffinity;
+
+extern IDTUsageFlags HalpIDTUsageFlags[MAXIMUM_IDTVECTOR];
+

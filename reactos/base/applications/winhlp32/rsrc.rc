@@ -26,7 +26,6 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 
 #include "Bg.rc"
 #include "Cs.rc"
-#include "Da.rc"
 #include "En.rc"
 #include "Es.rc"
 #include "Fi.rc"
@@ -39,6 +38,7 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "Tr.rc"
 
 /* UTF-8 */
+#include "Da.rc"
 #include "De.rc"
 #include "Fr.rc"
 #include "It.rc"
@@ -50,4 +50,5 @@ IDI_WINHELP ICON DISCARDABLE winhelp.ico
 #include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
+#include "Uk.rc"
 #include "Zh.rc"

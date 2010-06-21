@@ -1,0 +1,202 @@
+/*
+ * Help Viewer
+ *
+ * Copyright 1996 Ulrich Schmid
+ * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
+ *
+ * Ukrainian language support
+ *
+ * Copyright (C) 2010 Igor Paliychuk
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "winhelp_res.h"
+
+/* UTF-8 */
+#pragma code_page(65001)
+
+/* Menu */
+
+MAIN_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+{
+ POPUP "&Файл" {
+  MENUITEM "&Відкрити", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Друк", MNID_FILE_PRINT
+  MENUITEM "Налаштування &принтера...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "В&ихід", MNID_FILE_EXIT
+ }
+ POPUP "&Правка" {
+   MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Закладка" {
+   MENUITEM "&Define...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Налаштування" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "За замовчуванням",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Видимий",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Невидимий",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Історія",		MNID_OPTS_HISTORY
+  POPUP    "Шрифти"
+  BEGIN
+    MENUITEM "Малий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Нормальний",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Великий",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Використати системні кольори",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "&Довідка" {
+   MENUITEM "Help &on help", MNID_HELP_HELPON
+   MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Інформація...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Про Wine", MNID_HELP_WINE
+#endif
+ }
+}
+
+MAIN_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
+{
+ POPUP "&Файл" {
+  MENUITEM "&Відкрити", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Друк", MNID_FILE_PRINT
+  MENUITEM "Налаштування &принтера...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "В&ихід", MNID_FILE_EXIT
+ }
+ POPUP "&Правка" {
+   MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Annotate...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Закладка" {
+   MENUITEM "&Define...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Налаштування" {
+   POPUP	"Help always visible"
+   BEGIN
+     MENUITEM "За замовчуванням",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Видимий",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Невидимий",	MNID_OPTS_HELP_NONVISIBLE
+  END
+  MENUITEM "Історія",		MNID_OPTS_HISTORY
+  POPUP    "Шрифти"
+  BEGIN
+    MENUITEM "Малий",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Нормальний",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Великий",     	MNID_OPTS_FONTS_LARGE
+  END
+  MENUITEM "Використати системні кольори",	MNID_OPTS_SYSTEM_COLORS
+ }
+ POPUP "&Довідка" {
+   MENUITEM "Help &on help", MNID_HELP_HELPON
+   MENUITEM "Завжди &зверху", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Інформація...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Про Wine", MNID_HELP_WINE
+#endif
+ }
+}
+
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Index"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Search"
+{
+    LTEXT  "Ще не впроваджено", -1, 10, 10, 180, 150
+}
+
+/* Strings */
+STRINGTABLE DISCARDABLE LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+{
+STID_WINE_HELP, 	"Довідка Wine"
+STID_WHERROR, 		"ПОМИЛКА"
+STID_WARNING,  		"УВАГА"
+STID_INFO,  		"Інформація"
+STID_NOT_IMPLEMENTED, 	"Не впроваджено"
+STID_HLPFILE_ERROR_s, 	"Помилка читання файлу довідки `%s'"
+STID_INDEX, 		"&Index"
+STID_CONTENTS,		"Summary"
+STID_BACK, 		"&Назад"
+STID_ALL_FILES, 	"Всі файли (*.*)"
+STID_HELP_FILES_HLP, 	"Файли довідки (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Не можу знайти '%s'. Хочете знайти цей файл самотужки?"
+STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
+STID_PSH_INDEX,		"Розділи Довідки: "
+}
+
+CONTEXT_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копіювати",                MNID_CTXT_COPY
+		MENUITEM "Друк...",            MNID_CTXT_PRINT
+		POPUP    "Шрифти"
+		BEGIN
+			MENUITEM "Малий",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Нормальний",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Великий",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Довідка завжди видима"
+		BEGIN
+			MENUITEM "За замовчуванням",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Видима",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Невидима", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Використати системні кольори",   MNID_CTXT_SYSTEM_COLORS
+	END
+END
+
+CONTEXT_MENU MENU LANGUAGE LANG_UKRAINIAN, SUBLANG_NEUTRAL
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Annotation...",       MNID_CTXT_ANNOTATE
+		MENUITEM "Копіювати",                MNID_CTXT_COPY
+		MENUITEM "Друк...",            MNID_CTXT_PRINT
+		POPUP    "Шрифти"
+		BEGIN
+			MENUITEM "Малий",       MNID_CTXT_FONTS_SMALL
+			MENUITEM "Нормальний",      MNID_CTXT_FONTS_NORMAL
+			MENUITEM "Великий",       MNID_CTXT_FONTS_LARGE
+		END
+		POPUP   "Довідка завжди видима"
+		BEGIN
+			MENUITEM "За замовчуванням",     MNID_CTXT_HELP_DEFAULT
+			MENUITEM "Видима",     MNID_CTXT_HELP_VISIBLE
+			MENUITEM "Невидима", MNID_CTXT_HELP_NONVISIBLE
+		END
+		MENUITEM "Використати ситемні кольори",   MNID_CTXT_SYSTEM_COLORS
+	END
+END

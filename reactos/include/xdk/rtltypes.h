@@ -81,7 +81,7 @@ typedef struct _SLIST_ENTRY32 {
 } SLIST_ENTRY32, *PSLIST_ENTRY32;
 
 typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
-  struct {
+  _ANONYMOUS_STRUCT struct {
     ULONGLONG Alignment;
     ULONGLONG Region;
   } DUMMYSTRUCTNAME;
@@ -113,7 +113,7 @@ typedef union DECLSPEC_ALIGN(16) _SLIST_HEADER {
 
 typedef union _SLIST_HEADER32 {
   ULONGLONG Alignment;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     SLIST_ENTRY32 Next;
     USHORT Depth;
     USHORT Sequence;
@@ -130,7 +130,7 @@ typedef SLIST_ENTRY SLIST_ENTRY32, *PSLIST_ENTRY32;
 
 typedef union _SLIST_HEADER {
   ULONGLONG Alignment;
-  struct {
+  _ANONYMOUS_STRUCT struct {
     SLIST_ENTRY Next;
     USHORT Depth;
     USHORT Sequence;
@@ -167,8 +167,7 @@ typedef BOOLEAN
 (*PFN_RTL_IS_SERVICE_PACK_VERSION_INSTALLED)(
   IN ULONG Version);
 
-$endif
-
+$endif (_WDMDDK_)
 $if (_NTDDK_)
 
 #ifndef _RTL_RUN_ONCE_DEF
@@ -445,4 +444,106 @@ typedef LPOSVERSIONINFOA LPOSVERSIONINFO;
 
 #define HASH_ENTRY_KEY(x)    ((x)->Signature)
 
+$endif (_NTDDK_)
+$if (_NTIFS_)
+
+#define RTL_SYSTEM_VOLUME_INFORMATION_FOLDER    L"System Volume Information"
+
+typedef PVOID
+(NTAPI *PRTL_ALLOCATE_STRING_ROUTINE)(
+  IN SIZE_T NumberOfBytes);
+
+#if _WIN32_WINNT >= 0x0600
+typedef PVOID
+(NTAPI *PRTL_REALLOCATE_STRING_ROUTINE)(
+  IN SIZE_T NumberOfBytes,
+  IN PVOID Buffer);
+#endif
+
+typedef VOID
+(NTAPI *PRTL_FREE_STRING_ROUTINE)(
+  IN PVOID Buffer);
+
+extern const PRTL_ALLOCATE_STRING_ROUTINE RtlAllocateStringRoutine;
+extern const PRTL_FREE_STRING_ROUTINE RtlFreeStringRoutine;
+
+#if _WIN32_WINNT >= 0x0600
+extern const PRTL_REALLOCATE_STRING_ROUTINE RtlReallocateStringRoutine;
+#endif
+
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
+  IN PVOID Base,
+  IN OUT PVOID *CommitAddress,
+  IN OUT PSIZE_T CommitSize);
+
+typedef struct _RTL_HEAP_PARAMETERS {
+  ULONG Length;
+  SIZE_T SegmentReserve;
+  SIZE_T SegmentCommit;
+  SIZE_T DeCommitFreeBlockThreshold;
+  SIZE_T DeCommitTotalFreeThreshold;
+  SIZE_T MaximumAllocationSize;
+  SIZE_T VirtualMemoryThreshold;
+  SIZE_T InitialCommit;
+  SIZE_T InitialReserve;
+  PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
+  SIZE_T Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
+
+#if (NTDDI_VERSION >= NTDDI_WIN2K)
+
+typedef struct _GENERATE_NAME_CONTEXT {
+  USHORT Checksum;
+  BOOLEAN CheckSumInserted;
+  UCHAR NameLength;
+  WCHAR NameBuffer[8];
+  ULONG ExtensionLength;
+  WCHAR ExtensionBuffer[4];
+  ULONG LastIndexValue;
+} GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
+
+typedef struct _PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _PREFIX_TABLE_ENTRY *NextPrefixTree;
+  RTL_SPLAY_LINKS Links;
+  PSTRING Prefix;
+} PREFIX_TABLE_ENTRY, *PPREFIX_TABLE_ENTRY;
+
+typedef struct _PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PPREFIX_TABLE_ENTRY NextPrefixTree;
+} PREFIX_TABLE, *PPREFIX_TABLE;
+
+typedef struct _UNICODE_PREFIX_TABLE_ENTRY {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *NextPrefixTree;
+  struct _UNICODE_PREFIX_TABLE_ENTRY *CaseMatch;
+  RTL_SPLAY_LINKS Links;
+  PUNICODE_STRING Prefix;
+} UNICODE_PREFIX_TABLE_ENTRY, *PUNICODE_PREFIX_TABLE_ENTRY;
+
+typedef struct _UNICODE_PREFIX_TABLE {
+  CSHORT NodeTypeCode;
+  CSHORT NameLength;
+  PUNICODE_PREFIX_TABLE_ENTRY NextPrefixTree;
+  PUNICODE_PREFIX_TABLE_ENTRY LastNextEntry;
+} UNICODE_PREFIX_TABLE, *PUNICODE_PREFIX_TABLE;
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN2K) */
+
+#if (NTDDI_VERSION >= NTDDI_WINXP)
+typedef struct _COMPRESSED_DATA_INFO {
+  USHORT CompressionFormatAndEngine;
+  UCHAR CompressionUnitShift;
+  UCHAR ChunkShift;
+  UCHAR ClusterShift;
+  UCHAR Reserved;
+  USHORT NumberOfChunks;
+  ULONG CompressedChunkSizes[ANYSIZE_ARRAY];
+} COMPRESSED_DATA_INFO, *PCOMPRESSED_DATA_INFO;
+#endif
 $endif

@@ -156,7 +156,7 @@ typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
     } Interrupt;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     struct {
-      __GNU_EXTENSION union {
+      _ANONYMOUS_UNION union {
         struct {
 #if defined(NT_PROCESSOR_GROUPS)
           USHORT Group;
@@ -1005,9 +1005,8 @@ typedef enum _CM_ERROR_CONTROL_TYPE {
                                          CM_SERVICE_VIRTUAL_DISK_BOOT_LOAD |  \
                                          CM_SERVICE_USB_DISK_BOOT_LOAD)
 
-$endif
+$endif (_WDMDDK_)
 $if (_NTDDK_)
-
 typedef struct _KEY_NAME_INFORMATION {
   ULONG NameLength;
   WCHAR Name[1];
@@ -1045,4 +1044,4 @@ typedef struct _CM_PCCARD_DEVICE_DATA {
   UCHAR IRQMap[16];
 } CM_PCCARD_DEVICE_DATA, *PCM_PCCARD_DEVICE_DATA;
 
-$endif /* _NTDDK_ */
+$endif (_NTDDK_)

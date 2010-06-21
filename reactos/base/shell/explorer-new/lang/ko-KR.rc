@@ -125,6 +125,7 @@ BEGIN
     IDS_PROPERTIES        "속성(&R)"
     IDS_OPEN_ALL_USERS    "열기 - All Users(&P)"
     IDS_EXPLORE_ALL_USERS "탐색 - All Users(&X)"
+    IDS_STARTUP_ERROR     "The system cannot start explorer because the registry is corrupted or unavailable."
 END
 
 STRINGTABLE DISCARDABLE

@@ -96,7 +96,7 @@ CleanupWindowStationImpl(VOID)
 BOOL FASTCALL
 IntSetupClipboard(PWINSTATION_OBJECT WinStaObj)
 {
-    WinStaObj->Clipboard = ExAllocatePool(PagedPool, sizeof(CLIPBOARDSYSTEM));
+    WinStaObj->Clipboard = ExAllocatePoolWithTag(PagedPool, sizeof(CLIPBOARDSYSTEM), TAG_WINSTA);
     if (WinStaObj->Clipboard)
     {
         RtlZeroMemory(WinStaObj->Clipboard, sizeof(CLIPBOARDSYSTEM));
