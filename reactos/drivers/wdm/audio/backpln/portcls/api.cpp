@@ -108,7 +108,7 @@ PcRegisterIoTimeout(
         {
             bFound = TRUE;
             Status = STATUS_UNSUCCESSFUL;
-            ExFreePool(TimerContext);
+            FreeItem(TimerContext, TAG_PORTCLASS);
             break;
         }
         ListEntry = ListEntry->Flink;
@@ -161,7 +161,7 @@ PcUnregisterIoTimeout(
         {
             bFound = TRUE;
             RemoveEntryList(&CurContext->Entry);
-            ExFreePool(CurContext);
+            FreeItem(CurContext, TAG_PORTCLASS);
             break;
         }
         ListEntry = ListEntry->Flink;
@@ -196,7 +196,7 @@ PcCompletePendingPropertyRequest(
     IoCompleteRequest(PropertyRequest->Irp, IO_SOUND_INCREMENT);
 
     // free the property request
-    ExFreePool(PropertyRequest);
+    FreeItem(PropertyRequest, TAG_PORTCLASS);
 
     // return success
     return STATUS_SUCCESS;

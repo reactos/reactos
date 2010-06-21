@@ -226,7 +226,7 @@ CPortPinWaveRT::HandleKsProperty(
                     if (NT_SUCCESS(Status))
                     {
                         if (m_Format)
-                            ExFreePoolWithTag(m_Format, TAG_PORTCLASS);
+                            FreeItem(m_Format, TAG_PORTCLASS);
 
                         m_Format = NewDataFormat;
                         Irp->IoStatus.Information = DataFormat->FormatSize;
@@ -400,7 +400,7 @@ CloseStreamRoutine(
 
     if (This->m_Format)
     {
-        ExFreePool(This->m_Format);
+        FreeItem(This->m_Format, TAG_PORTCLASS);
         This->m_Format = NULL;
     }
 

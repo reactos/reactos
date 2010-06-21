@@ -959,7 +959,7 @@ CPortPinWaveCyclic::Close(
     if (m_Format)
     {
         // free format
-        ExFreePool(m_Format);
+        FreeItem(m_Format, TAG_PORTCLASS);
         m_Format = NULL;
     }
 
