@@ -15,11 +15,6 @@ void MSVCRT_I10_OUTPUT(void)
   /* FIXME: This is probably data, not a function */
 }
 
-void __p__amblksiz(void)
-{
-   FIXME("__p__amblksiz stub\n");
-}
-
 void __fileinfo(void)
 {
    FIXME("__fileinfo stub\n");
