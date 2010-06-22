@@ -3527,9 +3527,9 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    }
    else
    {
-      DeviceNode = IopGetDeviceNode(DeviceObject);
-      if (!DeviceNode)
+      if (!IopIsValidPhysicalDeviceObject(DeviceObject))
           return STATUS_INVALID_DEVICE_REQUEST;
+      DeviceNode = IopGetDeviceNode(DeviceObject);
       KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
                        DeviceNode->InstancePath.Length;
    }
