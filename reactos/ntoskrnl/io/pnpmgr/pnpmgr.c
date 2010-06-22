@@ -3528,6 +3528,8 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    else
    {
       DeviceNode = IopGetDeviceNode(DeviceObject);
+      if (!DeviceNode)
+          return STATUS_INVALID_DEVICE_REQUEST;
       KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
                        DeviceNode->InstancePath.Length;
    }
