@@ -22,3 +22,7 @@ Description = Visor para toda clase de archivos de imagen,audio y video.
 [Section.0415]
 Licence = Freeware (dla użytku domowego)
 Description = Przeglądarka dla bardzo wielu typów obrazów, plików audio oraz wideo.
+
+[Section.0422]
+Licence = Freeware (для домашнього використання)
+Description = Переглядач для всіх видів графічних та аудіо/відео файлів.

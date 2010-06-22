@@ -19,3 +19,6 @@ Description = Clon del motor de juegos "Transport Tycoon Deluxe" de código abie
 
 [Section.0415]
 Description = Otwarty klon silnika gry "Transport Tycoon Deluxe". Do poprawnego działania potrzebna jest kopia gry Transport Tycoon.
+
+[Section.0422]
+Description = Відкритий клон двигуна гри "Transport Tycoon Deluxe". Вам потрібна копія гри Transport Tycoon.

@@ -19,3 +19,6 @@ Description = Es un pequeño y rápido navegador web con completo soporte HTML 3
 
 [Section.0415]
 Description = Bardzo mała i szybka przeglądarka internetowa z pełną obsługą HTML 3.2.
+
+[Section.0422]
+Description = Дуже малий та швидкий веб-браузер з повною підтримкою HTML 3.2.

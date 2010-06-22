@@ -13,3 +13,6 @@ CDPath = none
 
 [Section.040a]
 Description = Cliente/Servidor VNC de código abierto.
+
+[Section.0422]
+Description = Відкритий VNC клієнт/сервер.

@@ -30,3 +30,8 @@ URLDownload = http://mozilla.mirror.ac.za/seamonkey/releases/2.0.4/win32/pl/SeaM
 Description = Продолжение Mozilla Suite. Включает браузер, почтовый клиент, IRC-клиент и HTML-редактор.
 Size = 10.4MB
 URLDownload = http://mozilla.mirror.ac.za/seamonkey/releases/2.0.4/win32/ru/SeaMonkey%20Setup%202.0.4.exe
+
+[Section.0422]
+Description = Mozilla Suite повернувся. Пакет містить в собі браузер, поштовий клієнт, IRC-клієнт та HTML-редактор.
+Size = 10.4MB
+URLDownload = http://mozilla.mirror.ac.za/seamonkey/releases/2.0.4/win32/ru/SeaMonkey%20Setup%202.0.4.exe

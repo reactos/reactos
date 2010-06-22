@@ -13,3 +13,6 @@ CDPath = none
 
 [Section.0407]
 Description = Eine sehr mächtige, dynamische Programmiersprache.
+
+[Section.0422]
+Description = Дуже потужна динамічна мова програмування.

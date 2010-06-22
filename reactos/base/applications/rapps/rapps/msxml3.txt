@@ -22,3 +22,7 @@ Description = MSXML3 para varios instaladores MSI.
 [Section.0415]
 Licence = Nieznana
 Description = Niektóre spośród plików instalacyjnych MSI potrzebują parsera MSXML3.
+
+[Section.0422]
+Licence = Невідома
+Description = MSXML3 необхідна для декотрих MSI інсталяторів.

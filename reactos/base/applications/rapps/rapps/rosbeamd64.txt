@@ -19,3 +19,6 @@ Description = Te permite compilar el código de ReactOS AMD64. Para más instruc
 
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS AMD64 ze źródeł. Więcej informacji na Wiki ReactOS.
+
+[Section.0422]
+Description = Дозволяє зібрати ReactOS AMD64 з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.

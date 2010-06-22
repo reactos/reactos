@@ -22,3 +22,7 @@ Description = X es necesario para varias aplicaciones.
 [Section.0415]
 Licence = Nieznana
 Description = X jest używana przez część aplikacji.
+
+[Section.0422]
+Licence = Невідома
+Description = Файл потрібен декотрим програмам.

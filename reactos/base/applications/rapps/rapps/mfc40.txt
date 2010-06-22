@@ -25,3 +25,8 @@ Description = MFC 4 es necesario para varias aplicaciones.
 Name = Przeglądarka OLE oraz MFC (Microsoft Foundation Classes) wersja 4
 Licence = Nieznana
 Description = Biblioteka MFC 4 jest używana przez część aplikacji.
+
+[Section.0422]
+Name = Переглядач OLE та MFC (Microsoft Foundation Classes) версія 4
+Licence = Невідома
+Description = Бібліотека MFC 4 необхідна декотрим програмам.

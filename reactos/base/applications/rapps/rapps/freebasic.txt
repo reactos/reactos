@@ -19,3 +19,6 @@ Description = Compilador BASIC de código abierto. El lenguaje BASIC es compatib
 
 [Section.0415]
 Description = Otwarty kompilator BASIC, ze składnią kompatybilną z QBASIC.
+
+[Section.0422]
+Description = Відкритий компілятор BASIC. Синтаксис сумісний з QBASIC.

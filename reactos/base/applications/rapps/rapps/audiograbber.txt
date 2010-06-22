@@ -19,3 +19,6 @@ Description = Un buen CD Ripper/ conversor de archivos de audio.
 
 [Section.0415]
 Description = Bardzo dobry CD Ripper/konwerter plików audio.
+
+[Section.0422]
+Description = Чудовий CD Ріппер/Конвертер аудіо файлів.

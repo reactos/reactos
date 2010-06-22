@@ -19,3 +19,6 @@ Description = Diablo 2 Shareware. zeckensack's glide wrapper es necesario para s
 
 [Section.0415]
 Description = Diablo 2 Shareware. Do poprawnego działania wymagany jest zainstalowany zeckensacks glide wrapper.
+
+[Section.0422]
+Description = Diablo 2 Shareware. Для запуску потрібен zeckensack's glide wrapper.

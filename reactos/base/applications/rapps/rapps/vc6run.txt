@@ -22,3 +22,7 @@ Description = Librerias Visual Studio 2006.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 6.
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Studio 6.

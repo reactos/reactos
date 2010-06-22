@@ -19,3 +19,6 @@ Licence = Desconocida
 
 [Section.0415]
 Licence = Nieznana
+
+[Section.0422]
+Licence = Невідома

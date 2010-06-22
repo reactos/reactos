@@ -19,3 +19,6 @@ Description = Aplicación de mensajería instantánea multiprotocolo de código 
 
 [Section.0415]
 Description = Otwarty komunikator internetowy, obsługujący wiele różnych protokołów (m.in. GG, Tlen, Jabber, ICQ, IRC) - może nie działać prawidłowo.
+
+[Section.0422]
+Description = Відкрита мультипротокольна програма миттєвих повідомлень - може не працювати повністю.
