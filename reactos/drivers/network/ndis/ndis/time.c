@@ -170,11 +170,6 @@ MiniTimerDpcFunction(PKDPC Dpc,
 {
   PNDIS_MINIPORT_TIMER Timer = DeferredContext;
 
-  Timer->MiniportTimerFunction(Dpc,
-                               Timer->MiniportTimerContext,
-                               SystemArgument1,
-                               SystemArgument2);
-
   /* Only dequeue if the timer has a period of 0 */
   if (!Timer->Timer.Period)
   {
@@ -183,6 +178,11 @@ MiniTimerDpcFunction(PKDPC Dpc,
       if (!DequeueMiniportTimer(Timer)) ASSERT(FALSE);
       KeReleaseSpinLockFromDpcLevel(&Timer->Miniport->Lock);
   }
+
+  Timer->MiniportTimerFunction(Dpc,
+                               Timer->MiniportTimerContext,
+                               SystemArgument1,
+                               SystemArgument2);
 }
 
 
