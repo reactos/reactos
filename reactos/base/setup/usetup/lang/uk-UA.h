@@ -422,13 +422,13 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         6,
         23,
-        "Коли всi параметри будуть визначенi, виберiть \"Застосувати данi параметри пристроїв\"",
+        "Коли всi параметри будуть визначенi, виберiть",
         TEXT_STYLE_NORMAL
     },
     {
         6,
         24,
-        "i натиснiть ENTER.",
+        "\"Застосувати данi параметри пристроїв\" i натиснiть ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -525,7 +525,7 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору типу Вашого комп'ютера.",
+        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору типу Вашого комп'ютера",
         TEXT_STYLE_NORMAL
     },
     {
@@ -662,7 +662,7 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
     },
     {   8,
         10,
-         "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу монiтору.",
+         "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу монiтору",
          TEXT_STYLE_NORMAL
     },
     {
@@ -720,7 +720,7 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
     {
         10,
         9,
-        "всiх CD-ROM з CD-приводiв.",
+        "всi CD-ROM з CD-приводiв.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -837,7 +837,7 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
     {
         0,
         0,
-        "Будь-ласка зачекайте...",
+        "Please wait...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG
     },
     {
@@ -1037,13 +1037,13 @@ static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
     {
         8,
         10,
-        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу клавiатури.",
+        "\x07  Натискайте клавiшi ВВЕРХ та ВНИЗ для вибору потрiбного типу",
         TEXT_STYLE_NORMAL
     },
     {
         8,
         11,
-        "   i натиснiть ENTER.",
+        "   клавiатури i натиснiть ENTER.",
         TEXT_STYLE_NORMAL
     },
     {
@@ -1485,8 +1485,8 @@ MUI_ERROR ukUAErrorEntries[] =
     },
     {
         //ERROR_INSUFFICIENT_DISKSPACE,
-        "Not enough free space in the selected partition.\n"
-        "  * Press any key to continue.",
+        "Недостатньо вiльного мiсця на обраному роздiлi.\n"
+        "  * Натиснiть будь-яку клавiшу для продовження.",
         NULL
     },
     {
