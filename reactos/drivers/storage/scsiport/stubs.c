@@ -14,6 +14,31 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef ScsiPortReadPortBufferUchar
+#undef ScsiPortReadPortBufferUshort
+#undef ScsiPortReadPortBufferUlong
+#undef ScsiPortReadPortUchar
+#undef ScsiPortReadPortUshort
+#undef ScsiPortReadPortUlong
+#undef ScsiPortReadRegisterBufferUchar
+#undef ScsiPortReadRegisterBufferUshort
+#undef ScsiPortReadRegisterBufferUlong
+#undef ScsiPortReadRegisterUchar
+#undef ScsiPortReadRegisterUshort
+#undef ScsiPortReadRegisterUlong
+#undef ScsiPortWritePortBufferUchar
+#undef ScsiPortWritePortBufferUshort
+#undef ScsiPortWritePortBufferUlong
+#undef ScsiPortWritePortUchar
+#undef ScsiPortWritePortUshort
+#undef ScsiPortWritePortUlong
+#undef ScsiPortWriteRegisterBufferUchar
+#undef ScsiPortWriteRegisterBufferUshort
+#undef ScsiPortWriteRegisterBufferUlong
+#undef ScsiPortWriteRegisterUchar
+#undef ScsiPortWriteRegisterUshort
+#undef ScsiPortWriteRegisterUlong
+
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
