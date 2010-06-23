@@ -149,7 +149,7 @@ Pin_fnClose(
         ZwClose(Context->hMixerPin);
     }
 
-    ExFreePool(Context);
+    FreeItem(Context);
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;
@@ -315,7 +315,7 @@ InstantiatePins(
         /* the audio irp pin didnt accept the input format
          * let's compute a compatible format
          */
-        MixerPinConnect = ExAllocatePool(NonPagedPool, sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT_WAVEFORMATEX));
+        MixerPinConnect = AllocateItem(NonPagedPool, sizeof(KSPIN_CONNECT) + sizeof(KSDATAFORMAT_WAVEFORMATEX));
         if (!MixerPinConnect)
         {
             /* not enough memory */
@@ -335,7 +335,7 @@ InstantiatePins(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("ComputeCompatibleFormat failed with %x\n", Status);
-            ExFreePool(MixerPinConnect);
+            FreeItem(MixerPinConnect);
             return Status;
         }
 
@@ -348,7 +348,7 @@ InstantiatePins(
             DPRINT1(" InputFormat: SampleRate %u Bits %u Channels %u\n", InputFormat->WaveFormatEx.nSamplesPerSec, InputFormat->WaveFormatEx.wBitsPerSample, InputFormat->WaveFormatEx.nChannels);
             DPRINT1("OutputFormat: SampleRate %u Bits %u Channels %u\n", OutputFormat->WaveFormatEx.nSamplesPerSec, OutputFormat->WaveFormatEx.wBitsPerSample, OutputFormat->WaveFormatEx.nChannels);
 
-            ExFreePool(MixerPinConnect);
+            FreeItem(MixerPinConnect);
             return Status;
         }
     }
@@ -378,7 +378,7 @@ InstantiatePins(
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to create Mixer Pin with %x\n", Status);
-            ExFreePool(MixerPinConnect);
+            FreeItem(MixerPinConnect);
         }
     }
     /* done */
@@ -408,7 +408,7 @@ GetConnectRequest(
     ParametersLength = IoStack->FileObject->FileName.MaximumLength - ObjectLength;
 
     /* allocate buffer */
-    Buffer = ExAllocatePool(NonPagedPool, ParametersLength);
+    Buffer = AllocateItem(NonPagedPool, ParametersLength);
     if (!Buffer)
         return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -471,7 +471,7 @@ DispatchCreateSysAudioPin(
 
 
     /* allocate dispatch context */
-    DispatchContext = ExAllocatePool(NonPagedPool, sizeof(DISPATCH_CONTEXT));
+    DispatchContext = AllocateItem(NonPagedPool, sizeof(DISPATCH_CONTEXT));
     if (!DispatchContext)
     {
         /* failed */
@@ -488,7 +488,7 @@ DispatchCreateSysAudioPin(
     if (!NT_SUCCESS(Status))
     {
         /* failed */
-        ExFreePool(DispatchContext);
+        FreeItem(DispatchContext);
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
@@ -500,7 +500,7 @@ DispatchCreateSysAudioPin(
     {
         /* failed */
         KsFreeObjectHeader(DispatchContext->ObjectHeader);
-        ExFreePool(DispatchContext);
+        FreeItem(DispatchContext);
     }
     else
     {

@@ -19,3 +19,6 @@ Description = Tablero de ajedrez para Windows/ReactOS que puede ser utilizado co
 
 [Section.0415]
 Description = Graficzna szachownica dla systemu Windows/ReactOS, która może służyć jako graficzna nakładka dla GNU Chess, Crafty, lub innych programów szachowych(w tym internetowych serwerów szachowych) lub szachów korespondencyjnych.
+
+[Section.0422]
+Description = Графічна шахматна дошка для Windows/ReactOS, що може слугувати графічним інтерфейсом для GNU Chess, Crafty, та інших шахматних двигунів, для серверів інтернет-шахмат та для шахматної переписки по е-мейл.

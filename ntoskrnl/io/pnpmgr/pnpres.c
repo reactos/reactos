@@ -755,7 +755,7 @@ IopTranslateDeviceResources(
                   DescriptorRaw->u.Interrupt.Level,
                   DescriptorRaw->u.Interrupt.Vector,
                   (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
-                  &DescriptorRaw->u.Interrupt.Affinity);
+                  &DescriptorTranslated->u.Interrupt.Affinity);
                break;
             }
             case CmResourceTypeMemory:

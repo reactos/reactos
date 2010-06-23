@@ -329,7 +329,6 @@
 		<file>gcvt.c</file>
 		<file>getenv.c</file>
 		<file>makepath.c</file>
-		<file>malloc.c</file>
 		<file>mbtowc.c</file>
 		<file>mbstowcs.c</file>
 		<file>obsol.c</file>

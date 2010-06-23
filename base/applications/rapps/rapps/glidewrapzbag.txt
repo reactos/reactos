@@ -19,3 +19,6 @@ Description = glidewrapper es necesario para ejecutar Diablo 2 en ReactOS.
 
 [Section.0415]
 Description = glidewrapper jest potrzebny do uruchomienia Diablo2 w ReactOS-ie.
+
+[Section.0422]
+Description = glidewrapper необхідний для запуску Diablo2 в ReactOS.

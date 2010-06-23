@@ -427,7 +427,7 @@ CPortPinDMus::Close(
 
     if (m_Format)
     {
-        ExFreePool(m_Format);
+        FreeItem(m_Format, TAG_PORTCLASS);
         m_Format = NULL;
     }
 

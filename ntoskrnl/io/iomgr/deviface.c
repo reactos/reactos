@@ -105,17 +105,19 @@ OpenRegistryHandlesFromSymbolicLink(IN PUNICODE_STRING SymbolicLinkName,
         goto cleanup;
     }
 
-    SubKeyName.Buffer = ExAllocatePool(PagedPool, SymbolicLinkName->Length);
+    SubKeyName.MaximumLength = SymbolicLinkName->Length + sizeof(WCHAR);
+    SubKeyName.Length = 0;
+    SubKeyName.Buffer = ExAllocatePool(PagedPool, SubKeyName.MaximumLength);
     if (!SubKeyName.Buffer)
     {
         Status = STATUS_INSUFFICIENT_RESOURCES;
         goto cleanup;
     }
-    SubKeyName.MaximumLength = SymbolicLinkName->Length;
-    SubKeyName.Length = 0;
 
     RtlAppendUnicodeStringToString(&SubKeyName,
                                    SymbolicLinkName);
+
+    SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     SubKeyName.Buffer[0] = L'#';
     SubKeyName.Buffer[1] = L'#';

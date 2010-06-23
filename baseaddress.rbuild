@@ -27,7 +27,7 @@
 	<property name="BASEADDRESS_MSDVBNP"		value="0x58280000" />
 	<property name="BASEADDRESS_MSG711ACM"		value="0x584f0000" />
 	<property name="BASEADDRESS_IMAADP32ACM"	value="0x585e0000" />
-	<property name="BASEADDRESS_BDAPLGIN"	value="0x58600000" />
+	<property name="BASEADDRESS_BDAPLGIN"		value="0x58600000" />
 	<property name="BASEADDRESS_TELEPHON"		value="0x58750000" />
 	<property name="BASEADDRESS_PWRCFG"		value="0x587e0000" />
 	<property name="BASEADDRESS_MMSYS"		value="0x588a0000" />
@@ -133,6 +133,7 @@
 	<property name="BASEADDRESS_OLESVR32"		value="0x71dd0000" />
 	<property name="BASEADDRESS_OLECLI32"		value="0x71df0000" />
 	<property name="BASEADDRESS_OLETHK32"		value="0x71e10000" />
+	<property name="BASEADDRESS_NETEVENT"		value="0x71e70000" />
 	<property name="BASEADDRESS_DPLAY"		value="0x71e80000" />
 	<property name="BASEADDRESS_SECURITY"		value="0x71f10000" />
 	<property name="BASEADDRESS_MSSIGN32"		value="0x720c0000" />
@@ -188,7 +189,7 @@
 	<property name="BASEADDRESS_SHLWAPI"		value="0x76100000" />
 	<property name="BASEADDRESS_INETCOMM"		value="0x76140000" />
 	<property name="BASEADDRESS_COMCTL32"		value="0x76160000" />
-	<property name="BASEADDRESS_COMDLG32"		value="0x76210000" />
+	<property name="BASEADDRESS_COMDLG32"		value="0x76220000" />
 	<property name="BASEADDRESS_WINSTA"		value="0x762f0000" />
 	<property name="BASEADDRESS_IMM32"		value="0x76320000" />
 	<property name="BASEADDRESS_D3D8THK"		value="0x76340000" />

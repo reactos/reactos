@@ -12,4 +12,8 @@
 	<module name="errcodes" type="messageheader">
 		<file>errcodes.mc</file>
 	</module>
+
+	<module name="neteventmsg" type="messageheader">
+		<file>netevent.mc</file>
+	</module>
 </group>

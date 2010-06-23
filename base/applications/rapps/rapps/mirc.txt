@@ -19,3 +19,6 @@ Description = El más popular cliente para Internet Relay Chat (IRC).
 
 [Section.0415]
 Description = Najpopularniejszy klient IRC (Internet Relay Chat).
+
+[Section.0422]
+Description = Найпопулярніший клієнт IRC (Internet Relay Chat).

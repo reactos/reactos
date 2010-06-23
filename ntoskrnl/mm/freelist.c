@@ -255,7 +255,6 @@ MiAllocatePagesForMdl(IN PHYSICAL_ADDRESS LowAddress,
             //
             // Make sure it's really free
             //
-            ASSERT(MiIsPfnInUse(Pfn1) == FALSE);
             ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
             
             //

@@ -13,3 +13,6 @@ CDPath = none
 
 [Section.0407]
 Description = ReMooD ist ein Port des Doom Legacy Sources. Es versucht das klassische Legacy Erfahrung zusammen mit neuen Features und mehr Stabilit�t zu bieten. Unterst�tzt werden Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x und h�her; und Linux (x86 und x86_64).
+
+[Section.0422]
+Description = ReMooD э Портом вихідних кодів Doom Legacy. Його метою є додати нові можливості та стабільність до досвіду класичного Legacy. Він підтримує Windows 98/98SE/ME/NT/2000/XP/2003/ Vista/2008/7/XP 64-bit/2003 64-bit/Vista 64-bit/2008 64-bit/7 64-bit; ReactOS 0.3.x та новіші; а також Linux (x86 та x86_64).

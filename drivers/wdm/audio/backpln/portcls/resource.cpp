@@ -438,8 +438,8 @@ PcNewResourceSublist(
 
     Parent = (CResourceList*)ParentList;
 
-    if (!Parent->m_TranslatedResourceList->List->PartialResourceList.Count ||
-        !Parent->m_UntranslatedResourceList->List->PartialResourceList.Count)
+    if (!Parent->m_TranslatedResourceList->List[0].PartialResourceList.Count ||
+        !Parent->m_UntranslatedResourceList->List[0].PartialResourceList.Count)
     {
         // parent list can't be empty
         return STATUS_INVALID_PARAMETER;
@@ -467,8 +467,8 @@ PcNewResourceSublist(
     RtlCopyMemory(NewList->m_UntranslatedResourceList, Parent->m_UntranslatedResourceList, sizeof(CM_RESOURCE_LIST));
 
     // mark list as empty
-    NewList->m_TranslatedResourceList->List->PartialResourceList.Count = 0;
-    NewList->m_UntranslatedResourceList->List->PartialResourceList.Count = 0;
+    NewList->m_TranslatedResourceList->List[0].PartialResourceList.Count = 0;
+    NewList->m_UntranslatedResourceList->List[0].PartialResourceList.Count = 0;
     // store members
     NewList->m_OuterUnknown = OuterUnknown;
     NewList->m_PoolType = PoolType;

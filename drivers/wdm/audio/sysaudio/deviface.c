@@ -70,7 +70,7 @@ InsertAudioDevice(
     PKSAUDIO_DEVICE_ENTRY DeviceEntry = NULL;
 
     /* a new device has arrived */
-    DeviceEntry = ExAllocatePool(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
+    DeviceEntry = AllocateItem(NonPagedPool, sizeof(KSAUDIO_DEVICE_ENTRY));
     if (!DeviceEntry)
     {
         /* no memory */
@@ -84,7 +84,7 @@ InsertAudioDevice(
     DeviceEntry->DeviceName.Length = 0;
     DeviceEntry->DeviceName.MaximumLength = DeviceName->MaximumLength + 10 * sizeof(WCHAR);
 
-    DeviceEntry->DeviceName.Buffer = ExAllocatePool(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
+    DeviceEntry->DeviceName.Buffer = AllocateItem(NonPagedPool, DeviceEntry->DeviceName.MaximumLength);
 
     if (!DeviceEntry->DeviceName.Buffer)
     {
@@ -115,9 +115,9 @@ cleanup:
     if (DeviceEntry)
     {
         if (DeviceEntry->DeviceName.Buffer)
-            ExFreePool(DeviceEntry->DeviceName.Buffer);
+            FreeItem(DeviceEntry->DeviceName.Buffer);
 
-        ExFreePool(DeviceEntry);
+        FreeItem(DeviceEntry);
     }
 
     return Status;

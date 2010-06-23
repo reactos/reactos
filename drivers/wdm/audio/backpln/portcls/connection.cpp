@@ -207,7 +207,7 @@ RegisterConnection(
 
     if (FromSubDeviceDescriptor)
     {
-        FromEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + ToString->MaximumLength, TAG_PORTCLASS);
+        FromEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + ToString->MaximumLength + sizeof(WCHAR), TAG_PORTCLASS);
         if (!FromEntry)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -217,7 +217,7 @@ RegisterConnection(
 
     if (ToSubDeviceDescriptor)
     {
-        ToEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + FromString->MaximumLength, TAG_PORTCLASS);
+        ToEntry = (PPHYSICAL_CONNECTION_ENTRY)AllocateItem(NonPagedPool, sizeof(PHYSICAL_CONNECTION_ENTRY) + FromString->MaximumLength + sizeof(WCHAR), TAG_PORTCLASS);
         if (!ToEntry)
         {
             Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -229,9 +229,9 @@ RegisterConnection(
     {
         FromEntry->FromPin = FromPin;
         FromEntry->Connection.Pin = ToPin;
-        FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength;
+        FromEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + ToString->MaximumLength + sizeof(WCHAR);
         RtlMoveMemory(&FromEntry->Connection.SymbolicLinkName, ToString->Buffer, ToString->MaximumLength);
-        FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = L'\0';
+        FromEntry->Connection.SymbolicLinkName[ToString->Length / sizeof(WCHAR)] = UNICODE_NULL;
 
         InsertTailList(&FromSubDeviceDescriptor->PhysicalConnectionList, &FromEntry->Entry);
     }
@@ -241,9 +241,9 @@ RegisterConnection(
     {
         ToEntry->FromPin = ToPin;
         ToEntry->Connection.Pin = FromPin;
-        ToEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + FromString->MaximumLength;
+        ToEntry->Connection.Size = sizeof(KSPIN_PHYSICALCONNECTION) + FromString->MaximumLength + sizeof(WCHAR);
         RtlMoveMemory(&ToEntry->Connection.SymbolicLinkName, FromString->Buffer, FromString->MaximumLength);
-        ToEntry->Connection.SymbolicLinkName[FromString->Length /  sizeof(WCHAR)] = L'\0';
+        ToEntry->Connection.SymbolicLinkName[FromString->Length /  sizeof(WCHAR)] = UNICODE_NULL;
 
         InsertTailList(&ToSubDeviceDescriptor->PhysicalConnectionList, &ToEntry->Entry);
 

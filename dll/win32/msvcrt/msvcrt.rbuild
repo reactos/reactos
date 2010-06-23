@@ -1,5 +1,5 @@
 <module name="msvcrt" type="win32dll" baseaddress="${BASEADDRESS_MSVCRT}" installbase="system32" installname="msvcrt.dll" iscrt="yes">
-	<importlibrary definition="msvcrt.def" />
+	<importlibrary definition="msvcrt.spec" />
 	<include base="msvcrt">.</include>
 	<include base="crt">include</include>
 	<define name="USE_MSVCRT_PREFIX" />
