@@ -186,8 +186,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                );
          assert(hListBox != NULL);
 
-         SetWindowLong(
-            hListBox, GWL_ID, reinterpret_cast<LONG>(hListBox)
+         SetWindowLongPtr(
+            hListBox, GWL_ID, reinterpret_cast<LONG_PTR>(hListBox)
             );
 
          SNDMSG(hListBox, LB_ADDSTRING, 0,
@@ -238,7 +238,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
             reinterpret_cast<LPMEASUREITEMSTRUCT>(lParam);
          assert(lpmis != NULL);
 
-         if (lpmis->CtlID == reinterpret_cast<UINT>(hListBox))
+         if (lpmis->CtlID == reinterpret_cast<UINT_PTR>(hListBox))
          {
             lpmis->itemHeight = 150;
             return TRUE;
@@ -251,7 +251,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
             reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
          assert(lpdis != NULL);
 
-         if (lpdis->CtlID == reinterpret_cast<UINT>(hListBox))
+         if (lpdis->CtlID == reinterpret_cast<UINT_PTR>(hListBox))
          {
             SaveDC(lpdis->hDC);
 #if 0
