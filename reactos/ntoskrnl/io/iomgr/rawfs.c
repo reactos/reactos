@@ -439,8 +439,26 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
             break;
     }
 
-    /* Unlock device and return */
+    /* Unlock device */
     KeReleaseMutex(&Vcb->Mutex, FALSE);
+
+    /* In case of status change, notify */
+    switch (IoStackLocation->Parameters.FileSystemControl.FsControlCode)
+    {
+        case FSCTL_LOCK_VOLUME:
+            FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, (NT_SUCCESS(Status) ? FSRTL_VOLUME_LOCK : FSRTL_VOLUME_LOCK_FAILED));
+            break;
+        case FSCTL_UNLOCK_VOLUME:
+            if (NT_SUCCESS(Status))
+            {
+                FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, FSRTL_VOLUME_UNLOCK);
+            }
+            break;
+        case FSCTL_DISMOUNT_VOLUME:
+            FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, (NT_SUCCESS(Status) ? FSRTL_VOLUME_DISMOUNT : FSRTL_VOLUME_DISMOUNT_FAILED));
+            break;
+    }
+
     return Status;
 }
 

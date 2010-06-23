@@ -4,6 +4,7 @@
  * FILE:            ntoskrnl/io/pnpmgr/pnpreport.c
  * PURPOSE:         Device Changes Reporting Functions
  * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
+ *                  Pierre Schweitzer
  */
 
 /* INCLUDES ******************************************************************/
@@ -11,6 +12,17 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+
+/* TYPES *******************************************************************/
+
+typedef struct _INTERNAL_WORK_QUEUE_ITEM
+{
+  WORK_QUEUE_ITEM WorkItem;
+  PDEVICE_OBJECT PhysicalDeviceObject;
+  PDEVICE_CHANGE_COMPLETE_CALLBACK Callback;
+  PVOID Context;
+  PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure;
+} INTERNAL_WORK_QUEUE_ITEM, *PINTERNAL_WORK_QUEUE_ITEM;
 
 NTSTATUS
 NTAPI
@@ -27,8 +39,15 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
                                 PVOID Context);
 
 NTSTATUS
-IopDetectResourceConflict(
-   IN PCM_RESOURCE_LIST ResourceList);
+IopDetectResourceConflict(IN PCM_RESOURCE_LIST ResourceList);
+
+NTSTATUS
+PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
+                       IN OUT PKEVENT SyncEvent OPTIONAL,
+                       IN OUT PNTSTATUS SyncStatus OPTIONAL,
+                       IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
+                       IN PVOID Context OPTIONAL,
+                       IN PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure);
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -89,6 +108,37 @@ IopGetInterfaceTypeString(INTERFACE_TYPE IfType)
          DPRINT1("Invalid bus type: %d\n", IfType);
          return NULL;
     }
+}
+
+VOID
+IopReportTargetDeviceChangeAsyncWorker(PVOID Context)
+{
+  PINTERNAL_WORK_QUEUE_ITEM Item;
+
+  Item = (PINTERNAL_WORK_QUEUE_ITEM)Context;
+  PpSetCustomTargetEvent(Item->PhysicalDeviceObject, NULL, NULL, Item->Callback, Item->Context, Item->NotificationStructure);
+  ObDereferenceObject(Item->PhysicalDeviceObject);
+  ExFreePoolWithTag(Context, '  pP');
+}
+
+NTSTATUS
+PpSetCustomTargetEvent(IN PDEVICE_OBJECT DeviceObject,
+                       IN OUT PKEVENT SyncEvent OPTIONAL,
+                       IN OUT PNTSTATUS SyncStatus OPTIONAL,
+                       IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
+                       IN PVOID Context OPTIONAL,
+                       IN PTARGET_DEVICE_CUSTOM_NOTIFICATION NotificationStructure)
+{
+    ASSERT(NotificationStructure != NULL);
+    ASSERT(DeviceObject != NULL);
+
+    /* That call is totally wrong but notifications handler must be fixed first */
+    IopNotifyPlugPlayNotification(DeviceObject,
+                                  EventCategoryTargetDeviceChange,
+                                  &GUID_PNP_CUSTOM_NOTIFICATION,
+                                  NotificationStructure,
+                                  NULL);
+    return STATUS_SUCCESS;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -343,19 +393,57 @@ IopSetEvent(IN PVOID Context)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
 IoReportTargetDeviceChange(IN PDEVICE_OBJECT PhysicalDeviceObject,
                            IN PVOID NotificationStructure)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    KEVENT NotifyEvent;
+    NTSTATUS Status, NotifyStatus;
+    PTARGET_DEVICE_CUSTOM_NOTIFICATION notifyStruct = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+
+    ASSERT(notifyStruct);
+
+    /* Check for valid PDO */
+    if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+    }
+
+    /* FileObject must be null. PnP will fill in it */
+    ASSERT(notifyStruct->FileObject == NULL);
+
+    /* Do not handle system PnP events */
+    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    if (notifyStruct->Version != 1)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* Initialize even that will let us know when PnP will have finished notify */
+    KeInitializeEvent(&NotifyEvent, NotificationEvent, FALSE);
+
+    Status = PpSetCustomTargetEvent(PhysicalDeviceObject, &NotifyEvent, &NotifyStatus, NULL, NULL, notifyStruct);
+    /* If no error, wait for the notify to end and return the status of the notify and not of the event */
+    if (NT_SUCCESS(Status))
+    {
+        KeWaitForSingleObject(&NotifyEvent, Executive, KernelMode, FALSE, NULL);
+        Status = NotifyStatus;
+    }
+
+    return Status;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 NTAPI
@@ -364,6 +452,47 @@ IoReportTargetDeviceChangeAsynchronous(IN PDEVICE_OBJECT PhysicalDeviceObject,
                                        IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback OPTIONAL,
                                        IN PVOID Context OPTIONAL)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PINTERNAL_WORK_QUEUE_ITEM Item = NULL;
+    PTARGET_DEVICE_CUSTOM_NOTIFICATION notifyStruct = (PTARGET_DEVICE_CUSTOM_NOTIFICATION)NotificationStructure;
+
+    ASSERT(notifyStruct);
+
+    /* Check for valid PDO */
+    if (!IopIsValidPhysicalDeviceObject(PhysicalDeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG)PhysicalDeviceObject, 0, 0);
+    }
+
+    /* FileObject must be null. PnP will fill in it */
+    ASSERT(notifyStruct->FileObject == NULL);
+
+    /* Do not handle system PnP events */
+    if ((RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_QUERY_REMOVE), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_CANCELLED), sizeof(GUID)) != sizeof(GUID)) ||
+        (RtlCompareMemory(&(notifyStruct->Event), &(GUID_TARGET_DEVICE_REMOVE_COMPLETE), sizeof(GUID)) != sizeof(GUID)))
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    if (notifyStruct->Version != 1)
+    {
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+
+    /* We need to store all the data given by the caller with the WorkItem, so use our own struct */
+    Item = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNAL_WORK_QUEUE_ITEM), '  pP');
+    if (!Item) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Initialize all stuff */
+    ObReferenceObject(PhysicalDeviceObject);
+    Item->NotificationStructure = notifyStruct;
+    Item->PhysicalDeviceObject = PhysicalDeviceObject;
+    Item->Callback = Callback;
+    Item->Context = Context;
+    ExInitializeWorkItem(&(Item->WorkItem), (PWORKER_THREAD_ROUTINE)IopReportTargetDeviceChangeAsyncWorker, Item);
+
+    /* Finally, queue the item, our work here is done */
+    ExQueueWorkItem(&(Item->WorkItem), DelayedWorkQueue);
+
+    return STATUS_PENDING;
 }
