@@ -766,4 +766,24 @@ typedef struct _GROUP_AFFINITY {
 #define LANG_YORUBA                      0x6a
 #define LANG_ZULU                        0x35
 
+#define VER_WORKSTATION_NT               0x40000000
+#define VER_SERVER_NT                    0x80000000
+
+#define VER_SUITE_SMALLBUSINESS            1
+#define VER_SUITE_ENTERPRISE               2
+#define VER_SUITE_BACKOFFICE               4
+#define VER_SUITE_COMMUNICATIONS           8
+#define VER_SUITE_TERMINAL                 16
+#define VER_SUITE_SMALLBUSINESS_RESTRICTED 32
+#define VER_SUITE_EMBEDDEDNT               64
+#define VER_SUITE_DATACENTER               128
+#define VER_SUITE_SINGLEUSERTS             256
+#define VER_SUITE_PERSONAL                 512
+#define VER_SUITE_BLADE                    1024
+#define VER_SUITE_EMBEDDED_RESTRICTED      2048
+#define VER_SUITE_SECURITY_APPLIANCE       4096
+#define VER_SUITE_STORAGE_SERVER           8192
+#define VER_SUITE_COMPUTE_SERVER           16384
+#define VER_SUITE_WH_SERVER                32768
+
 #endif /* _NTDEF_ */
