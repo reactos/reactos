@@ -354,10 +354,11 @@ WdmAudInitUserModeMixer()
     return TRUE;
 }
 
-VOID
-WdmAudCleanupMMixer()
+MMRESULT
+WdmAudCleanupByMMixer()
 {
     /* TODO */
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
