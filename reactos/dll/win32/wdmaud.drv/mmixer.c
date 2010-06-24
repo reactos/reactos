@@ -282,7 +282,7 @@ Enum(
         HeapFree(GetProcessHeap(), 0, DetailData);
         return MM_STATUS_NO_MEMORY;
     }
-
+	DPRINT1("DeviceName %S\n", DetailData->DevicePath);
     wcscpy(*DeviceName, DetailData->DevicePath);
     HeapFree(GetProcessHeap(), 0, DetailData);
 
@@ -519,7 +519,10 @@ WdmAudOpenSoundDeviceByMMixer(
     IN  struct _SOUND_DEVICE* SoundDevice,
     OUT PVOID* Handle)
 {
-    return WdmAudInitUserModeMixer();
+    if (WdmAudInitUserModeMixer())
+        return MMSYSERR_NOERROR;
+    else
+        return MMSYSERR_ERROR;
 }
 
 MMRESULT
