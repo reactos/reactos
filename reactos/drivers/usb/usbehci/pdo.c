@@ -394,11 +394,11 @@ PdoDispatchPnp(
                                                             USB_POOL_TAG);
 
             RootHubDevice->Configs[0] = ExAllocatePoolWithTag(NonPagedPool,
-                                                            sizeof(USB_CONFIGURATION) + sizeof(PVOID) * ROOTHUB2_CONFIGURATION_DESCRIPTOR[5],
+                                                            sizeof(USB_CONFIGURATION) + sizeof(PVOID) * ROOTHUB2_CONFIGURATION_DESCRIPTOR[4],
                                                             USB_POOL_TAG);
 
             RootHubDevice->Configs[0]->Interfaces[0] = ExAllocatePoolWithTag(NonPagedPool,
-                                                            sizeof(USB_INTERFACE) + sizeof(PVOID) * ROOTHUB2_INTERFACE_DESCRIPTOR[3],
+                                                            sizeof(USB_INTERFACE) + sizeof(PVOID) * ROOTHUB2_INTERFACE_DESCRIPTOR[4],
                                                             USB_POOL_TAG);
 
             RootHubDevice->Configs[0]->Interfaces[0]->EndPoints[0] = ExAllocatePoolWithTag(NonPagedPool,
