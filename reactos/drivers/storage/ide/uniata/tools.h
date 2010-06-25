@@ -94,9 +94,9 @@ typedef struct _FOUR_BYTE {
 }
 #define DEC_TO_BCD(x) (((x / 10) << 4) + (x % 10))
 
+/*
 
-
-#if defined(_M_X86_) && defined(_MSC_VER)
+#if defined _X86_ && !defined(__GNUC__)
 
 #define MOV_DD_SWP(a,b)           \
 {                                 \
@@ -203,7 +203,7 @@ typedef struct _FOUR_BYTE {
     __asm mov [ebx],eax           \
 }
 
-#elif !defined(_M_X86_)  // NO X86 optimization , use generic C/C++
+#else   // NO X86 optimization , use generic C/C++
 
 #define MOV_DD_SWP(a,b)           \
 {                                 \
@@ -247,17 +247,6 @@ typedef struct _FOUR_BYTE {
     _to_->Byte3 = _from_->Byte0;  \
 }
 
-#define MOV_SWP_DW2DD(a,b)        \
-{                                 \
-    PFOUR_BYTE _from_, _to_;      \
-    _from_ = ((PFOUR_BYTE)&(b));  \
-    _to_ =   ((PFOUR_BYTE)&(a));  \
-    *((PUSHORT)_to_) = 0;         \
-    _to_->Byte0 = _from_->Byte1;  \
-    _to_->Byte1 = _from_->Byte0;  \
-}
-
-
 #define MOV_MSF(a,b)              \
 {                                 \
     PFOUR_BYTE _from_, _to_;      \
@@ -293,7 +282,7 @@ typedef struct _FOUR_BYTE {
 
 #define MOV_3B_SWP(a,b)     MOV_MSF_SWP(a,b)
 
-
+*/
 
 #ifdef DBG
 

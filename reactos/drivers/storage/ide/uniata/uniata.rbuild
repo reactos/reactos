@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="uniata" type="kernelmodedriver" installbase="system32/drivers" installname="uniata.sys" allowwarnings="true">
+<module name="uniata" type="kernelmodedriver" installbase="system32/drivers" installname="uniata.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
@@ -23,8 +23,5 @@
 
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
-		<if property="ARCH" value="i386">
-			<file>ros_glue_asm.s</file>
-		</if>
 	</directory>
 </module>
