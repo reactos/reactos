@@ -677,6 +677,17 @@ RtlCreateSystemVolumeInformationFolder(
 */
 NTSTATUS
 NTAPI
+RtlCreateBootStatusDataFile(VOID)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+* @unimplemented
+*/
+NTSTATUS
+NTAPI
 RtlGetSetBootStatusData(
 	HANDLE Filehandle,
 	BOOLEAN WriteMode,

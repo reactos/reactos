@@ -3324,6 +3324,44 @@ RtlFlushSecureMemoryCache(
 );
 #endif
 
+//
+// Boot Status Data Functions
+//
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateBootStatusDataFile(
+    VOID
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetSetBootStatusData(
+    HANDLE FileHandle,
+    BOOLEAN WriteMode,
+    DWORD DataClass,
+    PVOID Buffer,
+    ULONG BufferSize,
+    DWORD DataClass2
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlLockBootStatusData(
+    HANDLE FileHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnlockBootStatusData(
+    HANDLE FileHandle
+);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
