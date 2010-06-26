@@ -83,8 +83,21 @@ BEGIN
     CONTROL         "&Думи",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,85,194,33,10
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE				      "Преглед на събития"
   	 IDC_EVENTSTRINGIDNOTFOUND	"Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Type"
+    IDS_COLUMNDATE      "Date"
+    IDS_COLUMNTIME      "Time"
+    IDS_COLUMNSOURCE    "Source"
+    IDS_COLUMNCATEGORY  "Category"
+    IDS_COLUMNEVENT     "Event"
+    IDS_COLUMNUSER      "User"
+    IDS_COLUMNCOMPUTER  "Computer"
+    IDS_COLUMNEVENTDATA "Event Data"
 END

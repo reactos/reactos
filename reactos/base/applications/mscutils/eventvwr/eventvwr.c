@@ -757,6 +757,7 @@ InitInstance(HINSTANCE hInstance,
 {
     HIMAGELIST hSmall;
     LVCOLUMNW lvc = {0};
+    WCHAR szTemp[256];
 
     hInst = hInstance; // Store instance handle in our global variable
 
@@ -820,39 +821,75 @@ InitInstance(HINSTANCE hInstance,
     // Now set up the listview with its columns.
     lvc.mask = LVCF_TEXT | LVCF_WIDTH;
     lvc.cx = 90;
-    lvc.pszText = L"Type";
+    LoadStringW(hInstance,
+                IDS_COLUMNTYPE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 0, &lvc);
 
     lvc.cx = 70;
-    lvc.pszText = L"Date";
+    LoadStringW(hInstance,
+                IDS_COLUMNDATE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 1, &lvc);
 
     lvc.cx = 70;
-    lvc.pszText = L"Time";
+    LoadStringW(hInstance,
+                IDS_COLUMNTIME,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 2, &lvc);
 
     lvc.cx = 150;
-    lvc.pszText = L"Source";
+    LoadStringW(hInstance,
+                IDS_COLUMNSOURCE,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 3, &lvc);
 
     lvc.cx = 100;
-    lvc.pszText = L"Category";
+    LoadStringW(hInstance,
+                IDS_COLUMNCATEGORY,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 4, &lvc);
 
     lvc.cx = 60;
-    lvc.pszText = L"Event";
+    LoadStringW(hInstance,
+                IDS_COLUMNEVENT,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 5, &lvc);
 
     lvc.cx = 120;
-    lvc.pszText = L"User";
+    LoadStringW(hInstance,
+                IDS_COLUMNUSER,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 6, &lvc);
 
     lvc.cx = 100;
-    lvc.pszText = L"Computer";
+    LoadStringW(hInstance,
+                IDS_COLUMNCOMPUTER,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 7, &lvc);
 
     lvc.cx = 0;
-    lvc.pszText = L"Event Data";
+    LoadStringW(hInstance,
+                IDS_COLUMNEVENTDATA,
+                szTemp,
+                sizeof(szTemp) / sizeof(WCHAR));
+    lvc.pszText = szTemp;
     (void)ListView_InsertColumn(hwndListView, 8, &lvc);
 
     ShowWindow(hwndMainWindow, nCmdShow);
