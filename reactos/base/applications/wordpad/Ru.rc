@@ -47,14 +47,14 @@ BEGIN
         MENUITEM "&Копировать\tCtrl+C",         ID_EDIT_COPY
         MENUITEM "&Вставить\tCtrl+V",           ID_EDIT_PASTE
         MENUITEM "&Удалить\tDEL",               ID_EDIT_CLEAR
-        MENUITEM "Выделить в&се\tCtrl+A",       ID_EDIT_SELECTALL
+        MENUITEM "Выделить в&сё\tCtrl+A",       ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
         MENUITEM "&Найти...\tCtrl+F",           ID_FIND
         MENUITEM "На&йти далее\tF3",            ID_FIND_NEXT
         MENUITEM "&Заменить...\tCtrl+H",        ID_REPLACE
         MENUITEM SEPARATOR
         MENUITEM "&Только для чтения",          ID_EDIT_READONLY
-        MENUITEM "&Изменен",                    ID_EDIT_MODIFIED
+        MENUITEM "&Изменён",                    ID_EDIT_MODIFIED
         MENUITEM SEPARATOR
         POPUP "&Дополнительно"
         BEGIN
@@ -129,7 +129,7 @@ BEGIN
         MENUITEM "Ярко-розовый"   ID_COLOR_FUCHSIA
         MENUITEM "Голубой"        ID_COLOR_AQUA
         MENUITEM "Белый"          ID_COLOR_WHITE
-        MENUITEM "Automatic"      ID_COLOR_AUTOMATIC
+        MENUITEM "Автоматически"      ID_COLOR_AUTOMATIC
     END
 END
 
@@ -193,7 +193,7 @@ Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Перенос по словам", -1, 10, 10, 130, 85
-    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Не переносить", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "В границах &окна", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "В границах &полей", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Панели", -1, 150, 10, 120, 85
@@ -241,15 +241,15 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "Печать"
-    STRING_PREVIEW_NEXTPAGE,         "Следующая страница"
-    STRING_PREVIEW_PREVPAGE,         "Предыдущая страница"
-    STRING_PREVIEW_TWOPAGES,         "Две страницы"
-    STRING_PREVIEW_ONEPAGE,          "Одна страница"
+    STRING_PREVIEW_NEXTPAGE,         "Следующая"
+    STRING_PREVIEW_PREVPAGE,         "Предыдущая"
+    STRING_PREVIEW_TWOPAGES,         "По две"
+    STRING_PREVIEW_ONEPAGE,          "По одной"
     STRING_PREVIEW_ZOOMIN,           "Приблизить"
     STRING_PREVIEW_ZOOMOUT,          "Отдалить"
     STRING_PREVIEW_CLOSE,            "Закрыть"
-    STRING_PREVIEW_PAGE,             "Page"
-    STRING_PREVIEW_PAGES,            "Pages"
+    STRING_PREVIEW_PAGE,             "Страница"
+    STRING_PREVIEW_PAGES,            "Страницы"
 END
 
 STRINGTABLE DISCARDABLE
@@ -263,15 +263,15 @@ BEGIN
     STRING_PROMPT_SAVE_CHANGES,  "Сохранить изменения в '%s'?"
     STRING_SEARCH_FINISHED,      "Поиск в документе завершен."
     STRING_LOAD_RICHED_FAILED,   "Ошибка загрузки библиотеки RichEdit."
-    STRING_SAVE_LOSEFORMATTING,  "Сохранение документа в виде неформатированного текста, " \
-                                 "приведет к потере форматирования. Подтверждаете выполнение" \
+    STRING_SAVE_LOSEFORMATTING,  "Сохранение документа в виде неформатированного текста " \
+                                 "приведёт к потере форматирования. Подтверждаете выполнение" \
                                  "этой операции?"
-    STRING_INVALID_NUMBER,       "Неправильный числовой формат"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются"
+    STRING_INVALID_NUMBER,       "Неправильный числовой формат."
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage документы не поддерживаются."
     STRING_WRITE_FAILED,              "Невозможно сохранить файл."
     STRING_WRITE_ACCESS_DENIED,       "Недостаточно прав для сохранения файла."
     STRING_OPEN_FAILED,               "Невозможно открыть файл."
     STRING_OPEN_ACCESS_DENIED,        "Недостаточно прав для открытия файла."
-    STRING_PRINTING_NOT_IMPLEMENTED, "Печать не поддерживается"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "Печать не поддерживается."
     STRING_MAX_TAB_STOPS,             "Нельзя добавить более 32 позиций табуляции."
 END

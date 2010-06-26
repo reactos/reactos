@@ -40,6 +40,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Ja.rc"
 #include "Lt.rc"
 #include "Nl.rc"
+#include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
 #include "Uk.rc"

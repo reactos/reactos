@@ -80,6 +80,14 @@ CAPTION "Указатель"
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Поиск"
+{
+    LTEXT  "Не реализовано", -1, 10, 10, 180, 150
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE
 {
@@ -87,7 +95,7 @@ STID_WINE_HELP, 	"Справка WINE"
 STID_WHERROR, 		"ОШИБКА"
 STID_WARNING,  		"ВНИМАНИЕ"
 STID_INFO,  		"Информация"
-STID_NOT_IMPLEMENTED, 	"Не реализованно"
+STID_NOT_IMPLEMENTED, 	"Не реализовано"
 STID_HLPFILE_ERROR_s, 	"Ошибка при чтении файла помощи `%s'"
 STID_INDEX, 		"&Содержание"
 STID_CONTENTS,		"Начало"

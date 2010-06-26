@@ -1,0 +1,80 @@
+/*
+ * XCOPY - Wine-compatible xcopy program
+ *
+ * Copyright (C) 2007 J. Edmeades
+ * Copyright (C) 2010 Claudia Cotună
+ *                    Michael Stefaniuc
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+#include "xcopy.h"
+
+LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
+
+#pragma code_page(65001)
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Număr de parametri nevalid - Utilizați xcopy /? pentru ajutor\n"
+    STRING_INVPARM,  "Parametru nevalid „%s” -  Utilizați xcopy /? pentru ajutor\n"
+    STRING_PAUSE,    "Apăsați pe <enter> pentru a începe copierea\n"
+    STRING_SIMCOPY,  "%d fișier(e) ar fi copiat(e)\n"
+    STRING_COPY,     "%d fișier(e) copiat(e)\n"
+    STRING_QISDIR,   "„%s” este un nume de fișier sau un director\ndin destinație?\n(F - Fișier, D - Director)\n"
+    STRING_SRCPROMPT,"%s? (Da|Nu)\n"
+    STRING_OVERWRITE,"Se suprascrie %s? (Da|Nu|Toate)\n"
+    STRING_COPYFAIL, "Copierea „%s” în „%s” a eșuat cu cod de retur %d\n"
+    STRING_OPENFAIL, "Deschiderea „%s” a eșuat\n"
+    STRING_READFAIL, "Citirea „%s” a eșuat\n"
+    STRING_YES_CHAR, "D"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Copiază fișiere sau arbori de directoare sursă într-o destinație\n\
+\n\
+Sintaxă:\n\
+XCOPY sursă [destinație] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\            [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\nCu:\n\
+\n\
+[/I]  Creează director dacă destinația nu există și se copiază două sau\n\
+\      mai multe fișiere\n\
+[/S]  Copiază directoarele și subdirectoarele\n\
+[/E]  Copiază directoarele și subdirectoarele, inclusiv pe cele goale\n\
+[/Q]  Nu afișa numele în timpul copierii.\n\
+[/F]  Arată numele întreg pentru sursă și destinație în timpul copierii\n\
+[/L]  Simulează operațiunea, afișând numele care ar fi copiate\n\
+[/W]  Solicită confirmarea înainte de a începe copierea\n\
+[/T]  Creează o structură de directoare goale, dar nu copiază fișiere\n\
+[/Y]  Nu solicita confirmarea la suprascrierea fișierelor\n\
+[/-Y] Solicită confirmarea la suprascrierea fișierelor\n\
+[/P]  Solicită confirmarea înainte de copierea fiecărui fișier sursă\n\
+[/N]  Copiază utilizând prescurtări de nume\n\
+[/U]  Copiază numai fișierele care există deja în destinație\n\
+[/R]  Suprascrie orice fișiere cu protecție la modificări\n\
+[/H]  Include în copie fișierele ascunse și de sistem\n\
+[/C]  Continuă chiar dacă apare o eroare în timpul copierii\n\
+[/A]  Copiază numai fișierele cu atributul de arhivă activat\n\
+[/M]  Copiază numai fișierele cu atributul de arhivă activat, dezactivează\n\
+\      apoi atributul\n\
+[/D | /D:m-d-y] Copiază fișierele noi sau pe cele modificate după data\n\
+\t\tspecificată. Dacă nu este specificată nici o dată, copiază\n\
+\t\tnumai dacă fișierul destinație este mai vechi decât fișierul\n\
+\t\tsursă\n\n"
+}

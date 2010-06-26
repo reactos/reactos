@@ -113,7 +113,7 @@ BEGIN
 	BEGIN
 		MENUITEM "Annotering...",       MNID_CTXT_ANNOTATE
 		MENUITEM "Kopiëren",            MNID_CTXT_COPY
-		MENUITEM "Afdrukken ...",       MNID_CTXT_PRINT
+		MENUITEM "Afdrukken...",        MNID_CTXT_PRINT
 		POPUP    "Lettertype"
 		BEGIN
 			MENUITEM "Klein",       MNID_CTXT_FONTS_SMALL
