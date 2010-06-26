@@ -105,13 +105,13 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COLUMNTYPE      "Type"
-    IDS_COLUMNDATE      "Date"
-    IDS_COLUMNTIME      "Time"
-    IDS_COLUMNSOURCE    "Source"
-    IDS_COLUMNCATEGORY  "Category"
-    IDS_COLUMNEVENT     "Event"
-    IDS_COLUMNUSER      "User"
+    IDS_COLUMNTYPE      "Tipo"
+    IDS_COLUMNDATE      "Data"
+    IDS_COLUMNTIME      "Ora"
+    IDS_COLUMNSOURCE    "Origine"
+    IDS_COLUMNCATEGORY  "Categoria"
+    IDS_COLUMNEVENT     "Evento"
+    IDS_COLUMNUSER      "Utente"
     IDS_COLUMNCOMPUTER  "Computer"
-    IDS_COLUMNEVENTDATA "Event Data"
+    IDS_COLUMNEVENTDATA "Dati Evento"
 END
