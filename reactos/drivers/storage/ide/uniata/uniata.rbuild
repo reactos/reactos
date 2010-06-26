@@ -23,6 +23,5 @@
 
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
-		<file>ros_glue_asm.s</file>
 	</directory>
 </module>
