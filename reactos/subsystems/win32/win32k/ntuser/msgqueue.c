@@ -936,12 +936,15 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       to be cleaned up on thread termination anymore */
    RemoveEntryList(&Message->ListEntry);
 
-   /* remove the message from the dispatching list, so lock the sender's message queue */
-   SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
-   if (!SenderReturned)
+   /* remove the message from the dispatching list if needed, so lock the sender's message queue */
+   if (!(Message->HookMessage & MSQ_SENTNOWAIT))
    {
-      /* only remove it from the dispatching list if not already removed by a timeout */
-      RemoveEntryList(&Message->DispatchingListEntry);
+      SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
+      if (!SenderReturned)
+      {
+         /* only remove it from the dispatching list if not already removed by a timeout */
+         RemoveEntryList(&Message->DispatchingListEntry);
+      }
    }
    /* still keep the sender's message queue locked, so the sender can't exit the
       MsqSendMessage() function (if timed out) */
@@ -973,7 +976,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                                     Message->CompletionCallbackContext,
                                     Result);
    }
-
 
    /* Only if it is not a no wait message */
    if (!(Message->HookMessage & MSQ_SENTNOWAIT))
@@ -1033,8 +1035,9 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
 
          RemoveEntryList(&SentMessage->ListEntry);
 
-         /* remove the message from the dispatching list */
-         if(SentMessage->DispatchingListEntry.Flink != NULL)
+         /* remove the message from the dispatching list if neede */
+         if ((!(SentMessage->HookMessage & MSQ_SENTNOWAIT))
+            && (SentMessage->DispatchingListEntry.Flink != NULL))
          {
             RemoveEntryList(&SentMessage->DispatchingListEntry);
          }
@@ -1453,8 +1456,9 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
-      /* remove the message from the dispatching list */
-      if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
+      /* remove the message from the dispatching list if needed */
+      if ((!(CurrentSentMessage->HookMessage & MSQ_SENTNOWAIT)) 
+         && (CurrentSentMessage->DispatchingListEntry.Flink != NULL))
       {
          RemoveEntryList(&CurrentSentMessage->DispatchingListEntry);
       }
@@ -1526,6 +1530,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          IntDereferenceMessageQueue(MessageQueue);
          IntDereferenceMessageQueue(CurrentSentMessage->SenderQueue);
       }
+
       /* free the message */
       ExFreePool(CurrentSentMessage);
    }
