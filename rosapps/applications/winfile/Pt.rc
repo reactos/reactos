@@ -4,6 +4,7 @@
  *
  * Copyright 2003 Marcelo Duarte
  * Copyright 2004,2007 Américo José Melo
+ * Copyright 2010 Gustavo Henrique Milaré
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,20 +35,20 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "A&brir\tEnter",               ID_ACTIVATE
         MENUITEM "&Mover...\tF7",               ID_FILE_MOVE
         MENUITEM "&Copiar...\tF8",              ID_FILE_COPY
-        MENUITEM "&In Clipboard...\tF9",        118
+        MENUITEM "Na área de &transferência...\tF9",        118
         MENUITEM "E&xcluir\tDel",               ID_FILE_DELETE
         MENUITEM "Re&nomear...",                109
-        MENUITEM "&Propriedades...\tAlt+Enter", ID_EDIT_PROPERTIES
+        MENUITEM "Propri&edades...\tAlt+Enter", ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "C&omprimir...",               119
-        MENUITEM "Descomprimir...",             120
+        MENUITEM "&Descomprimir...",             120
         MENUITEM SEPARATOR
-        MENUITEM "Execu&tar...",                ID_RUN
+        MENUITEM "Exec&utar...",                ID_RUN
         MENUITEM "&Imprimir...",                102
         MENUITEM "A&ssociar...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Cri&ar pasta...",             111
-        MENUITEM "P&esquisar...",               104
+        MENUITEM "Criar &pasta...",             111
+        MENUITEM "Pes&quisar...",               104
         MENUITEM "Selecionar arqui&vos...",     116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
@@ -66,8 +67,8 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Gerar disco de sistema...", -1   /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Conecta&r unidade de rede",   ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Desconectar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "Con&ectar unidade de rede",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "De&sconectar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "C&ompartilhar como...",       254
         MENUITEM "&Remover compartilhamento...",255
@@ -77,30 +78,30 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "Á&rvore"  {
         MENUITEM "&Próximo nível\t+",           301
-        MENUITEM "Expandi&r pasta\t*",          302
+        MENUITEM "E&xpandir pasta\t*",          302
         MENUITEM "Expandir &tudo\tStrg+*",      303
         MENUITEM "Recolher p&asta\t-",          304
         MENUITEM SEPARATOR
         MENUITEM "&Indicar subníveis",          505
     }
 
-    POPUP "&Exibir"  {
+    POPUP "E&xibir"  {
         MENUITEM "Á&rvore e pasta",             413
-        MENUITEM "S&omente árvore",             411
-        MENUITEM "So&mente pasta",              412
+        MENUITEM "Apenas ár&vore",             411
+        MENUITEM "Apenas &pasta",              412
         MENUITEM SEPARATOR
         MENUITEM "&Dividir",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Nome",                       ID_VIEW_NAME
-        MENUITEM "&Todos os delalhes",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Todos os detalhes",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "D&etalhes parciais...",       ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
         MENUITEM "&Classificar por nome",       ID_VIEW_SORT_NAME
-        MENUITEM "C&lassificar por tipo",       ID_VIEW_SORT_TYPE
-        MENUITEM "Cl&assificar por tamanho",    ID_VIEW_SORT_SIZE
-        MENUITEM "Cla&ssificar por &data",      ID_VIEW_SORT_DATE
+        MENUITEM "Cla&ssificar por tipo",       ID_VIEW_SORT_TYPE
+        MENUITEM "Classificar por ta&manho",    ID_VIEW_SORT_SIZE
+        MENUITEM "Classi&ficar por data",      ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Classificar &por...",         ID_VIEW_FILTER
+        MENUITEM "Classificar p&or...",         ID_VIEW_FILTER
     }
 
     POPUP "&Opções"  {
@@ -109,10 +110,10 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Personalizar barra de ferramentas...", 512
         MENUITEM SEPARATOR
         MENUITEM "Barra d&e ferramentas",       ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Barra de unidades",          ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "B&arra de &status",           ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Barra de &unidades",          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra de s&tatus",           ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Tela Cheia\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "Tela cheia\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimizar durante o uso",    504
@@ -122,8 +123,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Segurança"  {
         MENUITEM "&Acesso...",                  605
-        MENUITEM "&Logging...",                 606
-        MENUITEM "&Owner...",                   607
+        MENUITEM "Au&tenticação...",                 606
+        MENUITEM "&Proprietário...",                   607
     }
 
     POPUP "&Janela"  {
@@ -140,8 +141,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "Aj&uda"  {
         MENUITEM "&Tópicos da ajuda\tF1",       ID_HELP
-        MENUITEM "Pesquisar...",                ID_HELP
-        MENUITEM "&Usando a ajuda",             ID_HELP_USING
+        MENUITEM "&Pesquisar...",                ID_HELP
+        MENUITEM "Usando a &ajuda",             ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Sobre o Winefile...",        ID_ABOUT
     }
@@ -155,21 +156,21 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "A&brir\tEnter",               ID_ACTIVATE
         MENUITEM "&Mover...\tF7",               ID_FILE_MOVE
         MENUITEM "&Copiar...\tF8",              ID_FILE_COPY
-        MENUITEM "&Na Area de Transferência...\tF9",        118
+        MENUITEM "Na Area de &Transferência...\tF9",        118
         MENUITEM "E&xcluir\tDel",               ID_FILE_DELETE
         MENUITEM "Re&nomear...",                109
-        MENUITEM "&Propriedades...\tAlt+Enter", ID_EDIT_PROPERTIES
+        MENUITEM "Propri&edades...\tAlt+Enter", ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "C&omprimir...",               119
         MENUITEM "&Descomprimir...",            120
         MENUITEM SEPARATOR
-        MENUITEM "Execu&tar...",                ID_RUN
+        MENUITEM "Exec&utar...",                ID_RUN
         MENUITEM "&Imprimir...",                102
         MENUITEM "A&ssociar...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Cri&ar pasta...",             111
-        MENUITEM "P&esquisar...",               104
-        MENUITEM "Seleccionar fichei&ros...",    116
+        MENUITEM "Criar &pasta...",             111
+        MENUITEM "Pes&quisar...",               104
+        MENUITEM "Seleccion&ar ficheiros...",    116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "Sai&r\tAlt+X",                ID_FILE_EXIT
@@ -187,8 +188,8 @@ IDM_WINEFILE MENU FIXED IMPURE
         MENUITEM "&Gerar disco de sistema...", -1   /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Liga&r unidade de rede",   ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Desligar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "L&igar unidade de rede",   ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "D&esligar unidade de rede",ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "&Partilhar como...",          254
         MENUITEM "&Remover partilha...",        255
@@ -198,42 +199,42 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "Á&rvore"  {
         MENUITEM "&Próximo nível\t+",           301
-        MENUITEM "Expandi&r pasta\t*",          302
+        MENUITEM "E&xpandir pasta\t*",          302
         MENUITEM "Expandir &tudo\tStrg+*",      303
         MENUITEM "Recolher p&asta\t-",          304
         MENUITEM SEPARATOR
         MENUITEM "&Indicar subníveis",          505
     }
 
-    POPUP "&Exibir"  {
+    POPUP "E&xibir"  {
         MENUITEM "Á&rvore e pasta",             413
-        MENUITEM "A&penas árvore",             411
-        MENUITEM "Ap&enas pasta",              412
+        MENUITEM "Apenas ár&vore",             411
+        MENUITEM "Apenas &pasta",              412
         MENUITEM SEPARATOR
         MENUITEM "&Dividir",                    ID_VIEW_SPLIT
         MENUITEM SEPARATOR
         MENUITEM "&Nome",                       ID_VIEW_NAME
-        MENUITEM "&Todos os delalhes",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
+        MENUITEM "&Todos os detalhes",          ID_VIEW_ALL_ATTRIBUTES, CHECKED
         MENUITEM "D&etalhes parciais...",       ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
         MENUITEM "&Classificar por nome",       ID_VIEW_SORT_NAME
-        MENUITEM "C&lassificar por tipo",       ID_VIEW_SORT_TYPE
-        MENUITEM "Cl&assificar por tamanho",    ID_VIEW_SORT_SIZE
-        MENUITEM "Cla&ssificar por &data",      ID_VIEW_SORT_DATE
+        MENUITEM "Cla&ssificar por tipo",       ID_VIEW_SORT_TYPE
+        MENUITEM "Classificar por ta&manho",    ID_VIEW_SORT_SIZE
+        MENUITEM "Classi&ficar por data",      ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Classificar &por...",         ID_VIEW_FILTER
+        MENUITEM "Classificar p&or...",         ID_VIEW_FILTER
     }
 
     POPUP "&Opções"  {
         MENUITEM "&Confirmação...",             501
-        MENUITEM "&Tipo de Letra...",                   ID_SELECT_FONT
+        MENUITEM "&Tipo de letra...",                   ID_SELECT_FONT
         MENUITEM "&Personalizar barra de ferramentas...", 512
         MENUITEM SEPARATOR
-        MENUITEM "Barra d&e ferramentas",       ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Barra de unidades",          ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "B&arra de e&stado",           ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Barra de &ferramentas",       ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Barra de &unidades",          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra de &estado",           ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Ecrã Completo\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "Ecrã completo\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "&Minimizar durante o uso",    504
@@ -243,7 +244,7 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "&Segurança"  {
         MENUITEM "&Acesso...",                  605
-        MENUITEM "&Autenticação...",                 606
+        MENUITEM "Au&tenticação...",                 606
         MENUITEM "&Dono...",                    607
     }
 
@@ -261,8 +262,8 @@ IDM_WINEFILE MENU FIXED IMPURE
 
     POPUP "Aj&uda"  {
         MENUITEM "&Tópicos da ajuda\tF1",       ID_HELP
-        MENUITEM "Pesquisar...",                ID_HELP
-        MENUITEM "&Usar a ajuda",             ID_HELP_USING
+        MENUITEM "&Pesquisar...",                ID_HELP
+        MENUITEM "Usar a &ajuda",             ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "&Sobre o Winefile...",        ID_ABOUT
     }
@@ -298,6 +299,34 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Procurar", 254, 158, 43, 47, 14
 }
 
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Por tipo de arquivo"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Nome:",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "Tipo de arquivo",-1,7,23,87,56
+    CONTROL         "&Diretórios",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "&Programas",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "Do&cumentos",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "&Outros arquivos",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "&Mostrar arquivos ocultos/sistema",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,104,24,50,14
+END
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
 IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Por tipo de ficheiro"
@@ -310,7 +339,7 @@ BEGIN
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
     CONTROL         "&Programas",IDC_VIEW_TYPE_PROGRAMS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
-    CONTROL         "Docu&mentos",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+    CONTROL         "Do&cumentos",IDC_VIEW_TYPE_DOCUMENTS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
     CONTROL         "&Outros ficheiros",IDC_VIEW_TYPE_OTHERS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
@@ -319,6 +348,41 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,104,7,50,14
     PUSHBUTTON      "Cancelar",IDCANCEL,104,24,50,14
 END
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Propriedades de %s"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,191,7,50,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,191,29,50,14
+    LTEXT           "&Nome do arquivo:",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "&Localização Completa:",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Última alteração:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Versão:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Direitos de autor:",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "Tamanho:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "Atributos",-1,7,79,158,46
+    CONTROL         "&Apenas leitura",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "&Oculto",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "Ar&quivo",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Sistema",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "&Comprimido",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "&Informação de versão",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -341,10 +405,10 @@ BEGIN
     EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
     GROUPBOX        "Atributos",-1,7,79,158,46
     CONTROL         "&Apenas de leitura",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
-    CONTROL         "&Ocultos",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
-    CONTROL         "&Arquivos",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "&Oculto",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "Ar&quivo",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
     CONTROL         "&Sistema",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
-    CONTROL         "&Comprimidos",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    CONTROL         "&Comprimido",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
     GROUPBOX        "&Informação de versão",-1,7,129,234,79
     LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
     EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -355,7 +419,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 STRINGTABLE
 {
     IDS_FONT_SEL_DLG_NAME   "Aplicando configurações de fonte"
-    IDS_FONT_SEL_ERROR      "Erro enquanto seleciona nova fonte."
+    IDS_FONT_SEL_ERROR      "Erro al selecionar nova fonte."
 }
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
@@ -367,7 +431,37 @@ STRINGTABLE
 }
 
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+{
+ IDS_WINEFILE               "Gerenciador de Arquivos do Wine"
+ IDS_ERROR                  "Erro"
+ IDS_ROOT_FS                "root fs"
+ IDS_UNIXFS                 "unixfs"
+ IDS_DESKTOP                "Área de trabalho"
+ IDS_SHELL                  "Linha de comandos"
+ IDS_TITLEFMT               "%s - %s"
+ IDS_NO_IMPL                "Ainda não implementado"
+ IDS_WINE_FILE              "Arquivo Wine"
+}
+
+STRINGTABLE
+{
+ IDS_COL_NAME               "Nome"
+ IDS_COL_SIZE               "Tamanho"
+ IDS_COL_CDATE              "CData"
+ IDS_COL_ADATE              "AData"
+ IDS_COL_MDATE              "MData"
+ IDS_COL_IDX                "Índice/Inode"
+ IDS_COL_LINKS              "Links"
+ IDS_COL_ATTR               "Atributos"
+ IDS_COL_SEC                "Segurança"
+
+ IDS_FREE_SPACE_FMT         "%s de %s livre"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE
 {
