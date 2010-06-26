@@ -23,7 +23,7 @@
 #include <windowsx.h>
 #include <winnls32.h>
 #include <ndk/ntndk.h>
-#include <ddk/ntstatus.h>
+#include <ntstatus.h>
 
 /* CSRSS Headers */
 #include <csrss/csrss.h>
