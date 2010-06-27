@@ -463,7 +463,7 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             }
 
             /* Get the final Code */
-            BugCode = ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
+            BugCode = (PCHAR)((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
             i = strlen(BugCode);
 
             /* Handle newlines */

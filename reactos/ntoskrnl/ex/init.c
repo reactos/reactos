@@ -1044,7 +1044,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (NT_SUCCESS(Status))
         {
             /* Setup the string */
-            RtlInitAnsiString(&CsdString, MsgEntry->Text);
+            RtlInitAnsiString(&CsdString, (PCHAR)MsgEntry->Text);
 
             /* Remove trailing newline */
             while ((CsdString.Length > 0) &&
@@ -1371,7 +1371,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
                                     Size,
-                                    MsgEntry->Text,
+                                    (PCHAR)MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
                                     BeginBuffer);
@@ -1486,7 +1486,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     Status = RtlStringCbPrintfA(StringBuffer,
                                 256,
                                 NT_SUCCESS(MsgStatus) ?
-                                MsgEntry->Text :
+                                (PCHAR)MsgEntry->Text :
                                 "%u System Processor [%u MB Memory] %Z\n",
                                 KeNumberProcessors,
                                 Size,
@@ -1650,7 +1650,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
         }
     }
@@ -1670,7 +1670,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
 
             /* Setup boot logging */
