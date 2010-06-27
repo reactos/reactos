@@ -827,7 +827,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PCHAR CommandLine, PerfMem;
     ULONG PerfMemUsed;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
     SIZE_T Remaining = 0;
     PCHAR RcEnd = NULL;
@@ -1240,7 +1240,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime, Timeout;
     BOOLEAN SosEnabled, NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     PCHAR CommandLine, Y2KHackRequired, SafeBoot, Environment;
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;

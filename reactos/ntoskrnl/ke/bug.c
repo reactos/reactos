@@ -458,12 +458,12 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
             for (i = 0; i < IdOffset; i++)
             {
                 /* Advance in the Entries */
-                MessageEntry += ((PRTL_MESSAGE_RESOURCE_ENTRY)MessageEntry)->
+                MessageEntry += ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->
                                 Length;
             }
 
             /* Get the final Code */
-            BugCode = ((PRTL_MESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
+            BugCode = ((PMESSAGE_RESOURCE_ENTRY)MessageEntry)->Text;
             i = strlen(BugCode);
 
             /* Handle newlines */
