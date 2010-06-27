@@ -1397,10 +1397,10 @@
 @ stdcall SeUnregisterLogonSessionTerminatedRoutine(ptr)
 @ stdcall SeValidSecurityDescriptor(long ptr)
 @ stdcall VerSetConditionMask(long long long long)
-;VfFailDeviceNode
+@ stdcall VfFailDeviceNode(ptr long long long ptr ptr ptr)
 ;VfFailDriver
 ;VfFailSystemBIOS
-;VfIsVerificationEnabled
+@ stdcall VfIsVerificationEnabled(long ptr)
 #ifndef __x86_64__
 @ stdcall WRITE_REGISTER_BUFFER_UCHAR(ptr ptr long)
 @ stdcall WRITE_REGISTER_BUFFER_ULONG(ptr ptr long)

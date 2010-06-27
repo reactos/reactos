@@ -508,6 +508,9 @@
 	<directory name="wmi">
 		<file>wmi.c</file>
 	</directory>
+	<directory name="vf">
+		<file>driver.c</file>
+	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>
 </group>
