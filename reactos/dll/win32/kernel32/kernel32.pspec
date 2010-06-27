@@ -436,7 +436,7 @@
 @ stdcall GetConsoleFontInfo(long long long ptr)
 @ stdcall GetConsoleFontSize(long long)
 @ stdcall GetConsoleHardwareState(long long ptr)
-@ stdcall GetConsoleHistoryInfo ; Win 7
+;@ stdcall GetConsoleHistoryInfo ; Win 7
 @ stdcall GetConsoleInputExeNameA(long ptr)
 @ stdcall GetConsoleInputExeNameW(long ptr)
 @ stdcall GetConsoleInputWaitHandle()
@@ -1137,7 +1137,7 @@
 @ stdcall SetConsoleDisplayMode(long long ptr)
 @ stdcall SetConsoleFont(long long)
 @ stdcall SetConsoleHardwareState(long long long)
-@ stdcall SetConsoleHistoryInfo ; Win 7
+; @ stdcall SetConsoleHistoryInfo ; Win 7
 @ stdcall SetConsoleIcon(ptr)
 @ stdcall SetConsoleInputExeNameA(ptr)
 @ stdcall SetConsoleInputExeNameW(ptr)
