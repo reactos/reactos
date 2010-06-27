@@ -1,6 +1,6 @@
 /*++ NDK Version: 0098
 
-Copyright (c) Alex Ionescu.  All rights reserved.
+Copyright (c) ReactOS Portable Systems Group.  All rights reserved.
 
 Header Name:
 
@@ -8,11 +8,11 @@ Header Name:
 
 Abstract:
 
-    Type definitions for the Power Subystem
+    Type definitions for the Driver Verifier.
 
 Author:
 
-    Alex Ionescu (alexi@tinykrnl.org) - Updated - 27-Feb-2006
+    ReactOS Portable Systems Group (ros.arm@reactos.org) - Created - 27-Jun-2010
 
 --*/
 
