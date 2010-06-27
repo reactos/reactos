@@ -1397,7 +1397,7 @@
 @ stdcall SeUnregisterLogonSessionTerminatedRoutine(ptr)
 @ stdcall SeValidSecurityDescriptor(long ptr)
 @ stdcall VerSetConditionMask(long long long long)
-@ stdcall VfFailDeviceNode(ptr long long long ptr ptr ptr)
+@ cdecl VfFailDeviceNode(ptr long long long ptr ptr ptr)
 ;VfFailDriver
 ;VfFailSystemBIOS
 @ stdcall VfIsVerificationEnabled(long ptr)

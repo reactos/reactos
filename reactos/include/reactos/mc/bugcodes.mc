@@ -26,6 +26,64 @@ LanguageNames=(English=0x409:MSG00409)
 ;
 ; message definitions
 ;
+MessageId=0x7E
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_BANNER
+Language=English
+ReactOS (R) Kernel Version %hs (Build %u%hs)
+.
+
+MessageId=0x87
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_CSD_STRING
+Language=English
+Service Pack
+.
+
+MessageId=0x88
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_INFO_STRING
+Language=English
+%u System Processor [%u MB Memory] %Z
+.
+
+MessageId=0x89
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_MP_STRING
+Language=English
+MultiProcessor Kernel
+.
+
+MessageId=0x8A
+Severity=Informational
+Facility=System
+SymbolicName=THREAD_TERMINATE_HELD_MUTEX
+Language=English
+A kernel thread terminated while holding a mutex
+.
+
+MessageId=0x9D
+Severity=Informational
+Facility=System
+SymbolicName=WINDOWS_NT_INFO_STRING_PLURAL
+Language=English
+%u System Processors [%u MB Memory] %Z
+.
+
+MessageId=0x9F
+Severity=Informational
+Facility=System
+SymbolicName=REACTOS_COPYRIGHT_NOTICE
+Language=English
+\n\nReactOS is free software, covered by the GNU General Public License,
+ and you\n are welcome to change it and/or distribute copies of it under
+ certain\n conditions. There is absolutely no warranty for ReactOS.\n
+.
+
 MessageId=0x7F
 Severity=Warning
 Facility=System
@@ -563,9 +621,6 @@ Language=English
 SYSTEM_EXIT_OWNED_MUTEX
 .
 
-
-
-
 MessageId=0x3E
 Severity=Success
 Facility=System
@@ -611,8 +666,6 @@ Language=English
 ATDISK_DRIVER_INTERNAL
 .
 
-
-
 MessageId=0x44
 Severity=Success
 Facility=System
@@ -628,8 +681,6 @@ SymbolicName=INSUFFICIENT_SYSTEM_MAP_REGS
 Language=English
 INSUFFICIENT_SYSTEM_MAP_REGS
 .
-
-
 
 MessageId=0x48
 Severity=Success
@@ -774,8 +825,6 @@ SymbolicName=PINBALL_FILE_SYSTEM
 Language=English
 PINBALL_FILE_SYSTEM
 .
-
-
 
 MessageId=0x5C
 Severity=Success
@@ -1076,20 +1125,20 @@ Language=English
 Hardware malfunction
 .
 
-MessageId=0x8E
-Severity=Success
-Facility=System
-SymbolicName=KERNEL_MODE_EXCEPTION_NOT_HANDLED
-Language=English
-KERNEL_MODE_EXCEPTION_NOT_HANDLED
-.
-
 MessageId=0x81
 Severity=Success
 Facility=System
 SymbolicName=SPIN_LOCK_INIT_FAILURE
 Language=English
 SPIN_LOCK_INIT_FAILURE
+.
+
+MessageId=0x8E
+Severity=Success
+Facility=System
+SymbolicName=KERNEL_MODE_EXCEPTION_NOT_HANDLED
+Language=English
+KERNEL_MODE_EXCEPTION_NOT_HANDLED
 .
 
 MessageId=0x8F
@@ -1178,7 +1227,7 @@ Severity=Success
 Facility=System
 SymbolicName=HAL_MEMORY_ALLOCATION
 Language=English
-HAL_MEMORY_ALLOCATION
+Allocate from NonPaged Pool failed for a HAL critical allocation.
 .
 
 MessageId=0xB4
@@ -1186,7 +1235,7 @@ Severity=Success
 Facility=System
 SymbolicName=VIDEO_DRIVER_INIT_FAILURE
 Language=English
-VIDEO_DRIVER_INIT_FAILURE
+The video driver failed to initialize
 .
 
 MessageId=0xB7
@@ -1202,7 +1251,7 @@ Severity=Success
 Facility=System
 SymbolicName=ATTEMPTED_SWITCH_FROM_DPC
 Language=English
-ATTEMPTED_SWITCH_FROM_DPC
+A wait operation, attach process, or yield was attempted from a DPC routine.
 .
 
 MessageId=0xBE
@@ -1210,7 +1259,7 @@ Severity=Success
 Facility=System
 SymbolicName=ATTEMPTED_WRITE_TO_READONLY_MEMORY
 Language=English
-ATTEMPTED_WRITE_TO_READONLY_MEMORY
+An attempt was made to write to read-only memory.
 .
 
 MessageId=0xC2
@@ -1270,7 +1319,7 @@ Severity=Success
 Facility=System
 SymbolicName=PNP_DETECTED_FATAL_ERROR
 Language=English
-PNP_DETECTED_FATAL_ERROR
+Plug and Play detected an error most likely caused by a faulty driver.
 .
 
 MessageId=0xCB
@@ -1310,7 +1359,7 @@ Severity=Success
 Facility=System
 SymbolicName=DRIVER_PORTION_MUST_BE_NONPAGED
 Language=English
-DRIVER_PORTION_MUST_BE_NONPAGED
+The driver mistakenly marked a part of it's image pageable instead of non-pageable.
 .
 
 MessageId=0xD8
@@ -1318,7 +1367,7 @@ Severity=Success
 Facility=System
 SymbolicName=DRIVER_USED_EXCESSIVE_PTES
 Language=English
-DRIVER_USED_EXCESSIVE_PTES
+The driver has used an excessive number of system PTEs.
 .
 
 MessageId=0xD4
@@ -1326,7 +1375,7 @@ Severity=Success
 Facility=System
 SymbolicName=SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
 Language=English
-SYSTEM_SCAN_AT_RAISED_IRQL_CAUGHT_IMPROPER_DRIVER_UNLOAD
+The driver unloaded without cancelling pending operations.
 .
 
 MessageId=0xE0
@@ -1373,7 +1422,13 @@ Severity=Success
 Facility=System
 SymbolicName=WORKER_INVALID
 Language=English
-WORKER_INVALID
+If Parameter1 == 0, an executive worker item was found in memory which
+must not contain such items.  Usually this is memory being freed.  This
+is usually caused by a device driver that has not cleaned up properly
+before freeing memory.
+  
+If Parameter1 == 1, an attempt was made to queue an executive worker item
+with a usermode execution routine.
 .
 
 MessageId=0xE5
@@ -1384,78 +1439,14 @@ Language=English
 POWER_FAILURE_SIMULATE
 .
 
-MessageId=0xFA
-Severity=Success
-Facility=System
-SymbolicName=IMPERSONATING_WORKER_THREAD
-Language=English
-IMPERSONATING_WORKER_THREAD
-.
-
-MessageId=0x7E
-Severity=Informational
-Facility=System
-SymbolicName=WINDOWS_NT_BANNER
-Language=English
-ReactOS (R) Kernel Version %hs (Build %u%hs)
-.
-
-MessageId=0x87
-Severity=Informational
-Facility=System
-SymbolicName=WINDOWS_NT_CSD_STRING
-Language=English
-Service Pack
-.
-
-MessageId=0x88
-Severity=Informational
-Facility=System
-SymbolicName=WINDOWS_NT_INFO_STRING
-Language=English
-%u System Processor [%u MB Memory] %Z
-.
-
-MessageId=0x89
-Severity=Informational
-Facility=System
-SymbolicName=WINDOWS_NT_MP_STRING
-Language=English
-MultiProcessor Kernel
-.
-
-MessageId=0x8A
-Severity=Informational
-Facility=System
-SymbolicName=THREAD_TERMINATE_HELD_MUTEX
-Language=English
-A kernel thread terminated while holding a mutex
-.
-
-MessageId=0x9D
-Severity=Informational
-Facility=System
-SymbolicName=WINDOWS_NT_INFO_STRING_PLURAL
-Language=English
-%u System Processors [%u MB Memory] %Z
-.
-
-MessageId=0x9F
-Severity=Informational
-Facility=System
-SymbolicName=REACTOS_COPYRIGHT_NOTICE
-Language=English
-\n\nReactOS is free software, covered by the GNU General Public License,
- and you\n are welcome to change it and/or distribute copies of it under
- certain\n conditions. There is absolutely no warranty for ReactOS.\n
-.
-
 MessageId=0xE9
 Severity=Success
 Facility=System
 SymbolicName=ACTIVE_EX_WORKER_THREAD_TERMINATION
 Language=English
-ACTIVE_EX_WORKER_THREAD_TERMINATION
+An executive worker thread is being terminated without having gone through the worker thread rundown code.
+Work items queued to the Ex worker queue must not terminate their threads.
+A stack trace should indicate the culprit.
 .
 
 MessageId=0xEA
@@ -1476,7 +1467,7 @@ Severity=Success
 Facility=System
 SymbolicName=CRITICAL_PROCESS_DIED
 Language=English
-CRITICAL_PROCESS_DIED
+The kernel attempted to ready a thread that was in an incorrect state such as terminated.
 .
 
 MessageId=0xF4
@@ -1484,7 +1475,15 @@ Severity=Success
 Facility=System
 SymbolicName=CRITICAL_OBJECT_TERMINATION
 Language=English
-CRITICAL_OBJECT_TERMINATION
+A process or thread crucial to system operation has unexpectedly exited or been terminated.
+.
+
+MessageId=0xF6
+Severity=Success
+Facility=System
+SymbolicName=PCI_VERIFIER_DETECTED_VIOLATION
+Language=English
+The PCI driver has detected an error in a PCI device or BIOS being verified.
 .
 
 MessageId=0xF8
@@ -1495,12 +1494,21 @@ Language=English
 An initialization failure occurred while attempting to boot from the RAM disk.
 .
 
+MessageId=0xFA
+Severity=Success
+Facility=System
+SymbolicName=IMPERSONATING_WORKER_THREAD
+Language=English
+A worker thread is impersonating another process. The work item forgot to
+disable impersonation before it returned.
+.
+
 MessageId=0xFC
 Severity=Success
 Facility=System
 SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
 Language=English
-ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
+An attempt was made to execute to non-executable memory.
 .
 
 ; EOF
