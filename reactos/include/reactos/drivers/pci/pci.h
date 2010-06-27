@@ -62,5 +62,64 @@
 #define PCI_ASSERT_BRIDGE_RESET                             0x0040
 #define PCI_ENABLE_BRIDGE_VGA_16BIT                         0x0010
 
+//
+// PCI IRQ Routing Table in BIOS/Registry (Signature: PIR$)
+//
+#include <pshpack1.h>
+typedef struct _PIN_INFO
+{
+    UCHAR Link;
+    USHORT InterruptMap;
+} PIN_INFO, *PPIN_INFO;
+    
+typedef struct _SLOT_INFO
+{
+    UCHAR BusNumber;
+    UCHAR DeviceNumber;
+    PIN_INFO PinInfo[4];
+    UCHAR SlotNumber;
+    UCHAR Reserved;
+} SLOT_INFO, *PSLOT_INFO;
+
+typedef struct _PCI_IRQ_ROUTING_TABLE
+{
+    ULONG Signature;
+    USHORT Version;
+    USHORT TableSize;
+    UCHAR RouterBus;
+    UCHAR RouterDevFunc;
+    USHORT ExclusiveIRQs;
+    ULONG CompatibleRouter;
+    ULONG MiniportData;
+    UCHAR Reserved[11];
+    UCHAR Checksum;
+    SLOT_INFO Slot[ANYSIZE_ARRAY];
+} PCI_IRQ_ROUTING_TABLE, *PPCI_IRQ_ROUTING_TABLE;
+#include <poppack.h>
+
+//
+// PCI Registry Information
+//
+typedef struct _PCI_REGISTRY_INFO
+{
+    UCHAR MajorRevision;
+    UCHAR MinorRevision;
+    UCHAR NoBuses; // Number Of Buses
+    UCHAR HardwareMechanism;
+} PCI_REGISTRY_INFO, *PPCI_REGISTRY_INFO;
+
+//
+// PCI Card Descriptor in Registry
+//
+typedef struct _PCI_CARD_DESCRIPTOR
+{
+    ULONG Flags;
+    USHORT VendorID;
+    USHORT DeviceID;
+    USHORT RevisionID;
+    USHORT SubsystemVendorID;
+    USHORT SubsystemID;
+    USHORT Reserved;
+} PCI_CARD_DESCRIPTOR, *PPCI_CARD_DESCRIPTOR;
 
 /* EOF */

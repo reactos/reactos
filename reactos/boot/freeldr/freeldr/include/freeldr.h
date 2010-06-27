@@ -112,6 +112,8 @@
 #include <comm.h>
 /* Swap */
 #include <bytesex.h>
+/* Internal shared PCI header */
+#include <drivers/pci/pci.h>
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);

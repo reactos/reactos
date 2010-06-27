@@ -29,8 +29,10 @@
 #include <arc/arc.h>
 #include <ntndk.h>
 
+/* Internal shared PCI header */
+#include <drivers/pci/pci.h>
+
 /* Internal kernel headers */
-#include "internal/pci.h"
 #define KeGetCurrentThread _KeGetCurrentThread
 #ifdef _M_AMD64
 #include <internal/amd64/ke.h>
