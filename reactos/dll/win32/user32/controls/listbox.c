@@ -44,7 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(listbox);
 #define WS_EX_DRAGDETECT    0x00000002L
 #define WM_BEGINDRAG        0x022C
 
-UINT WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
+UINT_PTR WINAPI SetSystemTimer(HWND,UINT_PTR,UINT,TIMERPROC);
 BOOL WINAPI KillSystemTimer(HWND,UINT_PTR);
 
 /* End of hack section -------------------------------- */

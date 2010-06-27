@@ -172,11 +172,11 @@ MsgiUMToKMMessage(PMSG UMMsg, PMSG KMMsg, BOOL Posted)
               if (0 != HIWORD(DdeLparam->Value.Packed.uiHi))
                 {
                   /* uiHi should contain a hMem from WM_DDE_EXECUTE */
-                  HGLOBAL h = DdeGetPair((HGLOBAL) DdeLparam->Value.Packed.uiHi);
+                  HGLOBAL h = DdeGetPair((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
                   if (NULL != h)
                     {
-                      GlobalFree((HGLOBAL) DdeLparam->Value.Packed.uiHi);
-                      DdeLparam->Value.Packed.uiHi = (UINT) h;
+                      GlobalFree((HGLOBAL)(ULONG_PTR)DdeLparam->Value.Packed.uiHi);
+                      DdeLparam->Value.Packed.uiHi = (UINT_PTR) h;
                     }
                 }
               FreeDDElParam(UMMsg->message, UMMsg->lParam);
@@ -686,7 +686,7 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
               return FALSE;
             }
           CsA->lpszName = AnsiString.Buffer;
-          if (HIWORD((ULONG)CsW->lpszClass) != 0)
+          if (HIWORD((ULONG_PTR)CsW->lpszClass) != 0)
             {
               RtlInitUnicodeString(&UnicodeString, CsW->lpszClass);
               Status = RtlUnicodeStringToAnsiString(&AnsiString, &UnicodeString, TRUE);
@@ -850,7 +850,7 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           Cs = (CREATESTRUCTA*) AnsiMsg->lParam;
           RtlInitAnsiString(&AnsiString, Cs->lpszName);
           RtlFreeAnsiString(&AnsiString);
-          if (HIWORD((ULONG)Cs->lpszClass) != 0)
+          if (HIWORD((ULONG_PTR)Cs->lpszClass) != 0)
             {
               RtlInitAnsiString(&AnsiString, Cs->lpszClass);
               RtlFreeAnsiString(&AnsiString);
@@ -947,7 +947,7 @@ typedef struct tagMSGCONVERSION
   MSG UnicodeMsg;
   MSG AnsiMsg;
   PMSG FinalMsg;
-  ULONG LParamSize;
+  SIZE_T LParamSize;
 } MSGCONVERSION, *PMSGCONVERSION;
 
 static PMSGCONVERSION MsgConversions = NULL;
@@ -2452,7 +2452,7 @@ SendNotifyMessageW(
  * @implemented
  */
 BOOL WINAPI
-TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
+TranslateMessageEx(CONST MSG *lpMsg, UINT Flags)
 {
     switch (lpMsg->message)
     {
@@ -2460,7 +2460,7 @@ TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
         case WM_KEYUP:
         case WM_SYSKEYDOWN:
         case WM_SYSKEYUP:
-            return(NtUserTranslateMessage((LPMSG)lpMsg, unk));
+            return(NtUserTranslateMessage((LPMSG)lpMsg, Flags));
 
         default:
             if ( lpMsg->message & ~WM_MAXIMUM )

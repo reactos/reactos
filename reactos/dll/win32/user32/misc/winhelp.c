@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/* 
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/winhelp.c
  * PURPOSE:         WinHelp
@@ -51,7 +50,7 @@ typedef struct
  */
 BOOL
 WINAPI
-WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
+WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD_PTR dwData)
 {
 	static WORD WM_WINHELP = 0;
 	HWND hDest;
@@ -137,7 +136,7 @@ WinHelpA(HWND hWnd, LPCSTR lpszHelp, UINT uCommand, DWORD dwData)
  */
 BOOL
 WINAPI
-WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, DWORD dwData)
+WinHelpW(HWND hWnd, LPCWSTR lpszHelp, UINT uCommand, DWORD_PTR dwData)
 {
     INT len;
     LPSTR file;

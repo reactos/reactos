@@ -93,7 +93,7 @@
   NtUserCallOneParam((DWORD_PTR)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
 
 #define NtUserGetDesktopMapping(Ptr) \
-  (PVOID)NtUserCallOneParam((DWORD)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
+  (PVOID)NtUserCallOneParam((DWORD_PTR)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
 
 #define NtUserSetCursorPos(x, y) \
   (BOOL)NtUserCallTwoParam((DWORD)x, (DWORD)y, TWOPARAM_ROUTINE_SETCURSORPOS)

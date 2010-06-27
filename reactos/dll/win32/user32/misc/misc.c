@@ -267,7 +267,7 @@ TestWindowProcess(PWND Wnd)
       return TRUE;
    else
       return (NtUserQueryWindow(Wnd->head.h, QUERY_WINDOW_UNIQUE_PROCESS_ID) ==
-              (DWORD)NtCurrentTeb()->ClientId.UniqueProcess );
+              (DWORD_PTR)NtCurrentTeb()->ClientId.UniqueProcess );
 }
 
 BOOL
@@ -293,7 +293,7 @@ GetUser32Handle(HANDLE handle)
     INT Index;
     USHORT generation;
 
-    Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
+    Index = (((UINT_PTR)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
     if (Index < 0 || Index >= gHandleTable->nb_handles)
         return NULL;
@@ -301,7 +301,7 @@ GetUser32Handle(HANDLE handle)
     if (!gHandleEntries[Index].type || !gHandleEntries[Index].ptr)
         return NULL;
 
-    generation = (UINT)handle >> 16;
+    generation = (UINT_PTR)handle >> 16;
 
     if (generation == gHandleEntries[Index].generation || !generation || generation == 0xffff)
         return &gHandleEntries[Index];

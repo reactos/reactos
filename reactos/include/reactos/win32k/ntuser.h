@@ -3118,8 +3118,8 @@ typedef struct tagKMDDELPARAM
     {
       struct
         {
-          UINT uiLo;
-          UINT uiHi;
+          UINT_PTR uiLo;
+          UINT_PTR uiHi;
         } Packed;
       LPARAM Unpacked;
     } Value;
