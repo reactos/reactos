@@ -251,7 +251,7 @@ CsrpFormatMessages(
         }
         else
         {
-            RtlInitAnsiString(&FormatA, MessageResource->Text);
+            RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
             RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
         }
     }
@@ -355,7 +355,7 @@ CsrpFormatMessages(
                 }
                 else
                 {
-                    RtlInitAnsiString(&FormatA, MessageResource->Text);
+                    RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
                     RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
                 }
                 FormatString = FormatU.Buffer;
