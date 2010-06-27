@@ -221,7 +221,7 @@ CsrpFormatMessages(
     NTSTATUS Status;
     UNICODE_STRING FileNameU, TempStringU, FormatU;
     ANSI_STRING FormatA;
-    PRTL_MESSAGE_RESOURCE_ENTRY MessageResource;
+    PMESSAGE_RESOURCE_ENTRY MessageResource;
     PWSTR FormatString;
     ULONG Size, ExceptionCode;
 

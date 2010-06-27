@@ -65,7 +65,7 @@ static const WCHAR FMTWSTR[] = { '%','s',0 };
  */
 static LPWSTR load_messageW( HMODULE module, UINT id, WORD lang )
 {
-    PRTL_MESSAGE_RESOURCE_ENTRY mre;
+    PMESSAGE_RESOURCE_ENTRY mre;
     WCHAR *buffer;
     NTSTATUS status;
 
@@ -100,7 +100,7 @@ static LPWSTR load_messageW( HMODULE module, UINT id, WORD lang )
  */
 static LPSTR load_messageA( HMODULE module, UINT id, WORD lang )
 {
-    PRTL_MESSAGE_RESOURCE_ENTRY mre;
+    PMESSAGE_RESOURCE_ENTRY mre;
     char *buffer;
     NTSTATUS status;
 
