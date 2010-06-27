@@ -23,7 +23,7 @@ LIST_ENTRY KeBugcheckReasonCallbackListHead;
 KSPIN_LOCK BugCheckCallbackLock;
 ULONG KeBugCheckActive, KeBugCheckOwner;
 LONG KeBugCheckOwnerRecursionCount;
-PRTL_MESSAGE_RESOURCE_DATA KiBugCodeMessages;
+PMESSAGE_RESOURCE_DATA KiBugCodeMessages;
 ULONG KeBugCheckCount = 1;
 ULONG KiHardwareTrigger;
 PUNICODE_STRING KiBugCheckDriver;
@@ -394,7 +394,7 @@ INIT_FUNCTION
 NTAPI
 KiInitializeBugCheck(VOID)
 {
-    PRTL_MESSAGE_RESOURCE_DATA BugCheckData;
+    PMESSAGE_RESOURCE_DATA BugCheckData;
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     NTSTATUS Status;

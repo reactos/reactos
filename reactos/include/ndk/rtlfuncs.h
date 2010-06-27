@@ -2796,7 +2796,7 @@ RtlFindMessage(
     IN ULONG Type,
     IN ULONG Language,
     IN ULONG MessageId,
-    OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
+    OUT PMESSAGE_RESOURCE_ENTRY *MessageResourceEntry
 );
 
 NTSYSAPI
