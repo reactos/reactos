@@ -51,4 +51,16 @@
 #define PCI_HACK_ENABLE_MSI_MAPPING                         0x0000020000000000LL
 #define PCI_HACK_DISABLE_PM_DOWNSTREAM_PCI_BRIDGE           0x0000040000000000LL
 
+//
+// Bit encodes for PCI_COMMON_CONFIG.u.type1.BridgeControl
+//
+#define PCI_ENABLE_BRIDGE_PARITY_ERROR                      0x0001
+#define PCI_ENABLE_BRIDGE_SERR                              0x0002
+#define PCI_ENABLE_BRIDGE_ISA                               0x0004
+#define PCI_ENABLE_BRIDGE_VGA                               0x0008
+#define PCI_ENABLE_BRIDGE_MASTER_ABORT_SERR                 0x0020
+#define PCI_ASSERT_BRIDGE_RESET                             0x0040
+#define PCI_ENABLE_BRIDGE_VGA_16BIT                         0x0010
+
+
 /* EOF */
