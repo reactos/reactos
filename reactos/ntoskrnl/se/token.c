@@ -1811,6 +1811,10 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 
     PAGED_CODE();
 
+    if (TokenType != TokenImpersonation &&
+        TokenType != TokenPrimary)
+        return STATUS_INVALID_PARAMETER;
+
     PreviousMode = KeGetPreviousMode();
 
     if (PreviousMode != KernelMode)
