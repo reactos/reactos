@@ -68,8 +68,10 @@ dispatch(void)
     fd_set fds;
     time_t howlong, cur_time;
     struct timeval timeval;
+    HANDLE AdapterStateChangedEvent;
 
-    if (!StartAdapterDiscovery())
+    AdapterStateChangedEvent = StartAdapterDiscovery();
+    if (!AdapterStateChangedEvent)
          return;
 
     ApiLock();
@@ -103,29 +105,31 @@ dispatch(void)
             if (howlong > INT_MAX / 1000)
                 howlong = INT_MAX / 1000;
             to_msec = howlong * 1000;
-        } else
-            to_msec = 5000;
 
-        /* Set up the descriptors to be polled. */
-        FD_ZERO(&fds);
+            /* Set up the descriptors to be polled. */
+            FD_ZERO(&fds);
 
-        for (l = protocols; l; l = l->next)
-             FD_SET(l->fd, &fds);
+            for (l = protocols; l; l = l->next)
+                 FD_SET(l->fd, &fds);
 
-        /* Wait for a packet or a timeout... XXX */
-        timeval.tv_sec = to_msec / 1000;
-        timeval.tv_usec = to_msec % 1000;
+            /* Wait for a packet or a timeout... XXX */
+            timeval.tv_sec = to_msec / 1000;
+            timeval.tv_usec = to_msec % 1000;
 
-        ApiUnlock();
+            ApiUnlock();
 
-        if (protocols)
             count = select(0, &fds, NULL, NULL, &timeval);
-        else {
-            Sleep(to_msec);
-            count = 0;
-        }
 
-        ApiLock();
+            ApiLock();
+        }
+        else
+        {
+            ApiUnlock();
+            WaitForSingleObject(AdapterStateChangedEvent, INFINITE);
+            ApiLock();
+
+            continue;
+        }
 
         DH_DbgPrint(MID_TRACE,("Select: %d\n", count));
 
@@ -148,6 +152,8 @@ dispatch(void)
             }
         }
     } while (1);
+
+    CloseHandle(AdapterStateChangedEvent);
 
     ApiUnlock();
 }

@@ -227,10 +227,11 @@ InterfaceConnected(MIB_IFROW IfEntry)
 /*
  * XXX Figure out the way to bind a specific adapter to a socket.
  */
-DWORD WINAPI AdapterDiscoveryThread(LPVOID Unused) {
+DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PMIB_IFTABLE Table = (PMIB_IFTABLE) malloc(sizeof(MIB_IFTABLE));
     DWORD Error, Size = sizeof(MIB_IFTABLE);
     PDHCP_ADAPTER Adapter = NULL;
+    HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
     int i;
 
@@ -345,6 +346,8 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Unused) {
 
                     ApiLock();
                     InsertTailList( &AdapterList, &Adapter->ListEntry );
+                    DbgPrint("DHCPCSVC: Discovered new adapter [%s]\n", Adapter->DhclientInfo.name);
+                    SetEvent(AdapterStateChangedEvent);
                     ApiUnlock();
                 } else { free( Adapter ); Adapter = 0; }
             } else { free( Adapter ); Adapter = 0; }
@@ -361,22 +364,27 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Unused) {
     return Error;
 }
 
-BOOLEAN StartAdapterDiscovery(VOID) {
-    HANDLE ThreadHandle;
+HANDLE StartAdapterDiscovery(VOID) {
+    HANDLE ThreadHandle, EventHandle;
+
+    EventHandle = CreateEvent(NULL,
+                              FALSE,
+                              FALSE,
+                              NULL);
 
     ThreadHandle = CreateThread(NULL,
                                 0,
                                 AdapterDiscoveryThread,
-                                NULL,
+                                (LPVOID)EventHandle,
                                 0,
                                 NULL);
 
     if (ThreadHandle == NULL)
-        return FALSE;
+        return NULL;
 
     CloseHandle(ThreadHandle);
 
-    return TRUE;
+    return EventHandle;
 }
 
 void AdapterStop() {
