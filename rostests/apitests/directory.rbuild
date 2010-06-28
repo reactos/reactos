@@ -18,13 +18,15 @@
 		<xi:include href="user32api/user32api.rbuild" />
 	</directory>
 
-	<directory name="w32kdll">
-		<xi:include href="w32kdll/directory.rbuild" />
-	</directory>
+	<if property="ARCH" value="i386">
+		<directory name="w32kdll">
+			<xi:include href="w32kdll/directory.rbuild" />
+		</directory>
 
-	<directory name="w32knapi">
-		<xi:include href="w32knapi/w32knapi.rbuild" />
-	</directory>
+		<directory name="w32knapi">
+			<xi:include href="w32knapi/w32knapi.rbuild" />
+		</directory>
+	</endif>
 
 	<directory name="ws2_32">
 		<xi:include href="ws2_32/ws2_32.rbuild" />
