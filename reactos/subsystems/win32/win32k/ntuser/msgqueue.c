@@ -893,7 +893,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_SENT_MESSAGE Message;
    PLIST_ENTRY Entry;
    LRESULT Result;
-   BOOL SenderReturned;
 
    if (IsListEmpty(&MessageQueue->SentMessagesListHead))
    {
@@ -921,7 +920,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       Result = co_EVENT_CallEvents( Message->Msg.message,
                                     Message->Msg.hwnd,
                                     Message->Msg.wParam,
-                                    Message->Msg.lParam);                                  
+                                    Message->Msg.lParam);
    }
    else
    {
@@ -939,8 +938,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    /* remove the message from the dispatching list if needed, so lock the sender's message queue */
    if (!(Message->HookMessage & MSQ_SENTNOWAIT))
    {
-      SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
-      if (!SenderReturned)
+      if (Message->DispatchingListEntry.Flink != NULL)
       {
          /* only remove it from the dispatching list if not already removed by a timeout */
          RemoveEntryList(&Message->DispatchingListEntry);
@@ -968,7 +966,7 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
    }
 
    /* Call the callback if the message was sent with SendMessageCallback */
-   if (!SenderReturned && Message->CompletionCallback != NULL)
+   if (Message->CompletionCallback != NULL)
    {
       co_IntCallSentMessageCallback(Message->CompletionCallback,
                                     Message->Msg.hwnd,
