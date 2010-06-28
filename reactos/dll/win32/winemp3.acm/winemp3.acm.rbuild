@@ -3,6 +3,7 @@
 	<include base="winemp3.acm">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="__WINESRC__" />
+	<define name="WIN32" />
 	<file>common.c</file>
 	<file>dct64_i386.c</file>
 	<file>decode_i386.c</file>
