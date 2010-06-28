@@ -27,4 +27,16 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
     return STATUS_SUCCESS;
 }
 
+NTSTATUS
+NTAPI
+PciIrpNotSupported(IN PIRP Irp,
+                   IN PIO_STACK_LOCATION IoStackLocation,
+                   IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    /* Not supported */
+    DPRINT1("WARNING: PCI received unsupported IRP!\n");
+    DbgBreakPoint();
+    return STATUS_NOT_SUPPORTED;
+}
+
 /* EOF */

@@ -333,4 +333,226 @@ PciBuildDefaultExclusionLists(VOID)
     return Status;
 }
 
+PPCI_FDO_EXTENSION
+NTAPI
+PciFindParentPciFdoExtension(IN PDEVICE_OBJECT DeviceObject,
+                             IN PKEVENT Lock)
+{
+    PPCI_FDO_EXTENSION FoundExtension;
+
+    /* Assume we'll find nothing */
+    FoundExtension = NULL;
+
+    /* Check if a lock was specified */
+    if (Lock)
+    {
+        /* Wait for the lock to be released */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(Lock, Executive, KernelMode, FALSE, NULL);
+    }
+
+    /* Now search for the extension */
+    if (PciFdoExtensionListHead.Next)
+    {
+        /* This case should not be hit yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Check if we had acquired a lock previously */
+    if (Lock)
+    {
+        /* Release it */
+        KeSetEvent(Lock, IO_NO_INCREMENT, FALSE);
+        KeLeaveCriticalRegion();
+    }
+
+    /* Return which extension was found, if any */
+    return FoundExtension;
+}
+
+VOID
+NTAPI
+PciInsertEntryAtTail(IN PSINGLE_LIST_ENTRY ListHead,
+                     IN PPCI_FDO_EXTENSION DeviceExtension,
+                     IN PKEVENT Lock)
+{
+    PSINGLE_LIST_ENTRY NextEntry;
+    PAGED_CODE();
+
+    /* Check if a lock was specified */
+    if (Lock)
+    {
+        /* Wait for the lock to be released */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(Lock, Executive, KernelMode, FALSE, NULL);
+    }
+
+    /* Loop the list until we get to the end, then insert this entry there */
+    for (NextEntry = ListHead; NextEntry->Next; NextEntry = NextEntry->Next);
+    NextEntry->Next = &DeviceExtension->List;
+
+    /* Check if we had acquired a lock previously */
+    if (Lock)
+    {
+        /* Release it */
+        KeSetEvent(Lock, IO_NO_INCREMENT, FALSE);
+        KeLeaveCriticalRegion();
+    }
+}
+
+VOID
+NTAPI
+PciInsertEntryAtHead(IN PSINGLE_LIST_ENTRY ListHead,
+                     IN PSINGLE_LIST_ENTRY Entry,
+                     IN PKEVENT Lock)
+{
+    PAGED_CODE();
+
+    /* Check if a lock was specified */
+    if (Lock)
+    {
+        /* Wait for the lock to be released */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(Lock, Executive, KernelMode, FALSE, NULL);
+    }
+
+    /* Make the entry point to the current head and make the head point to it */
+    Entry->Next = ListHead->Next;
+    ListHead->Next = Entry;
+
+    /* Check if we had acquired a lock previously */
+    if (Lock)
+    {
+        /* Release it */
+        KeSetEvent(Lock, IO_NO_INCREMENT, FALSE);
+        KeLeaveCriticalRegion();
+    }
+}
+
+VOID
+NTAPI
+PcipLinkSecondaryExtension(IN PSINGLE_LIST_ENTRY List,
+                           IN PVOID Lock,
+                           IN PPCI_SECONDARY_EXTENSION SecondaryExtension,
+                           IN PCI_SIGNATURE ExtensionType,
+                           IN PVOID Destructor)
+{
+    PAGED_CODE();
+
+    /* Setup the extension data, and insert it into the primary's list */
+    SecondaryExtension->ExtensionType = ExtensionType;
+    SecondaryExtension->Destructor = Destructor;
+    PciInsertEntryAtHead(List, &SecondaryExtension->List, Lock);
+}
+
+NTSTATUS
+NTAPI
+PciGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
+                     IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
+                     OUT PVOID *OutputBuffer)
+{
+    NTSTATUS Status;
+    ULONG BufferLength, ResultLength;
+    PVOID Buffer;
+    do
+    {
+        /* Query the requested property size */
+        Status = IoGetDeviceProperty(DeviceObject,
+                                     DeviceProperty,
+                                     0,
+                                     NULL,
+                                     &BufferLength);
+        if (Status != STATUS_BUFFER_TOO_SMALL)
+        {
+            /* Call should've failed with buffer too small! */
+            DPRINT1("PCI - Unexpected status from GetDeviceProperty, saw %08X, expected %08X.\n",
+                    Status,
+                    STATUS_BUFFER_TOO_SMALL);
+            *OutputBuffer = NULL;
+            ASSERTMSG(FALSE, "PCI Successfully did the impossible!");
+            break;
+        }
+
+        /* Allocate the required buffer */
+        Buffer = ExAllocatePoolWithTag(PagedPool, BufferLength, 'BicP');
+        if (!Buffer)
+        {
+            /* No memory, fail the request */
+            DPRINT1("PCI - Failed to allocate DeviceProperty buffer (%d bytes).\n", BufferLength);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+        }
+
+        /* Do the actual property query call */
+        Status = IoGetDeviceProperty(DeviceObject,
+                                     DeviceProperty,
+                                     BufferLength,
+                                     Buffer,
+                                     &ResultLength);
+        if (!NT_SUCCESS(Status)) break;
+
+        /* Return the buffer to the caller */
+        ASSERT(BufferLength == ResultLength);
+        *OutputBuffer = Buffer;
+        return STATUS_SUCCESS;
+    } while (FALSE);
+
+    /* Failure path */
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+PciSendIoctl(IN PDEVICE_OBJECT DeviceObject,
+             IN ULONG IoControlCode,
+             IN PVOID InputBuffer,
+             IN ULONG InputBufferLength,
+             IN PVOID OutputBuffer,
+             IN ULONG OutputBufferLength)
+{
+    PIRP Irp;
+    NTSTATUS Status;
+    KEVENT Event;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PDEVICE_OBJECT AttachedDevice;
+    PAGED_CODE();
+
+    /* Initialize the pending IRP event */
+    KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+
+    /* Get a reference to the root PDO (ACPI) */
+    AttachedDevice = IoGetAttachedDeviceReference(DeviceObject);
+    if (!AttachedDevice) return STATUS_INVALID_PARAMETER;
+
+    /* Build the requested IOCTL IRP */
+    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
+                                        AttachedDevice,
+                                        InputBuffer,
+                                        InputBufferLength,
+                                        OutputBuffer,
+                                        OutputBufferLength,
+                                        0,
+                                        &Event,
+                                        &IoStatusBlock);
+    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Send the IOCTL to the driver */
+    Status = IoCallDriver(AttachedDevice, Irp);
+    if (Status == STATUS_PENDING)
+    {
+        /* Wait for a response */
+        KeWaitForSingleObject(&Event,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+        Status = Irp->IoStatus.Status;
+    }
+
+    /* Take away the reference we took and return the result to the caller */
+    ObDereferenceObject(AttachedDevice);
+    return Status;
+}
+
 /* EOF */

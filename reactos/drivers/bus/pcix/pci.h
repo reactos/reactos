@@ -17,11 +17,23 @@
 #include "halfuncs.h"
 #include "rtlfuncs.h"
 #include "vffuncs.h"
+#include "bugcodes.h"
 
 //
 // Tag used in all pool allocations (Pci Bus)
 //
 #define PCI_POOL_TAG    'BicP'
+
+//
+// Checks if the specified FDO is the FDO for the Root PCI Bus
+//
+#define PCI_IS_ROOT_FDO(x)                  ((x)->BusRootFdoExtension == x)
+
+//
+// Assertions to make sure we are dealing with the right kind of extension
+//
+#define ASSERT_FDO(x)                       ASSERT((x)->ExtensionType == PciFdoExtensionType);
+#define ASSERT_PDO(x)                       ASSERT((x)->ExtensionType == PciPdoExtensionType);
 
 //
 // PCI Hack Entry Name Lengths
@@ -32,10 +44,62 @@
 #define PCI_HACK_ENTRY_FULL_SIZE            sizeof(L"VVVVddddssssIIIIRR")   // 36
 
 //
-// PCI Hack Entry Information
+// PCI Hack Entry Flags
 //
 #define PCI_HACK_HAS_REVISION_INFO          0x01
 #define PCI_HACK_HAS_SUBSYSTEM_INFO         0x02
+
+//
+// Device Extension, Interface, Translator and Arbiter Signatures
+//
+typedef enum _PCI_SIGNATURE
+{
+    PciPdoExtensionType = '0Pci',
+    PciFdoExtensionType = '1Pci',
+    PciArb_Io = '2Pci',
+    PciArb_Memory = '3Pci',
+    PciArb_Interrupt = '4Pci',
+    PciArb_BusNumber = '5Pci',
+    PciTrans_Interrupt = '6Pci',
+    PciInterface_BusHandler = '7Pci',
+    PciInterface_IntRouteHandler = '8Pci',
+    PciInterface_PciCb = '9Pci',
+    PciInterface_LegacyDeviceDetection = ':Pci',
+    PciInterface_PmeHandler = ';Pci',
+    PciInterface_DevicePresent = '<Pci',
+    PciInterface_NativeIde = '=Pci',
+    PciInterface_AgpTarget = '>Pci',
+    PciInterface_Location  = '?Pci'
+} PCI_SIGNATURE, *PPCI_SIGNATURE;
+
+//
+// Device Extension Logic States
+//
+typedef enum _PCI_STATE
+{
+    PciNotStarted,
+    PciStarted,
+    PciDeleted,
+    PciStopped,
+    PciSurpriseRemoved,
+    PciSynchronizedOperation,
+    PciMaxObjectState
+} PCI_STATE;
+
+//
+// IRP Dispatch Logic Style
+//
+typedef enum _PCI_DISPATCH_STYLE
+{
+    IRP_COMPLETE,
+    IRP_DOWNWARD,
+    IRP_UPWARD,
+    IRP_DISPATCH,
+} PCI_DISPATCH_STYLE;
+
+//
+// PCI Hack Entry Information
+//
 typedef struct _PCI_HACK_ENTRY
 {
     USHORT VendorID;
@@ -48,6 +112,165 @@ typedef struct _PCI_HACK_ENTRY
 } PCI_HACK_ENTRY, *PPCI_HACK_ENTRY;
 
 //
+// Power State Information for Device Extension
+//
+typedef struct _PCI_POWER_STATE
+{
+    SYSTEM_POWER_STATE CurrentSystemState;
+    DEVICE_POWER_STATE CurrentDeviceState;
+    SYSTEM_POWER_STATE SystemWakeLevel;
+    DEVICE_POWER_STATE DeviceWakeLevel;
+    DEVICE_POWER_STATE SystemStateMapping[7];
+    PIRP WaitWakeIrp;
+    PVOID SavedCancelRoutine;
+    LONG Paging;
+    LONG Hibernate;
+    LONG CrashDump;
+} PCI_POWER_STATE, *PPCI_POWER_STATE;
+
+//
+// Internal PCI Lock Structure
+//
+typedef struct _PCI_LOCK
+{
+    LONG Atom;
+    BOOLEAN OldIrql;
+} PCI_LOCK, *PPCI_LOCK;
+
+//
+// Device Extension for a Bus FDO
+//
+typedef struct _PCI_FDO_EXTENSION
+{
+    SINGLE_LIST_ENTRY List;
+    ULONG ExtensionType;
+    struct _PCI_MJ_DISPATCH_TABLE *IrpDispatchTable;
+    BOOLEAN DeviceState;
+    BOOLEAN TentativeNextState;
+    KEVENT SecondaryExtLock;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PDEVICE_OBJECT FunctionalDeviceObject;
+    PDEVICE_OBJECT AttachedDeviceObject;
+    KEVENT ChildListLock;
+    struct _PCI_PDO_EXTENSION *ChildPdoList;
+    struct _PCI_FDO_EXTENSION *BusRootFdoExtension;
+    struct _PCI_FDO_EXTENSION *ParentFdoExtension;
+    struct _PCI_PDO_EXTENSION *ChildBridgePdoList;
+    PPCI_BUS_INTERFACE_STANDARD PciBusInterface;
+    BOOLEAN MaxSubordinateBus;
+    BUS_HANDLER *BusHandler;
+    BOOLEAN BaseBus;
+    BOOLEAN Fake;
+    BOOLEAN ChildDelete;
+    BOOLEAN Scanned;
+    BOOLEAN ArbitersInitialized;
+    BOOLEAN BrokenVideoHackApplied;
+    BOOLEAN Hibernated;
+    PCI_POWER_STATE PowerState;
+    SINGLE_LIST_ENTRY SecondaryExtension;
+    LONG ChildWaitWakeCount;
+    PPCI_COMMON_CONFIG PreservedConfig;
+    PCI_LOCK Lock;
+    struct
+    {
+        BOOLEAN Acquired;
+        BOOLEAN CacheLineSize;
+        BOOLEAN LatencyTimer;
+        BOOLEAN EnablePERR;
+        BOOLEAN EnableSERR;
+    } HotPlugParameters;
+    LONG BusHackFlags;
+} PCI_FDO_EXTENSION, *PPCI_FDO_EXTENSION;
+
+//
+// IRP Dispatch Function Type
+//
+typedef NTSTATUS (NTAPI *PCI_DISPATCH_FUNCTION)(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+//
+// IRP Dispatch Minor Table
+//
+typedef struct _PCI_MN_DISPATCH_TABLE
+{
+    PCI_DISPATCH_STYLE DispatchStyle;
+    PCI_DISPATCH_FUNCTION DispatchFunction;
+} PCI_MN_DISPATCH_TABLE, *PPCI_MN_DISPATCH_TABLE;
+
+//
+// IRP Dispatch Major Table
+//
+typedef struct _PCI_MJ_DISPATCH_TABLE
+{
+    ULONG PnpIrpMaximumMinorFunction;
+    PPCI_MN_DISPATCH_TABLE PnpIrpDispatchTable;
+    ULONG PowerIrpMaximumMinorFunction;
+    PPCI_MN_DISPATCH_TABLE PowerIrpDispatchTable;
+    PCI_DISPATCH_STYLE SystemControlIrpDispatchStyle;
+    PCI_DISPATCH_FUNCTION SystemControlIrpDispatchFunction;
+    PCI_DISPATCH_STYLE OtherIrpDispatchStyle;
+    PCI_DISPATCH_FUNCTION OtherIrpDispatchFunction;
+} PCI_MJ_DISPATCH_TABLE, *PPCI_MJ_DISPATCH_TABLE;
+
+//
+// Generic PCI Interface Constructor and Initializer
+//
+struct _PCI_INTERFACE;
+typedef NTSTATUS (NTAPI *PCI_INTERFACE_CONSTRUCTOR)(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+typedef NTSTATUS (NTAPI *PCI_INTERFACE_INITIALIZER)(
+    IN PVOID Instance
+);
+
+//
+// Generic PCI Interface (Interface, Translator, Arbiter)
+//
+typedef struct _PCI_INTERFACE
+{
+    LPGUID InterfaceType;
+    USHORT MinSize;
+    USHORT MinVersion;
+    USHORT MaxVersion;
+    USHORT Flags;
+    LONG ReferenceCount;
+    PCI_SIGNATURE Signature;
+    PCI_INTERFACE_CONSTRUCTOR Constructor;
+    PCI_INTERFACE_INITIALIZER Initializer;
+} PCI_INTERFACE, *PPCI_INTERFACE;
+
+//
+// Generic Secondary Extension Instance Header (Interface, Translator, Arbiter)
+//
+typedef struct PCI_SECONDARY_EXTENSION
+{
+    SINGLE_LIST_ENTRY List;
+    PCI_SIGNATURE ExtensionType;
+    PVOID Destructor;
+} PCI_SECONDARY_EXTENSION, *PPCI_SECONDARY_EXTENSION;
+
+//
+// PCI Arbiter Instance
+//
+typedef struct PCI_ARBITER_INSTANCE
+{
+    PCI_SECONDARY_EXTENSION Header;
+    PPCI_INTERFACE Interface;
+    PPCI_FDO_EXTENSION BusFdoExtension;
+    WCHAR InstanceName[24];
+    //ARBITER_INSTANCE CommonInstance; FIXME: Need Arbiter Headers
+} PCI_ARBITER_INSTANCE, *PPCI_ARBITER_INSTANCE;
+
+//
 // IRP Dispatch Routines
 //
 NTSTATUS
@@ -55,6 +278,14 @@ NTAPI
 PciDispatchIrp(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+PciIrpNotSupported(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
 );
 
 //
@@ -135,5 +366,83 @@ PciGetRegistryValue(
     OUT PVOID *OutputBuffer,
     OUT PULONG OutputLength
 );
+
+PPCI_FDO_EXTENSION
+NTAPI
+PciFindParentPciFdoExtension(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PKEVENT Lock
+);
+
+VOID
+NTAPI
+PciInsertEntryAtTail(
+    IN PSINGLE_LIST_ENTRY ListHead,
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PKEVENT Lock
+);
+
+NTSTATUS
+NTAPI
+PciGetDeviceProperty(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN DEVICE_REGISTRY_PROPERTY DeviceProperty,
+    OUT PVOID *OutputBuffer
+);
+
+NTSTATUS
+NTAPI
+PciSendIoctl(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG IoControlCode,
+    IN PVOID InputBuffer,
+    IN ULONG InputBufferLength,
+    IN PVOID OutputBuffer,
+    IN ULONG OutputBufferLength
+);
+
+VOID
+NTAPI
+PcipLinkSecondaryExtension(
+    IN PSINGLE_LIST_ENTRY List,
+    IN PVOID Lock,
+    IN PPCI_SECONDARY_EXTENSION SecondaryExtension,
+    IN PCI_SIGNATURE ExtensionType,
+    IN PVOID Destructor
+);
+
+//
+// Configuration Routines
+//
+NTSTATUS
+NTAPI
+PciGetConfigHandlers(
+    IN PPCI_FDO_EXTENSION FdoExtension
+);
+
+//
+// State Machine Logic Transition Routines
+//
+VOID
+NTAPI
+PciInitializeState(
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+//
+// Arbiter Support
+//
+NTSTATUS
+NTAPI
+PciInitializeArbiters(
+    IN PPCI_FDO_EXTENSION FdoExtension
+);
+
+//
+// External Resources
+//
+extern SINGLE_LIST_ENTRY PciFdoExtensionListHead;
+extern KEVENT PciGlobalLock;
+extern PPCI_INTERFACE PciInterfaces[];
 
 /* EOF */
