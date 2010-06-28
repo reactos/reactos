@@ -1189,6 +1189,14 @@ Language=English
 INTERNAL_POWER_ERROR
 .
 
+MessageId=0xA1
+Severity=Success
+Facility=System
+SymbolicName=PCI_BUS_DRIVER_INTERNAL
+Language=English
+Inconsistency detected in the PCI Bus driver's internal structures.
+.
+
 MessageId=0xA5
 Severity=Success
 Facility=System
