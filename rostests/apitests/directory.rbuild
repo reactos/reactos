@@ -26,7 +26,7 @@
 		<directory name="w32knapi">
 			<xi:include href="w32knapi/w32knapi.rbuild" />
 		</directory>
-	</endif>
+	</if>
 
 	<directory name="ws2_32">
 		<xi:include href="ws2_32/ws2_32.rbuild" />
