@@ -2631,7 +2631,29 @@ InterlockedPushListSList(
 NTSYSAPI
 VOID
 NTAPI
-RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
+RtlInitializeRangeList(
+    IN OUT PRTL_RANGE_LIST RangeList
+);
+    
+NTSYSAPI
+VOID
+NTAPI
+RtlFreeRangeList(
+    IN PRTL_RANGE_LIST RangeList
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddRange(
+    IN OUT PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Start,
+    IN ULONGLONG End,
+    IN UCHAR Attributes,
+    IN ULONG Flags,
+    IN PVOID UserData OPTIONAL,
+    IN PVOID Owner OPTIONAL
+);
 
 //
 // Debug Functions
