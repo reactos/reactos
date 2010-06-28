@@ -3,3 +3,5 @@
 #define REACTOS_STR_INTERNAL_NAME   	"pci\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"pci.sys\0"
 #include <reactos/version.rc>
+#include "pciclass.rc"
+
