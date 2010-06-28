@@ -16,4 +16,15 @@
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+PciAddDevice(IN PDRIVER_OBJECT DriverObject,
+             IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+    /* This function is not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

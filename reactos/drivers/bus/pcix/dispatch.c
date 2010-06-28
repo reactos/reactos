@@ -16,4 +16,15 @@
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
+               IN PIRP Irp)
+{
+    /* This function is not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
