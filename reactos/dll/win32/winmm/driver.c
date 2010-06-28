@@ -467,7 +467,7 @@ HDRVR WINAPI OpenDriver(LPCWSTR lpDriverName, LPCWSTR lpSectionName, LPARAM lPar
     return 0;
 
  the_end:
-    if (lpDrv)	TRACE("=> %08lx\n", (DWORD)lpDrv);
+    if (lpDrv)	TRACE("=> %p\n", lpDrv);
     return (HDRVR)lpDrv;
 }
 

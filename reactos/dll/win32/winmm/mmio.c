@@ -665,8 +665,8 @@ static HMMIO MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo, DWORD dwOpenFlags,
     refmminfo->wErrorRet = send_message(wm->ioProc, &wm->info, MMIOM_OPEN,
                                         (LPARAM)szFileName, 0, FALSE);
 
-    /* grab file size, when possible */
-    wm->dwFileSize = GetFileSize((HANDLE)wm->info.adwInfo[0], NULL);
+    /* grab file size, when possible (FIXME: not 64 bit safe) */
+    wm->dwFileSize = GetFileSize((HANDLE)(ULONG_PTR)wm->info.adwInfo[0], NULL);
 
     if (refmminfo->wErrorRet == 0)
 	return wm->info.hmmio;
