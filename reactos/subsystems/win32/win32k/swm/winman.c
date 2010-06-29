@@ -550,6 +550,20 @@ NTAPI
 SwmSetForeground(HWND hWnd)
 {
     PSWM_WINDOW SwmWin;
+    extern struct window *shell_window;
+
+    /* Check for a shell window */
+    UserEnterExclusive();
+
+    /* Don't allow the shell window to become foreground */
+    if(shell_window &&
+       (get_window((UINT_PTR)hWnd) == shell_window))
+    {
+        UserLeave();
+        return;
+    }
+
+    UserLeave();
 
     /* Acquire the lock */
     SwmAcquire();

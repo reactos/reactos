@@ -98,7 +98,7 @@ struct user_handle_array
 };
 
 /* global window pointers */
-static struct window *shell_window;
+/*static*/ struct window *shell_window;
 static struct window *shell_listview;
 static struct window *progman_window;
 static struct window *taskman_window;
