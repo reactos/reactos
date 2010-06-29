@@ -259,7 +259,7 @@ CIrpQueue::GetMapping(
         m_CurrentOffset = Offset = 0;
     }
 
-    if (!Irp)
+    if (!Irp && m_SilenceBuffer && m_MaxFrameSize)
     {
         DPRINT("NoIrp\n");
         // no irp available, use silence buffer
@@ -267,6 +267,13 @@ CIrpQueue::GetMapping(
         *BufferSize = m_MaxFrameSize;
         return STATUS_SUCCESS;
     }
+
+    if (!Irp)
+    {
+        // no irp buffer available
+        return STATUS_UNSUCCESSFUL;
+    }
+
 
     // get stream header
     StreamHeader = (PKSSTREAM_HEADER)Irp->Tail.Overlay.DriverContext[2];
