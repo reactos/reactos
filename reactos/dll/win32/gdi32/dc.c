@@ -912,6 +912,11 @@ INT WINAPI GetDeviceCaps( HDC hdc, INT cap )
         case LOGPIXELSX:  ret = 72; break;
         case LOGPIXELSY:  ret = 72; break;
         case SIZEPALETTE: ret = 2; break;
+        case TEXTCAPS:
+            ret = (TC_OP_CHARACTER | TC_OP_STROKE | TC_CP_STROKE |
+                   TC_CR_ANY | TC_SF_X_YINDEP | TC_SA_DOUBLE | TC_SA_INTEGER |
+                   TC_SA_CONTIN | TC_UA_ABLE | TC_SO_ABLE | TC_RA_ABLE | TC_VA_ABLE);
+            break;
         }
         release_dc_ptr( dc );
     }

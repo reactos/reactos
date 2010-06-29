@@ -29,9 +29,11 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
+#include "winnls.h"
 #include "dde.h"
 #include "ddeml.h"
 #include "win.h"
+#include "wine/unicode.h"
 #include "wine/debug.h"
 #include "dde_private.h"
 
@@ -756,6 +758,54 @@ static	WDML_XACT* WDML_ServerQueueExecute(WDML_CONV* pConv, LPARAM lParam)
     return pXAct;
 }
 
+static BOOL data_looks_unicode( const WCHAR *data, DWORD size )
+{
+    DWORD i;
+
+    if (size % sizeof(WCHAR)) return FALSE;
+    for (i = 0; i < size / sizeof(WCHAR); i++) if (data[i] > 255) return FALSE;
+    return TRUE;
+}
+
+/* convert data to Unicode, unless it looks like it's already Unicode */
+static HDDEDATA map_A_to_W( DWORD instance, void *ptr, DWORD size )
+{
+    HDDEDATA ret;
+    DWORD len;
+    const char *end;
+
+    if (!data_looks_unicode( ptr, size ))
+    {
+        if ((end = memchr( ptr, 0, size ))) size = end + 1 - (const char *)ptr;
+        len = MultiByteToWideChar( CP_ACP, 0, ptr, size, NULL, 0 );
+        ret = DdeCreateDataHandle( instance, NULL, len * sizeof(WCHAR), 0, 0, CF_TEXT, 0);
+        MultiByteToWideChar( CP_ACP, 0, ptr, size, (WCHAR *)DdeAccessData(ret, NULL), len );
+    }
+    else ret = DdeCreateDataHandle( instance, ptr, size, 0, 0, CF_TEXT, 0 );
+
+    return ret;
+}
+
+/* convert data to ASCII, unless it looks like it's not in Unicode format */
+static HDDEDATA map_W_to_A( DWORD instance, void *ptr, DWORD size )
+{
+    HDDEDATA ret;
+    DWORD len;
+    const WCHAR *end;
+
+    if (data_looks_unicode( ptr, size ))
+    {
+        size /= sizeof(WCHAR);
+        if ((end = memchrW( ptr, 0, size ))) size = end + 1 - (const WCHAR *)ptr;
+        len = WideCharToMultiByte( CP_ACP, 0, ptr, size, NULL, 0, NULL, NULL );
+        ret = DdeCreateDataHandle( instance, NULL, len, 0, 0, CF_TEXT, 0);
+        WideCharToMultiByte( CP_ACP, 0, ptr, size, (char *)DdeAccessData(ret, NULL), len, NULL, NULL );
+    }
+    else ret = DdeCreateDataHandle( instance, ptr, size, 0, 0, CF_TEXT, 0 );
+
+    return ret;
+}
+
  /******************************************************************
  *		WDML_ServerHandleExecute
  *
@@ -769,11 +819,16 @@ static	WDML_QUEUE_STATE WDML_ServerHandleExecute(WDML_CONV* pConv, WDML_XACT* pX
     if (!(pConv->instance->CBFflags & CBF_FAIL_EXECUTES))
     {
 	LPVOID	ptr = GlobalLock(pXAct->hMem);
+        DWORD size = GlobalSize(pXAct->hMem);
 
 	if (ptr)
 	{
-	    hDdeData = DdeCreateDataHandle(pConv->instance->instanceID, ptr, GlobalSize(pXAct->hMem),
-					   0, 0, CF_TEXT, 0);
+            if (pConv->instance->unicode)  /* Unicode server, try to map A->W */
+                hDdeData = map_A_to_W( pConv->instance->instanceID, ptr, size );
+            else if (!IsWindowUnicode( pConv->hwndClient )) /* ASCII server and client, try to map W->A */
+                hDdeData = map_W_to_A( pConv->instance->instanceID, ptr, size );
+            else
+                hDdeData = DdeCreateDataHandle(pConv->instance->instanceID, ptr, size, 0, 0, CF_TEXT, 0);
 	    GlobalUnlock(pXAct->hMem);
 	}
 	hDdeData = WDML_InvokeCallback(pConv->instance, XTYP_EXECUTE, 0, (HCONV)pConv,

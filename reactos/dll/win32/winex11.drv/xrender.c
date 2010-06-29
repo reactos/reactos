@@ -1205,7 +1205,7 @@ void X11DRV_XRender_UpdateDrawable(X11DRV_PDEVICE *physDev)
  *
  * Helper to ExtTextOut.  Must be called inside xrender_cs
  */
-static BOOL UploadGlyph(X11DRV_PDEVICE *physDev, int glyph, AA_Type format)
+static void UploadGlyph(X11DRV_PDEVICE *physDev, int glyph, AA_Type format)
 {
     unsigned int buflen;
     char *buf;
@@ -1252,8 +1252,16 @@ static BOOL UploadGlyph(X11DRV_PDEVICE *physDev, int glyph, AA_Type format)
             buflen = GetGlyphOutlineW(physDev->hdc, glyph, ggo_format, &gm, 0, NULL, &identity);
         }
         if(buflen == GDI_ERROR) {
-            WARN("GetGlyphOutlineW failed\n");
-            return FALSE;
+            WARN("GetGlyphOutlineW failed using default glyph\n");
+            buflen = GetGlyphOutlineW(physDev->hdc, 0, ggo_format, &gm, 0, NULL, &identity);
+            if(buflen == GDI_ERROR) {
+                WARN("GetGlyphOutlineW failed for default glyph trying for space\n");
+                buflen = GetGlyphOutlineW(physDev->hdc, 0x20, ggo_format, &gm, 0, NULL, &identity);
+                if(buflen == GDI_ERROR) {
+                    ERR("GetGlyphOutlineW for all attempts unable to upload a glyph\n");
+                    return;
+                }
+            }
         }
         TRACE("Turning off antialiasing for this monochrome font\n");
     }
@@ -1423,8 +1431,6 @@ static BOOL UploadGlyph(X11DRV_PDEVICE *physDev, int glyph, AA_Type format)
     }
 
     formatEntry->gis[glyph] = gi;
-
-    return TRUE;
 }
 
 static void SharpGlyphMono(X11DRV_PDEVICE *physDev, INT x, INT y,

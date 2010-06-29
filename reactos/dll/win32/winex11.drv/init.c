@@ -235,6 +235,15 @@ INT CDECL X11DRV_GetDeviceCaps( X11DRV_PDEVICE *physDev, INT cap )
         return text_caps;
     case CLIPCAPS:
         return CP_REGION;
+    case COLORRES:
+        /* The observed correspondence between BITSPIXEL and COLORRES is:
+         * BITSPIXEL: 8  -> COLORRES: 18
+         * BITSPIXEL: 16 -> COLORRES: 16
+         * BITSPIXEL: 24 -> COLORRES: 24
+         * (note that depth_to_bpp never chooses a bpp of 24)
+         * BITSPIXEL: 32 -> COLORRES: 24 */
+        return (screen_bpp <= 8) ? 18 :
+               (screen_bpp == 32) ? 24 : screen_bpp;
     case RASTERCAPS:
         return (RC_BITBLT | RC_BANDING | RC_SCALING | RC_BITMAP64 | RC_DI_BITMAP |
                 RC_DIBTODEV | RC_BIGFONT | RC_STRETCHBLT | RC_STRETCHDIB | RC_DEVBITS |
@@ -258,7 +267,6 @@ INT CDECL X11DRV_GetDeviceCaps( X11DRV_PDEVICE *physDev, INT cap )
     case SIZEPALETTE:
         return palette_size;
     case NUMRESERVED:
-    case COLORRES:
     case PHYSICALWIDTH:
     case PHYSICALHEIGHT:
     case PHYSICALOFFSETX:

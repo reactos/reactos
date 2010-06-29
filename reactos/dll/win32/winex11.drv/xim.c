@@ -51,7 +51,7 @@ static DWORD dwCompStringSize = 0;
 #define STYLE_ROOT (XIMPreeditNothing | XIMStatusNothing)
 /* this uses all the callbacks to utilize full IME support */
 #define STYLE_CALLBACK (XIMPreeditCallbacks | XIMStatusNothing)
-/* inorder to enable deadkey support */
+/* in order to enable deadkey support */
 #define STYLE_NONE (XIMPreeditNothing | XIMStatusNothing)
 
 static XIMStyle ximStyle = 0;

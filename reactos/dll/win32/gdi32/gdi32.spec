@@ -58,8 +58,8 @@
 @ stdcall CreateEnhMetaFileW(long wstr ptr wstr)
 @ stdcall CreateFontA(long long long long long long long long long long long long long str)
 @ stdcall CreateFontIndirectA(ptr)
-@ stub CreateFontIndirectExA
-@ stub CreateFontIndirectExW
+@ stdcall CreateFontIndirectExA(ptr)
+@ stdcall CreateFontIndirectExW(ptr)
 @ stdcall CreateFontIndirectW(ptr)
 @ stdcall CreateFontW(long long long long long long long long long long long long long wstr)
 @ stdcall CreateHalftonePalette(long)

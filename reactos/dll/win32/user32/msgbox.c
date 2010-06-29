@@ -122,55 +122,55 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMSW lpmb)
     TRACE_(msgbox)("%s\n", debugstr_w(lpszText));
     SetWindowTextW(GetDlgItem(hwnd, MSGBOX_IDTEXT), lpszText);
 
-    /* Hide not selected buttons */
+    /* Remove not selected buttons */
     switch(lpmb->dwStyle & MB_TYPEMASK) {
     case MB_OK:
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDCANCEL));
 	/* fall through */
     case MB_OKCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDABORT));
+	DestroyWindow(GetDlgItem(hwnd, IDRETRY));
+	DestroyWindow(GetDlgItem(hwnd, IDIGNORE));
+	DestroyWindow(GetDlgItem(hwnd, IDYES));
+	DestroyWindow(GetDlgItem(hwnd, IDNO));
+	DestroyWindow(GetDlgItem(hwnd, IDTRYAGAIN));
+	DestroyWindow(GetDlgItem(hwnd, IDCONTINUE));
 	break;
     case MB_ABORTRETRYIGNORE:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDOK));
+	DestroyWindow(GetDlgItem(hwnd, IDCANCEL));
+	DestroyWindow(GetDlgItem(hwnd, IDYES));
+	DestroyWindow(GetDlgItem(hwnd, IDNO));
+	DestroyWindow(GetDlgItem(hwnd, IDCONTINUE));
+	DestroyWindow(GetDlgItem(hwnd, IDTRYAGAIN));
 	break;
     case MB_YESNO:
-	ShowWindow(GetDlgItem(hwnd, IDCANCEL), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDCANCEL));
 	/* fall through */
     case MB_YESNOCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDOK));
+	DestroyWindow(GetDlgItem(hwnd, IDABORT));
+	DestroyWindow(GetDlgItem(hwnd, IDRETRY));
+	DestroyWindow(GetDlgItem(hwnd, IDIGNORE));
+	DestroyWindow(GetDlgItem(hwnd, IDCONTINUE));
+	DestroyWindow(GetDlgItem(hwnd, IDTRYAGAIN));
 	break;
     case MB_RETRYCANCEL:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDCONTINUE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDTRYAGAIN), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDOK));
+	DestroyWindow(GetDlgItem(hwnd, IDABORT));
+	DestroyWindow(GetDlgItem(hwnd, IDIGNORE));
+	DestroyWindow(GetDlgItem(hwnd, IDYES));
+	DestroyWindow(GetDlgItem(hwnd, IDNO));
+	DestroyWindow(GetDlgItem(hwnd, IDCONTINUE));
+	DestroyWindow(GetDlgItem(hwnd, IDTRYAGAIN));
 	break;
     case MB_CANCELTRYCONTINUE:
-	ShowWindow(GetDlgItem(hwnd, IDOK), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDABORT), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDIGNORE), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDYES), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDNO), SW_HIDE);
-	ShowWindow(GetDlgItem(hwnd, IDRETRY), SW_HIDE);
+	DestroyWindow(GetDlgItem(hwnd, IDOK));
+	DestroyWindow(GetDlgItem(hwnd, IDABORT));
+	DestroyWindow(GetDlgItem(hwnd, IDIGNORE));
+	DestroyWindow(GetDlgItem(hwnd, IDYES));
+	DestroyWindow(GetDlgItem(hwnd, IDNO));
+	DestroyWindow(GetDlgItem(hwnd, IDRETRY));
     }
     /* Set the icon */
     switch(lpmb->dwStyle & MB_ICONMASK) {
@@ -201,9 +201,9 @@ static HFONT MSGBOX_OnInit(HWND hwnd, LPMSGBOXPARAMSW lpmb)
 	break;
     }
 
-    /* Hide Help button unless MB_HELP supplied */
+    /* Remove Help button unless MB_HELP supplied */
     if (!(lpmb->dwStyle & MB_HELP)) {
-        ShowWindow(GetDlgItem(hwnd, IDHELP), SW_HIDE);
+        DestroyWindow(GetDlgItem(hwnd, IDHELP));
     }
 
     /* Position everything */
@@ -512,7 +512,11 @@ INT WINAPI MessageBoxIndirectW( LPMSGBOXPARAMSW msgbox )
 
     if (!(hRes = FindResourceExW(user32_module, (LPWSTR)RT_DIALOG,
                                  msg_box_res_nameW, msgbox->dwLanguageId)))
-        return 0;
+    {
+        if (!msgbox->dwLanguageId ||
+            !(hRes = FindResourceExW(user32_module, (LPWSTR)RT_DIALOG, msg_box_res_nameW, LANG_NEUTRAL)))
+            return 0;
+    }
     if (!(tmplate = LoadResource(user32_module, hRes)))
         return 0;
 

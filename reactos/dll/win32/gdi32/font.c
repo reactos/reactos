@@ -180,7 +180,7 @@ static void FONT_LogFontWToA( const LOGFONTW *fontW, LPLOGFONTA fontA )
 
 static void FONT_EnumLogFontExWToA( const ENUMLOGFONTEXW *fontW, LPENUMLOGFONTEXA fontA )
 {
-    FONT_LogFontWToA( (const LOGFONTW *)fontW, (LPLOGFONTA)fontA);
+    FONT_LogFontWToA( &fontW->elfLogFont, &fontA->elfLogFont );
 
     WideCharToMultiByte( CP_ACP, 0, fontW->elfFullName, -1,
 			 (LPSTR) fontA->elfFullName, LF_FULLFACESIZE, NULL, NULL );
@@ -191,6 +191,21 @@ static void FONT_EnumLogFontExWToA( const ENUMLOGFONTEXW *fontW, LPENUMLOGFONTEX
     WideCharToMultiByte( CP_ACP, 0, fontW->elfScript, -1,
 			 (LPSTR) fontA->elfScript, LF_FACESIZE, NULL, NULL );
     fontA->elfScript[LF_FACESIZE-1] = '\0';
+}
+
+static void FONT_EnumLogFontExAToW( const ENUMLOGFONTEXA *fontA, LPENUMLOGFONTEXW fontW )
+{
+    FONT_LogFontAToW( &fontA->elfLogFont, &fontW->elfLogFont );
+
+    MultiByteToWideChar( CP_ACP, 0, (LPCSTR)fontA->elfFullName, -1,
+			 fontW->elfFullName, LF_FULLFACESIZE );
+    fontW->elfFullName[LF_FULLFACESIZE-1] = '\0';
+    MultiByteToWideChar( CP_ACP, 0, (LPCSTR)fontA->elfStyle, -1,
+			 fontW->elfStyle, LF_FACESIZE );
+    fontW->elfStyle[LF_FACESIZE-1] = '\0';
+    MultiByteToWideChar( CP_ACP, 0, (LPCSTR)fontA->elfScript, -1,
+			 fontW->elfScript, LF_FACESIZE );
+    fontW->elfScript[LF_FACESIZE-1] = '\0';
 }
 
 /***********************************************************************
@@ -287,30 +302,42 @@ static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
     return strW;
 }
 
-
 /***********************************************************************
- *           CreateFontIndirectA   (GDI32.@)
+ *           CreateFontIndirectExA   (GDI32.@)
  */
-HFONT WINAPI CreateFontIndirectA( const LOGFONTA *plfA )
+HFONT WINAPI CreateFontIndirectExA( const ENUMLOGFONTEXDVA *penumexA )
 {
-    LOGFONTW lfW;
+    ENUMLOGFONTEXDVW enumexW;
 
-    if (!plfA) return 0;
+    if (!penumexA) return 0;
 
-    FONT_LogFontAToW( plfA, &lfW );
-    return CreateFontIndirectW( &lfW );
+    FONT_EnumLogFontExAToW( &penumexA->elfEnumLogfontEx, &enumexW.elfEnumLogfontEx );
+    enumexW.elfDesignVector = penumexA->elfDesignVector;
+    return CreateFontIndirectExW( &enumexW );
 }
 
 /***********************************************************************
- *           CreateFontIndirectW   (GDI32.@)
+ *           CreateFontIndirectExA   (GDI32.@)
  */
-HFONT WINAPI CreateFontIndirectW( const LOGFONTW *plf )
+HFONT WINAPI CreateFontIndirectExW( const ENUMLOGFONTEXDVW *penumex )
 {
     HFONT hFont;
     FONTOBJ *fontPtr;
+    const LOGFONTW *plf;
 
-    if (!plf) return 0;
+    if (!penumex) return 0;
 
+    if (penumex->elfEnumLogfontEx.elfFullName[0] ||
+        penumex->elfEnumLogfontEx.elfStyle[0] ||
+        penumex->elfEnumLogfontEx.elfScript[0])
+    {
+        FIXME("some fields ignored. fullname=%s, style=%s, script=%s\n",
+            debugstr_w(penumex->elfEnumLogfontEx.elfFullName),
+            debugstr_w(penumex->elfEnumLogfontEx.elfStyle),
+            debugstr_w(penumex->elfEnumLogfontEx.elfScript));
+    }
+
+    plf = &penumex->elfEnumLogfontEx.elfLogFont;
     if (!(fontPtr = HeapAlloc( GetProcessHeap(), 0, sizeof(*fontPtr) ))) return 0;
 
     fontPtr->logfont = *plf;
@@ -342,6 +369,35 @@ HFONT WINAPI CreateFontIndirectW( const LOGFONTW *plf )
           plf->lfUnderline ? "Underline" : "", hFont);
 
     return hFont;
+}
+
+/***********************************************************************
+ *           CreateFontIndirectA   (GDI32.@)
+ */
+HFONT WINAPI CreateFontIndirectA( const LOGFONTA *plfA )
+{
+    LOGFONTW lfW;
+
+    if (!plfA) return 0;
+
+    FONT_LogFontAToW( plfA, &lfW );
+    return CreateFontIndirectW( &lfW );
+}
+
+/***********************************************************************
+ *           CreateFontIndirectW   (GDI32.@)
+ */
+HFONT WINAPI CreateFontIndirectW( const LOGFONTW *plf )
+{
+    ENUMLOGFONTEXDVW exdv;
+
+    if (!plf) return 0;
+
+    exdv.elfEnumLogfontEx.elfLogFont = *plf;
+    exdv.elfEnumLogfontEx.elfFullName[0] = 0;
+    exdv.elfEnumLogfontEx.elfStyle[0] = 0;
+    exdv.elfEnumLogfontEx.elfScript[0] = 0;
+    return CreateFontIndirectExW( &exdv );
 }
 
 /*************************************************************************
@@ -1879,7 +1935,7 @@ BOOL WINAPI ExtTextOutW( HDC hdc, INT x, INT y, UINT flags,
         if (align & TA_UPDATECP)
         {
             pt.x = x + width.x;
-            pt.y = y - width.y;
+            pt.y = y + width.y;
             DPtoLP(hdc, &pt, 1);
             MoveToEx(hdc, pt.x, pt.y, NULL);
         }
@@ -1887,12 +1943,12 @@ BOOL WINAPI ExtTextOutW( HDC hdc, INT x, INT y, UINT flags,
 
     case TA_CENTER:
         x -= width.x / 2;
-        y += width.y / 2;
+        y -= width.y / 2;
         break;
 
     case TA_RIGHT:
         x -= width.x;
-        y += width.y;
+        y -= width.y;
         if (align & TA_UPDATECP)
         {
             pt.x = x;
@@ -2073,7 +2129,7 @@ done:
                 pts[0].x = x - underlinePos * sinEsc;
                 pts[0].y = y - underlinePos * cosEsc;
                 pts[1].x = x + width.x - underlinePos * sinEsc;
-                pts[1].y = y - width.y - underlinePos * cosEsc;
+                pts[1].y = y + width.y - underlinePos * cosEsc;
                 pts[2].x = pts[1].x + underlineWidth * sinEsc;
                 pts[2].y = pts[1].y + underlineWidth * cosEsc;
                 pts[3].x = pts[0].x + underlineWidth * sinEsc;
@@ -2089,7 +2145,7 @@ done:
                 pts[0].x = x - strikeoutPos * sinEsc;
                 pts[0].y = y - strikeoutPos * cosEsc;
                 pts[1].x = x + width.x - strikeoutPos * sinEsc;
-                pts[1].y = y - width.y - strikeoutPos * cosEsc;
+                pts[1].y = y + width.y - strikeoutPos * cosEsc;
                 pts[2].x = pts[1].x + strikeoutWidth * sinEsc;
                 pts[2].y = pts[1].y + strikeoutWidth * cosEsc;
                 pts[3].x = pts[0].x + strikeoutWidth * sinEsc;
@@ -2116,7 +2172,7 @@ done:
                 pts[0].x = x;
                 pts[0].y = y;
                 pts[1].x = x + width.x;
-                pts[1].y = y - width.y;
+                pts[1].y = y + width.y;
                 DPtoLP(hdc, pts, 2);
                 MoveToEx(hdc, pts[0].x - underlinePos * sinEsc, pts[0].y - underlinePos * cosEsc, &oldpt);
                 LineTo(hdc, pts[1].x - underlinePos * sinEsc, pts[1].y - underlinePos * cosEsc);
@@ -2131,7 +2187,7 @@ done:
                 pts[0].x = x;
                 pts[0].y = y;
                 pts[1].x = x + width.x;
-                pts[1].y = y - width.y;
+                pts[1].y = y + width.y;
                 DPtoLP(hdc, pts, 2);
                 MoveToEx(hdc, pts[0].x - strikeoutPos * sinEsc, pts[0].y - strikeoutPos * cosEsc, &oldpt);
                 LineTo(hdc, pts[1].x - strikeoutPos * sinEsc, pts[1].y - strikeoutPos * cosEsc);

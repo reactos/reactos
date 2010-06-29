@@ -108,7 +108,7 @@ HANDLE alloc_user_handle( struct user_object *ptr, enum user_obj_type type )
         assert( index < NB_USER_HANDLES );
         ptr->handle = handle;
         ptr->type = type;
-        user_handles[index] = ptr;
+        InterlockedExchangePointer( &user_handles[index], ptr );
     }
     return handle;
 }
@@ -162,8 +162,8 @@ void *free_user_handle( HANDLE handle, enum user_obj_type type )
         SERVER_START_REQ( free_user_handle )
         {
             req->handle = wine_server_user_handle( handle );
-            if (!wine_server_call( req )) user_handles[index] = NULL;
-            else ptr = NULL;
+            if (wine_server_call( req )) ptr = NULL;
+            else InterlockedCompareExchangePointer( &user_handles[index], NULL, ptr );
         }
         SERVER_END_REQ;
         release_user_handle_ptr( ptr );
@@ -244,7 +244,6 @@ static WND *create_window_handle( HWND parent, HWND owner, LPCWSTR name,
 
     index = USER_HANDLE_TO_INDEX(handle);
     assert( index < NB_USER_HANDLES );
-    user_handles[index] = win;
     win->obj.handle = handle;
     win->obj.type   = USER_WINDOW;
     win->parent     = full_parent;
@@ -252,6 +251,7 @@ static WND *create_window_handle( HWND parent, HWND owner, LPCWSTR name,
     win->class      = class;
     win->winproc    = get_class_winproc( class );
     win->cbWndExtra = extra_bytes;
+    InterlockedExchangePointer( &user_handles[index], win );
     if (WINPROC_IsUnicode( win->winproc, unicode )) win->flags |= WIN_ISUNICODE;
     return win;
 }
@@ -272,8 +272,8 @@ static void free_window_handle( HWND hwnd )
         SERVER_START_REQ( destroy_window )
         {
             req->handle = wine_server_user_handle( hwnd );
-            if (!wine_server_call_err( req )) user_handles[index] = NULL;
-            else ptr = NULL;
+            if (wine_server_call_err( req )) ptr = NULL;
+            else InterlockedCompareExchangePointer( &user_handles[index], NULL, ptr );
         }
         SERVER_END_REQ;
         release_user_handle_ptr( ptr );
@@ -816,7 +816,7 @@ static void destroy_thread_window( HWND hwnd )
         if ((wndPtr->dwStyle & (WS_CHILD | WS_POPUP)) != WS_CHILD) menu = (HMENU)wndPtr->wIDmenu;
         sys_menu = wndPtr->hSysMenu;
         free_dce( wndPtr->dce, hwnd );
-        user_handles[index] = NULL;
+        InterlockedCompareExchangePointer( &user_handles[index], NULL, wndPtr );
     }
     USER_Unlock();
 
@@ -1039,6 +1039,7 @@ static void dump_window_styles( DWORD style, DWORD exstyle )
     if(exstyle & WS_EX_STATICEDGE) TRACE(" WS_EX_STATICEDGE");
     if(exstyle & WS_EX_APPWINDOW) TRACE(" WS_EX_APPWINDOW");
     if(exstyle & WS_EX_LAYERED) TRACE(" WS_EX_LAYERED");
+    if(exstyle & WS_EX_LAYOUTRTL) TRACE(" WS_EX_LAYOUTRTL");
 
 #define DUMPED_EX_STYLES \
     (WS_EX_DLGMODALFRAME | \
@@ -1058,7 +1059,8 @@ static void dump_window_styles( DWORD style, DWORD exstyle )
      WS_EX_CONTROLPARENT | \
      WS_EX_STATICEDGE | \
      WS_EX_APPWINDOW | \
-     WS_EX_LAYERED)
+     WS_EX_LAYERED | \
+     WS_EX_LAYOUTRTL)
 
     if(exstyle & ~DUMPED_EX_STYLES) TRACE(" %08lx", exstyle & ~DUMPED_EX_STYLES);
     TRACE("\n");
