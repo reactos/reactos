@@ -38,10 +38,10 @@
 //
 // PCI Hack Entry Name Lengths
 //
-#define PCI_HACK_ENTRY_SIZE                 sizeof(L"VVVVdddd")             // 16
-#define PCI_HACK_ENTRY_REV_SIZE             sizeof(L"VVVVddddRR")           // 20
-#define PCI_HACK_ENTRY_SUBSYS_SIZE          sizeof(L"VVVVddddssssIIII")     // 32
-#define PCI_HACK_ENTRY_FULL_SIZE            sizeof(L"VVVVddddssssIIIIRR")   // 36
+#define PCI_HACK_ENTRY_SIZE                 sizeof(L"VVVVdddd") - sizeof(UNICODE_NULL)
+#define PCI_HACK_ENTRY_REV_SIZE             sizeof(L"VVVVddddRR") - sizeof(UNICODE_NULL)
+#define PCI_HACK_ENTRY_SUBSYS_SIZE          sizeof(L"VVVVddddssssIIII") - sizeof(UNICODE_NULL)
+#define PCI_HACK_ENTRY_FULL_SIZE            sizeof(L"VVVVddddssssIIIIRR") - sizeof(UNICODE_NULL)
 
 //
 // PCI Hack Entry Flags

@@ -260,6 +260,7 @@ PciGetRegistryValue(IN PWCHAR ValueName,
         /* Copy the data into the buffer and return its length to the caller */
         RtlCopyMemory(*OutputBuffer, PartialInfo->Data, NeededLength);
         if (OutputLength) *OutputLength = NeededLength;
+        Status = STATUS_SUCCESS;
     } while (0);
 
     /* Close any opened keys and free temporary allocations */
@@ -325,7 +326,6 @@ PciBuildDefaultExclusionLists(VOID)
         if (!NT_SUCCESS(Status)) break;
 
         /* Success, ranges added done */
-        return STATUS_SUCCESS;
     };
 
     RtlFreeRangeList(&PciIsaBitExclusionList);

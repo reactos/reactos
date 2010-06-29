@@ -37,7 +37,7 @@ PciAcpiFindRsdt(OUT PACPI_BIOS_MULTI_NODE *AcpiMultiNode)
     HANDLE KeyHandle, SubKey;
     ULONG NumberOfBytes, i, Length;
     PKEY_FULL_INFORMATION FullInfo;
-    PKEY_VALUE_BASIC_INFORMATION KeyInfo;
+    PKEY_BASIC_INFORMATION KeyInfo;
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     PACPI_BIOS_MULTI_NODE NodeData;
     UNICODE_STRING ValueName;
@@ -98,15 +98,19 @@ PciAcpiFindRsdt(OUT PACPI_BIOS_MULTI_NODE *AcpiMultiNode)
                                           PCI_POOL_TAG);
         if (!ValueInfo) break;
 
-        /* Query each sub-key */
-        Status = ZwEnumerateKey(KeyHandle,
-                                0,
-                                KeyValueBasicInformation,
-                                KeyInfo,
-                                Length,
-                                &NumberOfBytes);
-        for (i = 0; Status != STATUS_NO_MORE_ENTRIES; i++)
+        /* Loop each sub-key */
+        i = 0;
+        while (TRUE)
         {
+            /* Query each sub-key */
+            Status = ZwEnumerateKey(KeyHandle,
+                                    i++,
+                                    KeyBasicInformation,
+                                    KeyInfo,
+                                    Length,
+                                    &NumberOfBytes);
+            if (Status == STATUS_NO_MORE_ENTRIES) break;
+
             /* Null-terminate the keyname, because the kernel does not */
             KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
@@ -127,29 +131,29 @@ PciAcpiFindRsdt(OUT PACPI_BIOS_MULTI_NODE *AcpiMultiNode)
                                          sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
                                          sizeof(L"ACPI BIOS"),
                                          &NumberOfBytes);
-                 if (NT_SUCCESS(Status))
-                 {
-                     /* Check if this is the PCI BIOS subkey */
-                     if (!wcsncmp((PWCHAR)ValueInfo->Data,
-                                  L"ACPI BIOS",
-                                  ValueInfo->DataLength))
-                     {
-                         /* It is, proceed to query the PCI IRQ routing table */
-                         Status = PciGetRegistryValue(L"Configuration Data",
-                                                      KeyInfo->Name,
-                                                      KeyHandle,
-                                                      REG_FULL_RESOURCE_DESCRIPTOR,
-                                                      (PVOID*)&Package,
-                                                      &NumberOfBytes);
-                         ZwClose(SubKey);
-                         break;
-                     }
-                 }
+                if (NT_SUCCESS(Status))
+                {
+                    /* Check if this is the PCI BIOS subkey */
+                    if (!wcsncmp((PWCHAR)ValueInfo->Data,
+                                 L"ACPI BIOS",
+                                 ValueInfo->DataLength))
+                    {
+                        /* It is, proceed to query the PCI IRQ routing table */
+                        Status = PciGetRegistryValue(L"Configuration Data",
+                                                     KeyInfo->Name,
+                                                     KeyHandle,
+                                                     REG_FULL_RESOURCE_DESCRIPTOR,
+                                                     (PVOID*)&Package,
+                                                     &NumberOfBytes);
+                        ZwClose(SubKey);
+                        break;
+                    }
+                }
 
-                 /* Close the subkey and try the next one */
-                 ZwClose(SubKey);
-             }
-         }
+                /* Close the subkey and try the next one */
+                ZwClose(SubKey);
+            }
+        }
 
         /* Check if we got here because the routing table was found */
         if (!NT_SUCCESS(Status))
@@ -176,6 +180,7 @@ PciAcpiFindRsdt(OUT PACPI_BIOS_MULTI_NODE *AcpiMultiNode)
 
         /* Copy the data */
         RtlCopyMemory(*AcpiMultiNode, NodeData, Length);
+        Status = STATUS_SUCCESS;
     } while (FALSE);
 
     /* Close any opened keys, free temporary allocations, and return status */
@@ -202,7 +207,7 @@ PciGetAcpiTable(IN ULONG TableCode)
 
     /* Try to find the RSDT or XSDT */
     Status = PciAcpiFindRsdt(&AcpiMultiNode);
-    if (NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status))
     {
         /* No ACPI on the machine */
         DPRINT1("AcpiFindRsdt() Failed!\n");
@@ -231,7 +236,6 @@ PciGetAcpiTable(IN ULONG TableCode)
     if (!Rsdt) return NULL;
 
     /* Validate the table's signature */
-    DPRINT1("ACPI RSDT/XSDT at 0x%p\n", Rsdt);
     if ((Rsdt->Header.Signature != RSDT_SIGNATURE) &&
         (Rsdt->Header.Signature != XSDT_SIGNATURE))
     {
@@ -269,7 +273,7 @@ PciGetAcpiTable(IN ULONG TableCode)
         if (Rsdt->Header.Signature != XSDT_SIGNATURE)
         {
             /* Read the 32-bit physical address */
-            PhysicalAddress.LowPart = Rsdt->Tables[CurrentEntry];
+            PhysicalAddress.QuadPart = Rsdt->Tables[CurrentEntry];
         }
         else
         {
@@ -313,7 +317,7 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
     HANDLE KeyHandle, SubKey;
     ULONG NumberOfBytes, i, Length;
     PKEY_FULL_INFORMATION FullInfo;
-    PKEY_VALUE_BASIC_INFORMATION KeyInfo;
+    PKEY_BASIC_INFORMATION KeyInfo;
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     UNICODE_STRING ValueName;
     struct
@@ -364,24 +368,28 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
         Status = STATUS_INSUFFICIENT_RESOURCES;
         Length = FullInfo->MaxNameLen + 26;
         KeyInfo = ExAllocatePoolWithTag(PagedPool, Length, PCI_POOL_TAG);
-        if ( !KeyInfo ) break;
+        if (!KeyInfo) break;
 
         /* Allocate the value information and name we expect to find */
         ValueInfo = ExAllocatePoolWithTag(PagedPool,
                                           sizeof(KEY_VALUE_PARTIAL_INFORMATION) +
                                           sizeof(L"PCI BIOS"),
                                           PCI_POOL_TAG);
-        if ( !ValueInfo ) break;
+        if (!ValueInfo) break;
 
-        /* Query each sub-key */
-        Status = ZwEnumerateKey(KeyHandle,
-                                0,
-                                KeyValueBasicInformation,
-                                KeyInfo,
-                                Length,
-                                &NumberOfBytes);
-        for (i = 0; Status != STATUS_NO_MORE_ENTRIES; i++)
+        /* Loop each sub-key */
+        i = 0;
+        while (TRUE)
         {
+            /* Query each sub-key */
+            Status = ZwEnumerateKey(KeyHandle,
+                                    i++,
+                                    KeyBasicInformation,
+                                    KeyInfo,
+                                    Length,
+                                    &NumberOfBytes);
+            if (Status == STATUS_NO_MORE_ENTRIES) break;
+            
             /* Null-terminate the keyname, because the kernel does not */
             KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 
@@ -576,7 +584,9 @@ PciBuildHackTable(IN HANDLE KeyHandle)
                 (NameLength != PCI_HACK_ENTRY_SUBSYS_SIZE) &&
                 (NameLength != PCI_HACK_ENTRY_FULL_SIZE))
             {
+                /* It's an invalid entry, skip it */
                 DPRINT1("Skipping hack entry with invalid length name\n");
+                continue;
             }
 
             /* Initialize the entry */
@@ -634,11 +644,11 @@ PciBuildHackTable(IN HANDLE KeyHandle)
             DPRINT1("Adding Hack entry for Vendor:0x%04x Device:0x%04x ",
                     Entry->VendorID, Entry->DeviceID);
             if (Entry->Flags & PCI_HACK_HAS_SUBSYSTEM_INFO)
-                DPRINT1("SybSys:0x%04x SubVendor:0x%04x ",
-                        Entry->SubSystemID, Entry->SubVendorID);
+                DbgPrint("SybSys:0x%04x SubVendor:0x%04x ",
+                         Entry->SubSystemID, Entry->SubVendorID);
             if (Entry->Flags & PCI_HACK_HAS_REVISION_INFO)
-                DPRINT1("Revision:0x%02x", Entry->RevisionID);
-            DPRINT1(" = 0x%I64x\n", Entry->HackFlags);
+                DbgPrint("Revision:0x%02x", Entry->RevisionID);
+            DbgPrint(" = 0x%I64x\n", Entry->HackFlags);
         }
 
         /* Bail out in case of failure */
@@ -843,6 +853,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 
         /* Check if the system has an ACPI Hardware Watchdog Timer */
         WdTable = PciGetAcpiTable(WDRT_SIGNATURE);
+        Status = STATUS_SUCCESS;
     } while (FALSE);
 
     /* Close all opened keys, return driver status to PnP Manager */
