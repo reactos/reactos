@@ -5,6 +5,7 @@
  * FILE:             subsystems/win32/win32k/ntuser/timer.c
  * PROGRAMER:        Gunnar
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
+ *                   Michael Martin (michael.martin@reactos.org)
  * REVISION HISTORY: 10/04/2003 Implemented System Timers
  *
  */
@@ -104,7 +105,7 @@ RemoveTimer(PTIMER pTmr)
      UserDereferenceObject(pTmr);
      Ret = UserDeleteObject( UserHMGetHandle(pTmr), otTimer);
   }
-  if (!Ret) DPRINT1("Warning unable to delete timer\n");
+  if (!Ret) DPRINT1("Warning: Unable to delete timer\n");
 
   return Ret;
 }
@@ -113,8 +114,7 @@ PTIMER
 FASTCALL
 FindTimer(PWINDOW_OBJECT Window,
           UINT_PTR nID,
-          UINT flags,
-          BOOL Distroy)
+          UINT flags)
 {
   PLIST_ENTRY pLE;
   PTIMER pTmr = FirstpTmr, RetTmr = NULL;
@@ -127,10 +127,6 @@ FindTimer(PWINDOW_OBJECT Window,
          pTmr->pWnd == Window &&
         (pTmr->flags & (TMRF_SYSTEM|TMRF_RIT)) == (flags & (TMRF_SYSTEM|TMRF_RIT)))
     {
-       if (Distroy)
-       {
-          RemoveTimer(pTmr);
-       }
        RetTmr = pTmr;
        break;
     }
@@ -206,7 +202,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
   PTIMER pTmr;
   UINT Ret= IDEvent;
   LARGE_INTEGER DueTime;
-  DueTime.QuadPart = (LONGLONG)(-10000000);
+  DueTime.QuadPart = (LONGLONG)(-5000000);
 
 #if 0
   /* Windows NT/2k/XP behaviour */
@@ -234,7 +230,7 @@ IntSetTimer( PWINDOW_OBJECT Window,
   if ((Window) && (IDEvent == 0))
      IDEvent = 1;
 
-  pTmr = FindTimer(Window, IDEvent, Type, FALSE);
+  pTmr = FindTimer(Window, IDEvent, Type);
 
   if ((!pTmr) && (Window == NULL) && (!(Type & TMRF_SYSTEM)))
   {
@@ -350,7 +346,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
   {
      if ( (pTmr->flags & TMRF_READY) &&
           (pTmr->pti == pti) &&
-          ((pTmr->pWnd == Window) || (Window == NULL) ) )
+          ((pTmr->pWnd == Window) || (Window == NULL)) )
         {
            Msg.hwnd    = (pTmr->pWnd) ? pTmr->pWnd->hSelf : 0;
            Msg.message = (pTmr->flags & TMRF_SYSTEM) ? WM_SYSTIMER : WM_TIMER;
@@ -361,6 +357,7 @@ PostTimerMessages(PWINDOW_OBJECT Window)
            pTmr->flags &= ~TMRF_READY;
            ThreadQueue->WakeMask = ~QS_TIMER;
            Hit = TRUE;
+           break;
         }
 
      pLE = pTmr->ptmrList.Flink;
@@ -389,7 +386,7 @@ ProcessTimers(VOID)
   KeQueryTickCount(&TickCount);
   Time = MsqCalculateMessageTime(&TickCount);
 
-  DueTime.QuadPart = (LONGLONG)(-1000000);
+  DueTime.QuadPart = (LONGLONG)(-500000);
 
   do
   {
@@ -611,7 +608,15 @@ IntKillTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, BOOL SystemTimer)
    if ((Window) && (IDEvent == 0))
       IDEvent = 1;
 
-   pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0, TRUE);
+   pTmr = FindTimer(Window, IDEvent, SystemTimer ? TMRF_SYSTEM : 0);
+
+   if (pTmr)
+   {
+      TimerEnterExclusive();
+      RemoveTimer(pTmr);
+      TimerLeave();
+   }
+
    return pTmr ? TRUE :  FALSE;
 }
 
