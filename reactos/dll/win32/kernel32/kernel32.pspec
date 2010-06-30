@@ -1,5 +1,5 @@
 @ stdcall AcquireSRWLockExclusive(ptr) ntdll.RtlAcquireSRWLockExclusive
-@ stdcall AcquireSRWLockShare(ptr) ntdll.RtlAcquireSRWLockShared
+@ stdcall AcquireSRWLockShared(ptr) ntdll.RtlAcquireSRWLockShared
 @ stdcall ActivateActCtx(ptr ptr)
 @ stdcall AddAtomA(str)
 @ stdcall AddAtomW(wstr)
