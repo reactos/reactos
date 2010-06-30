@@ -179,7 +179,6 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL CallHooks)
 {
     PWINDOW_OBJECT DesktopWindow;
     PSYSTEM_CURSORINFO CurInfo;
-    LARGE_INTEGER LargeTickCount;
     MSLLHOOKSTRUCT MouseHookData;
     HDC hDC;
     MSG Msg;
@@ -222,9 +221,6 @@ BOOL UserSetCursorPos( INT x, INT y, BOOL CallHooks)
     //Store the new cursor position
     gpsi->ptCursor.x = x;
     gpsi->ptCursor.y = y;
-
-    KeQueryTickCount(&LargeTickCount);
-    Msg.time = MsqCalculateMessageTime(&LargeTickCount);
 
     //Move the mouse pointer
     GreMovePointer(hDC, x, y);

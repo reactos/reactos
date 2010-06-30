@@ -171,9 +171,12 @@ MsqInitializeImpl(VOID)
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg)
 {
+   LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
    ULONG Prev;
 
+   KeQueryTickCount(&LargeTickCount);
+   Msg->time = MsqCalculateMessageTime(&LargeTickCount);
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
     * system message queue, check if the last message is mouse move
