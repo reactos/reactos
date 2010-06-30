@@ -12,7 +12,7 @@ URLDownload = http://mesh.dl.sourceforge.net/project/mpc-hc/MPC%20HomeCinema%20-
 CDPath = none
 
 [Section.0407]
-Description = Ein Medienplayer.
+Description = Ein Mediaplayer.
 
 [Section.040a]
 Description = Reproductor multimedia.
