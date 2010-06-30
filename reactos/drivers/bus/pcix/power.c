@@ -16,4 +16,37 @@
 
 /* FUNCTIONS ******************************************************************/
 
+NTSTATUS
+NTAPI
+PciFdoWaitWake(IN PIRP Irp,
+               IN PIO_STACK_LOCATION IoStackLocation,
+               IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+PciFdoSetPowerState(IN PIRP Irp,
+                    IN PIO_STACK_LOCATION IoStackLocation,
+                    IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_NOT_SUPPORTED;
+}
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryPower(IN PIRP Irp,
+                    IN PIO_STACK_LOCATION IoStackLocation,
+                    IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+    return STATUS_NOT_SUPPORTED;
+}
+
 /* EOF */

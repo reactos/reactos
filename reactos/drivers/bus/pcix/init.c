@@ -389,7 +389,7 @@ PciGetIrqRoutingTableFromRegistry(OUT PPCI_IRQ_ROUTING_TABLE *PciRoutingTable)
                                     Length,
                                     &NumberOfBytes);
             if (Status == STATUS_NO_MORE_ENTRIES) break;
-            
+
             /* Null-terminate the keyname, because the kernel does not */
             KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = UNICODE_NULL;
 

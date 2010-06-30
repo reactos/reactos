@@ -289,6 +289,33 @@ PciIrpNotSupported(
 );
 
 //
+// Power Routines
+//
+NTSTATUS
+NTAPI
+PciFdoWaitWake(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoSetPowerState(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryPower(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+//
 // Bus FDO Routines
 //
 NTSTATUS
@@ -296,6 +323,110 @@ NTAPI
 PciAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpStartDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpCancelRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpCancelStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryDeviceRelations(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryInterface(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryCapabilities(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpDeviceUsageNotification(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpSurpriseRemoval(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciFdoIrpQueryLegacyBusInformation(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
 );
 
 //
@@ -436,6 +567,17 @@ NTSTATUS
 NTAPI
 PciInitializeArbiters(
     IN PPCI_FDO_EXTENSION FdoExtension
+);
+
+//
+// Debug Helpers
+//
+BOOLEAN
+NTAPI
+PciDebugIrpDispatchDisplay(
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN USHORT MaxMinor
 );
 
 //
