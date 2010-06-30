@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Visual Studio 2005 Runtime SP1
+Name = Microsoft Visual C++ 2005 SP1 Redistributable Package
 Version = 7.1
 Licence = Unknown
 Description = Visual Studio 2005 Runtime SP1.
