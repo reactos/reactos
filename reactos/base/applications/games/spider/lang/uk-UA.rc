@@ -3,7 +3,7 @@
  * LICENSE:    GPL - See COPYING in the top level directory
  * FILE:    base/applications/games/spider/lang/uk-UA.rc
  * PURPOSE:    Ukraianian Language File for ReactOS  Spider
- * TRANSLATOR:    Sakara Yevhen
+ * TRANSLATORS:    Sakara Yevhen, Igor Paliychuk
  */
 
  
@@ -41,9 +41,9 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 CAPTION "Рівень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    AUTORADIOBUTTON "Простий: &Один колір",    IDC_DIF_ONECOLOR,   8, 10, 80, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Середній: &Два кольори", IDC_DIF_TWOCOLORS,  8, 23, 80, 10
-    AUTORADIOBUTTON "Складний: &Чотири кольори",  IDC_DIF_FOURCOLORS, 8, 36, 80, 10
+    AUTORADIOBUTTON "Простий: &Один колір",    IDC_DIF_ONECOLOR,   3, 10, 82, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Середній: &Два кольори", IDC_DIF_TWOCOLORS,  3, 23, 92, 10
+    AUTORADIOBUTTON "Складний: &Чотири кольори",  IDC_DIF_FOURCOLORS, 3, 36, 120, 10
 
     DEFPUSHBUTTON   "OK", IDOK, 8, 58, 40, 14
     PUSHBUTTON      "Скасувати", IDCANCEL, 58, 58, 40, 14
@@ -56,7 +56,7 @@ BEGIN
     IDS_SPI_NAME    "Пас’янс Паук"
     IDS_SPI_ABOUT   "Пас’янс Паук, Gregor Schneider\n\nCardLib версії 1.0"
     IDS_SPI_QUIT    "Вийти з поточної гри?"
-    IDS_SPI_WIN     "Вітаємо, ви виграти!"
+    IDS_SPI_WIN     "Вітаємо, ви виграли!"
     IDS_SPI_DEAL    "Спробувати знову?"
 END
 

@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/devmgr/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for devmgr
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -39,90 +39,90 @@ END
 STRINGTABLE
 BEGIN
     IDS_DEV_NO_PROBLEM "Цей пристрій працює нормально."
-    IDS_DEV_NOT_CONFIGURED "Цей пристрій не настроєний правильно."
+    IDS_DEV_NOT_CONFIGURED "Цей пристрій не налаштований правильно."
     IDS_DEV_DEVLOADER_FAILED "ReactOS не може завантажити драйвер для цього пристрою, тому що система повідомляє про два види шин типу $1."
-    IDS_DEV_DEVLOADER_FAILED2 "Система завантаження устаткування $1 не може завантажити драйвер цього пристрою."
-    IDS_DEV_OUT_OF_MEMORY "The driver for this device may be bad, or your system may be running low on memory or other resources."
-    IDS_DEV_ENTRY_IS_WRONG_TYPE "This device is not working properly because one of its drivers may be bad, or your registry may be bad."
-    IDS_DEV_LACKED_ARBITRATOR "The driver for this device requested a resource that ReactOS does not know how to handle."
+    IDS_DEV_DEVLOADER_FAILED2 "Система завантаження обладнання $1 не може завантажити драйвер цього пристрою."
+    IDS_DEV_OUT_OF_MEMORY "Драйвер для цього пристрою є несправним або системі бракує пам'яті чи інших ресурсів."
+    IDS_DEV_ENTRY_IS_WRONG_TYPE "Цей пристрій працює неправильно, оскільки один з його драйверів або реєстр є несправними."
+    IDS_DEV_LACKED_ARBITRATOR "Драйвер для цього пристрою вимагає ресурсів, з якими ReactOS не вміє працювати."
     IDS_DEV_BOOT_CONFIG_CONFLICT "Інший пристрій використовує ресурси, потрібні цьому пристрою."
     IDS_DEV_FAILED_FILTER "Драйвери цього пристрою треба переустановити."
-    IDS_DEV_DEVLOADER_NOT_FOUND "This device is not working properly because ReactOS cannot load the file $1 that loads the drivers for the device."
-    IDS_DEV_DEVLOADER_NOT_FOUND2 "This device is not working properly because the file $1 that loads the drivers for this device is bad."
-    IDS_DEV_DEVLOADER_NOT_FOUND3 "Device failure: Try changing the driver for this device. If that doesn\'t work, see your hardware documentation."
-    IDS_DEV_INVALID_DATA "This device is not working properly because the BIOS in your computer is reporting the resources for the device incorrectly."
-    IDS_DEV_INVALID_DATA2 "This device is not working properly because the BIOS in the device is reporting the resources for the device incorrectly. "
-    IDS_DEV_FAILED_START "This device is either not present, not working properly, or does not have all the drivers installed."
-    IDS_DEV_LIAR "ReactOS stopped responding while attempting to start this device, and therefore will never attempt to start this device again."
-    IDS_DEV_NORMAL_CONFLICT "This device cannot find any free $1 resources to use."
+    IDS_DEV_DEVLOADER_NOT_FOUND "Цей пристрій працює неправильно, оскільки ReactOS не може завантажити файл $1 , який завантажує драйвери пристрою."
+    IDS_DEV_DEVLOADER_NOT_FOUND2 "Цей пристрій працює неправильно, оскільки файл $1 , який завантажує драйвери пристрою, є несправним."
+    IDS_DEV_DEVLOADER_NOT_FOUND3 "Помилка пристрою: Спробуйте змінити драйвер цього пристрою. Якщо це не допомагає, дивіться документацію пристрою."
+    IDS_DEV_INVALID_DATA "Цей пристрій працює неправильно, оскільки BIOS комп'ютера невірно передає ресурси для пристрою."
+    IDS_DEV_INVALID_DATA2 "Цей пристрій працює неправильно, оскільки BIOS пристрою невірно передає ресурси для пристрою. "
+    IDS_DEV_FAILED_START "Цей пристрій відсутній, працює некоректно або не має всіх встановлених драйверів."
+    IDS_DEV_LIAR "ReactOS не відповідає на запити при спробі запуску цього пристрою, і тому ніколи не буде намагатися запустити цей пристрій знов."
+    IDS_DEV_NORMAL_CONFLICT "Цей пристрій не може знайти вільних $1 ресурсів для їх використання."
     IDS_DEV_NOT_VERIFIED "Цей пристрій відсутній, працює некоректно або не має всіх встановлених драйверів."
-    IDS_DEV_NEED_RESTART "Цей пристрій не зможе коректно працювати, поки ви перезавантажите комп'ютер."
+    IDS_DEV_NEED_RESTART "Цей пристрій не зможе коректно працювати, поки ви не перезавантажите комп'ютер."
     IDS_DEV_REENUMERATION "Цей пристрій спричинив конфлікт ресурсів."
-    IDS_DEV_PARTIAL_LOG_CONF "ReactOS could not identify all the resources this device uses."
-    IDS_DEV_UNKNOWN_RESOURCE "The driver information file $1 is telling this child device to use a resource that the parent device does not have or recognize."
+    IDS_DEV_PARTIAL_LOG_CONF "ReactOS не може розпізнати всі ресурси, які використовуються пристроєм."
+    IDS_DEV_UNKNOWN_RESOURCE "Інформаційний файл пристрою $1 каже цьому похідному пристрою використати ресурс, якого батьківський пристрій не має чи не розпізнає."
     IDS_DEV_REINSTALL "Драйвери цього пристрою треба переустановити."
     IDS_DEV_REGISTRY "Ваш системний реєстр може бути пошкоджений."
     IDS_DEV_WILL_BE_REMOVED "ReactOS видалить цей пристрій."
     IDS_DEV_DISABLED "Цей пристрій не запущений."
     IDS_DEV_DISABLED2 "Цей пристрій відключений."
-    IDS_DEV_DEVLOADER_NOT_READY "The loaders for this device cannot load the required drivers."
-    IDS_DEV_DEVLOADER_NOT_READY2 "This display adapter is functioning correctly."
-    IDS_DEV_DEVLOADER_NOT_READY3 "The loaders for this device cannot load the required drivers."
-    IDS_DEV_DEVICE_NOT_THERE "This device is either not present, not working properly, or does not have all the drivers installed."
-    IDS_DEV_MOVED "ReactOS is in the process of setting up this device."
-    IDS_DEV_TOO_EARLY "ReactOS is in the process of setting up this device."
-    IDS_DEV_NO_VALID_LOG_CONF "ReactOS can\'t specify the resources for this device."
+    IDS_DEV_DEVLOADER_NOT_READY "Завантажувачі цього пристрою на можуть завантажити необхідні драйвери."
+    IDS_DEV_DEVLOADER_NOT_READY2 "Цей адапртер дисплея функціонує коректно."
+    IDS_DEV_DEVLOADER_NOT_READY3 "Завантажувачі цього пристрою на можуть завантажити необхідні драйвери."
+    IDS_DEV_DEVICE_NOT_THERE "Цей пристрій відсутній, працює некоректно або не має всіх встановлених драйверів."
+    IDS_DEV_MOVED "ReactOS налаштовує цей пристрій."
+    IDS_DEV_TOO_EARLY "ReactOS налаштовує цей пристрій."
+    IDS_DEV_NO_VALID_LOG_CONF "ReactOS не може вказати ресурси для цього пристрою."
     IDS_DEV_FAILED_INSTALL "Драйвери для цього пристрою не встановлені."
-    IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
-    IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
-    IDS_DEV_FAILED_ADD "This device is not working properly because $1 is not working properly."
-    IDS_DEV_DISABLED_SERVICE "ReactOS cannot install the drivers for this device because it cannot access the drive or network location that has the setup files on it."
-    IDS_DEV_TRANSLATION_FAILED "This device isn\'t responding to its driver."
-    IDS_DEV_NO_SOFTCONFIG "ReactOS cannot determine the settings for this device. Consult the documentation that came with this device and use the Resource tab to set the configuration."
-    IDS_DEV_BIOS_TABLE "Your computer\'s system firmware does not include enough information to properly configure and use this device. \nTo use this device, contact your computer manufacturer to obtain a firmware or BIOS update."
-    IDS_DEV_IRQ_TRANSLATION_FAILED "This device is requesting a PCI interrupt but is configured for an ISA interrupt (or vice versa). \nPlease use the computer\'s system setup program to reconfigure the interrupt for this device."
-    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS cannot initialize the device driver for this hardware."
-    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS cannot load the device driver for this hardware because a previous instance of the device driver is still in memory."
-    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS cannot load the device driver for this hardware. The driver may be corrupted or missing."
-    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS cannot access this hardware because its service key information in the registry is missing or recorded incorrectly."
-    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS successfully loaded the device driver for this hardware but cannot find the hardware device."
-    IDS_DEV_DUPLICATE_DEVICE "ReactOS cannot load the device driver for this hardware because there is a duplicate device already running in the system."
+    IDS_DEV_HARDWARE_DISABLED "Цей пристрій вимкнено, оскільки BIOS не виділив для пристрою ресурсів."
+    IDS_DEV_CANT_SHARE_IRQ "Цей пристрій використувує ресурс Запиту Переривань (IRQ), який використовується іншим пристроєм та не може бути спільним.\nВи повинні змінити конфліктуючі налаштування або видалити драйвер реального режиму, що спричинює конфлікт."
+    IDS_DEV_FAILED_ADD "Цей пристрій працює неправильно, оскільки $1 is not working properly."
+    IDS_DEV_DISABLED_SERVICE "ReactOS не може встановити драйвери для цього пристрою, оскільки не має доступу до диску чи мережного ресурсу, які містять файли установки."
+    IDS_DEV_TRANSLATION_FAILED "Цей пристрій не відповідає його драйверу."
+    IDS_DEV_NO_SOFTCONFIG "ReactOS не може визначити налаштуванн для цього пристрою. Зверніться до документації пристрою, і використовуйте вкладку Ресурси для налаштування конфігурації."
+    IDS_DEV_BIOS_TABLE "Мікропрограма вашого комп'ютера не містить досить інформації для коректних налаштування та використання цього пристрою. \nЩоб використовувати цей пристрій, зверніться до виробника комп'ютера для отримання оновлених мікропрограми чи BIOS."
+    IDS_DEV_IRQ_TRANSLATION_FAILED "Цей пристрій запитує переривання PCI, а він налаштований на переривання ISA (або навпаки). \nВикористайте програму налаштування комп'ютера для зміни параметрів переривань цього пристрою."
+    IDS_DEV_FAILED_DRIVER_ENTRY "ReactOS не може ініціалізувати драйвер пристрою для даного обладнання."
+    IDS_DEV_DRIVER_FAILED_PRIOR_UNLOAD "ReactOS не може завантажити драйвер цого пристрою, оскільки попередня версія драйвера пристрою все ще знаходиться в пам'яті."
+    IDS_DEV_DRIVER_FAILED_LOAD "ReactOS не може завантажити драйвер для цого пристрою. Драйвер зіпсований або відсутній."
+    IDS_DEV_DRIVER_SERVICE_KEY_INVALID "ReactOS не може отримати доступ до цього пристрою, оскільки дані сервісного ключа реєстру відсутні чи записані невірно."
+    IDS_DEV_LEGACY_SERVICE_NO_DEVICES "ReactOS успішно завантажив драйвер цього пристрою але не може знайти сам пристрій."
+    IDS_DEV_DUPLICATE_DEVICE "ReactOS  не може завантажити драйвер для цого пристрою, оскільки в системі вже працює такий же пристрій."
     IDS_DEV_FAILED_POST_START "ReactOS зупинив цей пристрій, оскільки в його роботі виявилися проблеми."
     IDS_DEV_HALTED "Додаток або служба відключили цей апаратний пристрій."
-    IDS_DEV_PHANTOM "Currently, this hardware device is not connected to the computer."
-    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS cannot gain access to this hardware device because the operating system is in the process of shutting down."
-    IDS_DEV_HELD_FOR_EJECT "ReactOS cannot use this hardware device because it has been prepared for safe removal, but it has not been removed from the computer"
-    IDS_DEV_DRIVER_BLOCKED "The software for this device has been blocked from starting because it is known to have problems with ReactOS. Contact the hardware vendor for a new driver."
-    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS cannot start new hardware devices because the system hive is too large (exceeds the Registry Size Limit)."
-    IDS_DEV_SETPROPERTIES_FAILED "ReactOS wasn\'t able to change the settings of this device."
+    IDS_DEV_PHANTOM "В даний момент цей пристрій не під'єднаний до комп'ютера."
+    IDS_DEV_SYSTEM_SHUTDOWN "ReactOS не може отримати доступ до цього пристрою, оскільки операційна система завершує свою роботу."
+    IDS_DEV_HELD_FOR_EJECT "ReactOS не може використовувати цей пристрій, оскільки він був підготовлений для безпечнрго видалення, але ще не був видалений з комп'ютера"
+    IDS_DEV_DRIVER_BLOCKED "Запуск програмного забезпечення для цього пристрою був заблокований, оскільки воно має відомі проблеми з ReactOS. Зверніться до постачальника за новим драйвером."
+    IDS_DEV_REGISTRY_TOO_LARGE "ReactOS не може запустити нові пристрої, оскільки системний кущ занадто великий (перевищує допустимий розмір реєстру)."
+    IDS_DEV_SETPROPERTIES_FAILED "ReactOS не зміг змінити параметри цього пристрою."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PROP_DEVICEID "Device Instance ID"
-    IDS_PROP_HARDWAREIDS "Hardware IDs"
-    IDS_PROP_COMPATIBLEIDS "Compatible IDs"
-    IDS_PROP_MATCHINGDEVICEID "Matching Device ID"
-    IDS_PROP_SERVICE "Service"
-    IDS_PROP_ENUMERATOR "Enumerator"
-    IDS_PROP_CAPABILITIES "Capabilities"
-    IDS_PROP_DEVNODEFLAGS "Devnode Flags"
-    IDS_PROP_CONFIGFLAGS "Config Flags"
-    IDS_PROP_CSCONFIGFLAGS "CSConfig Flags"
-    IDS_PROP_EJECTIONRELATIONS "Ejection Relations"
-    IDS_PROP_REMOVALRELATIONS "Removal Relations"
-    IDS_PROP_BUSRELATIONS "Bus Relations"
-    IDS_PROP_DEVUPPERFILTERS "Device Upper Filters"
-    IDS_PROP_DEVLOWERFILTERS "Device Lower Filters"
-    IDS_PROP_CLASSUPPERFILTERS "Class Upper Filters"
-    IDS_PROP_CLASSLOWERFILTERS "Class Lower Filters"
-    IDS_PROP_CLASSINSTALLER "Class Installers"
-    IDS_PROP_CLASSCOINSTALLER "Class Coinstallers"
-    IDS_PROP_DEVICECOINSTALLER "Device Coinstallers"
-    IDS_PROP_FIRMWAREREVISION "Firmware Revision"
-    IDS_PROP_CURRENTPOWERSTATE "Current Power State"
-    IDS_PROP_POWERCAPABILITIES "Power Capabilities"
-    IDS_PROP_POWERSTATEMAPPINGS "Power State Mappings"
+    IDS_PROP_DEVICEID "Код екземпляру пристрою"
+    IDS_PROP_HARDWAREIDS "Коди (ID) обладнання"
+    IDS_PROP_COMPATIBLEIDS "Сумісні коди (ID)"
+    IDS_PROP_MATCHINGDEVICEID "Відповідний код (ID) пристрою"
+    IDS_PROP_SERVICE "Служба"
+    IDS_PROP_ENUMERATOR "Лічильник"
+    IDS_PROP_CAPABILITIES "Можливості"
+    IDS_PROP_DEVNODEFLAGS "Прапорці Devnode"
+    IDS_PROP_CONFIGFLAGS "Прапорці Config"
+    IDS_PROP_CSCONFIGFLAGS "Прапорці CSConfig"
+    IDS_PROP_EJECTIONRELATIONS "Залежності виймання"
+    IDS_PROP_REMOVALRELATIONS "Залежності видалення"
+    IDS_PROP_BUSRELATIONS "Залежності шини"
+    IDS_PROP_DEVUPPERFILTERS "Верхні фільтри пристрою"
+    IDS_PROP_DEVLOWERFILTERS "Нижні фільтри пристрою"
+    IDS_PROP_CLASSUPPERFILTERS "Верхні фільтри класу"
+    IDS_PROP_CLASSLOWERFILTERS "Нижні фільтри класу"
+    IDS_PROP_CLASSINSTALLER "Встановлювачі класів"
+    IDS_PROP_CLASSCOINSTALLER "Співвстановлювачі класів"
+    IDS_PROP_DEVICECOINSTALLER "Співвстановлювачі пристроїв"
+    IDS_PROP_FIRMWAREREVISION "Мікропрограма"
+    IDS_PROP_CURRENTPOWERSTATE "Поточний стан електроживлення"
+    IDS_PROP_POWERCAPABILITIES "Можливості електроживлення"
+    IDS_PROP_POWERSTATEMAPPINGS "Співставлення енергозбереження"
 END
 
 IDD_HARDWARE DIALOGEX DISCARDABLE  0, 0, 300, 400
@@ -169,13 +169,13 @@ FONT 8, "MS Shell Dlg"
 BEGIN
      ICON "", IDC_DEVICON, 7, 7, 20, 20
      LTEXT "", IDC_DEVNAME, 37, 9, 174, 16, SS_NOPREFIX
-     LTEXT "Постачальник драйвера:", -1, 37, 39, 60, 8, SS_NOPREFIX
+     LTEXT "Постачальник драйвера:", -1, 4, 39, 85, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVPROVIDER, 100, 39, 146, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Дата драйвера:", -1, 37, 53, 60, 8, SS_NOPREFIX
+     LTEXT "Дата драйвера:", -1, 4, 53, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVDATE, 100, 53, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Версія драйвера:", -1, 37, 67, 60, 8, SS_NOPREFIX
+     LTEXT "Версія драйвера:", -1, 4, 67, 60, 8, SS_NOPREFIX
      EDITTEXT IDC_DRVVERSION, 100, 67, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-     LTEXT "Цифровий підпис:", -1, 37, 81, 60, 8, SS_NOPREFIX
+     LTEXT "Цифровий підпис:", -1, 4, 81, 65, 8, SS_NOPREFIX
      EDITTEXT IDC_DIGITALSIGNER, 100, 81, 145, 12, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
      PUSHBUTTON "&Відомості...", IDC_DRIVERDETAILS, 7, 106, 70, 15
      LTEXT "Перегляд відомостей про файли драйвера.", -1, 91, 110, 154, 17, SS_NOPREFIX
@@ -192,20 +192,20 @@ BEGIN
     CONTROL "", IDC_DRIVERFILES, "SysListView32", LVS_REPORT | LVS_NOCOLUMNHEADER |
             LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | LVS_SORTASCENDING |
             LVS_NOSORTHEADER | WS_BORDER | WS_TABSTOP, 7, 46, 209, 80
-    LTEXT "Постачальник:", -1, 14, 134, 50, 8
+    LTEXT "Постачальник:", -1, 4, 134, 50, 8
     EDITTEXT IDC_FILEPROVIDER, 66, 134, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Версія файлу:", -1, 14, 150, 50, 8
+    LTEXT "Версія файлу:", -1, 4, 150, 50, 8
     EDITTEXT IDC_FILEVERSION, 66, 150, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Авторські права:", -1, 14, 166, 50, 8
+    LTEXT "Авторські права:", -1, 4, 166, 65, 8
     EDITTEXT IDC_FILECOPYRIGHT, 66, 166, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
-    LTEXT "Цифровий підпис:", -1, 14, 182, 50, 8
+    LTEXT "Цифровий підпис:", -1, 4, 182, 65, 8
     EDITTEXT IDC_DIGITALSIGNER, 66, 182, 155, 8, NOT WS_TABSTOP | NOT WS_BORDER | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "OK", IDOK, 167, 208, 50, 14
 END
 
 IDD_DEVICEDETAILS DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Details"
+CAPTION "Відомості"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -218,7 +218,7 @@ END
 
 IDD_DEVICERESOURCES DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Resources"
+CAPTION "Ресурси"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20
@@ -227,7 +227,7 @@ END
 
 IDD_DEVICEPOWER DIALOGEX DISCARDABLE  0, 0, 252, 218
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Power"
+CAPTION "Живлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON "", IDC_DEVICON, 7, 7, 20, 20

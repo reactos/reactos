@@ -1,6 +1,7 @@
 /*
  * Copyright 2004 Ilya Korniyko
  *           2007-2008 Artem Reznikov
+ *           2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -150,12 +151,12 @@ END
 
 SHELL_RUN_DLG DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION ""
+CAPTION "Виконати"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
 	LTEXT "Введіть ім'я програми, папки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
-	LTEXT "&Відкрити:", 12305, 7, 39, 24, 10
+	LTEXT "&Відкрити:", 12305, 3, 39, 29, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
 	PUSHBUTTON "Скасувати", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
@@ -207,18 +208,18 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 8, 35, 50, 10
-	LTEXT "Folder", 14005, 68, 35, 160, 10
-	LTEXT "Location:", 14006, 8, 53, 50, 10
+	LTEXT "Тип файлу:", 14004, 8, 35, 50, 10
+	LTEXT "Папка", 14005, 68, 35, 160, 10
+	LTEXT "Розташування:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
-	LTEXT "Size:", 14008, 8, 72, 45, 10
+	LTEXT "Розмір:", 14008, 8, 72, 45, 10
 	LTEXT "", 14009, 68, 72, 315, 10
-	LTEXT "Contains:", 14010, 8, 93, 45, 10
+	LTEXT "Містить:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
-	LTEXT "Created:", 14014, 8, 118, 45, 10
+	LTEXT "Створено:", 14014, 8, 118, 45, 10
 	LTEXT "", 14015, 68, 118, 160, 10
-	AUTOCHECKBOX "&Read-only", 14021, 45, 150, 67, 10
-	AUTOCHECKBOX "&Hidden", 14022, 126, 150, 50, 10
+	AUTOCHECKBOX "Лише &читання", 14021, 45, 150, 67, 10
+	AUTOCHECKBOX "При&хована", 14022, 126, 150, 50, 10
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
@@ -232,7 +233,7 @@ BEGIN
 	LTEXT "Файл", 14005, 68, 35, 160, 10
 	LTEXT "Додаток:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 160, 10
-	LTEXT "Розташування:", 14008, 8, 72, 45, 10
+	LTEXT "Розташування:", 14008, 8, 72, 50, 10
 	LTEXT "", 14009, 68, 72, 315, 10
 	LTEXT "Розмір:", 14010, 8, 93, 45, 10
 	LTEXT "", 14011, 68, 93, 160, 10
@@ -295,7 +296,7 @@ BEGIN
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
 	LTEXT "Диск %s", 14009, 100, 170, 40, 10
-	PUSHBUTTON "Очищення диска", 14010, 180, 175, 50, 15, WS_TABSTOP
+	PUSHBUTTON "Очищення диску", 14010, 178, 175, 60, 15, WS_TABSTOP
 	CHECKBOX "Стискати диск для заощадження місця", 14011, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Дозволити індексування диску для прискорення пошуку", 14012, 15, 220, 200, 10, WS_DISABLED
 END
@@ -305,20 +306,20 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Сервіс"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Перевірка диска", -1, 5, 5, 230, 60
+	GROUPBOX "Перевірка диску", -1, 5, 5, 230, 60
 	LTEXT "Перевірка тому на наявність помилок.", -1, 40, 25, 160, 20
-	PUSHBUTTON "Виконати перевірку...", 14000, 130, 45, 90, 15, WS_TABSTOP
-	GROUPBOX "Дефрагментація диска", -1, 5, 65, 230, 60
+	PUSHBUTTON "Виконати перевірку...", 14000, 125, 45, 100, 15, WS_TABSTOP
+	GROUPBOX "Дефрагментація диску", -1, 5, 65, 230, 60
 	LTEXT "Дефрагментація файлів на цьому томі", -1, 40, 85, 160, 20
-	PUSHBUTTON "Виконати дефрагментацію...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	PUSHBUTTON "Виконати дефрагментацію...", 14001, 125, 105, 100, 15, WS_TABSTOP
 	GROUPBOX "Архівація", -1, 5, 130, 230, 60
 	LTEXT "Резервне копіювання файлів на цьому томі.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Виконати архівацію...", 14002, 130, 170, 90, 15, WS_TABSTOP
+	PUSHBUTTON "Виконати архівацію...", 14002, 125, 170, 100, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Устаткування"
+CAPTION "Обладнання"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
@@ -364,7 +365,7 @@ CAPTION "Вибір програми"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-	LTEXT "Виберіть програму, за допомогою якої слід відкрити цей файл.", -1, 44, 12, 211, 10
+	LTEXT "Виберіть програму, за допомогою якої слід відкрити цей файл.", -1, 44, 12, 234, 10
 	LTEXT "Файл:    ", 14001, 44, 25, 188, 10
 	GROUPBOX "&Програми", -1, 7, 42, 249, 187
         LISTBOX 14002, 16 ,57, 230, 130, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP, WS_EX_STATICEDGE
@@ -373,6 +374,17 @@ BEGIN
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
 	PUSHBUTTON "Скасувати", 14006, 206, 236, 50, 14
 END
+
+IDD_SH_FILE_COPY DIALOGEX 0, 0, 264, 45
+STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Копіювання..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	PUSHBUTTON "Скасувати", 14002, 195, 14, 60, 16 
+	CONTROL "", 14000, "MSCTLS_PROGRESS32", 0, 8, 20, 170, 10
+	LTEXT "Файл", 14001,  8, 6, 169, 10
+END
+
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
@@ -566,14 +578,14 @@ END
 
 CHKDSK_DLG DIALOGEX 50, 50, 194, 120
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Check Disk"
+CAPTION "Перевірка диску"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Start", IDOK, 53, 100, 60, 14
-	GROUPBOX "Check disk options", -1, 7, 6, 179, 50
-	PUSHBUTTON "Cancel", IDCANCEL, 118, 100, 60, 14
-	AUTOCHECKBOX "Automatically fix file system errors", 14000, 16, 15, 155, 10
-	AUTOCHECKBOX "&Scan for and attempt recovery of bad sectors", 14001, 16, 30, 165, 10
+	DEFPUSHBUTTON "Почати", IDOK, 53, 100, 60, 14
+	GROUPBOX "Опції перевірки диску", -1, 7, 6, 179, 50
+	PUSHBUTTON "Скасувати", IDCANCEL, 118, 100, 60, 14
+	AUTOCHECKBOX "Виправити помилки файлової системи", 14000, 16, 15, 165, 10
+	AUTOCHECKBOX "&Спробувати відновити погані сектори", 14001, 16, 30, 165, 10
 	CONTROL "", 14002, "MSCTLS_PROGRESS32", 16, 7, 60, 170, 8
 	LTEXT "", 14003, 60, 80, 170, 10
 END
@@ -617,7 +629,7 @@ BEGIN
 	IDS_SHV_COLUMN_STATUS       "Стан"
 	IDS_SHV_COLUMN_COMMENTS     "Примітки"
 	IDS_SHV_COLUMN_LOCATION     "Розташування"
-	IDS_SHV_COLUMN_MODEL        "Model"
+	IDS_SHV_COLUMN_MODEL        "Модель"
 
 	/* special folders */
 	IDS_DESKTOP                 "Робочий стіл"
@@ -666,8 +678,8 @@ BEGIN
 	IDS_RESTART_PROMPT          "Ви хочете перезавантажити систему?"
 	IDS_SHUTDOWN_TITLE          "Вимкнути"
 	IDS_SHUTDOWN_PROMPT         "Ви хочете вимкнути комп'ютер?"
-	IDS_LOGOFF_TITLE            "Log Off"
-	IDS_LOGOFF_PROMPT           "Do you want to log off?"
+	IDS_LOGOFF_TITLE            "Вихід з системи"
+	IDS_LOGOFF_PROMPT           "Ви хочете вийти з системи?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
@@ -676,7 +688,7 @@ BEGIN
 	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
 	IDS_RECENT                  "Recent"
 	IDS_SENDTO                  "Надіслати"
-	IDS_STARTMENU               "Start Menu"
+	IDS_STARTMENU               "Головне меню"
 	IDS_MYMUSIC                 "Моя музика"
 	IDS_MYVIDEO                 "Мої відеозаписи"
 	IDS_DESKTOPDIRECTORY        "Робочий стіл"
@@ -693,9 +705,9 @@ BEGIN
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
 	IDS_COMMON_DOCUMENTS        "Загальні документи"
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
-	IDS_COMMON_MUSIC            "Documents\\My Music"
-	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Videos"
+	IDS_COMMON_MUSIC            "Загальні документи\\Моя музика"
+	IDS_COMMON_PICTURES         "Загальні документи\\Мої малюнки"
+	IDS_COMMON_VIDEO            "Загальні документи\\Мої відеозаписи"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 	IDS_NETWORKPLACE            "Мережне оточення"
 
@@ -706,7 +718,7 @@ BEGIN
 	IDS_DRIVE_NETWORK           "Мережний диск"
 
 	IDS_OPEN_WITH               "Відкрити за допомогою"
-	IDS_OPEN_WITH_CHOOSE        "Вибрати програму"
+	IDS_OPEN_WITH_CHOOSE        "Вибрати програму..."
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Автори"
 	IDS_SHELL_ABOUT_BACK        "< &Назад"
@@ -714,7 +726,7 @@ BEGIN
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папку"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлик"
 	IDS_FOLDER_OPTIONS          "Властивості папки"
-	IDS_RECYCLEBIN_LOCATION     "Розташування Корзини"
+	IDS_RECYCLEBIN_LOCATION     "Розташування Кошика"
 	IDS_RECYCLEBIN_DISKSPACE    "Доступний простір"
 	IDS_EMPTY_BITBUCKET         "Порожня корзина"
 	IDS_PICK_ICON_TITLE         "Вибрати значок"
@@ -750,8 +762,8 @@ BEGIN
 	IDS_FONTS                   "Шрифти"
 	IDS_INSTALLNEWFONT          "Інсталювати новий шрифт..."
 
-	IDS_DEFAULT_CLUSTER_SIZE    "Розмір кластера за промовчанням"
-	IDS_COPY_OF                 "Copy of"
+	IDS_DEFAULT_CLUSTER_SIZE    "Розмір кластера за замовчуванням"
+	IDS_COPY_OF                 "Копія"
 
-	IDS_SHLEXEC_NOASSOC         "There is no Windows program configured to open this type of file."
+	IDS_SHLEXEC_NOASSOC         "Немає програми Windows, сконфігурованої для відкриття цього типу файлів."
 END
