@@ -32,7 +32,9 @@
 
 /* UTF-8 */
 #include "msvidc32_De.rc"
+#include "msvidc32_Es.rc"
 #include "msvidc32_Fr.rc"
+#include "msvidc32_It.rc"
 #include "msvidc32_Ja.rc"
 #include "msvidc32_Lt.rc"
 #include "msvidc32_Ro.rc"

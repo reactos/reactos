@@ -162,7 +162,8 @@ HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID iid, LPVOID *ppv )
         cf = (IClassFactory*) &xmldoccf.lpVtbl;
     }
     else if( IsEqualCLSID( rclsid, &CLSID_DOMFreeThreadedDocument ) ||   /* Version indep. v 2.x */
-             IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument ) )
+             IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument ) ||
+             IsEqualCLSID( rclsid, &CLSID_FreeThreadedDOMDocument30 ))
     {
         cf = (IClassFactory*) &domdoccf.lpVtbl;
     }

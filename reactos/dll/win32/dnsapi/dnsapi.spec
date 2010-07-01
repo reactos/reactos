@@ -31,7 +31,7 @@
 @ stdcall DnsExtractRecordsFromMessage_UTF8(ptr long ptr)
 @ stdcall DnsExtractRecordsFromMessage_W(ptr long ptr)
 @ stub DnsFindAuthoritativeZone
-@ stub DnsFlushResolverCache
+@ stdcall DnsFlushResolverCache()
 @ stub DnsFlushResolverCacheEntry_A
 @ stub DnsFlushResolverCacheEntry_UTF8
 @ stub DnsFlushResolverCacheEntry_W
@@ -127,4 +127,3 @@
 @ stdcall DnsWriteQuestionToBuffer_W(ptr ptr wstr long long long)
 @ stub DnsWriteReverseNameStringForIpAddress
 @ stub GetCurrentTimeInSeconds
-@ stdcall DnsFree(ptr long)

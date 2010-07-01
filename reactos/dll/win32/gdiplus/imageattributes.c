@@ -53,6 +53,8 @@ GpStatus WINGDIPAPI GdipCreateImageAttributes(GpImageAttributes **imageattr)
     *imageattr = GdipAlloc(sizeof(GpImageAttributes));
     if(!*imageattr)    return OutOfMemory;
 
+    (*imageattr)->wrap = WrapModeClamp;
+
     TRACE("<-- %p\n", *imageattr);
 
     return Ok;
@@ -120,17 +122,16 @@ GpStatus WINGDIPAPI GdipSetImageAttributesColorMatrix(GpImageAttributes *imageat
 GpStatus WINGDIPAPI GdipSetImageAttributesWrapMode(GpImageAttributes *imageAttr,
     WrapMode wrap, ARGB argb, BOOL clamp)
 {
-    static int calls;
-
     TRACE("(%p,%u,%08x,%i)\n", imageAttr, wrap, argb, clamp);
 
-    if(!imageAttr)
+    if(!imageAttr || wrap > WrapModeClamp)
         return InvalidParameter;
 
-    if(!(calls++))
-        FIXME("not implemented\n");
+    imageAttr->wrap = wrap;
+    imageAttr->outside_color = argb;
+    imageAttr->clamp = clamp;
 
-    return NotImplemented;
+    return Ok;
 }
 
 GpStatus WINGDIPAPI GdipSetImageAttributesCachedBackground(GpImageAttributes *imageAttr,

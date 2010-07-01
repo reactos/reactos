@@ -34,9 +34,10 @@
 #include "iccvid_De.rc"
 #include "iccvid_Es.rc"
 #include "iccvid_Fr.rc"
+#include "iccvid_It.rc"
 #include "iccvid_Ja.rc"
 #include "iccvid_Lt.rc"
 #include "iccvid_Ro.rc"
 #include "iccvid_Ru.rc"
 #include "iccvid_Si.rc"
-
+#include "iccvid_Uk.rc"

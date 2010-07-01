@@ -472,7 +472,9 @@ static BOOL CRYPT_ReadSerializedStore(void *handle,
                         buf = CryptMemAlloc(propHdr.cb);
                         bufSize = propHdr.cb;
                     }
-                    if (buf)
+                    if (!propHdr.cb)
+                        ; /* Property is empty, nothing to do */
+                    else if (buf)
                     {
                         ret = read_func(handle, buf, propHdr.cb, &read);
                         if (ret && read == propHdr.cb)
@@ -516,7 +518,7 @@ static BOOL CRYPT_ReadSerializedStore(void *handle,
                     else
                         ret = FALSE;
                 }
-            } while (ret && read > 0);
+            } while (ret && read > 0 && propHdr.cb);
             if (contextInterface && context)
             {
                 /* Free the last context added */
@@ -560,6 +562,12 @@ static BOOL read_blob_wrapper(void *handle, void *buffer, DWORD bytesToRead,
     {
         *bytesRead = min(bytesToRead, reader->blob->cbData - reader->current);
         memcpy(buffer, reader->blob->pbData + reader->current, *bytesRead);
+        reader->current += *bytesRead;
+        ret = TRUE;
+    }
+    else if (reader->current == reader->blob->cbData)
+    {
+        *bytesRead = 0;
         ret = TRUE;
     }
     else

@@ -53,7 +53,7 @@ END
 STRINGTABLE DISCARDABLE
 {
     IDS_LOCALPORT "Локальный порт"
-    IDS_INVALIDNAME "Не правильное название порта '%s'"
+    IDS_INVALIDNAME "Неправильное название порта '%s'"
     IDS_PORTEXISTS "Порт '%s' уже существует"
     IDS_NOTHINGTOCONFIG "Этот порт не имеет настроек"
 }

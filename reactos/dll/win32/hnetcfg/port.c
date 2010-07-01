@@ -270,7 +270,9 @@ static HRESULT WINAPI fw_port_get_Enabled(
     fw_port *This = impl_from_INetFwOpenPort( iface );
 
     FIXME("%p %p\n", This, enabled);
-    return E_NOTIMPL;
+
+    *enabled = VARIANT_TRUE;
+    return S_OK;
 }
 
 static HRESULT WINAPI fw_port_put_Enabled(

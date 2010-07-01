@@ -1111,7 +1111,8 @@ static void libxmlEndElementNS(
 
     end = (xmlChar*)This->pParserCtxt->input->cur;
     if(*(end-1) != '>' || *(end-2) != '/')
-        while(*(end-2)!='<' && *(end-1)!='/') end--;
+        while(end-2>=This->pParserCtxt->input->base
+                && *(end-2)!='<' && *(end-1)!='/') end--;
 
     update_position(This, end);
 
@@ -1268,7 +1269,8 @@ static void libxmlComment(void *ctx, const xmlChar *value)
     HRESULT hr;
     xmlChar *beg = (xmlChar*)This->pParserCtxt->input->cur;
 
-    while(memcmp(beg-4, "<!--", sizeof(char[4]))) beg--;
+    while(beg-4>=This->pParserCtxt->input->base
+            && memcmp(beg-4, "<!--", sizeof(char[4]))) beg--;
     update_position(This, beg);
 
     if(!This->vbInterface && !This->saxreader->lexicalHandler) return;
@@ -1345,7 +1347,8 @@ static void libxmlCDataBlock(void *ctx, const xmlChar *value, int len)
     BSTR Chars;
     BOOL lastEvent = FALSE, change;
 
-    while(memcmp(beg-9, "<![CDATA[", sizeof(char[9]))) beg--;
+    while(beg-9>=This->pParserCtxt->input->base
+            && memcmp(beg-9, "<![CDATA[", sizeof(char[9]))) beg--;
     update_position(This, beg);
 
     if(This->vbInterface && This->saxreader->vblexicalHandler)

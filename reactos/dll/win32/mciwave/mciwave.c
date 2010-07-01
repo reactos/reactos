@@ -277,7 +277,7 @@ static	DWORD 	WAVE_ConvertTimeFormatToByte(WINE_MCIWAVE* wmw, DWORD val)
 static	DWORD WAVE_mciReadFmt(WINE_MCIWAVE* wmw, const MMCKINFO* pckMainRIFF)
 {
     MMCKINFO	mmckInfo;
-    long	r;
+    LONG	r;
     LPWAVEFORMATEX pwfx;
 
     mmckInfo.ckid = mmioFOURCC('f', 'm', 't', ' ');
@@ -300,7 +300,7 @@ static	DWORD WAVE_mciReadFmt(WINE_MCIWAVE* wmw, const MMCKINFO* pckMainRIFF)
     TRACE("nAvgBytesPerSec=%d\n",  pwfx->nAvgBytesPerSec);
     TRACE("nBlockAlign=%d\n",      pwfx->nBlockAlign);
     TRACE("wBitsPerSample=%u !\n", pwfx->wBitsPerSample);
-    if (r >= (long)sizeof(WAVEFORMATEX))
+    if (r >= sizeof(WAVEFORMATEX))
 	TRACE("cbSize=%u !\n",     pwfx->cbSize);
     if ((pwfx->wFormatTag != WAVE_FORMAT_PCM)
 	&& (r < sizeof(WAVEFORMATEX) || (r < sizeof(WAVEFORMATEX) + pwfx->cbSize))) {
@@ -791,12 +791,12 @@ static DWORD WAVE_mciPlay(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt, 
     }
 
     end = wmw->ckWaveData.cksize;
-    if (lpParms && (dwFlags & MCI_TO)) {
+    if (dwFlags & MCI_TO) {
 	DWORD position = WAVE_ConvertTimeFormatToByte(wmw, lpParms->dwTo);
 	if (position > end)		return MCIERR_OUTOFRANGE;
 	end = position;
     }
-    if (lpParms && (dwFlags & MCI_FROM)) {
+    if (dwFlags & MCI_FROM) {
 	DWORD position = WAVE_ConvertTimeFormatToByte(wmw, lpParms->dwFrom);
 	if (position > end)		return MCIERR_OUTOFRANGE;
 	/* Seek rounds down, so do we. */
@@ -1033,10 +1033,10 @@ static DWORD WAVE_mciRecord(MCIDEVICEID wDevID, DWORD_PTR dwFlags, DWORD_PTR pmt
     dwRet = WAVE_mciCreateRIFFSkeleton(wmw);
     if (dwRet != 0) return dwRet;
 
-    if (lpParms && (dwFlags & MCI_TO)) {
+    if (dwFlags & MCI_TO) {
 	end = WAVE_ConvertTimeFormatToByte(wmw, lpParms->dwTo);
     } else end = 0xFFFFFFFF;
-    if (lpParms && (dwFlags & MCI_FROM)) {
+    if (dwFlags & MCI_FROM) {
 	DWORD position = WAVE_ConvertTimeFormatToByte(wmw, lpParms->dwFrom);
 	if (wmw->ckWaveData.cksize < position)	return MCIERR_OUTOFRANGE;
 	/* Seek rounds down, so do we. */

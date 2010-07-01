@@ -375,8 +375,8 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
         info->mode_8bit = 0;
     else
     {
-        ERR("Bad output format\n");
-        return ICERR_BADPARAM;
+        info->mode_8bit = 0;
+        FIXME("Unsupported output format %i\n", in->bmiHeader.biBitCount);
     }
 
     return ICERR_OK;
@@ -385,7 +385,6 @@ static LRESULT CRAM_DecompressBegin( Msvideo1Context *info, LPBITMAPINFO in, LPB
 static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD size )
 {
     LONG width, height, stride, sz;
-    WORD bit_per_pixel;
 
     TRACE("ICM_DECOMPRESS %p %p %d\n", info, icd, size);
 
@@ -396,7 +395,6 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 
     width  = icd->lpbiInput->biWidth;
     height = icd->lpbiInput->biHeight;
-    bit_per_pixel = icd->lpbiInput->biBitCount;
     stride = width; /* in bytes or 16bit words */
     sz = icd->lpbiInput->biSizeImage;
 
@@ -417,7 +415,6 @@ static LRESULT CRAM_Decompress( Msvideo1Context *info, ICDECOMPRESS *icd, DWORD 
 static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DWORD size )
 {
     LONG width, height, stride, sz;
-    WORD bit_per_pixel;
 
     TRACE("ICM_DECOMPRESSEX %p %p %d\n", info, icd, size);
 
@@ -428,7 +425,6 @@ static LRESULT CRAM_DecompressEx( Msvideo1Context *info, ICDECOMPRESSEX *icd, DW
 
     width  = icd->lpbiSrc->biWidth;
     height = icd->lpbiSrc->biHeight;
-    bit_per_pixel = icd->lpbiSrc->biBitCount;
     stride = width;
     sz = icd->lpbiSrc->biSizeImage;
 

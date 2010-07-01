@@ -238,46 +238,65 @@ static HRESULT WINAPI xmlelem_setAttribute(IXMLElement *iface, BSTR strPropertyN
     return (attr) ? S_OK : S_FALSE;
 }
 
-static HRESULT WINAPI xmlelem_getAttribute(IXMLElement *iface, BSTR strPropertyName,
-                                           VARIANT *PropertyValue)
+static HRESULT WINAPI xmlelem_getAttribute(IXMLElement *iface, BSTR name,
+    VARIANT *value)
 {
+    static const WCHAR xmllangW[] = { 'x','m','l',':','l','a','n','g',0 };
     xmlelem *This = impl_from_IXMLElement(iface);
-    xmlChar *val = NULL, *name;
-    xmlAttrPtr ptr;
+    xmlChar *val = NULL;
 
-    TRACE("(%p, %s, %p)\n", iface, debugstr_w(strPropertyName), PropertyValue);
+    TRACE("(%p, %s, %p)\n", iface, debugstr_w(name), value);
 
-    if (!PropertyValue)
+    if (!value)
         return E_INVALIDARG;
 
-    VariantInit(PropertyValue);
-    V_BSTR(PropertyValue) = NULL;
+    VariantInit(value);
+    V_BSTR(value) = NULL;
 
-    if (!strPropertyName)
+    if (!name)
         return E_INVALIDARG;
 
-    name = xmlChar_from_wchar(strPropertyName);
-    ptr = This->node->properties;
-    while (ptr)
+    /* case for xml:lang attribute */
+    if (!lstrcmpiW(name, xmllangW))
     {
-        if (!lstrcmpiA((LPSTR)name, (LPCSTR)ptr->name))
+        xmlNsPtr ns;
+        ns = xmlSearchNs(This->node->doc, This->node, (xmlChar*)"xml");
+        val = xmlGetNsProp(This->node, (xmlChar*)"lang", ns->href);
+    }
+    else
+    {
+        xmlAttrPtr attr;
+        xmlChar *xml_name;
+
+        xml_name = xmlChar_from_wchar(name);
+        attr = This->node->properties;
+        while (attr)
         {
-            val = xmlNodeListGetString(ptr->doc, ptr->children, 1);
-            break;
+            BSTR attr_name;
+
+            attr_name = bstr_from_xmlChar(attr->name);
+            if (!lstrcmpiW(name, attr_name))
+            {
+                val = xmlNodeListGetString(attr->doc, attr->children, 1);
+                SysFreeString(attr_name);
+                break;
+            }
+
+            attr = attr->next;
+            SysFreeString(attr_name);
         }
 
-        ptr = ptr->next;
+        heap_free(xml_name);
     }
 
     if (val)
     {
-        V_VT(PropertyValue) = VT_BSTR;
-        V_BSTR(PropertyValue) = bstr_from_xmlChar(val);
+        V_VT(value) = VT_BSTR;
+        V_BSTR(value) = bstr_from_xmlChar(val);
     }
 
-    heap_free(name);
     xmlFree(val);
-    TRACE("returning %s\n", debugstr_w(V_BSTR(PropertyValue)));
+    TRACE("returning %s\n", debugstr_w(V_BSTR(value)));
     return (val) ? S_OK : S_FALSE;
 }
 
@@ -703,21 +722,28 @@ static ULONG WINAPI xmlelem_collection_IEnumVARIANT_Release(
 }
 
 static HRESULT WINAPI xmlelem_collection_IEnumVARIANT_Next(
-    IEnumVARIANT *iface, ULONG celt, VARIANT *rgVar, ULONG *pCeltFetched)
+    IEnumVARIANT *iface, ULONG celt, VARIANT *rgVar, ULONG *fetched)
 {
     xmlelem_collection *This = impl_from_IEnumVARIANT(iface);
     xmlNodePtr ptr = This->current;
 
-    TRACE("(%p, %d, %p, %p)\n", iface, celt, rgVar, pCeltFetched);
+    TRACE("(%p, %d, %p, %p)\n", iface, celt, rgVar, fetched);
 
     if (!rgVar)
         return E_INVALIDARG;
 
     /* FIXME: handle celt */
-    if (pCeltFetched)
-        *pCeltFetched = 1;
+    if (fetched)
+        *fetched = 1;
 
-    This->current = This->current->next;
+    if (This->current)
+        This->current = This->current->next;
+    else
+    {
+        V_VT(rgVar) = VT_EMPTY;
+        if (fetched) *fetched = 0;
+        return S_FALSE;
+    }
 
     V_VT(rgVar) = VT_DISPATCH;
     return XMLElement_create((IUnknown *)iface, ptr, (LPVOID *)&V_DISPATCH(rgVar), FALSE);

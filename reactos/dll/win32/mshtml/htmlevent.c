@@ -1077,7 +1077,7 @@ static HRESULT ensure_nsevent_handler(HTMLDocumentNode *doc, event_target_t *eve
 
 static HRESULT remove_event_handler(event_target_t **event_target, eventid_t eid)
 {
-    if(*event_target && (*event_target)->event_table[eid]->handler_prop) {
+    if(*event_target && (*event_target)->event_table[eid] && (*event_target)->event_table[eid]->handler_prop) {
         IDispatch_Release((*event_target)->event_table[eid]->handler_prop);
         (*event_target)->event_table[eid]->handler_prop = NULL;
     }

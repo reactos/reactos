@@ -37,7 +37,6 @@
 
 #include "wine/wine_common_ver.rc"
 
-
 #include "ui_Da.rc"
 #include "ui_En.rc"
 #include "ui_Ko.rc"
@@ -49,9 +48,14 @@
 
 /* UTF-8 */
 #include "ui_De.rc"
+#include "ui_Es.rc"
 #include "ui_Fr.rc"
+#include "ui_Hu.rc"
+#include "ui_It.rc"
+#include "ui_Ja.rc"
 #include "ui_Lt.rc"
 #include "ui_Ro.rc"
 #include "ui_Ru.rc"
 #include "ui_Si.rc"
+#include "ui_Uk.rc"
 #include "ui_Zh.rc"

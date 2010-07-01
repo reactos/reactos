@@ -34,6 +34,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(htmlhelp);
 /* Reads a string from the #STRINGS section in the CHM file */
 static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
 {
+    LPCSTR str;
+
     if(!chm->strings_stream)
         return NULL;
 
@@ -72,7 +74,9 @@ static LPCSTR GetChmString(CHMInfo *chm, DWORD offset)
         }
     }
 
-    return chm->strings[offset >> BLOCK_BITS] + (offset & BLOCK_MASK);
+    str = chm->strings[offset >> BLOCK_BITS] + (offset & BLOCK_MASK);
+    TRACE("offset %#x => %s\n", offset, debugstr_a(str));
+    return str;
 }
 
 static BOOL ReadChmSystem(CHMInfo *chm)
@@ -234,11 +238,11 @@ BOOL LoadWinTypeFromCHM(HHInfo *info)
         info->WinType.pszIndex = strdupW(null);
         info->WinType.fsValidMembers=0;
         info->WinType.fsWinProperties=HHWIN_PROP_TRI_PANE;
-        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle);
+        info->WinType.pszCaption=strdupW(info->pCHMInfo->defTitle ? info->pCHMInfo->defTitle : null);
         info->WinType.dwStyles=WS_POPUP;
         info->WinType.dwExStyles=0;
         info->WinType.nShowState=SW_SHOW;
-        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic);
+        info->WinType.pszFile=strdupW(info->pCHMInfo->defTopic ? info->pCHMInfo->defTopic : null);
         info->WinType.curNavType=HHWIN_NAVTYPE_TOC;
         return TRUE;
     }

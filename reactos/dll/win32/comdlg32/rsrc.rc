@@ -47,7 +47,6 @@
 #include "cdlg_Da.rc"
 #include "cdlg_El.rc"
 #include "cdlg_En.rc"
-#include "cdlg_Eo.rc"
 #include "cdlg_Es.rc"
 #include "cdlg_Fi.rc"
 #include "cdlg_Hu.rc"
@@ -61,8 +60,8 @@
 #include "cdlg_Th.rc"
 #include "cdlg_Tr.rc"
 #include "cdlg_Uk.rc"
-#include "cdlg_Wa.rc"
 
+/* UTF-8 */
 #include "cdlg_De.rc"
 #include "cdlg_Fr.rc"
 #include "cdlg_Ja.rc"

@@ -34,11 +34,9 @@
 #include "wine/wine_common_ver.rc"
 
 #include "Bg.rc"
-#include "Da.rc"
 #include "En.rc"
 #include "Es.rc"
 #include "Fi.rc"
-#include "Hu.rc"
 #include "Ko.rc"
 #include "Nl.rc"
 #include "Pl.rc"
@@ -46,8 +44,10 @@
 #include "Tr.rc"
 
 /* UTF-8 */
+#include "Da.rc"
 #include "De.rc"
 #include "Fr.rc"
+#include "Hu.rc"
 #include "It.rc"
 #include "Ja.rc"
 #include "Lt.rc"

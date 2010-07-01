@@ -28,7 +28,6 @@
 #include "oleaut32_Da.rc"
 #include "oleaut32_El.rc"
 #include "oleaut32_En.rc"
-#include "oleaut32_Eo.rc"
 #include "oleaut32_Es.rc"
 #include "oleaut32_Cz.rc"
 #include "oleaut32_Fr.rc"
@@ -44,6 +43,7 @@
 #include "oleaut32_Th.rc"
 #include "oleaut32_Tr.rc"
 
+/* UTF-8 */
 #include "oleaut32_De.rc"
 #include "oleaut32_Lt.rc"
 #include "oleaut32_Ro.rc"

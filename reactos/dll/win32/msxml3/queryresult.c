@@ -227,7 +227,7 @@ static HRESULT WINAPI queryresult_get_item(
     if (index < 0 || index >= xmlXPathNodeSetGetLength(This->result->nodesetval))
         return S_FALSE;
 
-    *listItem = create_node(This->result->nodesetval->nodeTab[index]);
+    *listItem = create_node(xmlXPathNodeSetItem(This->result->nodesetval, index));
     This->resultPos = index + 1;
 
     return S_OK;
@@ -264,7 +264,7 @@ static HRESULT WINAPI queryresult_nextNode(
     if (This->resultPos >= xmlXPathNodeSetGetLength(This->result->nodesetval))
         return S_FALSE;
 
-    *nextItem = create_node(This->result->nodesetval->nodeTab[This->resultPos]);
+    *nextItem = create_node(xmlXPathNodeSetItem(This->result->nodesetval, This->resultPos));
     This->resultPos++;
     return S_OK;
 }
@@ -379,7 +379,6 @@ HRESULT queryresult_create(xmlNodePtr node, LPWSTR szQuery, IXMLDOMNodeList **ou
     xmlChar *str = xmlChar_from_wchar(szQuery);
     HRESULT hr;
 
-
     TRACE("(%p, %s, %p)\n", node, wine_dbgstr_w(szQuery), out);
 
     *out = NULL;
@@ -412,8 +411,7 @@ HRESULT queryresult_create(xmlNodePtr node, LPWSTR szQuery, IXMLDOMNodeList **ou
 cleanup:
     if (This != NULL && FAILED(hr))
         IXMLDOMNodeList_Release( (IXMLDOMNodeList*) &This->lpVtbl );
-    if (ctxt != NULL)
-        xmlXPathFreeContext(ctxt);
+    xmlXPathFreeContext(ctxt);
     heap_free(str);
     return hr;
 }

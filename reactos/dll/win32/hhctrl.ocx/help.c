@@ -1260,7 +1260,8 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
     RECT winPos = info->WinType.rcWindowPos;
     WNDCLASSEXW wcex;
     DWORD dwStyles, dwExStyles;
-    DWORD x, y, width, height;
+    DWORD x, y, width = 0, height = 0;
+    LPCWSTR caption;
 
     static const WCHAR windowClassW[] = {
         'H','H',' ', 'P','a','r','e','n','t',0
@@ -1301,7 +1302,7 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
         width = winPos.right - x;
         height = winPos.bottom - y;
     }
-    else
+    if (!width || !height)
     {
         x = WINTYPE_DEFAULT_X;
         y = WINTYPE_DEFAULT_Y;
@@ -1309,7 +1310,10 @@ static BOOL HH_CreateHelpWindow(HHInfo *info)
         height = WINTYPE_DEFAULT_HEIGHT;
     }
 
-    hWnd = CreateWindowExW(dwExStyles, windowClassW, info->WinType.pszCaption,
+    caption = info->WinType.pszCaption;
+    if (!*caption) caption = info->pCHMInfo->defTitle;
+
+    hWnd = CreateWindowExW(dwExStyles, windowClassW, caption,
                            dwStyles, x, y, width, height, NULL, NULL, hhctrl_hinstance, NULL);
     if (!hWnd)
         return FALSE;

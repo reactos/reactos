@@ -1,7 +1,5 @@
 /*
- * Oleaut32 - Esperanto Language Support
- *
- * Copyright 2006 Antonio Codazzi
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,16 +16,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "resource.h"
+#include "iccvid_private.h"
 
-LANGUAGE LANG_ESPERANTO, SUBLANG_DEFAULT
+/* UTF-8 */
+#pragma code_page(65001)
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Vere"
-  IDS_FALSE "False"
-  IDS_YES   "Jes"
-  IDS_NO    "Ne"
-  IDS_ON    "Kondukta"
-  IDS_OFF   "Elkluda"
+    IDS_NAME "Відео кодек Cinepak"
+    IDS_DESCRIPTION "Відео кодек Cinepak"
 }
