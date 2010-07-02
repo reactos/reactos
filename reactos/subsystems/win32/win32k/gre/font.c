@@ -63,7 +63,7 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                     &pTextBrush->BrushObj,
                     xspan,
                     y,
-                    xspan + lenspan,
+                    xspan + lenspan - 1,
                     y,
                     &rcBounds,
                     0);
@@ -128,6 +128,69 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
 #endif
 }
 
+static void SharpGlyphGray(PDC physDev, INT x, INT y,
+                           void *bitmap, GlyphInfo *gi, BRUSHGDI *pTextBrush)
+{
+    unsigned char   *srcLine = bitmap, *src, bits;
+    int             width = gi->width;
+    int             stride = ((width + 3) & ~3);
+    int             height = gi->height;
+    int             w;
+    int             xspan, lenspan;
+    RECTL           rcBounds;
+
+    x -= gi->x;
+    y -= gi->y;
+    while (height--)
+    {
+        src = srcLine;
+        srcLine += stride;
+        w = width;
+        
+        bits = *src++;
+        xspan = x;
+        while (w)
+        {
+            if (bits >= 0x80)
+            {
+                lenspan = 0;
+                do
+                {
+                    lenspan++;
+                    if (lenspan == w)
+                        break;
+                    bits = *src++;
+                } while (bits >= 0x80);
+                rcBounds.left = xspan; rcBounds.top = y;
+                rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
+                GreLineTo(&physDev->pBitmap->SurfObj,
+                    physDev->CombinedClip,
+                    &pTextBrush->BrushObj,
+                    xspan,
+                    y,
+                    xspan + lenspan - 1,
+                    y,
+                    &rcBounds,
+                    0);
+                xspan += lenspan;
+                w -= lenspan;
+            }
+            else
+            {
+                do
+                {
+                    w--;
+                    xspan++;
+                    if (!w)
+                        break;
+                    bits = *src++;
+                } while (bits < 0x80);
+            }
+        }
+        y++;
+    }
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 VOID NTAPI
@@ -147,10 +210,10 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
     {
         void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, BRUSHGDI *);
 
-        //if(aa_type == AA_None)
+        if(aa_type == AA_None)
             sharp_glyph_fn = SharpGlyphMono;
-        //else
-            //sharp_glyph_fn = SharpGlyphGray;
+        else
+            sharp_glyph_fn = SharpGlyphGray;
 
         for(idx = 0; idx < count; idx++) {
             sharp_glyph_fn(pDC,
@@ -176,6 +239,7 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
             }
         }
     } else {
+        UNIMPLEMENTED;
 #if 0
         OUTDATED (need to merge 47289 and higher)
         XImage *image;
