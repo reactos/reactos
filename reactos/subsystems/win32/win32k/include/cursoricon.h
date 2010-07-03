@@ -77,7 +77,7 @@ BOOL UserDrawIconEx(HDC hDc, INT xLeft, INT yTop, PCURICON_OBJECT pIcon, INT cxW
    INT cyHeight, UINT istepIfAniCur, HBRUSH hbrFlickerFreeDraw, UINT diFlags);
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon);
 
-BOOL UserSetCursorPos( INT x, INT y, BOOL CallHooks);
+BOOL UserSetCursorPos( INT x, INT y, BOOL SendMouseMoveMsg);
 
 int UserShowCursor(BOOL bShow);
 
