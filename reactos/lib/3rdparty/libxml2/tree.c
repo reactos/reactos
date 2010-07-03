@@ -3527,7 +3527,7 @@ xmlPreviousElementSibling(xmlNodePtr node) {
     while (node != NULL) {
         if (node->type == XML_ELEMENT_NODE)
             return(node);
-        node = node->next;
+        node = node->prev;
     }
     return(NULL);
 }
@@ -4188,6 +4188,8 @@ xmlStaticCopyNode(const xmlNodePtr node, xmlDocPtr doc, xmlNodePtr parent,
 
 		while (root->parent != NULL) root = root->parent;
 		ret->ns = xmlNewNs(root, ns->href, ns->prefix);
+		} else {
+			ret->ns = xmlNewReconciliedNs(doc, ret, node->ns);
 	    }
 	} else {
 	    /*
@@ -5056,7 +5058,7 @@ xmlNodeSetName(xmlNodePtr cur, const xmlChar *name) {
 void
 xmlNodeSetBase(xmlNodePtr cur, const xmlChar* uri) {
     xmlNsPtr ns;
-    const xmlChar* fixed;
+    xmlChar* fixed;
 
     if (cur == NULL) return;
     switch(cur->type) {
@@ -5103,7 +5105,7 @@ xmlNodeSetBase(xmlNodePtr cur, const xmlChar* uri) {
     fixed = xmlPathToURI(uri);
     if (fixed != NULL) {
 	xmlSetNsProp(cur, ns, BAD_CAST "base", fixed);
-	xmlFree((xmlChar *)fixed);
+	xmlFree(fixed);
     } else {
 	xmlSetNsProp(cur, ns, BAD_CAST "base", uri);
     }
@@ -5122,7 +5124,7 @@ xmlNodeSetBase(xmlNodePtr cur, const xmlChar* uri) {
  * and
  * 5.1.2. Base URI from the Encapsulating Entity
  * However it does not return the document base (5.1.3), use
- * xmlDocumentGetBase() for this
+ * doc->URL in this case
  *
  * Returns a pointer to the base URL, or NULL if not found
  *     It's up to the caller to free the memory with xmlFree().

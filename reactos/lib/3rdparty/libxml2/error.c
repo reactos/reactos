@@ -929,6 +929,7 @@ xmlCtxtResetLastError(void *ctx)
 
     if (ctxt == NULL)
         return;
+    ctxt->errNo = XML_ERR_OK;
     if (ctxt->lastError.code == XML_ERR_OK)
         return;
     xmlResetError(&ctxt->lastError);

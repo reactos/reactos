@@ -46,7 +46,7 @@ static xmlMutexPtr xmlThrDefMutex = NULL;
  */
 void xmlInitGlobals(void)
 {
-    if (xmlThrDefMutex != NULL)
+    if (xmlThrDefMutex == NULL)
         xmlThrDefMutex = xmlNewMutex();
 }
 

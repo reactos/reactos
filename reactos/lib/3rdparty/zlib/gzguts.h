@@ -116,9 +116,9 @@ typedef struct {
 typedef gz_state FAR *gz_statep;
 
 /* shared functions */
-void gz_error OF((gz_statep, int, const char *));
+void ZLIB_INTERNAL gz_error OF((gz_statep, int, const char *));
 #if defined UNDER_CE
-char *gz_strwinerror OF((DWORD error));
+char ZLIB_INTERNAL *gz_strwinerror OF((DWORD error));
 #endif
 
 /* GT_OFF(x), where x is an unsigned value, is true if x > maximum z_off64_t
@@ -127,6 +127,6 @@ char *gz_strwinerror OF((DWORD error));
 #ifdef INT_MAX
 #  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > INT_MAX)
 #else
-unsigned gz_intmax OF((void));
+unsigned ZLIB_INTERNAL gz_intmax OF((void));
 #  define GT_OFF(x) (sizeof(int) == sizeof(z_off64_t) && (x) > gz_intmax())
 #endif

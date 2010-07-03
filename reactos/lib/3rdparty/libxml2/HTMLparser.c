@@ -209,6 +209,59 @@ htmlnamePop(htmlParserCtxtPtr ctxt)
     return (ret);
 }
 
+/**
+ * htmlNodeInfoPush:
+ * @ctxt:  an HTML parser context
+ * @value:  the node info
+ *
+ * Pushes a new element name on top of the node info stack
+ *
+ * Returns 0 in case of error, the index in the stack otherwise
+ */
+static int
+htmlNodeInfoPush(htmlParserCtxtPtr ctxt, htmlParserNodeInfo *value)
+{
+    if (ctxt->nodeInfoNr >= ctxt->nodeInfoMax) {
+        if (ctxt->nodeInfoMax == 0)
+                ctxt->nodeInfoMax = 5;
+        ctxt->nodeInfoMax *= 2;
+        ctxt->nodeInfoTab = (htmlParserNodeInfo *)
+                         xmlRealloc((htmlParserNodeInfo *)ctxt->nodeInfoTab,
+                                    ctxt->nodeInfoMax *
+                                    sizeof(ctxt->nodeInfoTab[0]));
+        if (ctxt->nodeInfoTab == NULL) {
+            htmlErrMemory(ctxt, NULL);
+            return (0);
+        }
+    }
+    ctxt->nodeInfoTab[ctxt->nodeInfoNr] = *value;
+    ctxt->nodeInfo = &ctxt->nodeInfoTab[ctxt->nodeInfoNr];
+    return (ctxt->nodeInfoNr++);
+}
+
+/**
+ * htmlNodeInfoPop:
+ * @ctxt:  an HTML parser context
+ *
+ * Pops the top element name from the node info stack
+ *
+ * Returns 0 in case of error, the pointer to NodeInfo otherwise
+ */
+static htmlParserNodeInfo *
+htmlNodeInfoPop(htmlParserCtxtPtr ctxt)
+{
+    if (ctxt->nodeInfoNr <= 0)
+        return (NULL);
+    ctxt->nodeInfoNr--;
+    if (ctxt->nodeInfoNr < 0)
+        return (NULL);
+    if (ctxt->nodeInfoNr > 0)
+        ctxt->nodeInfo = &ctxt->nodeInfoTab[ctxt->nodeInfoNr - 1];
+    else
+        ctxt->nodeInfo = NULL;
+    return &ctxt->nodeInfoTab[ctxt->nodeInfoNr];
+}
+
 /*
  * Macros for accessing the content. Those should be used only by the parser,
  * and not exported.
@@ -267,8 +320,6 @@ htmlnamePop(htmlParserCtxtPtr ctxt)
 #define NEXT xmlNextChar(ctxt)
 
 #define RAW (ctxt->token ? -1 : (*ctxt->input->cur))
-#define NXT(val) ctxt->input->cur[(val)]
-#define CUR_PTR ctxt->input->cur
 
 
 #define NEXTL(l) do {							\
@@ -567,9 +618,9 @@ htmlSkipBlankChars(xmlParserCtxtPtr ctxt) {
 #define NB_PHRASE 10
 #define SPECIAL "a", "img", "applet", "embed", "object", "font", "basefont", "br", "script", "map", "q", "sub", "sup", "span", "bdo", "iframe"
 #define NB_SPECIAL 16
-#define INLINE PCDATA FONTSTYLE PHRASE SPECIAL FORMCTRL
+#define INLINE FONTSTYLE, PHRASE, SPECIAL, FORMCTRL
 #define NB_INLINE NB_PCDATA + NB_FONTSTYLE + NB_PHRASE + NB_SPECIAL + NB_FORMCTRL
-#define BLOCK HEADING, LIST "pre", "p", "dl", "div", "center", "noscript", "noframes", "blockquote", "form", "isindex", "hr", "table", "fieldset", "address"
+#define BLOCK HEADING, LIST, "pre", "p", "dl", "div", "center", "noscript", "noframes", "blockquote", "form", "isindex", "hr", "table", "fieldset", "address"
 #define NB_BLOCK NB_HEADING + NB_LIST + 14
 #define FORMCTRL "input", "select", "textarea", "label", "button"
 #define NB_FORMCTRL 5
@@ -1394,6 +1445,8 @@ static void
 htmlCheckImplied(htmlParserCtxtPtr ctxt, const xmlChar *newtag) {
     int i;
 
+    if (ctxt->options & HTML_PARSE_NOIMPLIED)
+        return;
     if (!htmlOmittedDefaultValue)
 	return;
     if (xmlStrEqual(newtag, BAD_CAST"html"))
@@ -3373,11 +3426,6 @@ htmlParseAttribute(htmlParserCtxtPtr ctxt, xmlChar **value) {
         NEXT;
 	SKIP_BLANKS;
 	val = htmlParseAttValue(ctxt);
-    } else if (htmlIsBooleanAttr(name)) {
-        /*
-	 * assume a minimized attribute
-	 */
-	val = xmlStrdup(name);
     }
 
     *value = val;
@@ -3476,6 +3524,8 @@ htmlCheckEncoding(htmlParserCtxtPtr ctxt, const xmlChar *attvalue) {
 	    }
 	    ctxt->input->base =
 	    ctxt->input->cur = ctxt->input->buf->buffer->content;
+            ctxt->input->end =
+                          &ctxt->input->base[ctxt->input->buf->buffer->use];
 	}
     }
 }
@@ -3925,6 +3975,7 @@ htmlParseReference(htmlParserCtxtPtr ctxt) {
  * @ctxt:  an HTML parser context
  *
  * Parse a content: comment, sub-element, reference or text.
+ * Kept for compatibility with old code
  */
 
 static void
@@ -4073,23 +4124,11 @@ htmlParseContent(htmlParserCtxtPtr ctxt) {
 }
 
 /**
- * htmlParseContent:
- * @ctxt:  an HTML parser context
- *
- * Parse a content: comment, sub-element, reference or text.
- */
-
-void
-__htmlParseContent(void *ctxt) {
-    if (ctxt != NULL)
-	htmlParseContent((htmlParserCtxtPtr) ctxt);
-}
-
-/**
  * htmlParseElement:
  * @ctxt:  an HTML parser context
  *
  * parse an HTML element, this is highly recursive
+ * this is kept for compatibility with previous code versions
  *
  * [39] element ::= EmptyElemTag | STag content ETag
  *
@@ -4217,6 +4256,301 @@ htmlParseElement(htmlParserCtxtPtr ctxt) {
 	xmlFree(currentNode);
 }
 
+static void
+htmlParserFinishElementParsing(htmlParserCtxtPtr ctxt) {
+    /*
+     * Capture end position and add node
+     */
+    if ( ctxt->node != NULL && ctxt->record_info ) {
+       ctxt->nodeInfo->end_pos = ctxt->input->consumed +
+                                (CUR_PTR - ctxt->input->base);
+       ctxt->nodeInfo->end_line = ctxt->input->line;
+       ctxt->nodeInfo->node = ctxt->node;
+       xmlParserAddNodeInfo(ctxt, ctxt->nodeInfo);
+       htmlNodeInfoPop(ctxt);
+    }
+    if (!IS_CHAR_CH(CUR)) {
+       htmlAutoCloseOnEnd(ctxt);
+    }
+}
+
+/**
+ * htmlParseElementInternal:
+ * @ctxt:  an HTML parser context
+ *
+ * parse an HTML element, new version, non recursive
+ *
+ * [39] element ::= EmptyElemTag | STag content ETag
+ *
+ * [41] Attribute ::= Name Eq AttValue
+ */
+
+static void
+htmlParseElementInternal(htmlParserCtxtPtr ctxt) {
+    const xmlChar *name;
+    const htmlElemDesc * info;
+    htmlParserNodeInfo node_info;
+    int failed;
+
+    if ((ctxt == NULL) || (ctxt->input == NULL)) {
+	htmlParseErr(ctxt, XML_ERR_INTERNAL_ERROR,
+		     "htmlParseElementInternal: context error\n", NULL, NULL);
+	return;
+    }
+
+    if (ctxt->instate == XML_PARSER_EOF)
+        return;
+
+    /* Capture start position */
+    if (ctxt->record_info) {
+        node_info.begin_pos = ctxt->input->consumed +
+                          (CUR_PTR - ctxt->input->base);
+	node_info.begin_line = ctxt->input->line;
+    }
+
+    failed = htmlParseStartTag(ctxt);
+    name = ctxt->name;
+    if ((failed == -1) || (name == NULL)) {
+	if (CUR == '>')
+	    NEXT;
+        return;
+    }
+
+    /*
+     * Lookup the info for that element.
+     */
+    info = htmlTagLookup(name);
+    if (info == NULL) {
+	htmlParseErr(ctxt, XML_HTML_UNKNOWN_TAG,
+	             "Tag %s invalid\n", name, NULL);
+    }
+
+    /*
+     * Check for an Empty Element labeled the XML/SGML way
+     */
+    if ((CUR == '/') && (NXT(1) == '>')) {
+        SKIP(2);
+	if ((ctxt->sax != NULL) && (ctxt->sax->endElement != NULL))
+	    ctxt->sax->endElement(ctxt->userData, name);
+	htmlnamePop(ctxt);
+	return;
+    }
+
+    if (CUR == '>') {
+        NEXT;
+    } else {
+	htmlParseErr(ctxt, XML_ERR_GT_REQUIRED,
+	             "Couldn't find end of Start Tag %s\n", name, NULL);
+
+	/*
+	 * end of parsing of this node.
+	 */
+	if (xmlStrEqual(name, ctxt->name)) {
+	    nodePop(ctxt);
+	    htmlnamePop(ctxt);
+	}
+
+        if (ctxt->record_info)
+            htmlNodeInfoPush(ctxt, &node_info);
+        htmlParserFinishElementParsing(ctxt);
+	return;
+    }
+
+    /*
+     * Check for an Empty Element from DTD definition
+     */
+    if ((info != NULL) && (info->empty)) {
+	if ((ctxt->sax != NULL) && (ctxt->sax->endElement != NULL))
+	    ctxt->sax->endElement(ctxt->userData, name);
+	htmlnamePop(ctxt);
+	return;
+    }
+
+    if (ctxt->record_info)
+        htmlNodeInfoPush(ctxt, &node_info);
+}
+
+/**
+ * htmlParseContentInternal:
+ * @ctxt:  an HTML parser context
+ *
+ * Parse a content: comment, sub-element, reference or text.
+ * New version for non recursive htmlParseElementInternal
+ */
+
+static void
+htmlParseContentInternal(htmlParserCtxtPtr ctxt) {
+    xmlChar *currentNode;
+    int depth;
+    const xmlChar *name;
+
+    currentNode = xmlStrdup(ctxt->name);
+    depth = ctxt->nameNr;
+    while (1) {
+	long cons = ctxt->nbChars;
+
+        GROW;
+
+        if (ctxt->instate == XML_PARSER_EOF)
+            break;
+
+	/*
+	 * Our tag or one of it's parent or children is ending.
+	 */
+        if ((CUR == '<') && (NXT(1) == '/')) {
+	    if (htmlParseEndTag(ctxt) &&
+		((currentNode != NULL) || (ctxt->nameNr == 0))) {
+		if (currentNode != NULL)
+		    xmlFree(currentNode);
+
+	        currentNode = xmlStrdup(ctxt->name);
+	        depth = ctxt->nameNr;
+	    }
+	    continue; /* while */
+        }
+
+	else if ((CUR == '<') &&
+	         ((IS_ASCII_LETTER(NXT(1))) ||
+		  (NXT(1) == '_') || (NXT(1) == ':'))) {
+	    name = htmlParseHTMLName_nonInvasive(ctxt);
+	    if (name == NULL) {
+	        htmlParseErr(ctxt, XML_ERR_NAME_REQUIRED,
+			 "htmlParseStartTag: invalid element name\n",
+			 NULL, NULL);
+	        /* Dump the bogus tag like browsers do */
+	        while ((IS_CHAR_CH(CUR)) && (CUR != '>'))
+	            NEXT;
+
+	        htmlParserFinishElementParsing(ctxt);
+	        if (currentNode != NULL)
+	            xmlFree(currentNode);
+
+	        currentNode = xmlStrdup(ctxt->name);
+	        depth = ctxt->nameNr;
+	        continue;
+	    }
+
+	    if (ctxt->name != NULL) {
+	        if (htmlCheckAutoClose(name, ctxt->name) == 1) {
+	            htmlAutoClose(ctxt, name);
+	            continue;
+	        }
+	    }
+	}
+
+	/*
+	 * Has this node been popped out during parsing of
+	 * the next element
+	 */
+        if ((ctxt->nameNr > 0) && (depth >= ctxt->nameNr) &&
+	    (!xmlStrEqual(currentNode, ctxt->name)))
+	     {
+	    htmlParserFinishElementParsing(ctxt);
+	    if (currentNode != NULL) xmlFree(currentNode);
+
+	    currentNode = xmlStrdup(ctxt->name);
+	    depth = ctxt->nameNr;
+	    continue;
+	}
+
+	if ((CUR != 0) && ((xmlStrEqual(currentNode, BAD_CAST"script")) ||
+	    (xmlStrEqual(currentNode, BAD_CAST"style")))) {
+	    /*
+	     * Handle SCRIPT/STYLE separately
+	     */
+	    htmlParseScript(ctxt);
+	} else {
+	    /*
+	     * Sometimes DOCTYPE arrives in the middle of the document
+	     */
+	    if ((CUR == '<') && (NXT(1) == '!') &&
+		(UPP(2) == 'D') && (UPP(3) == 'O') &&
+		(UPP(4) == 'C') && (UPP(5) == 'T') &&
+		(UPP(6) == 'Y') && (UPP(7) == 'P') &&
+		(UPP(8) == 'E')) {
+		htmlParseErr(ctxt, XML_HTML_STRUCURE_ERROR,
+		             "Misplaced DOCTYPE declaration\n",
+			     BAD_CAST "DOCTYPE" , NULL);
+		htmlParseDocTypeDecl(ctxt);
+	    }
+
+	    /*
+	     * First case :  a comment
+	     */
+	    if ((CUR == '<') && (NXT(1) == '!') &&
+		(NXT(2) == '-') && (NXT(3) == '-')) {
+		htmlParseComment(ctxt);
+	    }
+
+	    /*
+	     * Second case : a Processing Instruction.
+	     */
+	    else if ((CUR == '<') && (NXT(1) == '?')) {
+		htmlParsePI(ctxt);
+	    }
+
+	    /*
+	     * Third case :  a sub-element.
+	     */
+	    else if (CUR == '<') {
+		htmlParseElementInternal(ctxt);
+		if (currentNode != NULL) xmlFree(currentNode);
+
+		currentNode = xmlStrdup(ctxt->name);
+		depth = ctxt->nameNr;
+	    }
+
+	    /*
+	     * Fourth case : a reference. If if has not been resolved,
+	     *    parsing returns it's Name, create the node
+	     */
+	    else if (CUR == '&') {
+		htmlParseReference(ctxt);
+	    }
+
+	    /*
+	     * Fifth case : end of the resource
+	     */
+	    else if (CUR == 0) {
+		htmlAutoCloseOnEnd(ctxt);
+		break;
+	    }
+
+	    /*
+	     * Last case, text. Note that References are handled directly.
+	     */
+	    else {
+		htmlParseCharData(ctxt);
+	    }
+
+	    if (cons == ctxt->nbChars) {
+		if (ctxt->node != NULL) {
+		    htmlParseErr(ctxt, XML_ERR_INTERNAL_ERROR,
+		                 "detected an error in element content\n",
+				 NULL, NULL);
+		}
+		break;
+	    }
+	}
+        GROW;
+    }
+    if (currentNode != NULL) xmlFree(currentNode);
+}
+
+/**
+ * htmlParseContent:
+ * @ctxt:  an HTML parser context
+ *
+ * Parse a content: comment, sub-element, reference or text.
+ * This is the entry point when called from parser.c
+ */
+
+void
+__htmlParseContent(void *ctxt) {
+    if (ctxt != NULL)
+	htmlParseContentInternal((htmlParserCtxtPtr) ctxt);
+}
+
 /**
  * htmlParseDocument:
  * @ctxt:  an HTML parser context
@@ -4321,7 +4655,7 @@ htmlParseDocument(htmlParserCtxtPtr ctxt) {
     /*
      * Time to start parsing the tree itself
      */
-    htmlParseContent(ctxt);
+    htmlParseContentInternal(ctxt);
 
     /*
      * autoclose
@@ -4424,7 +4758,7 @@ htmlInitParserCtxt(htmlParserCtxtPtr ctxt)
     if (ctxt->nameTab == NULL) {
         htmlErrMemory(NULL, "htmlInitParserCtxt: out of memory\n");
 	ctxt->nameNr = 0;
-	ctxt->nameMax = 10;
+	ctxt->nameMax = 0;
 	ctxt->name = NULL;
 	ctxt->nodeNr = 0;
 	ctxt->nodeMax = 0;
@@ -4437,6 +4771,10 @@ htmlInitParserCtxt(htmlParserCtxtPtr ctxt)
     ctxt->nameNr = 0;
     ctxt->nameMax = 10;
     ctxt->name = NULL;
+
+    ctxt->nodeInfoTab = NULL;
+    ctxt->nodeInfoNr  = 0;
+    ctxt->nodeInfoMax = 0;
 
     if (sax == NULL) ctxt->sax = (xmlSAXHandlerPtr) &htmlDefaultSAXHandler;
     else {
