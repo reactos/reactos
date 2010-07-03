@@ -338,15 +338,19 @@ SwmClipAllWindows()
 
 VOID
 NTAPI
-SwmAddWindow(HWND hWnd, RECT *WindowRect)
+SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
 {
     PSWM_WINDOW Win;
 
     DPRINT("SwmAddWindow %x\n", hWnd);
-    DPRINT("rect (%d,%d)-(%d,%d)\n", WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom);
+    DPRINT("rect (%d,%d)-(%d,%d), style %x, ex_style %x\n",
+        WindowRect->left, WindowRect->top, WindowRect->right, WindowRect->bottom,
+        style, ex_style);
 
     /* Acquire the lock */
     SwmAcquire();
+
+    if (ex_style & WS_EX_TOPMOST) DPRINT1("Creating a topmost window, ignoring\n");
 
     /* Allocate entry */
     Win = ExAllocatePool(PagedPool, sizeof(SWM_WINDOW));
@@ -667,7 +671,10 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
     if (hWndAfter && !(SwpFlags & SWP_NOZORDER))
     {
         /* Get the previous window */
-        SwmPrev = CONTAINING_RECORD(SwmWin->Entry.Blink, SWM_WINDOW, Entry);
+        if (SwmWin->Entry.Blink != &SwmWindows)
+            SwmPrev = CONTAINING_RECORD(SwmWin->Entry.Blink, SWM_WINDOW, Entry);
+        else
+            SwmPrev = SwmWin;
 
         /* Check if they are different */
         if (SwmPrev->hwnd != hWndAfter)

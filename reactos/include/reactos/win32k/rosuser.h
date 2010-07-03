@@ -168,7 +168,7 @@ VOID NTAPI
 RosUserConnectCsrss(VOID);
 
 VOID NTAPI
-SwmAddWindow(HWND hWnd, RECT *WindowRect);
+SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style);
 
 VOID NTAPI
 SwmAddDesktopWindow(HWND hWnd, UINT Width, UINT Height);

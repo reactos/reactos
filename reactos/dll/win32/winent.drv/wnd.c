@@ -73,6 +73,7 @@ struct ntdrv_win_data *NTDRV_get_win_data( HWND hwnd )
 struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
 {
     struct ntdrv_win_data *data;
+    DWORD style, ex_style;
     HWND parent;
 
     if (!(parent = GetAncestor( hwnd, GA_PARENT ))) return NULL;  /* desktop */
@@ -99,8 +100,11 @@ struct ntdrv_win_data *NTDRV_create_win_data( HWND hwnd )
                hwnd, wine_dbgstr_rect( &data->window_rect ),
                wine_dbgstr_rect( &data->whole_rect ), wine_dbgstr_rect( &data->client_rect ));
 
+        style = GetWindowLongW( data->hwnd, GWL_STYLE );
+        ex_style = GetWindowLongW( data->hwnd, GWL_EXSTYLE );
+
         /* Inform window manager about window rect in screen coords */
-        SwmAddWindow(hwnd, &data->window_rect);
+        SwmAddWindow(hwnd, &data->window_rect, style, ex_style);
         data->whole_window = (PVOID)1;
     }
 
