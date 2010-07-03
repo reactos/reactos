@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/usbiffn.c
  * PURPOSE:     Direct Call Interface Functions.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (mjmartin@reactos.org)
  */
 
 #include "usbehci.h"
@@ -98,10 +98,12 @@ CreateUsbDevice(PVOID BusContext,
             PdoDeviceExtension->UsbDevices[i] = (PUSB_DEVICE)UsbDevice;
             PdoDeviceExtension->UsbDevices[i]->Address = i + 1;
             PdoDeviceExtension->UsbDevices[i]->Port = PortNumber;
-            break; 
+            break;
         }
         i++;
     }
+
+    PdoDeviceExtension->Ports[PortNumber - 1].PortStatus = PortStatus;
 
     /* Return it */
     *NewDevice = UsbDevice;
@@ -140,6 +142,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     }
 
     Ptr = Buffer;
+
     /* Set the device address */
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
     CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
@@ -149,6 +152,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     CtrlSetup.wIndex.W = 0;
     CtrlSetup.wLength = 0;
 
+    DPRINT1("Setting Address to %x\n", UsbDevice->Address);
     ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, 0, 0, NULL, 0);
 
     /* Get the Device Descriptor */
@@ -161,11 +165,15 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     CtrlSetup.wIndex.W = 0;
     CtrlSetup.wLength = sizeof(USB_DEVICE_DESCRIPTOR);
 
-    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port, 
+    DPRINT1("Requesting Descriptor\n");
+    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port,
                                      &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
+
 
     DPRINT1("bLength %x\n", UsbDevice->DeviceDescriptor.bLength);
     DPRINT1("bDescriptorType %x\n", UsbDevice->DeviceDescriptor.bDescriptorType);
+    DPRINT1("idVendor %x\n", UsbDevice->DeviceDescriptor.idVendor);
+    DPRINT1("idProduct %x\n", UsbDevice->DeviceDescriptor.idProduct);
     DPRINT1("bNumDescriptors %x\n", UsbDevice->DeviceDescriptor.bNumConfigurations);
 
     if (UsbDevice->DeviceDescriptor.bNumConfigurations == 0)
@@ -246,10 +254,10 @@ GetUsbDescriptors(PVOID BusContext,
                   PULONG ConfigDescriptorBufferLength)
 {
     PUSB_DEVICE UsbDevice;
-    DPRINT1("GetUsbDescriptor %x, %d, %x, %d\n", DeviceDescriptorBuffer, DeviceDescriptorBufferLength, ConfigDescriptorBuffer, ConfigDescriptorBufferLength);
+    DPRINT1("GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength, ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
 
     UsbDevice = (PUSB_DEVICE) DeviceHandle;
-
+    DPRINT1("DeviceHandle %x\n", UsbDevice);
     if ((DeviceDescriptorBuffer) && (DeviceDescriptorBufferLength))
     {
         RtlCopyMemory(DeviceDescriptorBuffer, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
@@ -268,7 +276,59 @@ NTSTATUS
 USB_BUSIFFN
 RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
 {
-    DPRINT1("RemoveUsbDevice called\n");
+    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
+    PUSB_DEVICE UsbDevice;
+    LONG i, j, k;
+
+    DPRINT1("RemoveUsbDevice called, DeviceHandle %x, Flags %x\n", DeviceHandle, Flags);
+
+    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
+
+    /* FIXME: Implement DeviceHandleToUsbDevice to validate handles */
+    //UsbDevice = DeviceHandleToUsbDevice(PdoDeviceExtension, DeviceHandle);
+
+    UsbDevice = (PUSB_DEVICE) DeviceHandle;
+
+   if (!UsbDevice)
+        return STATUS_DEVICE_NOT_CONNECTED;
+
+    switch (Flags)
+    {
+       case 0:
+            DPRINT1("Number of Configurations %d\n", UsbDevice->DeviceDescriptor.bNumConfigurations);
+            for (i = 0; i < UsbDevice->DeviceDescriptor.bNumConfigurations; i++)
+            {
+                for (j = 0; j < UsbDevice->Configs[i]->ConfigurationDescriptor.bNumInterfaces; j++)
+                {
+                    for (k = 0; k < UsbDevice->Configs[i]->Interfaces[j]->InterfaceDescriptor.bNumEndpoints; k++)
+                    {
+                        ExFreePool(UsbDevice->Configs[i]->Interfaces[j]->EndPoints[k]);
+                    }
+                    ExFreePool(UsbDevice->Configs[i]->Interfaces[j]);
+                }
+                ExFreePool(UsbDevice->Configs[i]);
+            }
+
+            for (i = 0; i < 127; i++)
+            {
+                if (PdoDeviceExtension->UsbDevices[i] == UsbDevice)
+                    PdoDeviceExtension->UsbDevices[i] = NULL;
+            }
+
+            ExFreePool(UsbDevice);
+
+            /* DeConfig Device */
+            break;
+       case USBD_KEEP_DEVICE_DATA:
+            DPRINT("USBD_KEEP_DEVICE_DATA Not implemented!\n");
+            break;
+
+        case USBD_MARK_DEVICE_BUSY:
+            DPRINT("USBD_MARK_DEVICE_BUSY Not implemented!\n");
+            break;
+        default:
+            DPRINT1("Unknown Remove Flags %x\n", Flags);
+    }
     return STATUS_SUCCESS;
 }
 

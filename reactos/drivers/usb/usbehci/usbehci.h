@@ -9,7 +9,7 @@
 #include <usbioctl.h>
 #include <usb.h>
 
-#define USB_POOL_TAG (ULONG)'UsbR'
+#define USB_POOL_TAG (ULONG)'ebsu'
 
 #define	DEVICEINTIALIZED		0x01
 #define	DEVICESTARTED			0x02
@@ -462,6 +462,9 @@ GetPhysicalDeviceObjectName(PDEVICE_OBJECT DeviceObject);
 
 NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+NTSTATUS NTAPI
+FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 BOOLEAN
 ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, UCHAR Address, ULONG Port, PVOID Buffer, ULONG BufferLength);

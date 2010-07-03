@@ -4,32 +4,11 @@
  * FILE:        drivers/usb/usbehci/usbehci.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (mjmartin@reactos.com)
  */
 
 /* DEFINES *******************************************************************/
 #include "usbehci.h"
-
-static NTSTATUS NTAPI
-IrpStub(PDEVICE_OBJECT DeviceObject, PIRP Irp)
-{
-    NTSTATUS Status;
-
-    if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFdo)
-    {
-        DPRINT1("ehci: FDO stub for major function 0x%lx\n",
-            IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-        return ForwardIrpAndForget(DeviceObject, Irp);
-    }
-
-    /* We are lower driver, So complete */
-    DPRINT1("ehci: PDO stub for major function 0x%lx\n",
-    IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
-
-    Status = Irp->IoStatus.Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-    return Status;
-}
 
 NTSTATUS NTAPI
 DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -47,7 +26,9 @@ DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     DPRINT("DispatchInternalDeviceControl\n");
     if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFdo)
-        return IrpStub(DeviceObject, Irp);
+    {
+        return FdoDispatchInternalDeviceControl(DeviceObject, Irp);
+    }
     else
         return PdoDispatchInternalDeviceControl(DeviceObject, Irp);
 }

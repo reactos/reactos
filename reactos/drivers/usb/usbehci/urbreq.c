@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/urbreq.c
  * PURPOSE:     URB Related Functions.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (mjmartin@reactos.org)
  */
 
 #include "usbehci.h"
@@ -135,6 +135,9 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
                                          (PVOID)&CtrlData,
                                          BufferLength);
 
+    QueueHead->EndPointCapabilities2.PortNumber = Port;
+    QueueHead->EndPointCapabilities1.DeviceAddress = Address;
+
     CtrlSetup->bmRequestType._BM.Recipient = SetupPacket->bmRequestType._BM.Recipient;
     CtrlSetup->bmRequestType._BM.Type = SetupPacket->bmRequestType._BM.Type;
     CtrlSetup->bmRequestType._BM.Dir = SetupPacket->bmRequestType._BM.Dir;
@@ -143,10 +146,6 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
     CtrlSetup->wValue.HiByte = SetupPacket->wValue.HiByte;
     CtrlSetup->wIndex.W = SetupPacket->wIndex.W;
     CtrlSetup->wLength = SetupPacket->wLength;
-
-
-    QueueHead->EndPointCapabilities1.DeviceAddress = Address;
-    //QueueHead->EndPointCapabilities2.PortNumber = Port;
 
     tmp = READ_REGISTER_ULONG((PULONG) (Base + EHCI_USBCMD));
     UsbCmd = (PEHCI_USBCMD_CONTENT) &tmp;
