@@ -1409,81 +1409,51 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
 
 
 /**********************************************************************
- * LookupPrivilegeValueW				EXPORTED
+ * LookupPrivilegeValueW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
-LookupPrivilegeValueW(LPCWSTR SystemName,
-                      LPCWSTR PrivName,
-                      PLUID Luid)
+LookupPrivilegeValueW(LPCWSTR lpSystemName,
+                      LPCWSTR lpPrivilegeName,
+                      PLUID lpLuid)
 {
-  static const WCHAR * const DefaultPrivNames[] =
-    {
-      L"SeCreateTokenPrivilege",
-      L"SeAssignPrimaryTokenPrivilege",
-      L"SeLockMemoryPrivilege",
-      L"SeIncreaseQuotaPrivilege",
-      L"SeMachineAccountPrivilege",
-      L"SeTcbPrivilege",
-      L"SeSecurityPrivilege",
-      L"SeTakeOwnershipPrivilege",
-      L"SeLoadDriverPrivilege",
-      L"SeSystemProfilePrivilege",
-      L"SeSystemtimePrivilege",
-      L"SeProfileSingleProcessPrivilege",
-      L"SeIncreaseBasePriorityPrivilege",
-      L"SeCreatePagefilePrivilege",
-      L"SeCreatePermanentPrivilege",
-      L"SeBackupPrivilege",
-      L"SeRestorePrivilege",
-      L"SeShutdownPrivilege",
-      L"SeDebugPrivilege",
-      L"SeAuditPrivilege",
-      L"SeSystemEnvironmentPrivilege",
-      L"SeChangeNotifyPrivilege",
-      L"SeRemoteShutdownPrivilege",
-      L"SeUndockPrivilege",
-      L"SeSyncAgentPrivilege",
-      L"SeEnableDelegationPrivilege",
-      L"SeManageVolumePrivilege",
-      L"SeImpersonatePrivilege",
-      L"SeCreateGlobalPrivilege"
-    };
-  unsigned Priv;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    LSA_UNICODE_STRING SystemName;
+    LSA_UNICODE_STRING PrivilegeName;
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
 
-  if (!ADVAPI_IsLocalComputer(SystemName))
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
-        return FALSE;
-    }
-  if (!PrivName)
-    {
-        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-  if (NULL != SystemName && L'\0' != *SystemName)
+    RtlInitUnicodeString(&PrivilegeName,
+                         lpPrivilegeName);
+
+    Status = LsaLookupPrivilegeValue(PolicyHandle,
+                                     &PrivilegeName,
+                                     lpLuid);
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status))
     {
-      FIXME("LookupPrivilegeValueW: not implemented for remote system\n");
-      SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-      return FALSE;
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
     }
 
-  for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
-    {
-      if (0 == _wcsicmp(PrivName, DefaultPrivNames[Priv]))
-        {
-          Luid->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
-          Luid->HighPart = 0;
-          return TRUE;
-        }
-    }
-
-  WARN("LookupPrivilegeValueW: no such privilege %S\n", PrivName);
-  SetLastError(ERROR_NO_SUCH_PRIVILEGE);
-  return FALSE;
+    return TRUE;
 }
 
 

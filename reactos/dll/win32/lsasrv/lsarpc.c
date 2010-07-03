@@ -10,12 +10,19 @@
 
 #include <wine/debug.h>
 
+typedef enum _LSA_DB_HANDLE_TYPE
+{
+    LsaDbIgnoreHandle,
+    LsaDbPolicyHandle,
+    LsaDbAccountHandle
+} LSA_DB_HANDLE_TYPE, *PLSA_DB_HANDLE_TYPE;
+
 typedef struct _LSA_DB_HANDLE
 {
     ULONG Signature;
-    ULONG Type;
+    LSA_DB_HANDLE_TYPE HandleType;
     LONG RefCount;
-    ACCESS_MASK AccessGranted;
+    ACCESS_MASK Access;
 } LSA_DB_HANDLE, *PLSA_DB_HANDLE;
 
 #define LSAP_DB_SIGNATURE 0x12345678
@@ -28,7 +35,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 /* FUNCTIONS ***************************************************************/
 
 static LSAPR_HANDLE
-LsapCreateDbHandle(ULONG Type)
+LsapCreateDbHandle(LSA_DB_HANDLE_TYPE HandleType,
+                   ACCESS_MASK DesiredAccess)
 {
     PLSA_DB_HANDLE DbHandle;
 
@@ -41,7 +49,8 @@ LsapCreateDbHandle(ULONG Type)
     {
         DbHandle->Signature = LSAP_DB_SIGNATURE;
         DbHandle->RefCount = 1;
-        DbHandle->Type = Type;
+        DbHandle->HandleType = HandleType;
+        DbHandle->Access = DesiredAccess;
     }
 
 //    RtlLeaveCriticalSection(&PolicyHandleTableLock);
@@ -51,7 +60,8 @@ LsapCreateDbHandle(ULONG Type)
 
 
 static BOOL
-LsapValidateDbHandle(LSAPR_HANDLE Handle)
+LsapValidateDbHandle(LSAPR_HANDLE Handle,
+                     LSA_DB_HANDLE_TYPE HandleType)
 {
     PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
     BOOL bValid = FALSE;
@@ -59,7 +69,12 @@ LsapValidateDbHandle(LSAPR_HANDLE Handle)
     _SEH2_TRY
     {
         if (DbHandle->Signature == LSAP_DB_SIGNATURE)
-            bValid = TRUE;
+        {
+            if (HandleType == LsaDbIgnoreHandle)
+                bValid = TRUE;
+            else if (DbHandle->HandleType == HandleType)
+                bValid = TRUE;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -81,7 +96,7 @@ LsarStartRpcServer(VOID)
 
     RtlInitializeCriticalSection(&PolicyHandleTableLock);
 
-    TRACE("LsarStartRpcServer() called");
+    TRACE("LsarStartRpcServer() called\n");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     10,
@@ -129,7 +144,7 @@ NTSTATUS LsarClose(
 
 //    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (LsapValidateDbHandle(*ObjectHandle))
+    if (LsapValidateDbHandle(*ObjectHandle, LsaDbIgnoreHandle))
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
         *ObjectHandle = NULL;
@@ -213,7 +228,8 @@ NTSTATUS LsarOpenPolicy(
 
     RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    *PolicyHandle = LsapCreateDbHandle(0);
+    *PolicyHandle = LsapCreateDbHandle(LsaDbPolicyHandle,
+                                       DesiredAccess);
     if (*PolicyHandle == NULL)
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -504,8 +520,63 @@ NTSTATUS LsarLookupPrivilegeValue(
     PRPC_UNICODE_STRING Name,
     PLUID Value)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    static const WCHAR * const DefaultPrivNames[] =
+    {
+      L"SeCreateTokenPrivilege",
+      L"SeAssignPrimaryTokenPrivilege",
+      L"SeLockMemoryPrivilege",
+      L"SeIncreaseQuotaPrivilege",
+      L"SeMachineAccountPrivilege",
+      L"SeTcbPrivilege",
+      L"SeSecurityPrivilege",
+      L"SeTakeOwnershipPrivilege",
+      L"SeLoadDriverPrivilege",
+      L"SeSystemProfilePrivilege",
+      L"SeSystemtimePrivilege",
+      L"SeProfileSingleProcessPrivilege",
+      L"SeIncreaseBasePriorityPrivilege",
+      L"SeCreatePagefilePrivilege",
+      L"SeCreatePermanentPrivilege",
+      L"SeBackupPrivilege",
+      L"SeRestorePrivilege",
+      L"SeShutdownPrivilege",
+      L"SeDebugPrivilege",
+      L"SeAuditPrivilege",
+      L"SeSystemEnvironmentPrivilege",
+      L"SeChangeNotifyPrivilege",
+      L"SeRemoteShutdownPrivilege",
+      L"SeUndockPrivilege",
+      L"SeSyncAgentPrivilege",
+      L"SeEnableDelegationPrivilege",
+      L"SeManageVolumePrivilege",
+      L"SeImpersonatePrivilege",
+      L"SeCreateGlobalPrivilege"
+    };
+    ULONG Priv;
+
+
+    TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
+          PolicyHandle, Name, Value);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
+    {
+        if (0 == _wcsicmp(Name->Buffer, DefaultPrivNames[Priv]))
+        {
+            Value->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
+            Value->HighPart = 0;
+            return STATUS_SUCCESS;
+        }
+    }
+
+    WARN("LsarLookupPrivilegeValue: no such privilege %wZ\n", Name);
+
+    return STATUS_NO_SUCH_PRIVILEGE;
 }
 
 
@@ -562,7 +633,7 @@ NTSTATUS LsarEnmuerateAccountRights(
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
 
-    if (!LsapValidateDbHandle(PolicyHandle))
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
         return STATUS_INVALID_HANDLE;
 
     UserRights->Entries = 0;

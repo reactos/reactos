@@ -397,6 +397,37 @@ LsaLookupNames2(
 }
 
 /*
+ * @implemented
+ */
+NTSTATUS
+WINAPI
+LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
+                        IN PLSA_UNICODE_STRING Name,
+                        OUT PLUID Value)
+{
+    LUID Luid;
+    NTSTATUS Status;
+
+    FIXME("(%p,%p,%p) stub\n", PolicyHandle, Name, Value);
+
+    RpcTryExcept
+    {
+        Status = LsarLookupPrivilegeValue(PolicyHandle,
+                                          (PRPC_UNICODE_STRING)Name,
+                                          &Luid);
+        if (Status == STATUS_SUCCESS)
+            *Value = Luid;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+/*
  * @unimplemented
  */
 NTSTATUS
