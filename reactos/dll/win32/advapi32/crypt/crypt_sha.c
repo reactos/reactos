@@ -14,12 +14,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <advapi32.h>
 #include "crypt.h"
-
 
 /* SHA Context Structure Declaration */
 
@@ -50,8 +49,7 @@ typedef struct {
 #define R4(v,w,x,y,z,i) z+=f4(w,x,y)+blk1(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
-static VOID
-SHA1Transform(ULONG State[5], UCHAR Buffer[64])
+static void SHA1Transform(ULONG State[5], UCHAR Buffer[64])
 {
    ULONG a, b, c, d, e;
    ULONG *Block;
@@ -103,6 +101,12 @@ SHA1Transform(ULONG State[5], UCHAR Buffer[64])
  * A_SHAInit [ADVAPI32.@]
  *
  * Initialize a SHA context structure.
+ *
+ * PARAMS
+ *  Context [O] SHA context
+ *
+ * RETURNS
+ *  Nothing
  */
 VOID WINAPI
 A_SHAInit(PSHA_CTX Context)
@@ -121,9 +125,17 @@ A_SHAInit(PSHA_CTX Context)
  * A_SHAUpdate [ADVAPI32.@]
  *
  * Update a SHA context with a hashed data from supplied buffer.
+ *
+ * PARAMS
+ *  Context    [O] SHA context
+ *  Buffer     [I] hashed data
+ *  BufferSize [I] hashed data size
+ *
+ * RETURNS
+ *  Nothing
  */
 VOID WINAPI
-A_SHAUpdate(PSHA_CTX Context, PCHAR Buffer, UINT BufferSize)
+A_SHAUpdate(PSHA_CTX Context, const unsigned char *Buffer, UINT BufferSize)
 {
    ULONG BufferContentSize;
 
@@ -157,12 +169,19 @@ A_SHAUpdate(PSHA_CTX Context, PCHAR Buffer, UINT BufferSize)
  * A_SHAFinal [ADVAPI32.@]
  *
  * Finalize SHA context and return the resulting hash.
+ *
+ * PARAMS
+ *  Context [I/O] SHA context
+ *  Result  [O] resulting hash
+ *
+ * RETURNS
+ *  Nothing
  */
 VOID WINAPI
 A_SHAFinal(PSHA_CTX Context, PULONG Result)
 {
    INT Pad, Index;
-   CHAR Buffer[72];
+   UCHAR Buffer[72];
    ULONG *Count;
    ULONG BufferContentSize, LengthHi, LengthLo;
 

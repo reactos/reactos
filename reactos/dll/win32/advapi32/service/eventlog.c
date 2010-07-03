@@ -312,6 +312,29 @@ CloseEventLog(IN HANDLE hEventLog)
     return TRUE;
 }
 
+/******************************************************************************
+ * ControlTraceW [ADVAPI32.@]
+ *
+ * Control a givel event trace session
+ *
+ */
+ULONG WINAPI ControlTraceW( TRACEHANDLE hSession, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
+{
+    FIXME("(%s, %s, %p, %d) stub\n", wine_dbgstr_longlong(hSession), debugstr_w(SessionName), Properties, control);
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************************
+ * ControlTraceA [ADVAPI32.@]
+ *
+ * See ControlTraceW.
+ *
+ */
+ULONG WINAPI ControlTraceA( TRACEHANDLE hSession, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties, ULONG control )
+{
+    FIXME("(%s, %s, %p, %d) stub\n", wine_dbgstr_longlong(hSession), debugstr_a(SessionName), Properties, control);
+    return ERROR_SUCCESS;
+}
 
 /******************************************************************************
  * DeregisterEventSource [ADVAPI32.@]
@@ -348,6 +371,16 @@ DeregisterEventSource(IN HANDLE hEventLog)
     return TRUE;
 }
 
+/******************************************************************************
+ * EnableTrace [ADVAPI32.@]
+ */
+ULONG WINAPI EnableTrace( ULONG enable, ULONG flag, ULONG level, LPCGUID guid, TRACEHANDLE hSession )
+{
+    FIXME("(%d, 0x%x, %d, %s, %s): stub\n", enable, flag, level,
+            debugstr_guid(guid), wine_dbgstr_longlong(hSession));
+
+    return ERROR_SUCCESS;
+}
 
 /******************************************************************************
  * GetEventLogInformation [ADVAPI32.@]
@@ -706,6 +739,32 @@ OpenEventLogW(IN LPCWSTR lpUNCServerName,
     return (HANDLE)LogHandle;
 }
 
+/******************************************************************************
+ * QueryAllTracesW [ADVAPI32.@]
+ *
+ * Query information for started event trace sessions
+ *
+ */
+ULONG WINAPI QueryAllTracesW( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
+{
+    FIXME("(%p, %d, %p) stub\n", parray, arraycount, psessioncount);
+
+    if (psessioncount) *psessioncount = 0;
+    return ERROR_SUCCESS;
+}
+
+/******************************************************************************
+ * QueryAllTracesA [ADVAPI32.@]
+ *
+ * See QueryAllTracesW.
+ */
+ULONG WINAPI QueryAllTracesA( PEVENT_TRACE_PROPERTIES * parray, ULONG arraycount, PULONG psessioncount )
+{
+    FIXME("(%p, %d, %p) stub\n", parray, arraycount, psessioncount);
+
+    if (psessioncount) *psessioncount = 0;
+    return ERROR_SUCCESS;
+}
 
 /******************************************************************************
  * ReadEventLogA [ADVAPI32.@]
@@ -1088,3 +1147,4 @@ ReportEventW(IN HANDLE hEventLog,
 
     return TRUE;
 }
+

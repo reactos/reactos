@@ -1122,7 +1122,7 @@ struct _RTF_Info {
     char *rtfTextBuf;
     int	rtfTextLen;
 
-    long rtfLineNum;
+    int rtfLineNum;
     int	rtfLinePos;
 
 

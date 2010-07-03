@@ -18,7 +18,7 @@
 23 stdcall AtlModuleUpdateRegistryFromResourceD(ptr wstr long ptr ptr)
 24 stub AtlWaitWithMessageLoop
 25 stub AtlSetErrorInfo
-26 stub AtlCreateTargetDC
+26 stdcall AtlCreateTargetDC(long ptr)
 27 stdcall AtlHiMetricToPixel(ptr ptr)
 28 stdcall AtlPixelToHiMetric(ptr ptr)
 29 stub AtlDevModeW2A
@@ -37,7 +37,7 @@
 43 stdcall AtlModuleAddCreateWndData(ptr ptr ptr)
 44 stdcall AtlModuleExtractCreateWndData(ptr)
 45 stdcall AtlModuleRegisterWndClassInfoW(ptr ptr ptr)
-46 stub AtlModuleRegisterWndClassInfoA
+46 stdcall AtlModuleRegisterWndClassInfoA(ptr ptr ptr)
 47 stdcall AtlAxGetControl(long ptr)
 48 stdcall AtlAxGetHost(long ptr)
 49 stub AtlRegisterClassCategoriesHelper

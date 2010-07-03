@@ -12,6 +12,7 @@
  */
 #include <advapi32.h>
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 
@@ -200,7 +201,7 @@ LsaCreateTrustedDomainEx(
 {
     FIXME("(%p,%p,%p,0x%08x,%p) stub\n", PolicyHandle, TrustedDomainInformation, AuthenticationInformation,
           DesiredAccess, TrustedDomainHandle);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -586,10 +587,9 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
                 DWORD padding[3];
                 WCHAR domain[MAX_COMPUTERNAME_LENGTH + 1];
             };
-            SID_IDENTIFIER_AUTHORITY localSidAuthority = {SECURITY_NT_AUTHORITY};
 
             DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
-            struct di * xdi = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
+            struct di * xdi = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*xdi));
 
             xdi->info.DomainName.MaximumLength = dwSize * sizeof(WCHAR);
             xdi->info.DomainName.Buffer = xdi->domain;
@@ -599,10 +599,16 @@ LsaQueryInformationPolicy(LSA_HANDLE PolicyHandle,
             TRACE("setting name to %s\n", debugstr_w(xdi->info.DomainName.Buffer));
 
             xdi->info.DomainSid = &xdi->sid;
-            xdi->sid.Revision = SID_REVISION;
-            xdi->sid.SubAuthorityCount = 1;
-            xdi->sid.IdentifierAuthority = localSidAuthority;
-            xdi->sid.SubAuthority[0] = SECURITY_LOCAL_SYSTEM_RID;
+
+            /* read the computer SID from the registry */
+            if (!ADVAPI_GetComputerSid(&xdi->sid))
+            {
+                HeapFree(GetProcessHeap(), 0, xdi);
+
+                WARN("Computer SID not found\n");
+
+                return STATUS_UNSUCCESSFUL;
+            }
 
             *Buffer = xdi;
         }
@@ -695,7 +701,7 @@ LsaRetrievePrivateData(
     PLSA_UNICODE_STRING *PrivateData)
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
 
 /*
@@ -709,7 +715,7 @@ LsaSetDomainInformationPolicy(
     PVOID Buffer)
 {
     FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
-    return STATUS_NOT_IMPLEMENTED;
+    return STATUS_UNSUCCESSFUL;
 }
 
 /*
@@ -724,6 +730,19 @@ LsaSetInformationPolicy(
 {
     FIXME("(%p,0x%08x,%p) stub\n", PolicyHandle, InformationClass, Buffer);
     return STATUS_UNSUCCESSFUL;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI LsaSetSecret(
+    IN LSA_HANDLE SecretHandle,
+    IN PLSA_UNICODE_STRING EncryptedCurrentValue,
+    IN PLSA_UNICODE_STRING EncryptedOldValue)
+{
+    FIXME("(%p,%p,%p) stub\n", SecretHandle, EncryptedCurrentValue,
+            EncryptedOldValue);
+    return STATUS_SUCCESS;
 }
 
 /*
@@ -760,6 +779,17 @@ LsaSetTrustedDomainInfoByName(
 /*
  * @unimplemented
  */
+NTSTATUS WINAPI LsaRegisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS class,
+    HANDLE event)
+{
+    FIXME("(%d,%p) stub\n", class, event);
+    return STATUS_UNSUCCESSFUL;
+}
+
+/*
+ * @unimplemented
+ */
 NTSTATUS
 WINAPI
 LsaSetTrustedDomainInformation(
@@ -784,6 +814,17 @@ LsaStorePrivateData(
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, KeyName, PrivateData);
     return STATUS_OBJECT_NAME_NOT_FOUND;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS WINAPI LsaUnregisterPolicyChangeNotification(
+    POLICY_NOTIFICATION_INFORMATION_CLASS class,
+    HANDLE event)
+{
+    FIXME("(%d,%p) stub\n", class, event);
+    return STATUS_SUCCESS;
 }
 
 /*

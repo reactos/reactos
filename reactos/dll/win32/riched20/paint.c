@@ -146,6 +146,8 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   /* Ensure that the cursor is visible */
   ME_EnsureVisible(editor, &editor->pCursors[0]);
 
+  ME_SendSelChange(editor);
+
   /* send EN_CHANGE if the event mask asks for it */
   if(editor->nEventMask & ENM_CHANGE)
   {
@@ -154,7 +156,6 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
     editor->nEventMask |= ENM_CHANGE;
   }
   ME_Repaint(editor);
-  ME_SendSelChange(editor);
 }
 
 void

@@ -10,6 +10,8 @@
 @ stdcall IsPwrHibernateAllowed ()
 @ stdcall IsPwrShutdownAllowed ()
 @ stdcall IsPwrSuspendAllowed ()
+@ stdcall PowerGetActiveScheme (ptr ptr)
+@ stdcall PowerReadDCValue (ptr ptr ptr ptr ptr ptr ptr)
 @ stdcall ReadGlobalPwrPolicy (ptr)
 @ stdcall ReadProcessorPwrScheme (long ptr)
 @ stdcall ReadPwrScheme (long ptr)

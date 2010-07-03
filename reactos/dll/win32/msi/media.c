@@ -629,12 +629,10 @@ static UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO
     static const WCHAR query[] = {
         'S','E','L','E','C','T',' ','*',' ', 'F','R','O','M',' ',
         '`','M','e','d','i','a','`',' ','W','H','E','R','E',' ',
-        '`','L','a','s','t','S','e','q','u','e','n','c','e','`',' ','>','=',
-        ' ','%','i',' ','A','N','D',' ','`','D','i','s','k','I','d','`',' ','>','=',
-        ' ','%','i',' ','O','R','D','E','R',' ','B','Y',' ',
-        '`','D','i','s','k','I','d','`',0};
+        '`','L','a','s','t','S','e','q','u','e','n','c','e','`',' ','>','=',' ','%','i',
+        ' ','O','R','D','E','R',' ','B','Y',' ','`','D','i','s','k','I','d','`',0};
 
-    row = MSI_QueryGetRecord(package->db, query, file->Sequence, mi->disk_id);
+    row = MSI_QueryGetRecord(package->db, query, file->Sequence);
     if (!row)
     {
         TRACE("Unable to query row\n");
@@ -787,13 +785,17 @@ UINT ready_media(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO *mi)
     {
         WCHAR temppath[MAX_PATH], *p;
 
-        msi_download_file(cabinet_file, temppath);
+        rc = msi_download_file(cabinet_file, temppath);
+        if (rc != ERROR_SUCCESS)
+        {
+            ERR("Failed to download %s (%u)\n", debugstr_w(cabinet_file), rc);
+            msi_free(cabinet_file);
+            return rc;
+        }
         if ((p = strrchrW(temppath, '\\'))) *p = 0;
-
-        msi_free(mi->sourcedir);
         strcpyW(mi->sourcedir, temppath);
         msi_free(mi->cabinet);
-        strcpyW(mi->cabinet, p + 1);
+        mi->cabinet = strdupW(p + 1);
 
         msi_free(cabinet_file);
         return ERROR_SUCCESS;

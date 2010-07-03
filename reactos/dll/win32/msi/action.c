@@ -496,6 +496,7 @@ UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
 {
     MSIPATCHINFO *pi;
     UINT r = ERROR_SUCCESS;
+    WCHAR *p;
 
     pi = msi_alloc_zero( sizeof(MSIPATCHINFO) );
     if (!pi)
@@ -507,6 +508,30 @@ UINT msi_parse_patch_summary( MSISUMMARYINFO *si, MSIPATCHINFO **patch )
         msi_free( pi );
         return ERROR_OUTOFMEMORY;
     }
+
+    p = pi->patchcode;
+    if (*p != '{')
+    {
+        msi_free( pi->patchcode );
+        msi_free( pi );
+        return ERROR_PATCH_PACKAGE_INVALID;
+    }
+
+    p = strchrW( p + 1, '}' );
+    if (!p)
+    {
+        msi_free( pi->patchcode );
+        msi_free( pi );
+        return ERROR_PATCH_PACKAGE_INVALID;
+    }
+
+    if (p[1])
+    {
+        FIXME("patch obsoletes %s\n", debugstr_w(p + 1));
+        p[1] = 0;
+    }
+
+    TRACE("patch code %s\n", debugstr_w(pi->patchcode));
 
     pi->transforms = msi_suminfo_dup_string( si, PID_LASTAUTHOR );
     if (!pi->transforms)
@@ -978,43 +1003,6 @@ static UINT ITERATE_CreateFolders(MSIRECORD *row, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-/* FIXME: probably should merge this with the above function */
-static UINT msi_create_directory( MSIPACKAGE* package, LPCWSTR dir )
-{
-    UINT rc = ERROR_SUCCESS;
-    MSIFOLDER *folder;
-    LPWSTR install_path;
-
-    install_path = resolve_folder(package, dir, FALSE, FALSE, TRUE, &folder);
-    if (!install_path)
-        return ERROR_FUNCTION_FAILED; 
-
-    /* create the path */
-    if (folder->State == 0)
-    {
-        create_full_pathW(install_path);
-        folder->State = 2;
-    }
-    msi_free(install_path);
-
-    return rc;
-}
-
-UINT msi_create_component_directories( MSIPACKAGE *package )
-{
-    MSICOMPONENT *comp;
-
-    /* create all the folders required by the components are going to install */
-    LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
-    {
-        if (comp->ActionRequest != INSTALLSTATE_LOCAL)
-            continue;
-        msi_create_directory( package, comp->Directory );
-    }
-
-    return ERROR_SUCCESS;
-}
-
 static UINT ACTION_CreateFolders(MSIPACKAGE *package)
 {
     static const WCHAR ExecSeqQuery[] =
@@ -1075,7 +1063,7 @@ static UINT ITERATE_RemoveFolders( MSIRECORD *row, LPVOID param )
     TRACE("folder is %s\n", debugstr_w(full_path));
 
     uirow = MSI_CreateRecord( 1 );
-    MSI_RecordSetStringW( uirow, 1, full_path );
+    MSI_RecordSetStringW( uirow, 1, dir );
     ui_actiondata( package, szRemoveFolders, uirow );
     msiobj_release( &uirow->hdr );
 
@@ -1976,16 +1964,12 @@ static UINT ITERATE_CostFinalizeConditions(MSIRECORD *row, LPVOID param)
     return ERROR_SUCCESS;
 }
 
-static LPWSTR get_disk_file_version( LPCWSTR filename )
+VS_FIXEDFILEINFO *msi_get_disk_file_version( LPCWSTR filename )
 {
-    static const WCHAR name_fmt[] =
-        {'%','u','.','%','u','.','%','u','.','%','u',0};
     static const WCHAR name[] = {'\\',0};
-    VS_FIXEDFILEINFO *lpVer;
-    WCHAR filever[0x100];
+    VS_FIXEDFILEINFO *ret;
     LPVOID version;
-    DWORD versize;
-    DWORD handle;
+    DWORD versize, handle;
     UINT sz;
 
     TRACE("%s\n", debugstr_w(filename));
@@ -1995,23 +1979,32 @@ static LPWSTR get_disk_file_version( LPCWSTR filename )
         return NULL;
 
     version = msi_alloc( versize );
+    if (!version)
+        return NULL;
+
     GetFileVersionInfoW( filename, 0, versize, version );
 
-    if (!VerQueryValueW( version, name, (LPVOID*)&lpVer, &sz ))
+    if (!VerQueryValueW( version, name, (LPVOID *)&ret, &sz ))
     {
         msi_free( version );
         return NULL;
     }
 
-    sprintfW( filever, name_fmt,
-        HIWORD(lpVer->dwFileVersionMS),
-        LOWORD(lpVer->dwFileVersionMS),
-        HIWORD(lpVer->dwFileVersionLS),
-        LOWORD(lpVer->dwFileVersionLS));
-
     msi_free( version );
+    return ret;
+}
 
-    return strdupW( filever );
+int msi_compare_file_versions( VS_FIXEDFILEINFO *fi, const WCHAR *version )
+{
+    DWORD ms, ls;
+
+    msi_parse_version_string( version, &ms, &ls );
+
+    if (fi->dwFileVersionMS > ms) return 1;
+    else if (fi->dwFileVersionMS < ms) return -1;
+    else if (fi->dwFileVersionLS > ls) return 1;
+    else if (fi->dwFileVersionLS < ls) return -1;
+    return 0;
 }
 
 static DWORD get_disk_file_size( LPCWSTR filename )
@@ -2045,7 +2038,7 @@ static BOOL hash_matches( MSIFILE *file )
 
 static UINT set_file_install_states( MSIPACKAGE *package )
 {
-    LPWSTR file_version;
+    VS_FIXEDFILEINFO *file_version;
     MSIFILE *file;
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
@@ -2062,18 +2055,14 @@ static UINT set_file_install_states( MSIPACKAGE *package )
 
         /* calculate target */
         p = resolve_folder(package, comp->Directory, FALSE, FALSE, TRUE, NULL);
-
         msi_free(file->TargetPath);
 
-        TRACE("file %s is named %s\n",
-               debugstr_w(file->File), debugstr_w(file->FileName));
+        TRACE("file %s is named %s\n", debugstr_w(file->File), debugstr_w(file->FileName));
 
         file->TargetPath = build_directory_name(2, p, file->FileName);
-
         msi_free(p);
 
-        TRACE("file %s resolves to %s\n",
-               debugstr_w(file->File), debugstr_w(file->TargetPath));
+        TRACE("file %s resolves to %s\n", debugstr_w(file->File), debugstr_w(file->TargetPath));
 
         if (GetFileAttributesW(file->TargetPath) == INVALID_FILE_ATTRIBUTES)
         {
@@ -2081,11 +2070,15 @@ static UINT set_file_install_states( MSIPACKAGE *package )
             comp->Cost += file->FileSize;
             continue;
         }
-        if (file->Version && (file_version = get_disk_file_version( file->TargetPath )))
+        if (file->Version && (file_version = msi_get_disk_file_version( file->TargetPath )))
         {
-            TRACE("new %s old %s\n", debugstr_w(file->Version), debugstr_w(file_version));
+            TRACE("new %s old %u.%u.%u.%u\n", debugstr_w(file->Version),
+                  HIWORD(file_version->dwFileVersionMS),
+                  LOWORD(file_version->dwFileVersionMS),
+                  HIWORD(file_version->dwFileVersionLS),
+                  LOWORD(file_version->dwFileVersionLS));
 
-            if (strcmpiW(file_version, file->Version) < 0)
+            if (msi_compare_file_versions( file_version, file->Version ) < 0)
             {
                 file->state = msifs_overwrite;
                 comp->Cost += file->FileSize;
@@ -4263,13 +4256,12 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
     MSIFILE *file;
     DWORD len;
     static const WCHAR ExeStr[] =
-        {'r','e','g','s','v','r','3','2','.','e','x','e',' ',' /',' s',' ','\"',0};
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','\"',0};
     static const WCHAR close[] =  {'\"',0};
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
     BOOL brc;
     MSIRECORD *uirow;
-    LPWSTR uipath, p;
 
     memset(&si,0,sizeof(STARTUPINFOW));
 
@@ -4302,14 +4294,11 @@ static UINT ITERATE_SelfRegModules(MSIRECORD *row, LPVOID param)
 
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, filename );
-    uipath = strdupW( file->TargetPath );
-    if ((p = strrchrW( uipath,'\\' ))) *p = 0;
-    MSI_RecordSetStringW( uirow, 2, uipath );
+    MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     ui_actiondata( package, szSelfRegModules, uirow );
     msiobj_release( &uirow->hdr );
 
     msi_free( FullName );
-    msi_free( uipath );
     return ERROR_SUCCESS;
 }
 
@@ -4337,7 +4326,7 @@ static UINT ACTION_SelfRegModules(MSIPACKAGE *package)
 static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
 {
     static const WCHAR regsvr32[] =
-        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','/','s',' ','\"',0};
+        {'r','e','g','s','v','r','3','2','.','e','x','e',' ','/','u',' ','\"',0};
     static const WCHAR close[] =  {'\"',0};
     MSIPACKAGE *package = param;
     LPCWSTR filename;
@@ -4348,7 +4337,6 @@ static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
     PROCESS_INFORMATION pi;
     BOOL ret;
     MSIRECORD *uirow;
-    LPWSTR uipath, p;
 
     memset( &si, 0, sizeof(STARTUPINFOW) );
 
@@ -4380,14 +4368,11 @@ static UINT ITERATE_SelfUnregModules( MSIRECORD *row, LPVOID param )
 
     uirow = MSI_CreateRecord( 2 );
     MSI_RecordSetStringW( uirow, 1, filename );
-    uipath = strdupW( file->TargetPath );
-    if ((p = strrchrW( uipath,'\\' ))) *p = 0;
-    MSI_RecordSetStringW( uirow, 2, uipath );
+    MSI_RecordSetStringW( uirow, 2, file->Component->Directory );
     ui_actiondata( package, szSelfUnregModules, uirow );
     msiobj_release( &uirow->hdr );
 
     msi_free( cmdline );
-    msi_free( uipath );
     return ERROR_SUCCESS;
 }
 
@@ -5773,7 +5758,7 @@ static UINT ITERATE_InstallODBCDriver( MSIRECORD *rec, LPVOID param )
     uirow = MSI_CreateRecord( 5 );
     MSI_RecordSetStringW( uirow, 1, desc );
     MSI_RecordSetStringW( uirow, 2, MSI_RecordGetString(rec, 2) );
-    MSI_RecordSetStringW( uirow, 3, driver_path );
+    MSI_RecordSetStringW( uirow, 3, driver_file->Component->Directory );
     ui_actiondata( package, szInstallODBC, uirow );
     msiobj_release( &uirow->hdr );
 
@@ -5846,7 +5831,7 @@ static UINT ITERATE_InstallODBCTranslator( MSIRECORD *rec, LPVOID param )
     uirow = MSI_CreateRecord( 5 );
     MSI_RecordSetStringW( uirow, 1, desc );
     MSI_RecordSetStringW( uirow, 2, MSI_RecordGetString(rec, 2) );
-    MSI_RecordSetStringW( uirow, 3, translator_path );
+    MSI_RecordSetStringW( uirow, 3, translator_file->Component->Directory );
     ui_actiondata( package, szInstallODBC, uirow );
     msiobj_release( &uirow->hdr );
 
@@ -6919,33 +6904,33 @@ static UINT ACTION_MsiPublishAssemblies( MSIPACKAGE *package )
         if (assembly->installed && !mi->is_continuous)
             continue;
 
-        if (assembly->file->Sequence > mi->last_sequence || mi->is_continuous ||
-            (assembly->file->IsCompressed && !mi->is_extracted))
+        if (assembly->file->IsCompressed)
         {
-            MSICABDATA data;
-
-            r = ready_media(package, assembly->file, mi);
-            if (r != ERROR_SUCCESS)
+            if (assembly->file->disk_id != mi->disk_id || mi->is_continuous)
             {
-                ERR("Failed to ready media\n");
-                break;
-            }
+                MSICABDATA data;
 
-            data.mi = mi;
-            data.package = package;
-            data.cb = installassembly_cb;
-            data.user = &assemblies;
+                r = ready_media(package, assembly->file, mi);
+                if (r != ERROR_SUCCESS)
+                {
+                    ERR("Failed to ready media\n");
+                    break;
+                }
 
-            if (assembly->file->IsCompressed &&
-                !msi_cabextract(package, mi, &data))
-            {
-                ERR("Failed to extract cabinet: %s\n", debugstr_w(mi->cabinet));
-                r = ERROR_FUNCTION_FAILED;
-                break;
+                data.mi = mi;
+                data.package = package;
+                data.cb = installassembly_cb;
+                data.user = &assemblies;
+
+                if (!msi_cabextract(package, mi, &data))
+                {
+                    ERR("Failed to extract cabinet: %s\n", debugstr_w(mi->cabinet));
+                    r = ERROR_FUNCTION_FAILED;
+                    break;
+                }
             }
         }
-
-        if (!assembly->file->IsCompressed)
+        else
         {
             LPWSTR source = resolve_file_source(package, assembly->file);
 

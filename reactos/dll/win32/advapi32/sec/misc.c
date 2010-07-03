@@ -1458,6 +1458,11 @@ LookupPrivilegeValueW(LPCWSTR SystemName,
         SetLastError(RPC_S_SERVER_UNAVAILABLE);
         return FALSE;
     }
+  if (!PrivName)
+    {
+        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        return FALSE;
+    }
 
   if (NULL != SystemName && L'\0' != *SystemName)
     {
@@ -2484,6 +2489,56 @@ TreeResetNamedSecurityInfoA(LPSTR pObjectName,
 
     return Ret;
 #endif
+}
+
+/******************************************************************************
+ * SaferCreateLevel   [ADVAPI32.@]
+ */
+BOOL WINAPI SaferCreateLevel(DWORD ScopeId, DWORD LevelId, DWORD OpenFlags,
+                             SAFER_LEVEL_HANDLE* LevelHandle, LPVOID lpReserved)
+{
+    FIXME("(%u, %x, %u, %p, %p) stub\n", ScopeId, LevelId, OpenFlags, LevelHandle, lpReserved);
+    return FALSE;
+}
+
+/******************************************************************************
+ * SaferGetPolicyInformation   [ADVAPI32.@]
+ */
+BOOL WINAPI SaferGetPolicyInformation(DWORD scope, SAFER_POLICY_INFO_CLASS class, DWORD size,
+                                      PVOID buffer, PDWORD required, LPVOID lpReserved)
+{
+    FIXME("(%u %u %u %p %p %p) stub\n", scope, class, size, buffer, required, lpReserved);
+    return FALSE;
+}
+
+/******************************************************************************
+ * QueryWindows31FilesMigration [ADVAPI32.@]
+ *
+ * PARAMS
+ *   x1 []
+ */
+BOOL WINAPI
+QueryWindows31FilesMigration( DWORD x1 )
+{
+	FIXME("(%d):stub\n",x1);
+	return TRUE;
+}
+
+/******************************************************************************
+ * SynchronizeWindows31FilesAndWindowsNTRegistry [ADVAPI32.@]
+ *
+ * PARAMS
+ *   x1 []
+ *   x2 []
+ *   x3 []
+ *   x4 []
+ */
+BOOL WINAPI
+SynchronizeWindows31FilesAndWindowsNTRegistry( DWORD x1, DWORD x2, DWORD x3,
+                                               DWORD x4 )
+{
+	FIXME("(0x%08x,0x%08x,0x%08x,0x%08x):stub\n",x1,x2,x3,x4);
+	return TRUE;
 }
 
 /* EOF */

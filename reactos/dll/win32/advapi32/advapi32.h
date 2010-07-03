@@ -22,6 +22,7 @@
 #include <aclapi.h>
 #include <wmistr.h>
 #include <evntrace.h>
+#include <winsafer.h>
 #include <sddl.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -40,6 +41,10 @@
 #ifndef HAS_FN_PROGRESSA
 #define FN_PROGRESSA FN_PROGRESS
 #endif
+
+/* sid.c */
+
+BOOL ADVAPI_GetComputerSid(PSID sid);
 
 /* rpc.c */
 

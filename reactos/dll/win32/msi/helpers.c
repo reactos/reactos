@@ -41,13 +41,23 @@ LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
 {
     LPWSTR SystemFolder, dest, FilePath;
 
+    static const WCHAR szMicrosoft[] =
+        {'M','i','c','r','o','s','o','f','t','\\',0};
     static const WCHAR szInstaller[] = 
-        {'M','i','c','r','o','s','o','f','t','\\',
-         'I','n','s','t','a','l','l','e','r','\\',0};
-    static const WCHAR szFolder[] =
+        {'I','n','s','t','a','l','l','e','r','\\',0};
+    static const WCHAR szADFolder[] =
         {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
+    static const WCHAR szWFolder[] =
+        {'W','i','n','d','o','w','s','F','o','l','d','e','r',0};
 
-    SystemFolder = msi_dup_property( package->db, szFolder );
+    if(package->Context == MSIINSTALLCONTEXT_MACHINE)
+        SystemFolder = msi_dup_property( package->db, szWFolder );
+    else
+    {
+        LPWSTR ADTgt = msi_dup_property( package->db, szADFolder );
+        SystemFolder = build_directory_name(2, ADTgt, szMicrosoft);
+        msi_free(ADTgt);
+    }
 
     dest = build_directory_name(3, SystemFolder, szInstaller, package->ProductCode);
 

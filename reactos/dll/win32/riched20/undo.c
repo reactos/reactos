@@ -203,7 +203,6 @@ void ME_CommitUndo(ME_TextEditor *editor) {
   }
 
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
-  ME_SendSelChange(editor);
 }
 
 /**
@@ -269,7 +268,6 @@ void ME_CommitCoalescingUndo(ME_TextEditor *editor)
     return;
 
   ME_AddUndoItem(editor, diUndoPotentialEndTransaction, NULL);
-  ME_SendSelChange(editor);
 }
 
 static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)

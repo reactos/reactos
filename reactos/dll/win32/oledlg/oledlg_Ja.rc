@@ -58,3 +58,43 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMOD         "ファイルは有効なOLEモジュールではないようです。OLEコントロールを登録できません。"
   IDS_NOTOLEMODCAPTION  "コントロールを追加"
 }
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "形式を選択して貼り付け"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "コピー元:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "貼り付け(&P)", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "リンク貼り付け(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "形式(&A):", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "キャンセル", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "ヘルプ(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "アイコンとして表示(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "アイコンの変更(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< result text goes here >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "結果", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "クリップボードの内容を %s として、文書に挿入します。"
+    IDS_PS_PASTE_OBJECT                   "クリップボードの内容を文書に挿入します。 %s を利用して、編集できます。"
+    IDS_PS_PASTE_OBJECT_AS_ICON           "クリップボードの内容を文書に挿入します。 %s を利用して、編集できます。アイコンとして表示されます。"
+    IDS_PS_PASTE_LINK_DATA                "クリップボードの内容を %s として、文書に挿入します。データは元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_PASTE_LINK_OBJECT              "クリップボードの内容を示す絵を文書に挿入します。絵は元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "クリップボードの内容の場所を指すショートカットを挿入します。ショートカットは元のファイルとリンクしているため、元のファイルへの変更はこの文書に反映されます。"
+    IDS_PS_NON_OLE                        "クリップボードの内容を挿入します。"
+    IDS_PS_UNKNOWN_TYPE                   "不明な形式"
+    IDS_PS_UNKNOWN_SRC                    "不明"
+    IDS_PS_UNKNOWN_APP                    "作成プログラム"
+}

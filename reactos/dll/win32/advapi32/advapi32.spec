@@ -6,7 +6,7 @@
 @ stdcall AccessCheck(ptr long long ptr ptr ptr ptr ptr)
 @ stdcall AccessCheckAndAuditAlarmA(str ptr str str ptr long ptr long ptr ptr ptr)
 @ stdcall AccessCheckAndAuditAlarmW(wstr ptr wstr wstr ptr long ptr long ptr ptr ptr)
-@ stub AccessCheckByType #(ptr ptr long long ptr long ptr ptr ptr ptr ptr)
+@ stdcall AccessCheckByType(ptr ptr long long ptr long ptr ptr ptr ptr ptr)
 @ stdcall AccessCheckByTypeAndAuditAlarmA(str ptr str str ptr ptr long long long ptr long ptr long ptr ptr ptr)
 @ stdcall AccessCheckByTypeAndAuditAlarmW(wstr ptr wstr wstr ptr ptr long long long ptr long ptr long ptr ptr ptr)
 @ stub AccessCheckByTypeResultList
@@ -67,8 +67,8 @@
 @ stub ComputeAccessTokenFromCodeAuthzLevel
 @ stdcall ControlService(long long ptr)
 @ stdcall ControlServiceEx(ptr long long ptr)
-@ stub ControlTraceA
-@ stub ControlTraceW
+@ stdcall ControlTraceA(double str ptr long)
+@ stdcall ControlTraceW(double wstr ptr long)
 @ stub ConvertAccessToSecurityDescriptorA
 @ stub ConvertAccessToSecurityDescriptorW
 @ stub ConvertSDToStringSDRootDomainA
@@ -96,9 +96,9 @@
 @ stdcall CreatePrivateObjectSecurityEx(ptr ptr ptr ptr long long ptr ptr)
 @ stdcall CreatePrivateObjectSecurityWithMultipleInheritance(ptr ptr ptr ptr long long long ptr ptr)
 @ stdcall CreateProcessAsUserA(long str str ptr ptr long long ptr str ptr ptr)
-@ stub CreateProcessAsUserSecure
+# @ stub CreateProcessAsUserSecure
 @ stdcall CreateProcessAsUserW(long str str ptr ptr long long ptr str ptr ptr)
-@ stub CreateProcessWithLogonW #(wstr wstr wstr long wstr wstr long ptr wstr ptr ptr)
+@ stdcall CreateProcessWithLogonW(wstr wstr wstr long wstr wstr long ptr wstr ptr ptr)
 @ stdcall CreateProcessWithTokenW(ptr long wstr wstr long ptr wstr ptr ptr)
 @ stdcall CreateRestrictedToken(long long long ptr long ptr long ptr ptr)
 @ stdcall CreateServiceA(long str str long long long long str str ptr str str str)
@@ -127,8 +127,8 @@
 @ stdcall CredUnmarshalCredentialA(str ptr ptr)
 @ stdcall CredUnmarshalCredentialW(wstr ptr ptr)
 @ stdcall CredWriteA(ptr long)
-@ stdcall CredWriteDomainCredentialsA(ptr ptr long)
-@ stdcall CredWriteDomainCredentialsW(ptr ptr long)
+# @ stub CredWriteDomainCredentialsA
+# @ stub CredWriteDomainCredentialsW
 @ stdcall CredWriteW(ptr long)
 @ stub CredpConvertCredential
 @ stub CredpConvertTargetInfo
@@ -189,6 +189,8 @@
 @ stub ElfClearEventLogFileW
 @ stub ElfCloseEventLog
 @ stub ElfDeregisterEventSource
+@ stub ElfDeregisterEventSourceW
+@ stub ElfFlushEventLog
 @ stub ElfNumberOfRecords
 @ stub ElfOldestRecord
 @ stub ElfOpenBackupEventLogA
@@ -201,13 +203,14 @@
 @ stub ElfRegisterEventSourceW
 @ stub ElfReportEventA
 @ stub ElfReportEventW
-@ stub EnableTrace
+@ stdcall EnableTrace(long long long ptr double)
 @ stdcall EncryptFileA(str)
 @ stdcall EncryptFileW(wstr)
 @ stub EncryptedFileKeyInfo
 @ stdcall EncryptionDisable(wstr long)
 @ stdcall EnumDependentServicesA(long long ptr long ptr ptr)
 @ stdcall EnumDependentServicesW(long long ptr long ptr ptr)
+@ stub EnumServiceGroupA
 @ stdcall EnumServiceGroupW(ptr long long ptr long ptr ptr ptr wstr)
 @ stdcall EnumServicesStatusA(long long long ptr long ptr ptr ptr)
 @ stdcall EnumServicesStatusExA(long long long long ptr long ptr ptr ptr str)
@@ -251,6 +254,7 @@
 @ stub GetLocalManagedApplications
 @ stub GetManagedApplicationCategories
 @ stub GetManagedApplications
+@ stub GetMangledSiteSid
 @ stdcall GetMultipleTrusteeA(ptr)
 @ stdcall GetMultipleTrusteeOperationA(ptr)
 @ stdcall GetMultipleTrusteeOperationW(ptr)
@@ -299,23 +303,25 @@
 @ stub I_ScIsSecurityProcess
 @ stub I_ScPnPGetServiceName
 @ stub I_ScSendTSMessage
+@ stub I_ScSetServiceBit
 @ stdcall I_ScSetServiceBitsA(ptr long long long str)
 @ stdcall I_ScSetServiceBitsW(ptr long long long wstr)
 @ stub IdentifyCodeAuthzLevelW
 @ stdcall ImpersonateAnonymousToken(ptr)
-@ stdcall ImpersonateLoggedOnUser(ptr)
-@ stdcall ImpersonateNamedPipeClient(ptr)
+@ stdcall ImpersonateLoggedOnUser(long)
+@ stdcall ImpersonateNamedPipeClient(long)
 @ stdcall ImpersonateSelf(long)
 @ stdcall InitializeAcl(ptr long long)
 @ stdcall InitializeSecurityDescriptor(ptr long)
 @ stdcall InitializeSid(ptr ptr long)
 @ stdcall InitiateSystemShutdownA(str str long long long)
-@ stub InitiateSystemShutdownExA #(str str long long long long)
+@ stdcall InitiateSystemShutdownExA(str str long long long long)
 @ stdcall InitiateSystemShutdownExW(wstr wstr long long long long)
 @ stdcall InitiateSystemShutdownW(str str long long long)
 @ stub InstallApplication
+@ stub IsProcessRestricted
 @ stdcall IsTextUnicode(ptr long ptr) ntdll.RtlIsTextUnicode
-@ stdcall IsTokenRestricted(ptr)
+@ stdcall IsTokenRestricted(long)
 @ stub IsTokenUntrusted
 @ stdcall IsValidAcl(ptr)
 @ stdcall IsValidSecurityDescriptor(ptr)
@@ -385,19 +391,23 @@
 @ stub LsaQuerySecurityObject
 @ stdcall LsaQueryTrustedDomainInfo(ptr ptr long ptr)
 @ stdcall LsaQueryTrustedDomainInfoByName(ptr ptr long ptr)
+@ stdcall LsaRegisterPolicyChangeNotification(long long)
 @ stdcall LsaRemoveAccountRights(ptr ptr long ptr long)
 @ stub LsaRemovePrivilegesFromAccount
 @ stdcall LsaRetrievePrivateData(ptr ptr ptr)
+# @ stub LsaSetDomainInformationPolicy
+# @ stub LsaSetForestTrustInformation
 @ stdcall LsaSetInformationPolicy(long long ptr)
 @ stub LsaSetForestTrustInformation
 @ stub LsaSetInformationTrustedDomain
 @ stub LsaSetQuotasForAccount
-@ stub LsaSetSecret
+@ stdcall LsaSetSecret(ptr ptr ptr)
 @ stub LsaSetSecurityObject
 @ stub LsaSetSystemAccessAccount
 @ stdcall LsaSetTrustedDomainInfoByName(ptr ptr long ptr)
 @ stdcall LsaSetTrustedDomainInformation(ptr ptr long ptr)
 @ stdcall LsaStorePrivateData(ptr ptr ptr)
+@ stdcall LsaUnregisterPolicyChangeNotification(long long)
 @ stdcall MD4Final(ptr)
 @ stdcall MD4Init(ptr)
 @ stdcall MD4Update(ptr ptr long)
@@ -440,8 +450,8 @@
 @ stub ProcessIdleTasks
 @ stub ProcessTrace
 @ stub ProvAccessRightsToNTAccessMask # ?
-@ stub QueryAllTracesA
-@ stub QueryAllTracesW
+@ stdcall QueryAllTracesA(ptr long ptr)
+@ stdcall QueryAllTracesW(ptr long ptr)
 @ stdcall QueryRecoveryAgentsOnEncryptedFile(wstr ptr)
 @ stdcall QuerySecurityAccessMask(long ptr)
 @ stdcall QueryServiceConfig2A(long long ptr long ptr)
@@ -456,7 +466,7 @@
 @ stub QueryTraceA
 @ stub QueryTraceW
 @ stdcall QueryUsersOnEncryptedFile(wstr ptr)
-@ stub QueryWindows31FilesMigration #(long)
+@ stdcall QueryWindows31FilesMigration(long)
 @ stub ReadEncryptedFileRaw
 @ stdcall ReadEventLogA(long long long ptr long ptr ptr)
 @ stdcall ReadEventLogW(long long long ptr long ptr ptr)
@@ -470,9 +480,9 @@
 @ stdcall RegCreateKeyExW(long wstr long ptr long long ptr ptr ptr)
 @ stdcall RegCreateKeyW(long wstr ptr)
 @ stdcall RegDeleteKeyA(long str)
+@ stdcall RegDeleteKeyExA(long str long long)
+@ stdcall RegDeleteKeyExW(long wstr long long)
 @ stdcall RegDeleteKeyW(long wstr)
-@ stdcall RegDeleteKeyExA(ptr str long long)
-@ stdcall RegDeleteKeyExW(ptr wstr long long)
 @ stdcall RegDeleteKeyValueA(ptr str str)
 @ stdcall RegDeleteKeyValueW(ptr wstr wstr)
 @ stdcall RegDeleteTreeA(long str)
@@ -514,6 +524,7 @@
 @ stdcall RegQueryValueExA(long str ptr ptr ptr ptr)
 @ stdcall RegQueryValueExW(long wstr ptr ptr ptr ptr)
 @ stdcall RegQueryValueW(long wstr ptr ptr)
+@ stub RegRemapPreDefKey
 @ stdcall RegReplaceKeyA(long str str str)
 @ stdcall RegReplaceKeyW(long wstr wstr wstr)
 @ stdcall RegRestoreKeyA(long str long)
@@ -547,9 +558,9 @@
 @ stdcall RevertToSelf()
 @ stub SaferCloseLevel
 @ stub SaferComputeTokenFromLevel
-@ stub SaferCreateLevel
+@ stdcall SaferCreateLevel(long long long ptr ptr)
 @ stub SaferGetLevelInformation
-@ stub SaferGetPolicyInformation
+@ stdcall SaferGetPolicyInformation(long long long ptr ptr ptr)
 @ stub SaferIdentifyLevel
 @ stub SaferRecordEventLogEntry
 @ stub SaferSetLevelInformation
@@ -600,11 +611,11 @@
 @ stdcall StartServiceCtrlDispatcherA(ptr)
 @ stdcall StartServiceCtrlDispatcherW(ptr)
 @ stdcall StartServiceW(long long ptr)
-@ stub StartTraceA
-@ stub StartTraceW
+@ stdcall StartTraceA(ptr str ptr)
+@ stdcall StartTraceW(ptr wstr ptr)
 @ stub StopTraceA
 @ stub StopTraceW
-@ stub SynchronizeWindows31FilesAndWindowsNTRegistry #(long long long long)
+@ stdcall SynchronizeWindows31FilesAndWindowsNTRegistry(long long long long)
 @ stdcall SystemFunction001(ptr ptr ptr)
 @ stdcall SystemFunction002(ptr ptr ptr)
 @ stdcall SystemFunction003(ptr ptr)
@@ -615,40 +626,40 @@
 @ stdcall SystemFunction008(ptr ptr ptr)
 @ stdcall SystemFunction009(ptr ptr ptr)
 @ stdcall SystemFunction010(ptr ptr ptr)
-@ stdcall SystemFunction011(ptr ptr ptr) advapi32.SystemFunction010
+@ stdcall SystemFunction011(ptr ptr ptr) SystemFunction010
 @ stdcall SystemFunction012(ptr ptr ptr)
 @ stdcall SystemFunction013(ptr ptr ptr)
-@ stdcall SystemFunction014(ptr ptr ptr) advapi32.SystemFunction012
-@ stdcall SystemFunction015(ptr ptr ptr) advapi32.SystemFunction013
-@ stdcall SystemFunction016(ptr ptr ptr) advapi32.SystemFunction012
-@ stdcall SystemFunction017(ptr ptr ptr) advapi32.SystemFunction013
-@ stdcall SystemFunction018(ptr ptr ptr) advapi32.SystemFunction012
-@ stdcall SystemFunction019(ptr ptr ptr) advapi32.SystemFunction013
-@ stdcall SystemFunction020(ptr ptr ptr) advapi32.SystemFunction012
-@ stdcall SystemFunction021(ptr ptr ptr) advapi32.SystemFunction013
-@ stdcall SystemFunction022(ptr ptr ptr) advapi32.SystemFunction012
-@ stdcall SystemFunction023(ptr ptr ptr) advapi32.SystemFunction013
+@ stdcall SystemFunction014(ptr ptr ptr) SystemFunction012
+@ stdcall SystemFunction015(ptr ptr ptr) SystemFunction013
+@ stdcall SystemFunction016(ptr ptr ptr) SystemFunction012
+@ stdcall SystemFunction017(ptr ptr ptr) SystemFunction013
+@ stdcall SystemFunction018(ptr ptr ptr) SystemFunction012
+@ stdcall SystemFunction019(ptr ptr ptr) SystemFunction013
+@ stdcall SystemFunction020(ptr ptr ptr) SystemFunction012
+@ stdcall SystemFunction021(ptr ptr ptr) SystemFunction013
+@ stdcall SystemFunction022(ptr ptr ptr) SystemFunction012
+@ stdcall SystemFunction023(ptr ptr ptr) SystemFunction013
 @ stdcall SystemFunction024(ptr ptr ptr)
 @ stdcall SystemFunction025(ptr ptr ptr)
-@ stdcall SystemFunction026(ptr ptr ptr) advapi32.SystemFunction024
-@ stdcall SystemFunction027(ptr ptr ptr) advapi32.SystemFunction025
+@ stdcall SystemFunction026(ptr ptr ptr) SystemFunction024
+@ stdcall SystemFunction027(ptr ptr ptr) SystemFunction025
 @ stdcall SystemFunction028(long long)
 @ stdcall SystemFunction029(long long)
 @ stdcall SystemFunction030(ptr ptr)
-@ stdcall SystemFunction031(ptr ptr) advapi32.SystemFunction030
+@ stdcall SystemFunction031(ptr ptr) SystemFunction030
 @ stdcall SystemFunction032(ptr ptr)
 @ stdcall SystemFunction033(long long)
 @ stdcall SystemFunction034(long long)
 @ stdcall SystemFunction035(str)
-@ stdcall SystemFunction036(ptr long)
-@ stdcall SystemFunction040(ptr long long)
-@ stdcall SystemFunction041(ptr long long)
+@ stdcall SystemFunction036(ptr long) # RtlGenRandom
+@ stdcall SystemFunction040(ptr long long) # RtlEncryptMemory
+@ stdcall SystemFunction041(ptr long long) # RtlDecryptMemory
 @ stdcall TraceEvent(double ptr)
 @ stub TraceEventInstance
 @ varargs TraceMessage(ptr long ptr long)
 @ stub TraceMessageVa
 @ stdcall TreeResetNamedSecurityInfoA(str ptr ptr ptr ptr ptr ptr long ptr ptr ptr)
-@ stdcall TreeResetNamedSecurityInfoW(wstr ptr ptr ptr ptr ptr ptr long ptr ptr ptr)
+@ stdcall TreeResetNamedSecurityInfoW(wstr long long ptr ptr ptr ptr long ptr long ptr)
 @ stub TrusteeAccessToObjectA
 @ stub TrusteeAccessToObjectW
 @ stub UninstallApplication

@@ -3,8 +3,11 @@
  */
 
 #include <advapi32.h>
-#include <debug.h>
 
+#include <wine/debug.h>
+#include <wine/unicode.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(advapi);
 /*
  * @unimplemented
  */
@@ -16,7 +19,7 @@ TraceMessage(
     USHORT       MessageNumber,
     ...)
 {
-    DPRINT1("TraceMessage()\n");
+    FIXME("TraceMessage()\n");
     return ERROR_SUCCESS;
 }
 
@@ -26,7 +29,7 @@ GetTraceLoggerHandle(
     PVOID Buffer
 )
 {
-    DPRINT1("GetTraceLoggerHandle stub()\n");
+    FIXME("GetTraceLoggerHandle stub()\n");
     return (TRACEHANDLE)-1;
 }
 
@@ -38,7 +41,7 @@ TraceEvent(
     PEVENT_TRACE_HEADER EventTrace
 )
 {
-    DPRINT1("TraceEvent stub()\n");
+    FIXME("TraceEvent stub()\n");
 
     if (!SessionHandle || !EventTrace)
     {
@@ -61,7 +64,7 @@ GetTraceEnableFlags(
     TRACEHANDLE TraceHandle
 )
 {
-    DPRINT1("GetTraceEnableFlags stub()\n");
+    FIXME("GetTraceEnableFlags stub()\n");
     return 0xFF;
 }
 
@@ -71,7 +74,7 @@ GetTraceEnableLevel(
     TRACEHANDLE TraceHandle
 )
 {
-    DPRINT1("GetTraceEnableLevel stub()\n");
+    FIXME("GetTraceEnableLevel stub()\n");
     return 0xFF;
 }
 
@@ -81,7 +84,7 @@ UnregisterTraceGuids(
     TRACEHANDLE RegistrationHandle
 )
 {
-    DPRINT1("UnregisterTraceGuids stub()\n");
+    FIXME("UnregisterTraceGuids stub()\n");
     return ERROR_SUCCESS;
 }
 
@@ -98,7 +101,7 @@ RegisterTraceGuidsA(
     PTRACEHANDLE RegistrationHandle
 )
 {
-    DPRINT1("RegisterTraceGuidsA stub()\n");
+    FIXME("RegisterTraceGuidsA stub()\n");
     return ERROR_SUCCESS;
 }
 
@@ -115,9 +118,21 @@ RegisterTraceGuidsW(
     PTRACEHANDLE RegistrationHandle
 )
 {
-    DPRINT1("RegisterTraceGuidsW stub()\n");
+    FIXME("RegisterTraceGuidsW stub()\n");
     return ERROR_SUCCESS;
 }
 
+ULONG WINAPI StartTraceW( PTRACEHANDLE pSessionHandle, LPCWSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    FIXME("(%p, %s, %p) stub\n", pSessionHandle, debugstr_w(SessionName), Properties);
+    if (pSessionHandle) *pSessionHandle = 0xcafe4242;
+    return ERROR_SUCCESS;
+}
 
+ULONG WINAPI StartTraceA( PTRACEHANDLE pSessionHandle, LPCSTR SessionName, PEVENT_TRACE_PROPERTIES Properties )
+{
+    FIXME("(%p, %s, %p) stub\n", pSessionHandle, debugstr_a(SessionName), Properties);
+    if (pSessionHandle) *pSessionHandle = 0xcafe4242;
+    return ERROR_SUCCESS;
+}
 /* EOF */
