@@ -196,10 +196,10 @@ static void SharpGlyphGray(PDC physDev, INT x, INT y,
 VOID NTAPI
 GreTextOut(PDC pDC, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
-           const INT *lpDx, gsCacheEntryFormat *formatEntry)
+           const INT *lpDx, gsCacheEntryFormat *formatEntry,
+           AA_Type aa_type)
 {
     POINT offset = {0, 0};
-    AA_Type aa_type = AA_None;
     INT idx;
     BRUSHGDI *pTextPen;
 

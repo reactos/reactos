@@ -155,7 +155,8 @@ BOOL APIENTRY RosGdiExtFloodFill( HDC physDev, INT x, INT y, COLORREF color,
                      UINT fillType );
 BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
                    const RECT *lprect, LPCWSTR wstr, UINT count,
-                   const INT *lpDx, gsCacheEntryFormat *formatEntry );
+                   const INT *lpDx, gsCacheEntryFormat *formatEntry,
+                   AA_Type aa_type );
 BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 );
 BOOL APIENTRY RosGdiPolyPolygon( HDC physDev, const POINT* pt, const INT* counts, UINT polygons);
 BOOL APIENTRY RosGdiPolyPolyline( HDC physDev, const POINT* pt, const DWORD* counts, DWORD polylines );

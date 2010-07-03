@@ -53,7 +53,8 @@ BOOL APIENTRY RosGdiExtFloodFill( HDC physDev, INT x, INT y, COLORREF color,
 
 BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
                    const RECT *lprect, LPCWSTR wstr, UINT count,
-                   const INT *lpDx, gsCacheEntryFormat *formatEntry )
+                   const INT *lpDx, gsCacheEntryFormat *formatEntry,
+                   AA_Type aa_type)
 {
     PDC pDC;
 
@@ -61,7 +62,7 @@ BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
     pDC = DC_Lock(physDev);
 
     /* Call GRE routine */
-    GreTextOut(pDC, x, y, flags, lprect, wstr, count, lpDx, formatEntry);
+    GreTextOut(pDC, x, y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
 
     /* Release the object */
     DC_Unlock(pDC);

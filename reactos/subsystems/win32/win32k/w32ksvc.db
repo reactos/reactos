@@ -50,7 +50,7 @@ RosGdiArc                          10
 RosGdiEllipse                      5
 RosGdiExtEscape                    6
 RosGdiExtFloodFill                 5
-RosGdiExtTextOut                   9
+RosGdiExtTextOut                   10
 RosGdiLineTo                       5
 RosGdiPolyPolygon                  4
 RosGdiPolyPolyline                 4

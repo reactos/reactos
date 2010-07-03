@@ -191,7 +191,8 @@ GreEllipse(PDC dc,
 VOID NTAPI
 GreTextOut(PDC pDC, INT x, INT y, UINT flags,
            const RECT *lprect, LPCWSTR wstr, UINT count,
-           const INT *lpDx, gsCacheEntryFormat *formatEntry);
+           const INT *lpDx, gsCacheEntryFormat *formatEntry,
+           AA_Type aa_type);
 
 /* lineto.c */
 BOOLEAN NTAPI
