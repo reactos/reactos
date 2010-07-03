@@ -33,15 +33,16 @@
 #include "winternl.h"
 
 /* FIXME!!! this test checks only mappings, defined by MSDN
- * It is necessary to add other mappings and to test them up to Windows XP.
+ * It is necessary to add other mappings and to test them
+ * up to the latest Windows platform.
  *
  * Some Windows platforms don't know about all the mappings, and in such
  * cases they return somewhat strange results (Win98) or a generic error
  * like ERROR_MR_MID_NOT_FOUND (NT4). Our tests have to know about these to
  * not fail, but we would very much prefer Wine not to return such garbage.
- * To you can pass the 'strict' option to this test to force it to only check
+ * So you can pass the 'strict' option to this test to force it to only check
  * results against the first listed value. This test should pass in strict
- * mode on the latest Windows platform (currently XP) and in Wine.
+ * mode on the latest Windows platform and in Wine.
  * (of course older Windows platforms will fail to pass the strict mode)
  */
 
@@ -167,6 +168,7 @@ static void run_error_tests(void)
     cmp(STATUS_INTEGER_OVERFLOW,                 ERROR_ARITHMETIC_OVERFLOW);
     cmp(STATUS_BUFFER_OVERFLOW,                  ERROR_MORE_DATA);
     cmp(STATUS_NO_MORE_FILES,                    ERROR_NO_MORE_FILES);
+    cmp2(STATUS_HANDLES_CLOSED,                  ERROR_HANDLES_CLOSED);
     cmp(STATUS_NO_INHERITANCE,                   ERROR_NO_INHERITANCE);
     cmp(STATUS_NO_MORE_EAS,                      ERROR_NO_MORE_ITEMS);
     cmp(STATUS_NO_MORE_ENTRIES,                  ERROR_NO_MORE_ITEMS);
@@ -189,7 +191,7 @@ static void run_error_tests(void)
     cmp(STATUS_HANDLE_NOT_CLOSABLE,              ERROR_INVALID_HANDLE);
     cmp(STATUS_NOT_COMMITTED,                    ERROR_INVALID_ADDRESS);
     cmp(STATUS_PARTIAL_COPY,                     ERROR_PARTIAL_COPY);
-    cmp3(STATUS_LPC_REPLY_LOST,                  ERROR_INTERNAL_ERROR, ERROR_CONNECTION_ABORTED);
+    cmp3(STATUS_LPC_REPLY_LOST,                  ERROR_CONNECTION_ABORTED, ERROR_INTERNAL_ERROR);
     cmp(STATUS_INVALID_PARAMETER,                ERROR_INVALID_PARAMETER);
     cmp(STATUS_INVALID_PARAMETER_1,              ERROR_INVALID_PARAMETER);
     cmp(STATUS_INVALID_PARAMETER_2,              ERROR_INVALID_PARAMETER);
@@ -738,8 +740,8 @@ static void run_error_tests(void)
     cmp(STATUS_LOGIN_WKSTA_RESTRICTION,          ERROR_LOGIN_WKSTA_RESTRICTION);
     cmp(STATUS_LICENSE_QUOTA_EXCEEDED,           ERROR_LICENSE_QUOTA_EXCEEDED);
     cmp(STATUS_RESOURCE_NOT_OWNED,               ERROR_NOT_OWNER);
-    cmp3(STATUS_DUPLICATE_OBJECTID,              STATUS_DUPLICATE_OBJECTID, ERROR_OBJECT_ALREADY_EXISTS);
-    cmp3(STATUS_OBJECTID_EXISTS,                 STATUS_OBJECTID_EXISTS, ERROR_OBJECT_ALREADY_EXISTS);
+    cmp3(STATUS_DUPLICATE_OBJECTID,              ERROR_OBJECT_ALREADY_EXISTS, STATUS_DUPLICATE_OBJECTID);
+    cmp3(STATUS_OBJECTID_EXISTS,                 ERROR_OBJECT_ALREADY_EXISTS, STATUS_OBJECTID_EXISTS);
     cmp2(STATUS_OBJECTID_NOT_FOUND,              ERROR_FILE_NOT_FOUND);
     cmp2(STATUS_MFT_TOO_FRAGMENTED,              ERROR_DISK_TOO_FRAGMENTED);
     cmp(SEC_E_INSUFFICIENT_MEMORY,               ERROR_NO_SYSTEM_RESOURCES);

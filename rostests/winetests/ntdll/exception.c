@@ -49,6 +49,7 @@ static NTSTATUS  (WINAPI *pNtReadVirtualMemory)(HANDLE, const void*, void*, SIZE
 static NTSTATUS  (WINAPI *pNtTerminateProcess)(HANDLE handle, LONG exit_code);
 static NTSTATUS  (WINAPI *pNtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
 static NTSTATUS  (WINAPI *pNtSetInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG);
+static BOOL      (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 #ifdef __i386__
 
@@ -63,6 +64,8 @@ static int      my_argc;
 static char**   my_argv;
 static int      test_stage;
 
+static BOOL is_wow64;
+
 /* Test various instruction combinations that cause a protection fault on the i386,
  * and check what the resulting exception looks like.
  */
@@ -72,121 +75,134 @@ static const struct exception
     BYTE     code[18];   /* asm code */
     BYTE     offset;     /* offset of faulting instruction */
     BYTE     length;     /* length of faulting instruction */
+    BOOL     wow64_broken; /* broken on Wow64, should be skipped */
     NTSTATUS status;     /* expected status code */
     DWORD    nb_params;  /* expected number of parameters */
     DWORD    params[4];  /* expected parameters */
 } exceptions[] =
 {
+/* 0 */
     /* test some privileged instructions */
     { { 0xfb, 0xc3 },  /* 0: sti; ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x6c, 0xc3 },  /* 1: insb (%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x6d, 0xc3 },  /* 2: insl (%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x6e, 0xc3 },  /* 3: outsb (%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x6f, 0xc3 },  /* 4: outsl (%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+/* 5 */
     { { 0xe4, 0x11, 0xc3 },  /* 5: inb $0x11,%al; ret */
-      0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 2, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xe5, 0x11, 0xc3 },  /* 6: inl $0x11,%eax; ret */
-      0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 2, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xe6, 0x11, 0xc3 },  /* 7: outb %al,$0x11; ret */
-      0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 2, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xe7, 0x11, 0xc3 },  /* 8: outl %eax,$0x11; ret */
-      0, 2, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 2, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xed, 0xc3 },  /* 9: inl (%dx),%eax; ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+/* 10 */
     { { 0xee, 0xc3 },  /* 10: outb %al,(%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xef, 0xc3 },  /* 11: outl %eax,(%dx); ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xf4, 0xc3 },  /* 12: hlt; ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0xfa, 0xc3 },  /* 13: cli; ret */
-      0, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 1, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test long jump to invalid selector */
     { { 0xea, 0, 0, 0, 0, 0, 0, 0xc3 },  /* 14: ljmp $0,$0; ret */
-      0, 7, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+      0, 7, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
+/* 15 */
     /* test iret to invalid selector */
     { { 0x6a, 0x00, 0x6a, 0x00, 0x6a, 0x00, 0xcf, 0x83, 0xc4, 0x0c, 0xc3 },
       /* 15: pushl $0; pushl $0; pushl $0; iret; addl $12,%esp; ret */
-      6, 1, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+      6, 1, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test loading an invalid selector */
     { { 0xb8, 0xef, 0xbe, 0x00, 0x00, 0x8e, 0xe8, 0xc3 },  /* 16: mov $beef,%ax; mov %ax,%gs; ret */
-      5, 2, STATUS_ACCESS_VIOLATION, 2, { 0, 0xbee8 } }, /* 0xbee8 or 0xffffffff */
+      5, 2, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xbee8 } }, /* 0xbee8 or 0xffffffff */
 
-    /* test accessing a zero selector */
+    /* test accessing a zero selector (%es broken on Wow64) */
     { { 0x06, 0x31, 0xc0, 0x8e, 0xc0, 0x26, 0xa1, 0, 0, 0, 0, 0x07, 0xc3 },
-      /* 17: push %es; xor %eax,%eax; mov %ax,%es; mov %es:(0),%ax; pop %es; ret */
-      5, 6, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+       /* push %es; xor %eax,%eax; mov %ax,%es; mov %es:(0),%ax; pop %es; ret */
+      5, 6, TRUE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+    { { 0x0f, 0xa8, 0x31, 0xc0, 0x8e, 0xe8, 0x65, 0xa1, 0, 0, 0, 0, 0x0f, 0xa9, 0xc3 },
+      /* push %gs; xor %eax,%eax; mov %ax,%gs; mov %gs:(0),%ax; pop %gs; ret */
+      6, 6, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moving %cs -> %ss */
     { { 0x0e, 0x17, 0x58, 0xc3 },  /* 18: pushl %cs; popl %ss; popl %eax; ret */
-      1, 1, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+      1, 1, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
-    /* 19: test overlong instruction (limit is 15 bytes, 5 on Win7) */
+/* 20 */
+    /* test overlong instruction (limit is 15 bytes, 5 on Win7) */
     { { 0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0x64,0xfa,0xc3 },
-      0, 16, STATUS_ILLEGAL_INSTRUCTION, 0 },
+      0, 16, TRUE, STATUS_ILLEGAL_INSTRUCTION, 0 },
     { { 0x64,0x64,0x64,0x64,0xfa,0xc3 },
-      0, 5, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 5, TRUE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test invalid interrupt */
     { { 0xcd, 0xff, 0xc3 },   /* 21: int $0xff; ret */
-      0, 2, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+      0, 2, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test moves to/from Crx */
     { { 0x0f, 0x20, 0xc0, 0xc3 },  /* 22: movl %cr0,%eax; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x20, 0xe0, 0xc3 },  /* 23: movl %cr4,%eax; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+/* 25 */
     { { 0x0f, 0x22, 0xc0, 0xc3 },  /* 24: movl %eax,%cr0; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x22, 0xe0, 0xc3 },  /* 25: movl %eax,%cr4; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test moves to/from Drx */
     { { 0x0f, 0x21, 0xc0, 0xc3 },  /* 26: movl %dr0,%eax; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x21, 0xc8, 0xc3 },  /* 27: movl %dr1,%eax; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x21, 0xf8, 0xc3 },  /* 28: movl %dr7,%eax; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+/* 30 */
     { { 0x0f, 0x23, 0xc0, 0xc3 },  /* 29: movl %eax,%dr0; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x23, 0xc8, 0xc3 },  /* 30: movl %eax,%dr1; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
     { { 0x0f, 0x23, 0xf8, 0xc3 },  /* 31: movl %eax,%dr7; ret */
-      0, 3, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      0, 3, FALSE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 
     /* test memory reads */
     { { 0xa1, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 32: movl 0xfffffffc,%eax; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffc } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffc } },
     { { 0xa1, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 33: movl 0xfffffffd,%eax; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffd } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffd } },
+/* 35 */
     { { 0xa1, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 34: movl 0xfffffffe,%eax; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffe } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xfffffffe } },
     { { 0xa1, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 35: movl 0xffffffff,%eax; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 0, 0xffffffff } },
 
     /* test memory writes */
     { { 0xa3, 0xfc, 0xff, 0xff, 0xff, 0xc3 },  /* 36: movl %eax,0xfffffffc; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffc } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffc } },
     { { 0xa3, 0xfd, 0xff, 0xff, 0xff, 0xc3 },  /* 37: movl %eax,0xfffffffd; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffd } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffd } },
     { { 0xa3, 0xfe, 0xff, 0xff, 0xff, 0xc3 },  /* 38: movl %eax,0xfffffffe; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffe } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xfffffffe } },
+/* 40 */
     { { 0xa3, 0xff, 0xff, 0xff, 0xff, 0xc3 },  /* 39: movl %eax,0xffffffff; ret */
-      0, 5, STATUS_ACCESS_VIOLATION, 2, { 1, 0xffffffff } },
+      0, 5, FALSE, STATUS_ACCESS_VIOLATION, 2, { 1, 0xffffffff } },
 
-    /* 40: test exception with cleared %ds and %es */
+    /* test exception with cleared %ds and %es (broken on Wow64) */
     { { 0x1e, 0x06, 0x31, 0xc0, 0x8e, 0xd8, 0x8e, 0xc0, 0xfa, 0x07, 0x1f, 0xc3 },
           /* push %ds; push %es; xorl %eax,%eax; mov %ax,%ds; mov %ax,%es; cli; pop %es; pop %ds; ret */
-      8, 1, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+      8, 1, TRUE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
 };
 
 static int got_exception;
@@ -230,7 +246,9 @@ static LONG CALLBACK rtlraiseexception_vectored_handler(EXCEPTION_POINTERS *Exce
        rec->ExceptionAddress, (char *)code_mem + 0xb);
 
     if (pNtCurrentTeb()->Peb->BeingDebugged)
-        ok((void *)context->Eax == pRtlRaiseException, "debugger managed to modify Eax to %x should be %p\n",
+        ok((void *)context->Eax == pRtlRaiseException ||
+           broken( is_wow64 && context->Eax == 0xf00f00f1 ), /* broken on vista */
+           "debugger managed to modify Eax to %x should be %p\n",
            context->Eax, pRtlRaiseException);
 
     /* check that context.Eip is fixed up only for EXCEPTION_BREAKPOINT
@@ -365,8 +383,8 @@ static DWORD handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_RECORD *fram
     unsigned int i, entry = except - exceptions;
 
     got_exception++;
-    trace( "exception: %x flags:%x addr:%p\n",
-           rec->ExceptionCode, rec->ExceptionFlags, rec->ExceptionAddress );
+    trace( "exception %u: %x flags:%x addr:%p\n",
+           entry, rec->ExceptionCode, rec->ExceptionFlags, rec->ExceptionAddress );
 
     ok( rec->ExceptionCode == except->status,
         "%u: Wrong exception code %x/%x\n", entry, rec->ExceptionCode, except->status );
@@ -412,6 +430,11 @@ static void test_prot_fault(void)
 
     for (i = 0; i < sizeof(exceptions)/sizeof(exceptions[0]); i++)
     {
+        if (is_wow64 && exceptions[i].wow64_broken && !strcmp( winetest_platform, "windows" ))
+        {
+            skip( "Exception %u broken on Wow64\n", i );
+            continue;
+        }
         got_exception = 0;
         run_exception_test(handler, &exceptions[i], &exceptions[i].code,
                            sizeof(exceptions[i].code), 0);
@@ -752,7 +775,9 @@ static void test_debugger(void)
                         /* ctx.Eip is the same value the exception handler got */
                         if (de.u.Exception.ExceptionRecord.ExceptionCode == EXCEPTION_BREAKPOINT)
                         {
-                            ok((char *)ctx.Eip == (char *)code_mem_address + 0xa, "Eip at 0x%x instead of %p\n",
+                            ok((char *)ctx.Eip == (char *)code_mem_address + 0xa ||
+                               broken(is_wow64 && (char *)ctx.Eip == (char *)code_mem_address + 0xb),
+                               "Eip at 0x%x instead of %p\n",
                                 ctx.Eip, (char *)code_mem_address + 0xa);
                             /* need to fixup Eip for debuggee */
                             if ((char *)ctx.Eip == (char *)code_mem_address + 0xa)
@@ -803,7 +828,8 @@ static DWORD simd_fault_handler( EXCEPTION_RECORD *rec, EXCEPTION_REGISTRATION_R
         ok( rec->ExceptionCode ==  STATUS_FLOAT_MULTIPLE_TRAPS,
             "exception code: %#x, should be %#x\n",
             rec->ExceptionCode,  STATUS_FLOAT_MULTIPLE_TRAPS);
-        ok( rec->NumberParameters == 1, "# of params: %i, should be 1\n",
+        ok( rec->NumberParameters == 1 || broken(is_wow64 && rec->NumberParameters == 2),
+            "# of params: %i, should be 1\n",
             rec->NumberParameters);
         if( rec->NumberParameters == 1 )
             ok( rec->ExceptionInformation[0] == 0, "param #1: %lx, should be 0\n", rec->ExceptionInformation[0]);
@@ -924,14 +950,18 @@ static void test_fpu_exceptions(void)
     run_exception_test(fpu_exception_handler, &info, fpu_exception_test_ie, sizeof(fpu_exception_test_ie), 0);
     ok(info.exception_code == EXCEPTION_FLT_STACK_CHECK,
             "Got exception code %#x, expected EXCEPTION_FLT_STACK_CHECK\n", info.exception_code);
-    ok(info.exception_offset == 0x19, "Got exception offset %#x, expected 0x19\n", info.exception_offset);
+    ok(info.exception_offset == 0x19 ||
+       broken( is_wow64 && info.exception_offset == info.eip_offset ),
+       "Got exception offset %#x, expected 0x19\n", info.exception_offset);
     ok(info.eip_offset == 0x1b, "Got EIP offset %#x, expected 0x1b\n", info.eip_offset);
 
     memset(&info, 0, sizeof(info));
     run_exception_test(fpu_exception_handler, &info, fpu_exception_test_de, sizeof(fpu_exception_test_de), 0);
     ok(info.exception_code == EXCEPTION_FLT_DIVIDE_BY_ZERO,
             "Got exception code %#x, expected EXCEPTION_FLT_DIVIDE_BY_ZERO\n", info.exception_code);
-    ok(info.exception_offset == 0x17, "Got exception offset %#x, expected 0x17\n", info.exception_offset);
+    ok(info.exception_offset == 0x17 ||
+       broken( is_wow64 && info.exception_offset == info.eip_offset ),
+       "Got exception offset %#x, expected 0x17\n", info.exception_offset);
     ok(info.eip_offset == 0x19, "Got EIP offset %#x, expected 0x19\n", info.eip_offset);
 }
 
@@ -1379,6 +1409,7 @@ START_TEST(exception)
                                                                  "NtQueryInformationProcess" );
     pNtSetInformationProcess           = (void*)GetProcAddress( hntdll,
                                                                  "NtSetInformationProcess" );
+    pIsWow64Process = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "IsWow64Process");
 
 #ifdef __i386__
     if (!pNtCurrentTeb)
@@ -1386,6 +1417,7 @@ START_TEST(exception)
         skip( "NtCurrentTeb not found\n" );
         return;
     }
+    if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
 
     if (pRtlAddVectoredExceptionHandler && pRtlRemoveVectoredExceptionHandler)
         have_vectored_api = TRUE;

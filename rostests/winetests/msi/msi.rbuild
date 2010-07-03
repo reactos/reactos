@@ -10,6 +10,7 @@
 	<file>install.c</file>
 	<file>msi.c</file>
 	<file>package.c</file>
+	<file>patch.c</file>
 	<file>record.c</file>
 	<file>source.c</file>
 	<file>suminfo.c</file>

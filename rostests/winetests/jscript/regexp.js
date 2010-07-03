@@ -19,6 +19,10 @@
 
 var m, re, b, i, obj;
 
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+RegExp.leftContext = "abc";
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+
 re = /a+/;
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
 
@@ -28,6 +32,8 @@ ok(m.index === 1, "m.index = " + m.index);
 ok(m.input === " aabaaa", "m.input = " + m.input);
 ok(m.length === 1, "m.length = " + m.length);
 ok(m[0] === "aa", "m[0] = " + m[0]);
+ok(RegExp.leftContext === " ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "baaa", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = re.exec(" aabaaa");
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
@@ -35,6 +41,8 @@ ok(m.index === 1, "m.index = " + m.index);
 ok(m.input === " aabaaa", "m.input = " + m.input);
 ok(m.length === 1, "m.length = " + m.length);
 ok(m[0] === "aa", "m[0] = " + m[0]);
+ok(RegExp.leftContext === " ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "baaa", "RegExp.rightContext = " + RegExp.rightContext);
 
 re = /a+/g;
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
@@ -59,6 +67,9 @@ ok(m === null, "m is not null");
 
 re.exec("               a");
 ok(re.lastIndex === 16, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "               ",
+   "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = re.exec(" a");
 ok(m === null, "m is not null");
@@ -79,10 +90,14 @@ ok(m[2] === "", "m[2] = " + m[2]);
 b = re.test("  a ");
 ok(b === true, "re.test('  a ') returned " + b);
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "  ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " ", "RegExp.rightContext = " + RegExp.rightContext);
 
 b = re.test(" a ");
 ok(b === false, "re.test(' a ') returned " + b);
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "  ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " ", "RegExp.rightContext = " + RegExp.rightContext);
 
 re = /\[([^\[]+)\]/g;
 m = re.exec(" [test]  ");
@@ -95,6 +110,18 @@ ok(m[1] === "test", "m[1] = " + m[1]);
 
 b = /a*/.test();
 ok(b === true, "/a*/.test() returned " + b);
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "undefined", "RegExp.rightContext = " + RegExp.rightContext);
+
+b = /f/.test();
+ok(b === true, "/f/.test() returned " + b);
+ok(RegExp.leftContext === "unde", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "ined", "RegExp.rightContext = " + RegExp.rightContext);
+
+b = /abc/.test();
+ok(b === false, "/abc/.test() returned " + b);
+ok(RegExp.leftContext === "unde", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "ined", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match(re = /ca/);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -102,11 +129,15 @@ ok(m.length === 1, "m.length is not 1");
 ok(m["0"] === "ca", "m[0] is not \"ca\"");
 ok(m.constructor === Array, "unexpected m.constructor");
 ok(re.lastIndex === 4, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "ab", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "bc", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match(/ab/);
 ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 1, "m.length is not 1");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cabc", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match(/ab/g);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -124,6 +155,8 @@ ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
+ok(RegExp.leftContext === "abc", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "c", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "aaabcabc".match(/a+b/g);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -147,6 +180,8 @@ ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 2, "m.length is not 2");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
 ok(m["1"] === "ab", "m[1] is not \"ab\"");
+ok(RegExp.leftContext === "abc", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "c", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match(new RegExp(/ab/g));
 ok(typeof(m) === "object", "typeof m is not object");
@@ -164,9 +199,13 @@ m = "abcabcg".match("ab", "g");
 ok(typeof(m) === "object", "typeof m is not object");
 ok(m.length === 1, "m.length is not 1");
 ok(m["0"] === "ab", "m[0] is not \"ab\"");
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cabcg", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match();
 ok(m === null, "m is not null");
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cabcg", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = "abcabc".match(/(a)(b)cabc/);
 ok(typeof(m) === "object", "typeof m is not object");
@@ -197,9 +236,15 @@ ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
 r = "- [test] -".replace(re = /\[([^\[]+)\]/g, "success");
 ok(r === "- success -", "r = " + r + " expected '- success -'");
 ok(re.lastIndex === 8, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "- ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " -", "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "[test] [test]".replace(/\[([^\[]+)\]/g, "aa");
 ok(r === "aa aa", "r = " + r + "aa aa");
+ok(RegExp.leftContext === "[test] ",
+   "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "",
+   "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "[test] [test]".replace(/\[([^\[]+)\]/, "aa");
 ok(r === "aa [test]", "r = " + r + " expected 'aa [test]'");
@@ -212,6 +257,8 @@ ok(r === "- true -", "r = " + r + " expected '- true -'");
 
 r = "- [test] -".replace(/\[([^\[]+)\]/g, true, "test");
 ok(r === "- true -", "r = " + r + " expected '- true -'");
+ok(RegExp.leftContext === "- ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " -", "RegExp.rightContext = " + RegExp.rightContext);
 
 var tmp = 0;
 
@@ -222,10 +269,18 @@ function replaceFunc1(m, off, str) {
     case 0:
         ok(m === "[test1]", "m = " + m + " expected [test1]");
         ok(off === 0, "off = " + off + " expected 0");
+        ok(RegExp.leftContext === "- ",
+           "RegExp.leftContext = " + RegExp.leftContext);
+        ok(RegExp.rightContext === " -",
+           "RegExp.rightContext = " + RegExp.rightContext);
         break;
     case 1:
         ok(m === "[test2]", "m = " + m + " expected [test2]");
         ok(off === 8, "off = " + off + " expected 8");
+        ok(RegExp.leftContext === "- ",
+           "RegExp.leftContext = " + RegExp.leftContext);
+        ok(RegExp.rightContext === " -",
+           "RegExp.rightContext = " + RegExp.rightContext);
         break;
     default:
         ok(false, "unexpected call");
@@ -237,6 +292,8 @@ function replaceFunc1(m, off, str) {
 
 r = "[test1] [test2]".replace(/\[[^\[]+\]/g, replaceFunc1);
 ok(r === "r0 r1", "r = " + r + " expected 'r0 r1'");
+ok(RegExp.leftContext === "[test1] ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "", "RegExp.rightContext = " + RegExp.rightContext);
 
 tmp = 0;
 
@@ -267,9 +324,13 @@ ok(r === "r0 r1", "r = '" + r + "' expected 'r0 r1'");
 
 r = "$1,$2".replace(/(\$(\d))/g, "$$1-$1$2");
 ok(r === "$1-$11,$1-$22", "r = '" + r + "' expected '$1-$11,$1-$22'");
+ok(RegExp.leftContext === "$1,", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "", "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "abc &1 123".replace(/(\&(\d))/g, "$&");
 ok(r === "abc &1 123", "r = '" + r + "' expected 'abc &1 123'");
+ok(RegExp.leftContext === "abc ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " 123", "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "abc &1 123".replace(/(\&(\d))/g, "$'");
 ok(r === "abc  123 123", "r = '" + r + "' expected 'abc  123 123'");
@@ -292,8 +353,11 @@ ok(r === "abc &11 123", "r = '" + r + "' expected 'abc &11 123'");
 r = "abc &1 123".replace(/(\&(\d))/g, "$0");
 ok(r === "abc $0 123", "r = '" + r + "' expected 'abc $0 123'");
 
+/a/.test("a");
 r = "1 2 3".replace("2", "$&");
 ok(r === "1 $& 3", "r = '" + r + "' expected '1 $& 3'");
+ok(RegExp.leftContext === "", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "", "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "1 2 3".replace("2", "$'");
 ok(r === "1 $' 3", "r = '" + r + "' expected '1 $' 3'");
@@ -303,6 +367,8 @@ ok(r.length === 3, "r.length = " + r.length);
 ok(r[0] === "1", "r[0] = " + r[0]);
 ok(r[1] === "2", "r[1] = " + r[1]);
 ok(r[2] === "3", "r[2] = " + r[2]);
+ok(RegExp.leftContext === "1,,2", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "3", "RegExp.rightContext = " + RegExp.rightContext);
 
 r = "1,,2,3".split(/,+/);
 ok(r.length === 3, "r.length = " + r.length);
@@ -341,6 +407,8 @@ ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
 r = "1 12 \t3".split(re = /(\s)+/g).join(";");
 ok(r === "1;12;3", "r = " + r);
 ok(re.lastIndex === 6, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "1 12", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "3", "RegExp.rightContext = " + RegExp.rightContext);
 
 re = /,+/;
 re.lastIndex = 4;
@@ -374,6 +442,8 @@ ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
 m = re.exec(" a   ");
 ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 2");
 ok(m.index === 1, "m.index = " + m.index + " expected 1");
+ok(RegExp.leftContext === " ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "   ", "RegExp.rightContext = " + RegExp.rightContext);
 
 m = re.exec(" a   ");
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex + " expected 0");
@@ -443,6 +513,8 @@ ok(re.lastIndex === -3, "re.lastIndex = " + re.lastIndex + " expected -3");
 m = re.exec(" a a ");
 ok(re.lastIndex === 2, "re.lastIndex = " + re.lastIndex + " expected 0");
 ok(m.index === 1, "m = " + m + " expected 1");
+ok(RegExp.leftContext === " ", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === " a ", "RegExp.rightContext = " + RegExp.rightContext);
 
 re.lastIndex = -1;
 ok(re.lastIndex === -1, "re.lastIndex = " + re.lastIndex + " expected -1");
@@ -454,6 +526,8 @@ re = /aa/g;
 i = 'baacd'.search(re);
 ok(i === 1, "'baacd'.search(re) = " + i);
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "b", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cd", "RegExp.rightContext = " + RegExp.rightContext);
 
 re.lastIndex = 2;
 i = 'baacdaa'.search(re);
@@ -469,12 +543,16 @@ re.lastIndex = 2;
 i = 'baacdaa'.search(re);
 ok(i === 1, "'baacd'.search(re) = " + i);
 ok(re.lastIndex === 3, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "b", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cdaa", "RegExp.rightContext = " + RegExp.rightContext);
 
 re = /d/g;
 re.lastIndex = 1;
 i = 'abc'.search(re);
 ok(i === -1, "'abc'.search(/d/g) = " + i);
 ok(re.lastIndex === 0, "re.lastIndex = " + re.lastIndex);
+ok(RegExp.leftContext === "b", "RegExp.leftContext = " + RegExp.leftContext);
+ok(RegExp.rightContext === "cdaa", "RegExp.rightContext = " + RegExp.rightContext);
 
 i = 'abcdde'.search(/[df]/);
 ok(i === 3, "'abc'.search(/[df]/) = " + i);

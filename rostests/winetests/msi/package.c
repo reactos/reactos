@@ -153,7 +153,7 @@ static BOOL squash_guid(LPCWSTR in, LPWSTR out)
     DWORD i,n=1;
     GUID guid;
 
-    if (FAILED(CLSIDFromString((LPOLESTR)in, &guid)))
+    if (FAILED(CLSIDFromString((LPCOLESTR)in, &guid)))
         return FALSE;
 
     for(i=0; i<8; i++)
@@ -2007,7 +2007,7 @@ static void test_property_table(void)
     const char *query;
     UINT r;
     MSIHANDLE hpkg, hdb, hrec;
-    char buffer[MAX_PATH];
+    char buffer[MAX_PATH], package[10];
     DWORD sz;
     BOOL found;
 
@@ -2050,15 +2050,14 @@ static void test_property_table(void)
     r = run_query(hdb, query);
     ok(r == ERROR_SUCCESS, "failed to add column\n");
 
-    hpkg = package_from_db(hdb);
-    todo_wine
-    {
-        ok(!hpkg, "package should not be created\n");
-    }
+    sprintf(package, "#%i", hdb);
+    r = MsiOpenPackage(package, &hpkg);
+    todo_wine ok(r != ERROR_SUCCESS, "MsiOpenPackage succeeded\n");
+    if (r == ERROR_SUCCESS)
+        MsiCloseHandle(hpkg);
 
-    MsiCloseHandle(hdb);
-    MsiCloseHandle(hpkg);
-    DeleteFile(msifile);
+    r = MsiCloseHandle(hdb);
+    ok(r == ERROR_SUCCESS, "MsiCloseHandle failed %u\n", r);
 
     hdb = create_package_db();
     ok (hdb, "failed to create package database\n");
@@ -8743,6 +8742,9 @@ static void test_appsearch_drlocator(void)
     r = add_appsearch_entry(hdb, "'SIGPROP11', 'NewSignature11'");
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
+    r = add_appsearch_entry(hdb, "'SIGPROP13', 'NewSignature13'");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
     r = create_drlocator_table(hdb);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -8798,6 +8800,18 @@ static void test_appsearch_drlocator(void)
 
     /* no parent, relative empty path, depth 0, no signature */
     sprintf(path, "'NewSignature11', '', '', 0");
+    r = add_drlocator_entry(hdb, path);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    r = create_reglocator_table(hdb);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    /* parent */
+    r = add_reglocator_entry(hdb, "'NewSignature12', 2, 'htmlfile\\shell\\open\\nonexistent', '', 1");
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+
+    /* parent is in RegLocator, no path, depth 0, no signature */
+    sprintf(path, "'NewSignature13', 'NewSignature12', '', 0");
     r = add_drlocator_entry(hdb, path);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
@@ -8906,6 +8920,12 @@ static void test_appsearch_drlocator(void)
     r = MsiGetPropertyA(hpkg, "SIGPROP11", prop, &size);
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpiA(prop, path), "Expected \"%s\", got \"%s\"\n", path, prop);
+
+    size = MAX_PATH;
+    strcpy(path, "c:\\");
+    r = MsiGetPropertyA(hpkg, "SIGPROP13", prop, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!prop[0], "Expected \"\", got \"%s\"\n", prop);
 
     DeleteFileA("FileName1");
     DeleteFileA("FileName3.dll");

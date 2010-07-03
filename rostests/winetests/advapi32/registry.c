@@ -1862,7 +1862,9 @@ static void test_redirection(void)
     ok( err == ERROR_SUCCESS, "RegCreateKeyExA failed: %u\n", err );
     check_key_value( key, "Winetest", 0, ptr_size );
     check_key_value( key, "Winetest", KEY_WOW64_64KEY, is_vista ? 64 : ptr_size );
-    check_key_value( key, "Winetest", KEY_WOW64_32KEY, 32 );
+    dw = get_key_value( key, "Winetest", KEY_WOW64_32KEY );
+    if (ptr_size == 32) ok( dw == 32, "wrong value %u\n", dw );
+    else todo_wine ok( dw == 32, "wrong value %u\n", dw );
     RegCloseKey( key );
 
     if (ptr_size == 32)
@@ -1910,6 +1912,79 @@ static void test_redirection(void)
     RegCloseKey( root64 );
 }
 
+static void test_deleted_key(void)
+{
+    HKEY hkey, hkey2;
+    char value[20];
+    DWORD val_count, type;
+    LONG res;
+
+    /* Open the test key, then delete it while it's open */
+    RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\Test", &hkey );
+
+    delete_key( hkey_main );
+
+    val_count = sizeof(value);
+    type = 0;
+    res = RegEnumValueA( hkey, 0, value, &val_count, NULL, &type, 0, 0 );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+
+    res = RegEnumKeyA( hkey, 0, value, sizeof(value) );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+
+    val_count = sizeof(value);
+    type = 0;
+    res = RegQueryValueExA( hkey, "test", NULL, &type, (BYTE *)value, &val_count );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+
+    res = RegSetValueExA( hkey, "test", 0, REG_SZ, (const BYTE*)"value", 6);
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+
+    res = RegOpenKeyA( hkey, "test", &hkey2 );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+    if (res == 0)
+        RegCloseKey( hkey2 );
+
+    res = RegCreateKeyA( hkey, "test", &hkey2 );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+    if (res == 0)
+        RegCloseKey( hkey2 );
+
+    res = RegFlushKey( hkey );
+    ok(res == ERROR_KEY_DELETED, "expect ERROR_KEY_DELETED, got %i\n", res);
+
+    RegCloseKey( hkey );
+
+    setup_main_key();
+}
+
+static void test_delete_value(void)
+{
+    LONG res;
+    char longname[401];
+
+    res = RegSetValueExA( hkey_main, "test", 0, REG_SZ, (const BYTE*)"value", 6 );
+    ok(res == ERROR_SUCCESS, "expect ERROR_SUCCESS, got %i\n", res);
+
+    res = RegQueryValueExA( hkey_main, "test", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_SUCCESS, "expect ERROR_SUCCESS, got %i\n", res);
+
+    res = RegDeleteValueA( hkey_main, "test" );
+    ok(res == ERROR_SUCCESS, "expect ERROR_SUCCESS, got %i\n", res);
+
+    res = RegQueryValueExA( hkey_main, "test", NULL, NULL, NULL, NULL);
+    ok(res == ERROR_FILE_NOT_FOUND, "expect ERROR_FILE_NOT_FOUND, got %i\n", res);
+
+    res = RegDeleteValueA( hkey_main, "test" );
+    ok(res == ERROR_FILE_NOT_FOUND, "expect ERROR_FILE_NOT_FOUND, got %i\n", res);
+
+    memset(longname, 'a', 400);
+    longname[400] = 0;
+    res = RegDeleteValueA( hkey_main, longname );
+    ok(res == ERROR_FILE_NOT_FOUND || broken(res == ERROR_MORE_DATA), /* nt4, win2k */
+       "expect ERROR_FILE_NOT_FOUND, got %i\n", res);
+}
+
 START_TEST(registry)
 {
     /* Load pointers for functions that are not available in all Windows versions */
@@ -1944,6 +2019,8 @@ START_TEST(registry)
 
     test_reg_delete_tree();
     test_rw_order();
+    test_deleted_key();
+    test_delete_value();
 
     /* cleanup */
     delete_key( hkey_main );

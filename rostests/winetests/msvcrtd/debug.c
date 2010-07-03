@@ -60,6 +60,7 @@ static void test_new(void)
 
   mem = pMSVCRTD_operator_new_dbg(42, _NORMAL_BLOCK, __FILE__, __LINE__);
   ok(mem != NULL, "memory not allocated\n");
+  HeapFree(GetProcessHeap(), 0, mem);
 }
 
 /**********************************************************************/

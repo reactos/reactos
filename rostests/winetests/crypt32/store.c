@@ -277,29 +277,35 @@ static void testMemStore(void)
     CertCloseStore(store1, 0);
 }
 
-static void compareFile(LPCWSTR filename, const BYTE *pb, DWORD cb)
+static void compareStore(HCERTSTORE store, LPCSTR name, const BYTE *pb,
+ DWORD cb, BOOL todo)
 {
-    HANDLE h;
-    BYTE buf[200];
     BOOL ret;
-    DWORD cbRead = 0, totalRead = 0;
+    CRYPT_DATA_BLOB blob = { 0, NULL };
 
-    h = CreateFileW(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING,
-     FILE_ATTRIBUTE_NORMAL, NULL);
-    if (h == INVALID_HANDLE_VALUE)
-        return;
-    do {
-        ret = ReadFile(h, buf, sizeof(buf), &cbRead, NULL);
-        if (ret && cbRead)
-        {
-            ok(totalRead + cbRead <= cb, "Expected total count %d, see %d\n",
-             cb, totalRead + cbRead);
-            ok(!memcmp(pb + totalRead, buf, cbRead),
-             "Unexpected data in file\n");
-            totalRead += cbRead;
-        }
-    } while (ret && cbRead);
-    CloseHandle(h);
+    ret = CertSaveStore(store, X509_ASN_ENCODING, CERT_STORE_SAVE_AS_STORE,
+     CERT_STORE_SAVE_TO_MEMORY, &blob, 0);
+    ok(ret, "CertSaveStore failed: %08x\n", GetLastError());
+    if (todo)
+        todo_wine
+        ok(blob.cbData == cb, "%s: expected size %d, got %d\n", name, cb,
+         blob.cbData);
+    else
+        ok(blob.cbData == cb, "%s: expected size %d, got %d\n", name, cb,
+         blob.cbData);
+    blob.pbData = HeapAlloc(GetProcessHeap(), 0, blob.cbData);
+    if (blob.pbData)
+    {
+        ret = CertSaveStore(store, X509_ASN_ENCODING, CERT_STORE_SAVE_AS_STORE,
+         CERT_STORE_SAVE_TO_MEMORY, &blob, 0);
+        ok(ret, "CertSaveStore failed: %08x\n", GetLastError());
+        if (todo)
+            todo_wine
+            ok(!memcmp(pb, blob.pbData, cb), "%s: unexpected value\n", name);
+        else
+            ok(!memcmp(pb, blob.pbData, cb), "%s: unexpected value\n", name);
+        HeapFree(GetProcessHeap(), 0, blob.pbData);
+    }
 }
 
 static const BYTE serializedStoreWithCert[] = {
@@ -689,11 +695,10 @@ static void testCollectionStore(void)
      GetLastError());
     ret = pCertControlStore(collection, 0, CERT_STORE_CTRL_COMMIT, NULL);
     ok(ret, "CertControlStore failed: %d\n", ret);
-
+    compareStore(collection, "serialized store with cert",
+     serializedStoreWithCert, sizeof(serializedStoreWithCert), FALSE);
     CertCloseStore(collection, 0);
 
-    compareFile(filename, serializedStoreWithCert,
-     sizeof(serializedStoreWithCert));
     DeleteFileW(filename);
 }
 
@@ -1294,8 +1299,8 @@ static void testFileStore(void)
         /* with commits enabled, commit is allowed */
         ret = pCertControlStore(store, 0, CERT_STORE_CTRL_COMMIT, NULL);
         ok(ret, "CertControlStore failed: %d\n", ret);
-        compareFile(filename, serializedStoreWithCert,
-         sizeof(serializedStoreWithCert));
+        compareStore(store, "serialized store with cert",
+         serializedStoreWithCert, sizeof(serializedStoreWithCert), FALSE);
         CertCloseStore(store, 0);
     }
     file = CreateFileW(filename, GENERIC_READ | GENERIC_WRITE, 0, NULL,
@@ -1311,9 +1316,10 @@ static void testFileStore(void)
         ret = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING, signedCRL,
          sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, NULL);
         ok(ret, "CertAddEncodedCRLToStore failed: %08x\n", GetLastError());
+        compareStore(store, "serialized store with cert and CRL",
+         serializedStoreWithCertAndCRL, sizeof(serializedStoreWithCertAndCRL),
+         FALSE);
         CertCloseStore(store, 0);
-        compareFile(filename, serializedStoreWithCertAndCRL,
-         sizeof(serializedStoreWithCertAndCRL));
     }
 
     DeleteFileW(filename);
@@ -1517,9 +1523,9 @@ static void testFileNameStore(void)
          bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, NULL);
         ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
          GetLastError());
+        compareStore(store, "serialized store with cert",
+         serializedStoreWithCert, sizeof(serializedStoreWithCert), FALSE);
         CertCloseStore(store, 0);
-        compareFile(filename, serializedStoreWithCert,
-         sizeof(serializedStoreWithCert));
     }
     store = CertOpenStore(CERT_STORE_PROV_FILENAME_W, 0, 0,
      CERT_FILE_STORE_COMMIT_ENABLE_FLAG, filename);
@@ -1529,9 +1535,10 @@ static void testFileNameStore(void)
         ret = CertAddEncodedCRLToStore(store, X509_ASN_ENCODING,
          signedCRL, sizeof(signedCRL), CERT_STORE_ADD_ALWAYS, NULL);
         ok(ret, "CertAddEncodedCRLToStore failed: %08x\n", GetLastError());
+        compareStore(store, "serialized store with cert and CRL",
+         serializedStoreWithCertAndCRL, sizeof(serializedStoreWithCertAndCRL),
+         FALSE);
         CertCloseStore(store, 0);
-        compareFile(filename, serializedStoreWithCertAndCRL,
-         sizeof(serializedStoreWithCertAndCRL));
     }
     DeleteFileW(filename);
 
@@ -1755,6 +1762,69 @@ static void testMessageStore(void)
      (GetLastError() == CRYPT_E_ASN1_BADTAG ||
       GetLastError() == OSS_DATA_ERROR), /* win9x */
      "Expected CRYPT_E_ASN1_BADTAG, got %08x\n", GetLastError());
+}
+
+static void testSerializedStore(void)
+{
+    HCERTSTORE store;
+    CRYPT_DATA_BLOB blob;
+
+    if (0)
+    {
+        /* Crash */
+        store = CertOpenStore(CERT_STORE_PROV_SERIALIZED, 0, 0, 0, NULL);
+        store = CertOpenStore(CERT_STORE_PROV_SERIALIZED, 0, 0,
+         CERT_STORE_DELETE_FLAG, NULL);
+    }
+    blob.cbData = sizeof(serializedStoreWithCert);
+    blob.pbData = (BYTE *)serializedStoreWithCert;
+    store = CertOpenStore(CERT_STORE_PROV_SERIALIZED, 0, 0,
+     CERT_STORE_DELETE_FLAG, &blob);
+    ok(!store && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED,
+     "Expected ERROR_CALL_NOT_IMPLEMENTED, got %08x\n", GetLastError());
+    store = CertOpenStore(CERT_STORE_PROV_SERIALIZED, 0, 0, 0, &blob);
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    if (store)
+    {
+        PCCERT_CONTEXT cert;
+        PCCRL_CONTEXT crl;
+
+        cert = CertEnumCertificatesInStore(store, NULL);
+        ok(cert != NULL, "CertEnumCertificatesInStore failed: %08x\n",
+         GetLastError());
+        cert = CertEnumCertificatesInStore(store, cert);
+        ok(!cert, "Expected only one cert\n");
+        if (pCertEnumCRLsInStore)
+        {
+            crl = pCertEnumCRLsInStore(store, NULL);
+            ok(!crl, "Expected no CRLs\n");
+        }
+        CertCloseStore(store, 0);
+    }
+    blob.cbData = sizeof(serializedStoreWithCertAndCRL);
+    blob.pbData = (BYTE *)serializedStoreWithCertAndCRL;
+    store = CertOpenStore(CERT_STORE_PROV_SERIALIZED, 0, 0, 0, &blob);
+    ok(store != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    if (store)
+    {
+        PCCERT_CONTEXT cert;
+        PCCRL_CONTEXT crl;
+
+        cert = CertEnumCertificatesInStore(store, NULL);
+        ok(cert != NULL, "CertEnumCertificatesInStore failed: %08x\n",
+         GetLastError());
+        cert = CertEnumCertificatesInStore(store, cert);
+        ok(!cert, "Expected only one cert\n");
+        if (pCertEnumCRLsInStore)
+        {
+            crl = pCertEnumCRLsInStore(store, NULL);
+            ok(crl != NULL, "CertEnumCRLsInStore failed: %08x\n",
+             GetLastError());
+            crl = pCertEnumCRLsInStore(store, crl);
+            ok(!crl, "Expected only one CRL\n");
+        }
+        CertCloseStore(store, 0);
+    }
 }
 
 static void testCertOpenSystemStore(void)
@@ -2063,6 +2133,334 @@ static void testAddSerialized(void)
     CertCloseStore(store, 0);
 }
 
+static const BYTE serializedCertWithFriendlyName[] = {
+0x0b,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x12,0x00,0x00,0x00,0x57,0x00,0x69,
+0x00,0x6e,0x00,0x65,0x00,0x54,0x00,0x65,0x00,0x73,0x00,0x74,0x00,0x00,0x00,
+0x20,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,
+0x01,0x01,0x30,0x02,0x06,0x00,0x30,0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,
+0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,
+0x22,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,
+0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,
+0x30,0x30,0x30,0x30,0x5a,0x30,0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,
+0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x07,
+0x30,0x02,0x06,0x00,0x03,0x01,0x00,0xa3,0x16,0x30,0x14,0x30,0x12,0x06,0x03,
+0x55,0x1d,0x13,0x01,0x01,0xff,0x04,0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,
+0x01 };
+static const BYTE serializedStoreWithCertWithFriendlyName[] = {
+0x00,0x00,0x00,0x00,0x43,0x45,0x52,0x54,0x0b,0x00,0x00,0x00,0x01,0x00,0x00,
+0x00,0x12,0x00,0x00,0x00,0x57,0x00,0x69,0x00,0x6e,0x00,0x65,0x00,0x54,0x00,
+0x65,0x00,0x73,0x00,0x74,0x00,0x00,0x00,0x20,0x00,0x00,0x00,0x01,0x00,0x00,
+0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,0x01,0x01,0x30,0x02,0x06,0x00,0x30,
+0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,
+0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,0x30,0x31,
+0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,0x31,0x36,
+0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x30,0x15,
+0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,0x61,0x6e,
+0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x07,0x30,0x02,0x06,0x00,0x03,0x01,0x00,
+0xa3,0x16,0x30,0x14,0x30,0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,0xff,0x04,
+0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,0x00,0x00,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00 };
+static const BYTE serializedStoreWithCertAndHash[] = {
+0x00,0x00,0x00,0x00,0x43,0x45,0x52,0x54,0x03,0x00,0x00,0x00,0x01,0x00,0x00,
+0x00,0x14,0x00,0x00,0x00,0x6e,0x30,0x90,0x71,0x5f,0xd9,0x23,0x56,0xeb,0xae,
+0x25,0x40,0xe6,0x22,0xda,0x19,0x26,0x02,0xa6,0x08,0x20,0x00,0x00,0x00,0x01,
+0x00,0x00,0x00,0x7c,0x00,0x00,0x00,0x30,0x7a,0x02,0x01,0x01,0x30,0x02,0x06,
+0x00,0x30,0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,
+0x75,0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x22,0x18,0x0f,0x31,0x36,
+0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,0x18,0x0f,
+0x31,0x36,0x30,0x31,0x30,0x31,0x30,0x31,0x30,0x30,0x30,0x30,0x30,0x30,0x5a,
+0x30,0x15,0x31,0x13,0x30,0x11,0x06,0x03,0x55,0x04,0x03,0x13,0x0a,0x4a,0x75,
+0x61,0x6e,0x20,0x4c,0x61,0x6e,0x67,0x00,0x30,0x07,0x30,0x02,0x06,0x00,0x03,
+0x01,0x00,0xa3,0x16,0x30,0x14,0x30,0x12,0x06,0x03,0x55,0x1d,0x13,0x01,0x01,
+0xff,0x04,0x08,0x30,0x06,0x01,0x01,0xff,0x02,0x01,0x01,0x00,0x00,0x00,0x00,
+0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00 };
+
+static void testAddCertificateLink(void)
+{
+    BOOL ret;
+    HCERTSTORE store1, store2;
+    PCCERT_CONTEXT source, linked;
+    DWORD size;
+    LPBYTE buf;
+    CERT_NAME_BLOB blob;
+    static const WCHAR szPrefix[] = { 'c','e','r',0 };
+    static const WCHAR szDot[] = { '.',0 };
+    static const WCHAR WineTestW[] = { 'W','i','n','e','T','e','s','t',0 };
+    WCHAR filename1[MAX_PATH], filename2[MAX_PATH];
+    HANDLE file;
+
+    if (0)
+    {
+        /* Crashes, i.e. the store is dereferenced without checking. */
+        ret = CertAddCertificateLinkToStore(NULL, NULL, 0, NULL);
+    }
+
+    /* Adding a certificate link to a store requires a valid add disposition */
+    store1 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    SetLastError(0xdeadbeef);
+    ret = CertAddCertificateLinkToStore(store1, NULL, 0, NULL);
+    ok(!ret && GetLastError() == E_INVALIDARG,
+     "expected E_INVALIDARG, got %08x\n", GetLastError());
+    source = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert,
+     sizeof(bigCert));
+    SetLastError(0xdeadbeef);
+    ret = CertAddCertificateLinkToStore(store1, source, 0, NULL);
+    ok(!ret && GetLastError() == E_INVALIDARG,
+     "expected E_INVALIDARG, got %08x\n", GetLastError());
+    ret = CertAddCertificateLinkToStore(store1, source, CERT_STORE_ADD_ALWAYS,
+     NULL);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (0)
+    {
+        /* Crashes, i.e. the source certificate is dereferenced without
+         * checking when a valid add disposition is given.
+         */
+        ret = CertAddCertificateLinkToStore(store1, NULL, CERT_STORE_ADD_ALWAYS,
+         NULL);
+    }
+    CertCloseStore(store1, 0);
+
+    store1 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ret = CertAddCertificateLinkToStore(store1, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(linked->hCertStore == store1, "unexpected store\n");
+        ret = CertSerializeCertificateStoreElement(linked, 0, NULL, &size);
+        ok(ret, "CertSerializeCertificateStoreElement failed: %08x\n",
+         GetLastError());
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (buf)
+        {
+            ret = CertSerializeCertificateStoreElement(linked, 0, buf, &size);
+            /* The serialized linked certificate is identical to the serialized
+             * original certificate.
+             */
+            ok(size == sizeof(serializedCert), "Wrong size %d\n", size);
+            ok(!memcmp(serializedCert, buf, size),
+             "Unexpected serialized cert\n");
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        /* Set a friendly name on the source certificate... */
+        blob.pbData = (LPBYTE)WineTestW;
+        blob.cbData = sizeof(WineTestW);
+        ret = CertSetCertificateContextProperty(source,
+         CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
+        ok(ret, "CertSetCertificateContextProperty failed: %08x\n",
+         GetLastError());
+        /* and the linked certificate has the same friendly name. */
+        ret = CertGetCertificateContextProperty(linked,
+         CERT_FRIENDLY_NAME_PROP_ID, NULL, &size);
+        ok(ret, "CertGetCertificateContextProperty failed: %08x\n",
+         GetLastError());
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (buf)
+        {
+            ret = CertGetCertificateContextProperty(linked,
+             CERT_FRIENDLY_NAME_PROP_ID, buf, &size);
+            ok(!lstrcmpW((LPCWSTR)buf, WineTestW),
+             "unexpected friendly name\n");
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        CertFreeCertificateContext(linked);
+    }
+    CertFreeCertificateContext(source);
+    CertCloseStore(store1, 0);
+
+    /* Test adding a cert to a file store, committing the change to the store,
+     * and creating a link to the resulting cert.
+     */
+    if (!GetTempFileNameW(szDot, szPrefix, 0, filename1))
+       return;
+
+    DeleteFileW(filename1);
+    file = CreateFileW(filename1, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return;
+
+    store1 = CertOpenStore(CERT_STORE_PROV_FILE, 0, 0,
+     CERT_FILE_STORE_COMMIT_ENABLE_FLAG, file);
+    ok(store1 != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    CloseHandle(file);
+
+    ret = CertAddEncodedCertificateToStore(store1, X509_ASN_ENCODING,
+     bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &source);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
+     GetLastError());
+
+    /* Test adding a link to a memory store. */
+    store2 = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    ret = CertAddCertificateLinkToStore(store2, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(linked->hCertStore == store2, "unexpected store\n");
+        ret = CertSerializeCertificateStoreElement(linked, 0, NULL, &size);
+        ok(ret, "CertSerializeCertificateStoreElement failed: %08x\n",
+         GetLastError());
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (buf)
+        {
+            ret = CertSerializeCertificateStoreElement(linked, 0, buf, &size);
+            /* The serialized linked certificate is identical to the serialized
+             * original certificate.
+             */
+            ok(size == sizeof(serializedCert), "Wrong size %d\n", size);
+            ok(!memcmp(serializedCert, buf, size),
+             "Unexpected serialized cert\n");
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        /* Set a friendly name on the source certificate... */
+        blob.pbData = (LPBYTE)WineTestW;
+        blob.cbData = sizeof(WineTestW);
+        ret = CertSetCertificateContextProperty(source,
+         CERT_FRIENDLY_NAME_PROP_ID, 0, &blob);
+        ok(ret, "CertSetCertificateContextProperty failed: %08x\n",
+         GetLastError());
+        /* and the linked certificate has the same friendly name. */
+        ret = CertGetCertificateContextProperty(linked,
+         CERT_FRIENDLY_NAME_PROP_ID, NULL, &size);
+        ok(ret, "CertGetCertificateContextProperty failed: %08x\n",
+         GetLastError());
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (buf)
+        {
+            ret = CertGetCertificateContextProperty(linked,
+             CERT_FRIENDLY_NAME_PROP_ID, buf, &size);
+            ok(!lstrcmpW((LPCWSTR)buf, WineTestW),
+             "unexpected friendly name\n");
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        CertFreeCertificateContext(linked);
+    }
+    CertCloseStore(store2, 0);
+
+    if (!GetTempFileNameW(szDot, szPrefix, 0, filename2))
+       return;
+
+    DeleteFileW(filename2);
+    file = CreateFileW(filename2, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return;
+
+    store2 = CertOpenStore(CERT_STORE_PROV_FILE, 0, 0,
+     CERT_FILE_STORE_COMMIT_ENABLE_FLAG, file);
+    ok(store2 != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    CloseHandle(file);
+    /* Test adding a link to a file store. */
+    ret = CertAddCertificateLinkToStore(store2, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(linked->hCertStore == store2, "unexpected store\n");
+        ret = CertSerializeCertificateStoreElement(linked, 0, NULL, &size);
+        ok(ret, "CertSerializeCertificateStoreElement failed: %08x\n",
+         GetLastError());
+        buf = HeapAlloc(GetProcessHeap(), 0, size);
+        if (buf)
+        {
+            ret = CertSerializeCertificateStoreElement(linked, 0, buf, &size);
+            ok(ret, "CertSerializeCertificateStoreElement failed: %08x\n",
+             GetLastError());
+            /* The serialized linked certificate now contains the friendly
+             * name property.
+             */
+            ok(size == sizeof(serializedCertWithFriendlyName),
+             "Wrong size %d\n", size);
+            ok(!memcmp(serializedCertWithFriendlyName, buf, size),
+             "Unexpected serialized cert\n");
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+        CertFreeCertificateContext(linked);
+        compareStore(store2, "file store -> file store",
+         serializedStoreWithCertWithFriendlyName,
+         sizeof(serializedStoreWithCertWithFriendlyName), FALSE);
+    }
+    CertCloseStore(store2, 0);
+    DeleteFileW(filename2);
+
+    CertFreeCertificateContext(source);
+
+    CertCloseStore(store1, 0);
+    DeleteFileW(filename1);
+
+    /* Test adding a link to a system store (which is a collection store.) */
+    store1 = CertOpenSystemStoreA(0, "My");
+    source = CertCreateCertificateContext(X509_ASN_ENCODING, bigCert,
+     sizeof(bigCert));
+    SetLastError(0xdeadbeef);
+    ret = CertAddCertificateLinkToStore(store1, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(!ret && GetLastError() == E_INVALIDARG,
+     "expected E_INVALIDARG, got %08x\n", GetLastError());
+    CertFreeCertificateContext(source);
+
+    /* Test adding a link to a file store, where the linked certificate is
+     * in a system store.
+     */
+    ret = CertAddEncodedCertificateToStore(store1, X509_ASN_ENCODING,
+     bigCert, sizeof(bigCert), CERT_STORE_ADD_ALWAYS, &source);
+    ok(ret, "CertAddEncodedCertificateToStore failed: %08x\n",
+     GetLastError());
+    if (!GetTempFileNameW(szDot, szPrefix, 0, filename1))
+       return;
+
+    DeleteFileW(filename1);
+    file = CreateFileW(filename1, GENERIC_READ | GENERIC_WRITE, 0, NULL,
+     CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (file == INVALID_HANDLE_VALUE)
+        return;
+
+    store2 = CertOpenStore(CERT_STORE_PROV_FILE, 0, 0,
+     CERT_FILE_STORE_COMMIT_ENABLE_FLAG, file);
+    ok(store2 != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    CloseHandle(file);
+
+    ret = CertAddCertificateLinkToStore(store2, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(linked->hCertStore == store2, "unexpected store\n");
+        ret = pCertControlStore(store2, 0, CERT_STORE_CTRL_COMMIT, NULL);
+        ok(ret, "CertControlStore failed: %d\n", ret);
+        compareStore(store2, "file store -> system store",
+         serializedStoreWithCertAndHash,
+         sizeof(serializedStoreWithCertAndHash), TRUE);
+        CertFreeCertificateContext(linked);
+    }
+
+    CertCloseStore(store2, 0);
+    DeleteFileW(filename1);
+
+    /* Test adding a link to a registry store, where the linked certificate is
+     * in a system store.
+     */
+    store2 = CertOpenStore(CERT_STORE_PROV_SYSTEM_REGISTRY, 0, 0,
+     CERT_SYSTEM_STORE_CURRENT_USER, WineTestW);
+    ok(store2 != NULL, "CertOpenStore failed: %08x\n", GetLastError());
+    ret = CertAddCertificateLinkToStore(store2, source, CERT_STORE_ADD_ALWAYS,
+     &linked);
+    ok(ret, "CertAddCertificateLinkToStore failed: %08x\n", GetLastError());
+    if (ret)
+    {
+        ok(linked->hCertStore == store2, "unexpected store\n");
+        CertDeleteCertificateFromStore(linked);
+    }
+    CertCloseStore(store2, 0);
+
+    CertFreeCertificateContext(source);
+    CertCloseStore(store1, 0);
+}
+
 static DWORD countCertsInStore(HCERTSTORE store)
 {
     PCCERT_CONTEXT cert = NULL;
@@ -2185,12 +2583,14 @@ START_TEST(store)
     testFileStore();
     testFileNameStore();
     testMessageStore();
+    testSerializedStore();
 
     testCertOpenSystemStore();
     testCertEnumSystemStore();
     testStoreProperty();
 
     testAddSerialized();
+    testAddCertificateLink();
 
     test_I_UpdateStore();
 }

@@ -357,6 +357,16 @@ static void test_xmlelem_collection(void)
     ok(V_VT(&var) == VT_DISPATCH, "Expected VT_DISPATCH, got %d\n", V_VT(&var));
     ok(num_vars == 1, "Expected 1, got %d\n", num_vars);
 
+    /* try advance further, no children left */
+    hr = IEnumVARIANT_Next(enumVar, 1, &var, &num_vars);
+    ok(hr == S_FALSE, "Expected S_FALSE, got %08x\n", hr);
+    ok(V_VT(&var) == 0, "Expected 0, got %d\n", V_VT(&var));
+    ok(num_vars == 0, "Expected 0, got %d\n", num_vars);
+
+    hr = IEnumVARIANT_Next(enumVar, 1, &var, NULL);
+    ok(hr == S_FALSE, "Expected S_FALSE, got %08x\n", hr);
+    ok(V_VT(&var) == 0, "Expected 0, got %d\n", V_VT(&var));
+
     hr = IUnknown_QueryInterface(V_DISPATCH(&var), &IID_IXMLElement, (LPVOID *)&child);
     ok(hr == S_OK, "Expected S_OK, got %08x\n", hr);
     ok(child != NULL, "Expected non-NULL child\n");

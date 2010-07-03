@@ -427,7 +427,7 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     /* WinXP returns HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND): 0x80070002 but
      * Win2K returns SCHED_E_CANNOT_OPEN_TASK: 0x8004130d
      * Win9x doesn't support security services */
-    if (hres == SCHED_E_NO_SECURITY_SERVICES)
+    if (hres == SCHED_E_NO_SECURITY_SERVICES || hres == SCHED_E_SERVICE_NOT_RUNNING)
     {
         win_skip("Security services are not supported\n");
         cleanup_task();
@@ -445,7 +445,8 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     hres = ITask_GetAccountInformation(test_task, &account_name);
     ok(hres == S_OK ||
        broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
-              hres == SCHED_E_CANNOT_OPEN_TASK),
+              hres == SCHED_E_CANNOT_OPEN_TASK ||
+              hres == 0x200),  /* win2k */
        "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {
@@ -464,7 +465,8 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     hres = ITask_GetAccountInformation(test_task, &account_name);
     ok(hres == S_OK ||
        broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
-              hres == SCHED_E_CANNOT_OPEN_TASK),
+              hres == SCHED_E_CANNOT_OPEN_TASK ||
+              hres == 0x200),  /* win2k */
        "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {
@@ -480,7 +482,8 @@ static void test_SetAccountInformation_GetAccountInformation(void)
     hres = ITask_GetAccountInformation(test_task, &account_name);
     ok(hres == S_OK ||
        broken(hres == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND) ||
-              hres == SCHED_E_CANNOT_OPEN_TASK),
+              hres == SCHED_E_CANNOT_OPEN_TASK ||
+              hres == 0x200),  /* win2k */
        "GetAccountInformation failed: %08x\n", hres);
     if (hres == S_OK)
     {

@@ -116,7 +116,7 @@ ULONG_PTR completionKey;
 IO_STATUS_BLOCK ioSb;
 ULONG_PTR completionValue;
 
-static long get_pending_msgs(HANDLE h)
+static ULONG get_pending_msgs(HANDLE h)
 {
     NTSTATUS res;
     ULONG a, req;
@@ -163,9 +163,8 @@ static void create_file_test(void)
     OBJECT_ATTRIBUTES attr;
     IO_STATUS_BLOCK io;
     UNICODE_STRING nameW;
-    UINT len;
 
-    len = GetCurrentDirectoryW( MAX_PATH, path );
+    GetCurrentDirectoryW( MAX_PATH, path );
     pRtlDosPathNameToNtPathName_U( path, &nameW, NULL, NULL );
     attr.Length = sizeof(attr);
     attr.RootDirectory = 0;
@@ -247,7 +246,6 @@ static void create_file_test(void)
     todo_wine
     ok( status == STATUS_INVALID_PARAMETER,
         "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status );
-    pRtlFreeUnicodeString( &nameW );
 }
 
 static void open_file_test(void)
@@ -255,7 +253,7 @@ static void open_file_test(void)
     NTSTATUS status;
     HANDLE dir, root, handle;
     WCHAR path[MAX_PATH];
-    BYTE data[8192];
+    BYTE data[1024];
     OBJECT_ATTRIBUTES attr;
     IO_STATUS_BLOCK io;
     UNICODE_STRING nameW;
@@ -270,8 +268,8 @@ static void open_file_test(void)
     attr.Attributes = OBJ_CASE_INSENSITIVE;
     attr.SecurityDescriptor = NULL;
     attr.SecurityQualityOfService = NULL;
-    status = pNtOpenFile( &dir, GENERIC_READ, &attr, &io,
-                          FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_DIRECTORY_FILE );
+    status = pNtOpenFile( &dir, SYNCHRONIZE|FILE_LIST_DIRECTORY, &attr, &io,
+                          FILE_SHARE_READ|FILE_SHARE_WRITE, FILE_DIRECTORY_FILE|FILE_SYNCHRONOUS_IO_NONALERT );
     ok( !status, "open %s failed %x\n", wine_dbgstr_w(nameW.Buffer), status );
     pRtlFreeUnicodeString( &nameW );
 
@@ -321,56 +319,61 @@ static void open_file_test(void)
     /* try open by file id */
 
     while (!pNtQueryDirectoryFile( dir, NULL, NULL, NULL, &io, data, sizeof(data),
-                                   FileIdBothDirectoryInformation, FALSE, NULL, restart ))
+                                   FileIdBothDirectoryInformation, TRUE, NULL, restart ))
     {
         FILE_ID_BOTH_DIRECTORY_INFORMATION *info = (FILE_ID_BOTH_DIRECTORY_INFORMATION *)data;
 
         restart = FALSE;
-        for (;;)
+
+        if (!info->FileId.QuadPart) continue;
+
+        nameW.Buffer = (WCHAR *)&info->FileId;
+        nameW.Length = sizeof(info->FileId);
+        info->FileName[info->FileNameLength/sizeof(WCHAR)] = 0;
+        attr.RootDirectory = dir;
+        /* We skip 'open' files by not specifying FILE_SHARE_WRITE */
+        status = pNtOpenFile( &handle, GENERIC_READ, &attr, &io,
+                              FILE_SHARE_READ,
+                              FILE_OPEN_BY_FILE_ID |
+                              ((info->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_DIRECTORY_FILE : 0) );
+        ok( status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED || status == STATUS_NOT_IMPLEMENTED || status == STATUS_SHARING_VIOLATION,
+            "open %s failed %x\n", wine_dbgstr_w(info->FileName), status );
+        if (status == STATUS_NOT_IMPLEMENTED)
         {
-            if (!info->FileId.QuadPart) goto next;
-            nameW.Buffer = (WCHAR *)&info->FileId;
-            nameW.Length = sizeof(info->FileId);
-            info->FileName[info->FileNameLength/sizeof(WCHAR)] = 0;
-            attr.RootDirectory = dir;
+            win_skip( "FILE_OPEN_BY_FILE_ID not supported\n" );
+            break;
+        }
+        if (status == STATUS_SHARING_VIOLATION)
+            trace( "%s is currently open\n", wine_dbgstr_w(info->FileName) );
+        if (!status)
+        {
+            BYTE buf[sizeof(FILE_ALL_INFORMATION) + MAX_PATH * sizeof(WCHAR)];
+
+            if (!pNtQueryInformationFile( handle, &io, buf, sizeof(buf), FileAllInformation ))
+            {
+                FILE_ALL_INFORMATION *fai = (FILE_ALL_INFORMATION *)buf;
+
+                /* check that it's the same file/directory */
+
+                /* don't check the size for directories */
+                if (!(info->FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                    ok( info->EndOfFile.QuadPart == fai->StandardInformation.EndOfFile.QuadPart,
+                        "mismatched file size for %s\n", wine_dbgstr_w(info->FileName));
+
+                ok( info->CreationTime.QuadPart == fai->BasicInformation.CreationTime.QuadPart,
+                    "mismatched creation time for %s\n", wine_dbgstr_w(info->FileName));
+            }
+            CloseHandle( handle );
+
+            /* try same thing from drive root */
+            attr.RootDirectory = root;
             status = pNtOpenFile( &handle, GENERIC_READ, &attr, &io,
                                   FILE_SHARE_READ|FILE_SHARE_WRITE,
                                   FILE_OPEN_BY_FILE_ID |
                                   ((info->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_DIRECTORY_FILE : 0) );
-            ok( status == STATUS_SUCCESS || status == STATUS_ACCESS_DENIED || status == STATUS_NOT_IMPLEMENTED,
+            ok( status == STATUS_SUCCESS || status == STATUS_NOT_IMPLEMENTED,
                 "open %s failed %x\n", wine_dbgstr_w(info->FileName), status );
-            if (status == STATUS_NOT_IMPLEMENTED)
-            {
-                win_skip( "FILE_OPEN_BY_FILE_ID not supported\n" );
-                break;
-            }
-            if (!status)
-            {
-                FILE_ALL_INFORMATION all_info;
-
-                if (!pNtQueryInformationFile( handle, &io, &all_info, sizeof(all_info), FileAllInformation ))
-                {
-                    /* check that it's the same file */
-                    ok( info->EndOfFile.QuadPart == all_info.StandardInformation.EndOfFile.QuadPart,
-                        "mismatched file size for %s\n", wine_dbgstr_w(info->FileName));
-                    ok( info->LastWriteTime.QuadPart == all_info.BasicInformation.LastWriteTime.QuadPart,
-                        "mismatched write time for %s\n", wine_dbgstr_w(info->FileName));
-                }
-                CloseHandle( handle );
-
-                /* try same thing from drive root */
-                attr.RootDirectory = root;
-                status = pNtOpenFile( &handle, GENERIC_READ, &attr, &io,
-                                      FILE_SHARE_READ|FILE_SHARE_WRITE,
-                                      FILE_OPEN_BY_FILE_ID |
-                                      ((info->FileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? FILE_DIRECTORY_FILE : 0) );
-                ok( status == STATUS_SUCCESS || status == STATUS_NOT_IMPLEMENTED,
-                    "open %s failed %x\n", wine_dbgstr_w(info->FileName), status );
-                if (!status) CloseHandle( handle );
-            }
-        next:
-            if (!info->NextEntryOffset) break;
-            info = (FILE_ID_BOTH_DIRECTORY_INFORMATION *)((char *)info + info->NextEntryOffset);
+            if (!status) CloseHandle( handle );
         }
     }
 
@@ -907,13 +910,13 @@ static void nt_mailslot_test(void)
 static void test_iocp_setcompletion(HANDLE h)
 {
     NTSTATUS res;
-    long count;
+    ULONG count;
 
     res = pNtSetIoCompletion( h, CKEY_FIRST, CVALUE_FIRST, STATUS_INVALID_DEVICE_REQUEST, 3 );
     ok( res == STATUS_SUCCESS, "NtSetIoCompletion failed: %x\n", res );
 
     count = get_pending_msgs(h);
-    ok( count == 1, "Unexpected msg count: %ld\n", count );
+    ok( count == 1, "Unexpected msg count: %d\n", count );
 
     if (get_msg(h))
     {
@@ -924,7 +927,7 @@ static void test_iocp_setcompletion(HANDLE h)
     }
 
     count = get_pending_msgs(h);
-    ok( !count, "Unexpected msg count: %ld\n", count );
+    ok( !count, "Unexpected msg count: %d\n", count );
 }
 
 static void test_iocp_fileio(HANDLE h)
@@ -1473,8 +1476,7 @@ START_TEST(file)
     pNtQueryDirectoryFile   = (void *)GetProcAddress(hntdll, "NtQueryDirectoryFile");
 
     create_file_test();
-    ok(0, "broken test: open_file_test\n");
-    //open_file_test();
+    open_file_test();
     delete_file_test();
     read_file_test();
     nt_mailslot_test();
@@ -1483,6 +1485,5 @@ START_TEST(file)
     test_file_all_information();
     test_file_both_information();
     test_file_name_information();
-    ok(0, "broken test: test_file_all_name_information \n");
-    //test_file_all_name_information();
+    test_file_all_name_information();
 }

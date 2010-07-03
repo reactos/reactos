@@ -28,10 +28,6 @@
 
 #include "wine/test.h"
 
-#define IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE          0x0040
-#define IMAGE_DLLCHARACTERISTICS_NX_COMPAT             0x0100
-#define CLDB_E_FILE_OLDVER              EMAKEHR(0x1107)
-
 typedef struct _tagASSEMBLY ASSEMBLY;
 
 typedef struct

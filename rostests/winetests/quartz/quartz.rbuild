@@ -2,6 +2,7 @@
 	<include base="quartz_winetest">.</include>
 	<define name="__ROS_LONG64__" />
 	<file>avisplitter.c</file>
+	<file>dsoundrender.c</file>
 	<file>filtergraph.c</file>
 	<file>filtermapper.c</file>
 	<file>memallocator.c</file>

@@ -925,6 +925,36 @@ static HWND create_parent_window(void)
     return hwnd;
 }
 
+static void test_showband(void)
+{
+    HWND hRebar;
+    REBARBANDINFOA rbi;
+    BOOL ret;
+
+    hRebar = create_rebar_control();
+
+    /* no bands */
+    ret = SendMessageA(hRebar, RB_SHOWBAND, 0, TRUE);
+    ok(ret == FALSE, "got %d\n", ret);
+
+    rbi.cbSize = REBARBANDINFOA_V6_SIZE;
+    rbi.fMask = RBBIM_SIZE | RBBIM_CHILDSIZE | RBBIM_CHILD;
+    rbi.cx = 200;
+    rbi.cxMinChild = 100;
+    rbi.cyMinChild = 30;
+    rbi.hwndChild = NULL;
+    SendMessageA(hRebar, RB_INSERTBAND, -1, (LPARAM)&rbi);
+
+    /* index out of range */
+    ret = SendMessageA(hRebar, RB_SHOWBAND, 1, TRUE);
+    ok(ret == FALSE, "got %d\n", ret);
+
+    ret = SendMessageA(hRebar, RB_SHOWBAND, 0, TRUE);
+    ok(ret == TRUE, "got %d\n", ret);
+
+    DestroyWindow(hRebar);
+}
+
 START_TEST(rebar)
 {
     HMODULE hComctl32;
@@ -948,6 +978,7 @@ START_TEST(rebar)
 
     test_bandinfo();
     test_colors();
+    test_showband();
 
     if(!is_font_installed("System") || !is_font_installed("Tahoma"))
     {

@@ -814,21 +814,70 @@ static void test_MkParseDisplayName(void)
     static const WCHAR wszDisplayNameProgId1[] = {'S','t','d','F','o','n','t',':',0};
     static const WCHAR wszDisplayNameProgId2[] = {'@','S','t','d','F','o','n','t',0};
     static const WCHAR wszDisplayNameProgIdFail[] = {'S','t','d','F','o','n','t',0};
+    static const WCHAR wszEmpty[] = {0};
     char szDisplayNameFile[256];
     WCHAR wszDisplayNameFile[256];
+    int i, len;
+
+    const struct
+    {
+        LPBC *ppbc;
+        LPCOLESTR szDisplayName;
+        LPDWORD pchEaten;
+        LPMONIKER *ppmk;
+    } invalid_parameters[] =
+    {
+        {NULL,  NULL,     NULL,   NULL},
+        {NULL,  NULL,     NULL,   &pmk},
+        {NULL,  NULL,     &eaten, NULL},
+        {NULL,  NULL,     &eaten, &pmk},
+        {NULL,  wszEmpty, NULL,   NULL},
+        {NULL,  wszEmpty, NULL,   &pmk},
+        {NULL,  wszEmpty, &eaten, NULL},
+        {NULL,  wszEmpty, &eaten, &pmk},
+        {&pbc,  NULL,     NULL,   NULL},
+        {&pbc,  NULL,     NULL,   &pmk},
+        {&pbc,  NULL,     &eaten, NULL},
+        {&pbc,  NULL,     &eaten, &pmk},
+        {&pbc,  wszEmpty, NULL,   NULL},
+        {&pbc,  wszEmpty, NULL,   &pmk},
+        {&pbc,  wszEmpty, &eaten, NULL},
+        {&pbc,  wszEmpty, &eaten, &pmk},
+    };
 
     hr = CreateBindCtx(0, &pbc);
     ok_ole_success(hr, CreateBindCtx);
 
+    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    {
+        eaten = 0xdeadbeef;
+        pmk = (IMoniker *)0xdeadbeef;
+        hr = MkParseDisplayName(invalid_parameters[i].ppbc ? *invalid_parameters[i].ppbc : NULL,
+                                invalid_parameters[i].szDisplayName,
+                                invalid_parameters[i].pchEaten,
+                                invalid_parameters[i].ppmk);
+        ok(hr == E_INVALIDARG, "[%d] MkParseDisplayName should have failed with E_INVALIDARG instead of 0x%08x\n", i, hr);
+        ok(eaten == 0xdeadbeef, "[%d] Processed character count should have been 0xdeadbeef instead of %u\n", i, eaten);
+        ok(pmk == (IMoniker *)0xdeadbeef, "[%d] Output moniker pointer should have been 0xdeadbeef instead of %p\n", i, pmk);
+    }
+
+    eaten = 0xdeadbeef;
+    pmk = (IMoniker *)0xdeadbeef;
     hr = MkParseDisplayName(pbc, wszNonExistentProgId, &eaten, &pmk);
     ok(hr == MK_E_SYNTAX || hr == MK_E_CANTOPENFILE /* Win9x */,
         "MkParseDisplayName should have failed with MK_E_SYNTAX or MK_E_CANTOPENFILE instead of 0x%08x\n", hr);
+    ok(eaten == 0, "Processed character count should have been 0 instead of %u\n", eaten);
+    ok(pmk == NULL, "Output moniker pointer should have been NULL instead of %p\n", pmk);
 
     /* no special handling of "clsid:" without the string form of the clsid
      * following */
+    eaten = 0xdeadbeef;
+    pmk = (IMoniker *)0xdeadbeef;
     hr = MkParseDisplayName(pbc, wszDisplayNameClsid, &eaten, &pmk);
     ok(hr == MK_E_SYNTAX || hr == MK_E_CANTOPENFILE /* Win9x */,
         "MkParseDisplayName should have failed with MK_E_SYNTAX or MK_E_CANTOPENFILE instead of 0x%08x\n", hr);
+    ok(eaten == 0, "Processed character count should have been 0 instead of %u\n", eaten);
+    ok(pmk == NULL, "Output moniker pointer should have been NULL instead of %p\n", pmk);
 
     /* shows clsid has higher precedence than a running object */
     hr = CreateFileMoniker(wszDisplayName, &pmk);
@@ -841,6 +890,8 @@ static void test_MkParseDisplayName(void)
     pmk = NULL;
     hr = MkParseDisplayName(pbc, wszDisplayName, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == sizeof(wszDisplayName)/sizeof(WCHAR) - 1,
+        "Processed character count should have been 43 instead of %u\n", eaten);
     if (pmk)
     {
         IMoniker_IsSystemMoniker(pmk, &moniker_type);
@@ -861,6 +912,8 @@ static void test_MkParseDisplayName(void)
     pmk = NULL;
     hr = MkParseDisplayName(pbc, wszDisplayNameRunning, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == sizeof(wszDisplayNameRunning)/sizeof(WCHAR) - 1,
+        "Processed character count should have been 15 instead of %u\n", eaten);
     if (pmk)
     {
         IMoniker_IsSystemMoniker(pmk, &moniker_type);
@@ -877,6 +930,8 @@ static void test_MkParseDisplayName(void)
     expected_display_name = wszDisplayNameProgId1;
     hr = MkParseDisplayName(pbc, wszDisplayNameProgId1, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == sizeof(wszDisplayNameProgId1)/sizeof(WCHAR) - 1,
+        "Processed character count should have been 8 instead of %u\n", eaten);
     if (pmk)
     {
         IMoniker_IsSystemMoniker(pmk, &moniker_type);
@@ -887,6 +942,8 @@ static void test_MkParseDisplayName(void)
     expected_display_name = wszDisplayNameProgId2;
     hr = MkParseDisplayName(pbc, wszDisplayNameProgId2, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == sizeof(wszDisplayNameProgId2)/sizeof(WCHAR) - 1,
+        "Processed character count should have been 8 instead of %u\n", eaten);
     if (pmk)
     {
         IMoniker_IsSystemMoniker(pmk, &moniker_type);
@@ -894,18 +951,23 @@ static void test_MkParseDisplayName(void)
         IMoniker_Release(pmk);
     }
 
+    eaten = 0xdeadbeef;
+    pmk = (IMoniker *)0xdeadbeef;
     hr = MkParseDisplayName(pbc, wszDisplayNameProgIdFail, &eaten, &pmk);
     ok(hr == MK_E_SYNTAX || hr == MK_E_CANTOPENFILE /* Win9x */,
         "MkParseDisplayName with ProgId without marker should fail with MK_E_SYNTAX or MK_E_CANTOPENFILE instead of 0x%08x\n", hr);
+    ok(eaten == 0, "Processed character count should have been 0 instead of %u\n", eaten);
+    ok(pmk == NULL, "Output moniker pointer should have been NULL instead of %p\n", pmk);
 
     hr = CoRevokeClassObject(pdwReg1);
     ok_ole_success(hr, CoRevokeClassObject);
 
     GetSystemDirectoryA(szDisplayNameFile, sizeof(szDisplayNameFile));
     strcat(szDisplayNameFile, "\\kernel32.dll");
-    MultiByteToWideChar(CP_ACP, 0, szDisplayNameFile, -1, wszDisplayNameFile, sizeof(wszDisplayNameFile)/sizeof(wszDisplayNameFile[0]));
+    len = MultiByteToWideChar(CP_ACP, 0, szDisplayNameFile, -1, wszDisplayNameFile, sizeof(wszDisplayNameFile)/sizeof(wszDisplayNameFile[0]));
     hr = MkParseDisplayName(pbc, wszDisplayNameFile, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == len - 1, "Processed character count should have been %d instead of %u\n", len - 1, eaten);
     if (pmk)
     {
         IMoniker_IsSystemMoniker(pmk, &moniker_type);
@@ -915,6 +977,7 @@ static void test_MkParseDisplayName(void)
 
     hr = MkParseDisplayName(pbc, wszDisplayName, &eaten, &pmk);
     ok_ole_success(hr, MkParseDisplayName);
+    ok(eaten == sizeof(wszDisplayName)/sizeof(WCHAR) - 1, "Processed character count should have been 43 instead of %u\n", eaten);
 
     if (pmk)
     {

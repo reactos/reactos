@@ -90,6 +90,16 @@ static const WCHAR szComplete5[] = {
     '<','/','S',':','s','e','a','r','c','h','>',0
 };
 
+static const WCHAR szComplete6[] = {
+    '<','?','x','m','l',' ','v','e','r','s','i','o','n','=','\'','1','.','0','\'',' ',
+    'e','n','c','o','d','i','n','g','=','\'','W','i','n','d','o','w','s','-','1','2','5','2','\'','?','>','\n',
+    '<','o','p','e','n','>','<','/','o','p','e','n','>','\n',0
+};
+
+static const CHAR szNonUnicodeXML[] =
+"<?xml version='1.0' encoding='Windows-1252'?>\n"
+"<open></open>\n";
+
 static const CHAR szExampleXML[] =
 "<?xml version='1.0' encoding='utf-8'?>\n"
 "<root xmlns:foo='urn:uuid:86B2F87F-ACB6-45cd-8B77-9BDB92A01A29'>\n"
@@ -460,20 +470,8 @@ static void node_to_string(IXMLDOMNode *node, char *buf)
         }
         else
         {
-            int pos = get_node_position(node);
-            DOMNodeType parent_type = NODE_INVALID;
             r = IXMLDOMNode_get_parentNode(node, &new_node);
-
-            /* currently wine doesn't create a node for the <?xml ... ?>. To be able to test query
-             * results we "fix" it */
-            if (r == S_OK)
-                ole_check(IXMLDOMNode_get_nodeType(new_node, &parent_type));
-            if ((parent_type == NODE_DOCUMENT) && type != NODE_PROCESSING_INSTRUCTION && pos==1)
-            {
-                todo_wine ok(FALSE, "The first child of the document node in MSXML is the <?xml ... ?> processing instruction\n");
-                pos++;
-            }
-            wsprintf(buf, "%d", pos);
+            wsprintf(buf, "%d", get_node_position(node));
             buf += strlen(buf);
         }
 
@@ -537,8 +535,9 @@ static void test_domdoc( void )
     LONG nLength = 0;
     WCHAR buff[100];
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -552,11 +551,11 @@ if (0)
 
     /* try some stupid things */
     r = IXMLDOMDocument_loadXML( doc, NULL, NULL );
-    ok( r == S_FALSE, "loadXML failed\n");
+    ok( r == S_FALSE, "loadXML succeeded\n");
 
     b = VARIANT_TRUE;
     r = IXMLDOMDocument_loadXML( doc, NULL, &b );
-    ok( r == S_FALSE, "loadXML failed\n");
+    ok( r == S_FALSE, "loadXML succeeded\n");
     ok( b == VARIANT_FALSE, "failed to load XML string\n");
 
     /* try to load a document from a nonexistent file */
@@ -567,16 +566,16 @@ if (0)
     V_BSTR(&var) = str;
 
     r = IXMLDOMDocument_load( doc, var, &b);
-    ok( r == S_FALSE, "load (from file) failed\n");
-    ok( b == VARIANT_FALSE, "failed to load XML file\n");
+    ok( r == S_FALSE, "loadXML succeeded\n");
+    ok( b == VARIANT_FALSE, "succeeded in loading XML string\n");
     SysFreeString( str );
 
     /* try load an empty document */
     b = VARIANT_TRUE;
     str = SysAllocString( szEmpty );
     r = IXMLDOMDocument_loadXML( doc, str, &b );
-    ok( r == S_FALSE, "loadXML failed\n");
-    ok( b == VARIANT_FALSE, "failed to load XML string\n");
+    ok( r == S_FALSE, "loadXML succeeded\n");
+    ok( b == VARIANT_FALSE, "succeeded in loading XML string\n");
     SysFreeString( str );
 
     r = IXMLDOMDocument_get_async( doc, &b );
@@ -598,8 +597,8 @@ if (0)
     b = VARIANT_TRUE;
     str = SysAllocString( szIncomplete );
     r = IXMLDOMDocument_loadXML( doc, str, &b );
-    ok( r == S_FALSE, "loadXML failed\n");
-    ok( b == VARIANT_FALSE, "failed to load XML string\n");
+    ok( r == S_FALSE, "loadXML succeeded\n");
+    ok( b == VARIANT_FALSE, "succeeded in loading XML string\n");
     SysFreeString( str );
 
     /* check that there's no document element */
@@ -617,6 +616,22 @@ if (0)
     ok( r == S_OK, "loadXML failed\n");
     ok( b == VARIANT_TRUE, "failed to load XML string\n");
 
+    /* loadXML ignores the encoding attribute and always expects Unicode */
+    b = VARIANT_FALSE;
+    str = SysAllocString( szComplete6 );
+    r = IXMLDOMDocument_loadXML( doc, str, &b );
+    ok( r == S_OK, "loadXML failed\n");
+    ok( b == VARIANT_TRUE, "failed to load XML string\n");
+    SysFreeString( str );
+
+    /* try a BSTR containing a Windows-1252 document */
+    b = VARIANT_TRUE;
+    str = SysAllocStringByteLen( szNonUnicodeXML, sizeof(szNonUnicodeXML) - 1 );
+    r = IXMLDOMDocument_loadXML( doc, str, &b );
+    ok( r == S_FALSE, "loadXML succeeded\n");
+    ok( b == VARIANT_FALSE, "succeeded in loading XML string\n");
+    SysFreeString( str );
+
     /* try to load something valid */
     b = VARIANT_FALSE;
     str = SysAllocString( szComplete1 );
@@ -628,6 +643,11 @@ if (0)
     /* check if nodename is correct */
     r = IXMLDOMDocument_get_nodeName( doc, NULL );
     ok ( r == E_INVALIDARG, "get_nodeName (NULL) wrong code\n");
+
+    str = (BSTR)0xdeadbeef;
+    r = IXMLDOMDocument_get_baseName( doc, &str );
+    ok ( r == S_FALSE, "got 0x%08x\n", r);
+    ok (str == NULL, "got %p\n", str);
 
     /* content doesn't matter here */
     str = NULL;
@@ -1222,6 +1242,27 @@ if (0)
     free_bstrs();
 }
 
+static void test_persiststreaminit(void)
+{
+    IXMLDOMDocument *doc;
+    IPersistStreamInit *streaminit;
+    HRESULT hr;
+
+    hr = CoCreateInstance( &CLSID_DOMDocument, NULL,
+        CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (void**)&doc );
+    ok( hr == S_OK, "failed with 0x%08x\n", hr );
+    if( hr != S_OK )
+        return;
+
+    hr = IXMLDOMDocument_QueryInterface(doc, &IID_IPersistStreamInit, (void**)&streaminit);
+    ok( hr == S_OK, "failed with 0x%08x\n", hr );
+
+    hr = IPersistStreamInit_InitNew(streaminit);
+    ok( hr == S_OK, "failed with 0x%08x\n", hr );
+
+    IXMLDOMDocument_Release(doc);
+}
+
 static void test_domnode( void )
 {
     HRESULT r;
@@ -1237,14 +1278,11 @@ static void test_domnode( void )
     VARIANT var;
     LONG count;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
-    if (!doc) {
-        ok( FALSE, "no document\n");
-        return;
-    }
 
     b = FALSE;
     str = SysAllocString( szComplete4 );
@@ -1680,15 +1718,17 @@ static void test_refs(void)
     LONG ref;
     IUnknown *unk, *unk2;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
     ref = IXMLDOMDocument_Release(doc);
     ok( ref == 0, "ref %d\n", ref);
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -1784,8 +1824,9 @@ static void test_create(void)
     LONG ref;
     LONG num;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -1986,6 +2027,17 @@ static void test_create(void)
     r = IXMLDOMDocument_createNode( doc, var, str, NULL, &node );
     ok( r == S_OK, "returns %08x\n", r );
     if( SUCCEEDED(r) ) IXMLDOMNode_Release( node );
+    SysFreeString(str);
+
+    /* a name is required for attribute, try a BSTR with first null wchar */
+    V_VT(&var) = VT_I1;
+    V_I1(&var) = NODE_ATTRIBUTE;
+    str = SysAllocString( szstr1 );
+    str[0] = 0;
+    node = (IXMLDOMNode*)0x1;
+    r = IXMLDOMDocument_createNode( doc, var, str, NULL, &node );
+    ok( r == E_FAIL, "returns %08x\n", r );
+    ok( node == (void*)0x1, "expected same ptr, got %p\n", node);
     SysFreeString(str);
 
     /* NODE_PROCESSING_INSTRUCTION */
@@ -2224,8 +2276,9 @@ static void test_getElementsByTagName(void)
     IXMLDOMNodeList *node_list;
     LONG len;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2289,8 +2342,9 @@ static void test_get_text(void)
     IXMLDOMNamedNodeMap *node_map;
     LONG len;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2390,8 +2444,9 @@ static void test_get_childNodes(void)
     IXMLDOMNodeList *node_list, *node_list2;
     LONG len;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2431,6 +2486,40 @@ static void test_get_childNodes(void)
     IXMLDOMDocument_Release( doc );
 }
 
+static void test_get_firstChild(void)
+{
+    static WCHAR xmlW[] = {'x','m','l',0};
+    IXMLDOMDocument *doc;
+    IXMLDOMNode *node;
+    VARIANT_BOOL b;
+    HRESULT r;
+    BSTR str;
+
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
+        CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (void**)&doc );
+    ok( r == S_OK, "failed with 0x%08x\n", r );
+    if( r != S_OK )
+        return;
+
+    str = SysAllocString( szComplete4 );
+    r = IXMLDOMDocument_loadXML( doc, str, &b );
+    ok( r == S_OK, "loadXML failed\n");
+    ok( b == VARIANT_TRUE, "failed to load XML string\n");
+    SysFreeString( str );
+
+    r = IXMLDOMDocument_get_firstChild( doc, &node );
+    ok( r == S_OK, "ret %08x\n", r);
+
+    r = IXMLDOMNode_get_nodeName( node, &str );
+    ok( r == S_OK, "ret %08x\n", r);
+
+    ok(memcmp(str, xmlW, sizeof(xmlW)) == 0, "expected \"xml\" node name\n");
+
+    SysFreeString(str);
+    IXMLDOMNode_Release( node );
+    IXMLDOMDocument_Release( doc );
+}
+
 static void test_removeChild(void)
 {
     HRESULT r;
@@ -2441,8 +2530,9 @@ static void test_removeChild(void)
     IXMLDOMNode *fo_node, *ba_node, *removed_node, *temp_node, *lc_node;
     IXMLDOMNodeList *root_list, *fo_list;
 
-    r = CoCreateInstance( &CLSID_DOMDocument, NULL, 
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2532,6 +2622,7 @@ static void test_replaceChild(void)
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2642,6 +2733,7 @@ static void test_removeNamedItem(void)
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2729,9 +2821,11 @@ static void test_XMLHTTP(void)
     HRESULT hr = CoCreateInstance(&CLSID_XMLHTTPRequest, NULL,
                                   CLSCTX_INPROC_SERVER, &IID_IXMLHttpRequest,
                                   (void **)&pXMLHttpRequest);
-    ok(hr == S_OK, "CoCreateInstance(CLSID_XMLHTTPRequest) should have succeeded instead of failing with 0x%08x\n", hr);
-    if (hr != S_OK)
+    if (FAILED(hr))
+    {
+        win_skip("IXMLHTTPRequest is not available (0x%08x)\n", hr);
         return;
+    }
 
     VariantInit(&dummy);
     V_VT(&dummy) = VT_ERROR;
@@ -2785,6 +2879,7 @@ static void test_IXMLDOMDocument2(void)
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2856,6 +2951,7 @@ static void test_XPath(void)
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL,
         CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -2915,6 +3011,8 @@ static void test_XPath(void)
     ole_check(IXMLDOMDocument_selectNodes(doc, _bstr_("elem//c"), &list));
     expect_list_and_release(list, "");
     ole_check(IXMLDOMDocument_selectNodes(doc, _bstr_("//elem[4]"), &list));
+    expect_list_and_release(list, "");
+    ole_check(IXMLDOMDocument_selectNodes(doc, _bstr_("root//elem[0]"), &list));
     expect_list_and_release(list, "");
 
     /* foo undeclared in document node */
@@ -2980,6 +3078,7 @@ static void test_cloneNode(void )
     static const WCHAR szSearch[] = { 'l', 'c', '/', 'p', 'r', 0 };
 
     r = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
     if( r != S_OK )
         return;
 
@@ -3141,6 +3240,7 @@ static void test_xmlTypes(void)
     LONG len = 0;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -4209,6 +4309,7 @@ static void test_nodeTypeTests( void )
     HRESULT hr;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -4554,10 +4655,12 @@ static void test_DocumentSaveToDocument(void)
     HRESULT hr;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc2 );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
     {
         IXMLDOMDocument_Release(doc);
@@ -4609,6 +4712,7 @@ static void test_DocumentSaveToFile(void)
     HRESULT hr;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -4656,10 +4760,12 @@ static void test_testTransforms(void)
     HRESULT hr;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&docSS );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
     {
         IXMLDOMDocument_Release(doc);
@@ -4707,6 +4813,7 @@ static void test_Namespaces(void)
 "</root>";
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -4762,6 +4869,7 @@ static void test_FormattingXML(void)
     static const CHAR szLinefeedRootXML[] = "<Root>\r\n\t<Sub val=\"A\"/>\r\n</Root>";
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -4798,6 +4906,7 @@ static void test_NodeTypeValue(void)
     VARIANT v;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -5187,10 +5296,12 @@ static void test_TransformWithLoadingLocalFile(void)
     }
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (LPVOID*)&xsl );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
     {
         IXMLDOMDocument2_Release(doc);
@@ -5256,6 +5367,7 @@ static void test_put_nodeValue(void)
     VARIANT data, type;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -5357,6 +5469,7 @@ static void test_document_IObjectSafety(void)
     HRESULT hr;
 
     hr = CoCreateInstance( &CLSID_DOMDocument, NULL, CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    ok( hr == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", hr );
     if( hr != S_OK )
         return;
 
@@ -5456,38 +5569,86 @@ static void test_document_IObjectSafety(void)
     IXMLDOMDocument_Release(doc);
 }
 
+static void test_XSLPattern(void)
+{
+    IXMLDOMDocument2 *doc;
+    IXMLDOMNodeList *list;
+    VARIANT_BOOL b;
+    HRESULT r;
+    LONG len;
+
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
+        CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument2, (void**)&doc );
+    ok( r == S_OK, "CoCreateInstance(CLSID_DOMDocument) should have succeeded instead of failing with 0x%08x\n", r );
+    if( r != S_OK )
+        return;
+
+    ole_check(IXMLDOMDocument2_loadXML(doc, _bstr_(szExampleXML), &b));
+    ok(b == VARIANT_TRUE, "failed to load XML string\n");
+
+    /* switch to XPath */
+    ole_check(IXMLDOMDocument2_setProperty(doc, _bstr_("SelectionLanguage"), _variantbstr_("XSLPattern")));
+
+    /* for XSLPattern start index is 0, for XPath it's 1 */
+    ole_check(IXMLDOMDocument2_selectNodes(doc, _bstr_("root//elem[0]"), &list));
+    len = 0;
+    ole_check(IXMLDOMNodeList_get_length(list, &len));
+    todo_wine ok(len != 0, "expected filled list\n");
+    if (len)
+        todo_wine expect_list_and_release(list, "E1.E2.D1");
+
+    IXMLDOMDocument2_Release(doc);
+    free_bstrs();
+}
+
 START_TEST(domdoc)
 {
+    IXMLDOMDocument *doc;
     HRESULT r;
 
     r = CoInitialize( NULL );
     ok( r == S_OK, "failed to init com\n");
+    if (r != S_OK)
+        return;
 
-    test_domdoc();
-    test_domnode();
-    test_refs();
-    test_create();
-    test_getElementsByTagName();
-    test_get_text();
-    test_get_childNodes();
-    test_removeChild();
-    test_replaceChild();
-    test_removeNamedItem();
+    r = CoCreateInstance( &CLSID_DOMDocument, NULL,
+        CLSCTX_INPROC_SERVER, &IID_IXMLDOMDocument, (LPVOID*)&doc );
+    if (SUCCEEDED(r))
+    {
+        IXMLDOMDocument_Release(doc);
+
+        test_domdoc();
+        test_persiststreaminit();
+        test_domnode();
+        test_refs();
+        test_create();
+        test_getElementsByTagName();
+        test_get_text();
+        test_get_childNodes();
+        test_get_firstChild();
+        test_removeChild();
+        test_replaceChild();
+        test_removeNamedItem();
+        test_IXMLDOMDocument2();
+        test_XPath();
+        test_XSLPattern();
+        test_cloneNode();
+        test_xmlTypes();
+        test_nodeTypeTests();
+        test_DocumentSaveToDocument();
+        test_DocumentSaveToFile();
+        test_testTransforms();
+        test_Namespaces();
+        test_FormattingXML();
+        test_NodeTypeValue();
+        test_TransformWithLoadingLocalFile();
+        test_put_nodeValue();
+        test_document_IObjectSafety();
+    }
+    else
+        win_skip("IXMLDOMDocument is not available (0x%08x)\n", r);
+
     test_XMLHTTP();
-    test_IXMLDOMDocument2();
-    test_XPath();
-    test_cloneNode();
-    test_xmlTypes();
-    test_nodeTypeTests();
-    test_DocumentSaveToDocument();
-    test_DocumentSaveToFile();
-    test_testTransforms();
-    test_Namespaces();
-    test_FormattingXML();
-    test_NodeTypeValue();
-    test_TransformWithLoadingLocalFile();
-    test_put_nodeValue();
-    test_document_IObjectSafety();
 
     CoUninitialize();
 }

@@ -656,7 +656,7 @@ static void test_lookupPrivilegeValue(void)
      { "SeCreateGlobalPrivilege", SE_CREATE_GLOBAL_PRIVILEGE },
     };
     BOOL (WINAPI *pLookupPrivilegeValueA)(LPCSTR, LPCSTR, PLUID);
-    int i;
+    unsigned int i;
     LUID luid;
     BOOL ret;
 
@@ -913,13 +913,13 @@ static void test_AccessCheck(void)
 
     /* SD without owner/group */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, KEY_QUERY_VALUE, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_INVALID_SECURITY_DESCR, "AccessCheck should have "
        "failed with ERROR_INVALID_SECURITY_DESCR, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     /* Set owner and group */
@@ -930,50 +930,50 @@ static void test_AccessCheck(void)
 
     /* Generic access mask */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_GENERIC_NOT_MAPPED, "AccessCheck should have failed "
        "with ERROR_GENERIC_NOT_MAPPED, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     /* Generic access mask - no privilegeset buffer */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                       NULL, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_NOACCESS, "AccessCheck should have failed "
        "with ERROR_NOACCESS, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     /* Generic access mask - no returnlength */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                       PrivSet, NULL, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_NOACCESS, "AccessCheck should have failed "
        "with ERROR_NOACCESS, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     /* Generic access mask - no privilegeset buffer, no returnlength */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                       NULL, NULL, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_NOACCESS, "AccessCheck should have failed "
        "with ERROR_NOACCESS, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     /* sd with no dacl present */
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = SetSecurityDescriptorDacl(SecurityDescriptor, FALSE, NULL, FALSE);
     ok(ret, "SetSecurityDescriptorDacl failed with error %d\n", GetLastError());
     ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
@@ -985,20 +985,20 @@ static void test_AccessCheck(void)
 
     /* sd with no dacl present - no privilegeset buffer */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                       NULL, &PrivSetLen, &Access, &AccessStatus);
     err = GetLastError();
     ok(!ret && err == ERROR_NOACCESS, "AccessCheck should have failed "
        "with ERROR_NOACCESS, instead of %d\n", err);
-    ok(Access == 0xdeadbeef && AccessStatus == 0xdeadbeef,
+    ok(Access == 0x1abe11ed && AccessStatus == 0x1abe11ed,
        "Access and/or AccessStatus were changed!\n");
 
     if(pNtAccessCheck)
     {
        /* Generic access mask - no privilegeset buffer */
        SetLastError(0xdeadbeef);
-       Access = ntAccessStatus = 0xdeadbeef;
+       Access = ntAccessStatus = 0x1abe11ed;
        ntret = pNtAccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                               NULL, &PrivSetLen, &Access, &ntAccessStatus);
        err = GetLastError();
@@ -1006,12 +1006,12 @@ static void test_AccessCheck(void)
           "NtAccessCheck should have failed with STATUS_ACCESS_VIOLATION, got %x\n", ntret);
        ok(err == 0xdeadbeef,
           "NtAccessCheck shouldn't set last error, got %d\n", err);
-       ok(Access == 0xdeadbeef && ntAccessStatus == 0xdeadbeef,
+       ok(Access == 0x1abe11ed && ntAccessStatus == 0x1abe11ed,
           "Access and/or AccessStatus were changed!\n");
 
       /* Generic access mask - no returnlength */
       SetLastError(0xdeadbeef);
-      Access = ntAccessStatus = 0xdeadbeef;
+      Access = ntAccessStatus = 0x1abe11ed;
       ntret = pNtAccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                              PrivSet, NULL, &Access, &ntAccessStatus);
       err = GetLastError();
@@ -1019,12 +1019,12 @@ static void test_AccessCheck(void)
          "NtAccessCheck should have failed with STATUS_ACCESS_VIOLATION, got %x\n", ntret);
       ok(err == 0xdeadbeef,
          "NtAccessCheck shouldn't set last error, got %d\n", err);
-      ok(Access == 0xdeadbeef && ntAccessStatus == 0xdeadbeef,
+      ok(Access == 0x1abe11ed && ntAccessStatus == 0x1abe11ed,
          "Access and/or AccessStatus were changed!\n");
 
       /* Generic access mask - no privilegeset buffer, no returnlength */
       SetLastError(0xdeadbeef);
-      Access = ntAccessStatus = 0xdeadbeef;
+      Access = ntAccessStatus = 0x1abe11ed;
       ntret = pNtAccessCheck(SecurityDescriptor, Token, GENERIC_READ, &Mapping,
                              NULL, NULL, &Access, &ntAccessStatus);
       err = GetLastError();
@@ -1032,14 +1032,14 @@ static void test_AccessCheck(void)
          "NtAccessCheck should have failed with STATUS_ACCESS_VIOLATION, got %x\n", ntret);
       ok(err == 0xdeadbeef,
          "NtAccessCheck shouldn't set last error, got %d\n", err);
-      ok(Access == 0xdeadbeef && ntAccessStatus == 0xdeadbeef,
+      ok(Access == 0x1abe11ed && ntAccessStatus == 0x1abe11ed,
          "Access and/or AccessStatus were changed!\n");
     }
     else
        win_skip("NtAccessCheck unavailable. Skipping.\n");
 
     /* sd with NULL dacl */
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = SetSecurityDescriptorDacl(SecurityDescriptor, TRUE, NULL, FALSE);
     ok(ret, "SetSecurityDescriptorDacl failed with error %d\n", GetLastError());
     ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
@@ -1067,7 +1067,7 @@ static void test_AccessCheck(void)
     ok(res, "AddAccessDeniedAce failed with error %d\n", GetLastError());
 
     /* sd with dacl */
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, KEY_READ, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     ok(ret, "AccessCheck failed with error %d\n", GetLastError());
@@ -1085,7 +1085,7 @@ static void test_AccessCheck(void)
 
     /* Access denied by SD */
     SetLastError(0xdeadbeef);
-    Access = AccessStatus = 0xdeadbeef;
+    Access = AccessStatus = 0x1abe11ed;
     ret = AccessCheck(SecurityDescriptor, Token, KEY_WRITE, &Mapping,
                       PrivSet, &PrivSetLen, &Access, &AccessStatus);
     ok(ret, "AccessCheck failed with error %d\n", GetLastError());
@@ -1420,7 +1420,7 @@ static void test_CreateWellKnownSid(void)
     PSID domainsid, sid;
     DWORD size, error;
     BOOL ret;
-    int i;
+    unsigned int i;
 
     if (!pCreateWellKnownSid)
     {
@@ -1466,13 +1466,13 @@ static void test_CreateWellKnownSid(void)
             cb = sizeof(sid_buffer);
             if (!pCreateWellKnownSid(i, domainsid, sid_buffer, &cb))
             {
-                skip("Well known SIDs starting from %d are not implemented\n", i);
+                skip("Well known SIDs starting from %u are not implemented\n", i);
                 break;
             }
         }
 
         cb = sizeof(sid_buffer);
-        ok(pCreateWellKnownSid(i, value->without_domain ? NULL : domainsid, sid_buffer, &cb), "Couldn't create well known sid %d\n", i);
+        ok(pCreateWellKnownSid(i, value->without_domain ? NULL : domainsid, sid_buffer, &cb), "Couldn't create well known sid %u\n", i);
         expect_eq(GetSidLengthRequired(*GetSidSubAuthorityCount(sid_buffer)), cb, DWORD, "%d");
         ok(IsValidSid(sid_buffer), "The sid is not valid\n");
         ok(pConvertSidToStringSidA(sid_buffer, &str), "Couldn't convert SID to string\n");
@@ -1484,9 +1484,9 @@ static void test_CreateWellKnownSid(void)
         {
             char buf2[SECURITY_MAX_SID_SIZE];
             cb = sizeof(buf2);
-            ok(pCreateWellKnownSid(i, domainsid, buf2, &cb), "Couldn't create well known sid %d with optional domain\n", i);
+            ok(pCreateWellKnownSid(i, domainsid, buf2, &cb), "Couldn't create well known sid %u with optional domain\n", i);
             expect_eq(GetSidLengthRequired(*GetSidSubAuthorityCount(sid_buffer)), cb, DWORD, "%d");
-            ok(memcmp(buf2, sid_buffer, cb) == 0, "SID create with domain is different than without (%d)\n", i);
+            ok(memcmp(buf2, sid_buffer, cb) == 0, "SID create with domain is different than without (%u)\n", i);
         }
     }
 
@@ -2674,7 +2674,7 @@ static void test_ConvertStringSecurityDescriptor(void)
     BOOL ret;
     PSECURITY_DESCRIPTOR pSD;
     static const WCHAR Blank[] = { 0 };
-    int i;
+    unsigned int i;
     static const struct
     {
         const char *sidstring;
@@ -2733,11 +2733,11 @@ static void test_ConvertStringSecurityDescriptor(void)
         ret = pConvertStringSecurityDescriptorToSecurityDescriptorA(
             cssd[i].sidstring, cssd[i].revision, &pSD, NULL);
         GLE = GetLastError();
-        ok(ret == cssd[i].ret, "(%02d) Expected %s (%d)\n", i, cssd[i].ret ? "success" : "failure", GLE);
+        ok(ret == cssd[i].ret, "(%02u) Expected %s (%d)\n", i, cssd[i].ret ? "success" : "failure", GLE);
         if (!cssd[i].ret)
             ok(GLE == cssd[i].GLE ||
                (cssd[i].altGLE && GLE == cssd[i].altGLE),
-               "(%02d) Unexpected last error %d\n", i, GLE);
+               "(%02u) Unexpected last error %d\n", i, GLE);
         if (ret)
             LocalFree(pSD);
     }
@@ -2807,12 +2807,12 @@ static void test_ConvertSecurityDescriptorToString(void)
  * don't replicate this feature so we only test len >= strlen+1. */
 #define CHECK_RESULT_AND_FREE(exp_str) \
     ok(strcmp(string, (exp_str)) == 0, "String mismatch (expected \"%s\", got \"%s\")\n", (exp_str), string); \
-    ok(len >= (lstrlen(exp_str) + 1), "Length mismatch (expected %d, got %d)\n", lstrlen(exp_str) + 1, len); \
+    ok(len >= (strlen(exp_str) + 1), "Length mismatch (expected %d, got %d)\n", lstrlen(exp_str) + 1, len); \
     LocalFree(string);
 
 #define CHECK_ONE_OF_AND_FREE(exp_str1, exp_str2) \
     ok(strcmp(string, (exp_str1)) == 0 || strcmp(string, (exp_str2)) == 0, "String mismatch (expected\n\"%s\" or\n\"%s\", got\n\"%s\")\n", (exp_str1), (exp_str2), string); \
-    ok(len >= (strlen(string) + 1), "Length mismatch (expected %d, got %d)\n", lstrlen(string) + 1, len); \
+    ok(len >= (strlen(exp_str1) + 1) || len >= (strlen(exp_str2) + 1), "Length mismatch (expected %d or %d, got %d)\n", lstrlen(exp_str1) + 1, lstrlen(exp_str2) + 1, len); \
     LocalFree(string);
 
     InitializeSecurityDescriptor(&desc, SECURITY_DESCRIPTOR_REVISION);

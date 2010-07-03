@@ -560,12 +560,6 @@ static void test_linei(void)
 {
     GpStatus status;
     GpPath *path;
-    GpPointF points[2];
-
-    points[0].X = 7.0;
-    points[0].Y = 11.0;
-    points[1].X = 13.0;
-    points[1].Y = 17.0;
 
     GdipCreatePath(FillModeAlternate, &path);
     status = GdipAddPathLineI(path, 5.0, 5.0, 6.0, 8.0);

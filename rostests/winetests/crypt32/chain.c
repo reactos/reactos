@@ -60,11 +60,25 @@ static BOOL (WINAPI *pCertVerifyCertificateChainPolicy)(LPCSTR,PCCERT_CHAIN_CONT
 
 #define IS_INTOID(x)    (((ULONG_PTR)(x) >> 16) == 0)
 
+typedef struct _CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT
+{
+    DWORD       cbSize;
+    HCERTSTORE  hRestrictedRoot;
+    HCERTSTORE  hRestrictedTrust;
+    HCERTSTORE  hRestrictedOther;
+    DWORD       cAdditionalStore;
+    HCERTSTORE *rghAdditionalStore;
+    DWORD       dwFlags;
+    DWORD       dwUrlRetrievalTimeout;
+    DWORD       MaximumCachedCertificates;
+    DWORD       CycleDetectionModulus;
+} CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT;
 
 static void testCreateCertChainEngine(void)
 {
     BOOL ret;
-    CERT_CHAIN_ENGINE_CONFIG config = { 0 };
+    CERT_CHAIN_ENGINE_CONFIG_NO_EXCLUSIVE_ROOT config = { 0 };
+    CERT_CHAIN_ENGINE_CONFIG *pConfig = (CERT_CHAIN_ENGINE_CONFIG *)&config;
     HCERTCHAINENGINE engine;
     HCERTSTORE store;
 
@@ -77,21 +91,21 @@ static void testCreateCertChainEngine(void)
     /* Crash
     ret = pCertCreateCertificateChainEngine(NULL, NULL);
     ret = pCertCreateCertificateChainEngine(NULL, &engine);
-    ret = pCertCreateCertificateChainEngine(&config, NULL);
+    ret = pCertCreateCertificateChainEngine(pConfig, NULL);
      */
-    ret = pCertCreateCertificateChainEngine(&config, &engine);
+    ret = pCertCreateCertificateChainEngine(pConfig, &engine);
     ok(!ret && GetLastError() == E_INVALIDARG,
      "Expected E_INVALIDARG, got %08x\n", GetLastError());
     /* Crashes
     config.cbSize = sizeof(config);
-    ret = pCertCreateCertificateChainEngine(&config, NULL);
+    ret = pCertCreateCertificateChainEngine(pConfig, NULL);
      */
     config.cbSize = sizeof(config);
-    ret = pCertCreateCertificateChainEngine(&config, &engine);
+    ret = pCertCreateCertificateChainEngine(pConfig, &engine);
     ok(ret, "CertCreateCertificateChainEngine failed: %08x\n", GetLastError());
     pCertFreeCertificateChainEngine(engine);
     config.dwFlags = 0xff000000;
-    ret = pCertCreateCertificateChainEngine(&config, &engine);
+    ret = pCertCreateCertificateChainEngine(pConfig, &engine);
     ok(ret, "CertCreateCertificateChainEngine failed: %08x\n", GetLastError());
     pCertFreeCertificateChainEngine(engine);
 
@@ -99,7 +113,7 @@ static void testCreateCertChainEngine(void)
     store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
      CERT_STORE_CREATE_NEW_FLAG, NULL);
     config.hRestrictedRoot = store;
-    ret = pCertCreateCertificateChainEngine(&config, &engine);
+    ret = pCertCreateCertificateChainEngine(pConfig, &engine);
     ok(ret, "CertCreateCertificateChainEngine failed: %08x\n", GetLastError());
     pCertFreeCertificateChainEngine(engine);
 
@@ -108,7 +122,7 @@ static void testCreateCertChainEngine(void)
      */
     CertAddEncodedCertificateToStore(store, X509_ASN_ENCODING, selfSignedCert,
      sizeof(selfSignedCert), CERT_STORE_ADD_ALWAYS, NULL);
-    ret = pCertCreateCertificateChainEngine(&config, &engine);
+    ret = pCertCreateCertificateChainEngine(pConfig, &engine);
     ok(!ret && GetLastError() == CRYPT_E_NOT_FOUND,
      "Expected CRYPT_E_NOT_FOUND, got %08x\n", GetLastError());
 
@@ -2458,6 +2472,37 @@ static const BYTE chain28_1[] = {
 0x44,0x76,0x66,0x26,0xa7,0x05,0x3c,0x68,0x66,0x1c,0x07,0x4d,0xcf,0x54,0xaa,
 0x5d,0xba,0x7a,0x8f,0x06,0xa7,0x1e,0x86,0xf1,0x5a,0x4b,0x50,0x16,0xad,0x9f,
 0x89 };
+/* A chain whose end certificate is issued to *.winehq.org. */
+static const BYTE chain29_1[] = {
+0x30,0x82,0x01,0xab,0x30,0x82,0x01,0x16,0xa0,0x03,0x02,0x01,0x02,0x02,0x01,
+0x01,0x30,0x0b,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x05,0x30,
+0x10,0x31,0x0e,0x30,0x0c,0x06,0x03,0x55,0x04,0x03,0x13,0x05,0x43,0x65,0x72,
+0x74,0x31,0x30,0x1e,0x17,0x0d,0x30,0x37,0x30,0x35,0x30,0x31,0x30,0x30,0x30,
+0x30,0x30,0x30,0x5a,0x17,0x0d,0x30,0x37,0x31,0x30,0x30,0x31,0x30,0x30,0x30,
+0x30,0x30,0x30,0x5a,0x30,0x10,0x31,0x0e,0x30,0x0c,0x06,0x03,0x55,0x04,0x03,
+0x13,0x05,0x43,0x65,0x72,0x74,0x32,0x30,0x81,0x9d,0x30,0x0b,0x06,0x09,0x2a,
+0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x01,0x03,0x81,0x8d,0x00,0x30,0x81,0x89,
+0x02,0x81,0x81,0x00,0xb8,0x52,0xda,0xc5,0x4b,0x3f,0xe5,0x33,0x0e,0x67,0x5f,
+0x48,0x21,0xdc,0x7e,0xef,0x37,0x33,0xba,0xff,0xb4,0xc6,0xdc,0xb6,0x17,0x8e,
+0x20,0x55,0x07,0x12,0xd2,0x7b,0x3c,0xce,0x30,0xc5,0xa7,0x48,0x9f,0x6e,0xfe,
+0xb8,0xbe,0xdb,0x9f,0x9b,0x17,0x60,0x16,0xde,0xc6,0x8b,0x47,0xd1,0x57,0x71,
+0x3c,0x93,0xfc,0xbd,0xec,0x44,0x32,0x3b,0xb9,0xcf,0x6b,0x05,0x72,0xa7,0x87,
+0x8e,0x7e,0xd4,0x9a,0x87,0x1c,0x2f,0xb7,0x82,0x40,0xfc,0x6a,0x80,0x83,0x68,
+0x28,0xce,0x84,0xf4,0x0b,0x2e,0x44,0xcb,0x53,0xac,0x85,0x85,0xb5,0x46,0x36,
+0x98,0x3c,0x10,0x02,0xaa,0x02,0xbc,0x8b,0xa2,0x23,0xb2,0xd3,0x51,0x9a,0x22,
+0x4a,0xe3,0xaa,0x4e,0x7c,0xda,0x38,0xcf,0x49,0x98,0x72,0xa3,0x02,0x03,0x01,
+0x00,0x01,0xa3,0x1b,0x30,0x19,0x30,0x17,0x06,0x03,0x55,0x1d,0x07,0x04,0x10,
+0x30,0x0e,0x82,0x0c,0x2a,0x2e,0x77,0x69,0x6e,0x65,0x68,0x71,0x2e,0x6f,0x72,
+0x67,0x30,0x0b,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x05,0x03,
+0x81,0x81,0x00,0x65,0xbf,0xfa,0xf7,0xc3,0x09,0x70,0x25,0x8a,0x46,0x69,0xf6,
+0xdc,0x07,0x1e,0x30,0xc9,0xe4,0x58,0x89,0x65,0x3a,0xa8,0xda,0xbd,0x17,0xf8,
+0x1d,0x0d,0x7d,0x47,0xb1,0xb2,0xda,0x17,0x9f,0xf6,0x47,0xe0,0xe4,0x4a,0xeb,
+0x02,0xc9,0x2e,0x69,0x1c,0x57,0x2a,0x80,0xc9,0x01,0x77,0x7b,0x27,0xff,0x2f,
+0xaf,0xdf,0xf3,0x65,0x12,0xd8,0x7d,0xc2,0xbf,0x1b,0x1d,0x18,0x96,0x5c,0xf6,
+0xba,0x43,0xc5,0x43,0x57,0xc0,0xdd,0x97,0x95,0xfb,0x1c,0xad,0x64,0x0f,0x61,
+0x3a,0xe9,0x27,0xa4,0x57,0x27,0x34,0xa7,0x42,0xde,0x78,0x1a,0x71,0x80,0x23,
+0xd6,0xd7,0x22,0xf0,0x24,0x0d,0x71,0xf1,0x2b,0xd0,0xd8,0x76,0x3d,0xef,0x4c,
+0xce,0x1c,0x3b,0x83,0x1b,0x63,0x10,0x6c,0x63,0xe5,0x69 };
 
 typedef struct _CONST_DATA_BLOB
 {
@@ -2482,9 +2527,9 @@ typedef struct _CONST_BLOB_ARRAY
  * certArray, where the last certificate in the chain is expected to be the
  * end certificate (the one from which the chain is built.)
  */
-static PCCERT_CHAIN_CONTEXT getChain(const CONST_BLOB_ARRAY *certArray,
- DWORD flags, BOOL includeStore, LPSYSTEMTIME checkTime, DWORD todo,
- DWORD testIndex)
+static PCCERT_CHAIN_CONTEXT getChain(HCERTCHAINENGINE engine,
+ const CONST_BLOB_ARRAY *certArray, DWORD flags, BOOL includeStore,
+ LPSYSTEMTIME checkTime, DWORD todo, DWORD testIndex)
 {
     HCERTSTORE store;
     PCCERT_CHAIN_CONTEXT chain = NULL;
@@ -2522,7 +2567,7 @@ static PCCERT_CHAIN_CONTEXT getChain(const CONST_BLOB_ARRAY *certArray,
             FILETIME fileTime;
 
             SystemTimeToFileTime(checkTime, &fileTime);
-            ret = pCertGetCertificateChain(NULL, endCert, &fileTime,
+            ret = pCertGetCertificateChain(engine, endCert, &fileTime,
              includeStore ? store : NULL, &chainPara, flags, NULL, &chain);
             if (todo & TODO_CHAIN)
                 todo_wine ok(ret, "Chain %d: CertGetCertificateChain failed: %08x\n",
@@ -3055,6 +3100,18 @@ static const CERT_TRUST_STATUS elementStatus28[] = {
 static const SimpleChainStatusCheck simpleStatus28[] = {
  { sizeof(elementStatus28) / sizeof(elementStatus28[0]), elementStatus28 },
 };
+static CONST_DATA_BLOB chain29[] = {
+ { sizeof(chain0_0), chain0_0 },
+ { sizeof(chain29_1), chain29_1 },
+};
+static const CERT_TRUST_STATUS elementStatus29[] = {
+ { CERT_TRUST_NO_ERROR, CERT_TRUST_HAS_NAME_MATCH_ISSUER },
+ { CERT_TRUST_IS_UNTRUSTED_ROOT | CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT,
+   CERT_TRUST_IS_SELF_SIGNED | CERT_TRUST_HAS_NAME_MATCH_ISSUER },
+};
+static const SimpleChainStatusCheck simpleStatus29[] = {
+ { sizeof(elementStatus29) / sizeof(elementStatus29[0]), elementStatus29 },
+};
 static CONST_DATA_BLOB selfSignedChain[] = {
  { sizeof(selfSignedCert), selfSignedCert }
 };
@@ -3340,6 +3397,7 @@ static ChainCheck chainCheck[] = {
        CERT_TRUST_HAS_NOT_PERMITTED_NAME_CONSTRAINT, 0 },
      1, simpleStatus28 },
    0 },
+ /* chain29 is handled separately elsewhere */
  { { sizeof(selfSignedChain) / sizeof(selfSignedChain[0]), selfSignedChain },
    { { 0, CERT_TRUST_HAS_PREFERRED_ISSUER },
      { CERT_TRUST_IS_NOT_TIME_VALID | CERT_TRUST_IS_UNTRUSTED_ROOT, 0 },
@@ -3555,7 +3613,7 @@ static void testGetCertChain(void)
 
     for (i = 0; i < sizeof(chainCheck) / sizeof(chainCheck[0]); i++)
     {
-        chain = getChain(&chainCheck[i].certs, 0, TRUE, &oct2007,
+        chain = getChain(NULL, &chainCheck[i].certs, 0, TRUE, &oct2007,
          chainCheck[i].todo, i);
         if (chain)
         {
@@ -3567,7 +3625,7 @@ static void testGetCertChain(void)
     for (i = 0; i < sizeof(chainCheckNoStore) / sizeof(chainCheckNoStore[0]);
      i++)
     {
-        chain = getChain(&chainCheckNoStore[i].certs, 0, FALSE, &oct2007,
+        chain = getChain(NULL, &chainCheckNoStore[i].certs, 0, FALSE, &oct2007,
          chainCheckNoStore[i].todo, i);
         if (chain)
         {
@@ -3576,7 +3634,7 @@ static void testGetCertChain(void)
             pCertFreeCertificateChain(chain);
         }
     }
-    chain = getChain(&chainCheckEmbeddedNull.certs, 0, TRUE, &oct2007,
+    chain = getChain(NULL, &chainCheckEmbeddedNull.certs, 0, TRUE, &oct2007,
      chainCheckEmbeddedNull.todo, 0);
     if (chain)
     {
@@ -3758,6 +3816,16 @@ static const ChainPolicyCheck opensslPolicyCheckWithoutMatchingName = {
  { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, NULL, 0
 };
 
+static const ChainPolicyCheck winehqPolicyCheckWithMatchingName = {
+ { sizeof(chain29) / sizeof(chain29[0]), chain29 },
+ { 0, 0, -1, -1, NULL}, NULL, 0
+};
+
+static const ChainPolicyCheck winehqPolicyCheckWithoutMatchingName = {
+ { sizeof(chain29) / sizeof(chain29[0]), chain29 },
+ { 0, CERT_E_CN_NO_MATCH, 0, 0, NULL}, NULL, 0
+};
+
 static const ChainPolicyCheck stanfordPolicyCheckWithMatchingName = {
  { sizeof(stanfordChain) / sizeof(stanfordChain[0]), stanfordChain },
  { 0, 0, -1, -1, NULL}, NULL, 0
@@ -3869,12 +3937,12 @@ static const char *num_to_str(WORD num)
     return buf;
 }
 
-static void checkChainPolicyStatus(LPCSTR policy, const ChainPolicyCheck *check,
- DWORD testIndex, SYSTEMTIME *sysTime, PCERT_CHAIN_POLICY_PARA para)
-
+static void checkChainPolicyStatus(LPCSTR policy, HCERTCHAINENGINE engine,
+ const ChainPolicyCheck *check, DWORD testIndex, SYSTEMTIME *sysTime,
+ PCERT_CHAIN_POLICY_PARA para)
 {
-    PCCERT_CHAIN_CONTEXT chain = getChain(&check->certs, 0, TRUE, sysTime,
-     check->todo, testIndex);
+    PCCERT_CHAIN_CONTEXT chain = getChain(engine, &check->certs, 0, TRUE,
+     sysTime, check->todo, testIndex);
 
     if (chain)
     {
@@ -3986,37 +4054,44 @@ static void check_ssl_policy(void)
      's','t','a','n','f','o','r','d','.','e','d','u',0 };
     WCHAR a_dot_cs_dot_stanford_dot_edu[] = { 'a','.','c','s','.',
      's','t','a','n','f','o','r','d','.','e','d','u',0 };
+    WCHAR test_dot_winehq_dot_org[] = { 't','e','s','t','.',
+     'w','i','n','e','h','q','.','o','r','g',0 };
+    WCHAR a_dot_b_dot_winehq_dot_org[] = { 'a','.','b','.',
+     'w','i','n','e','h','q','.','o','r','g',0 };
+    HCERTSTORE testRoot;
+    CERT_CHAIN_ENGINE_CONFIG engineConfig = { sizeof(engineConfig), 0 };
+    HCERTCHAINENGINE engine;
 
     /* Check ssl policy with no parameter */
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, NULL);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, NULL);
     /* Check again with a policy parameter that specifies nothing */
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* Check yet again, but specify an empty SSL_EXTRA_CERT_CHAIN_POLICY_PARA
      * argument.
      */
     policyPara.pvExtraPolicyPara = &sslPolicyPara;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* And again, but specify the auth type as a client */
     sslPolicyPara.dwAuthType = AUTHTYPE_CLIENT;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* And again, but specify the auth type as a server */
     sslPolicyPara.dwAuthType = AUTHTYPE_SERVER;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* And again authenticating a client, but specify the size of the policy
      * parameter.
      */
@@ -4024,79 +4099,107 @@ static void check_ssl_policy(void)
     sslPolicyPara.dwAuthType = AUTHTYPE_CLIENT;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* One more time authenticating a client, but specify winehq.org as the
      * server name.
      */
     sslPolicyPara.pwszServerName = winehq;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* And again authenticating a server, still specifying winehq.org as the
      * server name.
      */
     sslPolicyPara.dwAuthType = AUTHTYPE_SERVER;
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* And again authenticating a server, this time specifying the size of the
      * policy param.
      */
     policyPara.cbSize = sizeof(policyPara);
     for (i = 0;
      i < sizeof(sslPolicyCheck) / sizeof(sslPolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, &sslPolicyCheck[i], i,
-         &oct2007, &policyPara);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL, &sslPolicyCheck[i],
+         i, &oct2007, &policyPara);
     /* Yet again, but checking the iTunes chain, which contains a name
      * extension.
      */
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &iTunesPolicyCheckWithoutMatchingName, 0, &oct2007, &policyPara);
     /* And again, but checking the Google chain at a bad date */
     sslPolicyPara.pwszServerName = google_dot_com;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &googlePolicyCheckWithMatchingNameExpired, 0, &oct2007, &policyPara);
     /* And again, but checking the Google chain at a good date */
     sslPolicyPara.pwszServerName = google_dot_com;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &googlePolicyCheckWithMatchingName, 0, &oct2009, &policyPara);
     /* Check again with the openssl cert, which has a wildcard in its name,
      * with various combinations of matching and non-matching names.
      * With "a.openssl.org": match
      */
     sslPolicyPara.pwszServerName = a_dot_openssl_dot_org;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &opensslPolicyCheckWithMatchingName, 0, &oct2009, &policyPara);
     /* With "openssl.org": no match */
     sslPolicyPara.pwszServerName = openssl_dot_org;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &opensslPolicyCheckWithoutMatchingName, 0, &oct2009, &policyPara);
     /* With "fopenssl.org": no match */
     sslPolicyPara.pwszServerName = fopenssl_dot_org;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &opensslPolicyCheckWithoutMatchingName, 0, &oct2009, &policyPara);
     /* with "a.b.openssl.org": no match */
     sslPolicyPara.pwszServerName = a_dot_b_dot_openssl_dot_org;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &opensslPolicyCheckWithoutMatchingName, 0, &oct2009, &policyPara);
     /* Check again with the cs.stanford.edu, which has both cs.stanford.edu
      * and www.cs.stanford.edu in its subject alternative name.
      * With "cs.stanford.edu": match
      */
     sslPolicyPara.pwszServerName = cs_dot_stanford_dot_edu;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &stanfordPolicyCheckWithMatchingName, 0, &oct2009, &policyPara);
     /* With "www.cs.stanford.edu": match */
     sslPolicyPara.pwszServerName = www_dot_cs_dot_stanford_dot_edu;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &stanfordPolicyCheckWithMatchingName, 0, &oct2009, &policyPara);
     /* With "a.cs.stanford.edu": no match */
     sslPolicyPara.pwszServerName = a_dot_cs_dot_stanford_dot_edu;
-    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL,
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, NULL,
      &stanfordPolicyCheckWithoutMatchingName, 0, &oct2009, &policyPara);
+    /* Check chain29, which has a wildcard in its subject alternative name,
+     * but not in its distinguished name.
+     * Step 1: create a chain engine that trusts chain29's root.
+     */
+    testRoot = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    CertAddEncodedCertificateToStore(testRoot, X509_ASN_ENCODING, chain0_0,
+     sizeof(chain0_0), CERT_STORE_ADD_ALWAYS, NULL);
+    engineConfig.hExclusiveRoot = testRoot;
+    if (!CertCreateCertificateChainEngine(&engineConfig, &engine))
+    {
+        skip("Couldn't create chain engine\n");
+        return;
+    }
+    /* With "winehq.org": no match */
+    sslPolicyPara.pwszServerName = winehq;
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, engine,
+     &winehqPolicyCheckWithoutMatchingName, 0, &oct2007, &policyPara);
+    /* With "test.winehq.org": match */
+    sslPolicyPara.pwszServerName = test_dot_winehq_dot_org;
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, engine,
+     &winehqPolicyCheckWithMatchingName, 0, &oct2007, &policyPara);
+    /* With "a.b.winehq.org": no match */
+    sslPolicyPara.pwszServerName = a_dot_b_dot_winehq_dot_org;
+    checkChainPolicyStatus(CERT_CHAIN_POLICY_SSL, engine,
+     &winehqPolicyCheckWithoutMatchingName, 0, &oct2007, &policyPara);
+    CertFreeCertificateChainEngine(engine);
+    CertCloseStore(testRoot, 0);
 }
 
 static void testVerifyCertChainPolicy(void)
@@ -4163,8 +4266,8 @@ static void testVerifyCertChainPolicy(void)
 
     for (i = 0;
      i < sizeof(basePolicyCheck) / sizeof(basePolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_BASE, &basePolicyCheck[i], i,
-         &oct2007, NULL);
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_BASE, NULL,
+         &basePolicyCheck[i], i, &oct2007, NULL);
     check_ssl_policy();
     /* The authenticode policy doesn't seem to check anything beyond the base
      * policy.  It might check for chains signed by the MS test cert, but none
@@ -4172,12 +4275,12 @@ static void testVerifyCertChainPolicy(void)
      */
     for (i = 0; i <
      sizeof(authenticodePolicyCheck) / sizeof(authenticodePolicyCheck[0]); i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_AUTHENTICODE,
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_AUTHENTICODE, NULL,
          &authenticodePolicyCheck[i], i, &oct2007, NULL);
     for (i = 0; i <
      sizeof(basicConstraintsPolicyCheck) / sizeof(basicConstraintsPolicyCheck[0]);
      i++)
-        checkChainPolicyStatus(CERT_CHAIN_POLICY_BASIC_CONSTRAINTS,
+        checkChainPolicyStatus(CERT_CHAIN_POLICY_BASIC_CONSTRAINTS, NULL,
          &basicConstraintsPolicyCheck[i], i, &oct2007, NULL);
 }
 

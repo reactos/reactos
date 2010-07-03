@@ -144,7 +144,9 @@ static int load_blackbox(const char* logfile, void* blackbox, int size)
         ok(0, "unable to open '%s'\n", logfile);
         return 0;
     }
+    SetLastError(0xdeadbeef);
     ret=ReadFile(hFile, blackbox, size, &read, NULL);
+    ok(ret, "ReadFile failed: %d\n", GetLastError());
     ok(read == size, "wrong size for '%s': read=%d\n", logfile, read);
     CloseHandle(hFile);
     return 1;

@@ -453,148 +453,7 @@ static void test_GetCountColorProfileElements(void)
     }
 }
 
-typedef struct colorspace_description_struct {
-    DWORD dwID;
-    const char *szName;
-    BOOL registered;
-    char filename[MAX_PATH];
-} colorspace_descr;
-
-#define describe_colorspace(id) {id, #id, FALSE, ""}
-
-colorspace_descr known_colorspaces[] = { 
-    describe_colorspace(SPACE_XYZ),
-    describe_colorspace(SPACE_Lab),
-    describe_colorspace(SPACE_Luv),
-    describe_colorspace(SPACE_YCbCr),
-    describe_colorspace(SPACE_Yxy),
-    describe_colorspace(SPACE_RGB),
-    describe_colorspace(SPACE_GRAY),
-    describe_colorspace(SPACE_HSV),
-    describe_colorspace(SPACE_HLS),
-    describe_colorspace(SPACE_CMYK),
-    describe_colorspace(SPACE_CMY),
-    describe_colorspace(SPACE_2_CHANNEL),
-    describe_colorspace(SPACE_3_CHANNEL),
-    describe_colorspace(SPACE_4_CHANNEL),
-    describe_colorspace(SPACE_5_CHANNEL),
-    describe_colorspace(SPACE_6_CHANNEL),
-    describe_colorspace(SPACE_7_CHANNEL),
-    describe_colorspace(SPACE_8_CHANNEL)
-};
-
-static void enum_registered_color_profiles(void)
-{
-    BOOL ret;
-    DWORD size, count, i, present;
-    CHAR profile[MAX_PATH];
-
-    size = sizeof(profile);
-    count = sizeof(known_colorspaces)/sizeof(known_colorspaces[0]);
-
-    present = 0;
-    trace("\n");
-    trace("Querying registered standard colorspace profiles via GetStandardColorSpaceProfileA():\n");
-    for (i=0; i<count; i++)
-    {
-        ret = pGetStandardColorSpaceProfileA(NULL, known_colorspaces[i].dwID, profile, &size);
-        if (ret) 
-        {
-            lstrcpynA(known_colorspaces[i].filename, profile, MAX_PATH);
-            known_colorspaces[i].registered = TRUE;
-            present++;
-            trace(" found %s, pointing to '%s' (%d chars)\n", known_colorspaces[i].szName, profile, lstrlenA(profile));
-        }
-    }
-    trace("Total profiles found: %d.\n", present);
-    trace("\n");
-}
-
-static colorspace_descr *query_colorspace(DWORD dwID)
-{
-    DWORD count, i;
-
-    count = sizeof(known_colorspaces)/sizeof(known_colorspaces[0]);
-
-    for (i=0; i<count; i++)
-        if (known_colorspaces[i].dwID == dwID)
-        {
-            if (!known_colorspaces[i].registered) break;
-            return &known_colorspaces[i];
-        }
-    return NULL;
-}
-
-static HKEY reg_open_mscms_key(void)
-{
-    char win9x[] = "SOFTWARE\\Microsoft\\Windows";
-    char winNT[] = "SOFTWARE\\Microsoft\\Windows NT";
-    char ICM[] = "CurrentVersion\\ICM\\RegisteredProfiles";
-    HKEY win9x_key, winNT_key, ICM_key;
-
-    RegOpenKeyExA( HKEY_LOCAL_MACHINE, win9x, 0, KEY_READ, &win9x_key );
-    RegOpenKeyExA( HKEY_LOCAL_MACHINE, winNT, 0, KEY_READ, &winNT_key );
-
-    if (RegOpenKeyExA( winNT_key, ICM, 0, KEY_READ, &ICM_key )) 
-        RegOpenKeyExA( win9x_key, ICM, 0, KEY_READ, &ICM_key );
-    RegCloseKey( win9x_key );
-    RegCloseKey( winNT_key );
-
-    return ICM_key;
-}
-
-static void check_registry(BOOL *has_space_rgb)
-{
-    HKEY hkIcmKey;
-    LONG res;
-    DWORD i, dwValCount;
-    char szName[16383];
-    char szData[MAX_PATH+1];
-    DWORD dwNameLen, dwDataLen, dwType;
-
-    *has_space_rgb = FALSE;
-    hkIcmKey = reg_open_mscms_key();
-    if (!hkIcmKey)
-    {
-        trace("Key 'HKLM\\SOFTWARE\\Microsoft\\Windows*\\CurrentVersion\\ICM\\RegisteredProfiles' not found\n" );
-        return;
-    }
-
-    res = RegQueryInfoKeyA(hkIcmKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwValCount, NULL, NULL, NULL, NULL);
-    if (res) 
-    {
-        trace("RegQueryInfoKeyA() failed : %d\n", res);
-        return;
-    }
-
-    trace("Count of profile entries found directly in the registry: %d\n", dwValCount);
-
-    for (i = 0; i<dwValCount; i++) 
-    {
-        dwNameLen = sizeof(szName);
-        dwDataLen = sizeof(szData);
-        res = RegEnumValueA( hkIcmKey, i, szName, &dwNameLen, NULL, &dwType, (LPBYTE)szData, &dwDataLen );
-        if (!strncmp(szName, "RGB", 3))
-            *has_space_rgb = TRUE;
-        if (res != ERROR_SUCCESS) 
-        {
-            trace("RegEnumValueA() failed (%d), cannot enumerate profiles\n", res);
-            break;
-        }
-        ok( dwType == REG_SZ || dwType == REG_DWORD, "RegEnumValueA() returned unexpected value type (%d)\n", dwType );
-
-        if (dwType == REG_SZ)
-            trace(" found string value '%s' containing '%s' (%d chars)\n", szName, szData, lstrlenA(szData));
-        else if (dwType == REG_DWORD)
-            trace(" found DWORD value '%s' containing '%x'\n", szName, *(DWORD *)szData);
-        else
-            break;
-    } 
-
-    RegCloseKey( hkIcmKey );
-}
-
-static void test_GetStandardColorSpaceProfileA(BOOL has_space_rgb)
+static void test_GetStandardColorSpaceProfileA(void)
 {
     BOOL ret;
     DWORD size;
@@ -609,7 +468,7 @@ static void test_GetStandardColorSpaceProfileA(BOOL has_space_rgb)
     /* Single invalid parameter checks: */
 
     SetLastError(0xfaceabee); /* 1st param, */
-    ret = pGetStandardColorSpaceProfileA(machine, SPACE_RGB, newprofile, &sizeP);
+    ret = pGetStandardColorSpaceProfileA(machine, LCS_sRGB, newprofile, &sizeP);
     ok( !ret && GetLastError() == ERROR_NOT_SUPPORTED, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* 2nd param, */
@@ -617,33 +476,24 @@ static void test_GetStandardColorSpaceProfileA(BOOL has_space_rgb)
     ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* 4th param, */
-    ret = pGetStandardColorSpaceProfileA(NULL, SPACE_RGB, newprofile, NULL);
+    ret = pGetStandardColorSpaceProfileA(NULL, LCS_sRGB, newprofile, NULL);
     ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
-    if (query_colorspace(SPACE_RGB)) 
-    {
-        SetLastError(0xfaceabee); /* 3rd param, */
-        ret = pGetStandardColorSpaceProfileA(NULL, SPACE_RGB, NULL, &sizeP);
-        ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
+    SetLastError(0xfaceabee); /* 3rd param, */
+    ret = pGetStandardColorSpaceProfileA(NULL, LCS_sRGB, NULL, &sizeP);
+    ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
-        SetLastError(0xfaceabee); /* dereferenced 4th param, */
-        ret = pGetStandardColorSpaceProfileA(NULL, SPACE_RGB, newprofile, &zero);
-        ok( !ret && (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER), "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
-    } else {
-        SetLastError(0xfaceabee); /* 3rd param, */
-        ret = pGetStandardColorSpaceProfileA(NULL, SPACE_RGB, NULL, &sizeP);
-        ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
-
-        SetLastError(0xfaceabee); /* dereferenced 4th param. */
-        ret = pGetStandardColorSpaceProfileA(NULL, SPACE_RGB, newprofile, &sizeP);
-        ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
-    }
+    SetLastError(0xfaceabee); /* dereferenced 4th param, */
+    ret = pGetStandardColorSpaceProfileA(NULL, LCS_sRGB, newprofile, &zero);
+    ok( !ret && (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER),
+        "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     /* Several invalid parameter checks: */
 
     SetLastError(0xfaceabee); /* 1st, maybe 2nd and then dereferenced 4th param, */
     ret = pGetStandardColorSpaceProfileA(machine, 0, newprofile, &zero);
-    ok( !ret && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_NOT_SUPPORTED), "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
+    ok( !ret && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_NOT_SUPPORTED),
+        "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* maybe 2nd and then 4th param, */
     ret = pGetStandardColorSpaceProfileA(NULL, 0, newprofile, NULL);
@@ -651,50 +501,46 @@ static void test_GetStandardColorSpaceProfileA(BOOL has_space_rgb)
 
     SetLastError(0xfaceabee); /* maybe 2nd, then 3rd and dereferenced 4th param, */
     ret = pGetStandardColorSpaceProfileA(NULL, 0, NULL, &zero);
-    ok( !ret && (GetLastError() == ERROR_INSUFFICIENT_BUFFER || GetLastError() == ERROR_FILE_NOT_FOUND), "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
+    ok( !ret && (GetLastError() == ERROR_INSUFFICIENT_BUFFER || GetLastError() == ERROR_FILE_NOT_FOUND),
+        "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* maybe 2nd param. */
     ret = pGetStandardColorSpaceProfileA(NULL, 0, newprofile, &sizeP);
     if (!ret) ok( GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
-    else ok( !lstrcmpiA( newprofile, emptyA ) && GetLastError() == 0xfaceabee, "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
+    else ok( !lstrcmpiA( newprofile, emptyA ) && GetLastError() == 0xfaceabee,
+             "GetStandardColorSpaceProfileA() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     /* Functional checks */
 
-    if (has_space_rgb)
+    size = sizeof(oldprofile);
+    ret = pGetStandardColorSpaceProfileA( NULL, LCS_sRGB, oldprofile, &size );
+    ok( ret, "GetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
+
+    SetLastError(0xdeadbeef);
+    ret = pSetStandardColorSpaceProfileA( NULL, LCS_sRGB, standardprofile );
+    if (!ret && (GetLastError() == ERROR_ACCESS_DENIED))
     {
-        size = sizeof(oldprofile);
-
-        ret = pGetStandardColorSpaceProfileA( NULL, SPACE_RGB, oldprofile, &size );
-        ok( ret, "GetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
-
-        SetLastError(0xdeadbeef);
-        ret = pSetStandardColorSpaceProfileA( NULL, SPACE_RGB, standardprofile );
-        if (!ret && (GetLastError() == ERROR_ACCESS_DENIED))
-        {
-            skip("Not enough rights for SetStandardColorSpaceProfileA\n");
-            return;
-        }
-        ok( ret, "SetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
-
-        size = sizeof(newprofile);
-
-        ret = pGetStandardColorSpaceProfileA( NULL, SPACE_RGB, newprofile, &size );
-        ok( ret, "GetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
-
-        ok( !lstrcmpiA( (LPSTR)&newprofile, standardprofile ), "Unexpected profile\n" );
-
-        ret = pSetStandardColorSpaceProfileA( NULL, SPACE_RGB, oldprofile );
-        ok( ret, "SetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
+        skip("Not enough rights for SetStandardColorSpaceProfileA\n");
+        return;
     }
+    ok( ret, "SetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
+
+    size = sizeof(newprofile);
+    ret = pGetStandardColorSpaceProfileA( NULL, LCS_sRGB, newprofile, &size );
+    ok( ret, "GetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
+
+    ret = pSetStandardColorSpaceProfileA( NULL, LCS_sRGB, oldprofile );
+    ok( ret, "SetStandardColorSpaceProfileA() failed (%d)\n", GetLastError() );
 }
 
-static void test_GetStandardColorSpaceProfileW(BOOL has_space_rgb)
+static void test_GetStandardColorSpaceProfileW(void)
 {
     BOOL ret;
     DWORD size;
     WCHAR oldprofile[MAX_PATH];
     WCHAR newprofile[MAX_PATH];
-    const WCHAR emptyW[] = {0};
+    CHAR newprofileA[MAX_PATH];
+    const CHAR empty[] = "";
     DWORD zero = 0;
     DWORD sizeP = sizeof(newprofile);
 
@@ -703,37 +549,38 @@ static void test_GetStandardColorSpaceProfileW(BOOL has_space_rgb)
     /* Single invalid parameter checks: */
 
     SetLastError(0xfaceabee); /* 1st param, */
-    ret = pGetStandardColorSpaceProfileW(machineW, SPACE_RGB, newprofile, &sizeP);
+    ret = pGetStandardColorSpaceProfileW(machineW, LCS_sRGB, newprofile, &sizeP);
     ok( !ret && GetLastError() == ERROR_NOT_SUPPORTED, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* 2nd param, */
     ret = pGetStandardColorSpaceProfileW(NULL, (DWORD)-1, newprofile, &sizeP);
     ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
+    SetLastError(0xfaceabee); /* 2nd param, */
+    ret = pGetStandardColorSpaceProfileW(NULL, 0, newprofile, &sizeP);
+    ok( (!ret && GetLastError() == ERROR_FILE_NOT_FOUND) ||
+        broken(ret), /* Win98 and WinME */
+        "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+
     SetLastError(0xfaceabee); /* 3rd param, */
-    ret = pGetStandardColorSpaceProfileW(NULL, SPACE_RGB, NULL, &sizeP);
-    if (has_space_rgb)
-        ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
-    else
-        todo_wine ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+    ret = pGetStandardColorSpaceProfileW(NULL, LCS_sRGB, NULL, &sizeP);
+    ok( !ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* 4th param, */
-    ret = pGetStandardColorSpaceProfileW(NULL, SPACE_RGB, newprofile, NULL);
+    ret = pGetStandardColorSpaceProfileW(NULL, LCS_sRGB, newprofile, NULL);
     ok( !ret && GetLastError() == ERROR_INVALID_PARAMETER, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* dereferenced 4th param. */
-    ret = pGetStandardColorSpaceProfileW(NULL, SPACE_RGB, newprofile, &zero);
-    if (has_space_rgb)
-        ok( !ret && (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER), "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
-    else
-        todo_wine ok( !ret && GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
-
+    ret = pGetStandardColorSpaceProfileW(NULL, LCS_sRGB, newprofile, &zero);
+    ok( !ret && (GetLastError() == ERROR_MORE_DATA || GetLastError() == ERROR_INSUFFICIENT_BUFFER),
+        "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     /* Several invalid parameter checks: */
 
     SetLastError(0xfaceabee); /* 1st, maybe 2nd and then dereferenced 4th param, */
     ret = pGetStandardColorSpaceProfileW(machineW, 0, newprofile, &zero);
-    ok( !ret && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_NOT_SUPPORTED), "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+    ok( !ret && (GetLastError() == ERROR_INVALID_PARAMETER || GetLastError() == ERROR_NOT_SUPPORTED),
+        "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* maybe 2nd and then 4th param, */
     ret = pGetStandardColorSpaceProfileW(NULL, 0, newprofile, NULL);
@@ -741,41 +588,40 @@ static void test_GetStandardColorSpaceProfileW(BOOL has_space_rgb)
 
     SetLastError(0xfaceabee); /* maybe 2nd, then 3rd and dereferenced 4th param, */
     ret = pGetStandardColorSpaceProfileW(NULL, 0, NULL, &zero);
-    ok( !ret && (GetLastError() == ERROR_INSUFFICIENT_BUFFER || GetLastError() == ERROR_FILE_NOT_FOUND), "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+    ok( !ret && (GetLastError() == ERROR_INSUFFICIENT_BUFFER || GetLastError() == ERROR_FILE_NOT_FOUND),
+        "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
 
     SetLastError(0xfaceabee); /* maybe 2nd param. */
     ret = pGetStandardColorSpaceProfileW(NULL, 0, newprofile, &sizeP);
     if (!ret) ok( GetLastError() == ERROR_FILE_NOT_FOUND, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
-    else ok( !lstrcmpiW( newprofile, emptyW ) && GetLastError() == 0xfaceabee, "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+    else
+    {
+        WideCharToMultiByte(CP_ACP, 0, newprofile, -1, newprofileA, sizeof(newprofileA), NULL, NULL);
+        ok( !lstrcmpiA( newprofileA, empty ) && GetLastError() == 0xfaceabee,
+             "GetStandardColorSpaceProfileW() returns %d (GLE=%d)\n", ret, GetLastError() );
+    }
 
     /* Functional checks */
 
-    if (has_space_rgb)
+    size = sizeof(oldprofile);
+    ret = pGetStandardColorSpaceProfileW( NULL, LCS_sRGB, oldprofile, &size );
+    ok( ret, "GetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
+
+    SetLastError(0xdeadbeef);
+    ret = pSetStandardColorSpaceProfileW( NULL, LCS_sRGB, standardprofileW );
+    if (!ret && (GetLastError() == ERROR_ACCESS_DENIED))
     {
-        size = sizeof(oldprofile);
-
-        ret = pGetStandardColorSpaceProfileW( NULL, SPACE_RGB, oldprofile, &size );
-        ok( ret, "GetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
-
-        SetLastError(0xdeadbeef);
-        ret = pSetStandardColorSpaceProfileW( NULL, SPACE_RGB, standardprofileW );
-        if (!ret && (GetLastError() == ERROR_ACCESS_DENIED))
-        {
-            skip("Not enough rights for SetStandardColorSpaceProfileW\n");
-            return;
-        }
-        ok( ret, "SetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
-
-        size = sizeof(newprofile);
-
-        ret = pGetStandardColorSpaceProfileW( NULL, SPACE_RGB, newprofile, &size );
-        ok( ret, "GetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
-
-        ok( !lstrcmpiW( (LPWSTR)&newprofile, standardprofileW ), "Unexpected profile\n" );
-
-        ret = pSetStandardColorSpaceProfileW( NULL, SPACE_RGB, oldprofile );
-        ok( ret, "SetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
+        skip("Not enough rights for SetStandardColorSpaceProfileW\n");
+        return;
     }
+    ok( ret, "SetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
+
+    size = sizeof(newprofile);
+    ret = pGetStandardColorSpaceProfileW( NULL, LCS_sRGB, newprofile, &size );
+    ok( ret, "GetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
+
+    ret = pSetStandardColorSpaceProfileW( NULL, LCS_sRGB, oldprofile );
+    ok( ret, "SetStandardColorSpaceProfileW() failed (%d)\n", GetLastError() );
 }
 
 static void test_EnumColorProfilesA(void)
@@ -1458,7 +1304,6 @@ START_TEST(profile)
     char path[MAX_PATH], file[MAX_PATH];
     char profilefile1[MAX_PATH], profilefile2[MAX_PATH];
     WCHAR profilefile1W[MAX_PATH], profilefile2W[MAX_PATH];
-    BOOL has_space_rgb;
     WCHAR fileW[MAX_PATH];
     UINT ret;
 
@@ -1540,11 +1385,8 @@ START_TEST(profile)
 
     test_GetCountColorProfileElements();
 
-    enum_registered_color_profiles();
-    check_registry(&has_space_rgb);
-
-    test_GetStandardColorSpaceProfileA(has_space_rgb);
-    test_GetStandardColorSpaceProfileW(has_space_rgb);
+    test_GetStandardColorSpaceProfileA();
+    test_GetStandardColorSpaceProfileW();
 
     test_EnumColorProfilesA();
     test_EnumColorProfilesW();

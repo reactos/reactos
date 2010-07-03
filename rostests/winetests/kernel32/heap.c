@@ -27,7 +27,6 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-
 #include "wine/test.h"
 
 #define MAGIC_DEAD 0xdeadbeef
@@ -250,13 +249,26 @@ static void test_heap(void)
 
     res = GlobalUnlock(gbl);
     ok(res == 1 ||
-       res == 0, /* win9x */
+       broken(res == 0), /* win9x */
        "Expected 1 or 0, got %d\n", res);
 
     res = GlobalUnlock(gbl);
     ok(res == 1 ||
-       res == 0, /* win9x */
+       broken(res == 0), /* win9x */
        "Expected 1 or 0, got %d\n", res);
+
+    GlobalFree(gbl);
+
+    gbl = GlobalAlloc(GMEM_FIXED, 100);
+
+    SetLastError(0xdeadbeef);
+    res = GlobalUnlock(gbl);
+    ok(res == 1 ||
+       broken(res == 0), /* win9x */
+       "Expected 1 or 0, got %d\n", res);
+    ok(GetLastError() == 0xdeadbeef, "got %d\n", GetLastError());
+
+    GlobalFree(gbl);
 
     /* GlobalSize on an invalid handle */
     if (sizeof(void *) != 8)  /* crashes on 64-bit Vista */
@@ -268,8 +280,6 @@ static void test_heap(void)
            GetLastError() == ERROR_INVALID_PARAMETER, /* win9x */
            "Expected ERROR_INVALID_HANDLE or ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
     }
-
-    GlobalFree(gbl);
 
     /* ####################################### */
     /* Local*() functions */
@@ -371,6 +381,15 @@ static void test_heap(void)
     ok(!res && (GetLastError() == ERROR_INVALID_HANDLE),
         "returned %d with %d (expected '0' with ERROR_INVALID_HANDLE)\n",
         res, GetLastError());
+
+    /* trying to unlock pointer from LocalAlloc */
+    gbl = LocalAlloc(LMEM_FIXED, 100);
+    SetLastError(0xdeadbeef);
+    res = LocalUnlock(gbl);
+    ok(res == 0, "Expected 0, got %d\n", res);
+    ok(GetLastError() == ERROR_NOT_LOCKED ||
+       broken(GetLastError() == 0xdeadbeef) /* win9x */, "got %d\n", GetLastError());
+    LocalFree(gbl);
 
     /* trying to lock empty memory should give an error */
     gbl = GlobalAlloc(GMEM_MOVEABLE|GMEM_ZEROINIT,0);

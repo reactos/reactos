@@ -1329,6 +1329,89 @@ static void test_ThreadErrorMode(void)
     pSetThreadErrorMode(oldmode, NULL);
 }
 
+void _fpreset(void) {} /* override the mingw fpu init code */
+
+static inline void set_fpu_cw(WORD cw)
+{
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    __asm__ volatile ("fnclex; fldcw %0" : : "m" (cw));
+#endif
+}
+
+static inline WORD get_fpu_cw(void)
+{
+    WORD cw = 0;
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+    __asm__ volatile ("fnstcw %0" : "=m" (cw));
+#endif
+    return cw;
+}
+
+struct fpu_thread_ctx
+{
+    WORD cw;
+    HANDLE finished;
+};
+
+static DWORD WINAPI fpu_thread(void *param)
+{
+    struct fpu_thread_ctx *ctx = param;
+    BOOL ret;
+
+    ctx->cw = get_fpu_cw();
+
+    ret = SetEvent(ctx->finished);
+    ok(ret, "SetEvent failed, last error %#x.\n", GetLastError());
+
+    return 0;
+}
+
+static WORD get_thread_fpu_cw(void)
+{
+    struct fpu_thread_ctx ctx;
+    DWORD tid, res;
+    HANDLE thread;
+
+    ctx.finished = CreateEvent(NULL, FALSE, FALSE, NULL);
+    ok(!!ctx.finished, "Failed to create event, last error %#x.\n", GetLastError());
+
+    thread = CreateThread(NULL, 0, fpu_thread, &ctx, 0, &tid);
+    ok(!!thread, "Failed to create thread, last error %#x.\n", GetLastError());
+
+    res = WaitForSingleObject(ctx.finished, INFINITE);
+    ok(res == WAIT_OBJECT_0, "Wait failed (%#x), last error %#x.\n", res, GetLastError());
+
+    res = CloseHandle(ctx.finished);
+    ok(!!res, "Failed to close event handle, last error %#x.\n", GetLastError());
+
+    return ctx.cw;
+}
+
+static void test_thread_fpu_cw(void)
+{
+    WORD initial_cw, cw;
+
+    initial_cw = get_fpu_cw();
+    ok(initial_cw == 0x27f, "Expected FPU control word 0x27f, got %#x.\n", initial_cw);
+
+    cw = get_thread_fpu_cw();
+    ok(cw == 0x27f, "Expected FPU control word 0x27f, got %#x.\n", cw);
+
+    set_fpu_cw(0xf60);
+    cw = get_fpu_cw();
+    ok(cw == 0xf60, "Expected FPU control word 0xf60, got %#x.\n", cw);
+
+    cw = get_thread_fpu_cw();
+    ok(cw == 0x27f, "Expected FPU control word 0x27f, got %#x.\n", cw);
+
+    cw = get_fpu_cw();
+    ok(cw == 0xf60, "Expected FPU control word 0xf60, got %#x.\n", cw);
+
+    set_fpu_cw(initial_cw);
+    cw = get_fpu_cw();
+    ok(cw == initial_cw, "Expected FPU control word %#x, got %#x.\n", initial_cw, cw);
+}
+
 START_TEST(thread)
 {
    HINSTANCE lib;
@@ -1401,4 +1484,7 @@ START_TEST(thread)
    test_RegisterWaitForSingleObject();
    test_TLS();
    test_ThreadErrorMode();
+#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
+   test_thread_fpu_cw();
+#endif
 }

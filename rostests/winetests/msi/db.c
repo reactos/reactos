@@ -479,6 +479,9 @@ static void test_msidecomposedesc(void)
     r = pMsiDecomposeDescriptorA(NULL, NULL, NULL, NULL, &len);
     ok(r == ERROR_INVALID_PARAMETER, "returned wrong error\n");
     ok(len == 0, "length wrong\n");
+
+    r = pMsiDecomposeDescriptorA(desc, NULL, NULL, NULL, NULL);
+    ok(r == ERROR_SUCCESS, "returned wrong error\n");
 }
 
 static UINT try_query_param( MSIHANDLE hdb, LPCSTR szQuery, MSIHANDLE hrec )
@@ -1930,7 +1933,7 @@ static void test_where(void)
     rec = 0;
     query = "SELECT * FROM `Media` WHERE `DiskPrompt` <> 'Cabinet'";
     r = do_query(hdb, query, &rec);
-    todo_wine ok( r == ERROR_SUCCESS, "query failed: %d\n", r );
+    ok( r == ERROR_SUCCESS, "query failed: %d\n", r );
     MsiCloseHandle( rec );
 
     rec = 0;
@@ -8842,6 +8845,112 @@ static void test_columnorder(void)
     DeleteFileA(msifile);
 }
 
+static void test_createtable(void)
+{
+    MSIHANDLE hdb, htab = 0, hrec = 0;
+    LPCSTR query;
+    UINT res;
+    DWORD size;
+    char buffer[0x20];
+
+    hdb = create_db();
+    ok(hdb, "failed to create db\n");
+
+    query = "CREATE TABLE `blah` (`foo` CHAR(72) NOT NULL PRIMARY KEY `foo`)";
+    res = MsiDatabaseOpenView( hdb, query, &htab );
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    if(res == ERROR_SUCCESS )
+    {
+        res = MsiViewExecute( htab, hrec );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewGetColumnInfo( htab, MSICOLINFO_NAMES, &hrec );
+        todo_wine ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        size = sizeof(buffer);
+        res = MsiRecordGetString(hrec, 1, buffer, &size );
+        todo_wine ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewClose( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiCloseHandle( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    }
+
+    query = "CREATE TABLE `a` (`b` INT PRIMARY KEY `b`)";
+    res = MsiDatabaseOpenView( hdb, query, &htab );
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    if(res == ERROR_SUCCESS )
+    {
+        res = MsiViewExecute( htab, 0 );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewClose( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiCloseHandle( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        query = "SELECT * FROM `a`";
+        res = MsiDatabaseOpenView( hdb, query, &htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewGetColumnInfo( htab, MSICOLINFO_NAMES, &hrec );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        size = sizeof(buffer);
+        res = MsiRecordGetString(hrec, 1, buffer, &size );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+        ok(!strcmp(buffer,"b"), "b != %s\n", buffer);
+
+        res = MsiViewClose( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiCloseHandle( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiDatabaseCommit(hdb);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiCloseHandle(hdb);
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiOpenDatabase(msifile, MSIDBOPEN_TRANSACT, &hdb );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        query = "SELECT * FROM `a`";
+        res = MsiDatabaseOpenView( hdb, query, &htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewGetColumnInfo( htab, MSICOLINFO_NAMES, &hrec );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        size = sizeof(buffer);
+        res = MsiRecordGetString(hrec, 1, buffer, &size );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+        todo_wine ok(!strcmp(buffer,"b"), "b != %s\n", buffer);
+
+        res = MsiCloseHandle( hrec );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiViewClose( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+        res = MsiCloseHandle( htab );
+        ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+    }
+
+    res = MsiDatabaseCommit(hdb);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    res = MsiCloseHandle(hdb);
+    ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
+
+    DeleteFileA(msifile);
+}
+
+
 START_TEST(db)
 {
     test_msidatabase();
@@ -8893,4 +9002,5 @@ START_TEST(db)
     test_insertorder();
     test_columnorder();
     test_suminfo_import();
+    test_createtable();
 }

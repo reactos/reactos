@@ -1347,6 +1347,9 @@ static void test_CompareStringA(void)
     ret = CompareStringA(lcid, NORM_IGNORECASE | LOCALE_USE_CP_ACP, "#", -1, ".", -1);
     todo_wine ok(ret == CSTR_LESS_THAN, "\"#\" vs \".\" expected CSTR_LESS_THAN, got %d\n", ret);
 
+    ret = CompareStringA(lcid, NORM_IGNORECASE, "_", -1, ".", -1);
+    todo_wine ok(ret == CSTR_GREATER_THAN, "\"_\" vs \".\" expected CSTR_GREATER_THAN, got %d\n", ret);
+
     ret = lstrcmpi("#", ".");
     todo_wine ok(ret == -1, "\"#\" vs \".\" expected -1, got %d\n", ret);
 }

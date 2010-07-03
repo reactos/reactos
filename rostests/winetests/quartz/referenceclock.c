@@ -54,7 +54,7 @@ static void test_IReferenceClock_methods(const char * clockdesc, IReferenceClock
     HRESULT hr;
     REFERENCE_TIME time1;
     REFERENCE_TIME time2;
-    signed long diff;
+    LONG diff;
 
     /* Test response from invalid (NULL) argument */
     hr = IReferenceClock_GetTime(pClock, NULL);
@@ -86,7 +86,7 @@ static void test_IReferenceClock_methods(const char * clockdesc, IReferenceClock
     /* FIXME: How much deviation should be allowed after a sleep? */
     /* 0.3% is common, and 0.4% is sometimes observed. */
     diff = time2 - time1;
-    ok (9940000 <= diff && diff <= 10240000, "%s - Expected difference around 10000000, got %lu\n", clockdesc, diff);
+    ok (9940000 <= diff && diff <= 10240000, "%s - Expected difference around 10000000, got %u\n", clockdesc, diff);
 
 }
 

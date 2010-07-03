@@ -158,6 +158,117 @@ static void test_Scan0(void)
     ok( !bm, "expected null bitmap\n" );
 }
 
+static void test_FromGdiDib(void)
+{
+    GpBitmap *bm;
+    GpStatus stat;
+    BYTE buff[400];
+    BYTE rbmi[sizeof(BITMAPINFOHEADER)+256*sizeof(RGBQUAD)];
+    BITMAPINFO *bmi = (BITMAPINFO*)rbmi;
+    PixelFormat format;
+
+    bm = NULL;
+
+    memset(rbmi, 0, sizeof(rbmi));
+
+    bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi->bmiHeader.biWidth = 10;
+    bmi->bmiHeader.biHeight = 10;
+    bmi->bmiHeader.biPlanes = 1;
+    bmi->bmiHeader.biBitCount = 32;
+    bmi->bmiHeader.biCompression = BI_RGB;
+
+    stat = GdipCreateBitmapFromGdiDib(NULL, buff, &bm);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateBitmapFromGdiDib(bmi, NULL, &bm);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat32bppRGB, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 24;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat24bppRGB, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 16;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat16bppRGB555, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 8;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat8bppIndexed, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 4;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat4bppIndexed, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 1;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(Ok, stat);
+    ok(NULL != bm, "Expected bitmap to be initialized\n");
+    if (stat == Ok)
+    {
+        stat = GdipGetImagePixelFormat((GpImage*)bm, &format);
+        expect(Ok, stat);
+        expect(PixelFormat1bppIndexed, format);
+
+        GdipDisposeImage((GpImage*)bm);
+    }
+
+    bmi->bmiHeader.biBitCount = 0;
+    stat = GdipCreateBitmapFromGdiDib(bmi, buff, &bm);
+    expect(InvalidParameter, stat);
+}
+
 static void test_GetImageDimension(void)
 {
     GpBitmap *bm;
@@ -1101,6 +1212,78 @@ static void test_createhbitmap(void)
     expect(Ok, stat);
 }
 
+static void test_getthumbnail(void)
+{
+    GpStatus stat;
+    GpImage *bitmap1, *bitmap2;
+    UINT width, height;
+
+    stat = GdipGetImageThumbnail(NULL, 0, 0, &bitmap2, NULL, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateBitmapFromScan0(128, 128, 0, PixelFormat32bppRGB, NULL, (GpBitmap**)&bitmap1);
+    expect(Ok, stat);
+
+    stat = GdipGetImageThumbnail(bitmap1, 0, 0, NULL, NULL, NULL);
+    expect(InvalidParameter, stat);
+
+    stat = GdipGetImageThumbnail(bitmap1, 0, 0, &bitmap2, NULL, NULL);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        stat = GdipGetImageWidth(bitmap2, &width);
+        expect(Ok, stat);
+        expect(120, width);
+
+        stat = GdipGetImageHeight(bitmap2, &height);
+        expect(Ok, stat);
+        expect(120, height);
+
+        GdipDisposeImage(bitmap2);
+    }
+
+    GdipDisposeImage(bitmap1);
+
+
+    stat = GdipCreateBitmapFromScan0(64, 128, 0, PixelFormat32bppRGB, NULL, (GpBitmap**)&bitmap1);
+    expect(Ok, stat);
+
+    stat = GdipGetImageThumbnail(bitmap1, 32, 32, &bitmap2, NULL, NULL);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        stat = GdipGetImageWidth(bitmap2, &width);
+        expect(Ok, stat);
+        expect(32, width);
+
+        stat = GdipGetImageHeight(bitmap2, &height);
+        expect(Ok, stat);
+        expect(32, height);
+
+        GdipDisposeImage(bitmap2);
+    }
+
+    stat = GdipGetImageThumbnail(bitmap1, 0, 0, &bitmap2, NULL, NULL);
+    expect(Ok, stat);
+
+    if (stat == Ok)
+    {
+        stat = GdipGetImageWidth(bitmap2, &width);
+        expect(Ok, stat);
+        expect(120, width);
+
+        stat = GdipGetImageHeight(bitmap2, &height);
+        expect(Ok, stat);
+        expect(120, height);
+
+        GdipDisposeImage(bitmap2);
+    }
+
+    GdipDisposeImage(bitmap1);
+}
+
 static void test_getsetpixel(void)
 {
     GpStatus stat;
@@ -1888,6 +2071,76 @@ static void test_remaptable(void)
     GdipFree(map);
 }
 
+static void test_colorkey(void)
+{
+    GpStatus stat;
+    GpImageAttributes *imageattr;
+    GpBitmap *bitmap1, *bitmap2;
+    GpGraphics *graphics;
+    ARGB color;
+
+    stat = GdipSetImageAttributesColorKeys(NULL, ColorAdjustTypeDefault, TRUE, 0xff405060, 0xff708090);
+    expect(InvalidParameter, stat);
+
+    stat = GdipCreateImageAttributes(&imageattr);
+    expect(Ok, stat);
+
+    stat = GdipSetImageAttributesColorKeys(imageattr, ColorAdjustTypeCount, TRUE, 0xff405060, 0xff708090);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesColorKeys(imageattr, ColorAdjustTypeAny, TRUE, 0xff405060, 0xff708090);
+    expect(InvalidParameter, stat);
+
+    stat = GdipSetImageAttributesColorKeys(imageattr, ColorAdjustTypeDefault, TRUE, 0xff405060, 0xff708090);
+    expect(Ok, stat);
+
+    stat = GdipCreateBitmapFromScan0(2, 2, 0, PixelFormat32bppARGB, NULL, &bitmap1);
+    expect(Ok, stat);
+
+    stat = GdipCreateBitmapFromScan0(2, 2, 0, PixelFormat32bppARGB, NULL, &bitmap2);
+    expect(Ok, stat);
+
+    stat = GdipBitmapSetPixel(bitmap1, 0, 0, 0x20405060);
+    expect(Ok, stat);
+
+    stat = GdipBitmapSetPixel(bitmap1, 0, 1, 0x40506070);
+    expect(Ok, stat);
+
+    stat = GdipBitmapSetPixel(bitmap1, 1, 0, 0x60708090);
+    expect(Ok, stat);
+
+    stat = GdipBitmapSetPixel(bitmap1, 1, 1, 0xffffffff);
+    expect(Ok, stat);
+
+    stat = GdipGetImageGraphicsContext((GpImage*)bitmap2, &graphics);
+    expect(Ok, stat);
+
+    stat = GdipDrawImageRectRectI(graphics, (GpImage*)bitmap1, 0,0,2,2, 0,0,2,2,
+	UnitPixel, imageattr, NULL, NULL);
+    expect(Ok, stat);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 0, 1, &color);
+    expect(Ok, stat);
+    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 1, 0, &color);
+    expect(Ok, stat);
+    ok(color_match(0x00000000, color, 1), "Expected ffff00ff, got %.8x\n", color);
+
+    stat = GdipBitmapGetPixel(bitmap2, 1, 1, &color);
+    expect(Ok, stat);
+    ok(color_match(0xffffffff, color, 1), "Expected ffff00ff, got %.8x\n", color);
+
+    GdipDeleteGraphics(graphics);
+    GdipDisposeImage((GpImage*)bitmap1);
+    GdipDisposeImage((GpImage*)bitmap2);
+    GdipDisposeImageAttributes(imageattr);
+}
+
 START_TEST(image)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
@@ -1901,6 +2154,7 @@ START_TEST(image)
     GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 
     test_Scan0();
+    test_FromGdiDib();
     test_GetImageDimension();
     test_GdipImageGetFrameDimensionsCount();
     test_LoadingImages();
@@ -1917,6 +2171,7 @@ START_TEST(image)
     test_createfromwmf();
     test_resolution();
     test_createhbitmap();
+    test_getthumbnail();
     test_getsetpixel();
     test_palette();
     test_colormatrix();
@@ -1924,6 +2179,7 @@ START_TEST(image)
     test_multiframegif();
     test_rotateflip();
     test_remaptable();
+    test_colorkey();
 
     GdiplusShutdown(gdiplusToken);
 }

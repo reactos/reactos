@@ -37,8 +37,8 @@ static int      (WINAPIV *patoi)(const char *);
 static long     (WINAPIV *patol)(const char *);
 static LONGLONG (WINAPIV *p_atoi64)(const char *);
 static LPSTR    (WINAPIV *p_itoa)(int, LPSTR, INT);
-static LPSTR    (WINAPIV *p_ltoa)(long, LPSTR, INT);
-static LPSTR    (WINAPIV *p_ultoa)(unsigned long, LPSTR, INT);
+static LPSTR    (WINAPIV *p_ltoa)(LONG, LPSTR, INT);
+static LPSTR    (WINAPIV *p_ultoa)(ULONG, LPSTR, INT);
 static LPSTR    (WINAPIV *p_i64toa)(LONGLONG, LPSTR, INT);
 static LPSTR    (WINAPIV *p_ui64toa)(ULONGLONG, LPSTR, INT);
 
@@ -46,8 +46,8 @@ static int      (WINAPIV *p_wtoi)(LPWSTR);
 static long     (WINAPIV *p_wtol)(LPWSTR);
 static LONGLONG (WINAPIV *p_wtoi64)(LPWSTR);
 static LPWSTR   (WINAPIV *p_itow)(int, LPWSTR, int);
-static LPWSTR   (WINAPIV *p_ltow)(long, LPWSTR, INT);
-static LPWSTR   (WINAPIV *p_ultow)(unsigned long, LPWSTR, INT);
+static LPWSTR   (WINAPIV *p_ltow)(LONG, LPWSTR, INT);
+static LPWSTR   (WINAPIV *p_ultow)(ULONG, LPWSTR, INT);
 static LPWSTR   (WINAPIV *p_i64tow)(LONGLONG, LPWSTR, INT);
 static LPWSTR   (WINAPIV *p_ui64tow)(ULONGLONG, LPWSTR, INT);
 
@@ -56,6 +56,10 @@ static ULONG    (WINAPIV *pwcstoul)(LPCWSTR, LPWSTR *, INT);
 
 static LPWSTR   (WINAPIV *p_wcschr)(LPCWSTR, WCHAR);
 static LPWSTR   (WINAPIV *p_wcsrchr)(LPCWSTR, WCHAR);
+
+static void     (__cdecl *p_qsort)(void *,size_t,size_t, int(__cdecl *compar)(const void *, const void *) );
+static void*    (__cdecl *p_bsearch)(void *,void*,size_t,size_t, int(__cdecl *compar)(const void *, const void *) );
+
 
 static void InitFunctionPtrs(void)
 {
@@ -90,6 +94,8 @@ static void InitFunctionPtrs(void)
 
 	p_wcschr= (void *)GetProcAddress(hntdll, "wcschr");
 	p_wcsrchr= (void *)GetProcAddress(hntdll, "wcsrchr");
+	p_qsort= (void *)GetProcAddress(hntdll, "qsort");
+	p_bsearch= (void *)GetProcAddress(hntdll, "bsearch");
     } /* if */
 }
 
@@ -228,7 +234,7 @@ static void one_itoa_test(int test_num, const ulong2str_t *ulong2str)
 static void one_ltoa_test(int test_num, const ulong2str_t *ulong2str)
 {
     char dest_str[LARGE_STRI_BUFFER_LENGTH + 1];
-    long value;
+    LONG value;
     LPSTR result;
 
     memset(dest_str, '-', LARGE_STRI_BUFFER_LENGTH);
@@ -236,10 +242,10 @@ static void one_ltoa_test(int test_num, const ulong2str_t *ulong2str)
     value = ulong2str->value;
     result = p_ltoa(ulong2str->value, dest_str, ulong2str->base);
     ok(result == dest_str,
-       "(test %d): _ltoa(%ld, [out], %d) has result %p, expected: %p\n",
+       "(test %d): _ltoa(%d, [out], %d) has result %p, expected: %p\n",
        test_num, value, ulong2str->base, result, dest_str);
     ok(memcmp(dest_str, ulong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-       "(test %d): _ltoa(%ld, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): _ltoa(%d, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
        test_num, value, ulong2str->base, dest_str, ulong2str->Buffer);
 }
 
@@ -247,7 +253,7 @@ static void one_ltoa_test(int test_num, const ulong2str_t *ulong2str)
 static void one_ultoa_test(int test_num, const ulong2str_t *ulong2str)
 {
     char dest_str[LARGE_STRI_BUFFER_LENGTH + 1];
-    unsigned long value;
+    ULONG value;
     LPSTR result;
 
     memset(dest_str, '-', LARGE_STRI_BUFFER_LENGTH);
@@ -255,10 +261,10 @@ static void one_ultoa_test(int test_num, const ulong2str_t *ulong2str)
     value = ulong2str->value;
     result = p_ultoa(ulong2str->value, dest_str, ulong2str->base);
     ok(result == dest_str,
-       "(test %d): _ultoa(%lu, [out], %d) has result %p, expected: %p\n",
+       "(test %d): _ultoa(%u, [out], %d) has result %p, expected: %p\n",
        test_num, value, ulong2str->base, result, dest_str);
     ok(memcmp(dest_str, ulong2str->Buffer, LARGE_STRI_BUFFER_LENGTH) == 0,
-       "(test %d): _ultoa(%lu, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): _ultoa(%u, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
        test_num, value, ulong2str->base, dest_str, ulong2str->Buffer);
 }
 
@@ -323,7 +329,7 @@ static void one_ltow_test(int test_num, const ulong2str_t *ulong2str)
     WCHAR dest_wstr[LARGE_STRI_BUFFER_LENGTH + 1];
     UNICODE_STRING unicode_string;
     STRING ansi_str;
-    long value;
+    LONG value;
     LPWSTR result;
 
     for (pos = 0; pos < LARGE_STRI_BUFFER_LENGTH; pos++) {
@@ -343,10 +349,10 @@ static void one_ltow_test(int test_num, const ulong2str_t *ulong2str)
     result = p_ltow(value, dest_wstr, ulong2str->base);
     pRtlUnicodeStringToAnsiString(&ansi_str, &unicode_string, 1);
     ok(result == dest_wstr,
-       "(test %d): _ltow(%ld, [out], %d) has result %p, expected: %p\n",
+       "(test %d): _ltow(%d, [out], %d) has result %p, expected: %p\n",
        test_num, value, ulong2str->base, result, dest_wstr);
     ok(memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-       "(test %d): _ltow(%ld, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): _ltow(%d, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
        test_num, value, ulong2str->base, ansi_str.Buffer, ulong2str->Buffer);
     pRtlFreeAnsiString(&ansi_str);
 }
@@ -359,7 +365,7 @@ static void one_ultow_test(int test_num, const ulong2str_t *ulong2str)
     WCHAR dest_wstr[LARGE_STRI_BUFFER_LENGTH + 1];
     UNICODE_STRING unicode_string;
     STRING ansi_str;
-    unsigned long value;
+    ULONG value;
     LPWSTR result;
 
     for (pos = 0; pos < LARGE_STRI_BUFFER_LENGTH; pos++) {
@@ -379,10 +385,10 @@ static void one_ultow_test(int test_num, const ulong2str_t *ulong2str)
     result = p_ultow(value, dest_wstr, ulong2str->base);
     pRtlUnicodeStringToAnsiString(&ansi_str, &unicode_string, 1);
     ok(result == dest_wstr,
-       "(test %d): _ultow(%lu, [out], %d) has result %p, expected: %p\n",
+       "(test %d): _ultow(%u, [out], %d) has result %p, expected: %p\n",
        test_num, value, ulong2str->base, result, dest_wstr);
     ok(memcmp(dest_wstr, expected_wstr, LARGE_STRI_BUFFER_LENGTH * sizeof(WCHAR)) == 0,
-       "(test %d): _ultow(%lu, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
+       "(test %d): _ultow(%u, [out], %d) assigns string \"%s\", expected: \"%s\"\n",
        test_num, value, ulong2str->base, ansi_str.Buffer, ulong2str->Buffer);
     pRtlFreeAnsiString(&ansi_str);
 }
@@ -1137,6 +1143,80 @@ static void test_wcsrchr(void)
        "wcsrchr should have returned NULL\n");
 }
 
+static __cdecl int intcomparefunc(const void *a, const void*b)
+{
+	ok (a != b, "must never get the same pointer\n");
+	return (*(int*)a) - (*(int*)b);
+}
+
+static __cdecl int charcomparefunc(const void *a, const void*b)
+{
+	ok (a != b, "must never get the same pointer\n");
+	return (*(char*)a) - (*(char*)b);
+}
+
+static __cdecl int strcomparefunc(const void *a, const void*b)
+{
+	ok (a != b, "must never get the same pointer\n");
+	return lstrcmpA(*(char**)a,*(char**)b);
+}
+
+static void test_qsort(void)
+{
+    int arr[5] = { 23, 42, 8, 4, 16 };
+    char carr[5] = { 42, 23, 4, 8, 16 };
+    const char *strarr[7] = {
+	"Hello",
+	"Wine",
+	"World",
+	"!",
+	"Hopefully",
+	"Sorted",
+	"."
+    };
+
+    p_qsort ((void*)arr, 5, sizeof(int), intcomparefunc);
+    ok(arr[0] == 4,  "badly sorted, arr[0] is %d\n", arr[0]);
+    ok(arr[1] == 8,  "badly sorted, arr[1] is %d\n", arr[1]);
+    ok(arr[2] == 16, "badly sorted, arr[2] is %d\n", arr[2]);
+    ok(arr[3] == 23, "badly sorted, arr[3] is %d\n", arr[3]);
+    ok(arr[4] == 42, "badly sorted, arr[4] is %d\n", arr[4]);
+
+    p_qsort ((void*)carr, 5, sizeof(char), charcomparefunc);
+    ok(carr[0] == 4,  "badly sorted, carr[0] is %d\n", carr[0]);
+    ok(carr[1] == 8,  "badly sorted, carr[1] is %d\n", carr[1]);
+    ok(carr[2] == 16, "badly sorted, carr[2] is %d\n", carr[2]);
+    ok(carr[3] == 23, "badly sorted, carr[3] is %d\n", carr[3]);
+    ok(carr[4] == 42, "badly sorted, carr[4] is %d\n", carr[4]);
+
+    p_qsort ((void*)strarr, 7, sizeof(char*), strcomparefunc);
+    ok(!strcmp(strarr[0],"!"),  "badly sorted, strarr[0] is %s\n", strarr[0]);
+    ok(!strcmp(strarr[1],"."),  "badly sorted, strarr[1] is %s\n", strarr[1]);
+    ok(!strcmp(strarr[2],"Hello"),  "badly sorted, strarr[2] is %s\n", strarr[2]);
+    ok(!strcmp(strarr[3],"Hopefully"),  "badly sorted, strarr[3] is %s\n", strarr[3]);
+    ok(!strcmp(strarr[4],"Sorted"),  "badly sorted, strarr[4] is %s\n", strarr[4]);
+    ok(!strcmp(strarr[5],"Wine"),  "badly sorted, strarr[5] is %s\n", strarr[5]);
+    ok(!strcmp(strarr[6],"World"),  "badly sorted, strarr[6] is %s\n", strarr[6]);
+}
+
+static void test_bsearch(void)
+{
+    int arr[7] = { 1, 3, 4, 8, 16, 23, 42 };
+    int *x, l, i,j ;
+
+    /* just try all all sizes */
+    for (j=1;j<sizeof(arr)/sizeof(arr[0]);j++) {
+        for (i=0;i<j;i++) {
+            l = arr[i];
+            x = p_bsearch (&l, arr, j, sizeof(arr[0]), intcomparefunc);
+            ok (x == &arr[i], "bsearch did not find %d entry in loopsize %d.\n", i, j);
+        }
+        l = 4242;
+        x = p_bsearch (&l, arr, j, sizeof(arr[0]), intcomparefunc);
+        ok (x == NULL, "bsearch did find 4242 entry in loopsize %d.\n", j);
+    }
+}
+
 START_TEST(string)
 {
     InitFunctionPtrs();
@@ -1165,4 +1245,8 @@ START_TEST(string)
         test_atoi();
     if (patol)
         test_atol();
+    if (p_qsort)
+        test_qsort();
+    if (p_bsearch)
+        test_bsearch();
 }

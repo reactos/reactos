@@ -226,6 +226,9 @@ static void test_RtlIsNameLegalDOS8Dot3(void)
 }
 static void test_RtlGetFullPathName_U(void)
 {
+    static const WCHAR emptyW[] = {0};
+    static const WCHAR deadbeefW[] = {'d','e','a','d','b','e','e','f',0};
+
     struct test
     {
         const char *path;
@@ -268,6 +271,26 @@ static void test_RtlGetFullPathName_U(void)
     WCHAR *file_part;
     DWORD reslen;
     UINT len;
+
+    file_part = (WCHAR *)0xdeadbeef;
+    lstrcpyW(rbufferW, deadbeefW);
+    ret = pRtlGetFullPathName_U(NULL, MAX_PATH, rbufferW, &file_part);
+    ok(!ret, "Expected RtlGetFullPathName_U to return 0, got %u\n", ret);
+    ok(!lstrcmpW(rbufferW, deadbeefW),
+       "Expected the output buffer to be untouched, got %s\n", wine_dbgstr_w(rbufferW));
+    ok(file_part == (WCHAR *)0xdeadbeef ||
+       file_part == NULL, /* Win7 */
+       "Expected file part pointer to be untouched, got %p\n", file_part);
+
+    file_part = (WCHAR *)0xdeadbeef;
+    lstrcpyW(rbufferW, deadbeefW);
+    ret = pRtlGetFullPathName_U(emptyW, MAX_PATH, rbufferW, &file_part);
+    ok(!ret, "Expected RtlGetFullPathName_U to return 0, got %u\n", ret);
+    ok(!lstrcmpW(rbufferW, deadbeefW),
+       "Expected the output buffer to be untouched, got %s\n", wine_dbgstr_w(rbufferW));
+    ok(file_part == (WCHAR *)0xdeadbeef ||
+       file_part == NULL, /* Win7 */
+       "Expected file part pointer to be untouched, got %p\n", file_part);
 
     for (test = tests; test->path; test++)
     {

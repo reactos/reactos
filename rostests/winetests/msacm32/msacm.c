@@ -423,7 +423,7 @@ static const char * get_metric(UINT uMetric)
     return "UNKNOWN";
 }
 
-static DWORD check_count(UINT uMetric)
+static void check_count(UINT uMetric)
 {
     DWORD dwMetric;
     MMRESULT rc;
@@ -452,14 +452,11 @@ static DWORD check_count(UINT uMetric)
 
     if (rc == MMSYSERR_NOERROR && winetest_interactive)
         trace("%s: %u\n", get_metric(uMetric), dwMetric);
-
-    return dwMetric;
 }
 
 static void msacm_tests(void)
 {
     MMRESULT rc;
-    DWORD dwCount;
     DWORD dwACMVersion = acmGetVersion();
 
     if (winetest_interactive) {
@@ -470,17 +467,17 @@ static void msacm_tests(void)
             LOWORD(dwACMVersion)  ==  0 ? " (Retail)" : "");
     }
 
-    dwCount = check_count(ACM_METRIC_COUNT_CODECS);
-    dwCount = check_count(ACM_METRIC_COUNT_CONVERTERS);
-    dwCount = check_count(ACM_METRIC_COUNT_DISABLED);
-    dwCount = check_count(ACM_METRIC_COUNT_DRIVERS);
-    dwCount = check_count(ACM_METRIC_COUNT_FILTERS);
-    dwCount = check_count(ACM_METRIC_COUNT_HARDWARE);
-    dwCount = check_count(ACM_METRIC_COUNT_LOCAL_CODECS);
-    dwCount = check_count(ACM_METRIC_COUNT_LOCAL_CONVERTERS);
-    dwCount = check_count(ACM_METRIC_COUNT_LOCAL_DISABLED);
-    dwCount = check_count(ACM_METRIC_COUNT_LOCAL_DRIVERS);
-    dwCount = check_count(ACM_METRIC_COUNT_LOCAL_FILTERS);
+    check_count(ACM_METRIC_COUNT_CODECS);
+    check_count(ACM_METRIC_COUNT_CONVERTERS);
+    check_count(ACM_METRIC_COUNT_DISABLED);
+    check_count(ACM_METRIC_COUNT_DRIVERS);
+    check_count(ACM_METRIC_COUNT_FILTERS);
+    check_count(ACM_METRIC_COUNT_HARDWARE);
+    check_count(ACM_METRIC_COUNT_LOCAL_CODECS);
+    check_count(ACM_METRIC_COUNT_LOCAL_CONVERTERS);
+    check_count(ACM_METRIC_COUNT_LOCAL_DISABLED);
+    check_count(ACM_METRIC_COUNT_LOCAL_DRIVERS);
+    check_count(ACM_METRIC_COUNT_LOCAL_FILTERS);
 
     if (winetest_interactive)
         trace("enabled drivers:\n");

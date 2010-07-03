@@ -777,7 +777,6 @@ static void test_XcvDataPort_AddPort(void)
 {
     DWORD   res;
 
-
     /*
      * The following tests crash with native localspl.dll on w2k and xp,
      * but it works, when the native dll (w2k and xp) is used in wine.
@@ -791,18 +790,17 @@ static void test_XcvDataPort_AddPort(void)
     /* create a Port for a normal, writable file */
     SetLastError(0xdeadbeef);
     res = pXcvDataPort(hXcv, cmd_AddPortW, (PBYTE) tempfileW, (lstrlenW(tempfileW) + 1) * sizeof(WCHAR), NULL, 0, NULL);
+    ok( res == ERROR_SUCCESS, "returned %d with %u (expected ERROR_SUCCESS)\n", res, GetLastError());
 
     /* add our testport again */
     SetLastError(0xdeadbeef);
     res = pXcvDataPort(hXcv, cmd_AddPortW, (PBYTE) tempfileW, (lstrlenW(tempfileW) + 1) * sizeof(WCHAR), NULL, 0, NULL);
+    ok( res == ERROR_ALREADY_EXISTS, "returned %d with %u (expected ERROR_ALREADY_EXISTS)\n", res, GetLastError());
 
     /* create a well-known Port  */
     SetLastError(0xdeadbeef);
     res = pXcvDataPort(hXcv, cmd_AddPortW, (PBYTE) portname_lpt1W, (lstrlenW(portname_lpt1W) + 1) * sizeof(WCHAR), NULL, 0, NULL);
-
-    SetLastError(0xdeadbeef);
-    res = pXcvDataPort(hXcv, cmd_AddPortW, (PBYTE) portname_lpt1W, (lstrlenW(portname_lpt1W) + 1) * sizeof(WCHAR), NULL, 0, NULL);
-    /* native localspl.dll on wine: ERROR_ALREADY_EXISTS */
+    ok( res == ERROR_ALREADY_EXISTS, "returned %d with %u (expected ERROR_ALREADY_EXISTS)\n", res, GetLastError());
 
     /* ERROR_ALREADY_EXISTS is also returned from native localspl.dll on wine,
        when "RPT1:" was already installed for redmonnt.dll:
@@ -812,6 +810,7 @@ static void test_XcvDataPort_AddPort(void)
     /* cleanup */
     SetLastError(0xdeadbeef);
     res = pXcvDataPort(hXcv, cmd_DeletePortW, (PBYTE) tempfileW, (lstrlenW(tempfileW) + 1) * sizeof(WCHAR), NULL, 0, NULL);
+    ok( res == ERROR_SUCCESS, "returned %d with %u (expected ERROR_SUCCESS)\n", res, GetLastError());
     }
 
 }

@@ -371,6 +371,7 @@ static void test_wiznavigation(void)
 
     DestroyWindow(hdlg);
 }
+
 static void test_buttons(void)
 {
     HPROPSHEETPAGE hpsp[1];
@@ -436,6 +437,94 @@ static void test_buttons(void)
     DestroyWindow(hdlg);
 }
 
+static BOOL add_button_has_been_pressed;
+
+static INT_PTR CALLBACK
+page_with_custom_default_button_dlg_proc(HWND hdlg, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+    case WM_COMMAND:
+        switch(LOWORD(wparam))
+        {
+        case IDC_PS_PUSHBUTTON1:
+            switch(HIWORD(wparam))
+            {
+            case BN_CLICKED:
+                add_button_has_been_pressed = TRUE;
+                return TRUE;
+            }
+            break;
+        }
+        break;
+    }
+    return FALSE;
+}
+
+static void test_custom_default_button(void)
+{
+    HWND hdlg;
+    PROPSHEETPAGEA psp[1];
+    PROPSHEETHEADERA psh;
+    MSG msg;
+    LRESULT result;
+
+    psp[0].dwSize = sizeof (PROPSHEETPAGEA);
+    psp[0].dwFlags = PSP_USETITLE;
+    psp[0].hInstance = GetModuleHandleA(NULL);
+    U(psp[0]).pszTemplate = MAKEINTRESOURCE(IDD_PROP_PAGE_WITH_CUSTOM_DEFAULT_BUTTON);
+    U2(psp[0]).pszIcon = NULL;
+    psp[0].pfnDlgProc = page_with_custom_default_button_dlg_proc;
+    psp[0].pszTitle = "Page1";
+    psp[0].lParam = 0;
+
+    psh.dwSize = sizeof (PROPSHEETHEADERA);
+    psh.dwFlags = PSH_PROPSHEETPAGE | PSH_MODELESS;
+    psh.hwndParent = GetDesktopWindow();
+    psh.hInstance = GetModuleHandleA(NULL);
+    U(psh).pszIcon = NULL;
+    psh.pszCaption =  "PropertySheet1";
+    psh.nPages = 1;
+    U3(psh).ppsp = psp;
+    U2(psh).nStartPage = 0;
+
+    /* The goal of the test is to make sure that the Add button is pressed
+     * when the ENTER key is pressed and a different control, a combobox,
+     * has the keyboard focus. */
+    add_button_has_been_pressed = FALSE;
+
+    /* Create the modeless property sheet. */
+    hdlg = (HWND)PropertySheetA(&psh);
+    ok(hdlg != INVALID_HANDLE_VALUE, "Cannot create the property sheet\n");
+
+    /* Set the Add button as the default button. */
+    SendMessage(hdlg, DM_SETDEFID, (WPARAM)IDC_PS_PUSHBUTTON1, 0);
+
+    /* Make sure the default button is the Add button. */
+    result = SendMessage(hdlg, DM_GETDEFID, 0, 0);
+    ok(DC_HASDEFID == HIWORD(result), "The property sheet does not have a default button\n");
+    ok(IDC_PS_PUSHBUTTON1 == LOWORD(result), "The default button is not the Add button\n");
+
+    /* At this point, the combobox should have keyboard focus, so we press ENTER.
+     * Pull the lever, Kronk! */
+    keybd_event(VK_RETURN, 0, 0, 0);
+
+    /* Process all the messages in the queue for this thread. */
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        if (!PropSheet_IsDialogMessage(hdlg, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    todo_wine
+    ok(add_button_has_been_pressed, "The Add button has not been pressed!\n");
+
+    DestroyWindow(hdlg);
+}
+
 START_TEST(propsheet)
 {
     test_title();
@@ -443,4 +532,5 @@ START_TEST(propsheet)
     test_disableowner();
     test_wiznavigation();
     test_buttons();
+    test_custom_default_button();
 }

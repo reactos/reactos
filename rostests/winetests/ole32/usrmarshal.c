@@ -603,7 +603,7 @@ static void marshal_WdtpInterfacePointer(DWORD umcb_ctx, DWORD ctx)
     buffer_end = WdtpInterfacePointer_UserMarshal(&umcb.Flags, ctx, buffer, unk, &IID_IUnknown);
     wireip = buffer;
 
-    ok(buffer_end == buffer + marshal_size + 2 * sizeof(DWORD), "buffer_end %p buffer %p (diff %x)\n", buffer_end, buffer, buffer_end - buffer);
+    ok(buffer_end == buffer + marshal_size + 2 * sizeof(DWORD), "buffer_end %p buffer %p\n", buffer_end, buffer);
 
     ok(*(DWORD *)wireip == marshal_size, "wireip + 0x0 should be %x instead of %x\n", marshal_size, *(DWORD *)wireip);
     wireip += sizeof(DWORD);

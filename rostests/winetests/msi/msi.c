@@ -247,10 +247,10 @@ static void test_null(void)
     r = MsiConfigureFeatureA("{00000000-0000-0000-0000-000000000000}", NULL, 0);
     ok( r == ERROR_INVALID_PARAMETER, "wrong error\n");
 
-    r = MsiConfigureFeatureA("{00000000-0000-0000-0000-000000000000}", "foo", 0);
+    r = MsiConfigureFeatureA("{00000000-0000-0000-0000-000000000001}", "foo", 0);
     ok( r == ERROR_INVALID_PARAMETER, "wrong error %d\n", r);
 
-    r = MsiConfigureFeatureA("{00000000-0000-0000-0000-000000000000}", "foo", INSTALLSTATE_DEFAULT);
+    r = MsiConfigureFeatureA("{00000000-0000-0000-0000-000000000002}", "foo", INSTALLSTATE_DEFAULT);
     ok( r == ERROR_UNKNOWN_PRODUCT, "wrong error %d\n", r);
 
     /* make sure empty string to MsiGetProductInfo is not a handle to default registry value, saving and restoring the
@@ -467,7 +467,7 @@ static BOOL squash_guid(LPCWSTR in, LPWSTR out)
     DWORD i,n=1;
     GUID guid;
 
-    if (FAILED(CLSIDFromString((LPOLESTR)in, &guid)))
+    if (FAILED(CLSIDFromString((LPCOLESTR)in, &guid)))
         return FALSE;
 
     for(i=0; i<8; i++)
@@ -1555,9 +1555,19 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_INVALIDARG, "Expected INSTALLSTATE_INVALIDARG, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(NULL, path, &size);
+    ok(state == INSTALLSTATE_INVALIDARG, "Expected INSTALLSTATE_INVALIDARG, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     /* NULL lpPathBuf */
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, NULL, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, NULL, &size);
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
@@ -1567,9 +1577,19 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_INVALIDARG, "Expected INSTALLSTATE_INVALIDARG, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, NULL);
+    ok(state == INSTALLSTATE_INVALIDARG, "Expected INSTALLSTATE_INVALIDARG, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     /* all params valid */
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
@@ -1586,12 +1606,25 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"C:\\imapath", 10);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product value exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1609,8 +1642,16 @@ static void test_MsiGetComponentPath(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* install properties key exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1618,8 +1659,16 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1647,12 +1696,25 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"C:\\imapath", 10);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product value exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1670,8 +1732,16 @@ static void test_MsiGetComponentPath(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* install properties key exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1679,8 +1749,16 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1708,6 +1786,11 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
     lstrcatA(keypath, "Installer\\UserData\\");
     lstrcatA(keypath, usersid);
@@ -1723,12 +1806,25 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"C:\\imapath", 10);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product value exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1746,8 +1842,16 @@ static void test_MsiGetComponentPath(void)
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* install properties key exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1755,8 +1859,16 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1783,6 +1895,11 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
     lstrcatA(keypath, "Installer\\UserData\\");
     lstrcatA(keypath, usersid);
@@ -1798,12 +1915,25 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"C:\\imapath", 10);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product value exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1811,8 +1941,16 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1836,6 +1974,11 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     lstrcpyA(keypath, "Software\\Microsoft\\Windows\\CurrentVersion\\");
     lstrcatA(keypath, "Installer\\UserData\\S-1-5-18\\Components\\");
     lstrcatA(keypath, comp_squashed);
@@ -1849,12 +1992,25 @@ static void test_MsiGetComponentPath(void)
     ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
+    ok(state == INSTALLSTATE_UNKNOWN, "Expected INSTALLSTATE_UNKNOWN, got %d\n", state);
+    ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
+
     res = RegSetValueExA(compkey, prod_squashed, 0, REG_SZ, (const BYTE *)"C:\\imapath", 10);
     ok(res == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", res);
 
     /* product value exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -1862,8 +2018,16 @@ static void test_MsiGetComponentPath(void)
     create_file("C:\\imapath", "C:\\imapath", 11);
 
     /* file exists */
+    path[0] = 0;
     size = MAX_PATH;
     state = MsiGetComponentPathA(prodcode, component, path, &size);
+    ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
+    ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
+    ok(size == 10, "Expected 10, got %d\n", size);
+
+    path[0] = 0;
+    size = MAX_PATH;
+    state = MsiLocateComponentA(component, path, &size);
     ok(state == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", state);
     ok(!lstrcmpA(path, "C:\\imapath"), "Expected C:\\imapath, got %s\n", path);
     ok(size == 10, "Expected 10, got %d\n", size);
@@ -8221,7 +8385,9 @@ static void test_MsiEnumPatchesEx_userunmanaged(LPCSTR usersid, LPCSTR expecteds
     r = pMsiEnumPatchesExA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                            MSIPATCHSTATE_APPLIED, 0, patchcode, targetprod,
                            &context, targetsid, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_BAD_CONFIGURATION), /* Windows Installer 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(patchcode, "apple"),
        "Expected patchcode to be unchanged, got %s\n", patchcode);
     ok(!lstrcmpA(targetprod, "banana"),
@@ -8245,7 +8411,9 @@ static void test_MsiEnumPatchesEx_userunmanaged(LPCSTR usersid, LPCSTR expecteds
     r = pMsiEnumPatchesExA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
                            MSIPATCHSTATE_APPLIED, 0, patchcode, targetprod,
                            &context, targetsid, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_BAD_CONFIGURATION), /* Windows Installer 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(patchcode, "apple"),
        "Expected patchcode to be unchanged, got %s\n", patchcode);
     ok(!lstrcmpA(targetprod, "banana"),
@@ -9352,7 +9520,9 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
@@ -9369,7 +9539,8 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_BAD_CONFIGURATION,
+    ok(r == ERROR_BAD_CONFIGURATION ||
+       broken(r == ERROR_SUCCESS), /* Windows Installer < 3.0 */
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
@@ -9405,8 +9576,11 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(!lstrcmpA(patch, "apple"),
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(!lstrcmpA(patch, "apple") ||
+       broken(!lstrcmpA(patch, patchcode)), /* Windows Installer < 3.0 */
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
        "Expected lpTransformsBuf to be unchanged, got \"%s\"\n", transforms);
@@ -9467,7 +9641,8 @@ static void test_MsiEnumPatches(void)
     ok(r == ERROR_MORE_DATA, "Expected ERROR_MORE_DATA, got %d\n", r);
     ok(!lstrcmpA(patch, patchcode),
        "Expected \"%s\", got \"%s\"\n", patchcode, patch);
-    ok(!lstrcmpA(transforms, "whate"),
+    ok(!lstrcmpA(transforms, "whate") ||
+       broken(!lstrcmpA(transforms, "banana")), /* Windows Installer < 3.0 */
        "Expected \"whate\", got \"%s\"\n", transforms);
     ok(size == 8 || size == 16, "Expected 8 or 16, got %d\n", size);
 
@@ -9541,7 +9716,9 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
@@ -9558,7 +9735,8 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_BAD_CONFIGURATION,
+    ok(r == ERROR_BAD_CONFIGURATION ||
+       broken(r == ERROR_SUCCESS), /* Windows Installer < 3.0 */
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
@@ -9594,8 +9772,11 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(!lstrcmpA(patch, "apple"),
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(!lstrcmpA(patch, "apple") ||
+       broken(!lstrcmpA(patch, patchcode)), /* Windows Installer < 3.0 */
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
        "Expected lpTransformsBuf to be unchanged, got \"%s\"\n", transforms);
@@ -9610,10 +9791,14 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(!lstrcmpA(patch, "apple"),
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_SUCCESS), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(!lstrcmpA(patch, "apple") ||
+       broken(!lstrcmpA(patch, patchcode)), /* Windows Installer < 3.0 */
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
-    ok(!lstrcmpA(transforms, "banana"),
+    ok(!lstrcmpA(transforms, "banana") ||
+       broken(!lstrcmpA(transforms, "whatever")), /* Windows Installer < 3.0 */
        "Expected lpTransformsBuf to be unchanged, got \"%s\"\n", transforms);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
@@ -9686,7 +9871,9 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
@@ -9703,7 +9890,8 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_BAD_CONFIGURATION,
+    ok(r == ERROR_BAD_CONFIGURATION ||
+       broken(r == ERROR_SUCCESS), /* Windows Installer < 3.0 */
        "Expected ERROR_BAD_CONFIGURATION, got %d\n", r);
     ok(!lstrcmpA(patch, "apple"),
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
@@ -9739,8 +9927,11 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(!lstrcmpA(patch, "apple"),
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_FILE_NOT_FOUND), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(!lstrcmpA(patch, "apple") ||
+       broken(!lstrcmpA(patch, patchcode)), /* Windows Installer < 3.0 */
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
     ok(!lstrcmpA(transforms, "banana"),
        "Expected lpTransformsBuf to be unchanged, got \"%s\"\n", transforms);
@@ -9804,10 +9995,14 @@ static void test_MsiEnumPatches(void)
     lstrcpyA(patch, "apple");
     lstrcpyA(transforms, "banana");
     r = MsiEnumPatchesA(prodcode, 0, patch, transforms, &size);
-    ok(r == ERROR_NO_MORE_ITEMS, "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
-    ok(!lstrcmpA(patch, "apple"),
+    ok(r == ERROR_NO_MORE_ITEMS ||
+       broken(r == ERROR_SUCCESS), /* Windows Installer < 3.0 */
+       "Expected ERROR_NO_MORE_ITEMS, got %d\n", r);
+    ok(!lstrcmpA(patch, "apple") ||
+       broken(!lstrcmpA(patch, patchcode)), /* Windows Installer < 3.0 */
        "Expected lpPatchBuf to be unchanged, got \"%s\"\n", patch);
-    ok(!lstrcmpA(transforms, "banana"),
+    ok(!lstrcmpA(transforms, "banana") ||
+       broken(!lstrcmpA(transforms, "whatever")), /* Windows Installer < 3.0 */
        "Expected lpTransformsBuf to be unchanged, got \"%s\"\n", transforms);
     ok(size == MAX_PATH, "Expected size to be unchanged, got %d\n", size);
 
@@ -9841,7 +10036,8 @@ static void test_MsiEnumPatches(void)
     WideCharToMultiByte( CP_ACP, 0, transformsW, -1, transforms, MAX_PATH, NULL, NULL );
     ok(!lstrcmpA(patch, patchcode),
        "Expected \"%s\", got \"%s\"\n", patchcode, patch);
-    ok(!lstrcmpA(transforms, "whate"),
+    ok(!lstrcmpA(transforms, "whate") ||
+       broken(!lstrcmpA(transforms, "banana")), /* Windows Installer < 3.0 */
        "Expected \"whate\", got \"%s\"\n", transforms);
     ok(size == 8, "Expected 8, got %d\n", size);
 

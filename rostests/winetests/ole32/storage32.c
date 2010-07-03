@@ -315,6 +315,55 @@ static void test_storage_stream(void)
     r = IStream_Commit(stm, STGC_DEFAULT );
     ok(r==S_OK, "failed to commit stream\n");
 
+    /* Read past the end of the stream. */
+    pos.QuadPart = 3;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 3, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 3, "read bytes past end of stream\n");
+    pos.QuadPart = 10;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 10, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 0, "read bytes past end of stream\n");
+    pos.QuadPart = 10000;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 10000, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 0, "read bytes past end of stream\n");
+
+    /* Convert to a big block stream, and read past the end. */
+    p.QuadPart = 5000;
+    r = IStream_SetSize(stm,p);
+    ok(r==S_OK, "failed to set pos\n");
+    pos.QuadPart = 4997;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 4997, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 3, "read bytes past end of stream\n");
+    pos.QuadPart = 5001;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 5001, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 0, "read bytes past end of stream\n");
+    pos.QuadPart = 10000;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 10000, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to read\n");
+    ok(count == 0, "read bytes past end of stream\n");
+
     /* seek round a bit, reset the stream size */
     pos.QuadPart = 0;
     r = IStream_Seek(stm, pos, 3, &p );
@@ -329,6 +378,16 @@ static void test_storage_stream(void)
     r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
     ok(r==S_OK, "failed to seek stream\n");
     ok(p.QuadPart == 10, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to set pos\n");
+    ok(count == 0, "read bytes from empty stream\n");
+    pos.QuadPart = 10000;
+    r = IStream_Seek(stm, pos, STREAM_SEEK_SET, &p );
+    ok(r==S_OK, "failed to seek stream\n");
+    ok(p.QuadPart == 10000, "at wrong place\n");
+    r = IStream_Read(stm, buffer, sizeof buffer, &count );
+    ok(r==S_OK, "failed to set pos\n");
+    ok(count == 0, "read bytes from empty stream\n");
     pos.QuadPart = 0;
     r = IStream_Seek(stm, pos, STREAM_SEEK_END, &p );
     ok(r==S_OK, "failed to seek stream\n");
@@ -2750,7 +2809,7 @@ static void test_copyto_locking(void)
 
     /* Try to copy the storage while the stream is open */
     r = IStorage_CopyTo(stg2, 0, NULL, NULL, stg3);
-    todo_wine ok(r==S_OK, "IStorage->CopyTo failed, hr=%08x\n", r);
+    ok(r==S_OK, "IStorage->CopyTo failed, hr=%08x\n", r);
 
     IStream_Release(stm);
 

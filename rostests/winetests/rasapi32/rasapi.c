@@ -55,7 +55,8 @@ static void test_rasenum(void)
 
     /* create the return buffer */
     result = pRasEnumDevicesA(NULL, &bufsize, &cDevices);
-    if(ERROR_RASMAN_CANNOT_INITIALIZE == result) {
+    if(ERROR_RASMAN_CANNOT_INITIALIZE == result ||
+       ERROR_STATE_MACHINES_NOT_STARTED == result) {
         win_skip("RAS configuration problem\n");
         return;
     }
@@ -67,7 +68,7 @@ static void test_rasenum(void)
     ok(result == ERROR_BUFFER_TOO_SMALL,
     "Expected ERROR_BUFFER_TOO_SMALL, got %08d\n", result);
 
-    rasDevInfo = (LPRASDEVINFO) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+    rasDevInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                           max(bufsize,sizeof(RASDEVINFOA)));
     if(!rasDevInfo) {
         win_skip("failed to allocate buffer for RasEnumDevicesA tests\n");

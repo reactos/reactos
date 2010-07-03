@@ -20,6 +20,7 @@
 
 #include "ntdll_test.h"
 #include <winnls.h>
+#include <stdio.h>
 
 static NTSTATUS (WINAPI * pNtQuerySystemInformation)(SYSTEM_INFORMATION_CLASS, PVOID, ULONG, PULONG);
 static NTSTATUS (WINAPI * pNtQueryInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG, PULONG);
@@ -27,6 +28,9 @@ static NTSTATUS (WINAPI * pNtQueryInformationThread)(HANDLE, THREADINFOCLASS, PV
 static NTSTATUS (WINAPI * pNtSetInformationProcess)(HANDLE, PROCESSINFOCLASS, PVOID, ULONG);
 static NTSTATUS (WINAPI * pNtSetInformationThread)(HANDLE, THREADINFOCLASS, PVOID, ULONG);
 static NTSTATUS (WINAPI * pNtReadVirtualMemory)(HANDLE, const void*, void*, SIZE_T, SIZE_T*);
+static BOOL     (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
+
+static BOOL is_wow64;
 
 /* one_before_last_pid is used to be able to compare values of a still running process
    with the output of the test_query_process_times and test_query_process_handlecount tests.
@@ -58,6 +62,8 @@ static BOOL InitFunctionPtrs(void)
     NTDLL_GET_PROC(NtSetInformationThread);
     NTDLL_GET_PROC(NtReadVirtualMemory);
 
+    pIsWow64Process = (void *)GetProcAddress(GetModuleHandle("kernel32.dll"), "IsWow64Process");
+    if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
     return TRUE;
 }
 
@@ -128,21 +134,25 @@ static void test_query_performance(void)
 {
     NTSTATUS status;
     ULONG ReturnLength;
-    ULONGLONG buffer[sizeof(SYSTEM_PERFORMANCE_INFORMATION)/sizeof(ULONGLONG) + 1];
+    ULONGLONG buffer[sizeof(SYSTEM_PERFORMANCE_INFORMATION)/sizeof(ULONGLONG) + 5];
+    DWORD size = sizeof(SYSTEM_PERFORMANCE_INFORMATION);
 
     status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer, 0, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
 
-    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer,
-                                       sizeof(SYSTEM_PERFORMANCE_INFORMATION), &ReturnLength);
+    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer, size, &ReturnLength);
+    if (status == STATUS_INFO_LENGTH_MISMATCH && is_wow64)
+    {
+        /* size is larger on wow64 under w2k8/win7 */
+        size += 16;
+        status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer, size, &ReturnLength);
+    }
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION), "Inconsistent length %d\n", ReturnLength);
+    ok( ReturnLength == size, "Inconsistent length %d\n", ReturnLength);
 
-    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer,
-                                       sizeof(SYSTEM_PERFORMANCE_INFORMATION) + 2, &ReturnLength);
+    status = pNtQuerySystemInformation(SystemPerformanceInformation, buffer, size + 2, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08x\n", status);
-    ok( ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION) ||
-        ReturnLength == sizeof(SYSTEM_PERFORMANCE_INFORMATION) + 2,
+    ok( ReturnLength == size || ReturnLength == size + 2,
         "Inconsistent length %d\n", ReturnLength);
 
     /* Not return values yet, as struct members are unknown */
@@ -747,8 +757,82 @@ static void test_query_process_times(void)
 
     status = pNtQueryInformationProcess( GetCurrentProcess(), ProcessTimes, &spti, sizeof(spti) * 2, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08x\n", status);
-    ok( sizeof(spti) == ReturnLength || ReturnLength == 0 /* vista */,
+    ok( sizeof(spti) == ReturnLength ||
+        ReturnLength == 0 /* vista */ ||
+        broken(is_wow64),  /* returns garbage on wow64 */
         "Inconsistent length %d\n", ReturnLength);
+}
+
+static void test_query_process_debug_port(int argc, char **argv)
+{
+    DWORD_PTR debug_port = 0xdeadbeef;
+    char cmdline[MAX_PATH];
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si = { 0 };
+    NTSTATUS status;
+    BOOL ret;
+
+    sprintf(cmdline, "%s %s %s", argv[0], argv[1], "debuggee");
+
+    si.cb = sizeof(si);
+    ret = CreateProcess(NULL, cmdline, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &si, &pi);
+    ok(ret, "CreateProcess failed, last error %#x.\n", GetLastError());
+    if (!ret) return;
+
+    status = pNtQueryInformationProcess(NULL, ProcessDebugPort,
+            NULL, 0, NULL);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(NULL, ProcessDebugPort,
+            NULL, sizeof(debug_port), NULL);
+    ok(status == STATUS_INVALID_HANDLE || status == STATUS_ACCESS_VIOLATION,
+            "Expected STATUS_INVALID_HANDLE, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugPort,
+            NULL, sizeof(debug_port), NULL);
+    ok(status == STATUS_ACCESS_VIOLATION, "Expected STATUS_ACCESS_VIOLATION, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(NULL, ProcessDebugPort,
+            &debug_port, sizeof(debug_port), NULL);
+    ok(status == STATUS_INVALID_HANDLE, "Expected STATUS_ACCESS_VIOLATION, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugPort,
+            &debug_port, sizeof(debug_port) - 1, NULL);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugPort,
+            &debug_port, sizeof(debug_port) + 1, NULL);
+    ok(status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %#x.\n", status);
+
+    status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessDebugPort,
+            &debug_port, sizeof(debug_port), NULL);
+    ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+    ok(debug_port == 0, "Expected port 0, got %#lx.\n", debug_port);
+
+    status = pNtQueryInformationProcess(pi.hProcess, ProcessDebugPort,
+            &debug_port, sizeof(debug_port), NULL);
+    ok(!status, "NtQueryInformationProcess failed, status %#x.\n", status);
+    ok(debug_port == ~(DWORD_PTR)0, "Expected port %#lx, got %#lx.\n", ~(DWORD_PTR)0, debug_port);
+
+    for (;;)
+    {
+        DEBUG_EVENT ev;
+
+        ret = WaitForDebugEvent(&ev, INFINITE);
+        ok(ret, "WaitForDebugEvent failed, last error %#x.\n", GetLastError());
+        if (!ret) break;
+
+        if (ev.dwDebugEventCode == EXIT_PROCESS_DEBUG_EVENT) break;
+
+        ret = ContinueDebugEvent(ev.dwProcessId, ev.dwThreadId, DBG_CONTINUE);
+        ok(ret, "ContinueDebugEvent failed, last error %#x.\n", GetLastError());
+        if (!ret) break;
+    }
+
+    ret = CloseHandle(pi.hThread);
+    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
+    ret = CloseHandle(pi.hProcess);
+    ok(ret, "CloseHandle failed, last error %#x.\n", GetLastError());
 }
 
 static void test_query_process_handlecount(void)
@@ -928,7 +1012,7 @@ static void test_affinity(void)
     ok( tbi.AffinityMask == 1, "Unexpected thread affinity\n" );
 
     /* NOTE: Pre-Vista does not recognize the "all processors" flag (all bits set) */
-    thread_affinity = ~0UL;
+    thread_affinity = ~(DWORD_PTR)0;
     status = pNtSetInformationThread( GetCurrentThread(), ThreadAffinityMask, &thread_affinity, sizeof(thread_affinity) );
     ok( broken(status == STATUS_INVALID_PARAMETER) || status == STATUS_SUCCESS,
         "Expected STATUS_SUCCESS, got %08x\n", status);
@@ -978,8 +1062,14 @@ static void test_affinity(void)
 
 START_TEST(info)
 {
+    char **argv;
+    int argc;
+
     if(!InitFunctionPtrs())
         return;
+
+    argc = winetest_get_mainargs(&argv);
+    if (argc >= 3) return; /* Child */
 
     /* NtQuerySystemInformation */
 
@@ -1048,6 +1138,10 @@ START_TEST(info)
     /* 0x4 ProcessTimes */
     trace("Starting test_query_process_times()\n");
     test_query_process_times();
+
+    /* 0x7 ProcessDebugPort */
+    trace("Starting test_process_debug_port()\n");
+    test_query_process_debug_port(argc, argv);
 
     /* 0x14 ProcessHandleCount */
     trace("Starting test_query_process_handlecount()\n");

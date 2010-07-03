@@ -547,28 +547,36 @@ static DWORD CALLBACK serverThreadMain3(LPVOID arg)
         oOverlap.hEvent = hEvent;
 
         /* Wait for client to connect */
-        trace("Server calling overlapped ConnectNamedPipe...\n");
-        success = ConnectNamedPipe(hnp, &oOverlap);
-        err = GetLastError();
-        ok(!success && (err == ERROR_IO_PENDING || err == ERROR_PIPE_CONNECTED), "overlapped ConnectNamedPipe\n");
-        trace("overlapped ConnectNamedPipe returned.\n");
-        if (!success && (err == ERROR_IO_PENDING)) {
-            if (letWFSOEwait)
-            {
-                DWORD ret;
-                do {
-                    ret = WaitForSingleObjectEx(hEvent, INFINITE, TRUE);
-                } while (ret == WAIT_IO_COMPLETION);
-                ok(ret == 0, "wait ConnectNamedPipe returned %x\n", ret);
+        if (i == 0) {
+            trace("Server calling non-overlapped ConnectNamedPipe on overlapped pipe...\n");
+            success = ConnectNamedPipe(hnp, NULL);
+            err = GetLastError();
+            ok(success || (err == ERROR_PIPE_CONNECTED), "ConnectNamedPipe failed: %d\n", err);
+            trace("ConnectNamedPipe operation complete.\n");
+        } else {
+            trace("Server calling overlapped ConnectNamedPipe...\n");
+            success = ConnectNamedPipe(hnp, &oOverlap);
+            err = GetLastError();
+            ok(!success && (err == ERROR_IO_PENDING || err == ERROR_PIPE_CONNECTED), "overlapped ConnectNamedPipe\n");
+            trace("overlapped ConnectNamedPipe returned.\n");
+            if (!success && (err == ERROR_IO_PENDING)) {
+                if (letWFSOEwait)
+                {
+                    DWORD ret;
+                    do {
+                        ret = WaitForSingleObjectEx(hEvent, INFINITE, TRUE);
+                    } while (ret == WAIT_IO_COMPLETION);
+                    ok(ret == 0, "wait ConnectNamedPipe returned %x\n", ret);
+                }
+                success = GetOverlappedResult(hnp, &oOverlap, &dummy, letGORwait);
+                if (!letGORwait && !letWFSOEwait && !success) {
+                    ok(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult\n");
+                    success = GetOverlappedResult(hnp, &oOverlap, &dummy, TRUE);
+                }
             }
-            success = GetOverlappedResult(hnp, &oOverlap, &dummy, letGORwait);
-            if (!letGORwait && !letWFSOEwait && !success) {
-                ok(GetLastError() == ERROR_IO_INCOMPLETE, "GetOverlappedResult\n");
-                success = GetOverlappedResult(hnp, &oOverlap, &dummy, TRUE);
-            }
+            ok(success || (err == ERROR_PIPE_CONNECTED), "GetOverlappedResult ConnectNamedPipe\n");
+            trace("overlapped ConnectNamedPipe operation complete.\n");
         }
-        ok(success || (err == ERROR_PIPE_CONNECTED), "GetOverlappedResult ConnectNamedPipe\n");
-        trace("overlapped ConnectNamedPipe operation complete.\n");
 
         /* Echo bytes once */
         memset(buf, 0, sizeof(buf));
@@ -794,33 +802,39 @@ static void test_NamedPipe_2(void)
     DWORD alarmThreadId;
 
     trace("test_NamedPipe_2 starting\n");
-    /* Set up a ten second timeout */
+    /* Set up a twenty second timeout */
     alarm_event = CreateEvent( NULL, TRUE, FALSE, NULL );
-    alarmThread = CreateThread(NULL, 0, alarmThreadMain, (void *) 10000, 0, &alarmThreadId);
+    SetLastError(0xdeadbeef);
+    alarmThread = CreateThread(NULL, 0, alarmThreadMain, (void *) 20000, 0, &alarmThreadId);
+    ok(alarmThread != NULL, "CreateThread failed: %d\n", GetLastError());
 
-    /* The servers we're about to exercize do try to clean up carefully,
-     * but to reduce the change of a test failure due to a pipe handle
+    /* The servers we're about to exercise do try to clean up carefully,
+     * but to reduce the chance of a test failure due to a pipe handle
      * leak in the test code, we'll use a different pipe name for each server.
      */
 
     /* Try server #1 */
+    SetLastError(0xdeadbeef);
     serverThread = CreateThread(NULL, 0, serverThreadMain1, (void *)8, 0, &serverThreadId);
-    ok(serverThread != INVALID_HANDLE_VALUE, "CreateThread\n");
+    ok(serverThread != NULL, "CreateThread failed: %d\n", GetLastError());
     exercizeServer(PIPENAME "serverThreadMain1", serverThread);
 
     /* Try server #2 */
+    SetLastError(0xdeadbeef);
     serverThread = CreateThread(NULL, 0, serverThreadMain2, 0, 0, &serverThreadId);
-    ok(serverThread != INVALID_HANDLE_VALUE, "CreateThread\n");
+    ok(serverThread != NULL, "CreateThread failed: %d\n", GetLastError());
     exercizeServer(PIPENAME "serverThreadMain2", serverThread);
 
     /* Try server #3 */
+    SetLastError(0xdeadbeef);
     serverThread = CreateThread(NULL, 0, serverThreadMain3, 0, 0, &serverThreadId);
-    ok(serverThread != INVALID_HANDLE_VALUE, "CreateThread\n");
+    ok(serverThread != NULL, "CreateThread failed: %d\n", GetLastError());
     exercizeServer(PIPENAME "serverThreadMain3", serverThread);
 
     /* Try server #4 */
+    SetLastError(0xdeadbeef);
     serverThread = CreateThread(NULL, 0, serverThreadMain4, 0, 0, &serverThreadId);
-    ok(serverThread != INVALID_HANDLE_VALUE, "CreateThread\n");
+    ok(serverThread != NULL, "CreateThread failed: %d\n", GetLastError());
     exercizeServer(PIPENAME "serverThreadMain4", serverThread);
 
     ok(SetEvent( alarm_event ), "SetEvent\n");

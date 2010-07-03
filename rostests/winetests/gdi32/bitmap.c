@@ -411,7 +411,7 @@ static void test_dib_bits_access( HBITMAP hdib, void *bits )
     char bmibuf[sizeof(BITMAPINFO) + 256 * sizeof(RGBQUAD)];
     DWORD data[256];
     BITMAPINFO *pbmi = (BITMAPINFO *)bmibuf;
-    HDC hdc = GetDC(0);
+    HDC hdc;
     char filename[MAX_PATH];
     HANDLE file;
     DWORD written;
@@ -435,10 +435,14 @@ static void test_dib_bits_access( HBITMAP hdib, void *bits )
     pbmi->bmiHeader.biPlanes = 1;
     pbmi->bmiHeader.biCompression = BI_RGB;
 
+    hdc = GetDC(0);
+
     ret = SetDIBits( hdc, hdib, 0, 16, data, pbmi, DIB_RGB_COLORS );
     ok(ret == 16 ||
        broken(ret == 0), /* win9x */
        "SetDIBits failed: expected 16 got %d\n", ret);
+
+    ReleaseDC(0, hdc);
 
     ok(VirtualQuery(bits, &info, sizeof(info)) == sizeof(info),
         "VirtualQuery failed\n");
@@ -541,6 +545,18 @@ static void test_dibsections(void)
     hdib = CreateDIBSection(hdc, pbmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
     ok(hdib == NULL, "CreateDIBSection should fail when asked to create a compressed DIB section\n");
     ok(GetLastError() == 0xdeadbeef, "wrong error %d\n", GetLastError());
+
+    for (i = 0; i < 128; i++)
+    {
+        pbmi->bmiHeader.biBitCount = i;
+        pbmi->bmiHeader.biCompression = BI_RGB;
+        hdib = CreateDIBSection(hdc, pbmi, DIB_RGB_COLORS, (void**)&bits, NULL, 0);
+        if (i == 1 || i == 4 || i == 8 || i == 16 || i == 24 || i == 32)
+            ok(hdib != NULL, "CreateDIBSection bpp %u\n", i);
+        else
+            todo_wine ok(hdib == NULL, "CreateDIBSection bpp %u succeeded\n", i);
+        if (hdib) DeleteObject( hdib );
+    }
 
     pbmi->bmiHeader.biBitCount = 16;
     pbmi->bmiHeader.biCompression = BI_BITFIELDS;
@@ -864,8 +880,8 @@ static void test_dibsections(void)
     DeleteObject(hdib);
     DeleteObject(hpal);
 
-
     DeleteDC(hdcmem);
+    DeleteDC(hdcmem2);
     ReleaseDC(0, hdc);
 }
 
@@ -1805,9 +1821,11 @@ static void test_GetDIBits_BI_BITFIELDS(void)
     char dibinfo_buf[sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD)];
     DWORD bits[32];
     LPBITMAPINFO dibinfo = (LPBITMAPINFO) dibinfo_buf;
+    DWORD *bitmasks = (DWORD *)dibinfo->bmiColors;
     HDC hdc;
     HBITMAP hbm;
     int ret;
+    void *ptr;
 
     memset(dibinfo, 0, sizeof(dibinfo_buf));
     dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -1822,8 +1840,6 @@ static void test_GetDIBits_BI_BITFIELDS(void)
     ok(ret == 1, "GetDIBits failed\n");
     if (dibinfo->bmiHeader.biBitCount > 8)
     {
-        DWORD *bitmasks = (DWORD *)dibinfo->bmiColors;
-
         ok( dibinfo->bmiHeader.biCompression == BI_BITFIELDS,
             "compression is %u\n", dibinfo->bmiHeader.biCompression );
 
@@ -1886,6 +1902,135 @@ static void test_GetDIBits_BI_BITFIELDS(void)
         }
     }
     else skip("not in 16 bpp BI_BITFIELDS mode, skipping that test\n");
+
+    DeleteObject(hbm);
+
+    /* same thing now with a 32-bpp DIB section */
+
+    dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    dibinfo->bmiHeader.biWidth = 1;
+    dibinfo->bmiHeader.biHeight = 1;
+    dibinfo->bmiHeader.biPlanes = 1;
+    dibinfo->bmiHeader.biBitCount = 32;
+    dibinfo->bmiHeader.biCompression = BI_RGB;
+    dibinfo->bmiHeader.biSizeImage = 0;
+    dibinfo->bmiHeader.biXPelsPerMeter = 0;
+    dibinfo->bmiHeader.biYPelsPerMeter = 0;
+    dibinfo->bmiHeader.biClrUsed = 0;
+    dibinfo->bmiHeader.biClrImportant = 0;
+    bitmasks[0] = 0x0000ff;
+    bitmasks[1] = 0x00ff00;
+    bitmasks[2] = 0xff0000;
+    hbm = CreateDIBSection( hdc, dibinfo, DIB_RGB_COLORS, &ptr, NULL, 0 );
+    ok( hbm != 0, "failed to create bitmap\n" );
+
+    memset(dibinfo, 0, sizeof(dibinfo_buf));
+    dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    ret = GetDIBits(hdc, hbm, 0, 0, NULL, dibinfo, DIB_RGB_COLORS);
+    ok(ret == 1, "GetDIBits failed\n");
+    ok( dibinfo->bmiHeader.biBitCount == 32, "wrong bit count %u\n", dibinfo->bmiHeader.biBitCount );
+
+    ok( dibinfo->bmiHeader.biCompression == BI_BITFIELDS,
+        "compression is %u\n", dibinfo->bmiHeader.biCompression );
+    ok( !bitmasks[0], "red mask is set\n" );
+    ok( !bitmasks[1], "green mask is set\n" );
+    ok( !bitmasks[2], "blue mask is set\n" );
+
+    dibinfo->bmiHeader.biSizeImage = 0xdeadbeef;
+    ret = GetDIBits(hdc, hbm, 0, 1, bits, dibinfo, DIB_RGB_COLORS);
+    ok(ret == 1, "GetDIBits failed\n");
+    ok( dibinfo->bmiHeader.biBitCount == 32, "wrong bit count %u\n", dibinfo->bmiHeader.biBitCount );
+    ok( bitmasks[0] == 0xff0000, "wrong red mask %08x\n", bitmasks[0] );
+    ok( bitmasks[1] == 0x00ff00, "wrong green mask %08x\n", bitmasks[1] );
+    ok( bitmasks[2] == 0x0000ff, "wrong blue mask %08x\n", bitmasks[2] );
+    ok( dibinfo->bmiHeader.biSizeImage != 0xdeadbeef ||
+        broken(dibinfo->bmiHeader.biSizeImage == 0xdeadbeef), /* win9x */
+        "size image not set\n" );
+
+    DeleteObject(hbm);
+
+    dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    dibinfo->bmiHeader.biWidth = 1;
+    dibinfo->bmiHeader.biHeight = 1;
+    dibinfo->bmiHeader.biPlanes = 1;
+    dibinfo->bmiHeader.biBitCount = 32;
+    dibinfo->bmiHeader.biCompression = BI_BITFIELDS;
+    dibinfo->bmiHeader.biSizeImage = 0;
+    dibinfo->bmiHeader.biXPelsPerMeter = 0;
+    dibinfo->bmiHeader.biYPelsPerMeter = 0;
+    dibinfo->bmiHeader.biClrUsed = 0;
+    dibinfo->bmiHeader.biClrImportant = 0;
+    bitmasks[0] = 0x0000ff;
+    bitmasks[1] = 0x00ff00;
+    bitmasks[2] = 0xff0000;
+    hbm = CreateDIBSection( hdc, dibinfo, DIB_RGB_COLORS, &ptr, NULL, 0 );
+    ok( hbm != 0 || broken(!hbm), /* win9x */  "failed to create bitmap\n" );
+
+    if (hbm)
+    {
+        memset(dibinfo, 0, sizeof(dibinfo_buf));
+        dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        ret = GetDIBits(hdc, hbm, 0, 0, NULL, dibinfo, DIB_RGB_COLORS);
+        ok(ret == 1, "GetDIBits failed\n");
+
+        ok( dibinfo->bmiHeader.biCompression == BI_BITFIELDS,
+            "compression is %u\n", dibinfo->bmiHeader.biCompression );
+        ok( !bitmasks[0], "red mask is set\n" );
+        ok( !bitmasks[1], "green mask is set\n" );
+        ok( !bitmasks[2], "blue mask is set\n" );
+
+        dibinfo->bmiHeader.biSizeImage = 0xdeadbeef;
+        ret = GetDIBits(hdc, hbm, 0, 1, bits, dibinfo, DIB_RGB_COLORS);
+        ok(ret == 1, "GetDIBits failed\n");
+        ok( bitmasks[0] == 0x0000ff, "wrong red mask %08x\n", bitmasks[0] );
+        ok( bitmasks[1] == 0x00ff00, "wrong green mask %08x\n", bitmasks[1] );
+        ok( bitmasks[2] == 0xff0000, "wrong blue mask %08x\n", bitmasks[2] );
+        ok( dibinfo->bmiHeader.biSizeImage != 0xdeadbeef, "size image not set\n" );
+
+        DeleteObject(hbm);
+    }
+
+    /* 24-bpp DIB sections don't have bitfields */
+
+    dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    dibinfo->bmiHeader.biWidth = 1;
+    dibinfo->bmiHeader.biHeight = 1;
+    dibinfo->bmiHeader.biPlanes = 1;
+    dibinfo->bmiHeader.biBitCount = 24;
+    dibinfo->bmiHeader.biCompression = BI_BITFIELDS;
+    dibinfo->bmiHeader.biSizeImage = 0;
+    dibinfo->bmiHeader.biXPelsPerMeter = 0;
+    dibinfo->bmiHeader.biYPelsPerMeter = 0;
+    dibinfo->bmiHeader.biClrUsed = 0;
+    dibinfo->bmiHeader.biClrImportant = 0;
+    hbm = CreateDIBSection( hdc, dibinfo, DIB_RGB_COLORS, &ptr, NULL, 0 );
+    ok( hbm == 0, "creating 24-bpp BI_BITFIELDS dibsection should fail\n" );
+    dibinfo->bmiHeader.biCompression = BI_RGB;
+    hbm = CreateDIBSection( hdc, dibinfo, DIB_RGB_COLORS, &ptr, NULL, 0 );
+    ok( hbm != 0, "failed to create bitmap\n" );
+
+    memset(dibinfo, 0, sizeof(dibinfo_buf));
+    dibinfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    ret = GetDIBits(hdc, hbm, 0, 0, NULL, dibinfo, DIB_RGB_COLORS);
+    ok(ret == 1, "GetDIBits failed\n");
+    ok( dibinfo->bmiHeader.biBitCount == 24, "wrong bit count %u\n", dibinfo->bmiHeader.biBitCount );
+
+    ok( dibinfo->bmiHeader.biCompression == BI_RGB,
+        "compression is %u\n", dibinfo->bmiHeader.biCompression );
+    ok( !bitmasks[0], "red mask is set\n" );
+    ok( !bitmasks[1], "green mask is set\n" );
+    ok( !bitmasks[2], "blue mask is set\n" );
+
+    dibinfo->bmiHeader.biSizeImage = 0xdeadbeef;
+    ret = GetDIBits(hdc, hbm, 0, 1, bits, dibinfo, DIB_RGB_COLORS);
+    ok(ret == 1, "GetDIBits failed\n");
+    ok( dibinfo->bmiHeader.biBitCount == 24, "wrong bit count %u\n", dibinfo->bmiHeader.biBitCount );
+    ok( !bitmasks[0], "red mask is set\n" );
+    ok( !bitmasks[1], "green mask is set\n" );
+    ok( !bitmasks[2], "blue mask is set\n" );
+    ok( dibinfo->bmiHeader.biSizeImage != 0xdeadbeef ||
+        broken(dibinfo->bmiHeader.biSizeImage == 0xdeadbeef), /* win9x */
+        "size image not set\n" );
 
     DeleteObject(hbm);
     ReleaseDC(NULL, hdc);
@@ -2806,9 +2951,7 @@ static void test_GdiAlphaBlend(void)
 static void test_clipping(void)
 {
     HBITMAP bmpDst;
-    HBITMAP oldDst;
     HBITMAP bmpSrc;
-    HBITMAP oldSrc;
     HRGN hRgn;
     LPVOID bits;
     BOOL result;
@@ -2826,11 +2969,11 @@ static void test_clipping(void)
 
     bmpDst = CreateDIBSection( hdcDst, &bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
     ok(bmpDst != NULL, "Couldn't create destination bitmap\n");
-    oldDst = SelectObject( hdcDst, bmpDst );
+    SelectObject( hdcDst, bmpDst );
 
     bmpSrc = CreateDIBSection( hdcSrc, &bmpinfo, DIB_RGB_COLORS, &bits, NULL, 0 );
     ok(bmpSrc != NULL, "Couldn't create source bitmap\n");
-    oldSrc = SelectObject( hdcSrc, bmpSrc );
+    SelectObject( hdcSrc, bmpSrc );
 
     result = BitBlt( hdcDst, 0, 0, 100, 100, hdcSrc, 100, 100, SRCCOPY );
     ok(result, "BitBlt failed\n");
@@ -2846,6 +2989,54 @@ static void test_clipping(void)
     DeleteObject( hRgn );
     DeleteDC( hdcDst );
     DeleteDC( hdcSrc );
+}
+
+static void test_32bit_bitmap_blt(void)
+{
+    BITMAPINFO biDst;
+    HBITMAP bmpSrc, bmpDst;
+    HBITMAP oldSrc, oldDst;
+    HDC hdcSrc, hdcDst, hdcScreen;
+    UINT32 *dstBuffer;
+    DWORD colorSrc = 0x11223344;
+
+    memset(&biDst, 0, sizeof(BITMAPINFO));
+    biDst.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    biDst.bmiHeader.biWidth = 2;
+    biDst.bmiHeader.biHeight = -2;
+    biDst.bmiHeader.biPlanes = 1;
+    biDst.bmiHeader.biBitCount = 32;
+    biDst.bmiHeader.biCompression = BI_RGB;
+
+    hdcScreen = CreateCompatibleDC(0);
+    if(GetDeviceCaps(hdcScreen, BITSPIXEL) != 32)
+    {
+        DeleteDC(hdcScreen);
+        trace("Skipping 32-bit DDB test\n");
+        return;
+    }
+
+    hdcSrc = CreateCompatibleDC(hdcScreen);
+    bmpSrc = CreateBitmap(1, 1, 1, 32, &colorSrc);
+    oldSrc = SelectObject(hdcSrc, bmpSrc);
+
+    hdcDst = CreateCompatibleDC(hdcScreen);
+    bmpDst = CreateDIBSection(hdcDst, &biDst, DIB_RGB_COLORS, (void**)&dstBuffer, NULL, 0);
+    oldDst = SelectObject(hdcDst, bmpDst);
+
+    StretchBlt(hdcDst, 0, 0, 1, 1, hdcSrc, 0, 0, 1, 1, SRCCOPY);
+    ok(dstBuffer[0] == colorSrc, "Expected color=%x, received color=%x\n", colorSrc, dstBuffer[0]);
+
+    /* Tidy up */
+    SelectObject(hdcDst, oldDst);
+    DeleteObject(bmpDst);
+    DeleteDC(hdcDst);
+
+    SelectObject(hdcSrc, oldSrc);
+    DeleteObject(bmpSrc);
+    DeleteDC(hdcSrc);
+
+    DeleteDC(hdcScreen);
 }
 
 START_TEST(bitmap)
@@ -2874,6 +3065,7 @@ START_TEST(bitmap)
     test_StretchBlt();
     test_StretchDIBits();
     test_GdiAlphaBlend();
+    test_32bit_bitmap_blt();
     test_bitmapinfoheadersize();
     test_get16dibits();
     test_clipping();

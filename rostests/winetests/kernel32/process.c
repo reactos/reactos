@@ -55,6 +55,8 @@
     } while (0)
 
 static HINSTANCE hkernel32;
+static void   (WINAPI *pGetNativeSystemInfo)(LPSYSTEM_INFO);
+static BOOL   (WINAPI *pIsWow64Process)(HANDLE,PBOOL);
 static LPVOID (WINAPI *pVirtualAllocEx)(HANDLE, LPVOID, SIZE_T, DWORD, DWORD);
 static BOOL   (WINAPI *pVirtualFreeEx)(HANDLE, LPVOID, SIZE_T, DWORD);
 static BOOL   (WINAPI *pQueryFullProcessImageNameA)(HANDLE hProcess, DWORD dwFlags, LPSTR lpExeName, PDWORD lpdwSize);
@@ -194,6 +196,8 @@ static int     init(void)
     if ((p = strrchr(exename, '/')) != NULL) exename = p + 1;
 
     hkernel32 = GetModuleHandleA("kernel32");
+    pGetNativeSystemInfo = (void *) GetProcAddress(hkernel32, "GetNativeSystemInfo");
+    pIsWow64Process = (void *) GetProcAddress(hkernel32, "IsWow64Process");
     pVirtualAllocEx = (void *) GetProcAddress(hkernel32, "VirtualAllocEx");
     pVirtualFreeEx = (void *) GetProcAddress(hkernel32, "VirtualFreeEx");
     pQueryFullProcessImageNameA = (void *) GetProcAddress(hkernel32, "QueryFullProcessImageNameA");
@@ -523,6 +527,7 @@ static void test_Startup(void)
     char                buffer[MAX_PATH];
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup,si;
+    char *result;
     static CHAR title[]   = "I'm the title string",
                 desktop[] = "winsta0\\default",
                 empty[]   = "";
@@ -656,7 +661,7 @@ static void test_Startup(void)
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
 
     okChildInt("StartupInfoA", "cb", startup.cb);
-    todo_wine okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
+    okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
     okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
@@ -695,8 +700,9 @@ static void test_Startup(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
-    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
-        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
+    result = getChildString( "StartupInfoA", "lpTitle" );
+    ok( broken(!result) || (result && !strCmp( result, selfname, 0 )),
+        "expected '%s' or null, got '%s'\n", selfname, result );
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -734,7 +740,7 @@ static void test_Startup(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
-    todo_wine okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
+    okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -771,8 +777,8 @@ static void test_Startup(void)
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
 
     okChildInt("StartupInfoA", "cb", startup.cb);
-    todo_wine okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
-    todo_wine okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
+    okChildString("StartupInfoA", "lpDesktop", startup.lpDesktop);
+    okChildString("StartupInfoA", "lpTitle", startup.lpTitle);
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -794,7 +800,6 @@ static void test_CommandLine(void)
     char                buffer2[MAX_PATH];
     PROCESS_INFORMATION	info;
     STARTUPINFOA	startup;
-    DWORD               len;
     BOOL                ret;
 
     memset(&startup, 0, sizeof(startup));
@@ -873,7 +878,7 @@ static void test_CommandLine(void)
     assert(DeleteFileA(resfile) != 0);
     
     get_file_name(resfile);
-    len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
+    GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
     assert ( lpFilePart != 0);
     *(lpFilePart -1 ) = 0;
     p = strrchr(fullpath, '\\');
@@ -895,7 +900,7 @@ static void test_CommandLine(void)
 
     /* Using AppName */
     get_file_name(resfile);
-    len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
+    GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
     assert ( lpFilePart != 0);
     *(lpFilePart -1 ) = 0;
     p = strrchr(fullpath, '\\');
@@ -1182,6 +1187,7 @@ static  void    test_SuspendFlag(void)
     PROCESS_INFORMATION	info;
     STARTUPINFOA       startup, us;
     DWORD               exit_status;
+    char *result;
 
     /* let's start simplistic */
     memset(&startup, 0, sizeof(startup));
@@ -1207,8 +1213,9 @@ static  void    test_SuspendFlag(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
-        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
+    result = getChildString( "StartupInfoA", "lpTitle" );
+    ok( broken(!result) || (result && !strCmp( result, selfname, 0 )),
+        "expected '%s' or null, got '%s'\n", selfname, result );
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1230,6 +1237,7 @@ static  void    test_DebuggingFlag(void)
     STARTUPINFOA       startup, us;
     DEBUG_EVENT         de;
     unsigned            dbg = 0;
+    char *result;
 
     /* let's start simplistic */
     memset(&startup, 0, sizeof(startup));
@@ -1267,8 +1275,9 @@ static  void    test_DebuggingFlag(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
-        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
+    result = getChildString( "StartupInfoA", "lpTitle" );
+    ok( broken(!result) || (result && !strCmp( result, selfname, 0 )),
+        "expected '%s' or null, got '%s'\n", selfname, result );
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1301,6 +1310,7 @@ static void test_Console(void)
     const char*         msg = "This is a std-handle inheritance test.";
     unsigned            msg_len;
     BOOL                run_tests = TRUE;
+    char *result;
 
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
@@ -1378,8 +1388,9 @@ static void test_Console(void)
 
     okChildInt("StartupInfoA", "cb", startup.cb);
     okChildString("StartupInfoA", "lpDesktop", us.lpDesktop);
-    ok (startup.lpTitle == NULL || !strcmp(startup.lpTitle, selfname),
-        "StartupInfoA:lpTitle expected '%s' or null, got '%s'\n", selfname, startup.lpTitle);
+    result = getChildString( "StartupInfoA", "lpTitle" );
+    ok( broken(!result) || (result && !strCmp( result, selfname, 0 )),
+        "expected '%s' or null, got '%s'\n", selfname, result );
     okChildInt("StartupInfoA", "dwX", startup.dwX);
     okChildInt("StartupInfoA", "dwY", startup.dwY);
     okChildInt("StartupInfoA", "dwXSize", startup.dwXSize);
@@ -1739,6 +1750,7 @@ static void test_ProcessName(void)
 static void test_Handles(void)
 {
     HANDLE handle = GetCurrentProcess();
+    HANDLE h2, h3;
     BOOL ret;
     DWORD code;
 
@@ -1766,6 +1778,57 @@ static void test_Handles(void)
     ok( !ret, "GetExitCodeProcess succeeded for %p\n", handle );
     ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
 #endif
+
+    handle = GetStdHandle( STD_ERROR_HANDLE );
+    ok( handle != 0, "handle %p\n", handle );
+    DuplicateHandle( GetCurrentProcess(), handle, GetCurrentProcess(), &h3,
+                     0, TRUE, DUPLICATE_SAME_ACCESS );
+    SetStdHandle( STD_ERROR_HANDLE, h3 );
+    CloseHandle( (HANDLE)STD_ERROR_HANDLE );
+    h2 = GetStdHandle( STD_ERROR_HANDLE );
+    ok( h2 == 0 ||
+        broken( h2 == h3) || /* nt4, w2k */
+        broken( h2 == INVALID_HANDLE_VALUE),  /* win9x */
+        "wrong handle %p/%p\n", h2, h3 );
+    SetStdHandle( STD_ERROR_HANDLE, handle );
+}
+
+static void test_SystemInfo(void)
+{
+    SYSTEM_INFO si, nsi;
+    BOOL is_wow64;
+
+    if (!pGetNativeSystemInfo)
+    {
+        win_skip("GetNativeSystemInfo is not available\n");
+        return;
+    }
+
+    if (!pIsWow64Process || !pIsWow64Process( GetCurrentProcess(), &is_wow64 )) is_wow64 = FALSE;
+
+    GetSystemInfo(&si);
+    pGetNativeSystemInfo(&nsi);
+    if (is_wow64)
+    {
+        if (si.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_INTEL)
+        {
+            ok(nsi.wProcessorArchitecture == PROCESSOR_ARCHITECTURE_AMD64,
+               "Expected PROCESSOR_ARCHITECTURE_AMD64, got %d\n",
+               nsi.wProcessorArchitecture);
+            ok(nsi.dwProcessorType == PROCESSOR_AMD_X8664,
+               "Expected PROCESSOR_AMD_X8664, got %d\n",
+               nsi.dwProcessorType);
+        }
+    }
+    else
+    {
+        ok(si.wProcessorArchitecture == nsi.wProcessorArchitecture,
+           "Expected no difference for wProcessorArchitecture, got %d and %d\n",
+           si.wProcessorArchitecture, nsi.wProcessorArchitecture);
+        ok(si.dwProcessorType == nsi.dwProcessorType,
+           "Expected no difference for dwProcessorType, got %d and %d\n",
+           si.dwProcessorType, nsi.dwProcessorType);
+    }
 }
 
 START_TEST(process)
@@ -1792,6 +1855,7 @@ START_TEST(process)
     test_ProcessNameA();
     test_ProcessName();
     test_Handles();
+    test_SystemInfo();
     /* things that can be tested:
      *  lookup:         check the way program to be executed is searched
      *  handles:        check the handle inheritance stuff (+sec options)

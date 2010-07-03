@@ -275,23 +275,36 @@ static void test_ws_functions(void)
     ULONG_PTR pages[4096];
     char *addr;
     unsigned int i;
-    
+    BOOL ret;
+
     todo_wine w32_err(pEmptyWorkingSet(NULL), ERROR_INVALID_HANDLE);
     todo_wine w32_err(pEmptyWorkingSet(hpSR), ERROR_ACCESS_DENIED);
     w32_suc(pEmptyWorkingSet(hpAA));
-    
-    todo_wine w32_err(pInitializeProcessForWsWatch(NULL), ERROR_INVALID_HANDLE);
+
+    SetLastError( 0xdeadbeef );
+    ret = pInitializeProcessForWsWatch( NULL );
+    todo_wine ok( !ret, "InitializeProcessForWsWatch succeeded\n" );
+    if (!ret)
+    {
+        if (GetLastError() == ERROR_INVALID_FUNCTION)  /* not supported on xp in wow64 mode */
+        {
+            trace( "InitializeProcessForWsWatch not supported\n" );
+            return;
+        }
+        ok( GetLastError() == ERROR_INVALID_HANDLE, "wrong error %u\n", GetLastError() );
+    }
     w32_suc(pInitializeProcessForWsWatch(hpAA));
     
     if(!w32_suc(addr = VirtualAlloc(NULL, 1, MEM_COMMIT, PAGE_READWRITE)))
         return;
 
+    *addr = 0; /* make sure it's paged in (needed on wow64) */
     if(!VirtualLock(addr, 1))
     {
         trace("locking failed (error=%d) - skipping test\n", GetLastError());
         goto free_page;
     }
-	
+
     todo_wine if(w32_suc(pQueryWorkingSet(hpQI, pages, 4096 * sizeof(ULONG_PTR))))
     {
        for(i = 0; i < pages[0]; i++)

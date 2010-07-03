@@ -162,15 +162,35 @@ static void test_savedc(void)
     ret = RestoreDC(hdc, 3);
     ok(!ret, "ret = %d\n", ret);
 
-    /* Under win98 the following two succeed and both clear the save stack
+    /* Under Win9x the following RestoreDC call succeeds and clears the save stack. */
+    ret = RestoreDC(hdc, -3);
+    ok(!ret ||
+       broken(ret), /* Win9x */
+       "ret = %d\n", ret);
+
+    /* Trying to clear an empty save stack fails. */
     ret = RestoreDC(hdc, -3);
     ok(!ret, "ret = %d\n", ret);
+
+    ret = SaveDC(hdc);
+    ok(ret == 3 ||
+       broken(ret == 1), /* Win9x */
+       "ret = %d\n", ret);
+
+    /* Under Win9x the following RestoreDC call succeeds and clears the save stack. */
+    ret = RestoreDC(hdc, 0);
+    ok(!ret ||
+       broken(ret), /* Win9x */
+       "ret = %d\n", ret);
+
+    /* Trying to clear an empty save stack fails. */
     ret = RestoreDC(hdc, 0);
     ok(!ret, "ret = %d\n", ret);
-    */
 
     ret = RestoreDC(hdc, 1);
-    ok(ret, "ret = %d\n", ret);
+    ok(ret ||
+       broken(!ret), /* Win9x */
+       "ret = %d\n", ret);
 
     DeleteDC(hdc);
 }
@@ -474,6 +494,107 @@ todo_wine
     ok(ret, "UnregisterClassA failed\n");
 }
 
+static void test_boundsrect_invalid(void)
+{
+    HDC hdc;
+    RECT rect, expect;
+    UINT ret;
+
+    hdc = GetDC(NULL);
+    ok(hdc != NULL, "GetDC failed\n");
+
+    ret = GetBoundsRect(hdc, NULL, 0);
+    ok(ret == 0 ||
+       broken(ret == DCB_RESET), /* Win9x */
+       "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+    ret = GetBoundsRect(hdc, NULL, ~0U);
+    ok(ret == 0 ||
+       broken(ret == DCB_RESET), /* Win9x */
+       "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+    if (GetBoundsRect(hdc, NULL, 0) == DCB_RESET)
+        win_skip("Win9x fails catastrophically with first GetBoundsRect call\n");
+    else
+    {
+        /* Test parameter handling order. */
+        SetRect(&rect, 0, 0, 50, 50);
+        ret = SetBoundsRect(hdc, &rect, DCB_SET);
+        ok(ret & DCB_RESET,
+           "Expected return flag DCB_RESET to be set, got %u\n", ret);
+
+        ret = GetBoundsRect(hdc, NULL, DCB_RESET);
+        ok(ret == 0,
+           "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+        ret = GetBoundsRect(hdc, &rect, 0);
+        ok(ret == DCB_RESET,
+           "Expected GetBoundsRect to return DCB_RESET, got %u\n", ret);
+        SetRect(&expect, 0, 0, 0, 0);
+        ok(EqualRect(&rect, &expect),
+           "Expected output rectangle (0,0)-(0,0), got (%d,%d)-(%d,%d)\n",
+           rect.left, rect.top, rect.right, rect.bottom);
+    }
+
+    if (GetBoundsRect(hdc, NULL, 0) == DCB_RESET)
+        win_skip("Win9x fails catastrophically with NULL device context parameter\n");
+    else
+    {
+        ret = GetBoundsRect(NULL, NULL, 0);
+        ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+        ret = GetBoundsRect(NULL, NULL, ~0U);
+        ok(ret == 0, "Expected GetBoundsRect to return 0, got %u\n", ret);
+
+        ret = SetBoundsRect(NULL, NULL, 0);
+        ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
+
+        ret = SetBoundsRect(NULL, NULL, ~0U);
+        ok(ret == 0, "Expected SetBoundsRect to return 0, got %u\n", ret);
+    }
+
+    DeleteDC(hdc);
+}
+
+static void test_desktop_colorres(void)
+{
+    HDC hdc = GetDC(NULL);
+    int bitspixel, colorres;
+
+    bitspixel = GetDeviceCaps(hdc, BITSPIXEL);
+    ok(bitspixel != 0, "Expected to get valid BITSPIXEL capability value\n");
+
+    colorres = GetDeviceCaps(hdc, COLORRES);
+    ok(colorres != 0 ||
+       broken(colorres == 0), /* Win9x */
+       "Expected to get valid COLORRES capability value\n");
+
+    if (colorres)
+    {
+        switch (bitspixel)
+        {
+        case 8:
+            ok(colorres == 18,
+               "Expected COLORRES to be 18, got %d\n", colorres);
+            break;
+        case 16:
+            ok(colorres == 16,
+               "Expected COLORRES to be 16, got %d\n", colorres);
+            break;
+        case 24:
+        case 32:
+            ok(colorres == 24,
+               "Expected COLORRES to be 24, got %d\n", bitspixel);
+            break;
+        default:
+            ok(0, "Got unknown BITSPIXEL %d with COLORRES %d\n", bitspixel, colorres);
+            break;
+        }
+    }
+
+    DeleteDC(hdc);
+}
+
 START_TEST(dc)
 {
     test_savedc();
@@ -482,4 +603,6 @@ START_TEST(dc)
     test_CreateCompatibleDC();
     test_DC_bitmap();
     test_DeleteDC();
+    test_boundsrect_invalid();
+    test_desktop_colorres();
 }

@@ -317,7 +317,6 @@ static BOOL find_and_delete_cert_in_store(HCERTSTORE store, PCCERT_CONTEXT cert)
         return FALSE;
 
     CertDeleteCertificateFromStore(found);
-    CertFreeCertificateContext(found);
 
     return TRUE;
 }
@@ -560,7 +559,7 @@ static void test_crypt_ui_wiz_import(void)
             crl = CertEnumCRLsInStore(store, crl);
             if (crl)
                 count++;
-        } while (cert);
+        } while (crl);
         ok(count == 1, "expected 1 CRL, got %d\n", count);
     }
     CertCloseStore(store, 0);
@@ -596,7 +595,7 @@ static void test_crypt_ui_wiz_import(void)
             crl = CertEnumCRLsInStore(store, crl);
             if (crl)
                 count++;
-        } while (cert);
+        } while (crl);
         ok(count == 0, "expected 0 CRLs, got %d\n", count);
     }
     SetLastError(0xdeadbeef);
@@ -636,7 +635,7 @@ static void test_crypt_ui_wiz_import(void)
             crl = CertEnumCRLsInStore(store, crl);
             if (crl)
                 count++;
-        } while (cert);
+        } while (crl);
         ok(count == 1, "expected 1 CRL, got %d\n", count);
     }
     SetLastError(0xdeadbeef);

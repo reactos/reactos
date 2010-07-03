@@ -934,6 +934,28 @@ static void test_PdhMakeCounterPathA(void)
     ok(ret == PDH_INVALID_ARGUMENT, "PdhMakeCounterPathA failed 0x%08x\n", ret);
 }
 
+static void test_PdhGetDllVersion(void)
+{
+    PDH_STATUS ret;
+    DWORD version;
+
+    ret = PdhGetDllVersion(NULL);
+    ok(ret == PDH_INVALID_ARGUMENT ||
+       broken(ret == ERROR_SUCCESS), /* Vista+ */
+       "Expected PdhGetDllVersion to return PDH_INVALID_ARGUMENT, got %d\n", ret);
+
+    ret = PdhGetDllVersion(&version);
+    ok(ret == ERROR_SUCCESS,
+       "Expected PdhGetDllVersion to return ERROR_SUCCESS, got %d\n", ret);
+
+    if (ret == ERROR_SUCCESS)
+    {
+        ok(version == PDH_CVERSION_WIN50 ||
+           version == PDH_VERSION,
+           "Expected version number to be PDH_CVERSION_WIN50 or PDH_VERSION, got %u\n", version);
+    }
+}
+
 START_TEST(pdh)
 {
     if (PRIMARYLANGID(LANGIDFROMLCID(GetThreadLocale())) != LANG_ENGLISH)
@@ -975,4 +997,5 @@ START_TEST(pdh)
 
     test_PdhCollectQueryDataEx();
     test_PdhMakeCounterPathA();
+    test_PdhGetDllVersion();
 }

@@ -64,7 +64,7 @@ static BOOL (WINAPI *pCryptSetHashParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetKeyParam)(HCRYPTKEY, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptSetProvParam)(HCRYPTPROV, DWORD, BYTE*, DWORD);
 static BOOL (WINAPI *pCryptVerifySignatureW)(HCRYPTHASH, BYTE*, DWORD, HCRYPTKEY, LPCWSTR, DWORD);
-static BOOL (WINAPI *pSystemFunction036)(PVOID, ULONG);
+static BOOLEAN (WINAPI *pSystemFunction036)(PVOID, ULONG);
 
 static void init_function_pointers(void)
 {
@@ -856,6 +856,8 @@ static void test_set_provider_ex(void)
 {
 	DWORD result;
 	DWORD notNull = 5;
+        LPSTR curProvName = NULL;
+        DWORD curlen;
 	
 	/* results */
 	LPSTR pszProvName = NULL;
@@ -866,6 +868,13 @@ static void test_set_provider_ex(void)
 	    win_skip("CryptGetDefaultProviderA and/or CryptSetProviderExA are not available\n");
 	    return;
 	}
+
+        /* store the current one */
+        pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, NULL, &curlen);
+        if (!(curProvName = LocalAlloc(LMEM_ZEROINIT, curlen)))
+            return;
+        result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, curProvName, &curlen);
+        ok(result, "%d\n", GetLastError());
 
 	/* check pdwReserved for NULL */
 	result = pCryptSetProviderExA(MS_DEF_PROV, PROV_RSA_FULL, &notNull, CRYPT_MACHINE_DEFAULT);
@@ -880,6 +889,7 @@ static void test_set_provider_ex(void)
                 ok( GetLastError() == ERROR_ACCESS_DENIED || broken(GetLastError() == ERROR_INVALID_PARAMETER),
                     "wrong error %u\n", GetLastError() );
 		skip("Not enough rights to remove the default provider\n");
+                LocalFree(curProvName);
 		return;
 	}
 
@@ -889,13 +899,19 @@ static void test_set_provider_ex(void)
 	/* call CryptGetDefaultProvider to see if they match */
 	result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, NULL, &cbProvName);
 	if (!(pszProvName = LocalAlloc(LMEM_ZEROINIT, cbProvName)))
-		return;
+		goto reset;
 
 	result = pCryptGetDefaultProviderA(PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT, pszProvName, &cbProvName);
 	ok(result && !strcmp(MS_DEF_PROV, pszProvName), "expected %s, got %s\n", MS_DEF_PROV, pszProvName);
 	ok(result && cbProvName==(strlen(MS_DEF_PROV) + 1), "expected %i, got %d\n", (lstrlenA(MS_DEF_PROV) + 1), cbProvName);
 
 	LocalFree(pszProvName);
+
+reset:
+        /* Set the provider back to it's original */
+        result = pCryptSetProviderExA(curProvName, PROV_RSA_FULL, NULL, CRYPT_MACHINE_DEFAULT);
+        ok(result, "%d\n", GetLastError());
+        LocalFree(curProvName);
 }
 
 static void test_machine_guid(void)

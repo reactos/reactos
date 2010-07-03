@@ -59,6 +59,8 @@ static void testProps(void)
     PROPVARIANT var;
     CLIPDATA clipdata;
     unsigned char clipcontent[] = "foobar";
+    GUID anyOldGuid = { 0x12345678,0xdead,0xbeef, {
+     0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07 } };
 
     if(!GetTempFileNameW(szDot, szPrefix, 0, filename))
         return;
@@ -284,6 +286,59 @@ static void testProps(void)
      "Didn't get expected type or value for property (got type %d, value %s)\n",
      var.vt, U(var).pszVal);
     PropVariantClear(&var);
+
+    IPropertyStorage_Release(propertyStorage);
+    IPropertySetStorage_Release(propSetStorage);
+    IStorage_Release(storage);
+
+    DeleteFileW(filename);
+
+    /* Test creating a property set storage with a random GUID */
+    hr = StgCreateDocfile(filename,
+     STGM_READWRITE | STGM_SHARE_EXCLUSIVE | STGM_CREATE, 0, &storage);
+    ok(hr == S_OK, "StgCreateDocfile failed: 0x%08x\n", hr);
+
+    if(!pStgCreatePropSetStg)
+    {
+        IStorage_Release(storage);
+        DeleteFileW(filename);
+        return;
+    }
+    hr = pStgCreatePropSetStg(storage, 0, &propSetStorage);
+    ok(hr == S_OK, "StgCreatePropSetStg failed: 0x%08x\n", hr);
+
+    hr = IPropertySetStorage_Create(propSetStorage,
+     &anyOldGuid, NULL, PROPSETFLAG_ANSI,
+     STGM_READWRITE | STGM_CREATE | STGM_SHARE_EXCLUSIVE,
+     &propertyStorage);
+    ok(hr == S_OK, "IPropertySetStorage_Create failed: 0x%08x\n", hr);
+
+    spec.ulKind = PRSPEC_PROPID;
+    U(spec).propid = PID_FIRST_USABLE;
+    U(var).lVal = 1;
+    hr = IPropertyStorage_WriteMultiple(propertyStorage, 1, &spec, &var, 0);
+    ok(hr == S_OK, "WriteMultiple failed: 0x%08x\n", hr);
+
+    IPropertyStorage_Release(propertyStorage);
+    IPropertySetStorage_Release(propSetStorage);
+    IStorage_Release(storage);
+
+    /* now open it again */
+    hr = StgOpenStorage(filename, NULL, STGM_READWRITE | STGM_SHARE_EXCLUSIVE,
+     NULL, 0, &storage);
+    ok(hr == S_OK, "StgOpenStorage failed: 0x%08x\n", hr);
+
+    hr = pStgCreatePropSetStg(storage, 0, &propSetStorage);
+    ok(hr == S_OK, "StgCreatePropSetStg failed: 0x%08x\n", hr);
+
+    hr = IPropertySetStorage_Open(propSetStorage, &anyOldGuid,
+     STGM_READWRITE | STGM_SHARE_EXCLUSIVE, &propertyStorage);
+    ok(hr == S_OK, "IPropertySetStorage_Open failed: 0x%08x\n", hr);
+
+    spec.ulKind = PRSPEC_PROPID;
+    U(spec).propid = PID_FIRST_USABLE;
+    hr = IPropertyStorage_ReadMultiple(propertyStorage, 1, &spec, &var);
+    ok(hr == S_FALSE, "ReadMultiple failed: 0x%08x\n", hr);
 
     IPropertyStorage_Release(propertyStorage);
     IPropertySetStorage_Release(propSetStorage);

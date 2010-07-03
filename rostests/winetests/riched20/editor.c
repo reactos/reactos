@@ -4318,7 +4318,7 @@ const struct exsetsel_s exsetsel_tests[] = {
 
 static void check_EM_EXSETSEL(HWND hwnd, const struct exsetsel_s *setsel, int id) {
     CHARRANGE cr;
-    long result;
+    LRESULT result;
     int start, end;
 
     cr.cpMin = setsel->min;
