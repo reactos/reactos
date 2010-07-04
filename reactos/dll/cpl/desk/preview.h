@@ -35,11 +35,7 @@
 #define PVM_GETCYSIZEFRAME   (WM_USER+7)
 #define PVM_SETCYSIZEFRAME   (WM_USER+8)
 
-#define PVM_SETCAPTIONFONT   (WM_USER+9)
-#define PVM_SETMENUFONT      (WM_USER+10)
-#define PVM_SETDIALOGFONT    (WM_USER+11)
-
-#define PVM_SETCOLOR         (WM_USER+12)
+#define PVM_UPDATETHEME      (WM_USER+13)
 
 BOOL RegisterPreviewControl(IN HINSTANCE hInstance);
 VOID UnregisterPreviewControl(IN HINSTANCE hInstance);

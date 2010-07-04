@@ -31,4 +31,6 @@
 	<file>monslctl.c</file>
 	<file>general.c</file>
 	<file>desk.rc</file>
+	<file>draw.c</file>
+	<file>theme.c</file>
 </module>
