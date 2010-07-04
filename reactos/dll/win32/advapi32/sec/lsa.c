@@ -69,6 +69,27 @@ static void* ADVAPI_GetDomainName(unsigned sz, unsigned ofs)
     return ptr;
 }
 
+
+static BOOL LsapIsLocalComputer(PLSA_UNICODE_STRING ServerName)
+{
+    DWORD dwSize = MAX_COMPUTERNAME_LENGTH + 1;
+    BOOL Result;
+    LPWSTR buf;
+
+    if (ServerName == NULL || ServerName->Length == 0 || ServerName->Buffer == NULL)
+        return TRUE;
+
+    buf = HeapAlloc(GetProcessHeap(), 0, dwSize * sizeof(WCHAR));
+    Result = GetComputerNameW(buf, &dwSize);
+    if (Result && (ServerName->Buffer[0] == '\\') && (ServerName->Buffer[1] == '\\'))
+        ServerName += 2;
+    Result = Result && !lstrcmpW(ServerName->Buffer, buf);
+    HeapFree(GetProcessHeap(), 0, buf);
+
+    return Result;
+}
+
+
 handle_t __RPC_USER
 PLSAPR_SERVER_NAME_bind(PLSAPR_SERVER_NAME pszSystemName)
 {
@@ -397,6 +418,40 @@ LsaLookupNames2(
 }
 
 /*
+ * @unmplemented
+ */
+NTSTATUS
+WINAPI
+LsaLookupPrivilegeName(IN LSA_HANDLE PolicyHandle,
+                       IN PLUID Value,
+                       OUT PUNICODE_STRING *Name)
+{
+    PRPC_UNICODE_STRING NameBuffer = NULL;
+    NTSTATUS Status;
+
+    TRACE("(%p,%p,%p) stub\n", PolicyHandle, Value, Name);
+
+    RpcTryExcept
+    {
+        Status = LsarLookupPrivilegeName(PolicyHandle,
+                                         Value,
+                                         &NameBuffer);
+
+        *Name = (PUNICODE_STRING)NameBuffer;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (NameBuffer != NULL)
+            MIDL_user_free(NameBuffer);
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
+}
+
+/*
  * @implemented
  */
 NTSTATUS
@@ -408,7 +463,7 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
     LUID Luid;
     NTSTATUS Status;
 
-    FIXME("(%p,%p,%p) stub\n", PolicyHandle, Name, Value);
+    TRACE("(%p,%p,%p) stub\n", PolicyHandle, Name, Value);
 
     RpcTryExcept
     {
@@ -510,6 +565,10 @@ LsaOpenPolicy(
     TRACE("LsaOpenPolicy (%s,%p,0x%08x,%p)\n",
           SystemName ? debugstr_w(SystemName->Buffer) : "(null)",
           ObjectAttributes, DesiredAccess, PolicyHandle);
+
+    /* FIXME: RPC should take care of this */
+    if (!LsapIsLocalComputer(SystemName))
+        return RPC_NT_SERVER_UNAVAILABLE;
 
     RpcTryExcept
     {

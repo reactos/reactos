@@ -1419,11 +1419,13 @@ LookupPrivilegeValueW(LPCWSTR lpSystemName,
                       LPCWSTR lpPrivilegeName,
                       PLUID lpLuid)
 {
-    LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
-    LSA_UNICODE_STRING SystemName;
-    LSA_UNICODE_STRING PrivilegeName;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    UNICODE_STRING PrivilegeName;
     LSA_HANDLE PolicyHandle = NULL;
     NTSTATUS Status;
+
+    TRACE("%S,%S,%p\n", lpSystemName, lpPrivilegeName, lpLuid);
 
     RtlInitUnicodeString(&SystemName,
                          lpSystemName);
@@ -1565,36 +1567,61 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
                      LPWSTR lpName,
                      LPDWORD cchName)
 {
-    size_t privNameLen;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    PUNICODE_STRING PrivilegeName = NULL;
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
 
-    TRACE("%s,%p,%p,%p\n",debugstr_w(lpSystemName), lpLuid, lpName, cchName);
+    TRACE("%S,%p,%p,%p\n", lpSystemName, lpLuid, lpName, cchName);
 
-    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-    if (lpLuid->HighPart || (lpLuid->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
-     lpLuid->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
+    Status = LsaLookupPrivilegeName(PolicyHandle,
+                                    lpLuid,
+                                    &PrivilegeName);
+    if (NT_SUCCESS(Status))
     {
-        SetLastError(ERROR_NO_SUCH_PRIVILEGE);
+        if (PrivilegeName->Length + sizeof(WCHAR) > (*cchName) * sizeof(WCHAR))
+        {
+            Status = STATUS_BUFFER_TOO_SMALL;
+
+            (*cchName) = (PrivilegeName->Length + sizeof(WCHAR)) / sizeof(WCHAR);
+        }
+        else
+        {
+            RtlMoveMemory(lpName,
+                          PrivilegeName->Buffer,
+                          PrivilegeName->Length);
+            lpName[PrivilegeName->Length / sizeof(WCHAR)] = 0;
+
+            (*cchName) = PrivilegeName->Length / sizeof(WCHAR);
+        }
+
+        LsaFreeMemory(PrivilegeName->Buffer);
+        LsaFreeMemory(PrivilegeName);
+    }
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
-    privNameLen = strlenW(WellKnownPrivNames[lpLuid->LowPart]);
-    /* Windows crashes if cchName is NULL, so will I */
-    if (*cchName <= privNameLen)
-    {
-        *cchName = privNameLen + 1;
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        return FALSE;
-    }
-    else
-    {
-        strcpyW(lpName, WellKnownPrivNames[lpLuid->LowPart]);
-        *cchName = privNameLen;
-        return TRUE;
-    }
+
+    return TRUE;
 }
 
 

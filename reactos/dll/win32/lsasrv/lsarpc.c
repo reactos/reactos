@@ -6,6 +6,9 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#include <string.h>
+
+#include "lsasrv.h"
 #include "lsa_s.h"
 
 #include <wine/debug.h>
@@ -520,40 +523,7 @@ NTSTATUS LsarLookupPrivilegeValue(
     PRPC_UNICODE_STRING Name,
     PLUID Value)
 {
-    static const WCHAR * const DefaultPrivNames[] =
-    {
-      L"SeCreateTokenPrivilege",
-      L"SeAssignPrimaryTokenPrivilege",
-      L"SeLockMemoryPrivilege",
-      L"SeIncreaseQuotaPrivilege",
-      L"SeMachineAccountPrivilege",
-      L"SeTcbPrivilege",
-      L"SeSecurityPrivilege",
-      L"SeTakeOwnershipPrivilege",
-      L"SeLoadDriverPrivilege",
-      L"SeSystemProfilePrivilege",
-      L"SeSystemtimePrivilege",
-      L"SeProfileSingleProcessPrivilege",
-      L"SeIncreaseBasePriorityPrivilege",
-      L"SeCreatePagefilePrivilege",
-      L"SeCreatePermanentPrivilege",
-      L"SeBackupPrivilege",
-      L"SeRestorePrivilege",
-      L"SeShutdownPrivilege",
-      L"SeDebugPrivilege",
-      L"SeAuditPrivilege",
-      L"SeSystemEnvironmentPrivilege",
-      L"SeChangeNotifyPrivilege",
-      L"SeRemoteShutdownPrivilege",
-      L"SeUndockPrivilege",
-      L"SeSyncAgentPrivilege",
-      L"SeEnableDelegationPrivilege",
-      L"SeManageVolumePrivilege",
-      L"SeImpersonatePrivilege",
-      L"SeCreateGlobalPrivilege"
-    };
-    ULONG Priv;
-
+    NTSTATUS Status;
 
     TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
           PolicyHandle, Name, Value);
@@ -564,19 +534,12 @@ NTSTATUS LsarLookupPrivilegeValue(
         return STATUS_INVALID_HANDLE;
     }
 
-    for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
-    {
-        if (0 == _wcsicmp(Name->Buffer, DefaultPrivNames[Priv]))
-        {
-            Value->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
-            Value->HighPart = 0;
-            return STATUS_SUCCESS;
-        }
-    }
+    TRACE("Privilege: %wZ\n", Name);
 
-    WARN("LsarLookupPrivilegeValue: no such privilege %wZ\n", Name);
+    Status = LsarpLookupPrivilegeValue((PUNICODE_STRING)Name,
+                                       Value);
 
-    return STATUS_NO_SUCH_PRIVILEGE;
+    return Status;
 }
 
 
@@ -586,8 +549,20 @@ NTSTATUS LsarLookupPrivilegeName(
     PLUID Value,
     PRPC_UNICODE_STRING *Name)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeName(%p, %p, %p)\n",
+          PolicyHandle, Value, Name);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
+
+    return Status;
 }
 
 

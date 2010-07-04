@@ -11,5 +11,6 @@
 	<file>authport.c</file>
 	<file>lsarpc.c</file>
 	<file>lsasrv.c</file>
+	<file>privileges.c</file>
 	<file>lsasrv.rc</file>
 </module>
