@@ -386,7 +386,7 @@ void type_interface_define(type_t *iface, type_t *inherit, statement_list_t *stm
     compute_method_indexes(iface);
 }
 
-void type_dispinterface_define(type_t *iface, var_list_t *props, func_list_t *methods)
+void type_dispinterface_define(type_t *iface, var_list_t *props, var_list_t *methods)
 {
     iface->details.iface = xmalloc(sizeof(*iface->details.iface));
     iface->details.iface->disp_props = props;

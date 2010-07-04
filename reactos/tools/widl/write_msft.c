@@ -40,8 +40,10 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include <host/typedefs.h>
-#include <host/nls.h>
+#include "winerror.h"
+#include "windef.h"
+#include "winbase.h"
+#include "winnls.h"
 
 #include "widl.h"
 #include "typelib.h"
@@ -1155,7 +1157,7 @@ static int encode_var(
     return 0;
 }
 
-static unsigned long get_ulong_val(unsigned long val, int vt)
+static unsigned int get_ulong_val(unsigned int val, int vt)
 {
     switch(vt) {
     case VT_I2:
@@ -1186,7 +1188,7 @@ static void write_value(msft_typelib_t* typelib, int *out, int vt, const void *v
     case VT_HRESULT:
     case VT_PTR:
       {
-        const unsigned long lv = get_ulong_val(*(const unsigned long*)value, vt);
+        const unsigned int lv = get_ulong_val(*(const unsigned int *)value, vt);
         if((lv & 0x3ffffff) == lv) {
             *out = 0x80000000;
             *out |= vt << 26;
@@ -1224,7 +1226,7 @@ static void write_value(msft_typelib_t* typelib, int *out, int vt, const void *v
 }
 
 static HRESULT set_custdata(msft_typelib_t *typelib, REFGUID guid,
-                            int vt, void *value, int *offset)
+                            int vt, int value, int *offset)
 {
     MSFT_GuidEntry guidentry;
     int guidoffset;
@@ -1238,7 +1240,7 @@ static HRESULT set_custdata(msft_typelib_t *typelib, REFGUID guid,
     guidentry.next_hash = -1;
 
     guidoffset = ctl2_alloc_guid(typelib, &guidentry);
-    write_value(typelib, &data_out, vt, value);
+    write_value(typelib, &data_out, vt, &value);
 
     custoffset = ctl2_alloc_segment(typelib, MSFT_SEG_CUSTDATAGUID, 12, 0);
 
@@ -1482,7 +1484,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, var_t *func, int index)
                 }
                 else
                 {
-                  chat("default value %ld\n", expr->cval);
+                  chat("default value %d\n", expr->cval);
                   write_value(typeinfo->typelib, defaultdata, vt, &expr->cval);
                 }
                 break;
@@ -1948,7 +1950,7 @@ static void add_dispatch(msft_typelib_t *typelib)
 static void add_dispinterface_typeinfo(msft_typelib_t *typelib, type_t *dispinterface)
 {
     int idx = 0;
-    const func_t *func;
+    var_t *func;
     var_t *var;
     msft_typeinfo_t *msft_typeinfo;
 
@@ -1968,7 +1970,7 @@ static void add_dispinterface_typeinfo(msft_typelib_t *typelib, type_t *dispinte
 
     /* count the no of methods, as the variable indices come after the funcs */
     if (dispinterface->details.iface->disp_methods)
-        LIST_FOR_EACH_ENTRY( func, dispinterface->details.iface->disp_methods, const func_t, entry )
+        LIST_FOR_EACH_ENTRY( func, dispinterface->details.iface->disp_methods, var_t, entry )
             idx++;
 
     if (type_dispiface_get_props(dispinterface))
@@ -1978,8 +1980,8 @@ static void add_dispinterface_typeinfo(msft_typelib_t *typelib, type_t *dispinte
     if (type_dispiface_get_methods(dispinterface))
     {
         idx = 0;
-        LIST_FOR_EACH_ENTRY( func, type_dispiface_get_methods(dispinterface), const func_t, entry )
-            if(add_func_desc(msft_typeinfo, func->def, idx) == S_OK)
+        LIST_FOR_EACH_ENTRY( func, type_dispiface_get_methods(dispinterface), var_t, entry )
+            if(add_func_desc(msft_typeinfo, func, idx) == S_OK)
                 idx++;
     }
 }
@@ -2597,8 +2599,8 @@ int create_msft_typelib(typelib_t *typelib)
        and midl's version number */
     time_override = getenv( "WIDL_TIME_OVERRIDE");
     cur_time = time_override ? atol( time_override) : time(NULL);
-    set_custdata(msft, &midl_time_guid, VT_UI4, &cur_time, &msft->typelib_header.CustomDataOffset);
-    set_custdata(msft, &midl_version_guid, VT_UI4, &version, &msft->typelib_header.CustomDataOffset);
+    set_custdata(msft, &midl_time_guid, VT_UI4, cur_time, &msft->typelib_header.CustomDataOffset);
+    set_custdata(msft, &midl_version_guid, VT_UI4, version, &msft->typelib_header.CustomDataOffset);
 
     if (typelib->stmts)
         LIST_FOR_EACH_ENTRY( stmt, typelib->stmts, const statement_t, entry )

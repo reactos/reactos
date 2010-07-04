@@ -41,7 +41,7 @@ type_t *type_new_nonencapsulated_union(const char *name, int defined, var_list_t
 type_t *type_new_encapsulated_union(char *name, var_t *switch_field, var_t *union_field, var_list_t *cases);
 type_t *type_new_bitfield(type_t *field_type, const expr_t *bits);
 void type_interface_define(type_t *iface, type_t *inherit, statement_list_t *stmts);
-void type_dispinterface_define(type_t *iface, var_list_t *props, func_list_t *methods);
+void type_dispinterface_define(type_t *iface, var_list_t *props, var_list_t *methods);
 void type_dispinterface_define_from_iface(type_t *dispiface, type_t *iface);
 void type_module_define(type_t *module, statement_list_t *stmts);
 type_t *type_coclass_define(type_t *coclass, ifref_list_t *ifaces);

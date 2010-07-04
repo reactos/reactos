@@ -668,7 +668,7 @@ interface IMultiLanguage2 : IUnknown
     HRESULT GetCodePageDescription(      
         [in] UINT uiCodePage,
         [in] LCID lcid,
-        [in,out] LPWSTR lpWideCharStr,
+        [in,out,size_is(cchWideChar)] LPWSTR lpWideCharStr,
         [in] int cchWideChar);
 
     HRESULT IsCodePageInstallable(

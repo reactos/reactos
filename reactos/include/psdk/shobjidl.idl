@@ -1305,7 +1305,8 @@ interface IResolveShellLink : IUnknown
 [
     object,
     uuid(ac60f6a0-0fd9-11d0-99cb-00c04fd64497),
-    pointer_default(unique)
+    pointer_default(unique),
+	local
 ]
 interface IURLSearchHook : IUnknown
 {
@@ -1340,7 +1341,8 @@ interface ISearchContext : IUnknown
 [
     object,
     uuid(5ee44da4-6d32-46e3-86bc-07540dedd0e0),
-    pointer_default(unique)
+    pointer_default(unique),
+	local
 ]
 interface IURLSearchHook2 : IURLSearchHook
 {
@@ -1359,7 +1361,8 @@ cpp_quote("#define INewShortcutHook WINELIB_NAME_AW(INewShortcutHook)")
 [
     object,
     uuid(000214e1-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+	local
 ]
 interface INewShortcutHookA : IUnknown
 {
@@ -1389,7 +1392,8 @@ interface INewShortcutHookA : IUnknown
 [
     object,
     uuid(000214f7-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+	local
 ]
 interface INewShortcutHookW : IUnknown
 {

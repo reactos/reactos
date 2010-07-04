@@ -27,7 +27,7 @@ extern int is_ptrchain_attr(const var_t *var, enum attr_type t);
 extern int is_aliaschain_attr(const type_t *var, enum attr_type t);
 extern int is_attr(const attr_list_t *list, enum attr_type t);
 extern void *get_attrp(const attr_list_t *list, enum attr_type t);
-extern unsigned long get_attrv(const attr_list_t *list, enum attr_type t);
+extern unsigned int get_attrv(const attr_list_t *list, enum attr_type t);
 extern int is_void(const type_t *t);
 extern int is_conformant_array(const type_t *t);
 extern int is_declptr(const type_t *t);
