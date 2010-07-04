@@ -20,10 +20,10 @@
 
 #include "wine/test.h"
 #include <errno.h>
-#include "msvcrt.h"
+// #include "msvcrt.h"
 
 static int (__cdecl *prand_s)(unsigned int *);
-static int (__cdecl *pmemcpy_s)(void *, MSVCRT_size_t, void*, MSVCRT_size_t);
+static int (__cdecl *pmemcpy_s)(void *, size_t, void*, size_t);
 static int (__cdecl *pI10_OUTPUT)(long double, int, int, void*);
 
 static void init(void)
