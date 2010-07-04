@@ -13,6 +13,7 @@ extern void func_environ(void);
 extern void func_file(void);
 extern void func_headers(void);
 extern void func_heap(void);
+extern void func_locale(void);
 extern void func_misc(void);
 extern void func_printf(void);
 extern void func_scanf(void);
@@ -29,10 +30,11 @@ const struct test winetest_testlist[] =
     { "file", func_file },
     { "headers", func_headers },
     { "heap", func_heap },
+    { "locale", func_locale },
     { "misc", func_misc },
     { "printf", func_printf },
     { "scanf", func_scanf },
-	{ "signal", func_signal },
+    { "signal", func_signal },
     { "string", func_string },
     { "time", func_time },
     { 0, 0 }
