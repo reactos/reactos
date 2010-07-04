@@ -361,6 +361,9 @@ static BOOL compare_file_data(LPSTR file, const BYTE *data, DWORD size)
 static const BYTE uncompressed[] = {
     'u','n','c','o','m','p','r','e','s','s','e','d','\r','\n'
 };
+static const BYTE laurence[] = {
+    'l','a','u','r','e','n','c','e','\r','\n'
+};
 static const BYTE comp_lzx[] = {
     0x53, 0x5a, 0x44, 0x44, 0x88, 0xf0, 0x27, 0x33, 0x41, 0x00, 0x0e, 0x00, 0x00, 0x00, 0xff, 0x00,
     0x00, 0x75, 0x6e, 0x63, 0x6f, 0x6d, 0x70, 0x3f, 0x72, 0x65, 0x73, 0x73, 0x65, 0x64
@@ -393,6 +396,18 @@ static const BYTE comp_cab_zip[] =  {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x81, 0x36, 0x2f, 0xa5, 0x20, 0x00, 0x77, 0x69, 0x6e, 0x65,
     0x00, 0x7c, 0x80, 0x26, 0x2b, 0x12, 0x00, 0x0e, 0x00, 0x43, 0x4b, 0x2b, 0xcd, 0x4b, 0xce, 0xcf,
     0x2d, 0x28, 0x4a, 0x2d, 0x2e, 0x4e, 0x4d, 0xe1, 0xe5, 0x02, 0x00
+};
+static const BYTE comp_cab_zip_multi[] = {
+    0x4d, 0x53, 0x43, 0x46, 0x00, 0x00, 0x00, 0x00, 0x9c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x2c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0x03, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x71, 0x00, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x0a, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd1, 0x38, 0xf0, 0x48, 0x20, 0x00, 0x74, 0x72, 0x69, 0x73,
+    0x74, 0x72, 0x61, 0x6d, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x0a, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd1,
+    0x38, 0xf0, 0x48, 0x20, 0x00, 0x77, 0x69, 0x6e, 0x65, 0x00, 0x08, 0x00, 0x00, 0x00, 0x18, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0xd1, 0x38, 0xf0, 0x48, 0x20, 0x00, 0x73, 0x68, 0x61, 0x6e, 0x64, 0x79,
+    0x00, 0x67, 0x2c, 0x03, 0x85, 0x23, 0x00, 0x20, 0x00, 0x43, 0x4b, 0xcb, 0x49, 0x2c, 0x2d, 0x4a,
+    0xcd, 0x4b, 0x4e, 0xe5, 0xe5, 0x2a, 0xcd, 0x4b, 0xce, 0xcf, 0x2d, 0x28, 0x4a, 0x2d, 0x2e, 0x4e,
+    0x4d, 0xe1, 0xe5, 0x2a, 0x2e, 0x49, 0x2d, 0xca, 0x03, 0x8a, 0x02, 0x00
 };
 
 static void test_SetupGetFileCompressionInfo(void)
@@ -506,6 +521,39 @@ static void test_SetupDecompressOrCopyFile(void)
     DWORD ret;
     char source[MAX_PATH], target[MAX_PATH], temp[MAX_PATH], *p;
     UINT type;
+    int i;
+
+    const struct
+    {
+        PCSTR source;
+        PCSTR target;
+        PUINT type;
+    } invalid_parameters[] =
+    {
+        {NULL,   NULL,   NULL},
+        {NULL,   NULL,   &type},
+        {NULL,   target, NULL},
+        {NULL,   target, &type},
+        {source, NULL,   NULL},
+        {source, NULL,   &type},
+    };
+
+    const struct
+    {
+        const char *filename;
+        const BYTE *expected_buffer;
+        const size_t buffer_size;
+    } zip_multi_tests[] =
+    {
+        {"tristram",     laurence, sizeof(laurence)},
+        {"tristram.txt", laurence, sizeof(laurence)},
+        {"wine",         laurence, sizeof(laurence)},
+        {"wine.txt",     laurence, sizeof(laurence)},
+        {"shandy",       laurence, sizeof(laurence)},
+        {"shandy.txt",   laurence, sizeof(laurence)},
+        {"deadbeef",     laurence, sizeof(laurence)},
+        {"deadbeef.txt", laurence, sizeof(laurence)},
+    };
 
     GetTempPathA(sizeof(temp), temp);
     GetTempFileNameA(temp, "doc", 0, source);
@@ -515,15 +563,25 @@ static void test_SetupDecompressOrCopyFile(void)
 
     create_source_file(source, uncompressed, sizeof(uncompressed));
 
-    ret = SetupDecompressOrCopyFileA(NULL, NULL, NULL);
-    ok(ret == ERROR_INVALID_PARAMETER, "SetupDecompressOrCopyFile failed unexpectedly\n");
+    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    {
+        type = FILE_COMPRESSION_NONE;
+        ret = SetupDecompressOrCopyFileA(invalid_parameters[i].source,
+                                         invalid_parameters[i].target,
+                                         invalid_parameters[i].type);
+        ok(ret == ERROR_INVALID_PARAMETER,
+           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %u\n",
+           i, ret);
 
-    type = FILE_COMPRESSION_NONE;
-    ret = SetupDecompressOrCopyFileA(NULL, target, &type);
-    ok(ret == ERROR_INVALID_PARAMETER, "SetupDecompressOrCopyFile failed unexpectedly\n");
-
-    ret = SetupDecompressOrCopyFileA(source, NULL, &type);
-    ok(ret == ERROR_INVALID_PARAMETER, "SetupDecompressOrCopyFile failed unexpectedly\n");
+        /* try an invalid compression type */
+        type = 5;
+        ret = SetupDecompressOrCopyFileA(invalid_parameters[i].source,
+                                         invalid_parameters[i].target,
+                                         invalid_parameters[i].type);
+        ok(ret == ERROR_INVALID_PARAMETER,
+           "[%d] Expected SetupDecompressOrCopyFileA to return ERROR_INVALID_PARAMETER, got %u\n",
+           i, ret);
+    }
 
     type = 5; /* try an invalid compression type */
     ret = SetupDecompressOrCopyFileA(source, target, &type);
@@ -598,7 +656,27 @@ static void test_SetupDecompressOrCopyFile(void)
     ok(!ret, "SetupDecompressOrCopyFile failed unexpectedly: %d\n", ret);
     ok(compare_file_data(target, comp_cab_zip, sizeof(comp_cab_zip)), "incorrect target file\n");
 
-    DeleteFileA(target);
+    /* Show that SetupDecompressOrCopyFileA simply extracts the first file it
+     * finds within the compressed cabinet. Contents are:
+     * tristram -> "laurence\r\n"
+     * wine     -> "uncompressed\r\n"
+     * shandy   -> "sterne\r\n" */
+
+    create_source_file(source, comp_cab_zip_multi, sizeof(comp_cab_zip_multi));
+
+    p = strrchr(target, '\\');
+
+    for (i = 0; i < sizeof(zip_multi_tests)/sizeof(zip_multi_tests[0]); i++)
+    {
+        lstrcpyA(p + 1, zip_multi_tests[i].filename);
+
+        ret = SetupDecompressOrCopyFileA(source, target, NULL);
+        ok(!ret, "[%d] SetupDecompressOrCopyFile failed unexpectedly: %d\n", i, ret);
+        ok(compare_file_data(target, zip_multi_tests[i].expected_buffer, zip_multi_tests[i].buffer_size),
+           "[%d] incorrect target file\n", i);
+        DeleteFileA(target);
+    }
+
     DeleteFileA(source);
 }
 

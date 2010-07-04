@@ -10,5 +10,6 @@
 	<library>wine</library>
 	<library>ws2_32</library>
 	<library>ntdll</library>
+	<library>user32</library>
 </module>
 </group>

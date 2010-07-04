@@ -835,27 +835,75 @@ static void test_PrivacyGetSetZonePreferenceW(void)
     ok(ret == 0, "expected ret == 0, got %u\n", ret);
 }
 
-static void test_Option_Policy(void)
+static void test_InternetSetOption(void)
 {
-    HINTERNET hinet;
+    HINTERNET ses, con, req;
+    ULONG ulArg;
+    DWORD size;
     BOOL ret;
 
-    hinet = InternetOpen(NULL, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-    ok(hinet != 0, "InternetOpen failed: 0x%08x\n", GetLastError());
+    ses = InternetOpen(NULL, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != 0, "InternetOpen failed: 0x%08x\n", GetLastError());
+    con = InternetConnect(ses, "www.winehq.org", 80, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != 0, "InternetConnect failed: 0x%08x\n", GetLastError());
+    req = HttpOpenRequest(con, "GET", "/", NULL, NULL, NULL, 0, 0);
+    ok(req != 0, "HttpOpenRequest failed: 0x%08x\n", GetLastError());
 
+    /* INTERNET_OPTION_POLICY tests */
     SetLastError(0xdeadbeef);
-    ret = InternetSetOptionW(hinet, INTERNET_OPTION_POLICY, NULL, 0);
+    ret = InternetSetOptionW(ses, INTERNET_OPTION_POLICY, NULL, 0);
     ok(ret == FALSE, "InternetSetOption should've failed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should've "
             "given ERROR_INVALID_PARAMETER, gave: 0x%08x\n", GetLastError());
 
     SetLastError(0xdeadbeef);
-    ret = InternetQueryOptionW(hinet, INTERNET_OPTION_POLICY, NULL, 0);
+    ret = InternetQueryOptionW(ses, INTERNET_OPTION_POLICY, NULL, 0);
     ok(ret == FALSE, "InternetQueryOption should've failed\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError should've "
             "given ERROR_INVALID_PARAMETER, gave: 0x%08x\n", GetLastError());
 
-    ret = InternetCloseHandle(hinet);
+    /* INTERNET_OPTION_ERROR_MASK tests */
+    SetLastError(0xdeadbeef);
+    size = sizeof(ulArg);
+    ret = InternetQueryOptionW(NULL, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, &size);
+    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(GetLastError() == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "GetLastError() = %x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ulArg = 11;
+    ret = InternetSetOption(NULL, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
+    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(GetLastError() == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "GetLastError() = %x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ulArg = 11;
+    ret = InternetSetOption(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, 20);
+    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(GetLastError() == ERROR_INTERNET_BAD_OPTION_LENGTH, "GetLastError() = %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ulArg = 11;
+    ret = InternetSetOption(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
+    ok(ret == TRUE, "InternetQueryOption should've succeeded\n");
+    ok(GetLastError() == 0xdeadbeef, "GetLastError() = %d\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ulArg = 4;
+    ret = InternetSetOption(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
+    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %x\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ulArg = 16;
+    ret = InternetSetOption(req, INTERNET_OPTION_ERROR_MASK, (void*)&ulArg, sizeof(ULONG));
+    ok(ret == FALSE, "InternetQueryOption should've failed\n");
+    ok(GetLastError() == ERROR_INVALID_PARAMETER, "GetLastError() = %x\n", GetLastError());
+
+    ret = InternetCloseHandle(req);
+    ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
+    ret = InternetCloseHandle(con);
+    ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
+    ret = InternetCloseHandle(ses);
     ok(ret == TRUE, "InternetCloseHandle failed: 0x%08x\n", GetLastError());
 }
 
@@ -1097,7 +1145,6 @@ START_TEST(internet)
     test_complicated_cookie();
     test_version();
     test_null();
-    test_Option_Policy();
     test_Option_PerConnectionOption();
     test_Option_PerConnectionOptionA();
 
@@ -1123,4 +1170,6 @@ START_TEST(internet)
         test_PrivacyGetSetZonePreferenceW();
     else
         win_skip("Privacy[SG]etZonePreferenceW are not available\n");
+
+    test_InternetSetOption();
 }

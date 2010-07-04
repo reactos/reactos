@@ -21,10 +21,9 @@
 #include <stdio.h>
 #include <assert.h>
 
-#define WIN32_NO_STATUS
 #include <windows.h>
+#include <winternl.h>
 #include <winreg.h>
-#include <ntndk.h>
 #include "wine/test.h"
 
 #ifndef STATUS_DEBUGGER_INACTIVE
@@ -541,7 +540,7 @@ static void doChild(int argc, char **argv)
 
     if (pNtCurrentTeb)
     {
-        pNtCurrentTeb()->ProcessEnvironmentBlock->BeingDebugged = FALSE;
+        pNtCurrentTeb()->Peb->BeingDebugged = FALSE;
 
         ret = pIsDebuggerPresent();
         child_ok(!ret, "Expected ret != 0, got %#x.\n", ret);
@@ -549,7 +548,7 @@ static void doChild(int argc, char **argv)
         child_ok(ret, "CheckRemoteDebuggerPresent failed, last error %#x.\n", GetLastError());
         child_ok(debug, "Expected debug != 0, got %#x.\n", debug);
 
-        pNtCurrentTeb()->ProcessEnvironmentBlock->BeingDebugged = TRUE;
+        pNtCurrentTeb()->Peb->BeingDebugged = TRUE;
     }
 
     blackbox.failures = child_failures;

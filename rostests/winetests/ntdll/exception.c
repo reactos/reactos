@@ -203,6 +203,9 @@ static const struct exception
     { { 0x1e, 0x06, 0x31, 0xc0, 0x8e, 0xd8, 0x8e, 0xc0, 0xfa, 0x07, 0x1f, 0xc3 },
           /* push %ds; push %es; xorl %eax,%eax; mov %ax,%ds; mov %ax,%es; cli; pop %es; pop %ds; ret */
       8, 1, TRUE, STATUS_PRIVILEGED_INSTRUCTION, 0 },
+
+    { { 0xf1, 0x90, 0xc3 },  /* icebp; nop; ret */
+      1, 1, FALSE, STATUS_SINGLE_STEP, 0 },
 };
 
 static int got_exception;

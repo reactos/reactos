@@ -13,6 +13,7 @@
 	<file>misc.c</file>
 	<file>parser.c</file>
 	<file>query.c</file>
+	<file>setupcab.c</file>
 	<file>stringtable.c</file>
 	<file>testlist.c</file>
 </module>

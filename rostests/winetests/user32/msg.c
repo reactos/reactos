@@ -20,7 +20,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#define _WIN32_WINNT 0x0501 /* For WM_CHANGEUISTATE,QS_RAWINPUT */
+#define _WIN32_WINNT 0x0600 /* For WM_CHANGEUISTATE,QS_RAWINPUT,WM_DWMxxxx */
+#define WINVER 0x0600 /* for WM_GETTITLEBARINFOEX */
 
 #include <assert.h>
 #include <stdarg.h>
@@ -184,7 +185,7 @@ static const struct message WmSWP_ShowOverlappedSeq[] = {
     { WM_GETTITLEBARINFOEX, sent|optional },
     { WM_PAINT, sent|optional },
     { WM_NCPAINT, sent|beginpaint|optional },
-    { WM_GETTEXT, sent|defwinproc|optional },
+    { WM_GETTEXT, sent|beginpaint|defwinproc|optional },
     { WM_ERASEBKGND, sent|beginpaint|optional },
     { 0 }
 };
@@ -4716,10 +4717,10 @@ static void test_messages(void)
     ok(hwnd != 0, "Failed to create custom dialog window\n");
     ok_sequence(WmCreateCustomDialogSeq, "CreateCustomDialog", TRUE);
 
-    /*
+    if(0) {
     trace("testing scroll APIs on a visible dialog %p\n", hwnd);
     test_scroll_messages(hwnd);
-    */
+    }
 
     flush_sequence();
 
@@ -5256,6 +5257,65 @@ static const struct message WmSetStyleOwnerdrawSeq[] =
     { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000010e4 },
     { 0 }
 };
+static const struct message WmSetStateButtonSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmSetStateStaticSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmSetStateUserSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_HILITE) },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmSetStateOwnerdrawSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000120e4 },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmClearStateButtonSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_COMMAND, sent|wparam|parent, MAKEWPARAM(ID_BUTTON, BN_UNHILITE) },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmClearStateOwnerdrawSeq[] =
+{
+    { BM_SETSTATE, sent },
+    { WM_CTLCOLORBTN, sent|parent },
+    { WM_DRAWITEM, sent|wparam|lparam|parent, ID_BUTTON, 0x000020e4 },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmSetCheckIgnoredSeq[] =
+{
+    { BM_SETCHECK, sent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
+static const struct message WmSetCheckStaticSeq[] =
+{
+    { BM_SETCHECK, sent },
+    { WM_CTLCOLORSTATIC, sent|parent },
+    { WM_APP, sent|wparam|lparam, 0, 0 },
+    { 0 }
+};
 
 static WNDPROC old_button_proc;
 
@@ -5272,7 +5332,8 @@ static LRESULT CALLBACK button_hook_proc(HWND hwnd, UINT message, WPARAM wParam,
     case WM_SYNCPAINT:
         break;
     case BM_SETSTATE:
-	ok(GetCapture() == hwnd, "GetCapture() = %p\n", GetCapture());
+        if (GetCapture())
+            ok(GetCapture() == hwnd, "GetCapture() = %p\n", GetCapture());
         /* fall through */
     default:
         msg.hwnd = hwnd;
@@ -5316,29 +5377,43 @@ static void test_button_messages(void)
 	const struct message *setfocus;
 	const struct message *killfocus;
 	const struct message *setstyle;
+	const struct message *setstate;
+	const struct message *clearstate;
+	const struct message *setcheck;
     } button[] = {
 	{ BS_PUSHBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq,
+          WmSetStateButtonSeq, WmSetStateButtonSeq, WmSetCheckIgnoredSeq },
 	{ BS_DEFPUSHBUTTON, DLGC_BUTTON | DLGC_DEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleButtonSeq,
+          WmSetStateButtonSeq, WmSetStateButtonSeq, WmSetCheckIgnoredSeq },
 	{ BS_CHECKBOX, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_AUTOCHECKBOX, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_RADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_3STATE, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_AUTO3STATE, DLGC_BUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_GROUPBOX, DLGC_STATIC,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckIgnoredSeq },
 	{ BS_USERBUTTON, DLGC_BUTTON | DLGC_UNDEFPUSHBUTTON,
-	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleUserSeq },
+	  WmSetFocusButtonSeq, WmKillFocusButtonSeq, WmSetStyleUserSeq,
+          WmSetStateUserSeq, WmClearStateButtonSeq, WmSetCheckIgnoredSeq },
 	{ BS_AUTORADIOBUTTON, DLGC_BUTTON | DLGC_RADIOBUTTON,
-	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq },
+	  WmSetFocusStaticSeq, WmKillFocusStaticSeq, WmSetStyleStaticSeq,
+          WmSetStateStaticSeq, WmSetStateStaticSeq, WmSetCheckStaticSeq },
 	{ BS_OWNERDRAW, DLGC_BUTTON,
-	  WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq, WmSetStyleOwnerdrawSeq }
+	  WmSetFocusOwnerdrawSeq, WmKillFocusOwnerdrawSeq, WmSetStyleOwnerdrawSeq,
+          WmSetStateOwnerdrawSeq, WmClearStateOwnerdrawSeq, WmSetCheckIgnoredSeq },
     };
     unsigned int i;
     HWND hwnd, parent;
@@ -5365,7 +5440,7 @@ static void test_button_messages(void)
     for (i = 0; i < sizeof(button)/sizeof(button[0]); i++)
     {
         MSG msg;
-        DWORD style;
+        DWORD style, state;
 
         trace("button style %08x\n", button[i].style);
 
@@ -5414,7 +5489,80 @@ static void test_button_messages(void)
         style = GetWindowLongA(hwnd, GWL_STYLE);
         style &= ~(WS_VISIBLE | WS_CHILD | BS_NOTIFY);
         /* XP doesn't turn a BS_USERBUTTON into BS_PUSHBUTTON here! */
-        ok(style == button[i].style, "expected style %x got %x\n", button[i].style, style);
+        ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
+
+        state = SendMessage(hwnd, BM_GETSTATE, 0, 0);
+        ok(state == 0, "expected state 0, got %04x\n", state);
+
+        flush_sequence();
+
+        SendMessage(hwnd, BM_SETSTATE, TRUE, 0);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+        ok_sequence(button[i].setstate, "BM_SETSTATE/TRUE on a button", FALSE);
+
+        state = SendMessage(hwnd, BM_GETSTATE, 0, 0);
+        ok(state == 0x0004, "expected state 0x0004, got %04x\n", state);
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_CHILD | BS_NOTIFY | WS_VISIBLE);
+        ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
+
+        flush_sequence();
+
+        SendMessage(hwnd, BM_SETSTATE, FALSE, 0);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+        ok_sequence(button[i].clearstate, "BM_SETSTATE/FALSE on a button", FALSE);
+
+        state = SendMessage(hwnd, BM_GETSTATE, 0, 0);
+        ok(state == 0, "expected state 0, got %04x\n", state);
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_CHILD | BS_NOTIFY | WS_VISIBLE);
+        ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
+
+        state = SendMessage(hwnd, BM_GETCHECK, 0, 0);
+        ok(state == BST_UNCHECKED, "expected BST_UNCHECKED, got %04x\n", state);
+
+        flush_sequence();
+
+        SendMessage(hwnd, BM_SETCHECK, BST_UNCHECKED, 0);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+        ok_sequence(WmSetCheckIgnoredSeq, "BM_SETCHECK on a button", FALSE);
+
+        state = SendMessage(hwnd, BM_GETCHECK, 0, 0);
+        ok(state == BST_UNCHECKED, "expected BST_UNCHECKED, got %04x\n", state);
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_CHILD | BS_NOTIFY | WS_VISIBLE);
+        ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
+
+        flush_sequence();
+
+        SendMessage(hwnd, BM_SETCHECK, BST_CHECKED, 0);
+        SendMessage(hwnd, WM_APP, 0, 0); /* place a separator mark here */
+        while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) DispatchMessage(&msg);
+        ok_sequence(button[i].setcheck, "BM_SETCHECK on a button", FALSE);
+
+        state = SendMessage(hwnd, BM_GETCHECK, 0, 0);
+        if (button[i].style == BS_PUSHBUTTON ||
+            button[i].style == BS_DEFPUSHBUTTON ||
+            button[i].style == BS_GROUPBOX ||
+            button[i].style == BS_USERBUTTON ||
+            button[i].style == BS_OWNERDRAW)
+            ok(state == BST_UNCHECKED, "expected check 0, got %04x\n", state);
+        else
+            ok(state == BST_CHECKED, "expected check 1, got %04x\n", state);
+
+        style = GetWindowLongA(hwnd, GWL_STYLE);
+        style &= ~(WS_CHILD | BS_NOTIFY | WS_VISIBLE);
+        if (button[i].style == BS_RADIOBUTTON ||
+            button[i].style == BS_AUTORADIOBUTTON)
+            ok(style == (button[i].style | WS_TABSTOP), "expected style %04x | WS_TABSTOP got %04x\n", button[i].style, style);
+        else
+            ok(style == button[i].style, "expected style %04x got %04x\n", button[i].style, style);
 
         log_all_parent_messages--;
 
@@ -11515,7 +11663,7 @@ static const struct message wm_popup_menu_1[] =
     { WM_MENUSELECT, sent|wparam, MAKEWPARAM(200,MF_HILITE) },
     { HCBT_KEYSKIPPED, hook|wparam|lparam|optional, 'E', 0xf0000001 },
     { HCBT_KEYSKIPPED, hook|wparam|lparam|optional, VK_MENU, 0xd0000001 },
-    { HCBT_KEYSKIPPED, hook|wparam|lparam|optional, VK_RETURN, 0x10000001 },
+    { HCBT_KEYSKIPPED, hook|wparam|lparam|optional, VK_RETURN, 0x10000001, 0, 0x40000000 },
     { HCBT_DESTROYWND, hook|optional }, /* Win9x doesn't create a window */
     { WM_UNINITMENUPOPUP, sent|lparam, 0, 0 },
     { WM_MENUSELECT, sent|wparam|lparam, MAKEWPARAM(0,0xffff), 0 },
@@ -12275,6 +12423,7 @@ static DWORD CALLBACK wait_idle_thread( void *arg )
 
     hwnd = CreateWindowExA(0, "TestClass", NULL, WS_POPUP, 0, 0, 10, 10, 0, 0, 0, NULL);
     while (GetMessage( &msg, 0, 0, 0 )) DispatchMessage( &msg );
+    DestroyWindow(hwnd);
     return 0;
 }
 

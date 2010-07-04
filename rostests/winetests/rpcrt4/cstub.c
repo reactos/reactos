@@ -408,6 +408,28 @@ static int __stdcall iid_lookup( const IID * pIID, int * pIndex )
 }
 
 
+static BOOL check_address(void *actual, void *expected)
+{
+    static void *ole32_start = NULL;
+    static void *ole32_end = NULL;
+
+    if (actual == expected)
+        return TRUE;
+
+    /* On Win7, actual can be located inside ole32.dll */
+    if (ole32_start == NULL || ole32_end == NULL)
+    {
+        PIMAGE_NT_HEADERS nt_headers;
+        ole32_start = (void *) GetModuleHandleA("ole32.dll");
+        if (ole32_start == NULL)
+            return FALSE;
+        nt_headers = (PIMAGE_NT_HEADERS)((char *) ole32_start + ((PIMAGE_DOS_HEADER) ole32_start)->e_lfanew);
+        ole32_end = (void *)((char *) ole32_start + nt_headers->OptionalHeader.SizeOfImage);
+    }
+
+    return ole32_start <= actual && actual < ole32_end;
+}
+
 static const ExtendedProxyFileInfo my_proxy_file_info =
 {
     (const PCInterfaceProxyVtblList *) &cstub_ProxyVtblList,
@@ -477,7 +499,7 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     ok(stub_vtbl[i]->Vtbl.name != CStd_##name, #name "vtbl %d updated %p %p\n", \
        i, stub_vtbl[i]->Vtbl.name, CStd_##name )
 #define VTBL_TEST_CHANGE_TO(name, i)                                  \
-    ok(stub_vtbl[i]->Vtbl.name == CStd_##name, #name "vtbl %d not updated %p %p\n", \
+    ok(check_address(stub_vtbl[i]->Vtbl.name, CStd_##name), #name "vtbl %d not updated %p %p\n", \
        i, stub_vtbl[i]->Vtbl.name, CStd_##name )
 #define VTBL_TEST_ZERO(name, i)                                  \
     ok(stub_vtbl[i]->Vtbl.name == NULL, #name "vtbl %d not null %p\n", \
@@ -528,7 +550,7 @@ static IPSFactoryBuffer *test_NdrDllGetClassObject(void)
     VTBL_TEST_CHANGE_TO(DebugServerRelease, 3);
 
 #define VTBL_PROXY_TEST(i,num,ptr) \
-    ok( proxy_vtbl[i]->Vtbl[num] == (ptr), "wrong proxy %u func %u %p/%p\n", \
+    ok( check_address(proxy_vtbl[i]->Vtbl[num], (ptr)), "wrong proxy %u func %u %p/%p\n", \
         (i), (num), proxy_vtbl[i]->Vtbl[num], (ptr) )
 #define VTBL_PROXY_TEST_NOT_ZERO(i,num) \
     ok( proxy_vtbl[i]->Vtbl[num] != NULL, "wrong proxy %u func %u is NULL\n", (i), (num))
@@ -748,6 +770,8 @@ static void test_CreateStub(IPSFactoryBuffer *ppsf)
     /* 0xdeadbeef returned from create_stub_test_QI */
     ok(cstd_stub->pvServerObject == (void*)0xdeadbeef, "pvServerObject %p\n", cstd_stub->pvServerObject);
     ok(cstd_stub->pPSFactory != NULL, "pPSFactory was NULL\n");
+    cstd_stub->pvServerObject = NULL;
+    IRpcStubBuffer_Release(pstub);
 
     vtbl = &create_stub_test_fail_vtbl;
     pstub = create_stub(ppsf, &IID_if1, obj, E_NOINTERFACE);
@@ -886,6 +910,7 @@ static void test_Disconnect(IPSFactoryBuffer *ppsf)
     IRpcStubBuffer_Disconnect(pstub);
     ok(connect_test_orig_release_called == 1, "release called %d\n", connect_test_orig_release_called);
     ok(cstd_stub->pvServerObject == NULL, "pvServerObject %p\n", cstd_stub->pvServerObject);
+    IRpcStubBuffer_Release(pstub);
 }
 
 
@@ -1064,6 +1089,69 @@ static void test_delegating_Invoke(IPSFactoryBuffer *ppsf)
     HeapFree(GetProcessHeap(), 0, msg.Buffer);
     IRpcStubBuffer_Release(pstub);
 }
+static const CInterfaceProxyVtbl *cstub_ProxyVtblList2[] =
+{
+    NULL
+};
+
+static const CInterfaceStubVtbl *cstub_StubVtblList2[] =
+{
+    NULL
+};
+
+static PCInterfaceName const if_name_list2[] =
+{
+    NULL
+};
+
+static const IID *base_iid_list2[] =
+{
+    NULL,
+};
+
+static const ExtendedProxyFileInfo my_proxy_file_info2 =
+{
+    (const PCInterfaceProxyVtblList *) &cstub_ProxyVtblList2,
+    (const PCInterfaceStubVtblList *) &cstub_StubVtblList2,
+    (const PCInterfaceName *) &if_name_list2,
+    (const IID **) &base_iid_list2,
+    &iid_lookup,
+    0,
+    1,
+    NULL,
+    0,
+    0,
+    0
+};
+
+static const ProxyFileInfo *proxy_file_list2[] = {
+    &my_proxy_file_info2,
+    NULL
+};
+
+static void test_NdrDllRegisterProxy( void )
+{
+    HRESULT res;
+    const ExtendedProxyFileInfo *pf;
+    HMODULE hmod = GetModuleHandleA(NULL);
+
+
+    res = NdrDllRegisterProxy(NULL, NULL, NULL);
+    ok(res == E_HANDLE, "Incorrect return code %x\n",res);
+    pf = NULL;
+    res = NdrDllRegisterProxy(hmod, &pf, NULL);
+    ok(res == E_NOINTERFACE, "Incorrect return code %x\n",res);
+    res = NdrDllRegisterProxy(hmod, proxy_file_list2, NULL);
+    ok(res == E_NOINTERFACE, "Incorrect return code %x\n",res);
+    /* This fails on Vista and Windows 7 due to permissions */
+    res = NdrDllRegisterProxy(hmod, proxy_file_list, NULL);
+    ok(res == S_OK || res == E_ACCESSDENIED, "NdrDllRegisterProxy failed %x\n",res);
+    if (res == S_OK)
+    {
+        res = NdrDllUnregisterProxy(hmod,proxy_file_list, NULL);
+        ok(res == S_OK, "NdrDllUnregisterProxy failed %x\n",res);
+    }
+}
 
 START_TEST( cstub )
 {
@@ -1079,6 +1167,7 @@ START_TEST( cstub )
     test_Disconnect(ppsf);
     test_Release(ppsf);
     test_delegating_Invoke(ppsf);
+    test_NdrDllRegisterProxy();
 
     OleUninitialize();
 }

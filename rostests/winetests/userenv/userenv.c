@@ -95,7 +95,7 @@ static void test_create_env(void)
         { "ALLUSERSPROFILE", { 1, 1, 0, 0 } },
         { "TEMP", { 1, 1, 0, 0 } },
         { "TMP", { 1, 1, 0, 0 } },
-        { "CommonProgramFiles", { 1, 1, 1, 1 } },
+        { "CommonProgramFiles", { 1, 1, 0, 0 } },
         { "ProgramFiles", { 1, 1, 0, 0 } }
     };
     static const struct profile_item htok_vars[] = {
@@ -145,6 +145,7 @@ static void test_create_env(void)
                 todo_wine expect_env(TRUE, r, common_vars[i].name);
             else
                 expect_env(TRUE, r, common_vars[i].name);
+            if (r) HeapFree(GetProcessHeap(), 0, st);
         }
     }
 
@@ -164,6 +165,7 @@ static void test_create_env(void)
                     todo_wine expect_env(TRUE, r, common_post_nt4_vars[i].name);
                 else
                     expect_env(TRUE, r, common_post_nt4_vars[i].name);
+                if (r) HeapFree(GetProcessHeap(), 0, st);
             }
         }
     }
@@ -178,17 +180,29 @@ static void test_create_env(void)
                 todo_wine expect_env(TRUE, r, htok_vars[i].name);
             else
                 expect_env(TRUE, r, htok_vars[i].name);
+            if (r) HeapFree(GetProcessHeap(), 0, st);
         }
     }
 
     r = get_env(env[0], "WINE_XYZZY", &st);
     expect(FALSE, r);
+
     r = get_env(env[1], "WINE_XYZZY", &st);
     expect(FALSE, r);
+
     r = get_env(env[2], "WINE_XYZZY", &st);
     expect(TRUE, r);
+    if (r) HeapFree(GetProcessHeap(), 0, st);
+
     r = get_env(env[3], "WINE_XYZZY", &st);
     expect(TRUE, r);
+    if (r) HeapFree(GetProcessHeap(), 0, st);
+
+    for (i = 0; i < sizeof(env) / sizeof(env[0]); i++)
+    {
+        r = DestroyEnvironmentBlock(env[i]);
+        expect(TRUE, r);
+    }
 }
 
 START_TEST(userenv)

@@ -210,8 +210,15 @@ static void testAcquireSecurityContext(void)
     certs[1] = pCertCreateCertificateContext(X509_ASN_ENCODING, selfSignedCert,
      sizeof(selfSignedCert));
 
-    pCryptAcquireContextW(&csp, cspNameW, MS_DEF_PROV_W, PROV_RSA_FULL,
+    SetLastError(0xdeadbeef);
+    ret = pCryptAcquireContextW(&csp, cspNameW, MS_DEF_PROV_W, PROV_RSA_FULL,
      CRYPT_DELETEKEYSET);
+    if (!ret && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+    {
+        /* WinMe would crash on some tests */
+        win_skip("CryptAcquireContextW is not implemented\n");
+        return;
+    }
 
     st = pAcquireCredentialsHandleA(NULL, NULL, 0, NULL, NULL, NULL, NULL, NULL,
      NULL);

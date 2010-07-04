@@ -357,7 +357,7 @@ static void test_subpopup_locked_by_menu(void)
     ret = IsMenu( hsubmenu);
     ok( ret , "Menu handle is not valid\n");
     SetLastError( 0xdeadbeef);
-    ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+    ret = TrackPopupMenu( hmenu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
     if( ret == (itemid & 0xffff)) {
         win_skip("not on 16 bit menu subsystem\n");
         DestroyMenu( hsubmenu);
@@ -384,7 +384,7 @@ static void test_subpopup_locked_by_menu(void)
         ok( !ret , "Menu handle should be invalid\n");
         /* but TrackPopupMenu still works! */
         SetLastError( 0xdeadbeef);
-        ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+        ret = TrackPopupMenu( hmenu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
         gle = GetLastError();
         todo_wine {
             ok( ret == itemid , "TrackPopupMenu returned %d error is %d\n", ret, gle);
@@ -425,7 +425,7 @@ static void test_menu_ownerdraw(void)
     MOD_maxid = k-1;
     assert( k <= sizeof(MOD_rc)/sizeof(RECT));
     /* display the menu */
-    ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+    ret = TrackPopupMenu( hmenu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
 
     /* columns have a 4 pixel gap between them */
     ok( MOD_rc[0].right + 4 ==  MOD_rc[2].left,
@@ -449,7 +449,7 @@ static void test_menu_ownerdraw(void)
     leftcol= MOD_rc[0].left;
     ModifyMenu( hmenu, 0, MF_BYCOMMAND| MF_OWNERDRAW| MF_SEPARATOR, 0, 0); 
     /* display the menu */
-    ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+    ret = TrackPopupMenu( hmenu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
     /* left should be 4 pixels less now */
     ok( leftcol == MOD_rc[0].left + 4, 
             "columns should be 4 pixels to the left (actual %d).\n",
@@ -562,7 +562,7 @@ static void test_mbs_help( int ispop, int hassub, int mnuopt,
         ReleaseDC( hwnd, hdc);
     }
     if(ispop)
-        ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
+        ret = TrackPopupMenu( hmenu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
     else {
         ret = SetMenu( hwnd, hmenu);
         ok(ret, "SetMenu failed with error %d\n", GetLastError());
@@ -2032,6 +2032,12 @@ static void test_menu_input(void) {
     HANDLE hThread, hWnd;
     DWORD tid;
 
+    if (!pSendInput)
+    {
+        win_skip("SendInput is not available\n");
+        return;
+    }
+
     wclass.lpszClassName = "MenuTestClass";
     wclass.style         = CS_HREDRAW | CS_VREDRAW;
     wclass.lpfnWndProc   = WndProc;
@@ -2670,6 +2676,12 @@ static void test_menu_getmenuinfo(void)
     BOOL ret;
     DWORD gle;
 
+    if (!pGetMenuInfo)
+    {
+        win_skip("GetMenuInfo is not available\n");
+        return;
+    }
+
     /* create a menu */
     hmenu = CreateMenu();
     assert( hmenu);
@@ -2715,6 +2727,12 @@ static void test_menu_setmenuinfo(void)
     MENUITEMINFOA mii = {sizeof( MENUITEMINFOA)};
     BOOL ret;
     DWORD gle;
+
+    if (!pGetMenuInfo || !pSetMenuInfo)
+    {
+        win_skip("Get/SetMenuInfo are not available\n");
+        return;
+    }
 
     /* create a menu with a submenu */
     hmenu = CreateMenu();
@@ -2868,7 +2886,7 @@ static void test_menu_trackpopupmenu(void)
         /* start with an invalid menu handle */
         gle = 0xdeadbeef;
         gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
-        ret = MyTrackPopupMenu( Ex, NULL, 0x100, 100,100, hwnd, NULL);
+        ret = MyTrackPopupMenu( Ex, NULL, TPM_RETURNCMD, 100,100, hwnd, NULL);
         gle = GetLastError();
         ok( !ret, "TrackPopupMenu%s should have failed\n", Ex ? "Ex" : "");
         ok( gle == ERROR_INVALID_MENU_HANDLE
@@ -2884,7 +2902,7 @@ static void test_menu_trackpopupmenu(void)
         /* another one but not NULL */
         gle = 0xdeadbeef;
         gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
-        ret = MyTrackPopupMenu( Ex, (HMENU)hwnd, 0x100, 100,100, hwnd, NULL);
+        ret = MyTrackPopupMenu( Ex, (HMENU)hwnd, TPM_RETURNCMD, 100,100, hwnd, NULL);
         gle = GetLastError();
         ok( !ret, "TrackPopupMenu%s should have failed\n", Ex ? "Ex" : "");
         ok( gle == ERROR_INVALID_MENU_HANDLE
@@ -2900,7 +2918,7 @@ static void test_menu_trackpopupmenu(void)
         /* now a somewhat successful call */
         gle = 0xdeadbeef;
         gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
-        ret = MyTrackPopupMenu( Ex, hmenu, 0x100, 100,100, hwnd, NULL);
+        ret = MyTrackPopupMenu( Ex, hmenu, TPM_RETURNCMD, 100,100, hwnd, NULL);
         gle = GetLastError();
         ok( ret == 0, "TrackPopupMenu%s returned %d expected zero\n", Ex ? "Ex" : "", ret);
         ok( gle == NO_ERROR
@@ -2918,7 +2936,7 @@ static void test_menu_trackpopupmenu(void)
         ok( ret, "AppendMenA has failed!\n");
         gle = 0xdeadbeef;
         gflag_initmenupopup = gflag_entermenuloop = gflag_initmenu = 0;
-        ret = MyTrackPopupMenu( Ex, hmenu, 0x100, 100,100, hwnd, NULL);
+        ret = MyTrackPopupMenu( Ex, hmenu, TPM_RETURNCMD, 100,100, hwnd, NULL);
         gle = GetLastError();
         ok( ret == 0, "TrackPopupMenu%s returned %d expected zero\n", Ex ? "Ex" : "", ret);
         ok( gle == NO_ERROR
@@ -2934,6 +2952,53 @@ static void test_menu_trackpopupmenu(void)
         DestroyMenu(hmenu);
     }
     /* clean up */
+    DestroyWindow(hwnd);
+}
+
+static HMENU g_hmenu;
+
+static LRESULT WINAPI menu_track_again_wnd_proc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
+{
+    switch (msg)
+    {
+    case WM_ENTERMENULOOP:
+    {
+        BOOL ret;
+
+        /* try a recursive call */
+        SetLastError(0xdeadbeef);
+        ret = TrackPopupMenu(g_hmenu, 0, 100, 100, 0, hwnd, NULL);
+        ok(ret == FALSE, "got %d\n", ret);
+        ok(GetLastError() == ERROR_POPUP_ALREADY_ACTIVE ||
+           broken(GetLastError() == 0xdeadbeef) /* W9x */, "got %d\n", GetLastError());
+
+        /* exit menu modal loop
+         * ( A SendMessage does not work on NT3.51 here ) */
+        return PostMessage(hwnd, WM_CANCELMODE, 0, 0);
+    }
+    }
+    return DefWindowProc(hwnd, msg, wparam, lparam);
+}
+
+static void test_menu_trackagain(void)
+{
+    HWND hwnd;
+    BOOL ret;
+
+    hwnd = CreateWindowEx(0, MAKEINTATOM(atomMenuCheckClass), NULL,
+            WS_VISIBLE, CW_USEDEFAULT, CW_USEDEFAULT, 200, 200,
+            NULL, NULL, NULL, NULL);
+    ok(hwnd != NULL, "CreateWindowEx failed with error %d\n", GetLastError());
+    if (!hwnd) return;
+    SetWindowLongPtr( hwnd, GWLP_WNDPROC, (LONG_PTR)menu_track_again_wnd_proc);
+
+    g_hmenu = CreatePopupMenu();
+    ok(g_hmenu != NULL, "CreateMenu failed with error %d\n", GetLastError());
+
+    ret = TrackPopupMenu( g_hmenu, 0, 100, 100, 0, hwnd, NULL);
+    todo_wine ok(ret == FALSE, "got %d\n", ret);
+
+    DestroyMenu(g_hmenu);
     DestroyWindow(hwnd);
 }
 
@@ -2997,17 +3062,14 @@ static void test_menu_cancelmode(void)
      */
     /* menu owner is top level window */
     g_hwndtosend = hwnd;
-    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwnd, NULL);
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwnd, NULL);
     todo_wine {
         ok( g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
     }
     ok( g_got_enteridle < 2, "received %d WM_ENTERIDLE messages, should be less than 2\n", g_got_enteridle);
-
-    skip("skipping TrackPopupMenu, that hangs on reactos\n");
-#if 0
     /* menu owner is child window */
     g_hwndtosend = hwndchild;
-    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwndchild, NULL);
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwndchild, NULL);
     todo_wine {
         ok(g_got_enteridle == 0, "received %d WM_ENTERIDLE messages, none expected\n", g_got_enteridle);
     }
@@ -3015,9 +3077,8 @@ static void test_menu_cancelmode(void)
     /* now send the WM_CANCELMODE messages to the WRONG window */
     /* those should fail ( to have any effect) */
     g_hwndtosend = hwnd;
-    ret = TrackPopupMenu( menu, 0x100, 100,100, 0, hwndchild, NULL);
+    ret = TrackPopupMenu( menu, TPM_RETURNCMD, 100,100, 0, hwndchild, NULL);
     ok( g_got_enteridle == 2, "received %d WM_ENTERIDLE messages, should be 2\n", g_got_enteridle);
-#endif
     /* cleanup */
     DestroyMenu( menu);
     DestroyWindow( hwndchild);
@@ -3208,20 +3269,14 @@ START_TEST(menu)
     test_subpopup_locked_by_menu();
     test_menu_ownerdraw();
     test_menu_bmp_and_string();
-    /* test Get/SetMenuInfo if available */
-    if( pGetMenuInfo && pSetMenuInfo) {
-        test_menu_getmenuinfo();
-        test_menu_setmenuinfo();
-    } else
-        win_skip("Get/SetMenuInfo are not available\n");
-    if( !pSendInput)
-        win_skip("SendInput is not available\n");
-    else
-        test_menu_input();
+    test_menu_getmenuinfo();
+    test_menu_setmenuinfo();
+    test_menu_input();
     test_menu_flags();
 
     test_menu_hilitemenuitem();
     test_menu_trackpopupmenu();
+    test_menu_trackagain();
     test_menu_cancelmode();
     test_menu_maxdepth();
     test_menu_circref();

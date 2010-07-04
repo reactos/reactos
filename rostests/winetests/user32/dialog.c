@@ -338,7 +338,7 @@ static int id (HWND h)
  *      (tab test)
  */
 
-static void GetNextDlgItemTest (void)
+static void test_GetNextDlgItem(void)
 {
     static test_record test [] =
     {
@@ -574,7 +574,7 @@ static BOOL RegisterWindowClasses (void)
     return TRUE;
 }
 
-static void WM_NEXTDLGCTLTest(void)
+static void test_WM_NEXTDLGCTL(void)
 {
     DWORD dwVal;
 
@@ -681,7 +681,7 @@ static void WM_NEXTDLGCTLTest(void)
     DestroyWindow(g_hwndTestDlg);
 }
 
-static void IsDialogMessageWTest (void)
+static void test_IsDialogMessage(void)
 {
     MSG msg;
 
@@ -795,7 +795,7 @@ static const char * GetHwndString(HWND hw)
   return "unknown handle";
 }
 
-static void InitialFocusTest (void)
+static void test_initial_focus(void)
 {
     /* Test 1:
      * This test intentionally returns FALSE in response to WM_INITDIALOG
@@ -895,6 +895,57 @@ static void test_GetDlgItemText(void)
 
     ok(string[0] == '\0' || broken(!strcmp(string, "Overwrite Me")),
        "string retrieved using GetDlgItemText should have been NULL terminated\n");
+}
+
+static void test_GetDlgItem(void)
+{
+    HWND hwnd, child1, child2, hwnd2;
+    BOOL ret;
+
+    hwnd = CreateWindowA("button", "parent", WS_VISIBLE, 0, 0, 100, 100, NULL, 0, g_hinst, NULL);
+    ok(hwnd != NULL, "failed to created window\n");
+
+    /* created with the same ID */
+    child1 = CreateWindowA("button", "child1", WS_VISIBLE|WS_CHILD, 0, 0, 10, 10, hwnd, 0, g_hinst, NULL);
+    ok(child1 != NULL, "failed to create first child\n");
+    child2 = CreateWindowA("button", "child2", WS_VISIBLE|WS_CHILD, 0, 0, 10, 10, hwnd, 0, g_hinst, NULL);
+    ok(child2 != NULL, "failed to create second child\n");
+
+    hwnd2 = GetDlgItem(hwnd, 0);
+    ok(hwnd2 == child1, "expected first child, got %p\n", hwnd2);
+
+    hwnd2 = GetTopWindow(hwnd);
+    ok(hwnd2 == child1, "expected first child to be top, got %p\n", hwnd2);
+
+    ret = SetWindowPos(child1, child2, 0, 0, 0, 0, SWP_NOMOVE);
+    ok(ret, "got %d\n", ret);
+    hwnd2 = GetTopWindow(hwnd);
+    ok(hwnd2 == child2, "expected second child to be top, got %p\n", hwnd2);
+
+    /* top window from child list is picked */
+    hwnd2 = GetDlgItem(hwnd, 0);
+    ok(hwnd2 == child2, "expected second child, got %p\n", hwnd2);
+
+    /* Now test how GetDlgItem searches */
+    DestroyWindow(child2);
+    child2 = CreateWindowA("button", "child2", WS_VISIBLE|WS_CHILD, 0, 0, 10, 10, child1, 0, g_hinst, NULL);
+    ok(child2 != NULL, "failed to create second child\n");
+
+    /* give child2 an ID */
+    SetWindowLong(child2, GWLP_ID, 100);
+
+    hwnd2 = GetDlgItem(hwnd, 100);
+    ok(!hwnd2, "expected child to not be found, got %p\n", hwnd2);
+
+    /* make the ID of child2 public with a WS_EX_CONTROLPARENT parent */
+    SetWindowLong(child1, GWL_EXSTYLE, WS_EX_CONTROLPARENT);
+
+    hwnd2 = GetDlgItem(hwnd, 100);
+    ok(!hwnd2, "expected child to not be found, got %p\n", hwnd2);
+
+    DestroyWindow(child1);
+    DestroyWindow(child2);
+    DestroyWindow(hwnd);
 }
 
 static INT_PTR CALLBACK DestroyDlgWinProc (HWND hDlg, UINT uiMsg,
@@ -1212,10 +1263,11 @@ START_TEST(dialog)
 
     if (!RegisterWindowClasses()) assert(0);
 
-    GetNextDlgItemTest();
-    IsDialogMessageWTest();
-    WM_NEXTDLGCTLTest();
-    InitialFocusTest();
+    test_GetNextDlgItem();
+    test_IsDialogMessage();
+    test_WM_NEXTDLGCTL();
+    test_initial_focus();
+    test_GetDlgItem();
     test_GetDlgItemText();
     test_DialogBoxParamA();
     test_DisabledDialogTest();

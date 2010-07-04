@@ -10,6 +10,9 @@
 	<file>winhttp.c</file>
 	<library>wine</library>
 	<library>winhttp</library>
+	<library>crypt32</library>
+	<library>advapi32</library>
+	<library>ws2_32</library>
 	<library>ntdll</library>
 </module>
 </group>

@@ -225,7 +225,13 @@ static void test_dasharray(void)
 
     /* Try to set with count = 0. */
     GdipSetPenDashStyle(pen, DashStyleDot);
+    if (0)  /* corrupts stack on 64-bit Vista */
+    {
     status = GdipSetPenDashArray(pen, dashes, 0);
+    ok(status == OutOfMemory || status == InvalidParameter,
+       "Expected OutOfMemory or InvalidParameter, got %.8x\n", status);
+    }
+    status = GdipSetPenDashArray(pen, dashes, -1);
     ok(status == OutOfMemory || status == InvalidParameter,
        "Expected OutOfMemory or InvalidParameter, got %.8x\n", status);
     GdipGetPenDashStyle(pen, &style);

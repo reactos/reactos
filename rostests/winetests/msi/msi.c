@@ -11298,6 +11298,9 @@ static void test_MsiEnumProducts(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
 
     index = 0;
+    r = MsiEnumProductsA(index, guid);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %u\n", r);
+
     r = MsiEnumProductsA(index, NULL);
     ok(r == ERROR_INVALID_PARAMETER, "Expected ERROR_INVALID_PARAMETER, got %u\n", r);
 

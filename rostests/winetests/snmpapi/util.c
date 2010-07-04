@@ -424,7 +424,7 @@ static void test_SnmpUtilOidAppend(void)
     static AsnObjectIdentifier oid1;
     static AsnObjectIdentifier oid2 = { 3, ids2 };
 
-    ids1 = HeapAlloc(GetProcessHeap(), 0, 3 * sizeof(UINT));
+    ids1 = SnmpUtilMemAlloc(3 * sizeof(UINT));
     ids1[0] = 1;
     ids1[1] = 2;
     ids1[2] = 3;
@@ -451,7 +451,7 @@ static void test_SnmpUtilOidAppend(void)
     ok(!memcmp(&oid1.ids[3], ids2, 3 * sizeof(UINT)),
        "SnmpUtilOidAppend failed\n");
 
-    HeapFree(GetProcessHeap(), 0, ids1);
+    SnmpUtilOidFree(&oid1);
 }
 
 static void test_SnmpUtilVarBindCpyFree(void)

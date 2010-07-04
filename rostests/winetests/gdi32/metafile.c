@@ -1427,6 +1427,12 @@ static int compare_emf_bits(const HENHMETAFILE mf, const unsigned char *bits,
 	const ENHMETARECORD *emr1 = (const ENHMETARECORD *)(bits + offset1);
 	const ENHMETARECORD *emr2 = (const ENHMETARECORD *)(buf + offset2);
 
+	skip("skipping match_emf_record(), bug 5392\n");
+//	trace("%s: EMF record %u, size %u/record %u, size %u\n",
+//              desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
+ 
+//        if (!match_emf_record(emr1, emr2, desc, ignore_scaling)) return -1;
+	
 	trace("%s: EMF record %u, size %u/record %u, size %u\n",
               desc, emr1->iType, emr1->nSize, emr2->iType, emr2->nSize);
 

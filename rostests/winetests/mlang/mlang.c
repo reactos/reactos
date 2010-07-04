@@ -36,14 +36,8 @@
 #define CP_UNICODE 1200
 #endif
 
-#if 0
-#define DUMP_CP_INFO
-#define DUMP_SCRIPT_INFO
-
-#if defined DUMP_CP_INFO || defined DUMP_SCRIPT_INFO
-#include "wine/debug.h"
-#endif
-#endif /* 0 */
+/* #define DUMP_CP_INFO */
+/* #define DUMP_SCRIPT_INFO */
 
 static BOOL (WINAPI *pGetCPInfoExA)(UINT, DWORD, LPCPINFOEXA);
 static HRESULT (WINAPI *pConvertINetMultiByteToUnicode)(LPDWORD, DWORD, LPCSTR,
@@ -630,13 +624,8 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszWebCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
-            ok(!lstrcmpiW(cpinfo[i].wszWebCharset, mcsi.wszCharset),
-#ifdef DUMP_CP_INFO
-                    "%s != %s\n",
-            wine_dbgstr_w(cpinfo[i].wszWebCharset), wine_dbgstr_w(mcsi.wszCharset));
-#else
-                    "wszWebCharset mismatch\n");
-#endif
+            ok(!lstrcmpiW(cpinfo[i].wszWebCharset, mcsi.wszCharset), "%s != %s\n",
+               wine_dbgstr_w(cpinfo[i].wszWebCharset), wine_dbgstr_w(mcsi.wszCharset));
 
         if (0)
         {
@@ -661,13 +650,8 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszHeaderCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
-            ok(!lstrcmpiW(cpinfo[i].wszHeaderCharset, mcsi.wszCharset),
-#ifdef DUMP_CP_INFO
-                    "%s != %s\n",
-            wine_dbgstr_w(cpinfo[i].wszHeaderCharset), wine_dbgstr_w(mcsi.wszCharset));
-#else
-                    "wszHeaderCharset mismatch\n");
-#endif
+            ok(!lstrcmpiW(cpinfo[i].wszHeaderCharset, mcsi.wszCharset), "%s != %s\n",
+               wine_dbgstr_w(cpinfo[i].wszHeaderCharset), wine_dbgstr_w(mcsi.wszCharset));
 
         if (0)
         {
@@ -692,13 +676,8 @@ static void test_EnumCodePages(IMultiLanguage2 *iML2, DWORD flags)
 #ifdef DUMP_CP_INFO
             trace("%s: %u %u %s\n", wine_dbgstr_w(cpinfo[i].wszBodyCharset), mcsi.uiCodePage, mcsi.uiInternetEncoding, wine_dbgstr_w(mcsi.wszCharset));
 #endif
-            ok(!lstrcmpiW(cpinfo[i].wszBodyCharset, mcsi.wszCharset),
-#ifdef DUMP_CP_INFO
-                    "%s != %s\n",
-            wine_dbgstr_w(cpinfo[i].wszBodyCharset), wine_dbgstr_w(mcsi.wszCharset));
-#else
-                    "wszBodyCharset mismatch\n");
-#endif
+            ok(!lstrcmpiW(cpinfo[i].wszBodyCharset, mcsi.wszCharset), "%s != %s\n",
+               wine_dbgstr_w(cpinfo[i].wszBodyCharset), wine_dbgstr_w(mcsi.wszCharset));
 
         if (0)
         {
@@ -1946,7 +1925,10 @@ static void test_IsCodePageInstallable(IMultiLanguage2 *ml2)
          * up an installation dialog on some platforms, even when specifying CPIOD_PEEK.
          */
         if (IsValidCodePage(i))
-            ok(hr == S_OK, "code page %u is valid but not installable 0x%08x\n", i, hr);
+            ok(hr == S_OK ||
+               broken(hr == S_FALSE) ||  /* win2k */
+               broken(hr == E_INVALIDARG),  /* win2k */
+               "code page %u is valid but not installable 0x%08x\n", i, hr);
     }
 }
 

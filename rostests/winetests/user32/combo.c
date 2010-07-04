@@ -384,6 +384,8 @@ static void test_changesize( DWORD style)
             rc.right - rc.left, clwidth - 2);
     ok( rc.bottom - rc.top == ddheight, "drop-down rect height is %d vs %d\n",
             rc.bottom - rc.top, ddheight);
+    ok( rc.right - rc.left == ddwidth -2, "drop-down rect width is %d vs %d\n",
+            rc.right - rc.left, ddwidth - 2);
     /* new cx, cy is slightly bigger than the initial values */
     MoveWindow( hCombo, 10, 10, clwidth + 2, clheight + 2, TRUE);
     GetClientRect( hCombo, &rc);

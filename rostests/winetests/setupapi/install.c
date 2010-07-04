@@ -53,6 +53,7 @@ static char CURR_DIR[MAX_PATH];
 
 static void (WINAPI *pInstallHinfSectionA)(HWND, HINSTANCE, LPCSTR, INT);
 static void (WINAPI *pInstallHinfSectionW)(HWND, HINSTANCE, LPCWSTR, INT);
+static BOOL (WINAPI *pSetupGetInfFileListA)(PCSTR, DWORD, PSTR, DWORD, PDWORD);
 static BOOL (WINAPI *pSetupGetInfFileListW)(PCWSTR, DWORD, PWSTR, DWORD, PDWORD);
 
 /*
@@ -468,6 +469,65 @@ cleanup:
     DeleteFile(inffile);
 }
 
+static void test_inffilelistA(void)
+{
+    static const char inffile2[] = "test2.inf";
+    static const char *inf =
+        "[Version]\n"
+        "Signature=\"$Chicago$\"";
+
+    char buffer[MAX_PATH] = { 0 };
+    char dir[MAX_PATH], *p;
+    DWORD expected, outsize;
+    BOOL ret;
+
+    if(!pSetupGetInfFileListA)
+    {
+        win_skip("SetupGetInfFileListA not present\n");
+        return;
+    }
+
+    /* create a private directory, the temp directory may contain some
+     * inf files left over from old installations
+     */
+    if (!GetTempFileNameA(CURR_DIR, "inftest", 1, dir))
+    {
+        win_skip("GetTempFileNameA failed with error %d\n", GetLastError());
+        return;
+    }
+    if (!CreateDirectoryA(dir, NULL ))
+    {
+        win_skip("CreateDirectoryA(%s) failed with error %d\n", dir, GetLastError());
+        return;
+    }
+    if (!SetCurrentDirectoryA(dir))
+    {
+        win_skip("SetCurrentDirectoryA failed with error %d\n", GetLastError());
+        RemoveDirectoryA(dir);
+        return;
+    }
+
+    create_inf_file(inffile, inf);
+    create_inf_file(inffile2, inf);
+
+    /* mixed style
+     */
+    expected = 3 + strlen(inffile) + strlen(inffile2);
+    ret = pSetupGetInfFileListA(dir, INF_STYLE_OLDNT | INF_STYLE_WIN4, buffer,
+                                MAX_PATH, &outsize);
+    ok(ret, "expected SetupGetInfFileListA to succeed!\n");
+    ok(expected == outsize, "expected required buffersize to be %d, got %d\n",
+         expected, outsize);
+    for(p = buffer; lstrlenA(p) && (outsize > (p - buffer)); p+=lstrlenA(p) + 1)
+        ok(!lstrcmpA(p,inffile2) || !lstrcmpA(p,inffile),
+            "unexpected filename %s\n",p);
+
+    DeleteFile(inffile);
+    DeleteFile(inffile2);
+    SetCurrentDirectoryA(CURR_DIR);
+    RemoveDirectoryA(dir);
+}
+
 static void test_inffilelist(void)
 {
     static const char inffile2[] = "test2.inf";
@@ -656,6 +716,7 @@ START_TEST(install)
 
     pInstallHinfSectionA = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionA");
     pInstallHinfSectionW = (void *)GetProcAddress(hsetupapi, "InstallHinfSectionW");
+    pSetupGetInfFileListA = (void *)GetProcAddress(hsetupapi, "SetupGetInfFileListA");
     pSetupGetInfFileListW = (void *)GetProcAddress(hsetupapi, "SetupGetInfFileListW");
 
     if (pInstallHinfSectionA)
@@ -695,6 +756,7 @@ START_TEST(install)
     }
 
     test_inffilelist();
+    test_inffilelistA();
 
     SetCurrentDirectory(prev_path);
 }

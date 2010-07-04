@@ -320,6 +320,7 @@ static void test_instances(void)
     HINSTANCE kernel32 = GetModuleHandleA("kernel32");
     HINSTANCE user32 = GetModuleHandleA("user32");
     HINSTANCE main_module = GetModuleHandleA(NULL);
+    HINSTANCE zero_instance = 0;
     DWORD r;
     char buffer[0x10];
 
@@ -397,15 +398,19 @@ static void test_instances(void)
     /* GetClassInfo with instance 0 finds user32 instance */
     SetClassLongPtrA( hwnd, GCLP_HMODULE, (LONG_PTR)user32 );
     ok( RegisterClassA( &cls ), "Failed to register local class for kernel32\n" );
+    if (!GetClassInfo( 0, name, &wc )) zero_instance = user32; /* instance 0 not supported on wow64 */
+    else
+    {
+        check_instance( name, 0, 0, kernel32 );
+        check_thread_instance( name, 0, 0, kernel32 );
+    }
     check_class( kernel32, name, "kernel32" );
     check_class( user32, name, "main_module" );
-    check_class( 0, name, "main_module" );
+    check_class( zero_instance, name, "main_module" );
     check_instance( name, kernel32, kernel32, kernel32 );
-    check_instance( name, user32, 0, user32 );
-    check_instance( name, 0, 0, kernel32 );
+    check_instance( name, user32, zero_instance, user32 );
     check_thread_instance( name, kernel32, kernel32, kernel32 );
-    check_thread_instance( name, user32, 0, user32 );
-    check_thread_instance( name, 0, 0, kernel32 );
+    check_thread_instance( name, user32, zero_instance, user32 );
     ok( UnregisterClassA( name, kernel32 ), "Unregister failed for kernel32\n" );
 
     SetClassLongPtrA( hwnd, GCLP_HMODULE, 0x12345678 );
@@ -551,10 +556,10 @@ static void test_instances(void)
     /* GetClassInfo sets instance to passed value for global classes */
     check_instance( "BUTTON", 0, 0, user32 );
     check_instance( "BUTTON", (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, user32 );
-    check_instance( "BUTTON", user32, 0, user32 );
+    check_instance( "BUTTON", user32, zero_instance, user32 );
     check_thread_instance( "BUTTON", 0, 0, user32 );
     check_thread_instance( "BUTTON", (HINSTANCE)0xdeadbeef, (HINSTANCE)0xdeadbeef, user32 );
-    check_thread_instance( "BUTTON", user32, 0, user32 );
+    check_thread_instance( "BUTTON", user32, zero_instance, user32 );
 
     /* we can unregister system classes */
     ok( GetClassInfo( 0, "BUTTON", &wc ), "Button class not found with null instance\n" );
@@ -656,8 +661,16 @@ static void test_builtinproc(void)
     ok(IsWindowUnicode(hwnd), "Windows should be Unicode\n");
     SetWindowLongPtrW(hwnd, GWLP_WNDPROC, (LONG_PTR)pDefWindowProcA);
     ok(IsWindowUnicode(hwnd), "Windows should have remained Unicode\n");
-    ok(GetWindowLongPtrW(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcW, "Invalid ANSI winproc\n");
-    ok(GetWindowLongPtrA(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcA, "Invalid Unicode winproc\n");
+    if (GetWindowLongPtrW(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcA)
+    {
+        /* DefWindowProc isn't magic on wow64 */
+        ok(IS_WNDPROC_HANDLE(GetWindowLongPtrA(hwnd, GWLP_WNDPROC)), "Ansi winproc is not a handle\n");
+    }
+    else
+    {
+        ok(GetWindowLongPtrW(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcW, "Invalid Unicode winproc\n");
+        ok(GetWindowLongPtrA(hwnd, GWLP_WNDPROC) == (LONG_PTR)pDefWindowProcA, "Invalid Ansi winproc\n");
+    }
     SetWindowLongPtrA(hwnd, GWLP_WNDPROC, (LONG_PTR)ClassTest_WndProc);
     ok(IsWindowUnicode(hwnd) == FALSE, "SetWindowLongPtrA should have switched window to ANSI\n");
 

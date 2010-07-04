@@ -2411,9 +2411,8 @@ static void test_string_functions(void)
     GpBrush *brush;
     ARGB color = 0xff000000;
     HDC hdc = GetDC( hwnd );
-    const WCHAR fontname[] = {'C','o','u','r','i','e','r',' ','N','e','w',0};
-    const WCHAR fontname2[] = {'C','o','u','r','i','e','r',0};
-    const WCHAR teststring[] = {'o','o',' ','o','\n','o',0};
+    const WCHAR fontname[] = {'T','a','h','o','m','a',0};
+    const WCHAR teststring[] = {'M','M',' ','M','\n','M',0};
     REAL char_width, char_height;
     INT codepointsfitted, linesfilled;
     GpStringFormat *format;
@@ -2428,14 +2427,6 @@ static void test_string_functions(void)
     ok(graphics != NULL, "Expected graphics to be initialized\n");
 
     status = GdipCreateFontFamilyFromName(fontname, NULL, &family);
-
-    if (status != Ok)
-    {
-        /* Wine doesn't have Courier New? */
-        todo_wine expect(Ok, status);
-        status = GdipCreateFontFamilyFromName(fontname2, NULL, &family);
-    }
-
     expect(Ok, status);
 
     status = GdipCreateFont(family, 10.0, FontStyleRegular, UnitPixel, &font);
@@ -2514,14 +2505,15 @@ static void test_string_functions(void)
     expect(Ok, status);
     expectf(0.0, bounds.X);
     expectf(0.0, bounds.Y);
-    expectf_(char_bounds.Width + char_width * 3, bounds.Width, 0.01);
+    ok(bounds.Width > char_bounds.Width + char_width * 2, "got %0.2f, expected at least %0.2f\n",
+       bounds.Width, char_bounds.Width + char_width * 2);
     ok(bounds.Height > char_bounds.Height, "got %0.2f, expected at least %0.2f\n", bounds.Height, char_bounds.Height);
     expect(6, codepointsfitted);
     expect(2, linesfilled);
     char_height = bounds.Height - char_bounds.Height;
 
     /* Cut off everything after the first space. */
-    rc.Width = char_bounds.Width + char_width * 2.5;
+    rc.Width = char_bounds.Width + char_width * 2.1;
 
     status = GdipMeasureString(graphics, teststring, 6, font, &rc, NULL, &bounds, &codepointsfitted, &linesfilled);
     expect(Ok, status);
@@ -2607,7 +2599,7 @@ static void test_string_functions(void)
     ok(!region_isempty[3], "region shouldn't be empty\n");
 
     /* Cut off everything after the first space, and the second line. */
-    rc.Width = char_bounds.Width + char_width * 2.5;
+    rc.Width = char_bounds.Width + char_width * 2.1;
     rc.Height = char_bounds.Height + char_height * 0.5;
 
     status = GdipMeasureCharacterRanges(graphics, teststring, 6, font, &rc, format, 3, regions);

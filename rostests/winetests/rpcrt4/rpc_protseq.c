@@ -157,6 +157,9 @@ static void test_endpoint_mapper(RPC_CSTR protseq, RPC_CSTR address)
     /* register endpoints created in test_RpcServerUseProtseq */
     status = RpcEpRegisterA(IFoo_v0_0_s_ifspec, binding_vector, NULL, annotation);
     ok(status == RPC_S_OK, "%s: RpcEpRegisterA failed with error %u\n", protseq, status);
+    /* reregister the same endpoint with no annotation */
+    status = RpcEpRegisterA(IFoo_v0_0_s_ifspec, binding_vector, NULL, NULL);
+    ok(status == RPC_S_OK, "%s: RpcEpRegisterA failed with error %u\n", protseq, status);
 
     status = RpcStringBindingCompose(NULL, protseq, address,
                                      NULL, NULL, &binding);
@@ -169,8 +172,6 @@ static void test_endpoint_mapper(RPC_CSTR protseq, RPC_CSTR address)
 
     status = RpcBindingReset(handle);
     ok(status == RPC_S_OK, "%s: RpcBindingReset failed with error %u\n", protseq, status);
-
-    RpcStringFree(&binding);
 
     status = RpcEpResolveBinding(handle, IFoo_v0_0_s_ifspec);
     ok(status == RPC_S_OK || broken(status == RPC_S_SERVER_UNAVAILABLE), /* win9x */

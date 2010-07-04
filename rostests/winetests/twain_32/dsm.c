@@ -787,7 +787,8 @@ static void test_sources(TW_IDENTITY *appid)
         (rc == TWRC_FAILURE && status.ConditionCode == TWCC_NODS),
             "Get default invalid condition code, rc %d, cc %d\n", rc, status.ConditionCode);
 
-    if (rc == TWRC_SUCCESS && status.ConditionCode == TWCC_SUCCESS)
+    /* A DS might display a Popup during MSG_OPENDS, when the scanner is not connected */
+    if (rc == TWRC_SUCCESS && status.ConditionCode == TWCC_SUCCESS && winetest_interactive)
     {
         rc = pDSM_Entry(appid, NULL, DG_CONTROL, DAT_IDENTITY, MSG_OPENDS, &source);
         get_condition_code(appid, NULL, &status);

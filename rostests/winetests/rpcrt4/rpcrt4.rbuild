@@ -16,6 +16,7 @@
 		<library>pseh</library>
 		<library>ole32</library>
 		<library>uuid</library>
+		<library>advapi32</library>
 		<library>rpcrt4_winetest_server</library>
 		<library>rpcrt4_winetest_client</library>
 		<library>rpcrt4</library>

@@ -1414,7 +1414,7 @@ static void test_unlink(void)
     rmdir("test_unlink");
 }
 
-void test_dup2(void)
+static void test_dup2(void)
 {
     ok(-1 == _dup2(0, -1), "expected _dup2 to fail when second arg is negative\n" );
 }

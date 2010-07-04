@@ -33,6 +33,7 @@ static const WCHAR MSSansSerif[] = {'M','S',' ','S','a','n','s',' ','S','e','r',
 static const WCHAR MicrosoftSansSerif[] = {'M','i','c','r','o','s','o','f','t',' ','S','a','n','s',' ','S','e','r','i','f','\0'};
 static const WCHAR TimesNewRoman[] = {'T','i','m','e','s',' ','N','e','w',' ','R','o','m','a','n','\0'};
 static const WCHAR CourierNew[] = {'C','o','u','r','i','e','r',' ','N','e','w','\0'};
+static const WCHAR Tahoma[] = {'T','a','h','o','m','a',0};
 
 static void test_createfont(void)
 {
@@ -295,9 +296,12 @@ static void test_getgenerics (void)
     expect (Ok, stat);
     stat = GdipGetFamilyName (family, familyName, LANG_NEUTRAL);
     expect (Ok, stat);
-    todo_wine ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
-        "Expected Microsoft Sans Serif, got %s\n",
-        wine_dbgstr_w(familyName));
+    if (!lstrcmpiW(familyName, Tahoma))
+        todo_wine ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
+                      "Expected Microsoft Sans Serif, got Tahoma\n");
+    else
+        ok ((lstrcmpiW(familyName, MicrosoftSansSerif) == 0),
+            "Expected Microsoft Sans Serif, got %s\n", wine_dbgstr_w(familyName));
     stat = GdipDeleteFontFamily (family);
     expect (Ok, stat);
 

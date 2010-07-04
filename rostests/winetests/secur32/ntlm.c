@@ -32,6 +32,7 @@
 #include <sspi.h>
 #include <rpc.h>
 #include <rpcdce.h>
+#include <secext.h>
 
 #include "wine/test.h"
 
@@ -59,10 +60,11 @@ static SECURITY_STATUS (SEC_ENTRY * pEncryptMessage)(PCtxtHandle, ULONG,
                             PSecBufferDesc, ULONG);
 static SECURITY_STATUS (SEC_ENTRY * pDecryptMessage)(PCtxtHandle, PSecBufferDesc,
                             ULONG, PULONG);
+static BOOLEAN (WINAPI * pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
 
 typedef struct _SspiData {
-    PCredHandle cred;
-    PCtxtHandle ctxt;
+    CredHandle cred;
+    CtxtHandle ctxt;
     PSecBufferDesc in_buf;
     PSecBufferDesc out_buf;
     PSEC_WINNT_AUTH_IDENTITY id;
@@ -168,6 +170,7 @@ static void InitFunctionPtrs(void)
         pVerifySignature = (PVOID)GetProcAddress(secdll, "VerifySignature");
         pEncryptMessage = (PVOID)GetProcAddress(secdll, "EncryptMessage");
         pDecryptMessage = (PVOID)GetProcAddress(secdll, "DecryptMessage");
+        pGetUserNameExA = (PVOID)GetProcAddress(secdll, "GetUserNameExA");
     }
 }
 
@@ -310,17 +313,15 @@ static SECURITY_STATUS setupClient(SspiData *sspi_data, SEC_CHAR *provider)
 
     trace("Running setupClient\n");
     
-    sspi_data->cred = HeapAlloc(GetProcessHeap(), 0, sizeof(CredHandle));
-    sspi_data->ctxt = HeapAlloc(GetProcessHeap(), 0, sizeof(CtxtHandle));
-    
     ret = pQuerySecurityPackageInfoA(provider, &sec_pkg_info);
 
     ok(ret == SEC_E_OK, "QuerySecurityPackageInfo returned %s\n", getSecError(ret));
 
     setupBuffers(sspi_data, sec_pkg_info);
+    pFreeContextBuffer(sec_pkg_info);
     
     if((ret = pAcquireCredentialsHandleA(NULL, provider, SECPKG_CRED_OUTBOUND,
-            NULL, sspi_data->id, NULL, NULL, sspi_data->cred, &ttl))
+            NULL, sspi_data->id, NULL, NULL, &sspi_data->cred, &ttl))
             != SEC_E_OK)
     {
         trace("AcquireCredentialsHandle() returned %s\n", getSecError(ret));
@@ -341,17 +342,15 @@ static SECURITY_STATUS setupServer(SspiData *sspi_data, SEC_CHAR *provider)
 
     trace("Running setupServer\n");
 
-    sspi_data->cred = HeapAlloc(GetProcessHeap(), 0, sizeof(CredHandle));
-    sspi_data->ctxt = HeapAlloc(GetProcessHeap(), 0, sizeof(CtxtHandle));
-
     ret = pQuerySecurityPackageInfoA(provider, &sec_pkg_info);
 
     ok(ret == SEC_E_OK, "QuerySecurityPackageInfo returned %s\n", getSecError(ret));
 
     setupBuffers(sspi_data, sec_pkg_info);
+    pFreeContextBuffer(sec_pkg_info);
 
     if((ret = pAcquireCredentialsHandleA(NULL, provider, SECPKG_CRED_INBOUND, 
-            NULL, NULL, NULL, NULL, sspi_data->cred, &ttl)) != SEC_E_OK)
+            NULL, NULL, NULL, NULL, &sspi_data->cred, &ttl)) != SEC_E_OK)
     {
         trace("AcquireCredentialsHandle() returned %s\n", getSecError(ret));
     }
@@ -371,14 +370,12 @@ static SECURITY_STATUS setupFakeServer(SspiData *sspi_data, SEC_CHAR *provider)
 
     trace("Running setupFakeServer\n");
 
-    sspi_data->cred = HeapAlloc(GetProcessHeap(), 0, sizeof(CredHandle));
-    sspi_data->ctxt = HeapAlloc(GetProcessHeap(), 0, sizeof(CtxtHandle));
-
     ret = pQuerySecurityPackageInfoA(provider, &sec_pkg_info);
 
     ok(ret == SEC_E_OK, "QuerySecurityPackageInfo returned %s\n", getSecError(ret));
 
     ret = setupBuffers(sspi_data, sec_pkg_info);
+    pFreeContextBuffer(sec_pkg_info);
     
     return ret;
 }
@@ -419,8 +416,8 @@ static SECURITY_STATUS runClient(SspiData *sspi_data, BOOL first, ULONG data_rep
         void *old_buf;
 
         /* pass NULL as an output buffer */
-        ret = pInitializeSecurityContextA(sspi_data->cred, NULL, NULL, req_attr,
-            0, data_rep, NULL, 0, sspi_data->ctxt, NULL,
+        ret = pInitializeSecurityContextA(&sspi_data->cred, NULL, NULL, req_attr,
+            0, data_rep, NULL, 0, &sspi_data->ctxt, NULL,
             &ctxt_attr, &ttl);
 
         ok(ret == SEC_E_BUFFER_TOO_SMALL, "expected SEC_E_BUFFER_TOO_SMALL, got %s\n", getSecError(ret));
@@ -429,19 +426,20 @@ static SECURITY_STATUS runClient(SspiData *sspi_data, BOOL first, ULONG data_rep
         old_buf = out_buf->pBuffers[0].pvBuffer;
         out_buf->pBuffers[0].pvBuffer = NULL;
 
-        ret = pInitializeSecurityContextA(sspi_data->cred, NULL, NULL, req_attr, 
-            0, data_rep, NULL, 0, sspi_data->ctxt, out_buf,
+        ret = pInitializeSecurityContextA(&sspi_data->cred, NULL, NULL, req_attr,
+            0, data_rep, NULL, 0, &sspi_data->ctxt, out_buf,
             &ctxt_attr, &ttl);
 
-        ok(ret == SEC_E_INTERNAL_ERROR, "expected SEC_E_INTERNAL_ERROR, got %s\n", getSecError(ret));
+        ok(ret == SEC_E_INTERNAL_ERROR || ret == SEC_I_CONTINUE_NEEDED,
+           "expected SEC_E_INTERNAL_ERROR or SEC_I_CONTINUE_NEEDED, got %s\n", getSecError(ret));
 
         out_buf->pBuffers[0].pvBuffer = old_buf;
 
         /* pass an output buffer of 0 size */
         out_buf->pBuffers[0].cbBuffer = 0;
 
-        ret = pInitializeSecurityContextA(sspi_data->cred, NULL, NULL, req_attr, 
-            0, data_rep, NULL, 0, sspi_data->ctxt, out_buf,
+        ret = pInitializeSecurityContextA(&sspi_data->cred, NULL, NULL, req_attr,
+            0, data_rep, NULL, 0, &sspi_data->ctxt, out_buf,
             &ctxt_attr, &ttl);
 
         ok(ret == SEC_E_BUFFER_TOO_SMALL, "expected SEC_E_BUFFER_TOO_SMALL, got %s\n", getSecError(ret));
@@ -452,8 +450,8 @@ static SECURITY_STATUS runClient(SspiData *sspi_data, BOOL first, ULONG data_rep
         out_buf->pBuffers[0].cbBuffer = sspi_data->max_token;
         out_buf->pBuffers[0].BufferType = SECBUFFER_DATA;
 
-        ret = pInitializeSecurityContextA(sspi_data->cred, NULL, NULL, req_attr,
-            0, data_rep, NULL, 0, sspi_data->ctxt, out_buf,
+        ret = pInitializeSecurityContextA(&sspi_data->cred, NULL, NULL, req_attr,
+            0, data_rep, NULL, 0, &sspi_data->ctxt, out_buf,
             &ctxt_attr, &ttl);
 
         ok(ret == SEC_E_BUFFER_TOO_SMALL, "expected SEC_E_BUFFER_TOO_SMALL, got %s\n", getSecError(ret));
@@ -462,13 +460,13 @@ static SECURITY_STATUS runClient(SspiData *sspi_data, BOOL first, ULONG data_rep
 
     out_buf->pBuffers[0].cbBuffer = sspi_data->max_token;
 
-    ret = pInitializeSecurityContextA(first?sspi_data->cred:NULL, first?NULL:sspi_data->ctxt, NULL, req_attr,
-            0, data_rep, first?NULL:in_buf, 0, sspi_data->ctxt, out_buf,
+    ret = pInitializeSecurityContextA(first?&sspi_data->cred:NULL, first?NULL:&sspi_data->ctxt, NULL, req_attr,
+            0, data_rep, first?NULL:in_buf, 0, &sspi_data->ctxt, out_buf,
             &ctxt_attr, &ttl);
 
     if(ret == SEC_I_COMPLETE_AND_CONTINUE || ret == SEC_I_COMPLETE_NEEDED)
     {
-        pCompleteAuthToken(sspi_data->ctxt, out_buf);
+        pCompleteAuthToken(&sspi_data->ctxt, out_buf);
         if(ret == SEC_I_COMPLETE_AND_CONTINUE)
             ret = SEC_I_CONTINUE_NEEDED;
         else if(ret == SEC_I_COMPLETE_NEEDED)
@@ -493,13 +491,13 @@ static SECURITY_STATUS runServer(SspiData *sspi_data, BOOL first, ULONG data_rep
 
     trace("Running the server the %s time\n", first?"first":"second");
 
-    ret = pAcceptSecurityContext(sspi_data->cred, first?NULL:sspi_data->ctxt, 
-            sspi_data->in_buf, 0, data_rep, sspi_data->ctxt, 
+    ret = pAcceptSecurityContext(&sspi_data->cred, first?NULL:&sspi_data->ctxt,
+            sspi_data->in_buf, 0, data_rep, &sspi_data->ctxt,
             sspi_data->out_buf, &ctxt_attr, &ttl);
 
     if(ret == SEC_I_COMPLETE_AND_CONTINUE || ret == SEC_I_COMPLETE_NEEDED)
     {
-        pCompleteAuthToken(sspi_data->ctxt, sspi_data->out_buf);
+        pCompleteAuthToken(&sspi_data->ctxt, sspi_data->out_buf);
         if(ret == SEC_I_COMPLETE_AND_CONTINUE)
             ret = SEC_I_CONTINUE_NEEDED;
         else if(ret == SEC_I_COMPLETE_NEEDED)
@@ -611,8 +609,8 @@ static void testInitializeSecurityContextFlags(void)
     /* Without any flags, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = 0;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -623,12 +621,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "With req_attr == 0, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_CONNECTION, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = ISC_REQ_CONNECTION;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -639,12 +638,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "For ISC_REQ_CONNECTION, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_EXTENDED_ERROR, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = ISC_REQ_EXTENDED_ERROR;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -655,12 +655,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "For ISC_REQ_EXTENDED_ERROR, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_MUTUAL_AUTH, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = ISC_REQ_MUTUAL_AUTH;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -671,12 +672,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "For ISC_REQ_MUTUAL_AUTH, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_USE_DCE_STYLE, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = ISC_REQ_USE_DCE_STYLE;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -687,12 +689,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "For ISC_REQ_USE_DCE_STYLE, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_DELEGATE, the lowest byte should not have bits 0x20 or 0x10 set*/
     req_attr = ISC_REQ_DELEGATE;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -703,12 +706,13 @@ static void testInitializeSecurityContextFlags(void)
     ok(((packet[12] & 0x10) == 0) && ((packet[12] & 0x20) == 0),
             "For ISC_REQ_DELEGATE, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_INTEGRITY, the lowest byte should have bit 0x10 set */
     req_attr = ISC_REQ_INTEGRITY;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -719,12 +723,13 @@ static void testInitializeSecurityContextFlags(void)
     ok((packet[12] & 0x10) != 0,
             "For ISC_REQ_INTEGRITY, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_REPLAY_DETECT, the lowest byte should have bit 0x10 set */
     req_attr = ISC_REQ_REPLAY_DETECT;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -735,12 +740,13 @@ static void testInitializeSecurityContextFlags(void)
     ok((packet[12] & 0x10) != 0,
             "For ISC_REQ_REPLAY_DETECT, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_SEQUENCE_DETECT, the lowest byte should have bit 0x10 set */
     req_attr = ISC_REQ_SEQUENCE_DETECT;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -751,12 +757,13 @@ static void testInitializeSecurityContextFlags(void)
     ok((packet[12] & 0x10) != 0,
             "For ISC_REQ_SEQUENCE_DETECT, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
     /* With ISC_REQ_CONFIDENTIALITY, the lowest byte should have bit 0x20 set */
     req_attr = ISC_REQ_CONFIDENTIALITY;
 
-    if((sec_status = pInitializeSecurityContextA(client.cred, NULL, NULL, req_attr,
-        0, SECURITY_NETWORK_DREP, NULL, 0, client.ctxt, client.out_buf,
+    if((sec_status = pInitializeSecurityContextA(&client.cred, NULL, NULL, req_attr,
+        0, SECURITY_NETWORK_DREP, NULL, 0, &client.ctxt, client.out_buf,
         &ctxt_attr, &ttl)) != SEC_I_CONTINUE_NEEDED)
     {
         trace("InitializeSecurityContext returned %s not SEC_I_CONTINUE_NEEDED, aborting.\n",
@@ -767,11 +774,11 @@ static void testInitializeSecurityContextFlags(void)
     ok((packet[12] & 0x20) != 0,
             "For ISC_REQ_CONFIDENTIALITY, flags are 0x%02x%02x%02x%02x.\n",
             packet[15], packet[14], packet[13], packet[12]);
+    pDeleteSecurityContext(&client.ctxt);
 
 tISCFend:
     cleanupBuffers(&client);
-    pFreeCredentialsHandle(client.cred);
-
+    pFreeCredentialsHandle(&client.cred);
 }
 
 /**********************************************************************/
@@ -814,7 +821,7 @@ static void testAuth(ULONG data_rep, BOOL fake)
     {
         skip("Error: Setting up the client returned %s, exiting test!\n",
                 getSecError(sec_status));
-        pFreeCredentialsHandle(client.cred);
+        pFreeCredentialsHandle(&client.cred);
         return;
     }
 
@@ -827,8 +834,8 @@ static void testAuth(ULONG data_rep, BOOL fake)
     {
         skip("Error: Setting up the server returned %s, exiting test!\n",
                 getSecError(sec_status));
-        pFreeCredentialsHandle(server.cred);
-        pFreeCredentialsHandle(client.cred);
+        pFreeCredentialsHandle(&server.cred);
+        pFreeCredentialsHandle(&client.cred);
         return;
     }
 
@@ -863,7 +870,7 @@ static void testAuth(ULONG data_rep, BOOL fake)
         goto tAuthend;
     }
 
-    sec_status = pQueryContextAttributesA(client.ctxt,
+    sec_status = pQueryContextAttributesA(&client.ctxt,
             SECPKG_ATTR_SIZES, &ctxt_sizes);
 
     ok(sec_status == SEC_E_OK,
@@ -888,23 +895,23 @@ tAuthend:
 
     if(!fake)
     {
-        sec_status = pDeleteSecurityContext(server.ctxt);
+        sec_status = pDeleteSecurityContext(&server.ctxt);
         ok(sec_status == SEC_E_OK, "DeleteSecurityContext(server) returned %s\n",
             getSecError(sec_status));
     }
 
-    sec_status = pDeleteSecurityContext(client.ctxt);
+    sec_status = pDeleteSecurityContext(&client.ctxt);
     ok(sec_status == SEC_E_OK, "DeleteSecurityContext(client) returned %s\n",
             getSecError(sec_status));
 
     if(!fake)
     {
-        sec_status = pFreeCredentialsHandle(server.cred);
+        sec_status = pFreeCredentialsHandle(&server.cred);
         ok(sec_status == SEC_E_OK, "FreeCredentialsHandle(server) returned %s\n",
             getSecError(sec_status));
     }
 
-    sec_status = pFreeCredentialsHandle(client.cred);
+    sec_status = pFreeCredentialsHandle(&client.cred);
     ok(sec_status == SEC_E_OK, "FreeCredentialsHandle(client) returned %s\n",
             getSecError(sec_status));
 }
@@ -956,7 +963,7 @@ static void testSignSeal(void)
     {
         skip("Error: Setting up the client returned %s, exiting test!\n",
                 getSecError(sec_status));
-        pFreeCredentialsHandle(client.cred);
+        pFreeCredentialsHandle(&client.cred);
         return;
     }
 
@@ -979,7 +986,7 @@ static void testSignSeal(void)
      *    Now start with the actual testing     *
      ********************************************/
 
-    if(pQueryContextAttributesA(client.ctxt, SECPKG_ATTR_SIZES,
+    if(pQueryContextAttributesA(&client.ctxt, SECPKG_ATTR_SIZES,
                 &ctxt_sizes) != SEC_E_OK)
     {
         skip("Failed to get context sizes, aborting test.\n");
@@ -999,7 +1006,7 @@ static void testSignSeal(void)
     fake_data[1].cbBuffer = lstrlen(message);
     fake_data[1].pvBuffer = HeapAlloc(GetProcessHeap(), 0, fake_data[1].cbBuffer);
 
-    sec_status = pMakeSignature(client.ctxt, 0, &crypt, 0);
+    sec_status = pMakeSignature(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_INVALID_TOKEN,
             "MakeSignature returned %s, not SEC_E_INVALID_TOKEN.\n",
             getSecError(sec_status));
@@ -1019,7 +1026,7 @@ static void testSignSeal(void)
      * we should get the same signature for our data, no matter if
      * it is sent by the client or the server
      */
-    sec_status = pMakeSignature(client.ctxt, 0, &crypt, 0);
+    sec_status = pMakeSignature(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_OK, "MakeSignature returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
     ok(!memcmp(crypt.pBuffers[0].pvBuffer, message_signature,
@@ -1029,18 +1036,18 @@ static void testSignSeal(void)
 
     memcpy(data[0].pvBuffer, crypt_trailer_client, data[0].cbBuffer);
 
-    sec_status = pVerifySignature(client.ctxt, &crypt, 0, &qop);
+    sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_MESSAGE_ALTERED,
             "VerifySignature returned %s, not SEC_E_MESSAGE_ALTERED.\n",
             getSecError(sec_status));
 
     memcpy(data[0].pvBuffer, message_signature, data[0].cbBuffer);
 
-    sec_status = pVerifySignature(client.ctxt, &crypt, 0, &qop);
+    sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
 
-    sec_status = pEncryptMessage(client.ctxt, 0, &crypt, 0);
+    sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     if (sec_status == SEC_E_UNSUPPORTED_FUNCTION)
     {
         skip("Encrypt message returned SEC_E_UNSUPPORTED_FUNCTION. "
@@ -1052,15 +1059,39 @@ static void testSignSeal(void)
 
     ok(!memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client,
                crypt.pBuffers[0].cbBuffer), "Crypt trailer not as expected.\n");
+    if (memcmp(crypt.pBuffers[0].pvBuffer, crypt_trailer_client,
+               crypt.pBuffers[0].cbBuffer))
+    {
+        int i;
+        for (i = 0; i < crypt.pBuffers[0].cbBuffer; i++)
+        {
+            if (i % 8 == 0) printf("     ");
+            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[0].pvBuffer)[i]);
+            if (i % 8 == 7) printf("\n");
+        }
+        printf("\n");
+    }
     ok(!memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
                crypt.pBuffers[1].cbBuffer), "Crypt message not as expected.\n");
+    if (memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client,
+               crypt.pBuffers[1].cbBuffer))
+    {
+        int i;
+        for (i = 0; i < crypt.pBuffers[1].cbBuffer; i++)
+        {
+            if (i % 8 == 0) printf("     ");
+            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[1].pvBuffer)[i]);
+            if (i % 8 == 7) printf("\n");
+        }
+        printf("\n");
+    }
 
     data[0].cbBuffer = sizeof(crypt_trailer_server);
     data[1].cbBuffer = sizeof(crypt_message_server);
     memcpy(data[0].pvBuffer, crypt_trailer_server, data[0].cbBuffer);
     memcpy(data[1].pvBuffer, crypt_message_server, data[1].cbBuffer);
 
-    sec_status = pDecryptMessage(client.ctxt, &crypt, 0, &qop);
+    sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
 
     ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
@@ -1091,7 +1122,7 @@ static void testSignSeal(void)
     complex_data[3].pvBuffer = HeapAlloc(GetProcessHeap(), 0, complex_data[3].cbBuffer);
 
     /* We should get a dummy signature again. */
-    sec_status = pMakeSignature(client.ctxt, 0, &crypt, 0);
+    sec_status = pMakeSignature(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_OK, "MakeSignature returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
     ok(!memcmp(crypt.pBuffers[3].pvBuffer, message_signature,
@@ -1099,24 +1130,48 @@ static void testSignSeal(void)
 
     /* Being a dummy signature, it will verify right away, as if the server
      * sent it */
-    sec_status = pVerifySignature(client.ctxt, &crypt, 0, &qop);
+    sec_status = pVerifySignature(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "VerifySignature returned %s, not SEC_E_OK\n",
             getSecError(sec_status));
 
-    sec_status = pEncryptMessage(client.ctxt, 0, &crypt, 0);
+    sec_status = pEncryptMessage(&client.ctxt, 0, &crypt, 0);
     ok(sec_status == SEC_E_OK, "EncryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
 
     ok(!memcmp(crypt.pBuffers[3].pvBuffer, crypt_trailer_client2,
                crypt.pBuffers[3].cbBuffer), "Crypt trailer not as expected.\n");
+    if (memcmp(crypt.pBuffers[3].pvBuffer, crypt_trailer_client2,
+               crypt.pBuffers[3].cbBuffer))
+    {
+        int i;
+        for (i = 0; i < crypt.pBuffers[3].cbBuffer; i++)
+        {
+            if (i % 8 == 0) printf("     ");
+            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[3].pvBuffer)[i]);
+            if (i % 8 == 7) printf("\n");
+        }
+        printf("\n");
+    }
 
     ok(!memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client2,
                crypt.pBuffers[1].cbBuffer), "Crypt message not as expected.\n");
+    if (memcmp(crypt.pBuffers[1].pvBuffer, crypt_message_client2,
+               crypt.pBuffers[1].cbBuffer))
+    {
+        int i;
+        for (i = 0; i < crypt.pBuffers[1].cbBuffer; i++)
+        {
+            if (i % 8 == 0) printf("     ");
+            printf("0x%02x,", ((unsigned char *)crypt.pBuffers[1].pvBuffer)[i]);
+            if (i % 8 == 7) printf("\n");
+        }
+        printf("\n");
+    }
 
     memcpy(complex_data[1].pvBuffer, crypt_message_server2, complex_data[1].cbBuffer);
     memcpy(complex_data[3].pvBuffer, crypt_trailer_server2, complex_data[3].cbBuffer);
 
-    sec_status = pDecryptMessage(client.ctxt, &crypt, 0, &qop);
+    sec_status = pDecryptMessage(&client.ctxt, &crypt, 0, &qop);
     ok(sec_status == SEC_E_OK, "DecryptMessage returned %s, not SEC_E_OK.\n",
             getSecError(sec_status));
 
@@ -1125,8 +1180,8 @@ end:
     cleanupBuffers(&client);
     cleanupBuffers(&server);
 
-    pDeleteSecurityContext(client.ctxt);
-    pFreeCredentialsHandle(client.cred);
+    pDeleteSecurityContext(&client.ctxt);
+    pFreeCredentialsHandle(&client.cred);
 
     HeapFree(GetProcessHeap(), 0, fake_data[0].pvBuffer);
     HeapFree(GetProcessHeap(), 0, fake_data[1].pvBuffer);
@@ -1265,6 +1320,57 @@ static void test_cred_multiple_use(void)
     ok(ret == SEC_E_OK, "DeleteSecurityContext failed with error 0x%x\n", ret);
     ret = pFreeCredentialsHandle(&cred);
     ok(ret == SEC_E_OK, "FreeCredentialsHandle failed with error 0x%x\n", ret);
+
+    HeapFree(GetProcessHeap(), 0, buffers[0].pvBuffer);
+}
+
+static void test_null_auth_data(void)
+{
+    SECURITY_STATUS status;
+    PSecPkgInfo info;
+    CredHandle cred;
+    CtxtHandle ctx;
+    SecBufferDesc buffer_desc;
+    SecBuffer buffers[1];
+    char user[256];
+    TimeStamp ttl;
+    ULONG attr, size;
+    BOOLEAN ret;
+
+    if(pQuerySecurityPackageInfoA((SEC_CHAR *)"NTLM", &info) != SEC_E_OK)
+    {
+        skip("NTLM package not installed, skipping test\n");
+        return;
+    }
+
+    status = pAcquireCredentialsHandleA(NULL, (SEC_CHAR *)"NTLM", SECPKG_CRED_OUTBOUND,
+                                        NULL, NULL, NULL, NULL, &cred, &ttl);
+    ok(status == SEC_E_OK, "AcquireCredentialsHande() failed %s\n", getSecError(status));
+
+    buffers[0].cbBuffer = info->cbMaxToken;
+    buffers[0].BufferType = SECBUFFER_TOKEN;
+    buffers[0].pvBuffer = HeapAlloc(GetProcessHeap(), 0, buffers[0].cbBuffer);
+
+    buffer_desc.ulVersion = SECBUFFER_VERSION;
+    buffer_desc.cBuffers = sizeof(buffers)/sizeof(buffers[0]);
+    buffer_desc.pBuffers = buffers;
+
+    size = sizeof(user);
+    ret = pGetUserNameExA(NameSamCompatible, user, &size);
+    ok(ret, "GetUserNameExA failed %u\n", GetLastError());
+
+    status = pInitializeSecurityContextA(&cred, NULL, (SEC_CHAR *)user,
+                                         ISC_REQ_CONNECTION, 0, SECURITY_NETWORK_DREP,
+                                         NULL, 0, &ctx, &buffer_desc, &attr, &ttl);
+    ok(status == SEC_I_CONTINUE_NEEDED, "InitializeSecurityContextA failed %s\n", getSecError(status));
+
+    ret = pDeleteSecurityContext(&ctx);
+    ok(ret == SEC_E_OK, "DeleteSecurityContext failed with error 0x%x\n", ret);
+    ret = pFreeCredentialsHandle(&cred);
+    ok(ret == SEC_E_OK, "FreeCredentialsHandle failed with error 0x%x\n", ret);
+
+    pFreeContextBuffer(info);
+    HeapFree(GetProcessHeap(), 0, buffers[0].pvBuffer);
 }
 
 START_TEST(ntlm)
@@ -1290,6 +1396,7 @@ START_TEST(ntlm)
             testSignSeal();
 
         test_cred_multiple_use();
+        if (pGetUserNameExA) test_null_auth_data();
     }
     else
         win_skip("Needed functions are not available\n");

@@ -1960,7 +1960,7 @@ typedef struct {
 
 static const IOleCommandTargetVtbl IOleCommandTargetImpl_Vtbl;
 
-IOleCommandTarget* IOleCommandTargetImpl_Construct(void)
+static IOleCommandTarget* IOleCommandTargetImpl_Construct(void)
 {
     IOleCommandTargetImpl *obj;
 
@@ -2050,7 +2050,7 @@ typedef struct {
 static const IServiceProviderVtbl IServiceProviderImpl_Vtbl;
 static const IProfferServiceVtbl IProfferServiceImpl_Vtbl;
 
-IServiceProvider* IServiceProviderImpl_Construct(void)
+static IServiceProvider* IServiceProviderImpl_Construct(void)
 {
     IServiceProviderImpl *obj;
 
@@ -2061,7 +2061,7 @@ IServiceProvider* IServiceProviderImpl_Construct(void)
     return (IServiceProvider*)obj;
 }
 
-IProfferService* IProfferServiceImpl_Construct(void)
+static IProfferService* IProfferServiceImpl_Construct(void)
 {
     IProfferServiceImpl *obj;
 

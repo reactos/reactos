@@ -1639,17 +1639,39 @@ static void test_VarDateFromUdate(void)
   CHECKPTR(VarDateFromUdate);
   UD2T(1,1,1980,0,0,0,0,2,1,0,S_OK,29221.0);      /* 1 Jan 1980 */
   UD2T(2,1,1980,0,0,0,0,3,2,0,S_OK,29222.0);      /* 2 Jan 1980 */
+  UD2T(2,1,1980,0,0,0,0,4,5,0,S_OK,29222.0);      /* 2 Jan 1980 */
   UD2T(31,12,1990,0,0,0,0,0,0,0,S_OK,33238.0);    /* 31 Dec 1990 */
   UD2T(31,12,90,0,0,0,0,0,0,0,S_OK,33238.0);      /* year < 100 is 1900+year! */
   UD2T(30,12,1899,0,0,0,0,6,364,0,S_OK,0.0);      /* 30 Dec 1899 - VT_DATE 0.0 */
   UD2T(1,1,100,0,0,0,0,0,0,0,S_OK,-657434.0);     /* 1 Jan 100 - Min */
   UD2T(31,12,9999,0,0,0,0,0,0,0,S_OK,2958465.0);  /* 31 Dec 9999 - Max */
   UD2T(1,1,10000,0,0,0,0,0,0,0,E_INVALIDARG,0.0); /* > 31 Dec 9999 => err  */
+  UD2T(1,1,-10000,0,0,0,0,0,0,0,E_INVALIDARG,0.0);/* < -9999 => err  */
 
-  UD2T(1,1,1980,18,1,16,0,2,1,0,S_OK,29221.75087962963); /* 6:18:02 PM */
+  UD2T(30,12,1899,0,0,0,0,0,0,0,S_OK,0.0); /* 30 Dec 1899 0:00:00  */
+  UD2T(30,12,1899,0,0,0,999,0,0,0,S_OK,0.0); /* Ignore milliseconds  */
 
-  UD2T(0,1,1980,0,0,0,0,2,1,0,S_OK,29220.0);      /* Rolls back to 31 Dec 1899 */
-  UD2T(1,13,1980,0,0,0,0,2,1,0,S_OK,29587.0);     /* Rolls fwd to 1/1/1981 */
+  UD2T(1,1,1980,18,1,16,0,2,1,0,S_OK,29221.75087962963);             /* 6:18:02 PM */
+  UD2T(1,300,1980,18,1,16,0,2,1,0,S_OK,38322.75087962963);           /* Test fwdrolled month */
+  UD2T(300,1,1980,18,1,16,0,2,1,0,S_OK,29520.75087962963);           /* Test fwdrolled days */
+  UD2T(0,1,1980,42,1,16,0,2,1,0,S_OK,29221.75087962963);             /* Test fwdrolled hours */
+  UD2T(1,1,1980,17,61,16,0,2,1,0,S_OK,29221.75087962963);            /* Test fwdrolled minutes */
+  UD2T(1,1,1980,18,0,76,0,2,1,0,S_OK,29221.75087962963);             /* Test fwdrolled seconds */
+  UD2T(1,-300,1980,18,1,16,0,2,1,0,S_OK,20059.75087962963);          /* Test backrolled month */
+  UD2T(-300,1,1980,18,1,16,0,2,1,0,S_OK,28920.75087962963);          /* Test backrolled days */
+  UD2T(3,1,1980,-30,1,16,0,2,1,0,S_OK,29221.75087962963);            /* Test backrolled hours */
+  UD2T(1,1,1980,20,-119,16,0,2,1,0,S_OK,29221.75087962963);          /* Test backrolled minutes */
+  UD2T(1,1,1980,18,3,-104,0,2,1,0,S_OK,29221.75087962963);           /* Test backrolled seconds */
+  UD2T(1,12001,-1020,18,1,16,0,0,0,0,S_OK,29221.75087962963);        /* Test rolled year and month */
+  UD2T(1,-23,1982,18,1,16,0,0,0,0,S_OK,29221.75087962963);           /* Test backrolled month */
+  UD2T(-59,3,1980,18,1,16,0,0,0,0,S_OK,29221.75087962963);           /* Test backrolled days */
+  UD2T(1,1,0,0,0,0,0,0,0,0,S_OK,36526);                              /* Test zero year */
+  UD2T(0,0,1980,0,0,0,0,0,0,0,S_OK,29189);                           /* Test zero day and month */
+  UD2T(0,1,1980,0,0,0,0,2,1,0,S_OK,29220.0);                         /* Test zero day = LastDayOfMonth */
+  UD2T(-1,1,1980,18,1,16,0,0,0,0,S_OK,29219.75087962963);            /* Test day -1 = LastDayOfMonth - 1 */
+  UD2T(1,1,-1,18,1,16,0,0,0,0,S_OK,36161.75087962963);               /* Test year -1 = 1999 */
+  UD2T(1,-1,1980,18,1,16,0,0,0,0,S_OK,29160.7508796296);             /* Test month -1 = 11 */
+  UD2T(1,13,1980,0,0,0,0,2,1,0,S_OK,29587.0);                        /* Rolls fwd to 1/1/1981 */
 }
 
 static void test_st2dt(int line, WORD d, WORD m, WORD y, WORD h, WORD mn,
@@ -1753,9 +1775,45 @@ static void test_DosDateTimeToVariantTime(void)
   DOS2DT(1,1,1980,0,0,29,1,29221.00032407407); /* 1/1/1980 12:00:28 AM */
   DOS2DT(1,1,1980,0,0,31,1,29221.00034722222); /* 1/1/1980 12:00:30 AM */
   DOS2DT(1,1,1980,0,59,0,1,29221.04097222222); /* 1/1/1980 12:59:00 AM */
-  DOS2DT(1,1,1980,0,60,0,0,0.0);               /* Invalid seconds */
+  DOS2DT(1,1,1980,0,60,0,0,0.0);               /* Invalid minutes */
+  DOS2DT(1,1,1980,0,0,60,0,0.0);               /* Invalid seconds */
   DOS2DT(1,1,1980,23,0,0,1,29221.95833333333); /* 1/1/1980 11:00:00 PM */
   DOS2DT(1,1,1980,24,0,0,0,0.0);               /* Invalid hours */
+
+  DOS2DT(1,1,1980,0,0,1,1,29221.0);
+  DOS2DT(2,1,1980,0,0,0,1,29222.0);
+  DOS2DT(2,1,1980,0,0,0,1,29222.0);
+  DOS2DT(31,12,1990,0,0,0,1,33238.0);
+  DOS2DT(31,12,90,0,0,0,1,40543.0);
+  DOS2DT(30,12,1899,0,0,0,1,46751.0);
+  DOS2DT(1,1,100,0,0,0,1,43831.0);
+  DOS2DT(31,12,9999,0,0,0,1,59901.0);
+  DOS2DT(1,1,10000,0,0,0,1,59902.0);
+  DOS2DT(1,1,-10000,0,0,0,1,48214.0);
+
+  DOS2DT(30,12,1899,0,0,0,1,46751.0);
+  DOS2DT(30,12,1899,0,0,1,1,46751.0);
+
+  DOS2DT(1,1,1980,18,1,16,1,29221.75087962963);
+  DOS2DT(1,300,1980,18,1,16,1,29556.75087962963);
+  DOS2DT(300,1,1980,18,1,16,1,29232.75087962963);
+  DOS2DT(0,1,1980,42,1,16,1,29220.4175462963);
+  DOS2DT(1,1,1980,17,61,16,0,0.0);
+  DOS2DT(1,1,1980,18,0,76,1,29221.75013888889);
+  DOS2DT(1,-300,1980,18,1,16,1,29312.75087962963);
+  DOS2DT(-300,1,1980,18,1,16,1,29240.75087962963);
+  DOS2DT(3,1,1980,-30,1,16,1,29223.08421296296);
+  DOS2DT(1,1,1980,20,-119,16,1,29221.83976851852);
+  DOS2DT(1,1,1980,18,3,-104,1,29221.75236111111);
+  DOS2DT(1,12001,-1020,18,1,16,1,55519.75087962963);
+  DOS2DT(1,-23,1982,18,1,16,1,30195.75087962963);
+  DOS2DT(-59,3,1980,18,1,16,1,29285.75087962963);
+  DOS2DT(1,1,0,0,0,0,1,54058.0);
+  DOS2DT(0,0,1980,0,0,0,1,29189.0);
+  DOS2DT(0,1,1980,0,0,0,1,29220.0);
+  DOS2DT(-1,1,1980,18,1,16,1,29251.75087962963);
+  DOS2DT(1,1,-1,18,1,16,1,53693.75087962963);
+  DOS2DT(1,-1,1980,18,1,16,0,0);
 }
 
 static void test_dt2dos(int line, double dt, INT r, WORD d, WORD m, WORD y,
@@ -2289,7 +2347,7 @@ static void test_VarMod(void)
   static const WCHAR szNum1[] = {'1','0','\0'};
   int l, r;
   BOOL lFound, rFound;
-  BOOL lValid, rValid;
+  BOOL lValid;
   BSTR strNum0, strNum1;
 
   CHECKPTR(VarMod);
@@ -2473,7 +2531,6 @@ static void test_VarMod(void)
 	}
 
       rFound = TRUE;
-      rValid = TRUE;
       switch(r)
 	{
 	case VT_EMPTY:
@@ -2500,7 +2557,6 @@ static void test_VarMod(void)
 	case VT_VARIANT:
 	case VT_UNKNOWN:
 	case VT_RECORD:
-	  rValid = FALSE;
 	  break;
 	default:
 	  rFound = FALSE;
@@ -7072,7 +7128,7 @@ static void test_VarDiv(void)
     VARIANT left, right, exp, result, cy, dec;
     BSTR num1_str, num2_str;
     VARTYPE i;
-    HRESULT hres, expectedhres;
+    HRESULT hres;
     double r;
 
     num1_str = SysAllocString(str1);
@@ -7112,7 +7168,6 @@ static void test_VarDiv(void)
                 V_VT(&right) = rightvt | ExtraFlags[i];
                 V_VT(&result) = VT_EMPTY;
                 resvt = VT_EMPTY;
-                expectedhres = S_OK;
 
                 if (leftvt == VT_BSTR)
                     V_BSTR(&left) = num2_str;

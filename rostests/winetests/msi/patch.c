@@ -159,7 +159,8 @@ static BOOL get_program_files_dir( char *buf, char *buf2 )
         return FALSE;
 
     size = MAX_PATH;
-    if (RegQueryValueExA( hkey, "ProgramFilesDir", 0, &type, (LPBYTE)buf, &size ))
+    if (RegQueryValueExA( hkey, "ProgramFilesDir (x86)", 0, &type, (LPBYTE)buf, &size ) &&
+        RegQueryValueExA( hkey, "ProgramFilesDir", 0, &type, (LPBYTE)buf, &size ))
     {
         RegCloseKey( hkey );
         return FALSE;

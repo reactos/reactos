@@ -23,10 +23,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winreg.h"
+#include "winternl.h"
 #include "wine/test.h"
 
 #define MAGIC_DEAD 0xdeadbeef

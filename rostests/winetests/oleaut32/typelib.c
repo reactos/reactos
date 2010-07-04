@@ -31,6 +31,9 @@
 #include "ocidl.h"
 #include "shlwapi.h"
 #include "tmarshal.h"
+#include "initguid.h"
+
+#include "test_reg.h"
 
 #define expect_eq(expr, value, type, format) { type _ret = (expr); ok((value) == _ret, #expr " expected " format " got " format "\n", value, _ret); }
 #define expect_int(expr, value) expect_eq(expr, (int)(value), int, "%d")
@@ -150,7 +153,7 @@ static void test_TypeComp(void)
     /* test getting a function within a TKIND_MODULE with INVOKE_PROPERTYGET */
     ulHash = LHashValOfNameSys(SYS_WIN32, LOCALE_NEUTRAL, wszSavePicture);
     hr = ITypeComp_Bind(pTypeComp, wszSavePicture, ulHash, INVOKE_PROPERTYGET, &pTypeInfo, &desckind, &bindptr);
-    todo_wine ok(hr == TYPE_E_TYPEMISMATCH,
+    ok(hr == TYPE_E_TYPEMISMATCH,
         "ITypeComp_Bind should have failed with TYPE_E_TYPEMISMATCH instead of 0x%08x\n",
         hr);
 
@@ -449,6 +452,7 @@ static void test_TypeInfo(void)
 {
     ITypeLib *pTypeLib;
     ITypeInfo *pTypeInfo;
+    ITypeInfo2 *pTypeInfo2;
     HRESULT hr;
     static WCHAR wszBogus[] = { 'b','o','g','u','s',0 };
     static WCHAR wszGetTypeInfo[] = { 'G','e','t','T','y','p','e','I','n','f','o',0 };
@@ -458,6 +462,8 @@ static void test_TypeInfo(void)
     OLECHAR* pwszClone = wszClone;
     DISPID dispidMember;
     DISPPARAMS dispparams;
+    GUID bogusguid = {0x806afb4f,0x13f7,0x42d2,{0x89,0x2c,0x6c,0x97,0xc3,0x6a,0x36,0xc1}};
+    VARIANT var;
 
     hr = LoadTypeLib(wszStdOle2, &pTypeLib);
     ok_ole_success(hr, LoadTypeLib);
@@ -502,6 +508,25 @@ static void test_TypeInfo(void)
 
     hr = ITypeInfo_GetIDsOfNames(pTypeInfo, &pwszGetTypeInfo, 1, &dispidMember);
     ok_ole_success(hr, ITypeInfo_GetIDsOfNames);
+
+    hr = ITypeInfo_QueryInterface(pTypeInfo, &IID_ITypeInfo2, (void**)&pTypeInfo2);
+    ok_ole_success(hr, ITypeInfo_QueryInterface);
+
+    if (SUCCEEDED(hr))
+    {
+        VariantInit(&var);
+
+        V_VT(&var) = VT_I4;
+
+        /* test unknown guid passed to GetCustData */
+        hr = ITypeInfo2_GetCustData(pTypeInfo2, &bogusguid, &var);
+        ok_ole_success(hr, ITypeInfo_GetCustData);
+        ok(V_VT(&var) == VT_EMPTY, "got %i, expected VT_EMPTY\n", V_VT(&var));
+
+        ITypeInfo2_Release(pTypeInfo2);
+
+        VariantClear(&var);
+    }
 
     /* test invoking a method with a [restricted] keyword */
     hr = ITypeInfo_Invoke(pTypeInfo, NULL, dispidMember, DISPATCH_METHOD, &dispparams, NULL, NULL, NULL);
@@ -713,8 +738,10 @@ static void test_inheritance(void)
 if(use_midl_tlb) {
     ok(pTA->cFuncs == 6, "cfuncs %d\n", pTA->cFuncs);
     ok(pTA->cImplTypes == 1, "cimpltypes %d\n", pTA->cImplTypes);
+}
     ITypeInfo_ReleaseTypeAttr(pTI, pTA);
 
+if(use_midl_tlb) {
     hr = ITypeInfo_GetRefTypeOfImplType(pTI, 0, &href);
     ok(hr == S_OK, "hr %08x\n", hr);
     hr = ITypeInfo_GetRefTypeInfo(pTI, href, &pTI_p);
@@ -839,8 +866,10 @@ if(use_midl_tlb) {
 if(use_midl_tlb) {
     ok(pTA->cFuncs == 3, "cfuncs %d\n", pTA->cFuncs);
     ok(pTA->cImplTypes == 1, "cimpltypes %d\n", pTA->cImplTypes);
+}
     ITypeInfo_ReleaseTypeAttr(pTI, pTA);
 
+if(use_midl_tlb) {
     hr = ITypeInfo_GetRefTypeOfImplType(pTI, -1, &href);
     ok(hr == TYPE_E_ELEMENTNOTFOUND, "hr %08x\n", hr);
     hr = ITypeInfo_GetRefTypeOfImplType(pTI, 0, &href);
@@ -875,8 +904,10 @@ if(use_midl_tlb) {
 if(use_midl_tlb) {
     ok(pTA->cFuncs == 10, "cfuncs %d\n", pTA->cFuncs);
     ok(pTA->cImplTypes == 1, "cimpltypes %d\n", pTA->cImplTypes);
+}
     ITypeInfo_ReleaseTypeAttr(pTI, pTA);
 
+if(use_midl_tlb) {
     hr = ITypeInfo_GetRefTypeOfImplType(pTI, 0, &href);
     ok(hr == S_OK, "hr %08x\n", hr);
     hr = ITypeInfo_GetRefTypeInfo(pTI, href, &pTI_p);
@@ -893,6 +924,16 @@ if(use_midl_tlb) {
     ok(hr == S_OK, "hr %08x\n", hr);
     ok(pFD->memid == 0x1236, "memid %08x\n", pFD->memid);
     ok(pFD->oVft == 9 * sizeof(void *), "oVft %d\n", pFD->oVft);
+
+    /* first argument to 10th function is an HREFTYPE from the impl type */
+    ok(pFD->cParams == 1, "cParams %i\n", pFD->cParams);
+    ok(pFD->lprgelemdescParam[0].tdesc.vt == VT_USERDEFINED,
+        "vt 0x%x\n", pFD->lprgelemdescParam[0].tdesc.vt);
+    href = U(pFD->lprgelemdescParam[0].tdesc).hreftype;
+    ok((href & 0xff000000) == 0x04000000, "href 0x%08x\n", href);
+    hr = ITypeInfo_GetRefTypeInfo(pTI, href, &pTI_p);
+    ok(SUCCEEDED(hr), "hr %08x\n", hr);
+    if (SUCCEEDED(hr)) ITypeInfo_Release(pTI_p);
     ITypeInfo_ReleaseFuncDesc(pTI, pFD);
 }
     ITypeInfo_Release(pTI);
@@ -910,8 +951,10 @@ if(use_midl_tlb) {
 if(use_midl_tlb) {
     ok(pTA->cFuncs == 1, "cfuncs %d\n", pTA->cFuncs);
     ok(pTA->cImplTypes == 1, "cimpltypes %d\n", pTA->cImplTypes);
+}
     ITypeInfo_ReleaseTypeAttr(pTI, pTA);
 
+if(use_midl_tlb) {
     /* Should have one method */
     hr = ITypeInfo_GetFuncDesc(pTI, 1, &pFD);
     ok(hr == TYPE_E_ELEMENTNOTFOUND, "hr %08x\n", hr);
@@ -926,6 +969,626 @@ if(use_midl_tlb) {
     ITypeLib_Release(pTL);
 
     return;
+}
+
+static void test_CreateTypeLib(void) {
+    static const WCHAR stdoleW[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
+    static OLECHAR typelibW[] = {'t','y','p','e','l','i','b',0};
+    static OLECHAR helpfileW[] = {'C',':','\\','b','o','g','u','s','.','h','l','p',0};
+    static OLECHAR interface1W[] = {'i','n','t','e','r','f','a','c','e','1',0};
+    static OLECHAR interface2W[] = {'i','n','t','e','r','f','a','c','e','2',0};
+    static OLECHAR interface3W[] = {'i','n','t','e','r','f','a','c','e','3',0};
+    static OLECHAR dualW[] = {'d','u','a','l',0};
+    static OLECHAR coclassW[] = {'c','o','c','l','a','s','s',0};
+    static WCHAR defaultW[] = {'d','e','f','a','u','l','t',0x3213,0};
+    static OLECHAR func1W[] = {'f','u','n','c','1',0};
+    static OLECHAR func2W[] = {'f','u','n','c','2',0};
+    static OLECHAR prop1W[] = {'P','r','o','p','1',0};
+    static OLECHAR param1W[] = {'p','a','r','a','m','1',0};
+    static OLECHAR param2W[] = {'p','a','r','a','m','2',0};
+    static OLECHAR *names1[] = {func1W, param1W, param2W};
+    static OLECHAR *names2[] = {func2W, param1W, param2W};
+    static OLECHAR *propname[] = {prop1W, param1W};
+    static const GUID custguid = {0xbf611abe,0x5b38,0x11df,{0x91,0x5c,0x08,0x02,0x79,0x79,0x94,0x70}};
+
+    char filename[MAX_PATH];
+    WCHAR filenameW[MAX_PATH];
+    ICreateTypeLib2 *createtl;
+    ICreateTypeInfo *createti;
+    ICreateTypeInfo2 *createti2;
+    ITypeLib *tl, *stdole;
+    ITypeInfo *interface1, *interface2, *dual, *unknown, *dispatch, *ti;
+    ITypeInfo2 *ti2;
+    FUNCDESC funcdesc;
+    ELEMDESC elemdesc[5];
+    PARAMDESCEX paramdescex;
+    TYPEDESC typedesc1, typedesc2;
+    TYPEATTR *typeattr;
+    TLIBATTR *libattr;
+    HREFTYPE hreftype;
+    BSTR name, docstring, helpfile;
+    DWORD helpcontext;
+    int impltypeflags;
+    VARIANT cust_data;
+    HRESULT hres;
+
+    trace("CreateTypeLib tests\n");
+
+    hres = LoadTypeLib(stdoleW, &stdole);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetTypeInfoOfGuid(stdole, &IID_IUnknown, &unknown);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetTypeInfoOfGuid(stdole, &IID_IDispatch, &dispatch);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    GetTempFileNameA(".", "tlb", 0, filename);
+    MultiByteToWideChar(CP_ACP, 0, filename, -1, filenameW, MAX_PATH);
+
+    hres = CreateTypeLib2(SYS_WIN32, filenameW, &createtl);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeLib_QueryInterface(createtl, &IID_ITypeLib, (void**)&tl);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetLibAttr(tl, &libattr);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    ok(libattr->syskind == SYS_WIN32, "syskind = %d\n", libattr->syskind);
+    ok(libattr->wMajorVerNum == 0, "wMajorVer = %d\n", libattr->wMajorVerNum);
+    ok(libattr->wMinorVerNum == 0, "wMinorVerNum = %d\n", libattr->wMinorVerNum);
+    ok(libattr->wLibFlags == 0, "wLibFlags = %d\n", libattr->wLibFlags);
+
+    ITypeLib_ReleaseTLibAttr(tl, libattr);
+
+    name = (BSTR)0xdeadbeef;
+    hres = ITypeLib_GetDocumentation(tl, -1, &name, &docstring, &helpcontext, &helpfile);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(name == NULL, "name != NULL\n");
+    ok(docstring == NULL, "docstring != NULL\n");
+    ok(helpcontext == 0, "helpcontext != 0\n");
+    ok(helpfile == NULL, "helpfile != NULL\n");
+
+    hres = ITypeLib_GetDocumentation(tl, 0, &name, NULL, NULL, NULL);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeLib_SetName(createtl, typelibW);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeLib_SetHelpFileName(createtl, helpfileW);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetDocumentation(tl, -1, NULL, NULL, NULL, NULL);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetDocumentation(tl, -1, &name, NULL, NULL, &helpfile);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(!memcmp(name, typelibW, sizeof(typelibW)), "name = %s\n", wine_dbgstr_w(name));
+    ok(!memcmp(helpfile, helpfileW, sizeof(helpfileW)), "helpfile = %s\n", wine_dbgstr_w(helpfile));
+
+    SysFreeString(name);
+    SysFreeString(helpfile);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, interface1W, TKIND_INTERFACE, &createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_QueryInterface(createti, &IID_ITypeInfo, (void**)&interface1);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeLib_GetDocumentation(tl, 0, &name, NULL, NULL, NULL);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(!memcmp(name, interface1W, sizeof(interface1W)), "name = %s\n", wine_dbgstr_w(name));
+
+    SysFreeString(name);
+
+    ITypeLib_Release(tl);
+
+    name = (BSTR)0xdeadbeef;
+    helpfile = (BSTR)0xdeadbeef;
+    hres = ITypeInfo_GetDocumentation(interface1, -1, &name, &docstring, &helpcontext, &helpfile);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(!memcmp(name, interface1W, sizeof(interface1W)), "name = %s\n", wine_dbgstr_w(name));
+    ok(docstring == NULL, "docstring != NULL\n");
+    ok(helpcontext == 0, "helpcontext != 0\n");
+    ok(!memcmp(helpfile, helpfileW, sizeof(helpfileW)), "helpfile = %s\n", wine_dbgstr_w(helpfile));
+
+    SysFreeString(name);
+    SysFreeString(helpfile);
+
+    hres = ITypeInfo_GetDocumentation(interface1, 0, &name, NULL, NULL, NULL);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetRefTypeInfo(interface1, 0, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+
+    hres = ICreateTypeInfo_LayOut(createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, NULL, &hreftype);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, unknown, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, unknown, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    if(hres != S_OK) {
+        skip("Skipping some tests\n");
+        return;
+    }
+
+    hres = ICreateTypeInfo_AddImplType(createti, 1, hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 0, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(interface1, 0, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == 3, "hreftype = %d\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(interface1, -1, &hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    memset(&funcdesc, 0, sizeof(FUNCDESC));
+    funcdesc.funckind = FUNC_PUREVIRTUAL;
+    funcdesc.invkind = INVOKE_PROPERTYGET;
+    funcdesc.callconv = CC_STDCALL;
+    funcdesc.elemdescFunc.tdesc.vt = VT_BSTR;
+    U(funcdesc.elemdescFunc).idldesc.wIDLFlags = IDLFLAG_NONE;
+
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncHelpContext(createti, 0, 0xabcdefab);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    funcdesc.invkind = INVOKE_PROPERTYPUT;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == TYPE_E_INCONSISTENTPROPFUNCS, "got %08x\n", hres);
+
+    funcdesc.invkind = INVOKE_PROPERTYPUTREF;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == TYPE_E_INCONSISTENTPROPFUNCS, "got %08x\n", hres);
+
+    elemdesc[0].tdesc.vt = VT_BSTR;
+    U(elemdesc[0]).idldesc.dwReserved = 0;
+    U(elemdesc[0]).idldesc.wIDLFlags = IDLFLAG_FIN;
+
+    funcdesc.lprgelemdescParam = elemdesc;
+    funcdesc.invkind = INVOKE_PROPERTYPUT;
+    funcdesc.cParams = 1;
+    funcdesc.elemdescFunc.tdesc.vt = VT_VOID;
+
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncHelpContext(createti, 1, 0xabcdefab);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 0, propname, 1);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 1, propname, 1);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 1, propname, 2);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+
+    funcdesc.invkind = INVOKE_PROPERTYPUTREF;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncHelpContext(createti, 0, 0xabcdefab);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncHelpContext(createti, 0, 0x201);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    funcdesc.memid = 1;
+    funcdesc.lprgelemdescParam = NULL;
+    funcdesc.invkind = INVOKE_FUNC;
+    funcdesc.cParams = 0;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    funcdesc.memid = MEMBERID_NIL;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 1, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    elemdesc[0].tdesc.vt = VT_PTR;
+    U(elemdesc[0].tdesc).lptdesc = &typedesc1;
+    typedesc1.vt = VT_BSTR;
+    funcdesc.cParams = 1;
+    funcdesc.lprgelemdescParam = elemdesc;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 4, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    U(elemdesc[0].tdesc).lptdesc = &typedesc2;
+    typedesc2.vt = VT_PTR;
+    U(typedesc2).lptdesc = &typedesc1;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 4, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    elemdesc[0].tdesc.vt = VT_INT;
+    U(elemdesc[0]).paramdesc.wParamFlags = PARAMFLAG_FHASDEFAULT;
+    U(elemdesc[0]).paramdesc.pparamdescex = &paramdescex;
+    V_VT(&paramdescex.varDefaultValue) = VT_INT;
+    V_INT(&paramdescex.varDefaultValue) = 0x123;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 3, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    U(elemdesc[0]).idldesc.dwReserved = 0;
+    U(elemdesc[0]).idldesc.wIDLFlags = IDLFLAG_FIN;
+    elemdesc[1].tdesc.vt = VT_UI2;
+    U(elemdesc[1]).paramdesc.wParamFlags = PARAMFLAG_FHASDEFAULT;
+    U(elemdesc[1]).paramdesc.pparamdescex = &paramdescex;
+    V_VT(&paramdescex.varDefaultValue) = VT_UI2;
+    V_UI2(&paramdescex.varDefaultValue) = 0xffff;
+    funcdesc.cParams = 2;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 3, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    U(elemdesc[0]).paramdesc.wParamFlags = PARAMFLAG_FHASDEFAULT;
+    U(elemdesc[0]).paramdesc.pparamdescex = &paramdescex;
+    elemdesc[1].tdesc.vt = VT_INT;
+    V_VT(&paramdescex.varDefaultValue) = VT_INT;
+    V_INT(&paramdescex.varDefaultValue) = 0xffffffff;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 3, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    elemdesc[0].tdesc.vt = VT_BSTR;
+    elemdesc[1].tdesc.vt = VT_BSTR;
+    V_VT(&paramdescex.varDefaultValue) = VT_BSTR;
+    V_BSTR(&paramdescex.varDefaultValue) = SysAllocString(defaultW);
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 3, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetDocumentation(interface1, 0, &name, &docstring, &helpcontext, &helpfile);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(name == NULL, "name != NULL\n");
+    ok(docstring == NULL, "docstring != NULL\n");
+    ok(helpcontext == 0x201, "helpcontext != 0x201\n");
+    ok(!memcmp(helpfile, helpfileW, sizeof(helpfileW)), "helpfile = %s\n", wine_dbgstr_w(helpfile));
+
+    SysFreeString(helpfile);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 1000, NULL, 1);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 1000, names1, 1);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 0, names1, 2);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 0, names2, 1);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 0, names1, 1);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetDocumentation(interface1, 0, &name, NULL, NULL, NULL);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(!memcmp(name, func1W, sizeof(func1W)), "name = %s\n", wine_dbgstr_w(name));
+
+    SysFreeString(name);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 3, names2, 3);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetFuncAndParamNames(createti, 3, names1, 3);
+    ok(hres == TYPE_E_AMBIGUOUSNAME, "got %08x\n", hres);
+
+    ICreateTypeInfo_Release(createti);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, interface1W, TKIND_INTERFACE, &createti);
+    ok(hres == TYPE_E_NAMECONFLICT, "got %08x\n", hres);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, interface2W, TKIND_INTERFACE, &createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_QueryInterface(createti, &IID_ITypeInfo, (void**)&interface2);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(interface2, 0, &hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, interface1, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetRefTypeInfo(interface2, 0, &ti);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(ti == interface1, "Received and added interfaces are different\n");
+
+    ITypeInfo_Release(ti);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 0, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(interface2, 0, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == 2, "hreftype = %d\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(interface2, -1, &hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetImplTypeFlags(createti, 0, IMPLTYPEFLAG_FDEFAULT);
+    ok(hres == TYPE_E_BADMODULEKIND, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetImplTypeFlags(interface2, 0, &impltypeflags);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(impltypeflags == 0, "impltypeflags = %x\n", impltypeflags);
+
+    hres = ITypeInfo_GetImplTypeFlags(interface2, 1, &impltypeflags);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    funcdesc.oVft = 0xaaac;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+    funcdesc.oVft = 0xaaa8;
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+    funcdesc.oVft = 0;
+
+    ICreateTypeInfo_Release(createti);
+
+    VariantInit(&cust_data);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, interface3W, TKIND_INTERFACE, &createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_QueryInterface(createti, &IID_ICreateTypeInfo2, (void**)&createti2);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo2_QueryInterface(createti2, &IID_ITypeInfo2, (void**)&ti2);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo2_GetCustData(ti2, NULL, NULL);
+    todo_wine
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ITypeInfo2_GetCustData(ti2, &custguid, NULL);
+    todo_wine
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ITypeInfo2_GetCustData(ti2, &custguid, &cust_data);
+    todo_wine
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo2_SetCustData(createti2, NULL, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo2_SetCustData(createti2, &custguid, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo2_SetCustData(createti2, &custguid, &cust_data);
+    ok(hres == DISP_E_BADVARTYPE, "got %08x\n", hres);
+
+    V_VT(&cust_data) = VT_UI4;
+    V_I4(&cust_data) = 0xdeadbeef;
+
+    hres = ICreateTypeInfo2_SetCustData(createti2, &custguid, &cust_data);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    V_I4(&cust_data) = 0;
+    V_VT(&cust_data) = VT_EMPTY;
+
+    hres = ITypeInfo2_GetCustData(ti2, &custguid, &cust_data);
+    todo_wine
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    todo_wine
+    ok(V_VT(&cust_data) == VT_UI4, "got %d\n", V_VT(&cust_data));
+    todo_wine
+    ok(V_I4(&cust_data) == 0xdeadbeef, "got 0x%08x\n", V_I4(&cust_data));
+
+    V_VT(&cust_data) = VT_UI4;
+    V_I4(&cust_data) = 12345678;
+
+    hres = ICreateTypeInfo2_SetCustData(createti2, &custguid, &cust_data);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    V_I4(&cust_data) = 0;
+    V_VT(&cust_data) = VT_EMPTY;
+
+    hres = ITypeInfo2_GetCustData(ti2, &custguid, &cust_data);
+    todo_wine
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    todo_wine
+    ok(V_VT(&cust_data) == VT_UI4, "got %d\n", V_VT(&cust_data));
+    todo_wine
+    ok(V_I4(&cust_data) == 12345678, "got 0x%08x\n", V_I4(&cust_data));
+
+    ITypeInfo2_Release(ti2);
+    ICreateTypeInfo2_Release(createti2);
+    ICreateTypeInfo_Release(createti);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, coclassW, TKIND_COCLASS, &createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, interface1, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 0, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 0, hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, unknown, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 1, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 1, hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 2, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetImplTypeFlags(createti, 0, IMPLTYPEFLAG_FDEFAULT);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetImplTypeFlags(createti, 1, IMPLTYPEFLAG_FRESTRICTED);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_QueryInterface(createti, &IID_ITypeInfo, (void**)&ti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetImplTypeFlags(ti, 0, NULL);
+    ok(hres == E_INVALIDARG, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetImplTypeFlags(ti, 0, &impltypeflags);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(impltypeflags == IMPLTYPEFLAG_FDEFAULT, "impltypeflags = %x\n", impltypeflags);
+
+    hres = ITypeInfo_GetImplTypeFlags(ti, 1, &impltypeflags);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(impltypeflags == IMPLTYPEFLAG_FRESTRICTED, "impltypeflags = %x\n", impltypeflags);
+
+    hres = ITypeInfo_GetImplTypeFlags(ti, 2, &impltypeflags);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(impltypeflags == 0, "impltypeflags = %x\n", impltypeflags);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(ti, 0, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == 0, "hreftype = %d\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(ti, 1, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == 1, "hreftype = %d\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(ti, 2, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == 1, "hreftype = %d\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(ti, -1, &hreftype);
+    ok(hres == TYPE_E_ELEMENTNOTFOUND, "got %08x\n", hres);
+
+    ITypeInfo_Release(ti);
+
+    ICreateTypeInfo_Release(createti);
+
+    hres = ICreateTypeLib_CreateTypeInfo(createtl, dualW, TKIND_INTERFACE, &createti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_SetTypeFlags(createti, TYPEFLAG_FDUAL);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddFuncDesc(createti, 0, &funcdesc);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddRefTypeInfo(createti, dispatch, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_AddImplType(createti, 0, hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ICreateTypeInfo_QueryInterface(createti, &IID_ITypeInfo, (void**)&dual);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetTypeAttr(dual, &typeattr);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(typeattr->cbSizeInstance == 4, "cbSizeInstance = %d\n", typeattr->cbSizeInstance);
+    ok(typeattr->typekind == 3, "typekind = %d\n", typeattr->typekind);
+    ok(typeattr->cFuncs == 1, "cFuncs = %d\n", typeattr->cFuncs);
+    ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
+    ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
+    ok(typeattr->cbSizeVft == 32 || broken(typeattr->cbSizeVft == 7 * sizeof(void *) + 4), /* xp64 */
+       "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
+    ok(typeattr->wTypeFlags == (TYPEFLAG_FDISPATCHABLE|TYPEFLAG_FDUAL), "wTypeFlags = %d\n", typeattr->wTypeFlags);
+    ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
+    ok(typeattr->wMinorVerNum == 0, "wMinorVerNum = %d\n", typeattr->wMinorVerNum);
+
+    ITypeInfo_ReleaseTypeAttr(dual, typeattr);
+
+    hres = ITypeInfo_GetRefTypeOfImplType(dual, -1, &hreftype);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(hreftype == -2, "got %08x\n", hreftype);
+
+    hres = ITypeInfo_GetRefTypeInfo(dual, -2, &ti);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    hres = ITypeInfo_GetTypeAttr(ti, &typeattr);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(typeattr->cbSizeInstance == 4, "cbSizeInstance = %d\n", typeattr->cbSizeInstance);
+    ok(typeattr->typekind == 4, "typekind = %d\n", typeattr->typekind);
+    ok(typeattr->cFuncs == 8, "cFuncs = %d\n", typeattr->cFuncs);
+    ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
+    ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
+    ok(typeattr->cbSizeVft == 7 * sizeof(void *), "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
+    ok(typeattr->wTypeFlags == (TYPEFLAG_FDISPATCHABLE|TYPEFLAG_FDUAL), "wTypeFlags = %d\n", typeattr->wTypeFlags);
+    ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
+    ok(typeattr->wMinorVerNum == 0, "wMinorVerNum = %d\n", typeattr->wMinorVerNum);
+
+    ITypeInfo_ReleaseTypeAttr(ti, typeattr);
+
+    ITypeInfo_Release(ti);
+
+    ICreateTypeInfo_Release(createti);
+
+    hres = ITypeInfo_GetTypeAttr(interface1, &typeattr);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(typeattr->cbSizeInstance == 4, "cbSizeInstance = %d\n", typeattr->cbSizeInstance);
+    ok(typeattr->typekind == 3, "typekind = %d\n", typeattr->typekind);
+    ok(typeattr->cFuncs == 11, "cFuncs = %d\n", typeattr->cFuncs);
+    ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
+    ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
+    ok(typeattr->cbSizeVft == 56 || broken(typeattr->cbSizeVft == 3 * sizeof(void *) + 44), /* xp64 */
+       "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
+    ok(typeattr->wTypeFlags == 0, "wTypeFlags = %d\n", typeattr->wTypeFlags);
+    ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
+    ok(typeattr->wMinorVerNum == 0, "wMinorVerNum = %d\n", typeattr->wMinorVerNum);
+
+    ITypeInfo_ReleaseTypeAttr(interface1, typeattr);
+
+    hres = ITypeInfo_GetTypeAttr(interface2, &typeattr);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(typeattr->cbSizeInstance == 4, "cbSizeInstance = %d\n", typeattr->cbSizeInstance);
+    ok(typeattr->typekind == 3, "typekind = %d\n", typeattr->typekind);
+    ok(typeattr->cFuncs == 2, "cFuncs = %d\n", typeattr->cFuncs);
+    ok(typeattr->cVars == 0, "cVars = %d\n", typeattr->cVars);
+    ok(typeattr->cImplTypes == 1, "cImplTypes = %d\n", typeattr->cImplTypes);
+    ok(typeattr->cbSizeVft == 43696, "cbSizeVft = %d\n", typeattr->cbSizeVft);
+    ok(typeattr->cbAlignment == 4, "cbAlignment = %d\n", typeattr->cbAlignment);
+    ok(typeattr->wTypeFlags == 0, "wTypeFlags = %d\n", typeattr->wTypeFlags);
+    ok(typeattr->wMajorVerNum == 0, "wMajorVerNum = %d\n", typeattr->wMajorVerNum);
+    ok(typeattr->wMinorVerNum == 0, "wMinorVerNum = %d\n", typeattr->wMinorVerNum);
+
+    ITypeInfo_ReleaseTypeAttr(interface2, typeattr);
+
+    hres = ICreateTypeLib2_SaveAllChanges(createtl);
+    ok(hres == S_OK, "got %08x\n", hres);
+
+    ok(ITypeInfo_Release(interface2)==0, "Object should be freed\n");
+    ok(ITypeInfo_Release(interface1)==0, "Object should be freed\n");
+    ok(ITypeInfo_Release(dual)==0, "Object should be freed\n");
+    ok(ICreateTypeLib2_Release(createtl)==0, "Object should be freed\n");
+
+    ok(ITypeInfo_Release(dispatch)==0, "Object should be freed\n");
+    ok(ITypeInfo_Release(unknown)==0, "Object should be freed\n");
+    ok(ITypeLib_Release(stdole)==0, "Object should be freed\n");
+
+    hres = LoadTypeLibEx(filenameW, REGKIND_NONE, &tl);
+    ok(hres == S_OK, "got %08x\n", hres);
+    ok(ITypeLib_Release(tl)==0, "Object should be freed\n");
+
+    DeleteFileA(filename);
 }
 
 #if 0       /* use this to generate more tests */
@@ -1357,7 +2020,7 @@ static void test_dump_typelib(const char *name)
 
 #endif
 
-static const char *create_test_typelib(void)
+static const char *create_test_typelib(int res_no)
 {
     static char filename[MAX_PATH];
     HANDLE file;
@@ -1369,7 +2032,7 @@ static const char *create_test_typelib(void)
     file = CreateFile( filename, GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, 0 );
     ok( file != INVALID_HANDLE_VALUE, "file creation failed\n" );
     if (file == INVALID_HANDLE_VALUE) return NULL;
-    res = FindResource( GetModuleHandle(0), MAKEINTRESOURCE(2), "TYPELIB" );
+    res = FindResource( GetModuleHandle(0), MAKEINTRESOURCE(res_no), "TYPELIB" );
     ok( res != 0, "couldn't find resource\n" );
     ptr = LockResource( LoadResource( GetModuleHandle(0), res ));
     WriteFile( file, ptr, SizeofResource( GetModuleHandle(0), res ), &written, NULL );
@@ -1430,6 +2093,113 @@ static void test_create_typelibs(void)
     test_create_typelib_lcid(0x407);
 }
 
+
+static void test_register_typelib(void)
+{
+    HRESULT hr;
+    WCHAR filename[MAX_PATH];
+    const char *filenameA;
+    ITypeLib *typelib;
+    WCHAR uuidW[40];
+    char key_name[MAX_PATH], uuid[40];
+    LONG ret, expect_ret;
+    UINT count, i;
+    HKEY hkey;
+    struct
+    {
+        TYPEKIND kind;
+        WORD flags;
+    } attrs[11] =
+    {
+        { TKIND_INTERFACE, 0 },
+        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE },
+        { TKIND_INTERFACE, TYPEFLAG_FOLEAUTOMATION },
+        { TKIND_INTERFACE, TYPEFLAG_FDISPATCHABLE | TYPEFLAG_FOLEAUTOMATION },
+        { TKIND_DISPATCH,  0 /* TYPEFLAG_FDUAL - widl clears this flag for non-IDispatch derived interfaces */ },
+        { TKIND_DISPATCH,  0 /* TYPEFLAG_FDUAL - widl clears this flag for non-IDispatch derived interfaces */ },
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE | TYPEFLAG_FDUAL },
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE | TYPEFLAG_FDUAL },
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE },
+        { TKIND_DISPATCH,  TYPEFLAG_FDISPATCHABLE }
+    };
+
+    filenameA = create_test_typelib(3);
+    MultiByteToWideChar(CP_ACP, 0, filenameA, -1, filename, MAX_PATH);
+
+    hr = LoadTypeLibEx(filename, REGKIND_NONE, &typelib);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    hr = RegisterTypeLib(typelib, filename, NULL);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    count = ITypeLib_GetTypeInfoCount(typelib);
+    ok(count == 11, "got %d\n", count);
+
+    for(i = 0; i < count; i++)
+    {
+        ITypeInfo *typeinfo;
+        TYPEATTR *attr;
+
+        hr = ITypeLib_GetTypeInfo(typelib, i, &typeinfo);
+        ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+        hr = ITypeInfo_GetTypeAttr(typeinfo, &attr);
+        ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+        ok(attr->typekind == attrs[i].kind, "%d: got kind %d\n", i, attr->typekind);
+        ok(attr->wTypeFlags == attrs[i].flags, "%d: got flags %04x\n", i, attr->wTypeFlags);
+
+        if(attr->typekind == TKIND_DISPATCH && (attr->wTypeFlags & TYPEFLAG_FDUAL))
+        {
+            HREFTYPE reftype;
+            ITypeInfo *dual_info;
+            TYPEATTR *dual_attr;
+
+            hr = ITypeInfo_GetRefTypeOfImplType(typeinfo, -1, &reftype);
+            ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+            hr = ITypeInfo_GetRefTypeInfo(typeinfo, reftype, &dual_info);
+            ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+            hr = ITypeInfo_GetTypeAttr(dual_info, &dual_attr);
+            ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+            ok(dual_attr->typekind == TKIND_INTERFACE, "%d: got kind %d\n", i, dual_attr->typekind);
+            ok(dual_attr->wTypeFlags == (TYPEFLAG_FDISPATCHABLE | TYPEFLAG_FOLEAUTOMATION | TYPEFLAG_FDUAL), "%d: got flags %04x\n", i, dual_attr->wTypeFlags);
+
+            ITypeInfo_ReleaseTypeAttr(dual_info, dual_attr);
+            ITypeInfo_Release(dual_info);
+
+        }
+
+        StringFromGUID2(&attr->guid, uuidW, sizeof(uuidW) / sizeof(uuidW[0]));
+        WideCharToMultiByte(CP_ACP, 0, uuidW, -1, uuid, sizeof(uuid), NULL, NULL);
+        sprintf(key_name, "Interface\\%s", uuid);
+
+        /* All dispinterfaces will be registered (this includes dual interfaces) as well
+           as oleautomation interfaces */
+        if((attr->typekind == TKIND_INTERFACE && (attr->wTypeFlags & TYPEFLAG_FOLEAUTOMATION)) ||
+           attr->typekind == TKIND_DISPATCH)
+            expect_ret = ERROR_SUCCESS;
+        else
+            expect_ret = ERROR_FILE_NOT_FOUND;
+
+        ret = RegOpenKeyExA(HKEY_CLASSES_ROOT, key_name, 0, KEY_READ, &hkey);
+        ok(ret == expect_ret, "%d: got %d\n", i, ret);
+        if(ret == ERROR_SUCCESS) RegCloseKey(hkey);
+
+        ITypeInfo_ReleaseTypeAttr(typeinfo, attr);
+        ITypeInfo_Release(typeinfo);
+    }
+
+    hr = UnRegisterTypeLib(&LIBID_register_test, 1, 0, LOCALE_NEUTRAL, sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);
+    ok(SUCCEEDED(hr), "got %08x\n", hr);
+
+    ITypeLib_Release(typelib);
+    DeleteFileA( filenameA );
+}
+
 START_TEST(typelib)
 {
     const char *filename;
@@ -1440,13 +2210,15 @@ START_TEST(typelib)
     test_TypeInfo();
     test_QueryPathOfRegTypeLib();
     test_inheritance();
+    test_CreateTypeLib();
 
-    if ((filename = create_test_typelib()))
+    if ((filename = create_test_typelib(2)))
     {
         test_dump_typelib( filename );
         DeleteFile( filename );
     }
 
+    test_register_typelib();
     test_create_typelibs();
 
 }

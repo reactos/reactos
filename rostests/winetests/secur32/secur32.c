@@ -48,7 +48,7 @@ static void testGetComputerObjectNameA(void)
     char name[256];
     ULONG size;
     BOOLEAN rc;
-    int i;
+    UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
         size = sizeof(name);
@@ -73,7 +73,7 @@ static void testGetComputerObjectNameW(void)
     WCHAR nameW[256];
     ULONG size;
     BOOLEAN rc;
-    int i;
+    UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
         size = sizeof(nameW)/sizeof(nameW[0]);
@@ -101,7 +101,7 @@ static void testGetUserNameExA(void)
     char name[256];
     ULONG size;
     BOOLEAN rc;
-    int i;
+    UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
         size = sizeof(name);
@@ -148,7 +148,7 @@ static void testGetUserNameExW(void)
     WCHAR nameW[256];
     ULONG size;
     BOOLEAN rc;
-    int i;
+    UINT i;
 
     for (i = 0; i < (sizeof(formats) / sizeof(formats[0])); i++) {
         size = sizeof(nameW);

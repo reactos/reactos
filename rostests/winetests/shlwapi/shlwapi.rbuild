@@ -15,6 +15,7 @@
 	<file>string.c</file>
 	<file>url.c</file>
 	<file>testlist.c</file>
+	<file>thread.c</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>shlwapi</library>

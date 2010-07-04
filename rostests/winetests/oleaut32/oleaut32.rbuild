@@ -16,6 +16,7 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<library>tmarshal_interface</library>
+	<file>dispatch.c</file>
 	<file>olefont.c</file>
 	<file>olepicture.c</file>
 	<file>safearray.c</file>
@@ -30,6 +31,8 @@
 	<dependency>tmarshal_header</dependency>
 	<dependency>tmarshal</dependency>
 	<dependency>test_tlb</dependency>
+	<dependency>test_reg_header</dependency>
+	<dependency>test_reg</dependency>
 </module>
 <module name="tmarshal_header" type="idlheader">
 	<dependency>stdole2</dependency>
@@ -38,6 +41,14 @@
 <module name="tmarshal_interface" type="idlinterface">
 	<dependency>stdole2</dependency>
 	<file>tmarshal.idl</file>
+</module>
+<module name="test_reg_header" type="idlheader" allowwarnings="true">
+	<dependency>stdole2</dependency>
+	<file>test_reg.idl</file>
+</module>
+<module name="test_reg" type="embeddedtypelib" allowwarnings="true">
+	<dependency>stdole2</dependency>
+	<file>test_reg.idl</file>
 </module>
 <module name="test_tlb" type="embeddedtypelib" allowwarnings="true">
 	<dependency>stdole2</dependency>

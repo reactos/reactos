@@ -29,6 +29,9 @@
 #include "urlmon.h"
 #include "wininet.h"
 
+static HRESULT (WINAPI *pCoInternetGetSession)(DWORD, IInternetSession **, DWORD);
+static HRESULT (WINAPI *pReleaseBindInfo)(BINDINFO*);
+
 #define DEFINE_EXPECT(func) \
     static BOOL expect_ ## func = FALSE, called_ ## func = FALSE
 
@@ -1318,7 +1321,7 @@ static HRESULT WINAPI ProtocolEmul_Start(IInternetProtocol *iface, LPCWSTR szUrl
     ok(cbindf == (bindf|BINDF_FROMURLMON), "bindf = %x, expected %x\n",
        cbindf, (bindf|BINDF_FROMURLMON));
     ok(!memcmp(&exp_bindinfo, &bindinfo, sizeof(bindinfo)), "unexpected bindinfo\n");
-    ReleaseBindInfo(&bindinfo);
+    pReleaseBindInfo(&bindinfo);
 
     SET_EXPECT(ReportProgress_SENDINGREQUEST);
     hres = IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, emptyW);
@@ -2241,6 +2244,7 @@ static void test_file_protocol(void) {
     static const WCHAR wszFile[] = {'f','i','l','e',':',0};
     static const WCHAR wszFile2[] = {'f','i','l','e',':','/','/',0};
     static const WCHAR wszFile3[] = {'f','i','l','e',':','/','/','/',0};
+    static const WCHAR wszFile4[] = {'f','i','l','e',':','\\','\\',0};
     static const char html_doc[] = "<HTML></HTML>";
 
     trace("Testing file protocol...\n");
@@ -2304,6 +2308,20 @@ static void test_file_protocol(void) {
     bindf = 0;
     test_file_protocol_url(buf);
     bindf = BINDF_FROMURLMON;
+    test_file_protocol_url(buf);
+
+    memcpy(buf, wszFile4, sizeof(wszFile4));
+    len = GetCurrentDirectoryW(sizeof(file_name_buf)/sizeof(WCHAR), file_name_buf);
+    file_name_buf[len++] = '\\';
+    memcpy(file_name_buf+len, wszIndexHtml, sizeof(wszIndexHtml));
+    lstrcpyW(buf+sizeof(wszFile4)/sizeof(WCHAR)-1, file_name_buf);
+    file_name = file_name_buf;
+    bindf = 0;
+    test_file_protocol_url(buf);
+    bindf = BINDF_FROMURLMON;
+    test_file_protocol_url(buf);
+
+    buf[sizeof(wszFile4)/sizeof(WCHAR)] = '|';
     test_file_protocol_url(buf);
 
     DeleteFileW(wszIndexHtml);
@@ -2778,7 +2796,7 @@ static void test_CreateBinding(void)
     trace("Testing CreateBinding...\n");
     init_test(BIND_TEST, TEST_BINDING);
 
-    hres = CoInternetGetSession(0, &session, 0);
+    hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
 
     hres = IInternetSession_RegisterNameSpace(session, &ClassFactory, &IID_NULL, wsz_test, 0, NULL, 0);
@@ -2917,7 +2935,7 @@ static void test_binding(int prot, DWORD grf_pi, DWORD test_flags)
 
     init_test(prot, test_flags|TEST_BINDING);
 
-    hres = CoInternetGetSession(0, &session, 0);
+    hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
 
     if(test_flags & TEST_EMULATEPROT) {
@@ -3027,7 +3045,8 @@ static void register_filter(void)
 
     static const WCHAR gzipW[] = {'g','z','i','p',0};
 
-    CoInternetGetSession(0, &session, 0);
+    hres = pCoInternetGetSession(0, &session, 0);
+    ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
 
     hres = IInternetSession_RegisterMimeFilter(session, &mimefilter_cf, &IID_IInternetProtocol, gzipW);
     ok(hres == S_OK, "RegisterMimeFilter failed: %08x\n", hres);
@@ -3037,6 +3056,17 @@ static void register_filter(void)
 
 START_TEST(protocol)
 {
+    HMODULE hurlmon;
+
+    hurlmon = GetModuleHandle("urlmon.dll");
+    pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
+    pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");
+
+    if (!pCoInternetGetSession || !pReleaseBindInfo) {
+        win_skip("Various needed functions not present in IE 4.0\n");
+        return;
+    }
+
     OleInitialize(NULL);
 
     event_complete = CreateEvent(NULL, FALSE, FALSE, NULL);

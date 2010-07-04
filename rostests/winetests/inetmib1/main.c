@@ -47,6 +47,8 @@ static void testInit(void)
     ok(ret, "SnmpExtensionInit failed: %d\n", GetLastError());
     ok(!strcmp("1.3.6.1.2.1.1", SnmpUtilOidToA(&oid)),
         "Expected 1.3.6.1.2.1.1, got %s\n", SnmpUtilOidToA(&oid));
+
+    SnmpUtilOidFree(&oid);
 }
 
 static void testQuery(void)
@@ -88,7 +90,7 @@ static void testQuery(void)
     error = 0xdeadbeef;
     index = 0xdeadbeef;
     ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
-    ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+    ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR,
         "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
     ok(index == 0, "expected index 0, got %d\n", index);
@@ -105,7 +107,7 @@ static void testQuery(void)
     error = 0xdeadbeef;
     index = 0xdeadbeef;
     ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
-    ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+    ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR ||
         error == ERROR_FILE_NOT_FOUND /* Win9x */,
         "expected SNMP_ERRORSTATUS_NOERROR or ERROR_FILE_NOT_FOUND, got %d\n",
@@ -125,7 +127,7 @@ static void testQuery(void)
     error = 0xdeadbeef;
     index = 0xdeadbeef;
     ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
-    ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+    ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOSUCHNAME,
         "expected SNMP_ERRORSTATUS_NOSUCHNAME, got %d\n", error);
     /* The index is 1-based rather than 0-based */
@@ -147,7 +149,7 @@ static void testQuery(void)
     error = 0xdeadbeef;
     index = 0xdeadbeef;
     ret = pQuery(SNMP_PDU_GET, &list, &error, &index);
-    ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+    ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOSUCHNAME,
         "expected SNMP_ERRORSTATUS_NOSUCHNAME, got %d\n", error);
     ok(index == 1, "expected index 1, got %d\n", index);
@@ -169,7 +171,7 @@ static void testQuery(void)
         error = 0xdeadbeef;
         index = 0xdeadbeef;
         ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
-        ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+        ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
         ok(index == 0, "expected index 0, got %d\n", index);
@@ -187,8 +189,8 @@ static void testQuery(void)
             vars[2].name.idLength))
             moreData = FALSE;
         else if (!SnmpUtilOidCmp(&vars[0].name, &vars2[0].name) ||
-         !SnmpUtilOidCmp(&vars[0].name, &vars2[0].name) ||
-         !SnmpUtilOidCmp(&vars[0].name, &vars2[0].name))
+         !SnmpUtilOidCmp(&vars[1].name, &vars2[1].name) ||
+         !SnmpUtilOidCmp(&vars[2].name, &vars2[2].name))
         {
             /* If the OID isn't modified, the function isn't implemented on this
              * platform, skip the remaining tests.
@@ -252,7 +254,7 @@ static void testQuery(void)
     moreData = TRUE;
     noChange = FALSE;
     ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
-    ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+    ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
     ok(error == SNMP_ERRORSTATUS_NOERROR,
         "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
     ok(index == 0, "expected index 0, got %d\n", index);
@@ -274,7 +276,7 @@ static void testQuery(void)
     moreData = TRUE;
     do {
         ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
-        ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+        ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
         ok(index == 0, "expected index 0, got %d\n", index);
@@ -340,7 +342,7 @@ static void testQuery(void)
     noChange = FALSE;
     do {
         ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
-        ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+        ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         ok(error == SNMP_ERRORSTATUS_NOERROR,
             "expected SNMP_ERRORSTATUS_NOERROR, got %d\n", error);
         ok(index == 0, "expected index 0, got %d\n", index);
@@ -406,7 +408,7 @@ static void testQuery(void)
     noChange = FALSE;
     do {
         ret = pQuery(SNMP_PDU_GETNEXT, &list, &error, &index);
-        ok(ret, "SnmpExtensionQuery failed: %d\n", GetLastError());
+        ok(ret, "SnmpExtensionQuery failed: %d, %d\n", error, index);
         /* FIXME:  error and index aren't checked here because the UDP table is
          * the last OID currently supported by Wine, so the last GetNext fails.
          * todo_wine is also not effective because it will succeed for all but

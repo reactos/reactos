@@ -3246,7 +3246,8 @@ static BOOL get_system_dirs(void)
         return FALSE;
 
     size = MAX_PATH;
-    if (RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR, &size)) {
+    if (RegQueryValueExA(hkey, "ProgramFilesDir (x86)", 0, &type, (LPBYTE)PROG_FILES_DIR, &size) &&
+        RegQueryValueExA(hkey, "ProgramFilesDir", 0, &type, (LPBYTE)PROG_FILES_DIR, &size)) {
         RegCloseKey(hkey);
         return FALSE;
     }

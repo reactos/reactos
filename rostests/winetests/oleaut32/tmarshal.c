@@ -521,9 +521,18 @@ static HRESULT WINAPI Widget_StructArgs(
     MYSTRUCT *byptr,
     MYSTRUCT arr[5])
 {
-    ok(memcmp(&byval, &MYSTRUCT_BYVAL, sizeof(MYSTRUCT))==0, "Struct parameter passed by value corrupted\n");
-    ok(memcmp(byptr,  &MYSTRUCT_BYPTR, sizeof(MYSTRUCT))==0, "Struct parameter passed by pointer corrupted\n");
-    ok(memcmp(arr,    MYSTRUCT_ARRAY,  sizeof(MYSTRUCT_ARRAY))==0, "Array of structs corrupted\n");
+    int i, diff = 0;
+    ok(byval.field1 == MYSTRUCT_BYVAL.field1 &&
+       byval.field2 == MYSTRUCT_BYVAL.field2,
+       "Struct parameter passed by value corrupted\n");
+    ok(byptr->field1 == MYSTRUCT_BYPTR.field1 &&
+       byptr->field2 == MYSTRUCT_BYPTR.field2,
+       "Struct parameter passed by pointer corrupted\n");
+    for (i = 0; i < 5; i++)
+        if (arr[i].field1 != MYSTRUCT_ARRAY[i].field1 ||
+            arr[i].field2 != MYSTRUCT_ARRAY[i].field2)
+            diff++;
+    ok(diff == 0, "Array of structs corrupted\n");
     return S_OK;
 }
 
@@ -578,6 +587,31 @@ static HRESULT WINAPI Widget_get_prop_uint(
     return S_OK;
 }
 
+static HRESULT WINAPI Widget_ByRefUInt(
+    IWidget* iface, UINT *i)
+{
+    *i = 42;
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_put_prop_opt_arg(
+    IWidget* iface, INT opt, INT i)
+{
+    trace("put_prop_opt_arg(%08x, %08x)\n", opt, i);
+    todo_wine ok(opt == 0, "got opt=%08x\n", opt);
+    ok(i == 0xcafe, "got i=%08x\n", i);
+    return S_OK;
+}
+
+static HRESULT WINAPI Widget_put_prop_req_arg(
+    IWidget* iface, INT req, INT i)
+{
+    trace("put_prop_req_arg(%08x, %08x)\n", req, i);
+    ok(req == 0x5678, "got req=%08x\n", req);
+    ok(i == 0x1234, "got i=%08x\n", i);
+    return S_OK;
+}
+
 static const struct IWidgetVtbl Widget_VTable =
 {
     Widget_QueryInterface,
@@ -609,7 +643,10 @@ static const struct IWidgetVtbl Widget_VTable =
     Widget_put_prop_with_lcid,
     Widget_get_prop_with_lcid,
     Widget_get_prop_int,
-    Widget_get_prop_uint
+    Widget_get_prop_uint,
+    Widget_ByRefUInt,
+    Widget_put_prop_opt_arg,
+    Widget_put_prop_req_arg,
 };
 
 static HRESULT WINAPI StaticWidget_QueryInterface(IStaticWidget *iface, REFIID riid, void **ppvObject)
@@ -878,12 +915,18 @@ static BSTR WINAPI NonOleAutomation_BstrRet(INonOleAutomation *iface)
     return SysAllocString(wszTestString);
 }
 
+static HRESULT WINAPI NonOleAutomation_Error(INonOleAutomation *iface)
+{
+    return E_NOTIMPL;
+}
+
 static INonOleAutomationVtbl NonOleAutomation_VTable =
 {
     NonOleAutomation_QueryInterface,
     NonOleAutomation_AddRef,
     NonOleAutomation_Release,
     NonOleAutomation_BstrRet,
+    NonOleAutomation_Error
 };
 
 static INonOleAutomation NonOleAutomation = { &NonOleAutomation_VTable };
@@ -898,6 +941,7 @@ static ITypeInfo *NonOleAutomation_GetTypeInfo(void)
         ITypeInfo *pTypeInfo;
         hr = ITypeLib_GetTypeInfoOfGuid(pTypeLib, &IID_INonOleAutomation, &pTypeInfo);
         ok_ole_success(hr, ITypeLib_GetTypeInfoOfGuid);
+        ITypeLib_Release(pTypeLib);
         return pTypeInfo;
     }
     return NULL;
@@ -926,6 +970,7 @@ static void test_typelibmarshal(void)
     ITypeInfo *pTypeInfo;
     MYSTRUCT mystruct;
     MYSTRUCT mystructArray[5];
+    UINT uval;
 
     ok(pKEW != NULL, "Widget creation failed\n");
 
@@ -1069,9 +1114,7 @@ static void test_typelibmarshal(void)
     mystruct = MYSTRUCT_BYPTR;
     memcpy(mystructArray, MYSTRUCT_ARRAY, sizeof(mystructArray));
     hr = IWidget_StructArgs(pWidget, MYSTRUCT_BYVAL, &mystruct, mystructArray);
-    todo_wine {
     ok_ole_success(hr, IWidget_StructArgs);
-    }
 
     /* call Clone */
     dispparams.cNamedArgs = 0;
@@ -1222,6 +1265,19 @@ static void test_typelibmarshal(void)
     ok(V_BSTR(&varresult) != NULL, "V_BSTR(&varresult) should not be NULL\n");
 
     VariantClear(&varresult);
+
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 0;
+    dispparams.rgdispidNamedArgs = NULL;
+    dispparams.rgvarg = NULL;
+    hr = ITypeInfo_Invoke(pTypeInfo, &NonOleAutomation, DISPID_NOA_ERROR, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok(hr == DISP_E_EXCEPTION, "ITypeInfo_Invoke should have returned DISP_E_EXCEPTION instead of 0x%08x\n", hr);
+    ok(V_VT(&varresult) == VT_EMPTY, "V_VT(&varresult) should be VT_EMPTY instead of %d\n", V_VT(&varresult));
+    ok(excepinfo.wCode == 0x0 && excepinfo.scode == E_NOTIMPL,
+        "EXCEPINFO differs from expected: wCode = 0x%x, scode = 0x%08x\n",
+        excepinfo.wCode, excepinfo.scode);
+    VariantClear(&varresult);
+
     ITypeInfo_Release(pTypeInfo);
 
     /* tests call put_Name without named arg */
@@ -1244,10 +1300,8 @@ static void test_typelibmarshal(void)
     dispparams.cArgs = 1;
     dispparams.rgvarg = vararg;
     VariantInit(&varresult);
-#if 0 /* NULL unknown not currently marshaled correctly */
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_NAME, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
     ok(hr == DISP_E_TYPEMISMATCH, "IDispatch_Invoke should have returned DISP_E_TYPEMISMATCH instead of 0x%08x\n", hr);
-#endif
     VariantClear(&varresult);
 
     /* tests bad param type */
@@ -1299,7 +1353,6 @@ static void test_typelibmarshal(void)
     dispparams.rgvarg = vararg;
     VariantInit(&varresult);
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_WITH_LCID, &IID_NULL, 0x40c, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
-todo_wine
     ok_ole_success(hr, ITypeInfo_Invoke);
     VariantClear(&varresult);
 
@@ -1309,12 +1362,9 @@ todo_wine
     dispparams.rgvarg = NULL;
     dispparams.rgdispidNamedArgs = NULL;
     hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_WITH_LCID, &IID_NULL, 0x40c, DISPATCH_PROPERTYGET, &dispparams, &varresult, &excepinfo, NULL);
-todo_wine
-{
     ok_ole_success(hr, ITypeInfo_Invoke);
     ok(V_VT(&varresult) == VT_I4, "got %x\n", V_VT(&varresult));
     ok(V_I4(&varresult) == 0x409, "got %x\n", V_I4(&varresult));
-}
     VariantClear(&varresult);
 
     /* test propget of INT value */
@@ -1339,6 +1389,53 @@ todo_wine
     ok(V_UI4(&varresult) == 42, "got %x\n", V_UI4(&varresult));
     VariantClear(&varresult);
 
+    /* test byref marshalling */
+    uval = 666;
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_UI4|VT_BYREF;
+    V_UI4REF(&vararg[0]) = &uval;
+    dispparams.cNamedArgs = 0;
+    dispparams.cArgs = 1;
+    dispparams.rgvarg = vararg;
+    dispparams.rgdispidNamedArgs = NULL;
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_BYREF_UINT, &IID_NULL, LOCALE_NEUTRAL, DISPATCH_METHOD, &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    ok(V_VT(&varresult) == VT_EMPTY, "varresult should be VT_EMPTY\n");
+    ok(V_VT(&vararg[0]) == (VT_UI4|VT_BYREF), "arg VT not unmarshalled correctly: %x\n", V_VT(&vararg[0]));
+    ok(V_UI4REF(&vararg[0]) == &uval, "Byref pointer not preserved: %p/%p\n", &uval, V_UI4REF(&vararg[0]));
+    ok(*V_UI4REF(&vararg[0]) == 42, "Expected 42 to be returned instead of %u\n", *V_UI4REF(&vararg[0]));
+    VariantClear(&varresult);
+    VariantClear(&vararg[0]);
+
+    /* test propput with optional argument. */
+    VariantInit(&vararg[0]);
+    V_VT(&vararg[0]) = VT_I4;
+    V_I4(&vararg[0]) = 0xcafe;
+    dispparams.cNamedArgs = 1;
+    dispparams.rgdispidNamedArgs = &dispidNamed;
+    dispparams.cArgs = 1;
+    dispparams.rgvarg = vararg;
+    VariantInit(&varresult);
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_OPT_ARG, &IID_NULL, 0x40c, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    VariantClear(&varresult);
+
+    /* test propput with required argument. */
+    VariantInit(&vararg[0]);
+    VariantInit(&vararg[1]);
+    V_VT(&vararg[0]) = VT_I4;
+    V_I4(&vararg[0]) = 0x1234;
+    V_VT(&vararg[1]) = VT_I4;
+    V_I4(&vararg[1]) = 0x5678;
+    dispparams.cNamedArgs = 1;
+    dispparams.rgdispidNamedArgs = &dispidNamed;
+    dispparams.cArgs = 2;
+    dispparams.rgvarg = vararg;
+    VariantInit(&varresult);
+    hr = IDispatch_Invoke(pDispatch, DISPID_TM_PROP_REQ_ARG, &IID_NULL, 0x40c, DISPATCH_PROPERTYPUT, &dispparams, &varresult, &excepinfo, NULL);
+    ok_ole_success(hr, ITypeInfo_Invoke);
+    VariantClear(&varresult);
+
     IDispatch_Release(pDispatch);
     IWidget_Release(pWidget);
 
@@ -1359,7 +1456,7 @@ static void test_DispCallFunc(void)
     V_VT(&vararg[0]) = VT_R8;
     V_R8(&vararg[0]) = 3.141;
     V_VT(&vararg[1]) = VT_BSTR;
-    V_BSTR(&vararg[1]) = SysAllocString(szEmpty);
+    V_BSTRREF(&vararg[1]) = CoTaskMemAlloc(sizeof(BSTR));
     V_VT(&vararg[2]) = VT_BSTR;
     V_BSTR(&vararg[2]) = SysAllocString(szEmpty);
     V_VT(&vararg[3]) = VT_VARIANT|VT_BYREF;
@@ -1370,7 +1467,8 @@ static void test_DispCallFunc(void)
     hr = DispCallFunc(pWidget, 9*sizeof(void*), CC_STDCALL, VT_UI4, 4, rgvt, rgpvarg, &varresult);
     ok_ole_success(hr, DispCallFunc);
     VariantClear(&varresult);
-    VariantClear(&vararg[1]);
+    SysFreeString(*V_BSTRREF(&vararg[1]));
+    CoTaskMemFree(V_BSTRREF(&vararg[1]));
     VariantClear(&vararg[2]);
     IWidget_Release(pWidget);
 }
@@ -1403,6 +1501,29 @@ static void test_StaticWidget(void)
     ITypeInfo_Release(type_info);
 }
 
+static void test_libattr(void)
+{
+    ITypeLib *pTypeLib;
+    HRESULT hr;
+    TLIBATTR *pattr;
+
+    hr = LoadRegTypeLib(&LIBID_TestTypelib, 1, 0, LOCALE_NEUTRAL, &pTypeLib);
+    ok_ole_success(hr, LoadRegTypeLib);
+    if (FAILED(hr))
+        return;
+
+    hr = ITypeLib_GetLibAttr(pTypeLib, &pattr);
+    ok_ole_success(hr, GetLibAttr);
+    if (SUCCEEDED(hr))
+    {
+        ok(pattr->lcid == MAKELANGID(LANG_NEUTRAL, SUBLANG_NEUTRAL), "lcid %x\n", pattr->lcid);
+
+        ITypeLib_ReleaseTLibAttr(pTypeLib, pattr);
+    }
+
+    ITypeLib_Release(pTypeLib);
+}
+
 START_TEST(tmarshal)
 {
     HRESULT hr;
@@ -1415,6 +1536,7 @@ START_TEST(tmarshal)
     test_typelibmarshal();
     test_DispCallFunc();
     test_StaticWidget();
+    test_libattr();
 
     hr = UnRegisterTypeLib(&LIBID_TestTypelib, 1, 0, LOCALE_NEUTRAL,
                            sizeof(void*) == 8 ? SYS_WIN64 : SYS_WIN32);

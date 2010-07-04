@@ -200,7 +200,7 @@ static void test_crack_url(const crack_url_test_t *test)
     urlw.dwUrlPathLength = 1;
     urlw.dwExtraInfoLength = 1;
 
-    MultiByteToWideChar(CP_ACP, 0, test->url, -1, buf, sizeof(buf));
+    MultiByteToWideChar(CP_ACP, 0, test->url, -1, buf, sizeof(buf)/sizeof(buf[0]));
     b = InternetCrackUrlW(buf, lstrlenW(buf), 0, &urlw);
     if(!b && GetLastError() == ERROR_CALL_NOT_IMPLEMENTED) {
         win_skip("InternetCrackUrlW is not implemented\n");
@@ -416,19 +416,19 @@ static void InternetCrackUrlW_test(void)
     user[0]=0;
     pwd[0]=0;
     memset(&comp, 0, sizeof comp);
-    comp.dwStructSize = sizeof comp;
+    comp.dwStructSize = sizeof(comp);
     comp.lpszScheme = scheme;
-    comp.dwSchemeLength = sizeof scheme;
+    comp.dwSchemeLength = sizeof(scheme)/sizeof(scheme[0]);
     comp.lpszHostName = host;
-    comp.dwHostNameLength = sizeof host;
+    comp.dwHostNameLength = sizeof(host)/sizeof(host[0]);
     comp.lpszUserName = user;
-    comp.dwUserNameLength = sizeof user;
+    comp.dwUserNameLength = sizeof(user)/sizeof(user[0]);
     comp.lpszPassword = pwd;
-    comp.dwPasswordLength = sizeof pwd;
+    comp.dwPasswordLength = sizeof(pwd)/sizeof(pwd[0]);
     comp.lpszUrlPath = urlpart;
-    comp.dwUrlPathLength = sizeof urlpart;
+    comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
     comp.lpszExtraInfo = extra;
-    comp.dwExtraInfoLength = sizeof extra;
+    comp.dwExtraInfoLength = sizeof(extra)/sizeof(extra[0]);
 
     SetLastError(0xdeadbeef);
     r = InternetCrackUrlW(NULL, 0, 0, &comp );
@@ -471,9 +471,9 @@ static void InternetCrackUrlW_test(void)
     memset(&comp, 0, sizeof comp);
     comp.dwStructSize = sizeof comp;
     comp.lpszHostName = host;
-    comp.dwHostNameLength = sizeof host;
+    comp.dwHostNameLength = sizeof(host)/sizeof(host[0]);
     comp.lpszUrlPath = urlpart;
-    comp.dwUrlPathLength = sizeof urlpart;
+    comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
 
     r = InternetCrackUrlW(url, 0, 0, &comp );
     ok( r, "failed to crack url\n");
@@ -493,11 +493,11 @@ static void InternetCrackUrlW_test(void)
     memset(&comp, 0, sizeof comp);
     comp.dwStructSize = sizeof comp;
     comp.lpszHostName = host;
-    comp.dwHostNameLength = sizeof host;
+    comp.dwHostNameLength = sizeof(host)/sizeof(host[0]);
     comp.lpszUrlPath = urlpart;
-    comp.dwUrlPathLength = sizeof urlpart;
+    comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
     comp.lpszExtraInfo = NULL;
-    comp.dwExtraInfoLength = sizeof extra;
+    comp.dwExtraInfoLength = sizeof(extra)/sizeof(extra[0]);
 
     r = InternetCrackUrlW(url, 0, 0, &comp );
     ok( r, "failed to crack url\n");
@@ -547,17 +547,17 @@ static void InternetCrackUrlW_test(void)
     memset(&comp, 0, sizeof comp);
     comp.dwStructSize = sizeof comp;
     comp.lpszScheme = scheme;
-    comp.dwSchemeLength = sizeof scheme;
+    comp.dwSchemeLength = sizeof(scheme)/sizeof(scheme[0]);
     comp.lpszHostName = host;
-    comp.dwHostNameLength = sizeof host;
+    comp.dwHostNameLength = sizeof(host)/sizeof(host[0]);
     comp.lpszUserName = user;
-    comp.dwUserNameLength = sizeof user;
+    comp.dwUserNameLength = sizeof(user)/sizeof(user[0]);
     comp.lpszPassword = pwd;
-    comp.dwPasswordLength = sizeof pwd;
+    comp.dwPasswordLength = sizeof(pwd)/sizeof(pwd[0]);
     comp.lpszUrlPath = urlpart;
-    comp.dwUrlPathLength = sizeof urlpart;
+    comp.dwUrlPathLength = sizeof(urlpart)/sizeof(urlpart[0]);
     comp.lpszExtraInfo = extra;
-    comp.dwExtraInfoLength = sizeof extra;
+    comp.dwExtraInfoLength = sizeof(extra)/sizeof(extra[0]);
     r = InternetCrackUrlW(url3, 0, 0, &comp );
     ok( r, "InternetCrackUrlW failed unexpectedly\n");
     ok( host[0] == 'x', "host should be x.org\n");

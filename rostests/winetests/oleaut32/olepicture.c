@@ -36,6 +36,7 @@
 #include <winerror.h>
 #include <winnt.h>
 
+#include <urlmon.h>
 #include <wtypes.h>
 #include <olectl.h>
 #include <objidl.h>
@@ -357,6 +358,7 @@ static void test_empty_image(void) {
 	ok (hres == S_OK,"empty picture get handle failed with hres 0x%08x\n", hres);
 	ok (handle == 0, "empty picture get handle did not return 0, but 0x%08x\n", handle);
 	IPicture_Release (pic);
+	IStream_Release (stream);
 }
 
 static void test_empty_image_2(void) {
@@ -395,6 +397,7 @@ static void test_empty_image_2(void) {
 	ok (type == PICTYPE_NONE,"type is %d, but should be PICTYPE_NONE(0)\n", type);
 
 	IPicture_Release (pic);
+	IStream_Release (stream);
 }
 
 static void test_Invoke(void)
@@ -408,16 +411,17 @@ static void test_Invoke(void)
     HGLOBAL hglob;
     void *data;
 
-	hglob = GlobalAlloc (0, sizeof(gifimage));
-	data = GlobalLock(hglob);
-	memcpy(data, gifimage, sizeof(gifimage));
+    hglob = GlobalAlloc (0, sizeof(gifimage));
+    data = GlobalLock(hglob);
+    memcpy(data, gifimage, sizeof(gifimage));
     GlobalUnlock(hglob);
 
-	hr = CreateStreamOnHGlobal (hglob, FALSE, &stream);
+    hr = CreateStreamOnHGlobal (hglob, FALSE, &stream);
     ok_ole_success(hr, "CreateStreamOnHGlobal");
 
-	hr = pOleLoadPicture(stream, sizeof(gifimage), TRUE, &IID_IPictureDisp, (void **)&picdisp);
+    hr = pOleLoadPicture(stream, sizeof(gifimage), TRUE, &IID_IPictureDisp, (void **)&picdisp);
     IStream_Release(stream);
+    GlobalFree(hglob);
     ok_ole_success(hr, "OleLoadPicture");
 
     V_VT(&vararg) = VT_BOOL;
@@ -594,6 +598,9 @@ static void test_Render(void)
     HRESULT hres;
     short type;
     PICTDESC desc;
+    OLE_XSIZE_HIMETRIC pWidth;
+    OLE_YSIZE_HIMETRIC pHeight;
+    COLORREF result, expected;
     HDC hdc = GetDC(0);
 
     /* test IPicture::Render return code on uninitialized picture */
@@ -646,8 +653,39 @@ static void test_Render(void)
     ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
     hres = IPicture_Render(pic, hdc, 0, 0, 0, 0, 0, 0, 10, 10, NULL);
     ole_expect(hres, CTL_E_INVALIDPROPERTYVALUE);
-    IPicture_Release(pic);
 
+    /* Check if target size and position is respected */
+    IPicture_get_Width(pic, &pWidth);
+    IPicture_get_Height(pic, &pHeight);
+
+    SetPixelV(hdc, 0, 0, 0x00F0F0F0);
+    SetPixelV(hdc, 5, 5, 0x00F0F0F0);
+    SetPixelV(hdc, 10, 10, 0x00F0F0F0);
+    expected = GetPixel(hdc, 0, 0);
+
+    hres = IPicture_Render(pic, hdc, 1, 1, 9, 9, 0, 0, pWidth, -pHeight, NULL);
+    ole_expect(hres, S_OK);
+
+    if(hres != S_OK) {
+        IPicture_Release(pic);
+        ReleaseDC(NULL, hdc);
+        return;
+    }
+
+    /* Evaluate the rendered Icon */
+    result = GetPixel(hdc, 0, 0);
+    ok(result == expected,
+       "Color at 0,0 should be unchanged 0x%06X, but was 0x%06X\n", expected, result);
+    result = GetPixel(hdc, 5, 5);
+    ok(result != expected ||
+        broken(result == expected), /* WinNT 4.0 and older may claim they drew */
+                                    /* the icon, even if they didn't. */
+       "Color at 5,5 should have changed, but still was 0x%06X\n", expected);
+    result = GetPixel(hdc, 10, 10);
+    ok(result == expected,
+       "Color at 10,10 should be unchanged 0x%06X, but was 0x%06X\n", expected, result);
+
+    IPicture_Release(pic);
     ReleaseDC(NULL, hdc);
 }
 
@@ -700,6 +738,141 @@ static void test_get_Type(void)
     IPicture_Release(pic);
 }
 
+static void test_OleLoadPicturePath(void)
+{
+    static WCHAR emptyW[] = {0};
+
+    IPicture *pic;
+    HRESULT hres;
+    int i;
+    char temp_path[MAX_PATH];
+    char temp_file[MAX_PATH];
+    WCHAR temp_fileW[MAX_PATH + 5] = {'f','i','l','e',':','/','/','/'};
+    HANDLE file;
+    DWORD size;
+    WCHAR *ptr;
+
+    const struct
+    {
+        LPOLESTR szURLorPath;
+        REFIID riid;
+        IPicture **pic;
+    } invalid_parameters[] =
+    {
+        {NULL,  NULL,          NULL},
+        {NULL,  NULL,          &pic},
+        {NULL,  &IID_IPicture, NULL},
+        {NULL,  &IID_IPicture, &pic},
+        {emptyW, NULL,          NULL},
+        {emptyW, &IID_IPicture, NULL},
+    };
+
+    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    {
+        pic = (IPicture *)0xdeadbeef;
+        hres = OleLoadPicturePath(invalid_parameters[i].szURLorPath, NULL, 0, 0,
+                                  invalid_parameters[i].riid,
+                                  (void **)invalid_parameters[i].pic);
+        ok(hres == E_INVALIDARG,
+           "[%d] Expected OleLoadPicturePath to return E_INVALIDARG, got 0x%08x\n", i, hres);
+        ok(pic == (IPicture *)0xdeadbeef,
+           "[%d] Expected output pointer to be 0xdeadbeef, got %p\n", i, pic);
+    }
+
+    pic = (IPicture *)0xdeadbeef;
+    hres = OleLoadPicturePath(emptyW, NULL, 0, 0, NULL, (void **)&pic);
+    todo_wine
+    ok(hres == INET_E_UNKNOWN_PROTOCOL || /* XP/Vista+ */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL || /* Win95 OSR2 */
+       hres == E_OUTOFMEMORY, /* Win98/Win2k/Win2k3 */
+       "Expected OleLoadPicturePath to return INET_E_UNKNOWN_PROTOCOL, got 0x%08x\n", hres);
+    ok(pic == NULL,
+       "Expected the output interface pointer to be NULL, got %p\n", pic);
+
+    pic = (IPicture *)0xdeadbeef;
+    hres = OleLoadPicturePath(emptyW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    todo_wine
+    ok(hres == INET_E_UNKNOWN_PROTOCOL || /* XP/Vista+ */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL || /* Win95 OSR2 */
+       hres == E_OUTOFMEMORY, /* Win98/Win2k/Win2k3 */
+       "Expected OleLoadPicturePath to return INET_E_UNKNOWN_PROTOCOL, got 0x%08x\n", hres);
+    ok(pic == NULL,
+       "Expected the output interface pointer to be NULL, got %p\n", pic);
+
+    /* Create a local temporary image file for testing. */
+    GetTempPathA(sizeof(temp_path), temp_path);
+    GetTempFileNameA(temp_path, "bmp", 0, temp_file);
+    file = CreateFileA(temp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+    WriteFile(file, bmpimage, sizeof(bmpimage), &size, NULL);
+    CloseHandle(file);
+
+    MultiByteToWideChar(CP_ACP, 0, temp_file, -1, temp_fileW + 8, sizeof(temp_fileW)/sizeof(WCHAR) - 8);
+
+    /* Try a normal DOS path. */
+    hres = OleLoadPicturePath(temp_fileW + 8, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == S_OK ||
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
+       "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
+    if (pic)
+        IPicture_Release(pic);
+
+    /* Try a DOS path with tacked on "file:". */
+    hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == S_OK ||
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
+       "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
+    if (pic)
+        IPicture_Release(pic);
+
+    DeleteFileA(temp_file);
+
+    /* Try with a nonexistent file. */
+    hres = OleLoadPicturePath(temp_fileW + 8, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
+       "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
+
+    hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
+       "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
+
+    file = CreateFileA(temp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+                       FILE_ATTRIBUTE_NORMAL, NULL);
+    WriteFile(file, bmpimage, sizeof(bmpimage), &size, NULL);
+    CloseHandle(file);
+
+    /* Try a "file:" URL with slash separators. */
+    ptr = temp_fileW + 8;
+    while (*ptr)
+    {
+        if (*ptr == '\\')
+            *ptr = '/';
+        ptr++;
+    }
+
+    hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == S_OK ||
+       broken(hres == E_UNEXPECTED), /* NT4/Win95 */
+       "Expected OleLoadPicturePath to return S_OK, got 0x%08x\n", hres);
+    if (pic)
+        IPicture_Release(pic);
+
+    DeleteFileA(temp_file);
+
+    /* Try with a nonexistent file. */
+    hres = OleLoadPicturePath(temp_fileW, NULL, 0, 0, &IID_IPicture, (void **)&pic);
+    ok(hres == INET_E_RESOURCE_NOT_FOUND || /* XP+ */
+       hres == E_UNEXPECTED || /* NT4/Win95 */
+       hres == E_FAIL, /* Win9x/Win2k */
+       "Expected OleLoadPicturePath to return INET_E_RESOURCE_NOT_FOUND, got 0x%08x\n", hres);
+}
+
 START_TEST(olepicture)
 {
 	hOleaut32 = GetModuleHandleA("oleaut32.dll");
@@ -716,22 +889,21 @@ START_TEST(olepicture)
 	test_pic(jpgimage, sizeof(jpgimage));
 	test_pic(bmpimage, sizeof(bmpimage));
         test_pic(gif4pixel, sizeof(gif4pixel));
-	/* FIXME: No PNG support yet in Wine or in older Windows... */
+	/* FIXME: No PNG support in Windows... */
 	if (0) test_pic(pngimage, sizeof(pngimage));
 	test_empty_image();
 	test_empty_image_2();
-	skip("skipping test_apm, see bug 5396\n");
-        //test_apm();
+        test_apm();
         test_metafile();
-        skip("skipping test_enhmetafile, see bug 5396\n");
-        //test_enhmetafile();
+        test_enhmetafile();
 
-	test_Invoke();
-        test_OleCreatePictureIndirect();
-        test_Render();
-        test_get_Attributes();
-        test_get_Handle();
-        test_get_Type();
+    test_Invoke();
+    test_OleCreatePictureIndirect();
+    test_Render();
+    test_get_Attributes();
+    test_get_Handle();
+    test_get_Type();
+    test_OleLoadPicturePath();
 }
 
 

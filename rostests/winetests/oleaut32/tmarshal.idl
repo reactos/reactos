@@ -137,6 +137,15 @@ library TestTypelib
 
         [id(DISPID_TM_PROP_UINT), propget]
         HRESULT prop_uint([out,retval] UINT *i);
+
+        [id(DISPID_TM_BYREF_UINT)]
+        HRESULT ByRefUInt([in, out] UINT *i);
+
+        [id(DISPID_TM_PROP_OPT_ARG), propput]
+        HRESULT prop_opt_arg([in,optional] INT opt, [in] INT i);
+
+        [id(DISPID_TM_PROP_REQ_ARG), propput]
+        HRESULT prop_req_arg([in] INT req, [in] INT i);
     }
 
     [
@@ -181,6 +190,9 @@ library TestTypelib
     {
         [id(DISPID_NOA_BSTRRET)]
         BSTR BstrRet();
+
+        [id(DISPID_NOA_ERROR)]
+        HRESULT Error();
     }
 
 
@@ -285,7 +297,7 @@ library TestTypelib
     ]
     interface ItestIF7 : ItestIF6
     {
-        [id(0x1236)] HRESULT fn6([in] int a);
+        [id(0x1236)] HRESULT fn6([in] GUID a);
     }
 
     [

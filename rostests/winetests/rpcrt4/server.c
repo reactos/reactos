@@ -19,6 +19,8 @@
  */
 
 #include <windows.h>
+#include <secext.h>
+#include <rpcdce.h>
 #include "wine/test.h"
 #include "server_s.h"
 #include "server_defines.h"
@@ -41,14 +43,27 @@ static void (WINAPI *pNDRSContextMarshall2)(RPC_BINDING_HANDLE, NDR_SCONTEXT, vo
 static NDR_SCONTEXT (WINAPI *pNDRSContextUnmarshall2)(RPC_BINDING_HANDLE, void*, ULONG, void*, ULONG);
 static RPC_STATUS (WINAPI *pRpcServerRegisterIfEx)(RPC_IF_HANDLE,UUID*, RPC_MGR_EPV*, unsigned int,
                    unsigned int,RPC_IF_CALLBACK_FN*);
+static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
+static RPC_STATUS (WINAPI *pRpcBindingSetAuthInfoExA)(RPC_BINDING_HANDLE, RPC_CSTR, ULONG, ULONG,
+                                                      RPC_AUTH_IDENTITY_HANDLE, ULONG, RPC_SECURITY_QOS *);
+static RPC_STATUS (WINAPI *pRpcServerRegisterAuthInfoA)(RPC_CSTR, ULONG, RPC_AUTH_KEY_RETRIEVAL_FN, LPVOID);
+
+static char *domain_and_user;
+
+/* type check statements generated in header file */
+fnprintf *p_printf = printf;
 
 static void InitFunctionPointers(void)
 {
     HMODULE hrpcrt4 = GetModuleHandleA("rpcrt4.dll");
+    HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
     pNDRSContextMarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextMarshall2");
     pNDRSContextUnmarshall2 = (void *)GetProcAddress(hrpcrt4, "NDRSContextUnmarshall2");
     pRpcServerRegisterIfEx = (void *)GetProcAddress(hrpcrt4, "RpcServerRegisterIfEx");
+    pRpcBindingSetAuthInfoExA = (void *)GetProcAddress(hrpcrt4, "RpcBindingSetAuthInfoExA");
+    pRpcServerRegisterAuthInfoA = (void *)GetProcAddress(hrpcrt4, "RpcServerRegisterAuthInfoA");
+    pGetUserNameExA = (void *)GetProcAddress(hsecur32, "GetUserNameExA");
 
     if (!pNDRSContextMarshall2) old_windows_version = TRUE;
 }
@@ -268,9 +283,26 @@ s_sum_var_array(int x[20], int n)
 }
 
 int
+s_sum_complex_array(int n, refpint_t pi[])
+{
+  int total = 0;
+  for (; n > 0; n--)
+    total += *pi[n - 1];
+  return total;
+}
+
+int
 s_dot_two_vectors(vector_t vs[2])
 {
   return vs[0].x * vs[1].x + vs[0].y * vs[1].y + vs[0].z * vs[1].z;
+}
+
+void
+s_get_number_array(int x[20], int *n)
+{
+  int c[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+  memcpy(x, c, sizeof(c));
+  *n = sizeof(c)/sizeof(c[0]);
 }
 
 int
@@ -571,6 +603,16 @@ s_get_filename(void)
     return (char *)__FILE__;
 }
 
+int s_echo_ranged_int(int n)
+{
+    return n;
+}
+
+void s_get_ranged_enum(renum_t *re)
+{
+    *re = RE3;
+}
+
 void
 s_context_handle_test(void)
 {
@@ -704,6 +746,21 @@ s_get_numbers_struct(numbers_struct_t **ns)
 }
 
 void
+s_full_pointer_test(int *a, int *b)
+{
+    ok(*a == 42, "Expected *a to be 42 instead of %d\n", *a);
+    ok(*b == 42, "Expected *b to be 42 instead of %d\n", *a);
+    ok(a == b, "Expected a (%p) to point to the same memory as b (%p)\n", a, b);
+}
+
+void
+s_full_pointer_null_test(int *a, int *b)
+{
+    ok(*a == 42, "Expected *a to be 42 instead of %d\n", *a);
+    ok(b == NULL, "Expected b to be NULL instead of %p\n", b);
+}
+
+void
 s_stop(void)
 {
   ok(RPC_S_OK == RpcMgmtStopServerListening(NULL), "RpcMgmtStopServerListening\n");
@@ -762,6 +819,7 @@ basic_tests(void)
   wstr_struct_t ws = {wstring};
   str_t str;
   se_t se;
+  renum_t re;
 
   ok(int_return() == INT_CODE, "RPC int_return\n");
 
@@ -869,6 +927,17 @@ basic_tests(void)
   str = get_filename();
   ok(!strcmp(str, __FILE__), "get_filename() returned %s instead of %s\n", str, __FILE__);
   midl_user_free(str);
+
+  x = echo_ranged_int(0);
+  ok(x == 0, "echo_ranged_int() returned %d instead of 0\n", x);
+  x = echo_ranged_int(100);
+  ok(x == 100, "echo_ranged_int() returned %d instead of 100\n", x);
+
+  if (!old_windows_version)
+  {
+      get_ranged_enum(&re);
+      ok(re == RE3, "get_ranged_enum() returned %d instead of RE3\n", re);
+  }
 }
 
 static void
@@ -1055,6 +1124,7 @@ pointer_tests(void)
   void *buffer;
   int *pa2;
   s123_t *s123;
+  int val = 42;
 
   ok(test_list_length(list) == 3, "RPC test_list_length\n");
   ok(square_puint(p1) == 121, "RPC square_puint\n");
@@ -1115,6 +1185,9 @@ pointer_tests(void)
   s123 = get_s123();
   ok(s123->f1 == 1 && s123->f2 == 2 && s123->f3 == 3, "RPC get_s123\n");
   MIDL_user_free(s123);
+
+  full_pointer_test(&val, &val);
+  full_pointer_null_test(&val, NULL);
 }
 
 static int
@@ -1147,6 +1220,7 @@ array_tests(void)
   };
   int c[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
   int c2[] = {10, 100, 200};
+  int c3[20];
   vector_t vs[2] = {{1, -2, 3}, {4, -5, -6}};
   cps_t cps;
   cpsc_t cpsc;
@@ -1157,6 +1231,7 @@ array_tests(void)
   int *pi;
   pints_t api[5];
   numbers_struct_t *ns;
+  refpint_t rpi[5];
 
   if (!old_windows_version)
   {
@@ -1180,6 +1255,11 @@ array_tests(void)
   ok(sum_unique_conf_ptr(ca, 5) == 3, "RPC sum_unique_conf_array\n");
   ok(sum_unique_conf_ptr(NULL, 10) == 0, "RPC sum_unique_conf_array\n");
 
+  get_number_array(c3, &n);
+  ok(n == 10, "RPC get_num_array\n");
+  for (; n > 0; n--)
+    ok(c3[n-1] == c[n-1], "get_num_array returned wrong value %d @ %d\n",
+       c3[n-1], n);
   ok(sum_var_array(c, 10) == 45, "RPC sum_conf_array\n");
   ok(sum_var_array(&c[5], 2) == 11, "RPC sum_conf_array\n");
   ok(sum_var_array(&c[7], 1) == 7, "RPC sum_conf_array\n");
@@ -1261,6 +1341,15 @@ array_tests(void)
       HeapFree(GetProcessHeap(), 0, ns);
   }
   HeapFree(GetProcessHeap(), 0, pi);
+
+  pi = HeapAlloc(GetProcessHeap(), 0, 5 * sizeof(*pi));
+  pi[0] = 3;  rpi[0] = &pi[0];
+  pi[1] = 5;  rpi[1] = &pi[1];
+  pi[2] = -2; rpi[2] = &pi[2];
+  pi[3] = -1; rpi[3] = &pi[3];
+  pi[4] = -4; rpi[4] = &pi[4];
+  ok(sum_complex_array(5, rpi) == 1, "RPC sum_complex_array\n");
+  HeapFree(GetProcessHeap(), 0, pi);
 }
 
 static void
@@ -1274,34 +1363,89 @@ run_tests(void)
 }
 
 static void
+set_auth_info(RPC_BINDING_HANDLE handle)
+{
+    RPC_STATUS status;
+    RPC_SECURITY_QOS qos;
+
+    if (!pGetUserNameExA)
+        return;
+
+    qos.Version = 1;
+    qos.Capabilities = RPC_C_QOS_CAPABILITIES_MUTUAL_AUTH;
+    qos.IdentityTracking = RPC_C_QOS_IDENTITY_STATIC;
+    qos.ImpersonationType = RPC_C_IMP_LEVEL_IMPERSONATE;
+
+    status = pRpcBindingSetAuthInfoExA(handle, (RPC_CSTR)domain_and_user, RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+                                       RPC_C_AUTHN_WINNT, NULL, 0, &qos);
+    ok(status == RPC_S_OK, "RpcBindingSetAuthInfoExA failed %d\n", status);
+}
+
+static void
 client(const char *test)
 {
+  static unsigned char iptcp[] = "ncacn_ip_tcp";
+  static unsigned char np[] = "ncacn_np";
+  static unsigned char ncalrpc[] = "ncalrpc";
+  static unsigned char address[] = "127.0.0.1";
+  static unsigned char address_np[] = "\\\\.";
+  static unsigned char port[] = PORT;
+  static unsigned char pipe[] = PIPE;
+  static unsigned char guid[] = "00000000-4114-0704-2301-000000000000";
+
+  unsigned char *binding;
+
   if (strcmp(test, "tcp_basic") == 0)
   {
-    static unsigned char iptcp[] = "ncacn_ip_tcp";
-    static unsigned char address[] = "127.0.0.1";
-    static unsigned char port[] = PORT;
-    unsigned char *binding;
-
     ok(RPC_S_OK == RpcStringBindingCompose(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
     ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     run_tests();
+    authinfo_test(RPC_PROTSEQ_TCP, 0);
+
+    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
+  }
+  else if (strcmp(test, "tcp_secure") == 0)
+  {
+    ok(RPC_S_OK == RpcStringBindingCompose(NULL, iptcp, address, port, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+
+    set_auth_info(IServer_IfHandle);
+    authinfo_test(RPC_PROTSEQ_TCP, 1);
+
+    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
+  }
+  else if (strcmp(test, "ncalrpc_basic") == 0)
+  {
+    ok(RPC_S_OK == RpcStringBindingCompose(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+
+    run_tests(); /* can cause RPC_X_BAD_STUB_DATA exception */
+    authinfo_test(RPC_PROTSEQ_LRPC, 0);
+
+    ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
+    ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
+  }
+  else if (strcmp(test, "ncalrpc_secure") == 0)
+  {
+    ok(RPC_S_OK == RpcStringBindingCompose(NULL, ncalrpc, NULL, guid, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
+
+    set_auth_info(IServer_IfHandle);
+    authinfo_test(RPC_PROTSEQ_LRPC, 1);
 
     ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
     ok(RPC_S_OK == RpcBindingFree(&IServer_IfHandle), "RpcBindingFree\n");
   }
   else if (strcmp(test, "np_basic") == 0)
   {
-    static unsigned char np[] = "ncacn_np";
-    static unsigned char address[] = "\\\\.";
-    static unsigned char pipe[] = PIPE;
-    unsigned char *binding;
-
-    ok(RPC_S_OK == RpcStringBindingCompose(NULL, np, address, pipe, NULL, &binding), "RpcStringBindingCompose\n");
+    ok(RPC_S_OK == RpcStringBindingCompose(NULL, np, address_np, pipe, NULL, &binding), "RpcStringBindingCompose\n");
     ok(RPC_S_OK == RpcBindingFromStringBinding(binding, &IServer_IfHandle), "RpcBindingFromStringBinding\n");
 
     run_tests();
+    authinfo_test(RPC_PROTSEQ_NMP, 0);
     stop();
 
     ok(RPC_S_OK == RpcStringFree(&binding), "RpcStringFree\n");
@@ -1316,11 +1460,17 @@ server(void)
   static unsigned char port[] = PORT;
   static unsigned char np[] = "ncacn_np";
   static unsigned char pipe[] = PIPE;
-  RPC_STATUS status, iptcp_status, np_status;
+  static unsigned char ncalrpc[] = "ncalrpc";
+  static unsigned char guid[] = "00000000-4114-0704-2301-000000000000";
+  RPC_STATUS status, iptcp_status, np_status, ncalrpc_status;
   DWORD ret;
 
   iptcp_status = RpcServerUseProtseqEp(iptcp, 20, port, NULL);
   ok(iptcp_status == RPC_S_OK, "RpcServerUseProtseqEp(ncacn_ip_tcp) failed with status %d\n", iptcp_status);
+
+  ncalrpc_status = RpcServerUseProtseqEp(ncalrpc, 0, guid, NULL);
+  ok(ncalrpc_status == RPC_S_OK, "RpcServerUseProtseqEp(ncalrpc) failed with status %d\n", ncalrpc_status);
+
   np_status = RpcServerUseProtseqEp(np, 0, pipe, NULL);
   if (np_status == RPC_S_PROTSEQ_NOT_SUPPORTED)
     skip("Protocol sequence ncacn_np is not supported\n");
@@ -1345,7 +1495,19 @@ server(void)
   if (iptcp_status == RPC_S_OK)
     run_client("tcp_basic");
   else
-    skip("tcp_basic tests skipped due to earlier failure\n");
+    skip("tcp tests skipped due to earlier failure\n");
+
+  if (ncalrpc_status == RPC_S_OK)
+  {
+    run_client("ncalrpc_basic");
+    if (pGetUserNameExA)
+    {
+      /* we don't need to register RPC_C_AUTHN_WINNT for ncalrpc */
+      run_client("ncalrpc_secure");
+    }
+  }
+  else
+    skip("lrpc tests skipped due to earlier failure\n");
 
   if (np_status == RPC_S_OK)
     run_client("np_basic");
@@ -1376,6 +1538,16 @@ START_TEST(server)
 
   InitFunctionPointers();
 
+  if (pGetUserNameExA)
+  {
+    ULONG size = 0;
+    ok(!pGetUserNameExA(NameSamCompatible, NULL, &size), "GetUserNameExA\n");
+    domain_and_user = HeapAlloc(GetProcessHeap(), 0, size);
+    ok(pGetUserNameExA(NameSamCompatible, domain_and_user, &size), "GetUserNameExA\n");
+  }
+  else
+    win_skip("GetUserNameExA is needed for some authentication tests\n");
+
   argc = winetest_get_mainargs(&argv);
   progname = argv[0];
 
@@ -1393,4 +1565,6 @@ START_TEST(server)
   }
   else
     server();
+
+  HeapFree(GetProcessHeap(), 0, domain_and_user);
 }

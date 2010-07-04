@@ -209,12 +209,15 @@ static RPC_IF_HANDLE IFoo_v0_0_s_ifspec = (RPC_IF_HANDLE)& IFoo___RpcServerInter
 static void test_rpc_ncacn_ip_tcp(void)
 {
     RPC_STATUS status;
-    unsigned char *binding;
+    unsigned char *binding, *principal;
     handle_t IFoo_IfHandle;
+    ULONG level, authnsvc, authzsvc;
+    RPC_AUTH_IDENTITY_HANDLE identity;
     static unsigned char foo[] = "foo";
     static unsigned char ncacn_ip_tcp[] = "ncacn_ip_tcp";
     static unsigned char address[] = "127.0.0.1";
     static unsigned char endpoint[] = "4114";
+    static unsigned char spn[] = "principal";
 
     status = RpcNetworkIsProtseqValid(foo);
     ok(status == RPC_S_INVALID_RPC_PROTSEQ, "return wrong\n");
@@ -265,6 +268,29 @@ todo_wine {
                                    RPC_C_AUTHN_WINNT, NULL, RPC_C_AUTHZ_NAME);
     ok(status == RPC_S_OK || broken(status == RPC_S_UNKNOWN_AUTHN_SERVICE), /* win9x */
        "RpcBindingSetAuthInfo failed (%u)\n", status);
+
+    status = RpcBindingInqAuthInfo(IFoo_IfHandle, NULL, NULL, NULL, NULL, NULL);
+    ok(status == RPC_S_BINDING_HAS_NO_AUTH, "RpcBindingInqAuthInfo failed (%u)\n",
+       status);
+
+    status = RpcBindingSetAuthInfo(IFoo_IfHandle, spn, RPC_C_AUTHN_LEVEL_PKT_PRIVACY,
+                                   RPC_C_AUTHN_WINNT, NULL, RPC_C_AUTHZ_NAME);
+    ok(status == RPC_S_OK, "RpcBindingSetAuthInfo failed (%u)\n", status);
+
+    level = authnsvc = authzsvc = 0;
+    principal = (unsigned char *)0xdeadbeef;
+    identity = (RPC_AUTH_IDENTITY_HANDLE *)0xdeadbeef;
+    status = RpcBindingInqAuthInfo(IFoo_IfHandle, &principal, &level, &authnsvc,
+                                   &identity, &authzsvc);
+
+    ok(status == RPC_S_OK, "RpcBindingInqAuthInfo failed (%u)\n", status);
+    ok(identity == NULL, "expected NULL identity\n");
+    ok(principal != (unsigned char *)0xdeadbeef, "expected valid principal\n");
+    ok(level == RPC_C_AUTHN_LEVEL_PKT_PRIVACY, "expected RPC_C_AUTHN_LEVEL_PKT_PRIVACY\n");
+    ok(authnsvc == RPC_C_AUTHN_WINNT, "expected RPC_C_AUTHN_WINNT\n");
+    todo_wine ok(authzsvc == RPC_C_AUTHZ_NAME, "expected RPC_C_AUTHZ_NAME\n");
+
+    RpcStringFree(&principal);
 
     status = RpcMgmtStopServerListening(NULL);
     ok(status == RPC_S_OK, "RpcMgmtStopServerListening failed (%u)\n",
@@ -629,9 +655,13 @@ static void test_RpcStringBindingParseA(void)
     ok(status == RPC_S_INVALID_STRING_BINDING, "RpcStringBindingParseA should have returned RPC_S_INVALID_STRING_BINDING instead of %d\n", status);
     todo_wine
     ok(uuid == NULL, "uuid was %p instead of NULL\n", uuid);
+    if (uuid)
+        RpcStringFreeA(&uuid);
     ok(protseq == NULL, "protseq was %p instead of NULL\n", protseq);
     todo_wine
     ok(network_addr == NULL, "network_addr was %p instead of NULL\n", network_addr);
+    if (network_addr)
+        RpcStringFreeA(&network_addr);
     ok(endpoint == NULL, "endpoint was %p instead of NULL\n", endpoint);
     ok(options == NULL, "options was %p instead of NULL\n", options);
 }
@@ -775,6 +805,67 @@ static void test_UuidCreate(void)
     }
 }
 
+static void test_UuidCreateSequential(void)
+{
+    UUID guid1;
+    BYTE version;
+    RPC_STATUS (WINAPI *pUuidCreateSequential)(UUID *) = (void *)GetProcAddress(GetModuleHandle("rpcrt4.dll"), "UuidCreateSequential");
+    RPC_STATUS ret;
+
+    if (!pUuidCreateSequential)
+    {
+        skip("UuidCreateSequential not exported\n");
+        return;
+    }
+    ret = pUuidCreateSequential(&guid1);
+    ok(!ret || ret == RPC_S_UUID_LOCAL_ONLY,
+       "expected RPC_S_OK or RPC_S_UUID_LOCAL_ONLY, got %08x\n", ret);
+    version = (guid1.Data3 & 0xf000) >> 12;
+    ok(version == 1, "unexpected version %d\n", version);
+    if (version == 1)
+    {
+        UUID guid2;
+
+        if (!ret)
+        {
+            /* If the call succeeded, there's a valid (non-multicast) MAC
+             * address in the uuid:
+             */
+            ok(!(guid1.Data4[2] & 0x01),
+               "GUID does not appear to contain a MAC address\n");
+        }
+        else
+        {
+            /* Otherwise, there's a randomly generated multicast MAC address
+             * address in the uuid:
+             */
+            ok((guid1.Data4[2] & 0x01),
+               "GUID does not appear to contain a multicast MAC address\n");
+        }
+        /* Generate another GUID, and make sure its MAC address matches the
+         * first.
+         */
+        ret = pUuidCreateSequential(&guid2);
+        ok(!ret || ret == RPC_S_UUID_LOCAL_ONLY,
+           "expected RPC_S_OK or RPC_S_UUID_LOCAL_ONLY, got %08x\n", ret);
+        version = (guid2.Data3 & 0xf000) >> 12;
+        ok(version == 1, "unexpected version %d\n", version);
+        ok(!memcmp(guid1.Data4, guid2.Data4, sizeof(guid2.Data4)),
+           "unexpected value in MAC address\n");
+    }
+}
+
+static void test_RpcBindingFree(void)
+{
+    RPC_BINDING_HANDLE binding = NULL;
+    RPC_STATUS status;
+
+    status = RpcBindingFree(&binding);
+    ok(status == RPC_S_INVALID_BINDING,
+       "RpcBindingFree should have retured RPC_S_INVALID_BINDING instead of %d\n",
+       status);
+}
+
 START_TEST( rpc )
 {
     UuidConversionAndComparison();
@@ -786,4 +877,6 @@ START_TEST( rpc )
     test_I_RpcExceptionFilter();
     test_RpcStringBindingFromBinding();
     test_UuidCreate();
+    test_UuidCreateSequential();
+    test_RpcBindingFree();
 }

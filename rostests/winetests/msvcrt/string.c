@@ -975,7 +975,7 @@ static void test__strtoi64(void)
     ok(res == 123, "res != 123\n");
     ok(endpos == oct+strlen(oct), "Incorrect endpos (%p-%p)\n", oct, endpos);
     res = p_strtoi64(blanks, &endpos, 10);
-    ok(res == 12, "res != 12");
+    ok(res == 12, "res != 12\n");
     ok(endpos == blanks+10, "Incorrect endpos (%p-%p)\n", blanks, endpos);
     ok(errno == 0xdeadbeef, "errno = %x\n", errno);
 
@@ -1215,22 +1215,22 @@ static void test_mbstowcs(void)
         return;
     }
 
-    err = pmbstowcs_s(&ret, wOut, 6, mSimple, -1/*_TRUNCATE*/);
+    err = pmbstowcs_s(&ret, wOut, 6, mSimple, _TRUNCATE);
     ok(err == 0, "err = %d\n", err);
     ok(ret == 5, "ret = %d\n", (int)ret);
     ok(!memcmp(wOut, wSimple, sizeof(wSimple)), "wOut = %s\n", wine_dbgstr_w(wOut));
 
-    err = pmbstowcs_s(&ret, wOut, 6, mHiragana, -1/*_TRUNCATE*/);
+    err = pmbstowcs_s(&ret, wOut, 6, mHiragana, _TRUNCATE);
     ok(err == 0, "err = %d\n", err);
     ok(ret == 3, "ret = %d\n", (int)ret);
     ok(!memcmp(wOut, wHiragana, sizeof(wHiragana)), "wOut = %s\n", wine_dbgstr_w(wOut));
 
-    err = pwcstombs_s(&ret, mOut, 6, wSimple, -1/*_TRUNCATE*/);
+    err = pwcstombs_s(&ret, mOut, 6, wSimple, _TRUNCATE);
     ok(err == 0, "err = %d\n", err);
     ok(ret == 5, "ret = %d\n", (int)ret);
     ok(!memcmp(mOut, mSimple, sizeof(mSimple)), "mOut = %s\n", mOut);
 
-    err = pwcstombs_s(&ret, mOut, 6, wHiragana, -1/*_TRUNCATE*/);
+    err = pwcstombs_s(&ret, mOut, 6, wHiragana, _TRUNCATE);
     ok(err == 0, "err = %d\n", err);
     ok(ret == 5, "ret = %d\n", (int)ret);
     ok(!memcmp(mOut, mHiragana, sizeof(mHiragana)), "mOut = %s\n", mOut);

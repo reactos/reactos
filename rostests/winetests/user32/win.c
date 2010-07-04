@@ -1040,7 +1040,6 @@ static void test_shell_window(void)
     DWORD error;
     HMODULE hinst, hUser32;
     BOOL (WINAPI*SetShellWindow)(HWND);
-    BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
     HWND hwnd1, hwnd2, hwnd3, hwnd4, hwnd5;
     HWND shellWindow, nextWnd;
 
@@ -1055,7 +1054,6 @@ static void test_shell_window(void)
     hUser32 = GetModuleHandleA("user32");
 
     SetShellWindow = (void *)GetProcAddress(hUser32, "SetShellWindow");
-    SetShellWindowEx = (void *)GetProcAddress(hUser32, "SetShellWindowEx");
 
     trace("previous shell window: %p\n", shellWindow);
 
@@ -2181,7 +2179,7 @@ static void check_z_order_debug(HWND hwnd, HWND next, HWND prev, HWND owner,
                     hwnd, topmost ? "" : "NOT ");
 }
 
-static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E)
+static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E, DWORD style)
 {
     HWND hwnd_A, hwnd_B, hwnd_C, hwnd_F;
 
@@ -2205,7 +2203,7 @@ static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E)
     check_z_order(hwnd_D, hwnd_E, 0, 0, FALSE);
 
     hwnd_C = CreateWindowEx(0, "MainWindowClass", NULL,
-                            WS_POPUP,
+                            style,
                             100, 100, 100, 100,
                             hwnd_F, 0, GetModuleHandle(0), NULL);
     trace("hwnd_C %p\n", hwnd_C);
@@ -2215,7 +2213,7 @@ static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E)
     check_z_order(hwnd_C, hwnd_D, 0, hwnd_F, FALSE);
 
     hwnd_B = CreateWindowEx(WS_EX_TOPMOST, "MainWindowClass", NULL,
-                            WS_POPUP,
+                            style,
                             100, 100, 100, 100,
                             hwnd_F, 0, GetModuleHandle(0), NULL);
     trace("hwnd_B %p\n", hwnd_B);
@@ -2226,7 +2224,7 @@ static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E)
     check_z_order(hwnd_B, hwnd_C, 0, hwnd_F, TRUE);
 
     hwnd_A = CreateWindowEx(WS_EX_TOPMOST, "MainWindowClass", NULL,
-                            WS_POPUP,
+                            style,
                             100, 100, 100, 100,
                             0, 0, GetModuleHandle(0), NULL);
     trace("hwnd_A %p\n", hwnd_A);
@@ -2262,7 +2260,7 @@ static void test_popup_zorder(HWND hwnd_D, HWND hwnd_E)
     /* make hwnd_C owned by a topmost window */
     DestroyWindow( hwnd_C );
     hwnd_C = CreateWindowEx(0, "MainWindowClass", NULL,
-                            WS_POPUP,
+                            style,
                             100, 100, 100, 100,
                             hwnd_A, 0, GetModuleHandle(0), NULL);
     trace("hwnd_C %p\n", hwnd_C);
@@ -3215,10 +3213,12 @@ static void test_validatergn(HWND hwnd)
     GetWindowRect( child, &rc);
     MapWindowPoints( NULL, hwnd, (POINT*) &rc, 2);
     ret = GetUpdateRect( child, &rc2, 0);
+    ok( ret == 1, "Expected GetUpdateRect to return non-zero, got %d\n", ret);
     ok( rc2.right > rc2.left && rc2.bottom > rc2.top,
             "Update rectangle is empty!\n");
     ValidateRect( hwnd, &rc);
     ret = GetUpdateRect( child, &rc2, 0);
+    ok( !ret, "Expected GetUpdateRect to return zero, got %d\n", ret);
     ok( rc2.left == 0 && rc2.top == 0 && rc2.right == 0 && rc2.bottom == 0,
             "Update rectangle %d,%d-%d,%d is not empty!\n", rc2.left, rc2.top,
             rc2.right, rc2.bottom);
@@ -3230,6 +3230,7 @@ static void test_validatergn(HWND hwnd)
     rgn = CreateRectRgnIndirect( &rc);
     ValidateRgn( hwnd, rgn);
     ret = GetUpdateRect( child, &rc2, 0);
+    ok( !ret, "Expected GetUpdateRect to return zero, got %d\n", ret);
     ok( rc2.left == 0 && rc2.top == 0 && rc2.right == 0 && rc2.bottom == 0,
             "Update rectangle %d,%d-%d,%d is not empty!\n", rc2.left, rc2.top,
             rc2.right, rc2.bottom);
@@ -3295,8 +3296,6 @@ static void test_SetParent(void)
     BOOL ret;
     HWND desktop = GetDesktopWindow();
     HMENU hMenu;
-    /* FIXME: This detection is not correct as it also covers (all?) XP+ */
-    BOOL is_win9x = GetWindowLongPtrW(desktop, GWLP_WNDPROC) == 0;
     HWND parent, child1, child2, child3, child4, sibling;
 
     parent = CreateWindowExA(0, "static", NULL, WS_OVERLAPPEDWINDOW,
@@ -3342,19 +3341,41 @@ static void test_SetParent(void)
 
     if (!is_win9x) /* Win9x doesn't survive this test */
     {
+        HWND ret;
+
         ok(!SetParent(parent, child1), "SetParent should fail\n");
         ok(!SetParent(child2, child3), "SetParent should fail\n");
         ok(SetParent(child1, parent) != 0, "SetParent should not fail\n");
-        ok(SetParent(parent, child2) != 0, "SetParent should not fail\n");
-        ok(SetParent(parent, child3) != 0, "SetParent should not fail\n");
-        ok(!SetParent(child2, parent), "SetParent should fail\n");
-        ok(SetParent(parent, child4) != 0, "SetParent should not fail\n");
-
-        check_parents(parent, child4, child4, 0, 0, child4, parent);
-        check_parents(child1, parent, parent, parent, 0, child4, parent);
-        check_parents(child2, desktop, parent, parent, parent, child2, parent);
-        check_parents(child3, child2, child2, child2, 0, child2, parent);
-        check_parents(child4, desktop, child2, child2, child2, child4, parent);
+        ret = SetParent(parent, child2);
+        todo_wine ok( !ret || broken( ret != 0 ), "SetParent should fail\n");
+        if (ret)  /* nt4, win2k */
+        {
+            ret = SetParent(parent, child3);
+            ok(ret != 0, "SetParent should not fail\n");
+            ret = SetParent(child2, parent);
+            ok(!ret, "SetParent should fail\n");
+            ret = SetParent(parent, child4);
+            ok(ret != 0, "SetParent should not fail\n");
+            check_parents(parent, child4, child4, 0, 0, child4, parent);
+            check_parents(child1, parent, parent, parent, 0, child4, parent);
+            check_parents(child2, desktop, parent, parent, parent, child2, parent);
+            check_parents(child3, child2, child2, child2, 0, child2, parent);
+            check_parents(child4, desktop, child2, child2, child2, child4, parent);
+        }
+        else
+        {
+            ret = SetParent(parent, child3);
+            ok(ret != 0, "SetParent should not fail\n");
+            ret = SetParent(child2, parent);
+            ok(!ret, "SetParent should fail\n");
+            ret = SetParent(parent, child4);
+            ok(!ret, "SetParent should fail\n");
+            check_parents(parent, child3, child3, 0, 0, child2, parent);
+            check_parents(child1, parent, parent, parent, 0, child2, parent);
+            check_parents(child2, desktop, parent, parent, parent, child2, parent);
+            check_parents(child3, child2, child2, child2, 0, child2, parent);
+            check_parents(child4, desktop, child2, child2, child2, child4, parent);
+        }
     }
     else
         skip("Win9x/WinMe crash\n");
@@ -5169,14 +5190,14 @@ static LRESULT CALLBACK TestExposedRegion_WndProc(HWND hwnd, UINT msg, WPARAM wP
 
 static void test_Expose(void)
 {
-    ATOM atom;
     WNDCLASSA cls;
     HWND mw;
+
     memset(&cls, 0, sizeof(WNDCLASSA));
     cls.lpfnWndProc = TestExposedRegion_WndProc;
     cls.hbrBackground = GetStockObject(WHITE_BRUSH);
     cls.lpszClassName = "TestExposeClass";
-    atom = RegisterClassA(&cls);
+    RegisterClassA(&cls);
 
     mw = CreateWindowA("TestExposeClass", "MainWindow", WS_VISIBLE|WS_OVERLAPPEDWINDOW,
                             0, 0, 200, 100, NULL, NULL, 0, NULL);
@@ -6037,7 +6058,7 @@ START_TEST(win)
     test_capture_1();
     test_capture_2();
     test_capture_3(hwndMain, hwndMain2);
-    //test_capture_4();
+    test_capture_4();
 
     test_CreateWindow();
     test_parent_owner();
@@ -6053,7 +6074,8 @@ START_TEST(win)
     test_NCRedraw();
 
     test_children_zorder(hwndMain);
-    test_popup_zorder(hwndMain2, hwndMain);
+    test_popup_zorder(hwndMain2, hwndMain, WS_POPUP);
+    test_popup_zorder(hwndMain2, hwndMain, 0);
     test_keyboard_input(hwndMain);
     test_mouse_input(hwndMain);
     test_validatergn(hwndMain);

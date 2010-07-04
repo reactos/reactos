@@ -88,7 +88,10 @@ static void CALLBACK check_notification( HINTERNET handle, DWORD_PTR context, DW
         }
     }
     if (status_ok) info->index++;
-    if (status & WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS) SetEvent( info->wait );
+    if (status & (WINHTTP_CALLBACK_FLAG_ALL_COMPLETIONS | WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING))
+    {
+        SetEvent( info->wait );
+    }
 }
 
 static const struct notification cache_test[] =
@@ -103,11 +106,11 @@ static const struct notification cache_test[] =
     { winhttp_send_request,     WINHTTP_CALLBACK_STATUS_REQUEST_SENT, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 }
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 }
 };
 
 static void setup_test( struct info *info, enum api function, unsigned int line )
@@ -227,11 +230,11 @@ static const struct notification redirect_test[] =
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_REQUEST_SENT, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0 },
     { winhttp_receive_response, WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 }
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 }
 };
 
 static void test_redirect( void )
@@ -309,11 +312,11 @@ static const struct notification async_test[] =
     { winhttp_read_data,        WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE, 0, 1 },
     { winhttp_read_data,        WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 0, 1 },
     { winhttp_read_data,        WINHTTP_CALLBACK_STATUS_READ_COMPLETE, 0, 1 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 },
-    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1 }
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 0, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 },
+    { winhttp_close_handle,     WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 1, 1 }
 };
 
 static void test_async( void )
@@ -380,6 +383,8 @@ static void test_async( void )
     WinHttpCloseHandle( req );
     WinHttpCloseHandle( con );
     WinHttpCloseHandle( ses );
+
+    WaitForSingleObject( info.wait, INFINITE );
     CloseHandle( info.wait );
 }
 

@@ -9,12 +9,14 @@
 	<file>protocol.c</file>
 	<file>sec_mgr.c</file>
 	<file>stream.c</file>
+	<file>uri.c</file>
 	<file>url.c</file>
 	<file>testlist.c</file>
 	<library>wine</library>
 	<library>uuid</library>
 	<library>urlmon</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>user32</library>
 	<library>advapi32</library>
 	<library>ntdll</library>

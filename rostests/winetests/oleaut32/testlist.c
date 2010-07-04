@@ -6,6 +6,7 @@
 #define STANDALONE
 #include "wine/test.h"
 
+extern void func_dispatch(void);
 extern void func_olefont(void);
 extern void func_olepicture(void);
 extern void func_safearray(void);
@@ -18,6 +19,7 @@ extern void func_vartype(void);
 
 const struct test winetest_testlist[] =
 {
+    { "dispatch", func_dispatch },
     { "olefont", func_olefont },
     { "olepicture", func_olepicture },
     { "safearray", func_safearray },

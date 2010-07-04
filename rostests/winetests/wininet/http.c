@@ -2416,6 +2416,113 @@ static void test_HttpQueryInfo(int port)
     InternetCloseHandle(hi);
 }
 
+static void test_options(int port)
+{
+    HINTERNET ses, con, req;
+    DWORD size, error;
+    DWORD_PTR ctx;
+    BOOL ret;
+
+    ses = InternetOpen("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpen failed\n");
+
+    SetLastError(0xdeadbeef);
+    ret = InternetSetOption(ses, INTERNET_OPTION_CONTEXT_VALUE, NULL, 0);
+    error = GetLastError();
+    ok(!ret, "InternetSetOption succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = InternetSetOption(ses, INTERNET_OPTION_CONTEXT_VALUE, NULL, sizeof(ctx));
+    ok(!ret, "InternetSetOption succeeded\n");
+    error = GetLastError();
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = InternetSetOption(ses, INTERNET_OPTION_CONTEXT_VALUE, &ctx, 0);
+    ok(!ret, "InternetSetOption succeeded\n");
+    error = GetLastError();
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    ctx = 1;
+    ret = InternetSetOption(ses, INTERNET_OPTION_CONTEXT_VALUE, &ctx, sizeof(ctx));
+    ok(ret, "InternetSetOption failed %u\n", GetLastError());
+
+    SetLastError(0xdeadbeef);
+    ret = InternetQueryOption(ses, INTERNET_OPTION_CONTEXT_VALUE, NULL, NULL);
+    error = GetLastError();
+    ok(!ret, "InternetQueryOption succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    SetLastError(0xdeadbeef);
+    ret = InternetQueryOption(ses, INTERNET_OPTION_CONTEXT_VALUE, &ctx, NULL);
+    error = GetLastError();
+    ok(!ret, "InternetQueryOption succeeded\n");
+    ok(error == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %u\n", error);
+
+    size = 0;
+    SetLastError(0xdeadbeef);
+    ret = InternetQueryOption(ses, INTERNET_OPTION_CONTEXT_VALUE, NULL, &size);
+    error = GetLastError();
+    ok(!ret, "InternetQueryOption succeeded\n");
+    ok(error == ERROR_INSUFFICIENT_BUFFER, "expected ERROR_INSUFFICIENT_BUFFER, got %u\n", error);
+
+    size = sizeof(ctx);
+    SetLastError(0xdeadbeef);
+    ret = InternetQueryOption(NULL, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    error = GetLastError();
+    ok(!ret, "InternetQueryOption succeeded\n");
+    ok(error == ERROR_INTERNET_INCORRECT_HANDLE_TYPE, "expected ERROR_INTERNET_INCORRECT_HANDLE_TYPE, got %u\n", error);
+
+    ctx = 0xdeadbeef;
+    size = sizeof(ctx);
+    ret = InternetQueryOption(ses, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    ok(ret, "InternetQueryOption failed %u\n", GetLastError());
+    ok(ctx == 1, "expected 1 got %lu\n", ctx);
+
+    con = InternetConnect(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnect failed\n");
+
+    ctx = 0xdeadbeef;
+    size = sizeof(ctx);
+    ret = InternetQueryOption(con, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    ok(ret, "InternetQueryOption failed %u\n", GetLastError());
+    ok(ctx == 0, "expected 0 got %lu\n", ctx);
+
+    ctx = 2;
+    ret = InternetSetOption(con, INTERNET_OPTION_CONTEXT_VALUE, &ctx, sizeof(ctx));
+    ok(ret, "InternetSetOption failed %u\n", GetLastError());
+
+    ctx = 0xdeadbeef;
+    size = sizeof(ctx);
+    ret = InternetQueryOption(con, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    ok(ret, "InternetQueryOption failed %u\n", GetLastError());
+    ok(ctx == 2, "expected 2 got %lu\n", ctx);
+
+    req = HttpOpenRequest(con, NULL, "/test1", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequest failed\n");
+
+    ctx = 0xdeadbeef;
+    size = sizeof(ctx);
+    ret = InternetQueryOption(req, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    ok(ret, "InternetQueryOption failed %u\n", GetLastError());
+    ok(ctx == 0, "expected 0 got %lu\n", ctx);
+
+    ctx = 3;
+    ret = InternetSetOption(req, INTERNET_OPTION_CONTEXT_VALUE, &ctx, sizeof(ctx));
+    ok(ret, "InternetSetOption failed %u\n", GetLastError());
+
+    ctx = 0xdeadbeef;
+    size = sizeof(ctx);
+    ret = InternetQueryOption(req, INTERNET_OPTION_CONTEXT_VALUE, &ctx, &size);
+    ok(ret, "InternetQueryOption failed %u\n", GetLastError());
+    ok(ctx == 3, "expected 3 got %lu\n", ctx);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+}
+
 static void test_http_connection(void)
 {
     struct server_info si;
@@ -2451,6 +2558,7 @@ static void test_http_connection(void)
     test_HttpQueryInfo(si.port);
     test_HttpSendRequestW(si.port);
     test_last_error(si.port);
+    test_options(si.port);
 
     /* send the basic request again to shutdown the server thread */
     test_basic_request(si.port, "GET", "/quit");

@@ -64,6 +64,17 @@ DEFINE_EXPECT(CreateInstance);
 DEFINE_EXPECT(unk_Release);
 
 static HRESULT (WINAPI *pCoInternetCompareUrl)(LPCWSTR, LPCWSTR, DWORD);
+static HRESULT (WINAPI *pCoInternetGetSecurityUrl)(LPCWSTR, LPWSTR*, PSUACTION, DWORD);
+static HRESULT (WINAPI *pCoInternetGetSession)(DWORD, IInternetSession **, DWORD);
+static HRESULT (WINAPI *pCoInternetParseUrl)(LPCWSTR, PARSEACTION, DWORD, LPWSTR, DWORD, DWORD *, DWORD);
+static HRESULT (WINAPI *pCoInternetQueryInfo)(LPCWSTR, QUERYOPTION, DWORD, LPVOID, DWORD, DWORD *, DWORD);
+static HRESULT (WINAPI *pCopyStgMedium)(const STGMEDIUM *, STGMEDIUM *);
+static HRESULT (WINAPI *pFindMimeFromData)(LPBC, LPCWSTR, LPVOID, DWORD, LPCWSTR,
+                        DWORD, LPWSTR*, DWORD);
+static HRESULT (WINAPI *pObtainUserAgentString)(DWORD, LPSTR, DWORD*);
+static HRESULT (WINAPI *pReleaseBindInfo)(BINDINFO*);
+static HRESULT (WINAPI *pUrlMkGetSessionOption)(DWORD, LPVOID, DWORD, DWORD *, DWORD);
+
 
 static void test_CreateFormatEnum(void)
 {
@@ -306,27 +317,31 @@ static void test_CoInternetParseUrl(void)
 
     static WCHAR buf[4096];
 
+    if (!pCoInternetParseUrl) {
+        return;
+    }
+
     memset(buf, 0xf0, sizeof(buf));
-    hres = CoInternetParseUrl(parse_tests[0].url, PARSE_SCHEMA, 0, buf,
+    hres = pCoInternetParseUrl(parse_tests[0].url, PARSE_SCHEMA, 0, buf,
             3, &size, 0);
     ok(hres == E_POINTER, "schema failed: %08x, expected E_POINTER\n", hres);
 
     for(i=0; i < sizeof(parse_tests)/sizeof(parse_tests[0]); i++) {
         memset(buf, 0xf0, sizeof(buf));
-        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_SECURITY_URL, 0, buf,
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_SECURITY_URL, 0, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == parse_tests[i].secur_hres, "[%d] security url failed: %08x, expected %08x\n",
                 i, hres, parse_tests[i].secur_hres);
 
         memset(buf, 0xf0, sizeof(buf));
-        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_ENCODE, 0, buf,
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_ENCODE, 0, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == S_OK, "[%d] encoding failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].encoded_url), "[%d] wrong size\n", i);
         ok(!lstrcmpW(parse_tests[i].encoded_url, buf), "[%d] wrong encoded url\n", i);
 
         memset(buf, 0xf0, sizeof(buf));
-        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_PATH_FROM_URL, 0, buf,
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_PATH_FROM_URL, 0, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == parse_tests[i].path_hres, "[%d] path failed: %08x, expected %08x\n",
                 i, hres, parse_tests[i].path_hres);
@@ -336,7 +351,7 @@ static void test_CoInternetParseUrl(void)
         }
 
         memset(buf, 0xf0, sizeof(buf));
-        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_SCHEMA, 0, buf,
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_SCHEMA, 0, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == S_OK, "[%d] schema failed: %08x\n", i, hres);
         ok(size == lstrlenW(parse_tests[i].schema), "[%d] wrong size\n", i);
@@ -345,7 +360,7 @@ static void test_CoInternetParseUrl(void)
         if(memcmp(parse_tests[i].url, wszRes, 3*sizeof(WCHAR))
                 && memcmp(parse_tests[i].url, wszAbout, 5*sizeof(WCHAR))) {
             memset(buf, 0xf0, sizeof(buf));
-            hres = CoInternetParseUrl(parse_tests[i].url, PARSE_DOMAIN, 0, buf,
+            hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_DOMAIN, 0, buf,
                     sizeof(buf)/sizeof(WCHAR), &size, 0);
             ok(hres == parse_tests[i].domain_hres, "[%d] domain failed: %08x\n", i, hres);
             if(parse_tests[i].domain)
@@ -353,7 +368,7 @@ static void test_CoInternetParseUrl(void)
         }
 
         memset(buf, 0xf0, sizeof(buf));
-        hres = CoInternetParseUrl(parse_tests[i].url, PARSE_ROOTDOCUMENT, 0, buf,
+        hres = pCoInternetParseUrl(parse_tests[i].url, PARSE_ROOTDOCUMENT, 0, buf,
                 sizeof(buf)/sizeof(WCHAR), &size, 0);
         ok(hres == parse_tests[i].rootdocument_hres, "[%d] rootdocument failed: %08x\n", i, hres);
         if(parse_tests[i].rootdocument)
@@ -366,18 +381,17 @@ static void test_CoInternetCompareUrl(void)
     HRESULT hres;
 
     if (!pCoInternetCompareUrl) {
-        win_skip("CoInternetCompareUrl not found\n");
         return;
     }
 
     hres = pCoInternetCompareUrl(url1, url1, 0);
-    ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
+    ok(hres == S_OK, "CoInternetCompareUrl failed: %08x\n", hres);
 
     hres = pCoInternetCompareUrl(url1, url3, 0);
-    ok(hres == S_FALSE, "CoInternetParseUrl failed: %08x\n", hres);
+    ok(hres == S_FALSE, "CoInternetCompareUrl failed: %08x\n", hres);
 
     hres = pCoInternetCompareUrl(url3, url1, 0);
-    ok(hres == S_FALSE, "CoInternetParseUrl failed: %08x\n", hres);
+    ok(hres == S_FALSE, "CoInternetCompareUrl failed: %08x\n", hres);
 }
 
 static const struct {
@@ -400,22 +414,26 @@ static void test_CoInternetQueryInfo(void)
     DWORD cb, i;
     HRESULT hres;
 
+    if (!pCoInternetQueryInfo) {
+        return;
+    }
+
     for(i=0; i < sizeof(query_info_tests)/sizeof(query_info_tests[0]); i++) {
         cb = 0xdeadbeef;
         memset(buf, '?', sizeof(buf));
-        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), &cb, 0);
+        hres = pCoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), &cb, 0);
         ok(hres == S_OK, "[%d] CoInternetQueryInfo failed: %08x\n", i, hres);
         ok(cb == sizeof(DWORD), "[%d] cb = %d\n", i, cb);
         ok(*(DWORD*)buf == query_info_tests[i].uses_net, "[%d] ret %x, expected %x\n",
            i, *(DWORD*)buf, query_info_tests[i].uses_net);
 
-        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, 3, &cb, 0);
+        hres = pCoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, 3, &cb, 0);
         ok(hres == E_FAIL, "[%d] CoInternetQueryInfo failed: %08x, expected E_FAIL\n", i, hres);
-        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, NULL, sizeof(buf), &cb, 0);
+        hres = pCoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, NULL, sizeof(buf), &cb, 0);
         ok(hres == E_FAIL, "[%d] CoInternetQueryInfo failed: %08x, expected E_FAIL\n", i, hres);
 
         memset(buf, '?', sizeof(buf));
-        hres = CoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), NULL, 0);
+        hres = pCoInternetQueryInfo(query_info_tests[0].url, QUERY_USES_NETWORK, 0, buf, sizeof(buf), NULL, 0);
         ok(hres == S_OK, "[%d] CoInternetQueryInfo failed: %08x\n", i, hres);
         ok(*(DWORD*)buf == query_info_tests[i].uses_net, "[%d] ret %x, expected %x\n",
            i, *(DWORD*)buf, query_info_tests[i].uses_net);
@@ -647,9 +665,13 @@ static void test_FindMimeFromData(void)
     LPWSTR mime;
     int i;
 
+    if (!pFindMimeFromData) {
+        return;
+    }
+
     for(i=0; i<sizeof(mime_tests)/sizeof(mime_tests[0]); i++) {
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = FindMimeFromData(NULL, mime_tests[i].url, NULL, 0, NULL, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, NULL, 0, &mime, 0);
         if(mime_tests[i].mime) {
             ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
             ok(!lstrcmpW(mime, mime_tests[i].mime), "[%d] wrong mime\n", i);
@@ -662,26 +684,26 @@ static void test_FindMimeFromData(void)
         }
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = FindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeTextPlain, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeTextPlain, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
         ok(!lstrcmpW(mime, mimeTextPlain), "[%d] wrong mime\n", i);
         CoTaskMemFree(mime);
 
         mime = (LPWSTR)0xf0f0f0f0;
-        hres = FindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeAppOctetStream, 0, &mime, 0);
+        hres = pFindMimeFromData(NULL, mime_tests[i].url, NULL, 0, mimeAppOctetStream, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
         ok(!lstrcmpW(mime, mimeAppOctetStream), "[%d] wrong mime\n", i);
         CoTaskMemFree(mime);
     }
 
     for(i=0; i < sizeof(mime_tests2)/sizeof(mime_tests2[0]); i++) {
-        hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
+        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
                 NULL, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
         ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime: %s\n", i, wine_dbgstr_w(mime));
         CoTaskMemFree(mime);
 
-        hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
+        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
                 mimeTextHtml, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
         if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime)
@@ -691,7 +713,7 @@ static void test_FindMimeFromData(void)
             ok(!lstrcmpW(mime, mime_tests2[i].mime), "[%d] wrong mime\n", i);
         CoTaskMemFree(mime);
 
-        hres = FindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
+        hres = pFindMimeFromData(NULL, NULL, mime_tests2[i].data, mime_tests2[i].size,
                 mimeImagePjpeg, 0, &mime, 0);
         ok(hres == S_OK, "[%d] FindMimeFromData failed: %08x\n", i, hres);
         if(!lstrcmpW(mimeAppOctetStream, mime_tests2[i].mime) || i == 17)
@@ -704,39 +726,39 @@ static void test_FindMimeFromData(void)
         CoTaskMemFree(mime);
     }
 
-    hres = FindMimeFromData(NULL, url1, data1, sizeof(data1), NULL, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), NULL, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
     ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
     CoTaskMemFree(mime);
 
-    hres = FindMimeFromData(NULL, url1, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, url1, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
     ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
     CoTaskMemFree(mime);
 
-    hres = FindMimeFromData(NULL, url4, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, url4, data1, sizeof(data1), mimeAppOctetStream, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
     ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
     CoTaskMemFree(mime);
 
-    hres = FindMimeFromData(NULL, NULL, NULL, 0, NULL, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, NULL, 0, NULL, 0, &mime, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, excepted E_INVALIDARG\n", hres);
 
-    hres = FindMimeFromData(NULL, NULL, NULL, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, NULL, 0, mimeTextPlain, 0, &mime, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 
-    hres = FindMimeFromData(NULL, NULL, data1, 0, NULL, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, NULL, 0, &mime, 0);
     ok(hres == E_FAIL, "FindMimeFromData failed: %08x, expected E_FAIL\n", hres);
 
-    hres = FindMimeFromData(NULL, url1, data1, 0, NULL, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, url1, data1, 0, NULL, 0, &mime, 0);
     ok(hres == E_FAIL, "FindMimeFromData failed: %08x, expected E_FAIL\n", hres);
 
-    hres = FindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, &mime, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, &mime, 0);
     ok(hres == S_OK, "FindMimeFromData failed: %08x\n", hres);
     ok(!lstrcmpW(mime, mimeTextPlain), "wrong mime\n");
     CoTaskMemFree(mime);
 
-    hres = FindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, NULL, 0);
+    hres = pFindMimeFromData(NULL, NULL, data1, 0, mimeTextPlain, 0, NULL, 0);
     ok(hres == E_INVALIDARG, "FindMimeFromData failed: %08x, expected E_INVALIDARG\n", hres);
 }
 
@@ -748,7 +770,11 @@ static void register_protocols(void)
 
     static const WCHAR wszAbout[] = {'a','b','o','u','t',0};
 
-    hres = CoInternetGetSession(0, &session, 0);
+    if (!pCoInternetGetSession) {
+        return;
+    }
+
+    hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
     if(FAILED(hres))
         return;
@@ -921,7 +947,11 @@ static void test_NameSpace(void)
 
     static const WCHAR wszTest[] = {'t','e','s','t',0};
 
-    hres = CoInternetGetSession(0, &session, 0);
+    if (!pCoInternetGetSession || !pCoInternetParseUrl) {
+        return;
+    }
+
+    hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
     if(FAILED(hres))
         return;
@@ -944,7 +974,7 @@ static void test_NameSpace(void)
     SET_EXPECT(CreateInstance);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -956,7 +986,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -966,7 +996,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_SECURITY_URL, 0, buf,
+    hres = pCoInternetParseUrl(url8, PARSE_SECURITY_URL, 0, buf,
             sizeof(buf)/sizeof(WCHAR), &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
     ok(size == sizeof(url1)/sizeof(WCHAR), "Size = %d\n", size);
@@ -979,22 +1009,24 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetGetSecurityUrl(url8, &sec_url, PSU_SECURITY_URL_ONLY, 0);
-    ok(hres == S_OK, "CoInternetGetSecurityUrl failed: %08x\n", hres);
-    if(hres == S_OK) {
-        ok(lstrlenW(sec_url)>sizeof(wszFile)/sizeof(WCHAR) &&
-                !memcmp(sec_url, wszFile, sizeof(wszFile)-sizeof(WCHAR)),
-                "Encoded url = %s\n", wine_dbgstr_w(sec_url));
-        CoTaskMemFree(sec_url);
-    }
+    if (pCoInternetGetSecurityUrl) {
+        hres = pCoInternetGetSecurityUrl(url8, &sec_url, PSU_SECURITY_URL_ONLY, 0);
+        ok(hres == S_OK, "CoInternetGetSecurityUrl failed: %08x\n", hres);
+        if(hres == S_OK) {
+            ok(lstrlenW(sec_url)>sizeof(wszFile)/sizeof(WCHAR) &&
+                    !memcmp(sec_url, wszFile, sizeof(wszFile)-sizeof(WCHAR)),
+                    "Encoded url = %s\n", wine_dbgstr_w(sec_url));
+            CoTaskMemFree(sec_url);
+        }
 
-    CHECK_CALLED(QI_IInternetProtocolInfo);
-    CHECK_CALLED(ParseUrl);
+        CHECK_CALLED(QI_IInternetProtocolInfo);
+        CHECK_CALLED(ParseUrl);
+    }
 
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -1013,7 +1045,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -1026,7 +1058,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -1040,7 +1072,7 @@ static void test_NameSpace(void)
     SET_EXPECT(QI_IInternetProtocolInfo);
     SET_EXPECT(ParseUrl);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -1059,7 +1091,7 @@ static void test_NameSpace(void)
     hres = IInternetSession_UnregisterNameSpace(session, &test_protocol_cf2, wszTest);
     ok(hres == S_OK, "UnregisterNameSpace failed: %08x\n", hres);
 
-    hres = CoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
+    hres = pCoInternetParseUrl(url8, PARSE_ENCODE, 0, buf, sizeof(buf)/sizeof(WCHAR),
                               &size, 0);
     ok(hres == S_OK, "CoInternetParseUrl failed: %08x\n", hres);
 
@@ -1073,7 +1105,11 @@ static void test_MimeFilter(void)
 
     static const WCHAR mimeW[] = {'t','e','s','t','/','m','i','m','e',0};
 
-    hres = CoInternetGetSession(0, &session, 0);
+    if (!pCoInternetGetSession) {
+        return;
+    }
+
+    hres = pCoInternetGetSession(0, &session, 0);
     ok(hres == S_OK, "CoInternetGetSession failed: %08x\n", hres);
     if(FAILED(hres))
         return;
@@ -1110,13 +1146,17 @@ static void test_ReleaseBindInfo(void)
     BINDINFO bi;
     IUnknown unk = { &unk_vtbl };
 
-    ReleaseBindInfo(NULL); /* shouldn't crash */
+    if (!pReleaseBindInfo) {
+        return;
+    }
+
+    pReleaseBindInfo(NULL); /* shouldn't crash */
 
     memset(&bi, 0, sizeof(bi));
     bi.cbSize = sizeof(BINDINFO);
     bi.pUnk = &unk;
     SET_EXPECT(unk_Release);
-    ReleaseBindInfo(&bi);
+    pReleaseBindInfo(&bi);
     ok(bi.cbSize == sizeof(BINDINFO), "bi.cbSize=%d\n", bi.cbSize);
     ok(bi.pUnk == NULL, "bi.pUnk=%p, expected NULL\n", bi.pUnk);
     CHECK_CALLED(unk_Release);
@@ -1124,13 +1164,13 @@ static void test_ReleaseBindInfo(void)
     memset(&bi, 0, sizeof(bi));
     bi.cbSize = offsetof(BINDINFO, pUnk);
     bi.pUnk = &unk;
-    ReleaseBindInfo(&bi);
+    pReleaseBindInfo(&bi);
     ok(bi.cbSize == offsetof(BINDINFO, pUnk), "bi.cbSize=%d\n", bi.cbSize);
     ok(bi.pUnk == &unk, "bi.pUnk=%p, expected %p\n", bi.pUnk, &unk);
 
     memset(&bi, 0, sizeof(bi));
     bi.pUnk = &unk;
-    ReleaseBindInfo(&bi);
+    pReleaseBindInfo(&bi);
     ok(!bi.cbSize, "bi.cbSize=%d, expected 0\n", bi.cbSize);
     ok(bi.pUnk == &unk, "bi.pUnk=%p, expected %p\n", bi.pUnk, &unk);
 }
@@ -1143,12 +1183,17 @@ static void test_CopyStgMedium(void)
 
     static WCHAR fileW[] = {'f','i','l','e',0};
 
+    if (!pCopyStgMedium) {
+        return;
+    }
+
+
     memset(&src, 0xf0, sizeof(src));
     memset(&dst, 0xe0, sizeof(dst));
     memset(&empty, 0xf0, sizeof(empty));
     src.tymed = TYMED_NULL;
     src.pUnkForRelease = NULL;
-    hres = CopyStgMedium(&src, &dst);
+    hres = pCopyStgMedium(&src, &dst);
     ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
     ok(dst.tymed == TYMED_NULL, "tymed=%d\n", dst.tymed);
     ok(dst.u.hGlobal == empty, "u=%p\n", dst.u.hGlobal);
@@ -1158,7 +1203,7 @@ static void test_CopyStgMedium(void)
     src.tymed = TYMED_ISTREAM;
     src.u.pstm = NULL;
     src.pUnkForRelease = NULL;
-    hres = CopyStgMedium(&src, &dst);
+    hres = pCopyStgMedium(&src, &dst);
     ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
     ok(dst.tymed == TYMED_ISTREAM, "tymed=%d\n", dst.tymed);
     ok(!dst.u.pstm, "pstm=%p\n", dst.u.pstm);
@@ -1168,16 +1213,16 @@ static void test_CopyStgMedium(void)
     src.tymed = TYMED_FILE;
     src.u.lpszFileName = fileW;
     src.pUnkForRelease = NULL;
-    hres = CopyStgMedium(&src, &dst);
+    hres = pCopyStgMedium(&src, &dst);
     ok(hres == S_OK, "CopyStgMedium failed: %08x\n", hres);
     ok(dst.tymed == TYMED_FILE, "tymed=%d\n", dst.tymed);
     ok(dst.u.lpszFileName && dst.u.lpszFileName != fileW, "lpszFileName=%p\n", dst.u.lpszFileName);
     ok(!lstrcmpW(dst.u.lpszFileName, fileW), "wrong file name\n");
     ok(!dst.pUnkForRelease, "pUnkForRelease=%p, expected NULL\n", dst.pUnkForRelease);
 
-    hres = CopyStgMedium(&src, NULL);
+    hres = pCopyStgMedium(&src, NULL);
     ok(hres == E_POINTER, "CopyStgMedium failed: %08x, expected E_POINTER\n", hres);
-    hres = CopyStgMedium(NULL, &dst);
+    hres = pCopyStgMedium(NULL, &dst);
     ok(hres == E_POINTER, "CopyStgMedium failed: %08x, expected E_POINTER\n", hres);
 }
 
@@ -1186,36 +1231,41 @@ static void test_UrlMkGetSessionOption(void)
     DWORD encoding, size;
     HRESULT hres;
 
+
+    if (!pUrlMkGetSessionOption) {
+        return;
+    }
+
     size = encoding = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
                                  sizeof(encoding), &size, 0);
     ok(hres == S_OK, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(encoding != 0xdeadbeef, "encoding not changed\n");
     ok(size == sizeof(encoding), "size=%d\n", size);
 
     size = encoding = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
                                  sizeof(encoding)+1, &size, 0);
     ok(hres == S_OK, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(encoding != 0xdeadbeef, "encoding not changed\n");
     ok(size == sizeof(encoding), "size=%d\n", size);
 
     size = encoding = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
                                  sizeof(encoding)-1, &size, 0);
     ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(encoding == 0xdeadbeef, "encoding = %08x, exepcted 0xdeadbeef\n", encoding);
     ok(size == 0xdeadbeef, "size=%d\n", size);
 
     size = encoding = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, NULL,
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, NULL,
                                  sizeof(encoding)-1, &size, 0);
     ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(encoding == 0xdeadbeef, "encoding = %08x, exepcted 0xdeadbeef\n", encoding);
     ok(size == 0xdeadbeef, "size=%d\n", size);
 
     encoding = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_URL_ENCODING, &encoding,
                                  sizeof(encoding)-1, NULL, 0);
     ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(encoding == 0xdeadbeef, "encoding = %08x, exepcted 0xdeadbeef\n", encoding);
@@ -1231,34 +1281,38 @@ static void test_user_agent(void)
     HRESULT hres;
     DWORD size, saved;
 
-    hres = ObtainUserAgentString(0, NULL, NULL);
+    if (!pObtainUserAgentString || !pUrlMkGetSessionOption) {
+        return;
+    }
+
+    hres = pObtainUserAgentString(0, NULL, NULL);
     ok(hres == E_INVALIDARG, "ObtainUserAgentString failed: %08x\n", hres);
 
     size = 100;
-    hres = ObtainUserAgentString(0, NULL, &size);
+    hres = pObtainUserAgentString(0, NULL, &size);
     ok(hres == E_INVALIDARG, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size == 100, "size=%d, expected %d\n", size, 100);
 
     size = 0;
-    hres = ObtainUserAgentString(0, str, &size);
+    hres = pObtainUserAgentString(0, str, &size);
     ok(hres == E_OUTOFMEMORY, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size > 0, "size=%d, expected non-zero\n", size);
 
     size = 2;
     str[0] = 'a';
-    hres = ObtainUserAgentString(0, str, &size);
+    hres = pObtainUserAgentString(0, str, &size);
     ok(hres == E_OUTOFMEMORY, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size > 0, "size=%d, expected non-zero\n", size);
     ok(str[0] == 'a', "str[0]=%c, expected 'a'\n", str[0]);
 
     size = 0;
-    hres = ObtainUserAgentString(1, str, &size);
+    hres = pObtainUserAgentString(1, str, &size);
     ok(hres == E_OUTOFMEMORY, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size > 0, "size=%d, expected non-zero\n", size);
 
     str2 = HeapAlloc(GetProcessHeap(), 0, (size+20)*sizeof(CHAR));
     saved = size;
-    hres = ObtainUserAgentString(0, str2, &size);
+    hres = pObtainUserAgentString(0, str2, &size);
     ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size == saved, "size=%d, expected %d\n", size, saved);
     ok(strlen(expected) <= strlen(str2) &&
@@ -1267,23 +1321,23 @@ static void test_user_agent(void)
        str2, expected);
 
     size = saved+10;
-    hres = ObtainUserAgentString(0, str2, &size);
+    hres = pObtainUserAgentString(0, str2, &size);
     ok(hres == S_OK, "ObtainUserAgentString failed: %08x\n", hres);
     ok(size == saved, "size=%d, expected %d\n", size, saved);
 
     size = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 0, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 0, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size, "size == 0\n");
 
     size = 0xdeadbeef;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 1000, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, NULL, 1000, &size, 0);
     ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size, "size == 0\n");
 
     saved = size;
     size = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved+10, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved+10, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == saved, "size = %d, expected %d\n", size, saved);
     ok(sizeof(expected) <= strlen(str2) && !memcmp(expected, str2, sizeof(expected)-1),
@@ -1292,7 +1346,7 @@ static void test_user_agent(void)
 
     size = 0;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == saved, "size = %d, expected %d\n", size, saved);
     ok(sizeof(expected) <= strlen(str2) && !memcmp(expected, str2, sizeof(expected)-1),
@@ -1301,14 +1355,14 @@ static void test_user_agent(void)
 
     size = saved;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved-1, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved-1, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == saved, "size = %d, expected %d\n", size, saved);
     ok(!str2[0], "buf changed\n");
 
     size = saved;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, NULL, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, NULL, 0);
     ok(hres == E_INVALIDARG, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(!str2[0], "buf changed\n");
 
@@ -1317,7 +1371,7 @@ static void test_user_agent(void)
 
     size = 0;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == sizeof(test_str) && !memcmp(str2, test_str, sizeof(test_str)), "wrong user agent\n");
 
@@ -1326,7 +1380,7 @@ static void test_user_agent(void)
 
     size = 0;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == sizeof(test_str) && !memcmp(str2, test_str, sizeof(test_str)), "wrong user agent\n");
 
@@ -1335,7 +1389,7 @@ static void test_user_agent(void)
 
     size = 0;
     str2[0] = 0;
-    hres = UrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
+    hres = pUrlMkGetSessionOption(URLMON_OPTION_USERAGENT, str2, saved, &size, 0);
     ok(hres == E_OUTOFMEMORY, "UrlMkGetSessionOption failed: %08x\n", hres);
     ok(size == 3 && !strcmp(str2, "te"), "wrong user agent\n");
 
@@ -1364,7 +1418,49 @@ static void test_MkParseDisplayNameEx(void)
             '2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-','A','2','D','8',
             '-','0','8','0','0','2','B','3','0','3','0','9','D',':',0};
 
+    const struct
+    {
+        LPBC *ppbc;
+        LPCWSTR szDisplayName;
+        ULONG *pchEaten;
+        LPMONIKER *ppmk;
+    } invalid_parameters[] =
+    {
+        {NULL,  NULL,     NULL,   NULL},
+        {NULL,  NULL,     NULL,   &mon},
+        {NULL,  NULL,     &eaten, NULL},
+        {NULL,  NULL,     &eaten, &mon},
+        {NULL,  wszEmpty, NULL,   NULL},
+        {NULL,  wszEmpty, NULL,   &mon},
+        {NULL,  wszEmpty, &eaten, NULL},
+        {NULL,  wszEmpty, &eaten, &mon},
+        {&bctx, NULL,     NULL,   NULL},
+        {&bctx, NULL,     NULL,   &mon},
+        {&bctx, NULL,     &eaten, NULL},
+        {&bctx, NULL,     &eaten, &mon},
+        {&bctx, wszEmpty, NULL,   NULL},
+        {&bctx, wszEmpty, NULL,   &mon},
+        {&bctx, wszEmpty, &eaten, NULL},
+        {&bctx, wszEmpty, &eaten, &mon},
+    };
+
+    int i;
+
     CreateBindCtx(0, &bctx);
+
+    for (i = 0; i < sizeof(invalid_parameters)/sizeof(invalid_parameters[0]); i++)
+    {
+        eaten = 0xdeadbeef;
+        mon = (IMoniker *)0xdeadbeef;
+        hres = MkParseDisplayNameEx(invalid_parameters[i].ppbc ? *invalid_parameters[i].ppbc : NULL,
+                                    invalid_parameters[i].szDisplayName,
+                                    invalid_parameters[i].pchEaten,
+                                    invalid_parameters[i].ppmk);
+        ok(hres == E_INVALIDARG,
+            "[%d] Expected MkParseDisplayNameEx to return E_INVALIDARG, got %08x\n", i, hres);
+        ok(eaten == 0xdeadbeef, "[%d] Expected eaten to be 0xdeadbeef, got %u\n", i, eaten);
+        ok(mon == (IMoniker *)0xdeadbeef, "[%d] Expected mon to be 0xdeadbeef, got %p\n", i, mon);
+    }
 
     hres = MkParseDisplayNameEx(bctx, url9, &eaten, &mon);
     ok(hres == S_OK, "MkParseDisplayNameEx failed: %08x\n", hres);
@@ -1413,10 +1509,24 @@ START_TEST(misc)
 
     OleInitialize(NULL);
 
-    register_protocols();
-
     hurlmon = GetModuleHandle("urlmon.dll");
     pCoInternetCompareUrl = (void *) GetProcAddress(hurlmon, "CoInternetCompareUrl");
+    pCoInternetGetSecurityUrl = (void*) GetProcAddress(hurlmon, "CoInternetGetSecurityUrl");
+    pCoInternetGetSession = (void*) GetProcAddress(hurlmon, "CoInternetGetSession");
+    pCoInternetParseUrl = (void*) GetProcAddress(hurlmon, "CoInternetParseUrl");
+    pCoInternetQueryInfo = (void*) GetProcAddress(hurlmon, "CoInternetQueryInfo");
+    pCopyStgMedium = (void*) GetProcAddress(hurlmon, "CopyStgMedium");
+    pFindMimeFromData = (void*) GetProcAddress(hurlmon, "FindMimeFromData");
+    pObtainUserAgentString = (void*) GetProcAddress(hurlmon, "ObtainUserAgentString");
+    pReleaseBindInfo = (void*) GetProcAddress(hurlmon, "ReleaseBindInfo");
+    pUrlMkGetSessionOption = (void*) GetProcAddress(hurlmon, "UrlMkGetSessionOption");
+
+    if (!pCoInternetCompareUrl || !pCoInternetGetSecurityUrl ||
+        !pCoInternetGetSession || !pCoInternetParseUrl) {
+        win_skip("Various needed functions not present in IE 4.0\n");
+    }
+
+    register_protocols();
 
     test_CreateFormatEnum();
     test_RegisterFormatEnumerator();

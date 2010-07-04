@@ -328,6 +328,7 @@ static void test_VarFormat(void)
   VARFMT(VT_I4,V_I4,1,"000###",S_OK,"000001");
   VARFMT(VT_I4,V_I4,1,"#00##00#0",S_OK,"00000001");
   VARFMT(VT_I4,V_I4,1,"1#####0000",S_OK,"10001");
+  VARFMT(VT_I4,V_I4,1,"##abcdefghijklmnopqrstuvwxyz",S_OK,"1abcdefghijklmnopqrstuvwxyz");
   VARFMT(VT_I4,V_I4,100000,"#,###,###,###",S_OK,"100,000");
   VARFMT(VT_I4,V_I4,1,"0,000,000,000",S_OK,"0,000,000,001");
   VARFMT(VT_I4,V_I4,123456789,"#,#.#",S_OK,"123,456,789.");
@@ -381,13 +382,23 @@ static void test_VarFormat(void)
   VARFMT(VT_R8,V_R8,-0.1,".#",S_OK,"-.1");
   VARFMT(VT_R8,V_R8,0.099,"#.#",S_OK,".1");
   VARFMT(VT_R8,V_R8,0.0999,"#.##",S_OK,".1");
-  /* for large negative exponents, wine truncates instead of rounding */
-  todo_wine VARFMT(VT_R8,V_R8,0.099,"#.##",S_OK,".1");
+  VARFMT(VT_R8,V_R8,0.099,"#.##",S_OK,".1");
+  VARFMT(VT_R8,V_R8,0.0099,"#.##",S_OK,".01");
+  VARFMT(VT_R8,V_R8,0.0049,"#.##",S_OK,".");
+  VARFMT(VT_R8,V_R8,0.0094,"#.##",S_OK,".01");
+  VARFMT(VT_R8,V_R8,0.00099,"#.##",S_OK,".");
+  VARFMT(VT_R8,V_R8,0.0995,"#.##",S_OK,".1");
+  VARFMT(VT_R8,V_R8,8.0995,"#.##",S_OK,"8.1");
+  VARFMT(VT_R8,V_R8,0.0994,"#.##",S_OK,".1");
+  VARFMT(VT_R8,V_R8,1.00,"#,##0.00",S_OK,"1.00");
+  VARFMT(VT_R8,V_R8,0.0995,"#.###",S_OK,".1");
 
 
   /* 'out' is not cleared */
   out = (BSTR)0x1;
-  pVarFormat(&in,NULL,fd,fw,flags,&out); /* Would crash if out is cleared */
+  hres = pVarFormat(&in,NULL,fd,fw,flags,&out); /* Would crash if out is cleared */
+  ok(hres == S_OK, "got %08x\n", hres);
+  SysFreeString(out);
   out = NULL;
 
   /* VT_NULL */

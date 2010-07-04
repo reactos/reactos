@@ -40,7 +40,8 @@ static HWND hwnd_cache, hwnd_owndc, hwnd_classdc, hwnd_classdc2;
 static void test_dc_attributes(void)
 {
     HDC hdc, old_hdc;
-    INT rop, def_rop;
+    HDC hdcs[20];
+    INT i, rop, def_rop, found_dc;
 
     /* test cache DC */
 
@@ -57,26 +58,60 @@ static void test_dc_attributes(void)
     ok( rop == def_rop, "wrong ROP2 %d after release\n", rop );
     SetROP2( hdc, R2_WHITE );
     ReleaseDC( hwnd_cache, hdc );
+    old_hdc = hdc;
 
-    hdc = GetDCEx( hwnd_cache, 0, DCX_USESTYLE | DCX_NORESETATTRS );
-    rop = GetROP2( hdc );
-    /* Win9x seems to silently ignore DCX_NORESETATTRS */
-    ok( rop == def_rop || rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    found_dc = 0;
+    for (i = 0; i < 20; i++)
+    {
+        hdc = hdcs[i] = GetDCEx( hwnd_cache, 0, DCX_USESTYLE | DCX_NORESETATTRS );
+        if (!hdc) break;
+        rop = GetROP2( hdc );
+        if (hdc == old_hdc)
+            todo_wine ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+        else
+            ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+        if (hdc == old_hdc)
+        {
+            found_dc = 1;
+            SetROP2( hdc, R2_WHITE );
+        }
+    }
+    if (!found_dc)
+    {
+        trace( "hdc %p not found in cache using %p\n", old_hdc, hdcs[0] );
+        old_hdc = hdcs[0];
+        SetROP2( old_hdc, R2_WHITE );
+    }
+    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
-    SetROP2( hdc, R2_WHITE );
-    rop = GetROP2( hdc );
-    ok( rop == R2_WHITE, "wrong ROP2 %d\n", rop );
+    for (i = 0; i < 20; i++)
+    {
+        hdc = hdcs[i] = GetDCEx( hwnd_cache, 0, DCX_USESTYLE | DCX_NORESETATTRS );
+        if (!hdc) break;
+        rop = GetROP2( hdc );
+        if (hdc == old_hdc)
+            ok( rop == R2_WHITE || broken( rop == def_rop),  /* win9x doesn't support DCX_NORESETATTRS */
+                "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+        else
+            ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+    }
+    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
-    ReleaseDC( hwnd_cache, hdc );
-    hdc = GetDCEx( hwnd_cache, 0, DCX_USESTYLE | DCX_NORESETATTRS );
-    rop = GetROP2( hdc );
-    ok( rop == def_rop || rop == R2_WHITE, "wrong ROP2 %d after release\n", rop );
-    ReleaseDC( hwnd_cache, hdc );
-
-    hdc = GetDCEx( hwnd_cache, 0, DCX_USESTYLE );
-    rop = GetROP2( hdc );
-    ok( rop == def_rop, "wrong ROP2 %d after release\n", rop );
-    ReleaseDC( hwnd_cache, hdc );
+    for (i = 0; i < 20; i++)
+    {
+        hdc = hdcs[i] = GetDCEx( hwnd_cache, 0, DCX_USESTYLE );
+        if (!hdc) break;
+        rop = GetROP2( hdc );
+        if (hdc == old_hdc)
+        {
+            todo_wine ok( rop == R2_WHITE || broken( rop == def_rop),
+                          "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+            SetROP2( old_hdc, def_rop );
+        }
+        else
+            ok( rop == def_rop, "wrong ROP2 %d after release %p/%p\n", rop, old_hdc, hdc );
+    }
+    while (i >= 0) ReleaseDC( hwnd_cache, hdcs[--i] );
 
     /* test own DC */
 
@@ -392,6 +427,23 @@ static void test_invisible_create(void)
     DestroyWindow(hwnd_owndc);
 }
 
+static void test_destroyed_window(void)
+{
+    HDC dc;
+
+    dc = GetDCEx(hwnd_cache, 0, DCX_USESTYLE);
+    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+
+    dc = GetDCEx(hwnd_owndc, 0, DCX_USESTYLE);
+    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+
+    dc = GetDCEx(hwnd_classdc, 0, DCX_USESTYLE);
+    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+
+    dc = GetDCEx(hwnd_classdc2, 0, DCX_USESTYLE);
+    ok(!dc, "Got a non-NULL DC (%p) for a destroyed window.\n", dc);
+}
+
 START_TEST(dce)
 {
     WNDCLASSA cls;
@@ -431,4 +483,11 @@ START_TEST(dce)
     test_dc_visrgn();
     test_begin_paint();
     test_invisible_create();
+
+    DestroyWindow(hwnd_classdc2);
+    DestroyWindow(hwnd_classdc);
+    DestroyWindow(hwnd_owndc);
+    DestroyWindow(hwnd_cache);
+
+    test_destroyed_window();
 }

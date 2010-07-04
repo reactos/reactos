@@ -3435,10 +3435,15 @@ static void test_VarDateFromStr(void)
   DFS("1-2-1970");        EXPECT_DBL(25570.0);
   /* Native fails "1999 January 3, 9AM". I consider that a bug in native */
 
-  /* test a none english data string */
+  /* test a non-english data string */
+  DFS("02.01.1970"); EXPECT_MISMATCH;
   DFS("02.01.1970 00:00:00"); EXPECT_MISMATCH;
   lcid = MAKELCID(MAKELANGID(LANG_GERMAN,SUBLANG_GERMAN),SORT_DEFAULT);
-  DFS("02.01.1970 00:00:00"); todo_wine EXPECT_DBL(25570.0);
+  DFS("02.01.1970"); EXPECT_DBL(25570.0);
+  DFS("02.01.1970 00:00:00"); EXPECT_DBL(25570.0);
+  lcid = MAKELCID(MAKELANGID(LANG_SPANISH,SUBLANG_SPANISH),SORT_DEFAULT);
+  DFS("02.01.1970"); EXPECT_MISMATCH;
+  DFS("02.01.1970 00:00:00"); EXPECT_MISMATCH;
 }
 
 static void test_VarDateCopy(void)
@@ -3483,6 +3488,7 @@ static void test_VarDateChangeTypeEx(void)
           (!lstrcmpW(V_BSTR(&vDst), sz25570) || !lstrcmpW(V_BSTR(&vDst), sz25570_2)),
           "hres=0x%X, type=%d (should be VT_BSTR), *bstr=%s\n", 
           hres, V_VT(&vDst), V_BSTR(&vDst) ? wtoascii(V_BSTR(&vDst)) : "?");
+  VariantClear(&vDst);
 
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
   if (HAVE_OLEAUT32_LOCALES)
@@ -3491,6 +3497,7 @@ static void test_VarDateChangeTypeEx(void)
     ok(hres == S_OK && V_VT(&vDst) == VT_BSTR && V_BSTR(&vDst) && !lstrcmpW(V_BSTR(&vDst), sz25570Nls), 
             "hres=0x%X, type=%d (should be VT_BSTR), *bstr=%s\n", 
             hres, V_VT(&vDst), V_BSTR(&vDst) ? wtoascii(V_BSTR(&vDst)) : "?");
+    VariantClear(&vDst);
   }
 }
 
@@ -3511,7 +3518,7 @@ static void test_VarDateChangeTypeEx(void)
 
 #define EXPECTCY64(x,y) \
   ok(hres == S_OK && S(out).Hi == (LONG)x && S(out).Lo == y, \
-     "expected " #x #y "(%u,%u), got (%u,%u); hres=0x%08x\n", \
+     "expected " #x " " #y " (%u,%u), got (%u,%u); hres=0x%08x\n", \
       (ULONG)(x), (ULONG)(y), S(out).Hi, S(out).Lo, hres)
 
 static void test_VarCyFromI1(void)
@@ -4019,6 +4026,12 @@ static void test_VarCyInt(void)
   scl, sgn, hi, (LONG)(mid), (LONG)(lo), S(U(out)).scale, \
   S(U(out)).sign, out.Hi32, S1(U1(out)).Mid32, S1(U1(out)).Lo32, hres)
 
+/* expect either a positive or negative zero */
+#define EXPECTDECZERO() ok(hres == S_OK && S(U(out)).scale == 0 && \
+  (S(U(out)).sign == 0 || S(U(out)).sign == 0x80) && out.Hi32 == 0 && U1(out).Lo64 == 0, \
+  "expected zero, got (%d,%d,%d,(%x %x)) hres 0x%08x\n", \
+  S(U(out)).scale, S(U(out)).sign, out.Hi32, S1(U1(out)).Mid32, S1(U1(out)).Lo32, hres)
+
 #define EXPECTDECI if (i < 0) EXPECTDEC(0, 0x80, 0, -i); else EXPECTDEC(0, 0, 0, i)
 
 static void test_VarDecFromI1(void)
@@ -4262,11 +4275,11 @@ static void test_VarDecAdd(void)
 
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,0);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,1);
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,2);
-  SETDEC(l,0,0,0,1);    SETDEC(r,0,0x80,0,1); MATH2(VarDecAdd); EXPECTDEC(0,0x80,0,0); /* '-0'! */
+  SETDEC(l,0,0,0,1);    SETDEC(r,0,0x80,0,1); MATH2(VarDecAdd); EXPECTDECZERO();
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0x80,0,2); MATH2(VarDecAdd); EXPECTDEC(0,0x80,0,1);
 
   SETDEC(l,0,0x80,0,0); SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,1);
-  SETDEC(l,0,0x80,0,1); SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,0);
+  SETDEC(l,0,0x80,0,1); SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDECZERO();
   SETDEC(l,0,0x80,0,1); SETDEC(r,0,0,0,2);    MATH2(VarDecAdd); EXPECTDEC(0,0,0,1);
   SETDEC(l,0,0x80,0,1); SETDEC(r,0,0x80,0,1); MATH2(VarDecAdd); EXPECTDEC(0,0x80,0,2);
   SETDEC(l,0,0x80,0,2); SETDEC(r,0,0,0,1);    MATH2(VarDecAdd); EXPECTDEC(0,0x80,0,1);
@@ -4303,9 +4316,9 @@ static void test_VarDecSub(void)
   MATHVARS2;
 
   CHECKPTR(VarDecSub);
-  SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,0);    MATH2(VarDecSub); EXPECTDEC(0,0x80,0,0);
+  SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,0);    MATH2(VarDecSub); EXPECTDECZERO();
   SETDEC(l,0,0,0,0);    SETDEC(r,0,0,0,1);    MATH2(VarDecSub); EXPECTDEC(0,0x80,0,1);
-  SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,1);    MATH2(VarDecSub); EXPECTDEC(0,0x80,0,0);
+  SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,1);    MATH2(VarDecSub); EXPECTDECZERO();
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0x80,0,1); MATH2(VarDecSub); EXPECTDEC(0,0,0,2);
 }
 
@@ -4376,12 +4389,14 @@ static void test_VarDecDiv(void)
   SETDEC(l,0,0,0,45);    SETDEC(r,1,0,0,9);  MATH2(VarDecDiv);   EXPECTDEC(0,0,0,50);
   SETDEC(l,1,0,0,45);    SETDEC(r,2,0,0,9);  MATH2(VarDecDiv);   EXPECTDEC(0,0,0,50);
   /* these last three results suggest that native oleaut32 scales both operands down to zero
-     before the division, but does *not* try to scale the result, even if it is possible - 
-     analogous to multiplication behavior
+     before the division, but does not always try to scale the result, even if it is possible -
+     analogous to multiplication behavior.
    */
   SETDEC(l,1,0,0,45);    SETDEC(r,1,0,0,9);  MATH2(VarDecDiv);   EXPECTDEC(0,0,0,5);
-  SETDEC(l,2,0,0,450);    SETDEC(r,1,0,0,9);  MATH2(VarDecDiv);   EXPECTDEC(1,0,0,50);
-  
+  SETDEC(l,2,0,0,450);    SETDEC(r,1,0,0,9);  MATH2(VarDecDiv);
+  if (S(U(out)).scale == 1) EXPECTDEC(1,0,0,50);
+  else EXPECTDEC(0,0,0,5);
+
   /* inexact divisions */
   SETDEC(l,0,0,0,1);    SETDEC(r,0,0,0,3);  MATH2(VarDecDiv);   EXPECTDEC64(28,0,180700362,0x14b700cb,0x05555555);
   SETDEC(l,1,0,0,1);    SETDEC(r,0,0,0,3);  MATH2(VarDecDiv);   EXPECTDEC64(28,0,18070036,0x35458014,0x4d555555);
@@ -4771,7 +4786,8 @@ static void test_VarBoolCopy(void)
   ok(hres == S_OK && V_VT(&vDst) == VT_BSTR && \
      V_BSTR(&vDst) && !memcmp(V_BSTR(&vDst), str, sizeof(str)), \
      "hres=0x%X, type=%d (should be VT_BSTR), *bstr='%c'\n", \
-     hres, V_VT(&vDst), V_BSTR(&vDst) ? *V_BSTR(&vDst) : '?')
+     hres, V_VT(&vDst), V_BSTR(&vDst) ? *V_BSTR(&vDst) : '?'); \
+  VariantClear(&vDst)
 
 static void test_VarBoolChangeTypeEx(void)
 {
@@ -4846,6 +4862,7 @@ static void test_VarBstrFromR4(void)
      */
     ok(memcmp(bstr, szNative, sizeof(szNative)) == 0, "string different\n");
     }
+    SysFreeString(bstr);
   }
 
   f = -0.0;
@@ -4853,7 +4870,11 @@ static void test_VarBstrFromR4(void)
   ok(hres == S_OK, "got hres 0x%08x\n", hres);
   if (bstr)
   {
-    ok(memcmp(bstr, szZero, sizeof(szZero)) == 0, "negative zero (got %s)\n", wtoascii(bstr));
+      if (bstr[0] == '-')
+          ok(memcmp(bstr + 1, szZero, sizeof(szZero)) == 0, "negative zero (got %s)\n", wtoascii(bstr));
+      else
+          ok(memcmp(bstr, szZero, sizeof(szZero)) == 0, "negative zero (got %s)\n", wtoascii(bstr));
+      SysFreeString(bstr);
   }
   
   /* The following tests that lcid is used for decimal separator even without LOCALE_USE_NLS */
@@ -4863,6 +4884,7 @@ static void test_VarBstrFromR4(void)
   if (bstr)
   {
     ok(memcmp(bstr, szOneHalf_English, sizeof(szOneHalf_English)) == 0, "English locale failed (got %s)\n", wtoascii(bstr));
+    SysFreeString(bstr);
   }
   f = 0.5;
   hres = pVarBstrFromR4(f, lcid_spanish, LOCALE_NOUSEROVERRIDE, &bstr);
@@ -4870,12 +4892,14 @@ static void test_VarBstrFromR4(void)
   if (bstr)
   {
     ok(memcmp(bstr, szOneHalf_Spanish, sizeof(szOneHalf_Spanish)) == 0, "Spanish locale failed (got %s)\n", wtoascii(bstr));
+    SysFreeString(bstr);
   }
 }
 
-#define BSTR_DATE(dt,str) SysFreeString(bstr); bstr = NULL; \
+#define BSTR_DATE(dt,str) \
+  bstr = NULL; \
   hres = pVarBstrFromDate(dt,lcid,LOCALE_NOUSEROVERRIDE,&bstr); \
-  if (bstr) WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0); \
+  if (bstr) {WideCharToMultiByte(CP_ACP, 0, bstr, -1, buff, sizeof(buff), 0, 0); SysFreeString(bstr);} \
   else buff[0] = 0; \
   ok(hres == S_OK && !strcmp(str,buff), "Expected '%s', got '%s', hres = 0x%08x\n", \
      str, buff, hres)
@@ -4885,7 +4909,7 @@ static void test_VarBstrFromDate(void)
   char buff[256];
   LCID lcid;
   HRESULT hres;
-  BSTR bstr = NULL;
+  BSTR bstr;
 
   CHECKPTR(VarBstrFromDate);
   lcid = MAKELCID(MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),SORT_DEFAULT);
@@ -4908,6 +4932,7 @@ static void test_VarBstrFromDate(void)
   if (hres== S_OK && bstr)\
   {\
     ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
+    SysFreeString(bstr);\
   }
 
 static void test_VarBstrFromCy(void)
@@ -4970,6 +4995,7 @@ static void test_VarBstrFromCy(void)
   if (hres== S_OK && bstr)\
   {\
     ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
+    SysFreeString(bstr);\
   }
 
 #define BSTR_DEC64(l, a, b, c, x, d, e) \
@@ -4979,6 +5005,7 @@ static void test_VarBstrFromCy(void)
   if (hres== S_OK && bstr)\
   {\
     ok(lstrcmpW(bstr, e) == 0, "invalid number (got %s)\n", wtoascii(bstr));\
+    SysFreeString(bstr);\
   }
 
 static void test_VarBstrFromDec(void)
@@ -5150,6 +5177,7 @@ static void test_VarBstrCmp(void)
     VARBSTRCMP(bstr2,bstr,0,VARCMP_GT);
     SysFreeString(bstr2);
     SysFreeString(bstr);
+    SysFreeString(bstrempty);
 }
 
 /* Get the internal representation of a BSTR */
@@ -5214,9 +5242,7 @@ static void test_SysAllocStringLen(void)
   if (0)
   {
   str = SysAllocStringLen(szTest, 0x80000000);
-  todo_wine {
   ok (str == NULL, "Expected NULL, got %p\n", str);
-  }
   }
   
   str = SysAllocStringLen(NULL, 0);
@@ -5248,8 +5274,11 @@ static void test_SysAllocStringByteLen(void)
   const CHAR szTestA[6] = { 'T','e','s','t','\0','?' };
   BSTR str;
 
-  str = SysAllocStringByteLen(szTestA, 0x80000000);
-  ok (str == NULL, "Expected NULL, got %p\n", str);
+  if (sizeof(void *) == 4)  /* not limited to 0x80000000 on Win64 */
+  {
+      str = SysAllocStringByteLen(szTestA, 0x80000000);
+      ok (str == NULL, "Expected NULL, got %p\n", str);
+  }
 
   str = SysAllocStringByteLen(szTestA, 0xffffffff);
   ok (str == NULL, "Expected NULL, got %p\n", str);
@@ -5313,7 +5342,6 @@ static void test_SysReAllocString(void)
   if (str)
   {
     LPINTERNAL_BSTR bstr;
-    BSTR oldstr = str;
     int changed;
 
     bstr = Get(str);
@@ -5328,7 +5356,6 @@ static void test_SysReAllocString(void)
     ok (bstr->dwLen == 2, "Expected 2, got %d\n", bstr->dwLen);
     ok (!lstrcmpW(bstr->szString, szSmaller), "String different\n");
 
-    oldstr = str;
     changed = SysReAllocString(&str, szLarger);
     ok (changed == 1, "Expected 1, got %d\n", changed);
     /* Early versions always make new strings rather than resizing */
@@ -5353,7 +5380,6 @@ static void test_SysReAllocStringLen(void)
   if (str)
   {
     LPINTERNAL_BSTR bstr;
-    BSTR oldstr = str;
     int changed;
 
     bstr = Get(str);
@@ -5368,7 +5394,6 @@ static void test_SysReAllocStringLen(void)
     ok (bstr->dwLen == 2, "Expected 2, got %d\n", bstr->dwLen);
     ok (!lstrcmpW(bstr->szString, szSmaller), "String different\n");
 
-    oldstr = str;
     changed = SysReAllocStringLen(&str, szLarger, 6);
     ok (changed == 1, "Expected 1, got %d\n", changed);
     /* Early versions always make new strings rather than resizing */
@@ -5381,6 +5406,49 @@ static void test_SysReAllocStringLen(void)
     ok (changed == 1, "Expected 1, got %d\n", changed);
 
     SysFreeString(str);
+  }
+
+  /* Windows always returns null terminated strings */
+  str = SysAllocStringLen(szTest, 4);
+  ok (str != NULL, "Expected non-NULL\n");
+  if (str)
+  {
+    const int CHUNK_SIZE = 64;
+    const int STRING_SIZE = 24;
+    int changed;
+    changed = SysReAllocStringLen(&str, NULL, CHUNK_SIZE);
+    ok (changed == 1, "Expected 1, got %d\n", changed);
+    ok (str != NULL, "Expected non-NULL\n");
+    if (str)
+    {
+      BSTR oldstr = str;
+
+      /* Filling string */
+      memset (str, 0xAB, CHUNK_SIZE * sizeof (OLECHAR));
+      /* Checking null terminator */
+      changed = SysReAllocStringLen(&str, NULL, STRING_SIZE);
+      ok (changed == 1, "Expected 1, got %d\n", changed);
+      ok (str != NULL, "Expected non-NULL\n");
+      if (str)
+      {
+        ok (str == oldstr, "Expected reuse of the old string memory\n");
+        ok (str[STRING_SIZE] == 0,
+            "Expected null terminator, got 0x%04X\n", str[STRING_SIZE]);
+        SysFreeString(str);
+      }
+    }
+  }
+
+  /* Some Windows applications use the same pointer for pbstr and psz */
+  str = SysAllocStringLen(szTest, 4);
+  ok(str != NULL, "Expected non-NULL\n");
+  if(str)
+  {
+      SysReAllocStringLen(&str, str, 1000000);
+      ok(SysStringLen(str)==1000000, "Incorrect string length\n");
+      ok(!memcmp(szTest, str, 4*sizeof(WCHAR)), "Incorrect string returned\n");
+
+      SysFreeString(str);
   }
 }
 
@@ -5405,6 +5473,8 @@ static void test_BstrCopy(void)
     bstr = Get(V_BSTR(&vt2));
     ok (bstr->dwLen == 3, "Expected 3, got %d\n", bstr->dwLen);
     ok (!lstrcmpA((LPCSTR)bstr->szString, szTestTruncA), "String different\n");
+    VariantClear(&vt2);
+    VariantClear(&vt1);
   }
 }
 
@@ -5416,12 +5486,17 @@ static void test_VarBstrCat(void)
     static const WCHAR s1[] = { 'a',0 };
     static const WCHAR s2[] = { 'b',0 };
     static const WCHAR s1s2[] = { 'a',0,'b',0 };
+    static const char str1A[] = "Have ";
+    static const char str2A[] = "A Cigar";
     HRESULT ret;
     BSTR str1, str2, res;
+    UINT len;
 
-    /* Crash
+if (0)
+{
+    /* Crash */
     ret = VarBstrCat(NULL, NULL, NULL);
-     */
+}
 
     /* Concatenation of two NULL strings works */
     ret = VarBstrCat(NULL, NULL, &res);
@@ -5469,6 +5544,43 @@ static void test_VarBstrCat(void)
     ok(SysStringLen(res) == sizeof(s1s2) / sizeof(WCHAR),
      "Unexpected length\n");
     ok(!memcmp(res, s1s2, sizeof(s1s2)), "Unexpected value\n");
+    SysFreeString(res);
+
+    SysFreeString(str2);
+    SysFreeString(str1);
+
+    /* Concatenation of ansi BSTRs, both odd byte count not including termination */
+    str1 = SysAllocStringByteLen(str1A, sizeof(str1A)-1);
+    str2 = SysAllocStringByteLen(str2A, sizeof(str2A)-1);
+    len = SysStringLen(str1);
+    ok(len == (sizeof(str1A)-1)/sizeof(WCHAR), "got length %u\n", len);
+    len = SysStringLen(str2);
+    ok(len == (sizeof(str2A)-1)/sizeof(WCHAR), "got length %u\n", len);
+
+    ret = VarBstrCat(str1, str2, &res);
+    ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
+    ok(res != NULL, "Expected a string\n");
+    len = (sizeof(str1A) + sizeof(str2A) - 2)/sizeof(WCHAR);
+    ok(SysStringLen(res) == len, "got %d, expected %u\n", SysStringLen(res), len);
+    ok(!memcmp(res, "Have A Cigar", sizeof(str1A) + sizeof(str2A) - 1), "got (%s)\n", (char*)res);
+    SysFreeString(res);
+
+    SysFreeString(str2);
+    SysFreeString(str1);
+
+    /* Concatenation of ansi BSTRs, both 1 byte length not including termination */
+    str1 = SysAllocStringByteLen(str1A, 1);
+    str2 = SysAllocStringByteLen(str2A, 1);
+    len = SysStringLen(str1);
+    ok(len == 0, "got length %u\n", len);
+    len = SysStringLen(str2);
+    ok(len == 0, "got length %u\n", len);
+
+    ret = VarBstrCat(str1, str2, &res);
+    ok(ret == S_OK, "VarBstrCat failed: %08x\n", ret);
+    ok(res != NULL, "Expected a string\n");
+    ok(SysStringLen(res) == 1, "got %d, expected 1\n", SysStringLen(res));
+    ok(!memcmp(res, "HA", 2), "got (%s)\n", (char*)res);
     SysFreeString(res);
 
     SysFreeString(str2);
@@ -5812,6 +5924,7 @@ static void test_EmptyChangeTypeEx(void)
     ok(hres == hExpected && (hres != S_OK || V_VT(&vDst) == vt),
        "change empty: vt %d expected 0x%08x, got 0x%08x, vt %d\n",
        vt, hExpected, hres, V_VT(&vDst));
+    if(hres == S_OK) VariantClear(&vDst);
   }
 }
 

@@ -44,6 +44,7 @@ static NTSTATUS (WINAPI *pNtOpenDirectoryObject)(PHANDLE, ACCESS_MASK, POBJECT_A
 static NTSTATUS (WINAPI *pNtCreateDirectoryObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI *pNtOpenSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES);
 static NTSTATUS (WINAPI *pNtCreateSymbolicLinkObject)(PHANDLE, ACCESS_MASK, POBJECT_ATTRIBUTES, PUNICODE_STRING);
+static NTSTATUS (WINAPI *pNtQuerySymbolicLinkObject)(HANDLE,PUNICODE_STRING,PULONG);
 static NTSTATUS (WINAPI *pNtQueryObject)(HANDLE,OBJECT_INFORMATION_CLASS,PVOID,ULONG,PULONG);
 
 
@@ -402,13 +403,44 @@ static void test_directory(void)
     is_nt4 = (status == STATUS_OBJECT_NAME_NOT_FOUND);  /* nt4 doesn't have Local\\ symlink */
     if (!is_nt4)
     {
+        WCHAR buffer[256];
+        ULONG len, full_len;
+
         ok(status == STATUS_SUCCESS, "Failed to open SymbolicLink(%08x)\n", status);
         pRtlFreeUnicodeString(&str);
         InitializeObjectAttributes(&attr, &str, 0, dir, NULL);
         pRtlCreateUnicodeStringFromAsciiz(&str, "one more level");
         DIR_TEST_CREATE_FAILURE(&h, STATUS_OBJECT_TYPE_MISMATCH)
         pRtlFreeUnicodeString(&str);
-        pNtClose(h);
+
+        str.Buffer = buffer;
+        str.MaximumLength = sizeof(buffer);
+        len = 0xdeadbeef;
+        memset( buffer, 0xaa, sizeof(buffer) );
+        status = pNtQuerySymbolicLinkObject( dir, &str, &len );
+        ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        full_len = str.Length + sizeof(WCHAR);
+        ok( len == full_len, "bad length %u/%u\n", len, full_len );
+        ok( buffer[len / sizeof(WCHAR) - 1] == 0, "no terminating null\n" );
+
+        str.MaximumLength = str.Length;
+        len = 0xdeadbeef;
+        status = pNtQuerySymbolicLinkObject( dir, &str, &len );
+        ok( status == STATUS_BUFFER_TOO_SMALL, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        ok( len == full_len, "bad length %u/%u\n", len, full_len );
+
+        str.MaximumLength = 0;
+        len = 0xdeadbeef;
+        status = pNtQuerySymbolicLinkObject( dir, &str, &len );
+        ok( status == STATUS_BUFFER_TOO_SMALL, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        ok( len == full_len, "bad length %u/%u\n", len, full_len );
+
+        str.MaximumLength = str.Length + sizeof(WCHAR);
+        len = 0xdeadbeef;
+        status = pNtQuerySymbolicLinkObject( dir, &str, &len );
+        ok( status == STATUS_SUCCESS, "NtQuerySymbolicLinkObject failed %08x\n", status );
+        ok( len == full_len, "bad length %u/%u\n", len, full_len );
+
         pNtClose(dir);
     }
 
@@ -710,6 +742,7 @@ START_TEST(om)
     pNtCreateDirectoryObject= (void *)GetProcAddress(hntdll, "NtCreateDirectoryObject");
     pNtOpenSymbolicLinkObject = (void *)GetProcAddress(hntdll, "NtOpenSymbolicLinkObject");
     pNtCreateSymbolicLinkObject = (void *)GetProcAddress(hntdll, "NtCreateSymbolicLinkObject");
+    pNtQuerySymbolicLinkObject  = (void *)GetProcAddress(hntdll, "NtQuerySymbolicLinkObject");
     pNtCreateSemaphore      =  (void *)GetProcAddress(hntdll, "NtCreateSemaphore");
     pNtCreateTimer          =  (void *)GetProcAddress(hntdll, "NtCreateTimer");
     pNtCreateSection        =  (void *)GetProcAddress(hntdll, "NtCreateSection");

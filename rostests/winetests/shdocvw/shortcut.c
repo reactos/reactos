@@ -216,9 +216,10 @@ static void test_ShortcutFolder(void) {
     ok (pidlCurFolder->mkid.cb == 20 && ((LPSHITEMID)((BYTE*)pidlCurFolder+20))->cb == 0 && 
         IsEqualCLSID(&CLSID_WineTest, (REFCLSID)((LPBYTE)pidlCurFolder+4)), 
         "GetCurFolder returned unexpected pidl!\n");
-    
+
+    ILFree(pidlCurFolder);
     IPersistFolder3_Release(pWineTestPersistFolder);
-    
+
 cleanup:
     unregister_keys(HKEY_CLASSES_ROOT, HKEY_CLASSES_ROOT_keys, 1);
 }    
