@@ -22,7 +22,6 @@ inline void client_to_screen( struct window *win, int *x, int *y );
 void redraw_window( struct window *win, struct region *region, int frame, unsigned int flags );
 void req_update_window_zorder( const struct update_window_zorder_request *req, struct update_window_zorder_reply *reply );
 
-PSWM_WINDOW NTAPI SwmGetTopWindow();
 PSWM_WINDOW NTAPI SwmGetForegroundWindow(BOOLEAN TopMost);
 
 VOID NTAPI SwmClipAllWindows();
@@ -216,7 +215,7 @@ SwmRecalculateVisibility(PSWM_WINDOW CalcWindow)
     DPRINT("Calculating visibility for %x\n", CalcWindow->hwnd);
 
     /* Check if this window is already on top */
-    if (CalcWindow == SwmGetTopWindow())
+    if (CalcWindow == SwmGetForegroundWindow(TRUE))
     {
         /* It is, make sure it's fully visible */
         NewRegion = create_empty_region();
@@ -497,31 +496,6 @@ SwmRemoveWindow(HWND hWnd)
 
     /* Release the lock */
     SwmRelease();
-}
-
-// FIXME: This one is deprecated and will be removed soon
-PSWM_WINDOW
-NTAPI
-SwmGetTopWindow()
-{
-    PLIST_ENTRY Current;
-    PSWM_WINDOW Window;
-
-    /* Traverse the list to find top non-hidden window */
-    Current = SwmWindows.Flink;
-    while(Current != &SwmWindows)
-    {
-        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
-
-        /* If this window is not hidden - it's the top one */
-        if (!Window->Hidden) return Window;
-
-        Current = Current->Flink;
-    }
-
-    /* This should never happen */
-    ASSERT(FALSE);
-    return NULL;
 }
 
 PSWM_WINDOW
