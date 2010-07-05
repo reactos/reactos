@@ -82,7 +82,7 @@ END
 
 SHBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Огляд папок"
+CAPTION "Огляд тек"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
@@ -94,15 +94,15 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "Огляд папок"
+CAPTION "Огляд тек"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Папка:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "Тека:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Створити &папку", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Створити &теку", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "Скасувати", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
@@ -155,7 +155,7 @@ CAPTION "Виконати"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Введіть ім'я програми, папки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
+	LTEXT "Введіть ім'я програми, теки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
 	LTEXT "&Відкрити:", 12305, 3, 39, 29, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE |  CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
@@ -209,7 +209,7 @@ BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
 	LTEXT "Тип файлу:", 14004, 8, 35, 50, 10
-	LTEXT "Папка", 14005, 68, 35, 160, 10
+	LTEXT "Тека", 14005, 68, 35, 160, 10
 	LTEXT "Розташування:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 315, 10
 	LTEXT "Розмір:", 14008, 8, 72, 45, 10
@@ -351,12 +351,12 @@ CAPTION "Властивості Кошика"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Установки для вибраного розташування", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Користувацький розмір:", 14001, 20, 90, 80, 10, WS_TABSTOP
-	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "&Граничний об'єм кошика (Мб):", -1, 20, 105, 70, 10
+	GROUPBOX "Налаштування для вибраного розташування", -1, 10, 72, 220, 70
+	RADIOBUTTON "&Особливий розмір:", 14001, 20, 90, 92, 10, WS_TABSTOP
+	EDITTEXT 14002, 120, 100, 50, 14, WS_TABSTOP | ES_NUMBER
+	LTEXT "&Максимальний розмір(Мб):", -1, 20, 105, 100, 10
 	RADIOBUTTON "Не переміщ&увати файли до кошика, а видаляти їх остаточно відразу", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	AUTOCHECKBOX "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 140, 10, WS_TABSTOP
+	AUTOCHECKBOX "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 165, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -393,19 +393,19 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Завдання", -1, 7, 10, 249, 45
 	ICON "", 30109, 14, 25, 21, 20, SS_REALSIZECONTROL
-	AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Використовувати зви&чайні папки ReactOS", 14002, 40, 37, 120, 10, WS_TABSTOP | WS_GROUP
-	GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
+	AUTORADIOBUTTON "&Показувати список типових завдань у теках", 14001, 40, 25, 170, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Використовувати зви&чайні теки ReactOS", 14002, 40, 37, 149, 10, WS_TABSTOP | WS_GROUP
+	GROUPBOX "Огляд тек", -1, 7, 60, 249, 45, WS_TABSTOP
 	ICON "", 30110, 14, 70, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP | WS_GROUP
-	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP | WS_GROUP
+	AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 155, 10, WS_TABSTOP | WS_GROUP
 	GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
 	ICON "", 30111, 14, 120, 21, 20, SS_REALSIZECONTROL
 	AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP | WS_GROUP
 	AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP | WS_GROUP
-	PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
+	PUSHBUTTON "&Стандартно", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
@@ -413,14 +413,14 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Вигляд"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Подання папок", -1, 7, 10, 249, 60
+GROUPBOX "Вигляд тек", -1, 7, 10, 249, 60
 //ICON
-LTEXT "Можна застосувати вигляд, який використовується для цієї папки (наприклад, ""Таблиця"" або ""Плитка""), до всіх папок.", -1, 60, 20, 180, 20
-PUSHBUTTON "&Застосувати до всіх папок", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Скид для всіх папок", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Можна застосувати вигляд, який використовується для цієї теки (наприклад, ""Таблиця"" або ""Плитка""), до всіх тек.", -1, 60, 20, 180, 23
+PUSHBUTTON "&Застосувати до всіх тек", 14001, 58, 50, 84, 14, WS_TABSTOP
+PUSHBUTTON "&Скид для всіх тек", 14002, 150, 50, 80, 14, WS_TABSTOP
 LTEXT "Додаткові параметри:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "&Відновити", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Стандартно", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
@@ -433,11 +433,11 @@ CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGEL
 PUSHBUTTON "&Створити", 14001, 120, 110, 50, 14, WS_TABSTOP
 PUSHBUTTON "В&идалити", 14002, 180, 110, 50, 14, WS_TABSTOP
 GROUPBOX "Подробиці для розширення '%s'", 14003, 7, 130, 249, 70
-LTEXT "Відкривати у:", -1, 12, 140, 40, 10
+LTEXT "Відкривати у:", -1, 12, 140, 48, 10
 //ICON
 LTEXT "Додаток", 14005, 100, 140, 40, 10
 PUSHBUTTON "&Змінити...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Файли з розширенням '%s' мають тип '%s'. Щоб\nзмінити параметри, які впливатимуть на всі файли '%s', натисніть кнопку\n""Додатково"".", 14007, 12, 155, 160, 30
+LTEXT "Файли з розширенням '%s' мають тип '%s'.\nЩоб змінити параметри, які впливатимуть\nна всі файли '%s', натисніть кнопку ""Додатково"".", 14007, 12, 155, 160, 30
 PUSHBUTTON "&Додатково", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
@@ -725,10 +725,10 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Створити"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папку"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлик"
-	IDS_FOLDER_OPTIONS          "Властивості папки"
+	IDS_FOLDER_OPTIONS          "Властивості теки"
 	IDS_RECYCLEBIN_LOCATION     "Розташування Кошика"
 	IDS_RECYCLEBIN_DISKSPACE    "Доступний простір"
-	IDS_EMPTY_BITBUCKET         "Порожня корзина"
+	IDS_EMPTY_BITBUCKET         "Очистити Кошик"
 	IDS_PICK_ICON_TITLE         "Вибрати значок"
 	IDS_PICK_ICON_FILTER        "Файли значків(*.ico, *.icl, *.exe, *.dll)\0*.ico;*.icl;*.exe;*.dll\0"
 	IDS_OPEN_WITH_FILTER        "Виконувані файли\0*.exe\0"

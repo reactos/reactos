@@ -1,725 +1,727 @@
-/*
+﻿/*
  * PROJECT:     Command-line interface
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/shell/cmd/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for Command-line interface
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
 
-STRING_ASSOC_HELP,    "Modify file extension associations.\n\n\
-assoc [.ext[=[FileType]]]\n\
+STRING_ASSOC_HELP,    "Çìiíà àñîöiàöié ôàéëîâèõ ðîçøèðåíü.\n\n\
+assoc [.ðîø[=[ÔàéëÒèï]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (äðóê âñiõ àñîöiàöié)\n\
+assoc .ðîø (äðóê âiäïîâiäíî¿ àñîöiàöi¿)\n\
+assoc .ðîø= (âèäàëåííÿ âiäïîâiäíî¿ àñîöiàöi¿)\n\
+assoc .ðîø=ÔàéëÒèï (äîäàòè íîâó àñîöiàöiþ)\n"
 
-STRING_ATTRIB_HELP,    "³���������� ��� ���� �������� �����.\n\n\
-ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] ���� ...\n\
+STRING_ATTRIB_HELP,    "Â³äîáðàæåííÿ àáî çì³íà àòðèáóò³â ôàéëó.\n\n\
+ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] ôàéë ...\n\
        [/S [/D]]\n\n\
-  +   ��������� ��������\n\
-  -   ������ ��������\n\
-  R   ������� ����� ""���� �������""\n\
-  A   ������� ����� ""��������""\n\
-  S   ������� ����� ""���������""\n\
-  H   ������� ����� ""����������""\n\
-  /S  ������� ����� � ��������� ������� � �������� �����\n\
-      � � ��� �� ��������\n\
-  /D  ������� ����� � �����\n\n\
-������ ATTRIB ��� ���������, ��� ������� �������� ��� �����.\n"
+  +   Âñòàíîâëåííÿ àòðèáóòó\n\
+  -   Çíÿòòÿ àòðèáóòó\n\
+  R   Àòðèáóò ôàéëó ""Ëèøå ÷èòàííÿ""\n\
+  A   Àòðèáóò ôàéëó ""Àðõiâíèé""\n\
+  S   Àòðèáóò ôàéëó ""Ñèñòåìíèé""\n\
+  H   Àòðèáóò ôàéëó ""Ïðèõîâàíèé""\n\
+  /S  Îáðîáêà ôàéëiâ çi âêàçàíèìè iìåíàìè â ïîòî÷íié òåöi\n\
+      i ó âñ³õ ¿¿ ïiäòåêàõ\n\
+  /D  Îáðîáêà òàêîæ i òåê\n\n\
+Ââåäiòü ATTRIB áåç ïàðàìåòðà, ùîá âèâåñòè àòðèáóòè âñiõ ôàéëiâ.\n"
 
-STRING_ALIAS_HELP,  "������������, ��������� ��� ����� ����������.\n\n\
-ALIAS [���������=[�������]]\n\n\
-  ���������    ��'� ����������.\n\
-  �������      �����, �� ������������� ������ ����������.\n\n\
-��������� ������ ��� ����������:\n\
+STRING_ALIAS_HELP,  "Âñòàíîâëåííÿ, âèäàëåííÿ àáî ïîêàç ïñåâäîíiìiâ.\n\n\
+ALIAS [ïñåâäîíiì=[êîìàíäà]]\n\n\
+  ïñåâäîíiì    Iì'ÿ ïñåâäîíiìà.\n\
+  êîìàíäà      Òåêñò, ùî ïiäñòàâëÿºòüñÿ çàìiñòü ïñåâäîíiìà.\n\n\
+Âèâåäåííÿ ñïèñêó âñiõ ïñåâäîíiìiâ:\n\
   ALIAS\n\n\
-������������ ��� ���� ��������� ����������:\n\
+Âñòàíîâëåííÿ àáî çìiíà iñíóþ÷îãî ïñåâäîíiìà:\n\
   ALIAS da=dir a:\n\n\
-��������� ���������� � ������:\n\
+Âèäàëåííÿ ïñåâäîíiìà çi ñïèñêó:\n\
   ALIAS da="
 
-STRING_BEEP_HELP, "�������� ������ ������.\n\nBEEP\n"
+STRING_BEEP_HELP, "Çâóêîâèé ñèãíàë äèíàìiêà.\n\nBEEP\n"
 
-STRING_CALL_HELP, "������ ������ ������� �������� � ����.\n\n\
-CALL [����:][����]��'�_����� [���������]\n\n\
-  ���������  ���� ��������� ���������� �����, ���������� ��� ���������\n\
-             �����."
+STRING_CALL_HELP, "Âèêëèê îäíiº¿ ïàêåòíî¿ ïðîãðàìè ç iíøî¿.\n\n\
+CALL [äèñê:][øëÿõ]iì'ÿ_ôàéëà [ïàðàìåòðè]\n\n\
+  ïàðàìåòðè  Íàáið ïàðàìåòðiâ êîìàíäíîãî ðÿäêà, íåîáõiäíèõ äëÿ ïàêåòíîãî\n\
+             ôàéëó."
 
-STRING_CD_HELP,      "Changes the current directory or displays it's name\n\n\
-CHDIR [/D][drive:][path]\n\
+STRING_CD_HELP,      "Âèâåäåííÿ iìåíi àáî çìiíà ïîòî÷íîãî êàòàëîãó\n\n\
+CHDIR [/D][äèñê:][øëÿõ]\n\
 CHDIR[..|.]\n\
-CD [/D][drive:][path]\n\
+CD [/D][äèñê:][øëÿõ]\n\
 CD[..|.]\n\n\
-  ..   parent directory\n\
-  .    current directory\n\
-  /D   Will change current drive and current directory.\n\n\
-Type CD drive: to display the current directory on the specified drive.\n\
-Type CD without a parameter to display the current drive and directory.\n"
+  ..   áàòüêiâñüêèé êàòàëîã\n\
+  .    ïîòî÷íèé êàòàëîã\n\
+  /D   Îäíî÷àñíà çìiíà ïîòî÷íîãî äèñêó òà êàòàëîãó.\n\n\
+Êîìàíäà CD äèñê: âiäîáðàæàº iì'ÿ ïîòî÷íîãî êàòàëîãó âêàçàíîãî äèñêó.\n\
+Êîìàíäà CD áåç ïàðàìåòðiâ âiäîáðàæàº iìåíà ïîòî÷íèõ äèñêó òà êàòàëîãó.\n"
 
-STRING_CHCP_HELP,   "Displays or sets the active code page number.\n\n\
+STRING_CHCP_HELP,   "Âèâiä àáî çìiíà ïîòî÷íîãî íîìåðà êîäîâî¿ ñòîðiíêè.\n\n\
 CHCP [nnn]\n\n\
-  nnn   Specifies the active code page number.\n\n\
-Type CHCP without a parameter to display the active code page number.\n"
+  nnn   Çàäàº íîìåð êîäîâî¿ ñòîðiíêè.\n\n\
+Êîìàíäà CHCP áåç ïàðàìåòðà âèâîäèòü ïîòî÷íèé íîìåð êîäîâî¿ ñòîðiíêè.\n"
 
-STRING_CHOICE_HELP, "Waits for the user to choose one of a set of choices.\n\n\
-CHOICE  [/C[:]choices][/N][/S][/T[:]c,nn][text]\n\n\
-  /C[:]choices  Specifies allowable keys. Default is YN.\n\
-  /N            Do not display choices and ? at the end of the prompt string.\n\
-  /S            Treat choice keys as case sensitive.\n\
-  /T[:]c,nn     Default choice to c after nn seconds.\n\
-  text          Prompt string to display.\n\n\
-ERRORLEVEL is set to offset of key user presses in choices.\n"
+STRING_CHOICE_HELP, "Î÷iêóº, ïîêè êîðèñòóâà÷ íå îáåðå îäèí ç âêàçàíèõ â ñïèñêó ñèìâîëiâ.\n\n\
+CHOICE  [/C[:]ñïèñîê_ñèìâîëiâ][/N][/S][/T[:]c,nn][òåêñò]\n\n\
+  /C[:]ñïèñîê_ñèìâîëiâ  Çàäàº äîïóñòèìi ñèìâîëè. Ïî çàìîâ÷óâàííþ öå YN.\n\
+  /N            Íå âèâîäèòè ñïèñîê ñèìâîëiâ i ? ïiñëÿ ïiäêàçêè.\n\
+  /S            Òðàêòóâàòè ñèìâîëè ÿê ÷óòëèâi äî ðåãiñòðó.\n\
+  /T[:]c,nn     Ïî çàìîâ÷óâàííþ âèá³ð c ïiñëÿ ïðîìèíàííÿ nn ñåêóíä.\n\
+  òåêñò         ïiäêàçêà.\n\n\
+ERRORLEVEL âñòàíîâëþºòüñÿ ðiâíèì íîìåðó âèáðàíîãî ñèìâîëó.\n"
 
-STRING_CLS_HELP, "Clears the screen.\n\nCLS\n"
+STRING_CLS_HELP, "Î÷èùåííÿ åêðàíó.\n\nCLS\n"
 
-STRING_CMD_HELP1, "\nInternal commands available:\n"
+STRING_CMD_HELP1, "\nÄîñòóïíi âíóòðiøíi êîìàíäè:\n"
 
-STRING_CMD_HELP2, "\nFeatures available:"
+STRING_CMD_HELP2, "\nÄîñòóïíi ìîæëèâîñòi:"
 
-STRING_CMD_HELP3,"  [aliases]"
+STRING_CMD_HELP3,"  [ïñåâäîíiìè]"
 
-STRING_CMD_HELP4,"  [history]"
+STRING_CMD_HELP4,"  [iñòîðiÿ]"
 
-STRING_CMD_HELP5,"  [unix filename completion]"
+STRING_CMD_HELP5,"  [çàâàðøåííÿ iìåí ôàéëiâ unix]"
 
-STRING_CMD_HELP6,"  [directory stack]"
+STRING_CMD_HELP6,"  [ñòåê äèðåêòîðié]"
 
-STRING_CMD_HELP7,"  [redirections and piping]"
+STRING_CMD_HELP7,"  [ïåðåíàïðàâëåííÿ òà piping]"
 
-STRING_CMD_HELP8, "Starts a new instance of the ReactOS command line interpreter.\n\n\
-CMD [/[C|K] command][/P][/Q][/T:bf]\n\n\
-  /C command  Runs the specified command and terminates.\n\
-  /K command  Runs the specified command and remains.\n\
-  /P          CMD becomes permanent and runs autoexec.bat\n\
-              (cannot be terminated).\n\
-  /T:bf       Sets the background/foreground color (see COLOR command).\n"
+STRING_CMD_HELP8, "Çàïóñê íîâî¿ êîïi¿ iíòåðïðåòàòîðà êîìàíä ReactOS.\n\n\
+CMD [/[C|K] êîìàíäà][/P][/Q][/T:êë]\n\n\
+  /C êîìàíäà  Âèêîíàííÿ âêàçàíî¿ êîìàíäè ç ïîäàëüøèì çàâåðøåííÿì.\n\
+  /K êîìàíäà  Âèêîíàííÿ âêàçàíî¿ êîìàíäè áåç ïîäàëüøîãî çàâåðøåííÿ.\n\
+  /P          CMD ñòàº ïåðìàíåíòíèì i çàïóñêàº autoexec.bat\n\
+              (ïðîöåñ íå ìîæå áóòè çàâåðøåíèé).\n\
+  /T:êë       Âèáið êîëüîðó òåêñòó/òëà (äåòàëüíiøå äèâ. COLOR /?).\n"
 
-STRING_COLOR_HELP1, "Sets the default foreground and background colors.\n\n\
+STRING_COLOR_HELP1, "Âñòàíîâëåííÿ êîëüîðiâ ïî çàìîâ÷óâàííþ äëÿ òåêñòó òà òëà.\n\n\
 COLOR [attr [/-F]] \n\n\
-  attr        Specifies color attribute of console output\n\
-  /-F         Does not fill the console blank space with color attribute\n\n\
-There are three ways to specify the colors:\n\
-1) [bright] name on [bright] name  (only the first three letters are required)\n\
-2) decimal on decimal\n\
-3) two hex digits\n\n\
-Colors are:\n\
-dec  hex  name       dec  hex  name\n\
-0    0    Black       8   8    Gray(Bright black)\n\
-1    1    Blue        9   9    Bright Blue\n\
-2    2    Green      10   A    Bright Green\n\
-3    3    Cyan       11   B    Bright Cyan\n\
-4    4    Red        12   C    Bright Red\n\
-5    5    Magenta    13   D    Bright Magenta\n\
-6    6    Yellow     14   E    Bright Yellow\n\
-7    7    White      15   F    Bright White\n"
+  attr        Àòðèáóòè êîëüîðiâ äëÿ òåêñòîâèõ âiêîí\n\
+  /-F         Íå çàëèâàòè íåçàïîâíåíi ìiñöÿ êîëüîðîì\n\n\
+Iñíóº òðè ñïîñîáè çàäàííÿ êîëüîðiâ:\n\
+1) çà íàçâîþ íà àíãëiéñüêié ìîâi  (ïîòðiáíî ëèøå ïåðøi òðè áóêâè íàçâè)\n\
+2) â âèãëÿäi äåñÿòêîâèõ ÷èñåë (decimal on decimal)\n\
+3) äâi øiñíàäöÿòêîâi öèôðè\n\n\
+Òàáëèöÿ êîëüîðiâ:\n\
+äåñ  ø³ñ  íàçâà      äåñ  ø³ñ  íàçâà\n\
+0    0    ×îðíèé      8   8    Ñiðèé\n\
+1    1    Ñèíié       9   9    Ñâiòëî-ñèíié\n\
+2    2    Çåëåíèé    10   A    Ñâiòëî-çåëåíèé\n\
+3    3    Áëàêèòíèé  11   B    Ñâiòëî-áëàêèòíèé\n\
+4    4    ×åðâîíèé   12   C    Ñâiòëî-÷åðâîíèé\n\
+5    5    Ìàëèíîâèé  13   D    Ñâiòëî-ìàëèíîâèé\n\
+6    6    Æîâòèé     14   E    Ñâiòëî-æîâòèé\n\
+7    7    Áiëèé      15   F    ßñêðàâî-áiëèé\n"
 
-STRING_COPY_HELP1,  "Overwrite %s (Yes/No/All)? "
+STRING_COPY_HELP1,  "Ïåðåçàïèñàòè %s (Yes/No/All)? "
 
-STRING_COPY_HELP2, "Copies one or more files to another location.\n\n\
-COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
-     [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
-  source       Specifies the file or files to be copied.\n\
-  /A           Indicates an ASCII text file.\n\
-  /B           Indicates a binary file.\n\
-  destination  Specifies the directory and/or filename for the new file(s).\n\
-  /V           Verifies that new files are written correctly.\n\
-  /Y           Suppresses prompting to confirm you want to overwrite an\n\
-               existing destination file.\n\
-  /-Y          Causes prompting to confirm you want to overwrite an\n\
-               existing destination file.\n\n\
-The switch /Y may be present in the COPYCMD environment variable.\n\
+STRING_COPY_HELP2, "Êîïiþâàííÿ îäíîãî àáî äåê³ëüêîõ ôàéëiâ â iíøå ìiñöå.\n\n\
+COPY [/V][/Y|/-Y][/A|/B] äæåðåëî [/A|/B]\n\
+     [+ äæåðåëî [/A|/B] [+ ...]] [ðåçóëüòàò [/A|/B]]\n\n\
+  äæåðåëî      Iìåíà îäíîãî àáî äåêiëüêîõ ôàéëiâ, ùî áóäóòü ñêîï³éîâàíi.\n\
+  /A           Ôàéë º òåêñòîâèì ôàéëîì ASCII.\n\
+  /B           Ôàéë º äâiéêîâèì ôàéëîì.\n\
+  ðåçóëüòàò    Êàòàëîã òà/àáî iì'ÿ äëÿ êiíöåâèõ ôàéëiâ.\n\
+  /V           Ïåðåâiðêà ïðàâèëüíîñòi êîïiþâàííÿ ôàéëiâ.\n\
+  /Y           Ïðèäàâëåííÿ çàïèòó ïiäòâåðäæåííÿ íà ïåðåçàïèñ iñíóþ÷îãî\n\
+               ðåçóëüòóþ÷îãî ôàéëó.\n\
+  /-Y          Îáîâ'ÿçêîâèé çàïèò ïiäòâåðäæåííÿ íà ïåðåçàïèñ iñíóþ÷îãî\n\
+               ðåçóëüòóþ÷îãî ôàéëó.\n\n\
+Êëþ÷ /Y ìîæíà âñòàíîâèòè ÷åðåç çìiííó ñåðåäîâèùà COPYCMD.\n\
 ...\n"
 
-STRING_DATE_HELP1, "\nEnter new date (mm%cdd%cyyyy): "
+STRING_DATE_HELP1, "\nÂâåäiòü íîâó äàòó (mm%cdd%cyyyy): "
 
-STRING_DATE_HELP2, "\nEnter new date (dd%cmm%cyyyy): "
+STRING_DATE_HELP2, "\nÂâåäiòü íîâó äàòó (dd%cmm%cyyyy): "
 
-STRING_DATE_HELP3, "\nEnter new date (yyyy%cmm%cdd): "
+STRING_DATE_HELP3, "\nÂâåäiòü íîâó äàòó (yyyy%cmm%cdd): "
 
-STRING_DATE_HELP4, "Displays or sets the date.\n\n\
-DATE [/T][date]\n\n\
-  /T    display only\n\n\
-Type DATE without parameters to display the current date setting and\n\
-a prompt for a new one.  Press ENTER to keep the same date.\n"
+STRING_DATE_HELP4, "Âiäîáðàæåííÿ ÷è çìiíà äàòè.\n\n\
+DATE [/T][äàòà]\n\n\
+  /T    ëèøå âiäîáðàæåííÿ\n\n\
+Êîìàíäà DATE áåç ïàðàìàòðiâ âiäîáðàæàº ïîòî÷íó äàòó i çàïèòóº ââ³ä\n\
+íîâî¿ äàòè. Äëÿ çáåðåæåííÿ ïîòî÷íî¿ äàòè íàòèñ ENTER.\n"
 
-STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
-DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
-DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
-ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
-      file  Specifies the file(s) to delete.\n\n\
-  /N    Nothing.\n\
-  /P    Prompt. Ask before deleting each file.\n\
-  /T    Total. Display total number of deleted files and freed disk space.\n\
-  /Q    Quiet.\n\
-  /W    Wipe. Overwrite the file with random numbers before deleting it.\n\
-  /Y    Yes. Kill even *.* without asking.\n\
-  /F    Force Delete hidden, read-only and system files.\n\
-  /S    Delete file from all sub directory\n\
-  /A    Select files to be deleted based on attributes.\n\
-        attributes\n\
-        R     Read Only files\n\
-        S     System files\n\
-        A     Archiveable files\n\
-        H     Hidden Files\n\
-        -     prefix meaning not\n"
+STRING_DEL_HELP1,  "Âèäàëåííÿ îäíîãî àáî äåêiëüêîõ ôàéëiâ.\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]àòðèáóòè]] iìåíà_ôàéëiâ ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]àòðèáóòè]] iìåíà_ôàéëiâ ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]àòðèáóòè]] iìåíà_ôàéëiâ ...\n\n\
+      iìåíà_ôàéë³â  Iìåíà îäíîãî àáî äåêiëüêîõ ôàéëiâ.\n\n\
+  /N    Íå âèêîíóâàòè îïåðàöiþ âèäàëåííÿ áåçïîñåðåäíüî.\n\
+  /P    Çàïèò íà ïiäòâåðäæåííÿ ïåðåä âèäàëåííÿì êîæíîãî ôàéëó.\n\
+  /T    Âiäîáðàæàº êiëüêiñòü âèäàëåíèõ ôàéëiâ i çâiëüíåíîãî\n\
+        äèñêîâîãî ïðîñòîðó.\n\
+  /Q    Âèìêíåííÿ çàïèòó íà ïiäòâåðäæåííÿ ïðè âèäàëåííi ôàéëiâ.\n\
+  /W    Ïåðåçàïèñàòè ôàéë âèïàäêîâèìè äàíèìè ïåðåä âèäàëåííÿì.\n\
+  /Y    Âèìêíåííÿ çàïèòó íà ïiäòâåðäæåííÿ ïðè âèäàëåííi ôàéëiâ\n\
+        íàâiòü äëÿ ìàñêè *.*.\n\
+  /F    Ïðèìóñîâå âèäàëåííÿ ïðèõîâàíèõ, ñèñòåìíèõ òà ôàéëiâ\n\
+        äîñòóïíèõ ëèøå äëÿ ÷èòàííÿ.\n\
+  /S    Âèäàëÿòè ôàéë ç âñiõ ïiääèðåêòîðié\n\
+  /A    Âiäáið ôàéëiâ äëÿ âèäàëåííÿ çà âëàñòèâîñòÿìè.\n\
+        âëàñòèâîñòi\n\
+        R     Äîñòóïíi ëèøå äëÿ ÷èòàííÿ\n\
+        S     Ñèñòåìíi ôàéëè\n\
+        A     Ôàéëè äëÿ àðõiâóâàííÿ\n\
+        H     Ïðèõîâàíi ôàéëè\n\
+        Ïðåôiêñ ""-"" îçíà÷àº ÍÅ\n"
 
-STRING_DEL_HELP2, "All files in the directory will be deleted!\nAre you sure (Y/N)?"
-STRING_DEL_HELP3, "    %lu file deleted\n"
-STRING_DEL_HELP4, "    %lu files deleted\n"
+STRING_DEL_HELP2, "Âñi ôàéëè â êàòàëîçi áóäóòü âèäàëííi!\nÂè âïåâíåíi (Y/N)?"
+STRING_DEL_HELP3, "    %lu ôàéë âèäàëåíî\n"
+STRING_DEL_HELP4, "    %lu ôàéëiâ âèäàëåíî\n"
 
-STRING_DELAY_HELP, "pause for n seconds or milliseconds\n\
+STRING_DELAY_HELP, "ïàóçà íà n ñåêóíä ÷è ìiëiñåêóíä\n\
 DELAY [/m]n\n\n\
-  /m          specifiy than n are milliseconds\n\
-              otherwise n are seconds\n"
+  /m          âêàçóº, ùî n öå ìiëiñåêóíäè\n\
+              iíàêøå n öå êiëüêiñòü ñåêóíä\n"
 
-STRING_DIR_HELP1, "DIR [drive:][path][filename] [/A[[:]attributes]] [/B] [/C] [/D] [/L] [/N]\n\
-  [/O[[:]sortorder]] [/P] [/Q] [/S] [/T[[:]timefield]] [/W] [/X] [/4]\n\n\
-  [drive:][path][filename]\n\
-              Specifies drive, directory, and/or files to list.\n\n\
-  /A          Displays files with specified attributes.\n\
-  attributes   D  Directories                R  Read-only files\n\
-               H  Hidden files               A  Files ready for archiving\n\
-               S  System files               -  Prefix meaning not\n\
-  /B          Uses bare format (no heading information or summary).\n\
-  /C          Display the thousand separator in file sizes.  This is the\n\
-              default.  Use /-C to disable display of separator.\n\
-  /D          Same as wide but files are list sorted by column.\n\
-  /L          Uses lowercase.\n\
-  /N          New long list format where filenames are on the far right.\n\
-  /O          List by files in sorted order.\n\
-  sortorder    N  By name (alphabetic)       S  By size (smallest first)\n\
-               E  By extension (alphabetic)  D  By date/time (oldest first)\n\
-               G  Group directories first    -  Prefix to reverse order\n\
-  /P          Pauses after each screenful of information.\n\
-  /Q          Display the owner of the file.\n\
-  /S          Displays files in specified directory and all subdirectories.\n\
-  /T          Controls which time field displayed or used for sorting\n\
-  timefield   C  Creation\n\
-              A  Last Access\n\
-              W  Last Written\n\
-  /W          Uses wide list format.\n\
-  /X          This displays the short names generated for non-8dot3 file\n\
-              names.  The format is that of /N with the short name inserted\n\
-              before the long name. If no short name is present, blanks are\n\
-              displayed in its place.\n\
-  /4          Displays four-digit years\n\n\
-Switches may be preset in the DIRCMD environment variable.  Override\n\
-preset switches by prefixing any switch with - (hyphen)--for example, /-W.\n"
+STRING_DIR_HELP1, "DIR [äèñê:][øëÿõ][iì'ÿ_ôàéëó] [/A[[:]àòðèáóòè]] [/B] [/C] [/D] [/L] [/N]\n\
+  [/O[[:]ïîðÿäîê]] [/P] [/Q] [/S] [/T[[:]÷àñ]] [/W] [/X] [/4]\n\n\
+  [äèñê:][øëÿõ][iì'ÿ_ôàéëó]\n\
+              Âèçíà÷àº äèñê, äèðåêòîð³þ, òà/÷è ôàéëè äëÿ ¿õ âèâåäåííÿ â ñïèñêó.\n\n\
+  /A          Âiäîáðàæåííÿ ôàéëiâ ç âêàçàíèìè àòðèáóòàìè.\n\
+  àòðèáóòè     D  Äèðåêòîði¿                R  Ôàéëè, äîñòóïíi ëèøå äëÿ ÷òàííÿ\n\
+               H  Ïðèõîâàíi ôàéëè           A  Ôàéëè, ãîòîâi äëÿ àðõiâóâàííÿ\n\
+               S  Ñèñòåìíi ôàéëè            Ïðåôiêñ ""-"" îçíà÷àº ÍÅ\n\
+  /B          Âèâåäåííÿ ëèøå iìåí ôàéëiâ.\n\
+  /C          Çàñòîñóâàííÿ ðîçä³ëüíèêà ãðóï ðîçðÿä³â äëÿ âèâîäó ðîçì³ð³â ôàéë³â\n\
+              (ïî çàìîâ÷óâàííi).  Äëÿ âèìêíåííÿ öüîãî ðåæèìó âèêîðèñòàéòå êëþ÷ /-C.\n\
+  /D          Âèâåäåííÿ ñïèñêó â äåêiëüêà ñòîâï÷èêiâ ç ñîðòóâàííÿì ïî ñòîâï÷èêàõ.\n\
+  /L          Âèêîðèñòàííÿ íèæíüîãî ðåãiñòðó.\n\
+  /N          Âiäîáðàæåííÿ iìåí ôàéëiâ ó êðàéíüîìó ïðàâîìó ñòîâï÷èêó.\n\
+  /O          Ñîðòóâàííÿ ñïèñêó âiäîáðàæåíèõ ôàéëiâ.\n\
+  ïîðÿäîê      N  Çà iì'ÿì (ïî àëôàâiòó)        S  Çà ðîçìiðîì (ñïåðøó ìåíøi)\n\
+               E  Çà ðîçøèðåííÿì (ïî àëôàâiòó)  D  Çà äàòîþ/÷àñîì (ñïåðøó ñòàðiøi)\n\
+               G  Ïî÷àòè ñïèñîê ç êàòàëîãiâ     Ïðåôiêñ ""-"" äëÿ çâîðîòíüîãî ïîðÿäêó\n\
+  /P          Ïàóçà ïiñëÿ êîæíîãî çàïîâíåííÿ åêðàíó.\n\
+  /Q          Âiäîáðàæåííÿ äàíèõ ïðî âëàñíèêà ôàéëó.\n\
+  /S          Âiäîáðàæåííÿ ôàéëiâ ç âêàçàíîãî êàòàëîãó òà âñiõ ïiäêàòàëîãiâ.\n\
+  /T          Âèáið ïîëÿ ÷àñó äëÿ âiäîáðàæåííÿ ÷è ñîðòóâàííÿ\n\
+  ÷àñ         C  Ñòâîðåííÿ\n\
+              A  Îñòàííié äîñòóï\n\
+              W  Îñòàííÿ çìiíà\n\
+  /W          Ñïèñîê íà äåêiëüêà ñòîâïöiâ.\n\
+  /X          Âiäîáðàæåííÿ êîðîòêèõ iìåí ôàéëiâ, iìåíà ÿêèõ íå âiäïîâiäàþòü \n\
+              ñòàíäàðòó 8.3.  Ôîðìàò àíàëîãi÷íèé âèâîäó ç êëþ÷åì /N àëå êîðîòêi\n\
+              iìåíà âèâîäÿòüñÿ ñïàâà âiä äîâãèõ. ßêùî ó ôàéëà íåìàº êîðîòêîãî\n\
+              iì'ÿ, çàìiñòü íüîãî âèâîäÿòüñÿ ïðîáëè.\n\
+  /4          Âiäîáðàæåííÿ ðîêó â ÷îòèðèçíà÷íîìó ôîðìàòi\n\n\
+Êëþ÷i ìîæóòü áóòè ïîïåðåäíüî çàäàíi â çìiííié ñåðåäîâèùà DIRCMD.  Âiäõèëèòè\n\
+ïîïåðåäíüî çàäàíi êëþ÷i ìîæíà ïðåôiêñîì - (äåôiñ)--íàïðèêëàä, /-W.\n"
 
-STRING_DIR_HELP2, " Volume in drive %c is %s\n"
-STRING_DIR_HELP3, " Volume in drive %c has no label.\n"
-STRING_DIR_HELP4, " Volume Serial Number is %04X-%04X\n"
-STRING_DIR_HELP5, "\n     Total Files Listed:\n%16i File(s)% 14s bytes\n"
+STRING_DIR_HELP2, " Òîì â ïðèñòðî¿ %c ìàº ìiòêó %s\n"
+STRING_DIR_HELP3, " Òîì â ïðèñòðî¿ %c íå ìàº ìiòêè.\n"
+STRING_DIR_HELP4, " Ñåðiéíèé íîìåð òîìó: %04X-%04X\n"
+STRING_DIR_HELP5, "\n     Âñüîãî:\n%16i Ôàéë(iâ)% 14s áàéò\n"
 STRING_DIR_HELP6, "%16i Dir(s)% 15s bytes free\n"
 STRING_DIR_HELP7, "\n Directory of %s\n\n"
-STRING_DIR_HELP8, "%16i File(s)% 14s bytes\n"
+STRING_DIR_HELP8, "%16i Ôàéë(iâ)% 14s áàéò\n"
 
-STRING_DIRSTACK_HELP1, "Stores the current directory for use by the POPD command, then\n\
-changes to the specified directory.\n\n\
+STRING_DIRSTACK_HELP1, "Çáåðiãàº ïîòî÷íó äèðåêòîðiþ äëÿ âèêîðèñòàííÿ êîìàíäîþ POPD, ïîòiì\n\
+çàìiíþº ¿¿ íà âêàçàíó.\n\n\
 PUSHD [path | ..]\n\n\
-  path        Specifies the directory to make the current directory\n"
+  path        Âêàçóº äèðåêòîðiþ, ÿêó òðåáà çðîáèòè ïîòî÷íîþ\n"
 
-STRING_DIRSTACK_HELP2, "Changes to the directory stored by the PUSHD command.\n\nPOPD"
+STRING_DIRSTACK_HELP2, "Çìiíþº ïîòî÷íó äèðåêòîðiþ íà òó, ÿêà çáåðåæåíà êîìàíäîþ PUSHD.\n\nPOPD"
 
-STRING_DIRSTACK_HELP3, "Prints the contents of the directory stack.\n\nDIRS"
+STRING_DIRSTACK_HELP3, "Äðóêóº âìiñò ñòåêó äèðåêòîðié.\n\nDIRS"
 
-STRING_DIRSTACK_HELP4, "Directory stack empty"
+STRING_DIRSTACK_HELP4, "Ñòåê äèðåêòîðié ïîðîæíié"
 
-STRING_ECHO_HELP1,  "Display a messages without trailing carriage return and line feed.\n\n\
-  ECHOS message"
+STRING_ECHO_HELP1,  "Âèâîäèòü ïîâiäîìëåííÿ áåç ïîâåðíåííÿ êàðåòêè òà ïåðåâåäåííÿ ðÿäêà.\n\n\
+  ECHOS ïîâiäîìëåííÿ"
 
-STRING_ECHO_HELP2,  "Displays a message to the standard error output.\n\n\
-  ECHOERR message\n\
-  ECHOERR.           prints an empty line"
+STRING_ECHO_HELP2,  "Âèâîäèòü ïîâiäîìëåííÿ â ñòàíäàðòíèé êàíàë âèâîäó ïîìèëîê.\n\n\
+  ECHOERR ïîâiäîìëåííÿ\n\
+  ECHOERR.           äðóêóº ïîðîæíié ðÿäîê"
 
-STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carriage return and line feed.\n\n\
-  ECHOSERR message"
+STRING_ECHO_HELP3, "Äðóêóº ïîâiäîìëåííÿ â ñòàíäàðòíèé êàíàë âèâîäó ïîìèëîê áåç ïîâåðíåííÿ êàðåòêè òà ïåðåâåäåííÿ ðÿäêà.\n\n\
+  ECHOSERR ïîâiäîìëåííÿ"
 
-STRING_ECHO_HELP4, "Displays a message or switches command echoing on or off.\n\n\
+STRING_ECHO_HELP4, "Âèâåäåííÿ ïîâiäîìëåííÿ òà ïåðåìèêàííÿ ðåæèìó âiäîáðàæåííÿ êîìàíä íà åêðàíi.\n\n\
   ECHO [ON | OFF]\n\
-  ECHO [message]\n\
-  ECHO.             prints an empty line\n\n\
-Type ECHO without a parameter to display the current ECHO setting."
+  ECHO [ïîâiäîìëåííÿ]\n\
+  ECHO.             äðóêóº ïîðîæíié ðÿäîê\n\n\
+ECHO áåç ïàðàìåòðà âèâîäèòü ïîòî÷íèé ðåæèì âiäîáðàæåííÿ êîìàíä."
 
 STRING_ECHO_HELP5, "ECHO is %s\n"
 
-STRING_EXIT_HELP, "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
-  /B            Exits a batch file only.  \n\
-                If run outside of a batch file it will exit cmd.exe\n\
-  ExitCode      This value will be assigned to ERRORLEVEL on exit\n"
+STRING_EXIT_HELP, "Çàâåðøóº iíòåðïðåòàòîð êîìàíä.\n\nEXIT [/b] [ExitCode]\n\n\
+  /B            Âèõîäèòü ëèøå ç ïàêåòíîãî ôàéëó.  \n\
+                ßêùî ðîáîòà éäå ïîçà ïàêåòíèì ôàéëîì - âèõiä ç cmd.exe\n\
+  ExitCode      Öå çíà÷åííÿ áóäå ïðèñâîºíî ERRORLEVEL ïðè âèõîäi\n"
 
-STRING_FOR_HELP1, "Runs a specified command for each file in a set of files\n\n\
-FOR %variable IN (set) DO command [parameters]\n\n\
-  %variable  Specifies a replaceable parameter.\n\
-  (set)      Specifies a set of one or more files. Wildcards may be used.\n\
-  command    Specifies the command to carry out for each file.\n\
-  parameters Specifies parameters or switches for the specified command.\n\n\
-To use the FOR command in a batch program, specify %%variable instead of\n\
+STRING_FOR_HELP1, "Çàïóñêàº âêàçàíó êîìàíäó äëÿ êîæíîãî ôàéëó ç íàáîðó ôàéëiâ\n\n\
+FOR %variable IN (íàáið) DO êîìàíäà [ïàðàìåòðè]\n\n\
+  %variable  Ïàðàìåòð, ùî ïiäñòàâëÿºòüñÿ.\n\
+  (íàáið)    Íàáið ç îäíîãî àáî äåêiëüêîõ ôàéëiâ. Ìîæíà âèêîðèñòîâóâàòè ìàñêè.\n\
+  êîìàíäà    Êîìàíäà, ÿêó ñëiä âèêîíàòè äëÿ êîæíîãî ôàéëó.\n\
+  ïàðàìåòðè  Ïàðàìåòðè i êëþ÷i äëÿ âêàçàíî¿ êîìàíäè.\n\n\
+Â ïàêåòíèõ ïðîãðàìàõ äëÿ êîìàíäè FOR âèêîðèñòîâóºòüñÿ %%variable çàìiñòü\n\
 %variable.\n"
 
-STRING_FREE_HELP1, "\nVolume in drive %s is %-11s\n\
- Serial number is %s\n\
-  %16s bytes total disk space\n\
-  %16s bytes used\n\
-  %16s bytes free\n"
+STRING_FREE_HELP1, "\nÒîì äèñêó %s : %-11s\n\
+ Ñåðiéíèé íîìåð: %s\n\
+  %16s áàéò çàãàëüíîãî äèñêîâîãî ïðîñòîðó\n\
+  %16s áàéò çàéíÿòî\n\
+  %16s áàéò âiëüíî\n"
 
-STRING_FREE_HELP2, "Displays drive information.\n\nFREE [drive: ...]\n"
+STRING_FREE_HELP2, "Âèâîäèòü iíôîðìàöiþ ïðî òîì.\n\nFREE [drive: ...]\n"
 
-STRING_IF_HELP1, "Performs conditional processing in batch programs.\n\n\
-  IF [NOT] ERRORLEVEL number command\n\
-  IF [NOT] string1==string2 command\n\
-  IF [NOT] EXIST filename command\n\
-  IF [NOT] DEFINED variable command\n\n\
-NOT               Specifies that CMD should carry out the command only if\n\
-                  the condition is false\n\
-ERRORLEVEL number Specifies a true condition if the last program run returned\n\
-                  an exit code equal or greater than the number specified.\n\
-command           Specifies the command to carry out if the condition is met.\n\
-string1==string2  Specifies a true condition if the specified text strings\n\
-                  match.\n\
-EXIST filename    Specifies a true condition if the specified filename exists.\n\
-DEFINED variable  Specifies a true condition if the specified variable is\n\
-                  defined.\n"
+STRING_IF_HELP1, "Îïåðàòîð óìîâíîãî âèêîíàííÿ êîìàíä ó ïàêåòíîìó ôàéëi.\n\n\
+  IF [NOT] ERRORLEVEL ÷èñëî êîìàíäà\n\
+  IF [NOT] ðÿäîê1==ðÿäîê2 êîìàíäà\n\
+  IF [NOT] EXIST iì'ÿ_ôàéëó êîìàíäà\n\
+  IF [NOT] DEFINED çìiííà êîìàíäà\n\n\
+NOT               Âêàçóº, ùî CMD ïîâèíåí âèêîíàòè êîìàíäó, ëèøå ÿêùî\n\
+                  óìîâà º õèáíîþ\n\
+ERRORLEVEL ÷èñëî  Öÿ óìîâà º iñòèííîþ, ÿêùî êîä, ùî ïîâåðíóëà\n\
+                  îñòàííÿ âèêîíàíà ïðîãðàìà íå ìåíüøå âêàçàíîãî ÷èñëà.\n\
+êîìàíäà           Çàçíà÷àº êîìàíäó, âèêîíóâàíó ïðè iñòèííîñòi óìîâè.\n\
+ðÿäîê1==ðÿäîê2    Öÿ óìîâà º iñòèííîþ, ÿêùî âêàçàíi ðÿäêè\n\
+                  ñïiâïàäàþòü.\n\
+EXIST iì'ÿ_ôàéëó  Óìîâà º iñòèííîþ, ÿêùî ôàéë ç âêàçàíèì iìåíåì iñíóº.\n\
+DEFINED çìiííà    Öÿ óìîâà º iñòèííîþ, ÿêùî âêàçàíà çìiííà\n\
+                  çàäàíà.\n"
 
-STRING_GOTO_HELP1,  "Directs CMD to a labeled line in a batch script.\n\n\
-GOTO label\n\n\
-  label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
+STRING_GOTO_HELP1,  "Ïåðåäà÷à óïðàâë³ííÿ ðÿäêó ïàêåòíîãî ôàéëó, ùî ìiñòèòü ìiòêó.\n\n\
+GOTO ìiòêà\n\n\
+  label  ðÿäîê ïàêåòíîãî ôàéëó, âèçíà÷åíèé ÿê ìiòêà.\n\n\
+Ì³òêà ïîâèííà çíàõîäèòèñÿ â îêðåìîìó ðÿäêó i ïî÷èíàòèñÿ ç äâîêðàïêè."
 
-STRING_LABEL_HELP1, "Displays or changes drive label.\n\nLABEL [drive:][label]\n"
+STRING_LABEL_HELP1, "Âiäîáðàæåííÿ àáî çìiíà ìiòêè òîìó.\n\nLABEL [äèñê:][ìiòêà]\n"
 
-STRING_LABEL_HELP2, "Volume in drive %c: is %s\n"
-STRING_LABEL_HELP3, "Volume in drive %c: has no label\n"
-STRING_LABEL_HELP4, "Volume Serial Number is %04X-%04X\n"
-STRING_LABEL_HELP5, "Drive label (11 Characters, ENTER if none)? "
+STRING_LABEL_HELP2, "Òîì â ïðèñòðî¿ %c: ìàº ìiòêó %s\n"
+STRING_LABEL_HELP3, "Òîì â ïðèñòðî¿ %c: íå ìàº ìiòêè\n"
+STRING_LABEL_HELP4, "Ñåðiéíèé íîìåð òîìó: %04X-%04X\n"
+STRING_LABEL_HELP5, "Ìiòêà òîìó (11 áóêâ, ENTER áåç ìiòêè)? "
 
-STRING_LOCALE_HELP1, "Current time is"
+STRING_LOCALE_HELP1, "Ïîòî÷íèé ÷àñ: "
 
-STRING_MKDIR_HELP,   "Creates a directory.\n\n\
-MKDIR [drive:]path\nMD [drive:]path"
+STRING_MKDIR_HELP,   "Ñòâîðåííÿ êàòàëîãó.\n\n\
+MKDIR [äèñê:]øëÿõ\nMD [äèñê:]øëÿõ"
 
-STRING_MKLINK_HELP, "Creates a filesystem link object.\n\n\
-MKLINK [/D | /H | /J] linkname target\n\n\
-  /D  Indicates that the symbolic link target is a directory.\n\
-  /H  Create a hard link.\n\
-  /J  Create a directory junction.\n\n\
-If neither /H or /J is specified, a symbolic link is created."
+STRING_MKLINK_HELP, "Ñòâîðåííÿ îá'ºêòó-ïîñèëàííÿ ôàéëîâî¿ ñèñòåìè.\n\n\
+MKLINK [/D | /H | /J] íàçâà_ïîñèëàííÿ öiëü\n\n\
+  /D  Âêàçóº, ùî öiëü ñèìâîë÷íîãî ïîñèëàííÿ - öå äèðåêòîðiÿ.\n\
+  /H  Ñòâîðåííÿ æîðñòêîãî ïîñèëàííÿ.\n\
+  /J  Ñòâîðåííÿ ç'ºäíàííÿ äèðåêòîðié.\n\n\
+ßêùî íå âêàçàíî íi /H íi /J , ñòâîðþºòüñÿ ñèìâîëi÷íå ïîñèëàííÿ."
 
-STRING_MEMMORY_HELP1, "Displays the amount of system memory.\n\nMEMORY"
+STRING_MEMMORY_HELP1, "Âiäîáðàæåííÿ îá'ºìó ñèñòåìíî¿ ïàì'ÿòi.\n\nMEMORY"
 
-STRING_MEMMORY_HELP2, "\n  %12s%% memory load.\n\n\
-  %13s bytes total physical RAM.\n\
-  %13s bytes available physical RAM.\n\n\
-  %13s bytes total page file.\n\
-  %13s bytes available page file.\n\n\
-  %13s bytes total virtual memory.\n\
-  %13s bytes available virtual memory.\n"
+STRING_MEMMORY_HELP2, "\n  %12s%% ïàì'ÿòi âèêîðèñòîâóºòüñÿ.\n\n\
+  %13s áàéò âñüîãî ôiçè÷íî¿ RAM.\n\
+  %13s áàéò äîñòóïíî ôiçè÷íî¿ RAM.\n\n\
+  %13s áàéò âñüîãî â ôàéëi äîâàíòàæåííÿ.\n\
+  %13s áàéò äîñòóïíî â ôàéëi äîâàíòàæåííÿ.\n\n\
+  %13s áàéò âñüîãî âiðòóàëüíî¿ ïàì'ÿòi.\n\
+  %13s áàéò äîñòóïíî âiðòóàëüíî¿ ïàì'ÿòi.\n"
 
-STRING_MISC_HELP1, "Press a key to continue...\n"
+STRING_MISC_HELP1, "Íàòèñíiòü êëàâiøó äëÿ ïðîäîâæåííÿ...\n"
 
-STRING_MOVE_HELP1, "Overwrite %s (Yes/No/All)? "
+STRING_MOVE_HELP1, "Ïåðåïèñàòè %s (Yes/No/All)? "
 
-STRING_MOVE_HELP2, "Moves files and renames files and directories.\n\n\
-To move one or more files:\n\
-MOVE [/N][drive:][path]filename1[,...] destination\n\n\
-To rename a directory:\n\
-MOVE [/N][drive:][path]dirname1 dirname2\n\n\
-  [drive:][path]filename1  Specifies the location and name of the file\n\
-                           or files you want to move.\n\
-  /N                    Nothing. Do everything but move files or directories.\n\n\
-Current limitations:\n\
-  - You can't move a file or directory from one drive to another.\n"
+STRING_MOVE_HELP2, "Ïåðåìiùåííÿ ôàéëiâ i ïåðåéìåíóâàííÿ ôàéëiâ i êàòàëîãiâ.\n\n\
+Ïåðåìiùåííÿ îäíîãî òà áiëüøå ôàéëiâ:\n\
+MOVE [/N][äèñê:][øëÿõ]iì'ÿ_ôàéëó1[,...] ïðèçíà÷åííÿ\n\n\
+Ïåðåéìåíóâàííÿ êàòàëîãó:\n\
+MOVE [/N][äèñê:][øëÿõ]iì'ÿ_êàòàëîãó1 iì'ÿ_êàòàëîãó2\n\n\
+  [äèñê:][øëÿõ]iì'ÿ_ôàéëó1 Âêàçóº ìiñöå ðîçòàøóâàííÿ é iì'ÿ ôàéëó àáî\n\
+                           ôàéëiâ ÿêi íåîáõiäíî ïåðåìiñòèòè.\n\
+  /N                    Íi÷îãî. Do everything but move files or directories.\n\n\
+Ïîòî÷íi îáìåæåííÿ:\n\
+  - Íåìîæëèâî ïåðåíîñèòè ôàéëè ÷è òåêè ìiæ ðiçíèìè ðîçäiëàìè.\n"
 
-STRING_MSGBOX_HELP, "display a message box and return user responce\n\n\
-MSGBOX type ['title'] prompt\n\n\
-type          button displayed\n\
-              possible values are: OK, OKCANCEL,\n\
+STRING_MSGBOX_HELP, "ïîêàç âiêíà ç ïîâiäîìëåííÿì òà ïîâåðíåííÿ âiäïîâäi êîðèñòóâà÷à\n\n\
+MSGBOX òèï ['çàãîëîâîê'] ïiäêàçêà\n\n\
+òèï           âiäîáðàæåí³ êíîïêè\n\
+              ìîæëèâi çíà÷åííÿ: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
-title         title of message box\n\
-prompt        text displayed by the message box\n\n\n\
-ERRORLEVEL is set according the button pressed:\n\n\
+çàãîëîâîê     çàãîëîâîê âiêíà ç ïîâiäîìëåííÿì\n\
+ïiäêàçêà      òåêñò ïîâiäîìëåííÿ\n\n\n\
+ERRORLEVEL âñòàíîâëþºòüñÿ âiäïîâäíî äî íàòèñíóòî¿ êíîïêè:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
 
-STRING_PATH_HELP1, "Displays or sets a search path for executable files.\n\n\
-PATH [[drive:]path[;...]]\nPATH ;\n\n\
-Type PATH ; to clear all search-path settings and direct the command shell\n\
-to search only in the current directory.\n\
-Type PATH without parameters to display the current path.\n"
+STRING_PATH_HELP1, "Ïîêàç àáî çàäàííÿ øëÿõó ïîøóêó âèêîíóâàíèõ ôàéëiâ.\n\n\
+PATH [[äèñê:]øëÿõ[;...]]\nPATH ;\n\n\
+Êîìàíäà PATH ; î÷èùàº øëÿõ ïîøóêó ôàéëiâ òà îáìåæóº éîãî\n\
+ïîòî÷íèì êàòàëîãîì.\n\
+Êîìàíäà PATH áåç ïàðàìåòðiâ âiäîáðàæàº ïîòî÷íèé øëÿõ ïîøóêó.\n"
 
-STRING_PROMPT_HELP1, "Changes the command prompt.\n\n\
-PROMPT [text]\n\n\
-  text    Specifies a new command prompt.\n\n\
-Prompt can be made up of normal characters and the following special codes:\n\n\
-  $A   & (Ampersand)\n\
-  $B   | (pipe)\n\
-  $C   ( (Left parenthesis)\n\
-  $D   Current date\n\
-  $E   Escape code (ASCII code 27)\n\
-  $F   ) (Right parenthesis)\n\
-  $G   > (greater-than sign)\n\
-  $H   Backspace (erases previous character)\n\
-  $L   < (less-than sign)\n\
-  $N   Current drive\n\
-  $P   Current drive and path\n\
-  $Q   = (equal sign)\n\
-  $T   Current time\n\
-  $V   OS version number\n\
-  $_   Carriage return and linefeed\n\
-  $$   $ (dollar sign)\n"
+STRING_PROMPT_HELP1, "Çìiíà çàïðîøåííÿ êîìàíäíîãî ðÿäêà.\n\n\
+PROMPT [òåêñò]\n\n\
+  òåêñò    Íîâå çàïðîøåííÿ êîìàíäíîãî ðÿäêà.\n\n\
+Çàïðîøåííÿ ìîæå ñêëàäàòèñü ç çâè÷àéíèõ ñèìâîëiâ òà íàñòóïíèõ êîäiâ:\n\n\
+  $A   & (Àìïåðñàíä)\n\
+  $B   | (âåðòèêàëüíà ðèñêà)\n\
+  $C   ( (Ëiâà êðóãëà äóæêà)\n\
+  $D   Ïîòî÷íà äàòà\n\
+  $E   ESC (ñèìâîë ASCII ç êîäîì 27)\n\
+  $F   ) (Ïðàâà êðóãëà äóæêà)\n\
+  $G   > (çíàê á³ëüøå)\n\
+  $H   Backspace (âèäàëåííÿ ïîïåðåäüíîãî ñèìâîëó)\n\
+  $L   < (çíàê ìåíüøå)\n\
+  $N   Ïîòî÷íèé äèñê\n\
+  $P   Ïîòî÷íèé äèñê òà êàòàëîã\n\
+  $Q   = (çíàê ðiâíîñòi)\n\
+  $T   Ïîòî÷íèé ÷àñ\n\
+  $V   Íîìåð âåðñi¿ îïåðàöiéíî¿ ñèñòåìè\n\
+  $_   Ïîâåðíåííÿ êàðåòêè òà ïåðåâåäåííÿ ðÿäêà\n\
+  $$   $ (çíàê äîëàðà)\n"
 
-STRING_PAUSE_HELP1, "Stops the execution of a batch file and shows the following message:\n\
-'Press any key to continue...' or a user defined message.\n\n\
-PAUSE [message]"
+STRING_PAUSE_HELP1, "Ïðèçóïèíêà îáðîáêè ïàêåòíîãî ôàéëó i ïîêàç ïîâiäîìëåííÿ:\n\
+'Äëÿ ïðîäîâæåííÿ íàòèñíiòü áóäü-ÿêó êëàâiøó...' ÷è çàäàíå ïîâiäîìëåííÿ.\n\n\
+PAUSE [ïîâiäîìëåííÿ]"
 
-STRING_PROMPT_HELP2, "  $+   Displays the current depth of the directory stack"
+STRING_PROMPT_HELP2, "  $+   Ïîêàçóº ïîòî÷íó ãëèáèíó ñòåêà êàòàëîãiâ"
 
-STRING_PROMPT_HELP3, "\nType PROMPT without parameters to reset the prompt to the default setting."
+STRING_PROMPT_HELP3, "\nPROMPT áåç ïàðàìåòðiâ âñòàíîâëþº çàïðîøåííÿ êîìàíäíîãî ðÿäêà çà çàìîâ÷óâàííÿì."
 
-STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
+STRING_REM_HELP, "Ñòàðòóº ðÿäîê êîìåíòàðÿ âïàêåòíîìó ôàéëi.\n\nREM [Comment]"
 
-STRING_RMDIR_HELP,   "Removes a directory.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S			Deletes all files and folders within target\n\
-/Q			Doesnt prompt for user\n"
-STRING_RMDIR_HELP2,	"Directory is not empty!\n"
+STRING_RMDIR_HELP,   "Âèäàëåííÿ êàòàëîãó.\n\n\
+RMDIR [äèñê:]øëÿõ\nRD [äèñê:]øëÿõ\n\
+/S			Âèäàëåííÿ âñüîãî äåðåâà âñåðåäèíi öiëi\n\
+/Q			Âèìêíåííÿ çàïèòó ïiäòâåðäæåííÿ\n"
+STRING_RMDIR_HELP2,	"Êàòàëîã íå ïîðîæíié!\n"
 
-STRING_REN_HELP1, "Renames a file/directory or files/directories.\n\n\
-RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
-REN [/E /N /P /Q /S /T] old_name ... new_name\n\n\
-  /E    No error messages.\n\
-  /N    Nothing.\n\
-  /P    Prompts for confirmation before renaming each file.\n\
-        (Not implemented yet!)\n\
-  /Q    Quiet.\n\
-  /S    Rename subdirectories.\n\
-  /T    Display total number of renamed files.\n\n\
-Note that you cannot specify a new drive or path for your destination. Use\n\
-the MOVE command for that purpose.\n"
+STRING_REN_HELP1, "Ïåðåéìåíóâàííÿ îäíîãî ÷è êiëüêîõ ôàéëiâ/êàòàëîãiâ.\n\n\
+RENAME [/E /N /P /Q /S /T] ñòàðå_iì'ÿ ... íîâå_iì'ÿ\n\
+REN [/E /N /P /Q /S /T] ñòàðå_iì'ÿ ... íîâå_iì'ÿ\n\n\
+  /E    Íå ïîêàçóâàòè ïîâiäîìëåííÿ ïðî ïîìèëêè.\n\
+  /N    Íi÷îãî.\n\
+  /P    Çàïèò ïiäòâåðäæåííÿ äëÿ êîæíîãî ôàéëó.\n\
+        (Ùå íå ðåàëiçîâàíî!)\n\
+  /Q    Òèõî.\n\
+  /S    Ïåðåéìåíóâàòè ïiäêàòàëîãè.\n\
+  /T    Âiäîáðàæåííÿ êiëüêîñòi ïåðåiìåíîâàíèõ ôàéëiâ.\n\n\
+Äëÿ êiíöåâîãî ôàëó íå ìîæíà âêàçàòè iíøèé äèñê ÷è êàòàëîã.\n\
+Äëÿ öüîãî âèêîðèñòàéòå êîìàíäó MOVE.\n"
 
-STRING_REN_HELP2, "    %lu file renamed\n"
+STRING_REN_HELP2, "    %lu ôàéë ïåðåiìåíîâàíî\n"
 
-STRING_REN_HELP3, "    %lu files renamed\n"
+STRING_REN_HELP3, "    %lu ôàéëiâ ïåðåiìåíîâàíî\n"
 
-STRING_REPLACE_HELP1, "Replaces files.\n\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
-REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
-  [drive1:][path1]filename Specifies the source file or files.\n\
-  [drive2:][path2]         Specifies the directory where files are to be\n\
-                           replaced.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
+STRING_REPLACE_HELP1, "Çàìiíà ôàéëiâ.\n\n\
+REPLACE [äèñê1:][øëÿõ1]iì'ÿ_ôàéëó [äèñê2:][øëÿõ2] [/A] [/P] [/R] [/W]\n\
+REPLACE [äèñê1:][øëÿõ1]iì'ÿ_ôàéëó [äèñê2:][øëÿõ2] [/P] [/R] [/S] [/W] [/U]\n\n\
+  [äèñê1:][øëÿõ1]iì'ÿ_ôàéëó Çàäàº ôàéë(è) äëÿ çàìiíè.\n\
+  [äèñê2:][øëÿõ2]           Çàäàº êàòàëîã, â ÿêîìó áóäóòü çàìiíåíi ôàéëè\n\
+                            ôàéëè.\n\
+  /A                        Äîäàòè íîâi ôàéëè â êiíöåâó òåêó. Íåìîæëèâå\n\
+                            ïðè âèêîðèñòàííi êëþ÷iâ /S ÷è /U.\n\
+  /P                        Çàïèò íà ïiäòâåðäæåííÿ çàìiíè ôàéëó ÷è\n\
+                            äîäàâàííÿ ïî÷àòêîâîãî ôàéëó.\n\
+  /R                        Çàìiíþº òàêîæ ôàéëè ëèøå äëÿ ÷èòàííÿ.\n\
+  /S                        Çàìiíþº ôàéëè ó âñiõ ïiäêàòàëîãàõ êàòàëîãó\n\
+                            ïðèçíà÷åííÿ. Íåìîæëèâå ïðè âèêîðèñòàííi\n\
+                            êëþ÷à /A.\n\
+  /W                        ×åêàº ïîêè âè âñòàâèòå äèñê ïåðåä ïî÷àòêîì.\n\
+  /U                        Çàìiíþº (îíîâëþº) ëèøå ôàéëè, ùî ñòàðiøi íiæ\n\
+                            êîïiéîâàíi. Íåìîæëèâå ïðè âèêîðèñòàííi êëþ÷à /A.\n"
 
-STRING_REPLACE_HELP2, "Source path required\n"
+STRING_REPLACE_HELP2, "Íåîáõiäíèé øëÿõ äæåðåëà\n"
 
-STRING_REPLACE_HELP3, "No files replaced\n"
+STRING_REPLACE_HELP3, "Íå çàìiíåíî æîäíèõ ôàéëiâ\n"
 
-STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+STRING_REPLACE_HELP4, "%lu ôàéë(iâ) çàìiíåíî\n"
 
-STRING_REPLACE_HELP5, "Replacing %s\n"
+STRING_REPLACE_HELP5, "Çàìiíà %s\n"
 
-STRING_REPLACE_HELP6, "Replace %s\n"
+STRING_REPLACE_HELP6, "Çàìiíèòè %s\n"
 
-STRING_REPLACE_HELP7, "No files added\n"
+STRING_REPLACE_HELP7, "Íå äîäàíî æîäíèõ ôàéëiâ\n"
 
-STRING_REPLACE_HELP8, "%lu file(s) added\n"
+STRING_REPLACE_HELP8, "%lu ôàéë(iâ) äîäàíî\n"
 
-STRING_REPLACE_HELP9, "Add %s (Y/N) "
+STRING_REPLACE_HELP9, "Äîäàòè %s (Y/N) "
 
-STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+STRING_REPLACE_HELP10, "Çàìiíèòè %s (Y/N) "
 
-STRING_REPLACE_HELP11, "Adding %s\n"
+STRING_REPLACE_HELP11, "Äîäàâàííÿ %s\n"
 
 
-STRING_SHIFT_HELP, "Changes the position of replaceable parameters in a batch file.\n\n\
+STRING_SHIFT_HELP, "Çìiíà ïîçèöi¿ ïiäñòàâëþâàíèõ ïàðàìåòðiâ äëÿ ïàêåòíîãî ôàéëó.\n\n\
 SHIFT [DOWN]"
 
-STRING_SCREEN_HELP, "move cursor and optionally print text\n\n\
-SCREEN row col [text]\n\n\
-  row         row to which move the cursor\n\
-  col         column to which move the cursor"
+STRING_SCREEN_HELP, "ïåðåìiùåííÿ êóðñîðà òà îïöiîíàëüíî ïîêàç òåêñòó\n\n\
+SCREEN ðÿä ñòï [òåêñò]\n\n\
+  ðÿä         ðÿäîê, êóäè òðåáå ïåðåìiñòèòè êóðñîð\n\
+  ñòï         ñòîâï÷èê, êóäè òðåáå ïåðåìiñòèòè êóðñîð"
 
-STRING_SET_HELP, "Displays, sets, or removes environment variables.\n\n\
-SET [variable[=][string]]\n\n\
-  variable  Specifies the environment-variable name.\n\
-  string    Specifies a series of characters to assign to the variable.\n\n\
-Type SET without parameters to display the current environment variables.\n"
+STRING_SET_HELP, "Ïîêàç, çàäàííÿ ÷è âèäàëåííÿ çìiííèõ ñåðåäîâèùà.\n\n\
+SET [çìiííà[=][çíà÷åííÿ]]\n\n\
+  çìiííà     Iì'ÿ çìiííî¿ ñåðåäîâèùà.\n\
+  çíà÷åííÿ   Ðÿäîê ñèìâîëiâ, ùî ïðèçíà÷àºòüñÿ âêàçàíié çìiííié.\n\n\
+SET áåç ïàðàìåòðiâ âèâîäèòü ïîòî÷íi çíà÷åííÿ çìiííèõ ñåðåäîâèùà.\n"
 
-STRING_START_HELP1, "Starts a command.\n\n\
-START command\n\n\
-  command     Specifies the command to run.\n\n\
-At the moment all commands are started asynchronously.\n"
+STRING_START_HELP1, "Çàïóñê êîìàíäè.\n\n\
+START êîìàíäà\n\n\
+  êîìàíäà     Êîìàíäà äëÿ çàïóñêó.\n\n\
+Íà äàíèé ìîìåíò âñi êîìàíäè ñòàðòóþòü àñèíõðîííî.\n"
 
-STRING_TITLE_HELP, "Sets the window title for the command prompt window.\n\n\
-TITLE [string]\n\n\
-string       Specifies the title for the command prompt window.\n"
+STRING_TITLE_HELP, "Çìiíà çàãîëîâêà âiêíà êîìàíäíîãî ðÿäêà.\n\n\
+TITLE [ðÿäîê]\n\n\
+ðÿäîê       Ìàéáóòíié çàãîëîâîê âiêíà êîìàíäíîãî ðÿäêà.\n"
 
-STRING_TIME_HELP1, "Displays or sets the system time.\n\n\
-TIME [/T][time]\n\n\
-  /T    display only\n\n\
-Type TIME with no parameters to display the current time setting and a prompt\n\
-for a new one.  Press ENTER to keep the same time.\n"
+STRING_TIME_HELP1, "Âiäîáðàæåííÿ ÷è çìiíà ñèñòåìíîãî ÷àñó.\n\n\
+TIME [/T][÷àñ]\n\n\
+  /T    ëèøå âiäîáðàæåííÿ\n\n\
+TIME áåç ïàðàìåòðiâ âèâîäèòü ïîòî÷íèé ÷àñ òà çàïèòóº\n\
+ââåäåííÿ íîâîãî. Íàòèñíiòü ENTER äëÿ çáåðåæåííÿ ïîòî÷íîãî.\n"
 
-STRING_TIME_HELP2, "Enter new time: "
+STRING_TIME_HELP2, "Ââåäiòü íîâèé ÷àñ: "
 
-STRING_TIMER_HELP1, "Elapsed %d msecs\n"
+STRING_TIMER_HELP1, "Ìèíóëî %d ìñåê\n"
 
-STRING_TIMER_HELP2, "Elapsed %02d%c%02d%c%02d%c%02d\n"
+STRING_TIMER_HELP2, "Ìèíóëî %02d%c%02d%c%02d%c%02d\n"
 
-STRING_TIMER_HELP3, "allow the use of ten stopwatches.\n\n\
+STRING_TIMER_HELP3, "äîçâîëÿº âèêîðèñòàòè äåñÿòü ñåêóíäîìiðiâ.\n\n\
 TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
-  ON          set stopwatch ON\n\
-  OFF         set stopwatch OFF\n\
-  /S          Split time. Return stopwatch split\n\
-              time without changing its value\n\
-  /n          Specifiy the stopwatch number.\n\
-              Stopwatches available are 0 to 9\n\
-              If it is not specified default is 1\n\
-  /Fn         Format for output\n\
-              n can be:\n\
-                    0    milliseconds\n\
+  ON          ââiìêíóòè ñåêóíäîìið (ON)\n\
+  OFF         âèìêíóòè ñåêóíäîìið (OFF)\n\
+  /S          Ðiçíèöÿ â ÷àñi. Ïîâåðòàº ðiçíèöþ â ÷àñi\n\
+              ñåêóíäîìiðà áåç çìiíè éîãî çíà÷åííÿ\n\
+  /n          Çàäàòè íîìåð ñåêóíäîìiðà.\n\
+              Äîñòóïíi íîìåðè âiä 0 äî 9\n\
+              Çà çàìîâ÷óâàííÿì - 1\n\
+  /Fn         Ôîðìàò âèâîäó\n\
+              n ìîæå áóòè:\n\
+                    0    ìiëiñåêóíäè\n\
                     1    hh%cmm%css%cdd\n\n\
-if none of ON, OFF or /S is specified the command\n\
-will toggle stopwatch state\n\n"
+ßêùî íå âêàçàíi ON, OFF òà /S , êîìàíäà ïåðåìèêàº\n\
+ñòàí ñåêóíäîìiðà\n\n"
 
-STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename \n\
-  /P 		  Shows one screen of output at a time.\n"
+STRING_TYPE_HELP1, "Âèâåäåííÿ âìiñòó òåêñòîâèõ ôàéëiâ.\n\nTYPE [äèñê:][øëÿõ]iì'ÿ_ôàéëó \n\
+  /P 		  Ïîåêðàííèé âèâiä.\n"
 
 STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
-Sets whether to verify that your files are written correctly to a\n\
-disk.\n\n\
+Ââiìêíåííÿ ÷è âèìêíåííÿ ïåðåâiðêè ïðàâèëüíîñòi çàïèñó ôàéëiâ\n\
+íà äèñê.\n\n\
 VERIFY [ON | OFF]\n\n\
-Type VERIFY without a parameter to display the current VERIFY setting.\n"
+VERIFY áåç ïàðàìåòðiâ âèâîäèòü ïîòî÷íå çíà÷åííÿ êîìàíäè.\n"
 
-STRING_VERIFY_HELP2, "VERIFY is %s.\n"
+STRING_VERIFY_HELP2, "VERIFY %s.\n"
 
-STRING_VERIFY_HELP3, "Must specify ON or OFF."
+STRING_VERIFY_HELP3, "Òðåáà çàäàòè ON àáî OFF."
 
-STRING_VERSION_HELP1, "Displays shell version information\n\n\
+STRING_VERSION_HELP1, "Äàíi ïðî âåðñiþ îáîëîíêè\n\n\
 VER [/C][/R][/W]\n\n\
-  /C  Displays credits.\n\
-  /R  Displays redistribution information.\n\
-  /W  Displays warranty information."
+  /C  Âiäîáðàæåííÿ ñïèñêó àâòîðiâ.\n\
+  /R  Âiäîáðàæåííÿ iíôîðìàöi¿ ïðî ïåðåïîøèðåííÿ.\n\
+  /W  Âiäîáðàæåííÿ ãàðàíòiéíî¿ iíôîðìàöi¿."
 
-STRING_VERSION_HELP2, " comes with ABSOLUTELY NO WARRANTY; for details\n\
-type: `ver /w'. This is free software, and you are welcome to redistribute\n\
-it under certain conditions; type `ver /r' for details. Type `ver /c' for a\n\
-listing of credits."
+STRING_VERSION_HELP2, " íàäàºòüñÿ áåç ÁÓÄÜ-ßÊÈÕ ÃÀÐÀÍÒIÉ; äëÿ äåòàëüíèõ äàíèõ\n\
+íàäðóêóéòå: `ver /w'. Öÿ ïðîãðàìà º âiëüíèì ÏÇ, i âè ìîæåòå ðîçïîâñþäæóâàòè\n\
+¿¿ çãiäíî ïåâíèõ óìîâ; íàäðóêóéòå `ver /r' äëÿ äåòàëüíèõ äàíèõ. Íàäðóêóéòå `ver /c' \n\
+äëÿ âèâåäåííÿ ñïèñêó àâòîðiâ."
 
-STRING_VERSION_HELP3, "\n This program is distributed in the hope that it will be useful,\n\
- but WITHOUT ANY WARRANTY; without even the implied warranty of\n\
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n\
- GNU General Public License for more details."
+STRING_VERSION_HELP3, "\n Öÿ ïðîãðàìà ðîçïîâñþäæóºòüñÿ iç ñïîäiâàííÿì, ùî âîíà áóäå êîðèñíîþ,\n\
+ àëå ÁÅÇ ÁÓÄÜ-ßÊÈÕ ÃÀÐÀÍÒIÉ; íàâiòü áåç íåïðÿìèõ ãàðàíòié\n\
+ ùîäî ÏÐÎÄÀÆÓ ÷è ÏÐÈÄÀÒÍÎÑÒI ÄËß ÏÅÂÍÈÕ ÖIËÅÉ.  Äèâiòüñÿ\n\
+ GNU General Public License äëÿ äåòàëüíî¿ iíôîðìàöi¿."
 
-STRING_VERSION_HELP4, "\n This program is free software; you can redistribute it and/or modify\n\
- it under the terms of the GNU General Public License as published by\n\
- the Free Software Foundation; either version 2 of the License, or\n\
- (at your option) any later version.\n"
+STRING_VERSION_HELP4, "\n Öÿ ïðîãðàìà º âiëüíèì ÏÇ; âè ìîæåòå ïåðåïîøèðþâàòè ¿¿ òà/÷è\n\
+ ìîäèôiêóâàòè çãiäíî óìîâ GNU General Public License, ùî îïóáëiêîâàíà\n\
+ Free Software Foundation; âåðñi¿ 2 Ëiöåíçi¿, ÷è\n\
+ (íà âàø âèáið) áóäü-ÿêî¿ íîâiøî¿ âåðñi¿.\n"
 
-STRING_VERSION_HELP5, "\nSend bug reports to <ros-dev@reactos.org>.\n\
-Updates are available at: http://www.reactos.org"
+STRING_VERSION_HELP5, "\nÂiäñèëàéòå çâiòè ïðî ïîìèëêè íà <ros-dev@reactos.org>.\n\
+Îíîâëåííÿ äîñòïíi íà: http://www.reactos.org"
 
-STRING_VERSION_HELP6, "\nFreeDOS version written by:\n"
+STRING_VERSION_HELP6, "\nFreeDOS-âåðñiÿ íàïèñàíà:\n"
 
-STRING_VERSION_HELP7, "\nReactOS version written by:\n"
+STRING_VERSION_HELP7, "\nReactOS-âåðñiÿ íàïèñàíà:\n"
 
-STRING_VOL_HELP1, " Volume in drive %c is %s\n"
-STRING_VOL_HELP2, " Volume in drive %c has no label.\n"
-STRING_VOL_HELP3, " Volume Serial Number is %04X-%04X\n"
-STRING_VOL_HELP4, "Displays the disk volume label and serial number, if they exist.\n\nVOL [drive:]"
+STRING_VOL_HELP1, " Òîì â ïðèñòðî¿ %c ìàº ìiòêó %s\n"
+STRING_VOL_HELP2, " Òîì â ïðèñòðî¿ %c íå ìàº ìiòêè.\n"
+STRING_VOL_HELP3, " Ñåðiéíèé íîìåð òîìó: %04X-%04X\n"
+STRING_VOL_HELP4, "Âèâîäèòü ìiòêó òîìó òà ñåðiéíèé íîìåð, ÿêùî âîíè iñíóþòü.\n\nVOL [äèñê:]"
 
-STRING_WINDOW_HELP1, "change console window aspect\n\n\
+STRING_WINDOW_HELP1, "çìiíþº âèãëÿä âiêíà êîíñîëi\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
-              [MIN|MAX|RESTORE] ['title']\n\n\
-/POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window"
+              [MIN|MAX|RESTORE] ['çàãîëîâîê']\n\n\
+/POS          âèçíà÷àº ðîçì³ðè òà ðîçìiùåííÿ âiêíà\n\
+MIN           çãîðòàº âiêíî\n\
+MAX           ðîçãîðòàº âiêíî\n\
+RESTORE       âiäíîâëþº âiêíî"
 
-STRING_WINDOW_HELP2, "change console window aspect\n\n\
+STRING_WINDOW_HELP2, "çìiíþº âèãëÿä âiêíà êîíñîëi\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-window        tile of window on which perform actions\n\
-/POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window\n\
-title         new title\n"
+window        çàãîëîâîê âiêíà, âèãëÿä ÿêîãî òðåáà çìiíèòè\n\
+/POS          âèçíà÷àº ðîçì³ðè òà ðîçìiùåííÿ âiêíà\n\
+MIN           çãîðòàº âiêíî\n\
+MAX           ðîçãîðòàº âiêíî\n\
+RESTORE       âiäíîâëþº âiêíî\n\
+title         íîâèé çàãîëîâîê\n"
 
 
-STRING_HELP1, "������ ��� ��������� ������ (+ ����)\n\n\
-  ������� /?     ��� �������� ���������� ��� ��������� �������\n\n\
-?        ������ ��� ��������� ������ ��� �����.\n\
-ALIAS    ������������, ��������� ��� ����� ����������.\n\
-ATTRIB   ³���������� ��� ���� �������� �����.\n\
-BEEP     �������� ������ ������.\n\
-CALL     ������ ������ ������� �������� � ����.\n\
-CD       ³���������� ����� ��� ���� ������� �����.\n\
-CHCP     ³���������� ��� ������������ ��������� ������ ������ �������.\n\
-CHOICE   ���������� ������ ������������ ������ � �������� �������.\n\
-CLS      �������� ������.\n\
-CMD      ������ ���� ��ﳿ �������������� ������ ReactOS.\n\
-COLOR    ������������ ������� ������� ������ � ��� ������.\n\
-COPY     ��������� ������ ��� ����� ����� � ���� ����.\n\
-DATE     ³���������� ��� ������������ ����.\n\
-DELETE   ��������� ������ ��� ����� �����.\n\
-DIR      ³���������� ������ ����� � ������� � �����.\n\
-ECHO     ³���������� ����������, ��� ����������� ������ ����������� ������.\n\
-ERASE    ��������� ������ ��� ����� �����.\n\
-EXIT     ����� � �������� CMD.EXE (�������������� ������).\n\
-FOR      ������ ������� ������� ��� ������� ����� � ������ �����.\n\
-FREE     (³�����) �������� ������.\n\
-GOTO     �������� ��������� ����� ������� ��������, ���� ������ ����.\n\
-HELP     �������� ���������� ��� ������� ReactOS.\n\
-HISTORY  ������ ��� ������������ ������.\n\
-IF       �������� ������� ���� � �������� ���������.\n\
-LABEL    ���������, ����, ��� ��������� ���� ���� �����.\n\
-MD       ��������� �����.\n\
-MKDIR    ��������� �����.\n\
-MKLINK   Creates a filesystem link object.\n\
-MOVE     ���������� ������ ��� ����� ����� � ������ ����� �� ����\n\
-         �����.\n\
-PATH     ³���������� ��� ������������ ����� ������ ����������� �����.\n\
-PAUSE    ��������� ���������� ������� ���������� ����� � ����� �����������.\n\
-POPD     ³������� ��������� �������� ������� �����, ��������� ��������\n\
+STRING_HELP1, "Ñïèñîê âñiõ äîñòóïíèõ êîìàíä (+ îïèñ)\n\n\
+  êîìàíäà /?     Äëÿ äîêëàäíî¿ iíôîðìàöi¿ ïðî êîíêðåòíó êîìàíäó\n\n\
+?        Ñïèñîê âñiõ äîñòóïíèõ êîìàíä áåç îïèñó.\n\
+ALIAS    Âñòàíîâëåííÿ, âèäàëåííÿ àáî ïîêàç ïñåâäîíiìiâ.\n\
+ATTRIB   Âiäîáðàæåííÿ àáî çìiíà àòðèáóòiâ ôàéëó.\n\
+BEEP     Çâóêîâèé ñèãíàë äèíàìiêà.\n\
+CALL     Âèêëèê îäíiº¿ ïàêåòíî¿ ïðîãðàìè ç iíøî¿.\n\
+CD       Âiäîáðàæåííÿ iìåíi àáî çìiíà ïîòî÷íî¿ òåêè.\n\
+CHCP     Âiäîáðàæåííÿ àáî âñòàíîâëåííÿ ïîòî÷íîãî íîìåðà êîäîâî¿ ñòîðiíêè.\n\
+CHOICE   Î÷iêóâàííÿ âèáîðó êîðèñòóâà÷åì îäíîãî ç âêàçàíèõ ñèìâîëiâ.\n\
+CLS      Î÷èùåííÿ åêðàíó.\n\
+CMD      Çàïóñê íîâî¿ êîïi¿ iíòåðïðåòàòîðà êîìàíä ReactOS.\n\
+COLOR    Âñòàíîâëåííÿ òèïîâèõ êîëüîðiâ òåêñòó i òëà êîíñîëi.\n\
+COPY     Êîïiþâàííÿ îäíîãî àáî áiëüøå ôàéëiâ â iíøå ìiñöå.\n\
+DATE     Âiäîáðàæåííÿ àáî âñòàíîâëåííÿ äàòè.\n\
+DELETE   Âèäàëåííÿ îäíîãî àáî áiëüøå ôàéëiâ.\n\
+DIR      Âiäîáðàæåííÿ ñïèñêó ôàéëiâ i ïiäòåê â òåöi.\n\
+ECHO     Âiäîáðàæåííÿ ïîâiäîìëåíü, àáî ïåðåìèêàííÿ ðåæèìó âiäîáðàæåííÿ êîìàíä.\n\
+ERASE    Âèäàëåííÿ îäíîãî àáî áiëüøå ôàéëiâ.\n\
+EXIT     Âèõiä ç ïðîãðàìè CMD.EXE (iíòåðïðåòàòîðà êîìàíä).\n\
+FOR      Çàïóñê âêàçàíî¿ êîìàíäè äëÿ êîæíîãî ôàéëó ç íàáîðó ôàéëiâ.\n\
+FREE     (Âiëüíèé) äèñêîâèé ïðîñòið.\n\
+GOTO     Ïåðåäà÷à óïðàâëiííÿ ðÿäêó ïàêåòíî¿ ïðîãðàìè, ÿêèé ìiñòèòü ìiòêó.\n\
+HELP     Äîâiäêîâà iíôîðìàöiÿ ïðî êîìàíäè ReactOS.\n\
+HISTORY  Ñïèñîê óñiõ âèêîðèñòàíèõ êîìàíä.\n\
+IF       Îïåðàòîð îáðîáêè óìîâ ó ïàêåòíèõ ïðîãðàìàõ.\n\
+LABEL    Ñòâîðåííÿ, çìiíà, àáî âèäàëåííÿ ìiòîê òîìó äèñêà.\n\
+MD       Ñòâîðåííÿ òåêè.\n\
+MKDIR    Ñòâîðåííÿ òåêè.\n\
+MKLINK   Ñòâîðåííÿ îá'ºêòó-ïîñèëàííÿ ôàéëîâî¿ ñèñòåìè.\n\
+MOVE     Ïåðåìiùåííÿ îäíîãî àáî áiëüøå ôàéëiâ ç îäíiº¿ òåêè äî iíøî¿\n\
+         òåêè.\n\
+PATH     Âiäîáðàæåííÿ àáî âñòàíîâëåííÿ øëÿõó ïîøóêó âèêîíóâàíèõ ôàéëiâ.\n\
+PAUSE    Òèì÷àñîâå ïðèïèíåííÿ îáðîáêè êîìàíäíîãî ôàéëó i ïîêàç ïîâiäîìëåííÿ.\n\
+POPD     Âiäíîâëþº ïîïåðåäíº çíà÷åííÿ ïîòî÷íî¿ òåêè, çáåðåæåíå êîìàíäîþ\n\
          PUSHD.\n\
-PROMPT   ���� ���������� ���������� �����.\n\
-PUSHD    ������ ������� �����, � ���� ����� ��.\n\
-RD       ���������� �����.\n\
-REM      ������ �������� (����������) � ��������� ������.\n\
-REN      �������������� ����� ��� �����.\n\
-RENAME   �������������� ����� ��� �����.\n\
-REPLACE  ����� �����.\n\
-RMDIR    ���������� �����.\n\
-SCREEN   ���������� ������� � ��������� ������.\n\
-SET      ³����������, ������������, ��� ��������� ������ �������� ReactOS.\n\
-SHIFT    �������� ������� ������� ��������� � ��������� ������.\n"
-STRING_HELP2, "START    ³������ ������ ���� ��� ������� �������� ������ ��� �������.\n\
-         ������ �������.\n\
-TIME     ³���������� ��� ������������ ���������� ����.\n\
-TIMER    �������� ������������ ������ ����������.\n\
-TITLE    ������������ ��������� ���� ��� ��� CMD.EXE.\n\
-TYPE     ³���������� ����� ���������� �����.\n\
-VER      ³���������� ���� ReactOS.\n\
-VERIFY   ��������� ��� ���������� ������ �������� ����������� ������\n\
-         ����� �� ����.\n\
-VOL      ³���������� ���� ���� ����� � �������� ������.\n"
+PROMPT   Çìiíà çàïðîøåííÿ êîìàíäíîãî ðÿäêà.\n\
+PUSHD    Çáåðiãàº ïîòî÷íó òåêó, à ïîòiì çìiíþº ¿¿.\n\
+RD       Âèäàëåííÿ òåêè.\n\
+REM      Çàïèñóº êîìåíòàði (çàóâàæåííÿ) â êîìàíäíèõ ôàéëàõ.\n\
+REN      Ïåðåéìåíóâàííÿ ôàéëà àáî ôàéëiâ.\n\
+RENAME   Ïåðåéìåíóâàííÿ ôàéëà àáî ôàéëiâ.\n\
+REPLACE  Çàìiíà ôàéëiâ.\n\
+RMDIR    Ïåðåìiùåííÿ òåêè.\n\
+SCREEN   Ïåðåìiùåííÿ êóðñîðà i âèâåäåííÿ òåêñòó.\n\
+SET      Âiäîáðàæåííÿ, âñòàíîâëåííÿ, àáî âèäàëåííÿ çìiííèõ îòî÷åííÿ ReactOS.\n\
+SHIFT    Çðóøåííÿ ïîçèöi¿ çàìiííèõ ïàðàìåòðiâ ó êîìàíäíèõ ôàéëàõ.\n"
+STRING_HELP2, "START    Âiäêðèâàº îêðåìå âiêíî äëÿ çàïóñêó âêàçàíèõ êîìàíä àáî ïðîãðàì.\n\
+         Âèêîíóº êîìàíäó.\n\
+TIME     Âiäîáðàæåííÿ àáî âñòàíîâëåííÿ ñèñòåìíîãî ÷àñó.\n\
+TIMER    Äîçâîëÿº âèêîðèñòàííÿ äåñÿòè ñåêóíäîìiðiâ.\n\
+TITLE    Âñòàíîâëåííÿ çàãîëîâêà âiêíà äëÿ ñåñi¿ CMD.EXE.\n\
+TYPE     Âiäîáðàæåííÿ âìiñòó òåêñòîâîãî ôàéëó.\n\
+VER      Âiäîáðàæåííÿ âåðñi¿ ReactOS.\n\
+VERIFY   Âêëþ÷åííÿ àáî âiäêëþ÷åííÿ ðåæèìó ïåðåâiðêè ïðàâèëüíîñòi çàïèñó\n\
+         ôàéëiâ íà äèñê.\n\
+VOL      Âiäîáðàæåííÿ ìiòêè òîìó äèñêà i ñåðiéíîãî íîìåðà.\n"
 
 
 STRING_CHOICE_OPTION,         "YN"
 STRING_COPY_OPTION,           "YNA"
 
 
-STRING_ALIAS_ERROR,          "Command line too long after alias expansion!\n"
-STRING_ASSOC_ERROR,          "File association not found for extension %s\n"
-STRING_BATCH_ERROR,          "Error opening batch file\n"
-STRING_CHCP_ERROR1,          "Active code page: %u\n"
-STRING_CHCP_ERROR4,          "Invalid code page\n"
-STRING_CHOICE_ERROR,         "Invalid option. Expected format: /C[:]options"
-STRING_CHOICE_ERROR_TXT,     "Invalid option. Expected format: /T[:]c,nn"
-STRING_CHOICE_ERROR_OPTION,  "Illegal Option: %s"
-STRING_MD_ERROR,			 "A subdirectory or file already exists.\n"
-STRING_MD_ERROR2,			 "The path to the new folder does not exist.\n"
-STRING_CMD_ERROR1,           "Can't redirect input from file %s\n"
-STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
-STRING_CMD_ERROR3,           "Can't redirect to file %s\n"
-STRING_CMD_ERROR4,           "Running %s...\n"
-STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
-STRING_COLOR_ERROR1,         "Same colors error! (Background and foreground can't be the same color)"
-STRING_COLOR_ERROR2,         "error in color specification"
-STRING_COLOR_ERROR3,         "Color %x\n"
-STRING_COLOR_ERROR4,         "same colors error!"
-STRING_CONSOLE_ERROR,        "Unknown error: %d\n"
-STRING_COPY_ERROR1,          "Error: Cannot open source - %s!\n"
-STRING_COPY_ERROR2,          "Error: Can't copy onto itself!\n"
-STRING_COPY_ERROR3,          "Error writing destination!\n"
-STRING_COPY_ERROR4,          "Error: Not implemented yet!\n"
-STRING_DATE_ERROR,           "Invalid date."
-STRING_DEL_ERROR5,           "The file %s will be deleted! "
-STRING_DEL_ERROR6,           "Are you sure (Y/N)?"
-STRING_DEL_ERROR7,           "Deleting: %s\n"
-STRING_ERROR_ERROR1,         "Unknown error! Error code: 0x%lx\n"
-STRING_ERROR_ERROR2,         "Syntax error"
-STRING_FOR_ERROR1,           "'in' missing in for statement."
-STRING_FOR_ERROR2,           "no brackets found."
-STRING_FOR_ERROR3,           "'do' missing."
-STRING_FOR_ERROR4,           "no command after 'do'."
-STRING_FREE_ERROR1,          "Invalid drive"
-STRING_FREE_ERROR2,          "unlabeled"
-STRING_GOTO_ERROR1,          "No label specified for GOTO"
-STRING_GOTO_ERROR2,          "Label '%s' not found\n"
+STRING_ALIAS_ERROR,          "Êîìàíäíèé ðÿäîê çàíàäòî äîâãèé ïiñëÿ ðîçãîðòàííÿ ïñåâäîíiìiâ!\n"
+STRING_ASSOC_ERROR,          "Íå çíàéäåíî ôàéëîâî¿ àñîöiàöi¿ äëÿ ðîçøèðåííÿ %s\n"
+STRING_BATCH_ERROR,          "Ïîìèëêà âiäêðèòòÿ ïàêåòíîãî ôàéëó\n"
+STRING_CHCP_ERROR1,          "Ïîòî÷íà êîäîâà ñòîðiíêà: %u\n"
+STRING_CHCP_ERROR4,          "Ïîìèëêîâà êîäîâà ñòîðiíêà\n"
+STRING_CHOICE_ERROR,         "Íåâiðíèé ïàðàìåòð. Î÷iêóºòüñÿ ôîðìàò: /C[:]ïàðàìåòðè"
+STRING_CHOICE_ERROR_TXT,     "Íåâiðíèé ïàðàìåòð. Î÷iêóºòüñÿ ôîðìàò: /T[:]c,nn"
+STRING_CHOICE_ERROR_OPTION,  "Íåâiðíèé ïàðàìåòð: %s"
+STRING_CMD_ERROR1,           "Íå ìîæó ïåðåíàïðàâèòè ââiä ç ôàéëó %s\n"
+STRING_CMD_ERROR2,           "Ïîìèëêà ñòâîðåííÿ òèì÷àñîâîãî ôàéëó äëÿ pipe-äàíèõ\n"
+STRING_CMD_ERROR3,           "Íå ìîæó ïåðåíàïðàâèòè â ôàéë %s\n"
+STRING_CMD_ERROR4,           "Çàïóñê %s...\n"
+STRING_CMD_ERROR5,           "Çàïóñê cmdexit.bat...\n"
+STRING_COLOR_ERROR1,         "ïîìèëêà - îäíàêîâi êîëüîðè! (òëî òà òåêñò íå ìîæóòü áóòè îäíàêîâîãî êîëüîðó)"
+STRING_COLOR_ERROR2,         "ïîìèëêà ïðè âêàçàííi êîëüîðó"
+STRING_COLOR_ERROR3,         "Êîëið %x\n"
+STRING_COLOR_ERROR4,         "ïîìèëêà - îäíàêîâi êîëüîðè!"
+STRING_CONSOLE_ERROR,        "Íåâiäîìà ïîìèëêà: %d\n"
+STRING_COPY_ERROR1,          "Ïîìèëêà: Íåìîæëèâî âiäêðèòè äæåðåëî - %s!\n"
+STRING_COPY_ERROR2,          "Ïîìèëêà: Íåìîæëèâî êîïiþâàòè â ñåáå!\n"
+STRING_COPY_ERROR3,          "Ïîìèëêà çàïèñó ïðèçíà÷åííÿ!\n"
+STRING_COPY_ERROR4,          "Ïîìèëêà: Ùå íå ðåàëiçîâàíî!\n"
+STRING_DATE_ERROR,           "Íåâiðíà äàòà."
+STRING_DEL_ERROR5,           "Ôàéë %s áóäå âèäàëåíèé! "
+STRING_DEL_ERROR6,           "Âè âïåâíåíi (Y/N)?"
+STRING_DEL_ERROR7,           "Âèäàëåííÿ: %s\n"
+STRING_ERROR_ERROR1,         "Íåâiäîìà ïîìèëêà! Êîä ïîìèëêè: 0x%lx\n"
+STRING_ERROR_ERROR2,         "Ñèíòàêñè÷íà ïîìèëêà"
+STRING_FOR_ERROR1,           "'in' âiäñóòíº â êîìàíä³ for."
+STRING_FOR_ERROR2,           "äóæîê íå çíàéäåíî."
+STRING_FOR_ERROR3,           "'do' âiäñóòíº."
+STRING_FOR_ERROR4,           "íåìàº êîìàíäè ïiñëÿ 'do'."
+STRING_FREE_ERROR1,          "Íåâiðíèé äèñê"
+STRING_FREE_ERROR2,          "íå âiäìi÷åíî"
+STRING_GOTO_ERROR1,          "Íå âèçíà÷åíà ìiòêà äëÿ GOTO"
+STRING_GOTO_ERROR2,          "Ìiòêà '%s' íå çíàéäåíà\n"
 
+STRING_MD_ERROR,			 "Ïiäêàòàëîã ÷è ôàéë âæå iñíóº.\n"
+STRING_MD_ERROR2,			 "Øëÿõ äî íîâîãî êàòàëîãó íå iñíóº.\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
-STRING_MOVE_ERROR2,          "[Error]\n"
+STRING_MOVE_ERROR2,          "[Ïîìèëêà]\n"
 
-STRING_REN_ERROR1,           "MoveFile() failed. Error: %lu\n"
+STRING_REN_ERROR1,           "Íåâäà÷íå âèêîíàííÿ MoveFile(). Ïîìèëêà: %lu\n"
 
-STRING_START_ERROR1,         "No batch support at the moment!"
+STRING_START_ERROR1,         "Íà äàíèé ìîìåíò ïàêåòíi ôàéëè íå ïiäòðèìóþòüñÿ!"
 
-STRING_TIME_ERROR1,          "Invalid time."
+STRING_TIME_ERROR1,          "Íåâiðíèé ÷àñ."
 
-STRING_TYPE_ERROR1,          "Invalid option '/%s'\n"
+STRING_TYPE_ERROR1,          "Íåâiðíèé ïàðàìåòð '/%s'\n"
 
-STRING_WINDOW_ERROR1,        "window not found"
+STRING_WINDOW_ERROR1,        "âiêíî íå çíàéäåíî"
 
 
-STRING_ERROR_PARAMETERF_ERROR,     "������������ ������ ��������� - %c\n"
-STRING_ERROR_INVALID_SWITCH,       "������ ����� - /%c\n"
-STRING_ERROR_TOO_MANY_PARAMETERS,  "�������� ��������� - %s\n"
-STRING_ERROR_PATH_NOT_FOUND,       "���� �� ���������\n"
-STRING_ERROR_FILE_NOT_FOUND,       "���� �� ���������\n"
-STRING_ERROR_REQ_PARAM_MISSING,    "³������� ����'������� ��������\n"
-STRING_ERROR_INVALID_DRIVE,        "Invalid drive specification\n"
-STRING_ERROR_INVALID_PARAM_FORMAT, "Invalid parameter format - %s\n"
-STRING_ERROR_BADCOMMAND,           "������ ������� ��� ��'� ����� - %s\n"
-STRING_ERROR_OUT_OF_MEMORY,        "����������� ���'��.\n"
-STRING_ERROR_CANNOTPIPE,           "Error!  Cannot pipe!  Cannot open temporary file!\n"
-STRING_ERROR_D_PAUSEMSG,           "��������� ����-��� ������ ��� ����������� . . ."
-STRING_ERROR_DRIVER_NOT_READY,     "������� �� �������"
+STRING_ERROR_PARAMETERF_ERROR,     "Íåïðàâèëüíèé ôîðìàò ïàðàìåòðà - %c\n"
+STRING_ERROR_INVALID_SWITCH,       "Íåâ³ðíà îïöiÿ - /%c\n"
+STRING_ERROR_TOO_MANY_PARAMETERS,  "Çàáàãàòî ïàðàìåòðiâ - %s\n"
+STRING_ERROR_PATH_NOT_FOUND,       "Øëÿõ íå çíàéäåíèé\n"
+STRING_ERROR_FILE_NOT_FOUND,       "Ôàéë íå çíàéäåíèé\n"
+STRING_ERROR_REQ_PARAM_MISSING,    "Âiäñóòíié îáîâ'ÿçêîâèé ïàðàìåòð\n"
+STRING_ERROR_INVALID_DRIVE,        "Íåâiðíå âèçíà÷åííÿ äèñêó\n"
+STRING_ERROR_INVALID_PARAM_FORMAT, "Íåâiðíèé ôîðìàò ïàðàìåòðà - %s\n"
+STRING_ERROR_BADCOMMAND,           "Íåâiðíà êîìàíäà àáî iì'ÿ ôàéëó - %s\n"
+STRING_ERROR_OUT_OF_MEMORY,        "Íåäîñòàòíüî ïàì'ÿòi.\n"
+STRING_ERROR_CANNOTPIPE,           "Ïîìèëêà!  Íåìîæëèâî âèêîðèñòàòè pipe!  Íåìîæëèâî âiäêðèòè òèì÷àñîâèé ôàéë!\n"
+STRING_ERROR_D_PAUSEMSG,           "Íàòèñíiòü áóäü-ÿêó êëàâiøó äëÿ ïðîäîâæåííÿ . . ."
+STRING_ERROR_DRIVER_NOT_READY,     "Ïðèñòð³é íå ãîòîâèé"
 
-STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
+STRING_PATH_ERROR,                 "CMD: Íå â ñåðåäîâèùi '%s'\n"
 
-STRING_REPLACE_ERROR1, "Invalid switch - %s\n"
-STRING_REPLACE_ERROR2, "Path not found - %s\n"
-STRING_REPLACE_ERROR3, "The filename, directory name, or volume label syntax is incorrect.\n"
-STRING_REPLACE_ERROR4, "Invalid parameter combination\n"
-STRING_REPLACE_ERROR5, "Access denied - %s\n"
-STRING_REPLACE_ERROR6, "No files found - %s\n"
-STRING_REPLACE_ERROR7, "Extended Error 32\n"
+STRING_REPLACE_ERROR1, "Íåâiðíèé êëþ÷ - %s\n"
+STRING_REPLACE_ERROR2, "Øëÿõ íå çíàéäåíî - %s\n"
+STRING_REPLACE_ERROR3, "Ñèíòàêñèñ iìåíi ôàéëó, òåêè ÷è ìiòêè äèñêó íåêîðåêòíi.\n"
+STRING_REPLACE_ERROR4, "Íåâiðíà êîìáiíàöiÿ ïàðàìåòðiâ\n"
+STRING_REPLACE_ERROR5, "Íåìàº äîñòóïó - %s\n"
+STRING_REPLACE_ERROR6, "Ôàéëè íå çíàéäåíî - %s\n"
+STRING_REPLACE_ERROR7, "Ðîçøèðåíà ïîìèëêà 32\n"
 
-STRING_REACTOS_VERSION,            "ReactOS Operating System [Version %s-%s]\n"
-STRING_CMD_SHELLINFO,              "\nReactOS Command Line Interpreter\nVersion %s %s"
-STRING_VERSION_RUNVER,             " running on %s"
-STRING_COPY_FILE ,                 "        %d ����(��) ����������\n"
-STRING_DELETE_WIPE,                "wiped"
-STRING_FOR_ERROR,                  "bad variable specification."
-STRING_SCREEN_COL,                 "����������� �������� col"
-STRING_SCREEN_ROW,                 "����������� �������� row"
-STRING_TIMER_TIME                  "������ %d - %s: "
-STRING_MKLINK_CREATED_SYMBOLIC,    "Symbolic link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_HARD,        "Hard link created for %s <<===>> %s\n"
-STRING_MKLINK_CREATED_JUNCTION,    "Junction created for %s <<===>> %s\n"
-STRING_MORE,                       "More? "
-STRING_CANCEL_BATCH_FILE,          "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
+STRING_REACTOS_VERSION,            "Îïåðàöiéíà Ñèñòåìà ReactOS [Âåðñiÿ %s-%s]\n"
+STRING_CMD_SHELLINFO,              "\nIíòåðïðåòàòîð êîìàíäíîãî ðÿäêà ReactOS\nVersion %s %s"
+STRING_VERSION_RUNVER,             " çàïóùåíèé íà %s"
+STRING_COPY_FILE ,                 "        %d ôàéë(iâ) ñêîïiéîâàíî\n"
+STRING_DELETE_WIPE,                "âèòåðòî"
+STRING_FOR_ERROR,                  "íåâiðíà ñïåöèôiêàöiÿ çìiííî¿."
+STRING_SCREEN_COL,                 "íåïðàâèëüíå çíà÷åííÿ col"
+STRING_SCREEN_ROW,                 "íåïðàâèëüíå çíà÷åííÿ row"
+STRING_TIMER_TIME                  "Òàéìåð %d - %s: "
+STRING_MKLINK_CREATED_SYMBOLIC,    "Ñòâîðåíî ñèìâîëi÷íå ïîñèëàííÿ äëÿ %s <<===>> %s\n"
+STRING_MKLINK_CREATED_HARD,        "Ñòâîðåíî æîðñòêå ïîñèëàííÿ äëÿ %s <<===>> %s\n"
+STRING_MKLINK_CREATED_JUNCTION,    "Ñòâîðåíî ç'ºäíàííÿ äëÿ %s <<===>> %s\n"
+STRING_MORE,                       "Áiëüøå? "
+STRING_CANCEL_BATCH_FILE,          "\r\níàòèñíåíî Ctrl-Break.  Ïðèïèíèòè âèêîíàííÿ ïàêåòíîãî ôàéëó? (Yes/No/All) "
 
-STRING_INVALID_OPERAND,            "������� �������."
-STRING_EXPECTED_CLOSE_PAREN,       "��������� ')'."
-STRING_EXPECTED_NUMBER_OR_VARIABLE,"��������� ����� ��� ��'� �����."
-STRING_SYNTAX_COMMAND_INCORRECT,   "����������� ��������� �������."
+STRING_INVALID_OPERAND,            "Íåâiðíèé îïåðàíä."
+STRING_EXPECTED_CLOSE_PAREN,       "Î÷iêóºòüñÿ ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Î÷iêóºòüñÿ ÷èñëî àáî iì'ÿ çìiííî¿."
+STRING_SYNTAX_COMMAND_INCORRECT,   "Íåêîðåêòíèé ñèíòàêñèñ êîìàíäè."
 
 END

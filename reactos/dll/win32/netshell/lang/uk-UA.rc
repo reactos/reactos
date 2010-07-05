@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/netshell/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for netshell
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -24,12 +24,12 @@ BEGIN
  GROUPBOX "Опис", -1, 9, 153, 230, 46, BS_GROUPBOX
  LTEXT "Опис компонентів...", IDC_DESCRIPTION, 15, 165, 217, 28, WS_GROUP
  CHECKBOX "Вивести значок підключення на панель завдань", IDC_SHOWTASKBAR, 9, 206, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
- CHECKBOX "Сповіщати, якщо досяжність цього підключення обмежена або нульова", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+ CHECKBOX "Сповіщати мене, якщо це підключення обмежене чи відсутнє", IDC_NOTIFYNOCONNECTION, 9, 220, 230, 12, BS_AUTOCHECKBOX | WS_TABSTOP
 END
 
 IDD_STATUS DIALOGEX DISCARDABLE  0, 0, 200, 280
 STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Allgemein"
+CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
 END
@@ -62,16 +62,16 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Підтримка"
 FONT 8, "MS Shell Dlg"
 BEGIN
- GROUPBOX "Стан підключення", -1, 9, 8, 200, 88, BS_GROUPBOX
+ GROUPBOX "Стан підключення", -1, 9, 8, 189, 88, BS_GROUPBOX
  LTEXT "Тип адреси:", -1, 22, 20, 80, 8
  LTEXT "IP-адреса:", -1, 22, 34, 80, 8
  LTEXT "Маска підмережі:", -1, 22, 48, 80, 8
  LTEXT "Основний шлюз:", -1, 22, 62, 80, 8
 
- RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
- RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
- RTEXT "", IDC_DETAILSGATEWAY, 122, 62, 80, 8
+ RTEXT "N/A", IDC_DETAILSTYPE, 115, 20, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSIP, 115, 34, 80, 8
+ RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 115, 48, 80, 8
+ RTEXT "", IDC_DETAILSGATEWAY, 115, 62, 80, 8
 
  PUSHBUTTON "&Склад...", IDC_DETAILS, 22, 76, 62, 14
 END
