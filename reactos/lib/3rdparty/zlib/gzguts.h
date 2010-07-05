@@ -25,6 +25,7 @@
 #  include <stdlib.h>
 #  include <limits.h>
 #endif
+#include <io.h>
 #include <fcntl.h>
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
