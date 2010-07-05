@@ -24,6 +24,10 @@
 #include <prsht.h>
 #include <shlguid.h>
 
+#ifdef WINE_NO_UNICODE_MACROS
+#undef GetObject
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif /* defined(__cplusplus) */
@@ -381,33 +385,28 @@ typedef struct
 #define FCIDM_TOOLBAR      (FCIDM_BROWSERFIRST + 0)
 #define FCIDM_STATUS       (FCIDM_BROWSERFIRST + 1)
 
-
-/****************************************************************************
- * IShellIcon interface
- */
-
-#define INTERFACE IShellIcon
-DECLARE_INTERFACE_(IShellIcon,IUnknown)
+#define INTERFACE IShellDetails
+DECLARE_INTERFACE_(IShellDetails, IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IShellIcon methods ***/
-    STDMETHOD(GetIconOf)(THIS_ LPCITEMIDLIST pidl, UINT flags, LPINT lpIconIndex) PURE;
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IShellDetails methods ***/
+    STDMETHOD(GetDetailsOf)(THIS_ PCUITEMID_CHILD pidl, UINT iColumn, SHELLDETAILS *pDetails) PURE;
+    STDMETHOD(ColumnClick)(THIS_ UINT iColumn) PURE;
 };
 #undef INTERFACE
 
 #if !defined(__cplusplus) || defined(CINTERFACE)
 /*** IUnknown methods ***/
-#define IShellIcon_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
-#define IShellIcon_AddRef(p)                  (p)->lpVtbl->AddRef(p)
-#define IShellIcon_Release(p)                 (p)->lpVtbl->Release(p)
-/*** IShellIcon methods ***/
-#define IShellIcon_GetIconOf(p,a,b,c)         (p)->lpVtbl->GetIconOf(p,a,b,c)
+#define IShellDetails_QueryInterface(p,a,b)    (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellDetails_AddRef(p)                (p)->lpVtbl->AddRef(p)
+#define IShellDetails_Release(p)               (p)->lpVtbl->Release(p)
+/*** IShellDetails methods ***/
+#define IShellDetails_GetDetailsOf(p,a,b,c)    (p)->lpVtbl->GetDetailsOf(p,a,b,c)
+#define IShellDetails_ColumnClick(p,a)         (p)->lpVtbl->ColumnClick(p,a)
 #endif
-
-typedef IShellIcon *LPSHELLICON;
 
 /* IQueryInfo interface */
 #define INTERFACE IQueryInfo
@@ -576,6 +575,99 @@ DECLARE_INTERFACE_(IShellFolderViewCB,IUnknown)
 #define IShellFolderViewCB_Release(p)                 (p)->lpVtbl->Release(p)
 /*** IShellFolderViewCB methods ***/
 #define IShellFolderViewCB_MessageSFVCB(p,a,b,c)      (p)->lpVtbl->MessageSFVCB(p,a,b,c)
+#endif
+
+/****************************************************************************
+ * IShellFolderView interface
+ */
+
+#include <pshpack8.h>
+
+typedef struct _ITEMSPACING
+{
+    int cxSmall;
+    int cySmall;
+    int cxLarge;
+    int cyLarge;
+} ITEMSPACING;
+
+#include <poppack.h>
+
+#define INTERFACE IShellFolderView
+DEFINE_GUID(IID_IShellFolderView,0x37a378c0,0xf82d,0x11ce,0xae,0x65,0x08,0x00,0x2b,0x2e,0x12,0x62);
+DECLARE_INTERFACE_(IShellFolderView, IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void **ppv) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+
+    /*** IShellFolderView methods ***/
+    STDMETHOD(Rearrange) (THIS_ LPARAM lParamSort) PURE;
+    STDMETHOD(GetArrangeParam) (THIS_ LPARAM *plParamSort) PURE;
+    STDMETHOD(ArrangeGrid) (THIS) PURE;
+    STDMETHOD(AutoArrange) (THIS) PURE;
+    STDMETHOD(GetAutoArrange) (THIS) PURE;
+    STDMETHOD(AddObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
+    STDMETHOD(GetObject) (THIS_ PITEMID_CHILD *ppidl, UINT uItem) PURE;
+    STDMETHOD(RemoveObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
+    STDMETHOD(GetObjectCount) (THIS_ UINT *puCount) PURE;
+    STDMETHOD(SetObjectCount) (THIS_ UINT uCount, UINT dwFlags) PURE;
+    STDMETHOD(UpdateObject) (THIS_ PITEMID_CHILD pidlOld, PITEMID_CHILD pidlNew, UINT *puItem) PURE;
+    STDMETHOD(RefreshObject) (THIS_ PITEMID_CHILD pidl, UINT *puItem) PURE;
+    STDMETHOD(SetRedraw) (THIS_ BOOL bRedraw) PURE;
+    STDMETHOD(GetSelectedCount) (THIS_ UINT *puSelected) PURE;
+    STDMETHOD(GetSelectedObjects) (THIS_ PCITEMID_CHILD **pppidl, UINT *puItems) PURE;
+    STDMETHOD(IsDropOnSource) (THIS_ IDropTarget *pDropTarget) PURE;
+    STDMETHOD(GetDragPoint) (THIS_ POINT *ppt) PURE;
+    STDMETHOD(GetDropPoint) (THIS_ POINT *ppt) PURE;
+    STDMETHOD(MoveIcons) (THIS_ IDataObject *pDataObject) PURE;
+    STDMETHOD(SetItemPos) (THIS_ PCUITEMID_CHILD pidl, POINT *ppt) PURE;
+    STDMETHOD(IsBkDropTarget) (THIS_ IDropTarget *pDropTarget) PURE;
+    STDMETHOD(SetClipboard) (THIS_ BOOL bMove) PURE;
+    STDMETHOD(SetPoints) (THIS_ IDataObject *pDataObject) PURE;
+    STDMETHOD(GetItemSpacing) (THIS_ ITEMSPACING *pSpacing) PURE;
+    STDMETHOD(SetCallback) (THIS_ IShellFolderViewCB* pNewCB, IShellFolderViewCB** ppOldCB) PURE;
+    STDMETHOD(Select) ( THIS_  UINT dwFlags ) PURE;
+    STDMETHOD(QuerySupport) (THIS_ UINT * pdwSupport ) PURE;
+    STDMETHOD(SetAutomationObject)(THIS_ IDispatch* pdisp) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IShellFolderView_QueryInterface(p,a,b)      (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellFolderView_AddRef(p)                  (p)->lpVtbl->AddRef(p)
+#define IShellFolderView_Release(p)                 (p)->lpVtbl->Release(p)
+/*** IShellFolderView methods ***/
+#define IShellFolderView_Rearrange(p,a)             (p)->lpVtbl->Rearrange(p,a)
+#define IShellFolderView_GetArrangeParam(p,a)       (p)->lpVtbl->GetArrangeParam(p,a)
+#define IShellFolderView_ArrangeGrid(p)             (p)->lpVtbl->ArrangeGrid(p)
+#define IShellFolderView_AutoArrange(p)             (p)->lpVtbl->AutoArrange(p)
+#define IShellFolderView_GetAutoArrange(p)          (p)->lpVtbl->GetAutoArrange(p)
+#define IShellFolderView_AddObject(p,a,b)           (p)->lpVtbl->AddObject(p,a,b)
+#define IShellFolderView_GetObject(p,a,b)           (p)->lpVtbl->GetObject(p,a,b)
+#define IShellFolderView_RemoveObject(p,a,b)        (p)->lpVtbl->RemoveObject(p,a,b)
+#define IShellFolderView_GetObjectCount(p,a)        (p)->lpVtbl->GetObjectCount(p,a)
+#define IShellFolderView_SetObjectCount(p,a,b)      (p)->lpVtbl->SetObjectCount(p,a,b)
+#define IShellFolderView_UpdateObject(p,a,b,c)      (p)->lpVtbl->UpdateObject(p,a,b,c)
+#define IShellFolderView_RefreshObject(p,a,b)       (p)->lpVtbl->RefreshObject(p,a,b)
+#define IShellFolderView_SetRedraw(p,a)             (p)->lpVtbl->SetRedraw(p,a)
+#define IShellFolderView_GetSelectedCount(p,a)      (p)->lpVtbl->GetSelectedCount(p,a)
+#define IShellFolderView_GetSelectedObjects(p,a,b)  (p)->lpVtbl->GetSelectedObjects(p,a,b)
+#define IShellFolderView_IsDropOnSource(p,a)        (p)->lpVtbl->IsDropOnSource(p,a)
+#define IShellFolderView_GetDragPoint(p,a)          (p)->lpVtbl->GetDragPoint(p,a)
+#define IShellFolderView_GetDropPoint(p,a)          (p)->lpVtbl->GetDropPoint(p,a)
+#define IShellFolderView_MoveIcons(p,a)             (p)->lpVtbl->MoveIcons(p,a)
+#define IShellFolderView_SetItemPos(p,a,b)          (p)->lpVtbl->SetItemPos(p,a,b)
+#define IShellFolderView_DropTarget(p,a)            (p)->lpVtbl->DropTarget(p,a)
+#define IShellFolderView_SetClipboard(p,a)          (p)->lpVtbl->SetClipboard(p,a)
+#define IShellFolderView_SetPoints(p,a)             (p)->lpVtbl->SetPoints(p,a)
+#define IShellFolderView_GetItemSpacing(p,a)        (p)->lpVtbl->GetItemSpacing(p,a)
+#define IShellFolderView_SetCallback(p,a)           (p)->lpVtbl->SetCallback(p,a)
+#define IShellFolderView_Select(p,a)                (p)->lpVtbl->Select(p,a)
+#define IShellFolderView_QuerySupport(p,a)          (p)->lpVtbl->QuerySupport(p,a)
+#define IShellFolderView_SetAutomationObject(p,a)   (p)->lpVtbl->SetAutomationObject(p,a)
 #endif
 
 /* IProgressDialog interface */
@@ -757,6 +849,8 @@ typedef HRESULT (CALLBACK *LPFNVIEWCALLBACK)(
 	WPARAM wParam,
 	LPARAM lParam);
 
+#include <pshpack8.h>
+
 typedef struct _CSFV
 {
   UINT             cbSize;
@@ -767,6 +861,8 @@ typedef struct _CSFV
   LPFNVIEWCALLBACK pfnCallback;
   FOLDERVIEWMODE   fvm;
 } CSFV, *LPCSFV;
+
+#include <poppack.h>
 
 HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 
@@ -828,6 +924,8 @@ HRESULT WINAPI SHCreateShellFolderViewEx(LPCSFV pshfvi, IShellView **ppshv);
 #define SFVM_GET_WEBVIEW_THEME        86 /* undocumented */
 #define SFVM_GETDEFERREDVIEWSETTINGS  92 /* undocumented */
 
+#include <pshpack8.h>
+
 typedef struct _SFV_CREATE
 {
     UINT cbSize;
@@ -835,6 +933,8 @@ typedef struct _SFV_CREATE
     IShellView *psvOuter;
     IShellFolderViewCB *psfvcb;
 } SFV_CREATE;
+
+#include <poppack.h>
 
 HRESULT WINAPI SHCreateShellFolderView(const SFV_CREATE *pscfv, IShellView **ppsv);
 
@@ -1264,15 +1364,16 @@ typedef struct _SHChangeNotifyEntry
 #define SHCNF_PRINTERW		0x0006
 #define SHCNF_TYPE		0x00FF
 #define SHCNF_FLUSH		0x1000
-#define SHCNF_FLUSHNOWAIT	0x2000
+#define SHCNF_FLUSHNOWAIT	0x3000
+#define SHCNF_NOTIFYRECURSIVE	0x10000
 
 #define SHCNF_PATH              WINELIB_NAME_AW(SHCNF_PATH)
 #define SHCNF_PRINTER           WINELIB_NAME_AW(SHCNF_PRINTER)
 
-#define SHCNRF_InterruptLevel   0x1
-#define SHCNRF_ShellLevel   0x2
-#define SHCNRF_RecursiveInterrupt   0x1000
-#define SHCNRF_NewDelivery  0x8000
+#define SHCNRF_InterruptLevel 0x0001
+#define SHCNRF_ShellLevel 0x0002
+#define SHCNRF_RecursiveInterrupt 0x1000
+#define SHCNRF_NewDelivery 0x8000
 
 void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2);
 

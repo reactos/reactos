@@ -118,7 +118,8 @@ cpp_quote("#endif")
 [
     object,
     uuid(000214E9-0000-0000-C000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IShellPropSheetExt : IUnknown
 {
@@ -175,10 +176,6 @@ interface IShellFolder : IUnknown
 
     typedef DWORD SHCONTF;
 
-    cpp_quote("#define SHCIDS_ALLFIELDS        0x80000000L")
-    cpp_quote("#define SHCIDS_CANONICALONLY    0x10000000L")
-    cpp_quote("#define SHCIDS_BITMASK          0xFFFF0000L")
-    cpp_quote("#define SHCIDS_COLUMNMASK       0x0000FFFFL")
     cpp_quote("#define SFGAO_CANCOPY           DROPEFFECT_COPY")
     cpp_quote("#define SFGAO_CANMOVE           DROPEFFECT_MOVE")
     cpp_quote("#define SFGAO_CANLINK           DROPEFFECT_LINK")
@@ -375,6 +372,37 @@ interface IShellItem : IUnknown
         [out] int *piOrder);
 }
 
+typedef enum tagNWMF {
+    NWMF_UNLOADING        = 0x0001,
+    NWMF_USERINITED       = 0x0002,
+    NWMF_FIRST            = 0x0004,
+    NWMF_OVERRIDEKEY      = 0x0008,
+    NWMF_SHOWHELP         = 0x0010,
+    NWMF_HTMLDIALOG       = 0x0020,
+    NWMF_FROMDIALOGCHILD  = 0x0040,
+    NWMF_USERREQUESTED    = 0x0080,
+    NWMF_USERALLOWED      = 0x0100
+} NWMF;
+
+[
+    uuid(d2bc4c84-3f72-4a52-a604-7bcbf3982cbb),
+    object,
+    pointer_default(unique)
+]
+interface INewWindowManager : IUnknown
+{
+    HRESULT EvaluateNewWindow(
+        [in, string] LPCWSTR pszUrl,
+        [in, string] LPCWSTR pszName,
+        [in, string] LPCWSTR pszUrlContext,
+        [in, string] LPCWSTR pszFeatures,
+        [in]         BOOL fReplace,
+        [in]         DWORD dwFlags,
+        [in]         DWORD dwUserActionTime);
+}
+
+cpp_quote("#define SID_SNewWindowManager IID_INewWindowManager")
+
 /*****************************************************************************
  * FOLDERSETTINGS
  */
@@ -400,11 +428,25 @@ typedef enum
     FWF_SINGLECLICKACTIVATE = 0x00008000,
     FWF_NOWEBVIEW           = 0x00010000,
     FWF_HIDEFILENAMES       = 0x00020000,
-    FWF_CHECKSELECT         = 0x00040000
+    FWF_CHECKSELECT         = 0x00040000,
+    FWF_NOENUMREFRESH       = 0x00080000,
+    FWF_NOGROUPING          = 0x00100000,
+    FWF_FULLROWSELECT       = 0x00200000,
+    FWF_NOFILTERS           = 0x00400000,
+    FWF_NOCOLUMNHEADER      = 0x00800000,
+    FWF_NOHEADERINALLVIEWS  = 0x01000000,
+    FWF_EXTENDEDTILES       = 0x02000000,
+    FWF_TRICHECKSELECT      = 0x04000000,
+    FWF_AUTOCHECKSELECT     = 0x08000000,
+    FWF_NOBROWSERVIEWSTATE  = 0x10000000,
+    FWF_SUBSETGROUPS        = 0x20000000,
+    FWF_USESEARCHFOLDER     = 0x40000000,
+    FWF_ALLOWRTLREADING     = 0x80000000
 } FOLDERFLAGS;
 
 typedef enum
 {
+    FVM_AUTO       =-1,
     FVM_ICON       = 1,
     FVM_FIRST      = FVM_ICON,
     FVM_SMALLICON  = 2,
@@ -413,7 +455,8 @@ typedef enum
     FVM_THUMBNAIL  = 5,
     FVM_TILE       = 6,
     FVM_THUMBSTRIP = 7,
-    FVM_LAST       = FVM_THUMBSTRIP
+    FVM_CONTENT    = 8,
+    FVM_LAST       = FVM_CONTENT
 } FOLDERVIEWMODE;
 
 typedef struct
@@ -423,6 +466,21 @@ typedef struct
 } FOLDERSETTINGS, *PFOLDERSETTINGS, *LPFOLDERSETTINGS;
 typedef const FOLDERSETTINGS *LPCFOLDERSETTINGS;
 
+/*****************************************************************************
+ * IShellIcon interface
+ */
+[
+    uuid(000214e5-0000-0000-c000-000000000046),
+    object,
+    pointer_default(unique)
+]
+interface IShellIcon : IUnknown
+{
+    HRESULT GetIconOf(
+        [in] PCUITEMID_CHILD pidl,
+        [in] UINT flags,
+        [out] int *pIconIndex);
+}
 
 /*****************************************************************************
  * IShellView interface
@@ -498,80 +556,90 @@ interface IShellView : IOleWindow
         [out, iid_is(riid)] void **ppv);
 }
 
-
 [
-    uuid(88E39E80-3578-11CF-AE69-08002B2E1262),
     object,
+    uuid(88e39e80-3578-11cf-ae69-08002b2e1262),
     pointer_default(unique)
 ]
-interface IShellView2 :  IShellView
+interface IShellView2 : IShellView
 {
     typedef GUID SHELLVIEWID;
-
-    cpp_quote("#define SV2GV_CURRENTVIEW ((UINT)-1)")
-    cpp_quote("#define SV2GV_DEFAULTVIEW ((UINT)-2)")
-
-    cpp_quote("#include <pshpack8.h>")
+cpp_quote("#include <pshpack8.h>")
     typedef struct _SV2CVW2_PARAMS
     {
         DWORD cbSize;
-
         IShellView *psvPrev;
         LPCFOLDERSETTINGS pfs;
         IShellBrowser *psbOwner;
         RECT *prcView;
         SHELLVIEWID const *pvid;
         HWND hwndView;
-
     } SV2CVW2_PARAMS, *LPSV2CVW2_PARAMS;
-
-    cpp_quote("#include <poppack.h>")
+cpp_quote("#include <poppack.h>")
 
     HRESULT GetView(
-        [in, out] SHELLVIEWID* pvid,
-        [in] ULONG uView);
-
+        [in, out] SHELLVIEWID *view_guid,
+        [in] ULONG view_type
+    );
     HRESULT CreateViewWindow2(
-        [in] LPSV2CVW2_PARAMS lpParams);
-
+        [in] LPSV2CVW2_PARAMS view_params
+    );
     HRESULT HandleRename(
-        [in, unique] PCUITEMID_CHILD pidlNew);
-
+        [in] LPCITEMIDLIST new_pidl
+    );
     HRESULT SelectAndPositionItem(
-        [in] PCUITEMID_CHILD pidlItem,
-        [in] UINT uFlags,
-        [in, unique] POINT *ppt);
+        [in] LPCITEMIDLIST item,
+        [in] UINT flags,
+        [in] POINT *point
+    );
 }
 
-
+/*****************************************************************************
+ * IFolderView interface
+ */
 [
-    uuid(ec39fa88-f8af-41c5-8421-38bed28f4673),
+    uuid(cde725b0-ccc9-4519-917e-325d72fab4ce),
     object,
     pointer_default(unique)
 ]
-interface IShellView3 :  IShellView2
+interface IFolderView : IUnknown
 {
-    enum tagSV3CVW3
-    {
-        SV3CVW3_DEFAULT             = 0x00000000,
-        SV3CVW3_NONINTERACTIVE      = 0x00000001,
-        SV3CVW3_FORCEVIEWMODE       = 0x00000002,
-        SV3CVW3_FORCEFOLDERFLAGS    = 0x00000004,
-    };
-    typedef DWORD SV3CVW3_FLAGS;
-
-    HRESULT CreateViewWindow3(
-        [in] IShellBrowser *psbOwner,
-        [in, unique] IShellView *psvPrev,
-        [in] SV3CVW3_FLAGS dwViewFlags,
-        [in] FOLDERFLAGS dwMask,
-        [in] FOLDERFLAGS dwFlags,
-        [in] FOLDERVIEWMODE fvMode,
-        [in, unique] const SHELLVIEWID *pvid,
-        [in] const RECT *prcView,
-        [out] HWND *phwndView);
+    HRESULT GetCurrentViewMode( [out] UINT *mode );
+    HRESULT SetCurrentViewMode( [in] UINT mode );
+    HRESULT GetFolder( [in] REFIID riid, [out, iid_is(riid)] void **ppv );
+    HRESULT Item(
+        [in] int index,
+        [out] PITEMID_CHILD *ppidl
+    );
+    HRESULT ItemCount(
+        [in] UINT flags,
+        [out] int *items
+    );
+    HRESULT Items(
+        [in] UINT flags,
+        [in] REFIID riid,
+        [out, iid_is(riid)] void **ppv
+    );
+    HRESULT GetSelectionMarkedItem( [out] int *item );
+    HRESULT GetFocusedItem( [out] int *item );
+    HRESULT GetItemPosition(
+        [in] PCUITEMID_CHILD pidl,
+        [out] POINT* ppt
+    );
+    HRESULT GetSpacing( [in, out, unique] POINT* pt );
+    HRESULT GetDefaultSpacing( [out] POINT* pt );
+    HRESULT GetAutoArrange();
+    HRESULT SelectItem(
+        [in] int item,
+        [in] DWORD flags
+    );
+    HRESULT SelectAndPositionItems(
+        [in] UINT cidl,
+        [in, size_is(cidl)] PCUITEMID_CHILD_ARRAY apidl,
+        [in, unique, size_is(cidl)] POINT* apt,
+        [in] DWORD flags
+    );
 }
-
 
 /*****************************************************************************
  * IShellBrowser interface
@@ -599,8 +667,18 @@ cpp_quote("#define SBSP_PARENT                0x00002000")
 cpp_quote("#define SBSP_NAVIGATEBACK          0x00004000")
 cpp_quote("#define SBSP_NAVIGATEFORWARD       0x00008000")
 cpp_quote("#define SBSP_ALLOW_AUTONAVIGATE    0x00010000")
+cpp_quote("#define SBSP_KEEPSAMETEMPLATE      0x00020000")
+cpp_quote("#define SBSP_KEEPWORDWHEELTEXT     0x00040000")
+cpp_quote("#define SBSP_ACTIVATE_NOFOCUS      0x00080000")
+cpp_quote("#define SBSP_CREATENOHISTORY       0x00100000")
+cpp_quote("#define SBSP_PLAYNOSOUND           0x00200000")
+cpp_quote("#define SBSP_CALLERUNTURUSTED      0x00800000")
+cpp_quote("#define SBSP_TRUSTFIRSTDOWNLOAD    0x01000000")
+cpp_quote("#define SBSP_UNTRUSTEDFORDOWNLOAD  0x02000000")
 cpp_quote("#define SBSP_NOAUTOSELECT          0x04000000")
 cpp_quote("#define SBSP_WRITENOHISTORY        0x08000000")
+cpp_quote("#define SBSP_TRUSTEDFORACTIVEX     0x10000000")
+cpp_quote("#define SBSP_FEEDNAVIGATION        0x20000000")
 cpp_quote("#define SBSP_REDIRECT              0x40000000")
 cpp_quote("#define SBSP_INITIATEDBYHLINKFRAME 0x80000000")
 
@@ -698,7 +776,7 @@ interface IShellLinkA : IUnknown
     HRESULT GetPath(
         [out, size_is(cch)] LPSTR pszFile,
         [in] int cch,
-        [in, out] WIN32_FIND_DATAA *pfd,
+        [in, out, unique] WIN32_FIND_DATAA *pfd,
         [in] DWORD fFlags);
 
     HRESULT GetIDList( [out] LPITEMIDLIST * ppidl );
@@ -886,7 +964,8 @@ interface IPersistFolder3 : IPersistFolder2
 [
     object,
     uuid(000214eb-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IExtractIconA : IUnknown
 {
@@ -926,7 +1005,8 @@ cpp_quote("#define GIL_DONTCACHE    0x0010")
 [
     object,
     uuid(000214fa-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IExtractIconW : IUnknown
 {
@@ -976,6 +1056,55 @@ cpp_quote("#define CDBOSC_STATECHANGE  0x00000004")
 
 
 /*****************************************************************************
+ * ICommDlgBrowser2 interface
+ */
+[
+ object,
+ uuid(10339516-2894-11D2-9039-00C04F8EEB3E),
+ pointer_default(unique)
+]
+interface ICommDlgBrowser2 : ICommDlgBrowser
+{
+
+    HRESULT Notify(
+        [in] IShellView *ppshv,
+        [in] DWORD dwNotifyType);
+
+    HRESULT GetDefaultMenuText(
+        [in] IShellView *ppshv,
+        [out, string, size_is(cchMax)] LPWSTR pszText,
+        [in] int cchMax);
+
+    HRESULT GetViewFlags(
+        [out] DWORD *pdwFlags);
+}
+
+
+/*****************************************************************************
+ * ICommDlgBrowser3 interface
+ */
+[
+ object,
+ uuid(C8AD25A1-3294-41EE-8165-71174BD01C57),
+ pointer_default(unique)
+]
+interface ICommDlgBrowser3 : ICommDlgBrowser2
+{
+
+    HRESULT OnColumnClicked(
+        [in] IShellView *ppshv,
+        [in] int iColumn);
+
+    HRESULT GetCurrentFilter(
+        [out, string, size_is(cchFileSpec)] LPWSTR pszFileSpec,
+        [in] int cchFileSpec);
+
+    HRESULT OnPreviewCreated(
+        [in] IShellView *ppshv);
+}
+
+
+/*****************************************************************************
  * IDockingWindowFrame interface
  */
 [
@@ -1012,7 +1141,8 @@ cpp_quote("#define DWFAF_HIDDEN           0x0001")
 [
     object,
     uuid(de5bf786-477a-11d2-839d-00c04fd918d0),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IDragSourceHelper : IUnknown
 {
@@ -1041,7 +1171,8 @@ interface IDragSourceHelper : IUnknown
 [
     object,
     uuid(4657278b-411b-11d2-839a-00c04fd918d0),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IDropTargetHelper : IUnknown
 {
@@ -1192,7 +1323,8 @@ cpp_quote("#define CMIC_MASK_NOZONECHECKS   SEE_MASK_NOZONECHECKS")
 [
     object,
     uuid(000214f4-0000-0000-c000-000000000046),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IContextMenu2 : IContextMenu
 {
@@ -1211,7 +1343,8 @@ interface IContextMenu2 : IContextMenu
 [
     object,
     uuid(bcfce0a0-ec17-11d0-8d10-00a0c90f2719),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IContextMenu3 : IContextMenu2
 {
@@ -1322,7 +1455,8 @@ interface IURLSearchHook : IUnknown
 [
     object,
     uuid(09f656a2-41af-480c-88f7-16cc0d164615),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface ISearchContext : IUnknown
 {
@@ -1370,7 +1504,7 @@ interface INewShortcutHookA : IUnknown
                 [in] LPCSTR pcszReferent,
                 [in] HWND hwnd);
     HRESULT GetReferent(
-                [out] LPCSTR pcszReferent,
+                [out] LPSTR pcszReferent,
                 [in] int cchReferent);
     HRESULT SetFolder(
                 [in] LPCSTR pcszReferent);
@@ -1401,7 +1535,7 @@ interface INewShortcutHookW : IUnknown
                 [in] LPCWSTR pcszReferent,
                 [in] HWND hwnd);
     HRESULT GetReferent(
-                [out] LPCWSTR pcszReferent,
+                [out] LPWSTR pcszReferent,
                 [in] int cchReferent);
     HRESULT SetFolder(
                 [in] LPCWSTR pcszReferent);
@@ -1422,7 +1556,8 @@ interface INewShortcutHookW : IUnknown
 [
     object,
     uuid(85788d00-6807-11d0-b810-00c04fd706ec),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IRunnableTask : IUnknown
 {
@@ -1439,7 +1574,8 @@ interface IRunnableTask : IUnknown
 [
     object,
     uuid(d82be2b1-5764-11d0-a96e-00c04fd705a2),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IShellChangeNotify : IUnknown
 {
@@ -1455,7 +1591,8 @@ interface IShellChangeNotify : IUnknown
 [
     object,
     uuid(01e18d10-4d8b-11d2-855d-006008059367),
-    pointer_default(unique)
+    pointer_default(unique),
+    local
 ]
 interface IFileSystemBindData : IUnknown
 {
@@ -1639,44 +1776,6 @@ interface IDeskBand : IDockingWindow
         [in] DWORD dwViewMode,
         [in, out] DESKBANDINFO* pdbi);
 }
-
-cpp_quote("#if (NTDDI_VERSION >= NTDDI_LONGHORN)")
-
-/*****************************************************************************
- * IDeskBandInfo interface
- */
-[
-    uuid(77E425FC-CBF9-4307-BA6A-BB5727745661),
-    object,
-]
-interface IDeskBandInfo : IUnknown
-{
-    HRESULT GetDefaultBandWidth(
-        [in] DWORD dwBandID,
-        [in] DWORD dwViewMode,
-        [out] int *pnWidth);
-}
-
-
-/*****************************************************************************
- * IDeskBand2 interface
- */
-[
-    uuid(79D16DE4-ABEE-4021-8D9D-9169B261D657),
-    object,
-]
-interface IDeskBand2 : IDeskBand
-{
-    HRESULT CanRenderComposited([out] BOOL *pfCanRenderComposited);
-
-    HRESULT SetCompositionState([in] BOOL fCompositionEnabled);
-
-    HRESULT GetCompositionState([out] BOOL *pfCompositionEnabled);
-}
-
-cpp_quote("#endif  // NTDDI_LONGHORN")
-
-
 
 cpp_quote("#if (_WIN32_IE >= _WIN32_IE_IE60)")
 
@@ -1868,12 +1967,11 @@ interface IMenuBand : IUnknown
 interface IProfferService : IUnknown
 {
     HRESULT ProfferService(
-		[in] REFGUID rguidService,
-        [in] IServiceProvider *psp,
-        [out] DWORD *pdwCookie);
-    
-    HRESULT RevokeService( 
-        [in] DWORD dwCookie);
+        [in] REFGUID service,
+        [in] IServiceProvider *pService,
+        [out] DWORD *pCookie);
+
+    HRESULT RevokeService([in] DWORD cookie);
 }
 
 /*****************************************************************************
@@ -2192,7 +2290,6 @@ interface ITravelLog : IUnknown
 
 	HRESULT Revert();
 };
-
 
 /*****************************************************************************
  * IShellService interface
@@ -2719,3 +2816,153 @@ interface ITrackShellMenu : IShellMenu
 };
 
 cpp_quote("#endif /* _WIN32_IE_IE60 */")
+
+/*****************************************************************************
+ *    IAutoCompleteDropDown interface
+ */
+[
+    object,
+    uuid(3CD141F4-3C6A-11d2-BCAA-00C04FD929DB),
+    pointer_default(unique)
+]
+interface IAutoCompleteDropDown : IUnknown
+{
+cpp_quote("#define ACDD_VISIBLE   0x0001")
+
+    HRESULT GetDropDownStatus(
+        [out] DWORD *pdwFlags,
+        [out, string] LPWSTR *ppwszString);
+
+    HRESULT ResetEnumerator();
+}
+
+/*****************************************************************************
+ * IExplorerBrowserEvents interface
+ */
+[
+ object,
+ uuid(361BBDC7-E6EE-4E13-BE58-58E2240C810F)
+]
+interface IExplorerBrowserEvents : IUnknown
+{
+    HRESULT OnNavigationPending(
+        [in] PCIDLIST_ABSOLUTE pidlFolder);
+
+    HRESULT OnViewCreated(
+        [in] IShellView *psv);
+
+    HRESULT OnNavigationComplete(
+        [in] PCIDLIST_ABSOLUTE pidlFolder);
+
+    HRESULT OnNavigationFailed(
+        [in] PCIDLIST_ABSOLUTE pidlFolder);
+}
+
+typedef GUID EXPLORERPANE;
+typedef EXPLORERPANE *REFEXPLORERPANE;
+
+cpp_quote("#define SID_ExplorerPaneVisibility IID_IExplorerPaneVisibility")
+
+/*****************************************************************************
+ * IExplorerPaneVisibility interface
+ */
+[
+ object,
+ uuid(E07010EC-BC17-44C0-97B0-46C7C95B9EDC)
+]
+interface IExplorerPaneVisibility : IUnknown
+{
+    typedef enum tagEXPLORERPANESTATE {
+        EPS_DONTCARE     = 0x0,
+        EPS_DEFAULT_ON   = 0x1,
+        EPS_DEFAULT_OFF  = 0x2,
+        EPS_STATE_MASK   = 0xffff,
+        EPS_INITIALSTATE = 0x10000,
+        EPS_FORCE        = 0x20000
+    } EXPLORERPANESTATE;
+
+    HRESULT GetPaneState(
+        [in] REFEXPLORERPANE ep,
+        [out] EXPLORERPANESTATE *peps);
+}
+
+typedef [v1_enum] enum tagEXPLORER_BROWSER_FILL_FLAGS {
+    EBF_NONE                     = 0,
+    EBF_SELECTFROMDATAOBJECT     = 0x100,
+    EBF_NODROPTARGET             = 0x200
+} EXPLORER_BROWSER_FILL_FLAGS;
+
+typedef [v1_enum] enum tagEXPLORER_BROWSER_OPTIONS {
+    EBO_NONE               = 0x00,
+    EBO_NAVIGATEONCE       = 0x01,
+    EBO_SHOWFRAMES         = 0x02,
+    EBO_ALWAYSNAVIGATE     = 0x04,
+    EBO_NOTRAVELLOG        = 0x08,
+    EBO_NOWRAPPERWINDOW    = 0x10,
+    EBO_HTMLSHAREPOINTVIEW = 0x20
+} EXPLORER_BROWSER_OPTIONS;
+
+cpp_quote("#define SID_SExplorerBrowserFrame IID_ICommDlgBrowser")
+
+/*****************************************************************************
+ * IExplorerBrowser interface
+ */
+[
+ object,
+ uuid(DFD3B6B5-C10C-4BE9-85F6-A66969F402F6),
+ pointer_default(unique)
+]
+interface IExplorerBrowser : IUnknown
+{
+
+    [local] HRESULT Initialize(
+        [in] HWND hwndParent,
+        [in] const RECT *prc,
+        [in, unique] const FOLDERSETTINGS *pfs);
+
+    HRESULT Destroy();
+
+    [local] HRESULT SetRect(
+        [in,out,unique] HDWP *phdwp,
+        [in] RECT rcBrowser);
+
+    HRESULT SetPropertyBag(
+        [in, string] LPCWSTR pszPropertyBag);
+
+    HRESULT SetEmptyText(
+        [in, string] LPCWSTR pszEmptyText);
+
+    HRESULT SetFolderSettings(
+        [in] const FOLDERSETTINGS *pfs);
+
+    HRESULT Advise(
+        [in] IExplorerBrowserEvents *psbe,
+        [out] DWORD *pdwCookie);
+
+    HRESULT Unadvise(
+        [in] DWORD dwCookie);
+
+    HRESULT SetOptions(
+        [in] EXPLORER_BROWSER_OPTIONS dwFlag);
+
+    HRESULT GetOptions(
+        [out] EXPLORER_BROWSER_OPTIONS *pdwFlag);
+
+    HRESULT BrowseToIDList(
+        [in] PCUIDLIST_RELATIVE pidl,
+        [in] UINT uFlags);
+
+    HRESULT BrowseToObject(
+        [in] IUnknown *punk,
+        [in] UINT uFlags);
+
+    HRESULT FillFromObject(
+        [in] IUnknown *punk,
+        [in] EXPLORER_BROWSER_FILL_FLAGS dwFlags);
+
+    HRESULT RemoveAll();
+
+    HRESULT GetCurrentView(
+        [in] REFIID riid,
+        [out, iid_is(riid)] IUnknown **ppv);
+}

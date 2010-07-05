@@ -1,0 +1,481 @@
+/*
+ * Copyright (C) 2008 Maarten Lankhorst
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+cpp_quote("#if 0")
+typedef DWORD IDirectDrawSurface7;
+typedef DWORD IDirectDraw7;
+typedef DWORD *LPBITMAPINFOHEADER;
+typedef DWORD *LPDDPIXELFORMAT;
+typedef struct { DWORD dw1, dw2; } DDCOLORKEY;
+cpp_quote("#endif")
+cpp_quote("#include <ddraw.h>")
+
+interface IVMRSurface;
+interface IVMRSurfaceAllocator;
+interface IVMRSurfaceAllocatorNotify;
+interface IVMRImagePresenter;
+interface IVMRImagePresenterNotify;
+interface IVMRWindowlessControl;
+interface IVMRMixerControl;
+interface IVMRMixerBitmap;
+interface IVMRFilterConfig;
+interface IVMRAspectRatioControl;
+interface IVMRDeinterlaceControl;
+interface IVMRMonitorConfig;
+interface IVMRImageCompositor;
+interface IVMRVideoStreamControl;
+
+typedef enum _VMRPresentationFlags
+{
+    VMRSample_SyncPoint = 0x01,
+    VMRSample_Preroll = 0x02,
+    VMRSample_Discontinuity = 0x04,
+    VMRSample_TimeValid = 0x08,
+    VMRSample_SrcDstRectsValid = 0x10
+} VMRPresentationFlags;
+
+typedef struct tagVMRPRESENTATIONINFO
+{
+    DWORD dwFlags;
+    IDirectDrawSurface7 *lpSurf;
+    REFERENCE_TIME rtStart, rtEnd;
+    SIZE szAspectRatio;
+    RECT rcSrc, rcDst;
+    DWORD dwTypeSpecificFlags;
+    DWORD dwInterlaceFlags;
+} VMRPRESENTATIONINFO;
+
+[
+    local,
+    object,
+    uuid(ce704fe7-e71e-41fb-baa2-c4403e1182f5),
+    helpstring("IVMRImagePresenter interface"),
+    pointer_default(unique)
+]
+interface IVMRImagePresenter : IUnknown
+{
+    HRESULT StartPresenting([in] DWORD_PTR id);
+    HRESULT StopPresenting([in] DWORD_PTR id);
+    HRESULT PresentImage([in] DWORD_PTR id, [in] VMRPRESENTATIONINFO *info);
+};
+
+typedef enum _VMRSurfaceAllocationFlags
+{
+    AMAP_PIXELFORMAT_VALID = 0x01,
+    AMAP_3D_TARGET = 0x02,
+    AMAP_ALLOW_SYSMEM = 0x04,
+    AMAP_FORCE_SYSMEM = 0x08,
+    AMAP_DIRECTED_FLIP = 0x10,
+    AMAP_DXVA_TARGET = 0x20
+} VMRSurfaceAllocationFlags;
+
+typedef struct tagVMRALLOCATIONINFO
+{
+    DWORD dwFlags;
+    LPBITMAPINFOHEADER lpHdr;
+    LPDDPIXELFORMAT lpPixFmt;
+    SIZE szAspectRatio;
+    DWORD dwMinBuffers;
+    DWORD dwMaxBuffers;
+    DWORD dwInterlaceFlags;
+    SIZE szNativeSize;
+} VMRALLOCATIONINFO;
+
+[
+    local,
+    object,
+    uuid(31ce832e-4484-458b-8cca-f4d7e3db0b52),
+    helpstring("IVMRSurfaceAllocator interface"),
+    pointer_default(unique)
+]
+interface IVMRSurfaceAllocator : IUnknown
+{
+    HRESULT AllocateSurface([in] DWORD_PTR id, [in] VMRALLOCATIONINFO *allocinfo, [in, out] DWORD *buffers, IDirectDrawSurface7 **surface);
+    HRESULT FreeSurface([in] DWORD_PTR id);
+    HRESULT PrepareSurface([in] DWORD_PTR id, [in] IDirectDrawSurface7 *surface, [in] DWORD dwSurfaceFlags);
+    HRESULT AdviseNotify([in] IVMRSurfaceAllocatorNotify *notify);
+};
+
+[
+    local,
+    object,
+    uuid(aada05a8-5a4e-4729-af0b-cea27aed51e2),
+    helpstring("IVMRSurfaceAllocatorNotify interface"),
+    pointer_default(unique)
+]
+interface IVMRSurfaceAllocatorNotify : IUnknown
+{
+    HRESULT AdviseSurfaceAllocator([in] DWORD_PTR id, [in] IVMRSurfaceAllocator *allocator);
+    HRESULT SetDDrawDevice([in] IDirectDraw7 *device, [in] HMONITOR monitor);
+    HRESULT ChangeDDrawDevice([in] IDirectDraw7 *device, [in] HMONITOR monitor);
+    HRESULT RestoreDDrawSurfaces();
+    HRESULT NotifyEvent([in] LONG EventCode, [in] LONG_PTR p1, [in] LONG_PTR p2);
+    HRESULT SetBorderColor([in] COLORREF border);
+};
+
+typedef enum _VMR_ASPECT_RATIO_MODE
+{
+    VMR_ARMODE_NONE,
+    VMR_ARMODE_LETTER_BOX
+} VMR_ASPECT_RATIO_MODE;
+
+[
+    local,
+    object,
+    uuid(0eb1088c-4dcd-46f0-878f-39dae86a51b7),
+    helpstring("IVMRWindowlessControl interface"),
+    pointer_default(unique)
+]
+interface IVMRWindowlessControl : IUnknown
+{
+    HRESULT GetNativeVideoSize([out] LONG *width, [out] LONG *height, [out] LONG *ar_width, [out] LONG *ar_height);
+    HRESULT GetMinIdealVideoSize([out] LONG *width, [out] LONG *height);
+    HRESULT GetMaxIdealVideoSize([out] LONG *width, [out] LONG *height);
+    HRESULT SetVideoPosition([in] const RECT *src_rect, [in] const RECT *dst_rect);
+    HRESULT GetVideoPosition([out] RECT *src_rect, [out] RECT *dst_rect);
+    HRESULT GetAspectRatioMode([out] DWORD *mode);
+    HRESULT SetAspectRatioMode([in] DWORD mode);
+    HRESULT SetVideoClippingWindow([in] HWND hwnd);
+    HRESULT RepaintVideo([in] HWND hwnd, [in] HDC hdc);
+    HRESULT DisplayModeChanged();
+    HRESULT GetCurrentImage([out] BYTE **data);
+    HRESULT SetBorderColor([in] COLORREF border);
+    HRESULT GetBorderColor([out] COLORREF *border);
+    HRESULT SetColorKey([in] COLORREF key);
+    HRESULT GetColorKey([out] COLORREF *key);
+};
+
+typedef enum _VMRMixerPrefs
+{
+    MixerPref_NoDecimation = 0x0001,
+    MixerPref_DecimateOutput = 0x0002,
+    MixerPref_ARAdjustXorY = 0x0004,
+    MixerPref_DecimationReserved = 0x0008,
+    MixerPref_DecimateMask = 0x000f,
+
+    MixerPref_BiLinearFiltering = 0x0010,
+    MixerPref_PointFiltering = 0x0020,
+    MixerPref_FinteringMask = 0x00f0,
+
+    MixerPref_RenderTargetRGB = 0x0100,
+    MixerPref_RenderTargetYUV = 0x1000,
+    MixerPref_RenderTargetYUV420 = 0x0200,
+    MixerPref_RenderTargetYUV422 = 0x0400,
+    MixerPref_RenderTargetYUV444 = 0x0800,
+    MixerPref_RenderTargetReserved = 0xe000,
+    MixerPref_RenderTargetMask = 0xff00,
+
+    MixerPref_DynamicSwitchToBOB = 0x10000,
+    MixerPref_DynamicDecimateBy2 = 0x20000,
+    MixerPref_DynamicReserved = 0xc0000,
+    MixerPref_DynamicMask = 0xf0000
+} VMRMixerPrefs;
+
+typedef struct _NORMALIZEDRECT
+{
+    FLOAT left, top, right, bottom;
+} NORMALIZEDRECT;
+
+[
+    local,
+    object,
+    uuid(1c1a17b0-bed0-415d-974b-dc6696131599),
+    helpstring("IVMRMixerControl interface"),
+    pointer_default(unique)
+]
+interface IVMRMixerControl : IUnknown
+{
+    HRESULT SetAlpha([in] DWORD id, [in] FLOAT alpha);
+    HRESULT GetAlpha([in] DWORD id, [out] FLOAT *alpha);
+    HRESULT SetZOrder([in] DWORD id, [in] DWORD z);
+    HRESULT GetZOrder([in] DWORD id, [out] DWORD *z);
+    HRESULT SetOutputRect([in] DWORD id, [in] const NORMALIZEDRECT *rect);
+    HRESULT SetBackgroundClr([in] COLORREF background);
+    HRESULT GetBackgroundClr([out] COLORREF *background);
+    HRESULT SetMixingPrefs([in] DWORD prefs);
+    HRESULT GetMixingPrefs([out] DWORD *prefs);
+};
+
+typedef struct tagVMRGUID
+{
+    struct _GUID *pGUID, GUID;
+} VMRGUID;
+
+#define VMRDEVICENAMELEN 32
+#define VMRDEVICEDESCRIPTIONLEN 256
+
+typedef struct tagVMRMONITORINFO
+{
+    VMRGUID guid;
+    RECT rcMonitor;
+    HMONITOR hMon;
+    DWORD dwFlags;
+    WCHAR szDevice[VMRDEVICENAMELEN];
+    WCHAR szDescription[VMRDEVICEDESCRIPTIONLEN];
+    LARGE_INTEGER liDriverVersion;
+    DWORD dwVendorId;
+    DWORD dwDeviceId;
+    DWORD dwSubSysId;
+    DWORD dwRevision;
+} VMRMONITORINFO;
+
+[
+    local,
+    object,
+    uuid(9cf0b1b6-fbaa-4b7f-88cf-cf1f130a0dce),
+    helpstring("IVMRMonitorConfig interface"),
+    pointer_default(unique)
+]
+interface IVMRMonitorConfig : IUnknown
+{
+    HRESULT SetMonitor([in] const VMRGUID *vmrguid);
+    HRESULT GetMonitor([out] VMRGUID *vmrguid);
+    HRESULT SetDefaultMonitor([in] const VMRGUID *vmrguid);
+    HRESULT GetDefaultMonitor([out] VMRGUID *vmrguid);
+    HRESULT GetAvailableMonitors([out, size_is(array_size)] VMRMONITORINFO *info, [in] DWORD array_size, [out] DWORD *retrieved);
+}
+
+typedef enum _VMRRenderPrefs
+{
+    RenderPrefs_RestrictToInitialMonitor = 0x00,
+    RenderPrefs_ForceOffScreen = 0x01,
+    RenderPrefs_ForceOverlays = 0x02,
+    RenderPrefs_AllowOverlays = 0x00,
+    RenderPrefs_AllowOffscreen = 0x00,
+    RenderPrefs_DoNotRenderColorKeyAndBorder = 0x08,
+    RenderPrefs_Reserved = 0x10,
+    RenderPrefs_PreferAGPMemWhenMixing = 0x20,
+    RenderPrefs_Mask = 0x3f
+} VMRRenderPrefs;
+
+typedef enum _VMRMode
+{
+    VMRMode_Windowed = 0x1,
+    VMRMode_Windowless = 0x2,
+    VMRMode_Renderless = 0x4,
+    VMRMode_Mask = 0x7
+} VMRMode;
+
+enum { MAX_NUMBER_OF_STREAMS = 16 };
+
+[
+    local,
+    object,
+    uuid(9e5530c5-7034-48b4-bb46-0b8a6efc8e36),
+    helpstring("IVMRFilterConfig interface"),
+    pointer_default(unique)
+]
+interface IVMRFilterConfig : IUnknown
+{
+    HRESULT SetImageCompositor([in] IVMRImageCompositor *compositor);
+    HRESULT SetNumberOfStreams([in] DWORD streams);
+    HRESULT GetNumberOfStreams([out] DWORD *streams);
+    HRESULT SetRenderingPrefs([in] DWORD prefs);
+    HRESULT GetRenderingPrefs([out] DWORD *prefs);
+    HRESULT SetRenderingMode([in] DWORD mode);
+    HRESULT GetRenderingMode([out] DWORD *mode);
+};
+
+[
+    local,
+    object,
+    uuid(ede80b5c-bad6-4623-b537-65586c9f8dfd),
+    helpstring("IVMRAspectRatioControl interface"),
+    pointer_default(unique)
+]
+interface IVMRAspectRatioControl : IUnknown
+{
+    HRESULT GetAspectRatioMode([out] DWORD *armode);
+    HRESULT SetAspectRatioMode([in] DWORD armode);
+};
+
+typedef enum _VMRDeinterlacePrefs
+{
+    DeinterlacePref_NextBest = 0x1,
+    DeinterlacePref_BOB = 0x2,
+    DeinterlacePref_Weave = 0x4,
+    DeinterlacePref_Mask = 0x7
+} VMRDeinterlacePrefs;
+
+typedef enum _VMRDeinterlaceTech
+{
+    DeinterlaceTech_Unknown = 0x00,
+    DeinterlaceTech_BOBLineReplicate = 0x01,
+    DeinterlaceTech_BOBVerticalStretch = 0x02,
+    DeinterlaceTech_MedianFiltering = 0x04,
+    DeinterlaceTech_EdgeFiltering = 0x08,
+    DeinterlaceTech_FieldAdaptive = 0x10,
+    DeinterlaceTech_PixelAdaptive = 0x20,
+    DeinterlaceTech_MotionVectorSteered = 0x80
+} VMRDeinterlaceTech;
+
+typedef struct _VMRFrequency
+{
+    DWORD dwNumerator, dwDenominator;
+} VMRFrequency;
+
+typedef struct _VMRVideoDesc
+{
+    DWORD dwSize;
+    DWORD dwSampleWidth;
+    DWORD dwSampleHeight;
+    BOOL SingleFieldPerSample;
+    DWORD dwFourCC;
+    VMRFrequency InputSampleFreq;
+    VMRFrequency OutputFrameFreq;
+} VMRVideoDesc;
+
+typedef struct _VMRDeinterlaceCaps
+{
+    DWORD dwSize;
+    DWORD dwNumPreviousOutputFrames;
+    DWORD dwNumForwardRefSamples;
+    DWORD dwNumBackwardRefSamples;
+    VMRDeinterlaceTech DeinterlaceTechnology;
+} VMRDeinterlaceCaps;
+
+[
+    local,
+    object,
+    uuid(bb057577-0db8-4e6a-87a7-1a8c9a505a0f),
+    helpstring("IVMRDeinterlaceControl interface"),
+    pointer_default(unique)
+]
+interface IVMRDeinterlaceControl : IUnknown
+{
+    HRESULT GetNumberOfDeinterlaceModes([in] VMRVideoDesc *desc, [in, out] DWORD *num_modes, [out] GUID *modes);
+    HRESULT GetDeinterlaceModeCaps([in] GUID *mode, [in] VMRVideoDesc *desc, [in, out] VMRDeinterlaceCaps *caps);
+    HRESULT GetDeinterlaceMode([in] DWORD id, [out] GUID *mode);
+    HRESULT SetDeinterlaceMode([in] DWORD id, [in] GUID *mode);
+    HRESULT GetDeinterlacePrefs([out] DWORD *prefs);
+    HRESULT SetDeinterlacePrefs([in] DWORD prefs);
+    HRESULT GetActualDeinterlaceMode([in] DWORD id, [out] GUID *mode);
+};
+
+typedef struct _VMRALPHABITMAP
+{
+    DWORD dwFlags;
+    HDC hdc;
+    IDirectDrawSurface7 *pDDS;
+    RECT rSrc;
+    RECT rDest;
+    FLOAT fAlpha;
+    COLORREF clrSrcKey;
+} VMRALPHABITMAP, *PVMRALPHABITMAP;
+
+cpp_quote("#define VMRBITMAP_DISABLE (0x01)")
+cpp_quote("#define VMRBITMAP_HDC (0x02)")
+cpp_quote("#define VMRBITMAP_ENTIREDDS (0x04)")
+cpp_quote("#define VMRBITMAP_SRCCOLORKEY (0x08)")
+cpp_quote("#define VMRBITMAP_SRCRECT (0x10)")
+
+[
+    local,
+    object,
+    uuid(1e673275-0257-40aa-af20-7c608d4a0428),
+    helpstring("IVMRMixerBitmap interface"),
+    pointer_default(unique)
+]
+interface IVMRMixerBitmap : IUnknown
+{
+    HRESULT SetAlphaBitmap([in] const VMRALPHABITMAP *params);
+    HRESULT UpdateAlphaBitmapParameters([in] VMRALPHABITMAP *params);
+    HRESULT GetAlphaBitmapParameters([out] VMRALPHABITMAP *params);
+};
+
+typedef struct _VMRVIDEOSTREAMINFO
+{
+    IDirectDrawSurface7 *pddsVideoSurface;
+    DWORD dwWidth;
+    DWORD dwHeight;
+    DWORD dwStrmID;
+    FLOAT fAlpha;
+    DDCOLORKEY ddClrKey;
+    NORMALIZEDRECT rNormal;
+} VMRVIDEOSTREAMINFO;
+
+[
+    local,
+    object,
+    uuid(7a4fb5af-479f-4074-bb40-ce6722e43c82),
+    helpstring("IVMRImageCompositor interface"),
+    pointer_default(unique)
+]
+interface IVMRImageCompositor : IUnknown
+{
+    HRESULT InitCompositionTarget([in] IUnknown *d3ddev, [in] IDirectDrawSurface7 *rendertarget);
+    HRESULT TermCompositionTarget([in] IUnknown *d3ddev, [in] IDirectDrawSurface7 *rendertarget);
+    HRESULT SetStreamMediaType([in] DWORD id, [in] AM_MEDIA_TYPE *pmt, [in] BOOL texture);
+    HRESULT CompositeImage([in] IUnknown *d3ddev, [in] IDirectDrawSurface7 *rendertarget,
+                           [in] AM_MEDIA_TYPE *pmt, [in] REFERENCE_TIME start, [in] REFERENCE_TIME stop,
+                           [in] DWORD backgrnd, [in] VMRVIDEOSTREAMINFO *info, [in] UINT streams);
+};
+
+[
+    local,
+    object,
+    uuid(058d1f11-2a54-4bef-bd54-df706626b727),
+    helpstring("IVMRVideoStreamControl interface"),
+    pointer_default(unique)
+]
+interface IVMRVideoStreamControl : IUnknown
+{
+    HRESULT SetColorKey([in] DDCOLORKEY *key);
+    HRESULT GetColorKey([out] DDCOLORKEY *key);
+    HRESULT SetStreamActiveState([in] BOOL active);
+    HRESULT GetStreamActiveState([out] BOOL *active);
+};
+
+[
+    local,
+    object,
+    uuid(9f3a1c85-8555-49ba-935f-be5b5b29d178),
+    helpstring("IVMRImagePresenterConfig interface"),
+    pointer_default(unique)
+]
+interface IVMRImagePresenterConfig : IUnknown
+{
+    HRESULT SetRenderingPrefs([in] DWORD prefs);
+    HRESULT GetRenderingPrefs([out] DWORD *prefs);
+};
+
+[
+    local,
+    object,
+    uuid(e6f7ce40-4673-44f1-8f77-5499d68cb4ea),
+    helpstring("IVMRImagePresenterExclModeConfig interface"),
+    pointer_default(unique)
+]
+interface IVMRImagePresenterExclModeConfig : IVMRImagePresenterConfig
+{
+    HRESULT SetXlcModeDDObjAndPrimarySurface([in] IDirectDraw7 *dddev, [in] IDirectDrawSurface7 *ddsurface);
+    HRESULT GetXlcModeDDObjAndPrimarySurface([out] IDirectDraw7 **dddev, [out] IDirectDrawSurface7 **ddsurface);
+};
+
+[
+    local,
+    object,
+    uuid(aac18c18-e186-46d2-825d-a1f8dc8e395a),
+    helpstring("IVPManager interface"),
+    pointer_default(unique)
+]
+interface IVPManager : IUnknown
+{
+    HRESULT SetVideoPortIndex([in] DWORD index);
+    HRESULT GetVideoPortIndex([out] DWORD *index);
+};

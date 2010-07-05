@@ -255,6 +255,8 @@ typedef enum _SCHEMATYPEVARIETY
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF80-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMNode : IDispatch
@@ -392,6 +394,8 @@ interface IXMLDOMNode : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF81-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMDocument : IXMLDOMNode
@@ -528,6 +532,8 @@ interface IXMLDOMDocument : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (373984c8-b845-449b-91e7-45ac83036ade)
 ]
 interface IXMLDOMSchemaCollection : IDispatch
@@ -564,6 +570,8 @@ interface IXMLDOMSchemaCollection : IDispatch
 [
     local,
     object,
+    dual,
+    oleautomation,
     uuid(50ea08b0-dd1b-4664-9a50-c2f40f4bd79a),
 ]
 interface IXMLDOMSchemaCollection2 : IXMLDOMSchemaCollection
@@ -593,6 +601,8 @@ interface IXMLDOMSchemaCollection2 : IXMLDOMSchemaCollection
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF95-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMDocument2 : IXMLDOMDocument
@@ -624,6 +634,8 @@ interface IXMLDOMDocument2 : IXMLDOMDocument
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF82-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMNodeList : IDispatch
@@ -648,6 +660,8 @@ interface IXMLDOMNodeList : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (AA634FC7-5888-44a7-A257-3A47150D3A0E)
 ]
 interface IXMLDOMSelection : IXMLDOMNodeList
@@ -698,6 +712,8 @@ interface IXMLDOMSelection : IXMLDOMNodeList
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF83-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMNamedNodeMap : IDispatch
@@ -749,6 +765,8 @@ interface IXMLDOMNamedNodeMap : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (3efaa413-272f-11d2-836f-0000f87a7782)
 ]
 interface IXMLDOMDocumentFragment : IXMLDOMNode 
@@ -758,6 +776,8 @@ interface IXMLDOMDocumentFragment : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF84-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMCharacterData : IXMLDOMNode 
@@ -801,6 +821,8 @@ interface IXMLDOMCharacterData : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF85-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMAttribute : IXMLDOMNode 
@@ -818,6 +840,8 @@ interface IXMLDOMAttribute : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF86-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMElement : IXMLDOMNode 
@@ -866,6 +890,8 @@ interface IXMLDOMElement : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF87-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMText : IXMLDOMCharacterData 
@@ -879,6 +905,8 @@ interface IXMLDOMText : IXMLDOMCharacterData
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF88-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMComment : IXMLDOMCharacterData 
@@ -888,6 +916,8 @@ interface IXMLDOMComment : IXMLDOMCharacterData
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF89-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMProcessingInstruction : IXMLDOMNode 
@@ -905,6 +935,8 @@ interface IXMLDOMProcessingInstruction : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8A-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMCDATASection : IXMLDOMText 
@@ -914,6 +946,8 @@ interface IXMLDOMCDATASection : IXMLDOMText
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8B-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMDocumentType : IXMLDOMNode 
@@ -931,6 +965,8 @@ interface IXMLDOMDocumentType : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8C-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMNotation : IXMLDOMNode 
@@ -945,6 +981,8 @@ interface IXMLDOMNotation : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8D-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMEntity : IXMLDOMNode 
@@ -962,6 +1000,8 @@ interface IXMLDOMEntity : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8E-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMEntityReference : IXMLDOMNode 
@@ -971,6 +1011,8 @@ interface IXMLDOMEntityReference : IXMLDOMNode
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF8F-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXMLDOMImplementation : IDispatch
@@ -985,6 +1027,8 @@ interface IXMLDOMImplementation : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (3efaa425-272f-11d2-836f-0000f87a7782)
 ]
 interface IXTLRuntime : IXMLDOMNode
@@ -1060,6 +1104,8 @@ dispinterface XMLDOMDocumentEvents
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF92-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXSLProcessor : IDispatch
@@ -1118,6 +1164,8 @@ interface IXSLProcessor : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (2933BF93-7B36-11d2-B20E-00C04F983E60)
 ]
 interface IXSLTemplate : IDispatch
@@ -1190,6 +1238,8 @@ interface IXMLHTTPRequest : IDispatch
 [
 local,
 object,
+dual,
+oleautomation,
 uuid (3efaa426-272f-11d2-836f-0000f87a7782)
 ]
 interface IXMLDOMParseError : IDispatch
@@ -1721,6 +1771,7 @@ interface ISAXXMLReader : IUnknown
 [
     object,
     dual,
+    oleautomation,
     uuid(10dc0586-132b-4cac-8bb3-db00ac8b7ee0)
 ]
 interface IVBSAXAttributes : IDispatch
@@ -1769,6 +1820,7 @@ interface IVBSAXAttributes : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(2ed7290a-4dd5-4b46-bb26-4e4155e77faa)
 ]
 interface IVBSAXContentHandler : IDispatch
@@ -1815,6 +1867,7 @@ interface IVBSAXContentHandler : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(e8917260-7579-4be1-b5dd-7afbfa6f077b)
 ]
 interface IVBSAXDeclHandler : IDispatch
@@ -1847,6 +1900,7 @@ interface IVBSAXDeclHandler : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(24fb3297-302d-4620-ba39-3a732d850558)
 ]
 interface IVBSAXDTDHandler : IDispatch
@@ -1868,6 +1922,7 @@ interface IVBSAXDTDHandler : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(0c05d096-f45b-4aca-ad1a-aa0bc25518dc)
 ]
 interface IVBSAXEntityResolver : IDispatch
@@ -1882,6 +1937,7 @@ interface IVBSAXEntityResolver : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(d963d3fe-173c-4862-9095-b92f66995f52)
 ]
 interface IVBSAXErrorHandler : IDispatch
@@ -1908,6 +1964,7 @@ interface IVBSAXErrorHandler : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(032aac35-8c0e-4d9d-979f-e3b702935576)
 ]
 interface IVBSAXLexicalHandler : IDispatch
@@ -1936,6 +1993,8 @@ interface IVBSAXLexicalHandler : IDispatch
 
 [
     object,
+    dual,
+    oleautomation,
     uuid(796e7ac5-5aa2-4eff-acad-3faaf01a3288)
 ]
 interface IVBSAXLocator : IDispatch
@@ -1956,6 +2015,7 @@ interface IVBSAXLocator : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(1299eb1b-5b88-433e-82de-82ca75ad4e04)
 ]
 interface IVBSAXXMLFilter : IDispatch
@@ -1969,6 +2029,7 @@ interface IVBSAXXMLFilter : IDispatch
 
 [
     dual,
+    oleautomation,
     object,
     uuid (8c033caa-6cd6-4f73-b728-4531af74945f)
 ]
@@ -2028,6 +2089,7 @@ interface IVBSAXXMLReader : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(f10d27cc-3ec0-415c-8ed8-77ab1c5e7262)
 ]
 interface IMXAttributes : IDispatch
@@ -2084,6 +2146,7 @@ interface IMXAttributes : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(808f4e35-8d5a-4fbe-8466-33a41279ed30)
 ]
 interface IMXReaderControl : IDispatch
@@ -2101,6 +2164,7 @@ interface IMXReaderControl : IDispatch
 [
     object,
     dual,
+    oleautomation,
     uuid(4d7ff4ba-1565-4ea8-94e1-6e724a46f98d)
 ]
 interface IMXWriter :  IDispatch
@@ -2153,6 +2217,7 @@ interface IMXWriter :  IDispatch
     local,
     object,
     uuid(50ea08b1-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaStringCollection : IDispatch
@@ -2175,6 +2240,7 @@ interface ISchemaStringCollection : IDispatch
     local,
     object,
     uuid(50ea08b2-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaItemCollection : IDispatch
@@ -2208,6 +2274,7 @@ interface ISchemaItemCollection : IDispatch
     local,
     object,
     uuid(50ea08b3-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaItem : IDispatch
@@ -2246,6 +2313,7 @@ interface ISchemaItem : IDispatch
     local,
     object,
     uuid(50ea08b4-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchema : ISchemaItem
@@ -2291,6 +2359,7 @@ interface ISchema : ISchemaItem
     local,
     object,
     uuid(50ea08b5-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaParticle : ISchemaItem
@@ -2307,6 +2376,7 @@ interface ISchemaParticle : ISchemaItem
 [
     object,
     uuid(50ea08b6-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual,
 ]
 interface ISchemaAttribute : ISchemaItem
@@ -2340,6 +2410,7 @@ interface ISchemaAttribute : ISchemaItem
     local,
     object,
     uuid(50ea08b7-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaElement : ISchemaParticle
@@ -2393,6 +2464,7 @@ interface ISchemaElement : ISchemaParticle
     local,
     object,
     uuid(50ea08b8-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaType : ISchemaItem
@@ -2471,6 +2543,7 @@ interface ISchemaType : ISchemaItem
     local,
     object,
     uuid(50ea08b9-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual,
 ]
 interface ISchemaComplexType : ISchemaType
@@ -2504,6 +2577,7 @@ interface ISchemaComplexType : ISchemaType
     local,
     object,
     uuid(50ea08ba-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual,
 ]
 interface ISchemaAttributeGroup : ISchemaItem
@@ -2521,6 +2595,7 @@ interface ISchemaAttributeGroup : ISchemaItem
     local,
     object,
     uuid(50ea08bb-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual,
 ]
 interface ISchemaModelGroup : ISchemaParticle
@@ -2534,6 +2609,7 @@ interface ISchemaModelGroup : ISchemaParticle
     local,
     object,
     uuid(50ea08bc-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaAny : ISchemaParticle
@@ -2551,6 +2627,7 @@ interface ISchemaAny : ISchemaParticle
     local,
     object,
     uuid(50ea08bd-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaIdentityConstraint : ISchemaItem
@@ -2572,6 +2649,7 @@ interface ISchemaIdentityConstraint : ISchemaItem
     local,
     object,
     uuid(50ea08be-dd1b-4664-9a50-c2f40f4bd79a),
+    oleautomation,
     dual
 ]
 interface ISchemaNotation : ISchemaItem
