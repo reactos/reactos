@@ -8,8 +8,8 @@
 #include "lang/pl-PL.rc"
 #include "lang/no-NO.rc"
 #include "lang/sk-SK.rc"
-#include "lang/uk-UA.rc"
 
 #include "lang/de-DE.rc"
 #include "lang/ja-JP.rc"
 #include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"
