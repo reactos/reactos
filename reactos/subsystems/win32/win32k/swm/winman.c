@@ -23,6 +23,8 @@ void redraw_window( struct window *win, struct region *region, int frame, unsign
 void req_update_window_zorder( const struct update_window_zorder_request *req, struct update_window_zorder_reply *reply );
 
 PSWM_WINDOW NTAPI SwmGetTopWindow();
+PSWM_WINDOW NTAPI SwmGetForegroundWindow(BOOLEAN TopMost);
+
 VOID NTAPI SwmClipAllWindows();
 
 VOID NTAPI SwmDumpRegion(struct region *Region);
@@ -340,7 +342,7 @@ VOID
 NTAPI
 SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
 {
-    PSWM_WINDOW Win;
+    PSWM_WINDOW Win, FirstNonTop;
 
     DPRINT("SwmAddWindow %x\n", hWnd);
     DPRINT("rect (%d,%d)-(%d,%d), style %x, ex_style %x\n",
@@ -349,8 +351,6 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
 
     /* Acquire the lock */
     SwmAcquire();
-
-    if (ex_style & WS_EX_TOPMOST) DPRINT1("Creating a topmost window, ignoring\n");
 
     /* Allocate entry */
     Win = ExAllocatePool(PagedPool, sizeof(SWM_WINDOW));
@@ -364,10 +364,21 @@ SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style)
     Win->Visible = create_empty_region();
     set_region_rect(Win->Visible, &Win->Window);
 
-    /* Now go through the list and remove this rect from all underlying windows visible region */
-    //SwmMarkInvisible(Win->Visible);
+    /* Set window's flags */
+    if (ex_style & WS_EX_TOPMOST) Win->Topmost = TRUE;
 
-    InsertHeadList(&SwmWindows, &Win->Entry);
+    /* Add it to the zorder list */
+    if (Win->Topmost)
+    {
+        /* It's a topmost window, just add it on top */
+        InsertHeadList(&SwmWindows, &Win->Entry);
+    }
+    else
+    {
+        /* Find the first topmost window and insert before it */
+        FirstNonTop = SwmGetForegroundWindow(FALSE);
+        InsertHeadList(FirstNonTop->Entry.Blink, &Win->Entry);
+    }
 
     /* Now ensure it is visible on screen */
     SwmInvalidateRegion(Win, Win->Visible, &Win->Window);
@@ -475,10 +486,8 @@ SwmRemoveWindow(HWND hWnd)
         return;
     }
 
+    /* Remove it from the zorder list */
     RemoveEntryList(&Win->Entry);
-
-    /* Mark this region as visible in other window */
-    //SwmMarkVisible(Win->Visible);
 
     /* Free the entry */
     free_region(Win->Visible);
@@ -490,6 +499,7 @@ SwmRemoveWindow(HWND hWnd)
     SwmRelease();
 }
 
+// FIXME: This one is deprecated and will be removed soon
 PSWM_WINDOW
 NTAPI
 SwmGetTopWindow()
@@ -514,6 +524,38 @@ SwmGetTopWindow()
     return NULL;
 }
 
+PSWM_WINDOW
+NTAPI
+SwmGetForegroundWindow(BOOLEAN TopMost)
+{
+    PLIST_ENTRY Current;
+    PSWM_WINDOW Window;
+
+    /* Traverse the list to find top non-hidden window */
+    Current = SwmWindows.Flink;
+    while(Current != &SwmWindows)
+    {
+        Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+        if (TopMost)
+        {
+            /* The first visible window */
+            if (!Window->Hidden) return Window;
+        }
+        else
+        {
+            /* The first visible non-topmost window */
+            if (!Window->Hidden && !Window->Topmost) return Window;
+        }
+
+        Current = Current->Flink;
+    }
+
+    /* There should always be a desktop window */
+    ASSERT(FALSE);
+    return NULL;
+}
+
 
 VOID
 NTAPI
@@ -522,7 +564,7 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     PSWM_WINDOW Previous;
 
     /* Save previous focus window */
-    Previous = SwmGetTopWindow();
+    Previous = SwmGetForegroundWindow(SwmWin->Topmost);
 
     /* It's already on top */
     if (Previous->hwnd == SwmWin->hwnd)
@@ -536,8 +578,16 @@ SwmBringToFront(PSWM_WINDOW SwmWin)
     /* Remove it from the list */
     RemoveEntryList(&SwmWin->Entry);
 
-    /* Add it to the head of the list */
-    InsertHeadList(&SwmWindows, &SwmWin->Entry);
+    if (SwmWin->Topmost)
+    {
+        /* Add it to the head of the list */
+        InsertHeadList(&SwmWindows, &SwmWin->Entry);
+    }
+    else
+    {
+        /* Bringing non-topmost window to foreground */
+        InsertHeadList(Previous->Entry.Blink, &SwmWin->Entry);
+    }
 
     /* Make it fully visible */
     free_region(SwmWin->Visible);
