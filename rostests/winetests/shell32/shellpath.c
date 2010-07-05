@@ -201,7 +201,7 @@ static void loadShell32(void)
     {
         HRESULT hr = pSHGetMalloc(&pMalloc);
 
-        ok(SUCCEEDED(hr), "SHGetMalloc failed: 0x%08x\n", hr);
+        ok(hr == S_OK, "SHGetMalloc failed: 0x%08x\n", hr);
         ok(pMalloc != NULL, "SHGetMalloc returned a NULL IMalloc\n");
     }
 
@@ -303,92 +303,66 @@ static const char *printGUID(const GUID *guid, char * guidSTR)
     return guidSTR;
 }
 
-static void testSHGetFolderLocationInvalidArgs(void)
-{
-    LPITEMIDLIST pidl;
-    HRESULT hr;
-
-    if (!pSHGetFolderLocation) return;
-
-    /* check a bogus CSIDL: */
-    pidl = NULL;
-    hr = pSHGetFolderLocation(NULL, 0xeeee, NULL, 0, &pidl);
-    ok(hr == E_INVALIDARG,
-     "SHGetFolderLocation(NULL, 0xeeee, NULL, 0, &pidl) returned 0x%08x, expected E_INVALIDARG\n", hr);
-    if (SUCCEEDED(hr))
-        IMalloc_Free(pMalloc, pidl);
-    /* check a bogus user token: */
-    pidl = NULL;
-    hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, (HANDLE)2, 0, &pidl);
-    ok(hr == E_FAIL || hr == E_HANDLE,
-     "SHGetFolderLocation(NULL, CSIDL_FAVORITES, 2, 0, &pidl) returned 0x%08x, expected E_FAIL or E_HANDLE\n", hr);
-    if (SUCCEEDED(hr))
-        IMalloc_Free(pMalloc, pidl);
-    /* a NULL pidl pointer crashes, so don't test it */
-}
-
-static void testSHGetSpecialFolderLocationInvalidArgs(void)
+static void test_parameters(void)
 {
     LPITEMIDLIST pidl = NULL;
-    HRESULT hr;
-
-    if (!pSHGetSpecialFolderLocation) return;
-
-    /* SHGetSpecialFolderLocation(NULL, 0, NULL) crashes */
-    hr = pSHGetSpecialFolderLocation(NULL, 0xeeee, &pidl);
-    ok(hr == E_INVALIDARG,
-     "SHGetSpecialFolderLocation(NULL, 0xeeee, &pidl) returned 0x%08x, "
-     "expected E_INVALIDARG\n", hr);
-}
-
-static void testSHGetFolderPathInvalidArgs(void)
-{
     char path[MAX_PATH];
     HRESULT hr;
 
-    if (!pSHGetFolderPathA) return;
+    if (pSHGetFolderLocation)
+    {
+        /* check a bogus CSIDL: */
+        pidl = NULL;
+        hr = pSHGetFolderLocation(NULL, 0xeeee, NULL, 0, &pidl);
+        ok(hr == E_INVALIDARG, "got 0x%08x, expected E_INVALIDARG\n", hr);
+        if (hr == S_OK) IMalloc_Free(pMalloc, pidl);
 
-    /* expect 2's a bogus handle, especially since we didn't open it */
-    hr = pSHGetFolderPathA(NULL, CSIDL_DESKTOP, (HANDLE)2,
-     SHGFP_TYPE_DEFAULT, path);
-    ok(hr == E_FAIL ||
-       hr == E_HANDLE ||   /* Windows Vista and 2008 */
-       broken(hr == S_OK), /* Windows 2000 and Me */
-     "SHGetFolderPathA(NULL, CSIDL_DESKTOP, 2, SHGFP_TYPE_DEFAULT, path) returned 0x%08x, expected E_FAIL\n", hr);
-    hr = pSHGetFolderPathA(NULL, 0xeeee, NULL, SHGFP_TYPE_DEFAULT, path);
-    ok(hr == E_INVALIDARG,
-     "SHGetFolderPathA(NULL, 0xeeee, NULL, SHGFP_TYPE_DEFAULT, path) returned 0x%08x, expected E_INVALIDARG\n", hr);
-}
+        /* check a bogus user token: */
+        pidl = NULL;
+        hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, (HANDLE)2, 0, &pidl);
+        ok(hr == E_FAIL || hr == E_HANDLE, "got 0x%08x, expected E_FAIL or E_HANDLE\n", hr);
+        if (hr == S_OK) IMalloc_Free(pMalloc, pidl);
 
-static void testSHGetSpecialFolderPathInvalidArgs(void)
-{
-    char path[MAX_PATH];
-    BOOL ret;
+        /* a NULL pidl pointer crashes, so don't test it */
+    }
 
-    if (!pSHGetSpecialFolderPathA) return;
+    if (pSHGetSpecialFolderLocation)
+    {
+        if (0)
+            /* crashes */
+            SHGetSpecialFolderLocation(NULL, 0, NULL);
 
-#if 0
-    ret = pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE);
-    ok(!ret,
-     "SHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE) returned TRUE, expected FALSE\n");
-#endif
-    /* odd but true: calling with a NULL path still succeeds if it's a real
-     * dir (on some windows platform).  on winME it generates exception.
-     */
-    ret = pSHGetSpecialFolderPathA(NULL, path, CSIDL_PROGRAMS, FALSE);
-    ok(ret,
-     "SHGetSpecialFolderPathA(NULL, path, CSIDL_PROGRAMS, FALSE) returned FALSE, expected TRUE\n");
-    ret = pSHGetSpecialFolderPathA(NULL, path, 0xeeee, FALSE);
-    ok(!ret,
-     "SHGetSpecialFolderPathA(NULL, path, 0xeeee, FALSE) returned TRUE, expected FALSE\n");
-}
+        hr = pSHGetSpecialFolderLocation(NULL, 0xeeee, &pidl);
+        ok(hr == E_INVALIDARG, "got returned 0x%08x\n", hr);
+    }
 
-static void testApiParameters(void)
-{
-    testSHGetFolderLocationInvalidArgs();
-    testSHGetSpecialFolderLocationInvalidArgs();
-    testSHGetFolderPathInvalidArgs();
-    testSHGetSpecialFolderPathInvalidArgs();
+    if (pSHGetFolderPathA)
+    {
+        /* expect 2's a bogus handle, especially since we didn't open it */
+        hr = pSHGetFolderPathA(NULL, CSIDL_DESKTOP, (HANDLE)2, SHGFP_TYPE_DEFAULT, path);
+        ok(hr == E_FAIL || hr == E_HANDLE || /* Vista and 2k8 */
+           broken(hr == S_OK), /* W2k and Me */ "got 0x%08x, expected E_FAIL\n", hr);
+
+        hr = pSHGetFolderPathA(NULL, 0xeeee, NULL, SHGFP_TYPE_DEFAULT, path);
+        ok(hr == E_INVALIDARG, "got 0x%08x, expected E_INVALIDARG\n", hr);
+    }
+
+    if (pSHGetSpecialFolderPathA)
+    {
+        BOOL ret;
+
+        if (0)
+           ret = pSHGetSpecialFolderPathA(NULL, NULL, CSIDL_BITBUCKET, FALSE);
+
+        /* odd but true: calling with a NULL path still succeeds if it's a real
+         * dir (on some windows platform).  on winME it generates exception.
+         */
+        ret = pSHGetSpecialFolderPathA(NULL, path, CSIDL_PROGRAMS, FALSE);
+        ok(ret, "got %d\n", ret);
+
+        ret = pSHGetSpecialFolderPathA(NULL, path, 0xeeee, FALSE);
+        ok(!ret, "got %d\n", ret);
+    }
 }
 
 /* Returns the folder's PIDL type, or 0xff if one can't be found. */
@@ -403,7 +377,7 @@ static BYTE testSHGetFolderLocation(int folder)
 
     pidl = NULL;
     hr = pSHGetFolderLocation(NULL, folder, NULL, 0, &pidl);
-    if (SUCCEEDED(hr))
+    if (hr == S_OK)
     {
         if (pidl)
         {
@@ -431,7 +405,7 @@ static BYTE testSHGetSpecialFolderLocation(int folder)
 
     pidl = NULL;
     hr = pSHGetSpecialFolderLocation(NULL, folder, &pidl);
-    if (SUCCEEDED(hr))
+    if (hr == S_OK)
     {
         if (pidl)
         {
@@ -447,7 +421,7 @@ static BYTE testSHGetSpecialFolderLocation(int folder)
     return ret;
 }
 
-static void testSHGetFolderPath(BOOL optional, int folder)
+static void test_SHGetFolderPath(BOOL optional, int folder)
 {
     char path[MAX_PATH];
     HRESULT hr;
@@ -455,11 +429,11 @@ static void testSHGetFolderPath(BOOL optional, int folder)
     if (!pSHGetFolderPathA) return;
 
     hr = pSHGetFolderPathA(NULL, folder, NULL, SHGFP_TYPE_CURRENT, path);
-    ok(SUCCEEDED(hr) || optional,
+    ok(hr == S_OK || optional,
      "SHGetFolderPathA(NULL, %s, NULL, SHGFP_TYPE_CURRENT, path) failed: 0x%08x\n", getFolderName(folder), hr);
 }
 
-static void testSHGetSpecialFolderPath(BOOL optional, int folder)
+static void test_SHGetSpecialFolderPath(BOOL optional, int folder)
 {
     char path[MAX_PATH];
     BOOL ret;
@@ -474,7 +448,7 @@ static void testSHGetSpecialFolderPath(BOOL optional, int folder)
      getFolderName(folder));
 }
 
-static void testShellValues(const struct shellExpectedValues testEntries[],
+static void test_ShellValues(const struct shellExpectedValues testEntries[],
  int numEntries, BOOL optional)
 {
     int i;
@@ -509,8 +483,8 @@ static void testShellValues(const struct shellExpectedValues testEntries[],
             case PT_DRIVE:
             case PT_DRIVE2:
             case PT_IESPECIAL2:
-                testSHGetFolderPath(optional, testEntries[i].folder);
-                testSHGetSpecialFolderPath(optional, testEntries[i].folder);
+                test_SHGetFolderPath(optional, testEntries[i].folder);
+                test_SHGetSpecialFolderPath(optional, testEntries[i].folder);
                 break;
         }
     }
@@ -555,7 +529,7 @@ static void matchGUID(int folder, const GUID *guid, const GUID *guid_alt)
 
     pidl = NULL;
     hr = pSHGetFolderLocation(NULL, folder, NULL, 0, &pidl);
-    if (SUCCEEDED(hr))
+    if (hr == S_OK)
     {
         LPITEMIDLIST pidlLast = pILFindLastID(pidl);
 
@@ -580,27 +554,22 @@ static void matchGUID(int folder, const GUID *guid, const GUID *guid_alt)
     }
 }
 
-static void testDesktop(void)
-{
-    testSHGetFolderPath(FALSE, CSIDL_DESKTOP);
-    testSHGetSpecialFolderPath(FALSE, CSIDL_DESKTOP);
-}
-
 /* Checks the PIDL type of all the known values. */
-static void testPidlTypes(void)
+static void test_PidlTypes(void)
 {
-    testDesktop();
-    testShellValues(requiredShellValues, ARRAY_SIZE(requiredShellValues),
-     FALSE);
-    testShellValues(optionalShellValues, ARRAY_SIZE(optionalShellValues),
-     TRUE);
+    /* Desktop */
+    test_SHGetFolderPath(FALSE, CSIDL_DESKTOP);
+    test_SHGetSpecialFolderPath(FALSE, CSIDL_DESKTOP);
+
+    test_ShellValues(requiredShellValues, ARRAY_SIZE(requiredShellValues), FALSE);
+    test_ShellValues(optionalShellValues, ARRAY_SIZE(optionalShellValues), TRUE);
 }
 
 /* FIXME: Should be in shobjidl.idl */
 DEFINE_GUID(CLSID_NetworkExplorerFolder, 0xF02C1A0D, 0xBE21, 0x4350, 0x88, 0xB0, 0x73, 0x67, 0xFC, 0x96, 0xEF, 0x3C);
 
 /* Verifies various shell virtual folders have the correct well-known GUIDs. */
-static void testGUIDs(void)
+static void test_GUIDs(void)
 {
     matchGUID(CSIDL_BITBUCKET, &CLSID_RecycleBin, NULL);
     matchGUID(CSIDL_CONTROLS, &CLSID_ControlPanel, NULL);
@@ -609,20 +578,20 @@ static void testGUIDs(void)
     matchGUID(CSIDL_NETWORK, &CLSID_NetworkPlaces, &CLSID_NetworkExplorerFolder); /* Vista and higher */
     matchGUID(CSIDL_PERSONAL, &CLSID_MyDocuments, NULL);
     matchGUID(CSIDL_COMMON_DOCUMENTS, &CLSID_CommonDocuments, NULL);
+    matchGUID(CSIDL_PRINTERS, &CLSID_Printers, NULL);
 }
 
 /* Verifies various shell paths match the environment variables to which they
  * correspond.
  */
-static void testEnvVars(void)
+static void test_EnvVars(void)
 {
     matchSpecialFolderPathToEnv(CSIDL_PROGRAM_FILES, "ProgramFiles");
     matchSpecialFolderPathToEnv(CSIDL_APPDATA, "APPDATA");
     matchSpecialFolderPathToEnv(CSIDL_PROFILE, "USERPROFILE");
     matchSpecialFolderPathToEnv(CSIDL_WINDOWS, "SystemRoot");
     matchSpecialFolderPathToEnv(CSIDL_WINDOWS, "windir");
-    matchSpecialFolderPathToEnv(CSIDL_PROGRAM_FILES_COMMON,
-     "CommonProgramFiles");
+    matchSpecialFolderPathToEnv(CSIDL_PROGRAM_FILES_COMMON, "CommonProgramFiles");
     /* this is only set on Wine, but can't hurt to verify it: */
     matchSpecialFolderPathToEnv(CSIDL_SYSTEM, "winsysdir");
 }
@@ -715,84 +684,71 @@ static int init(void)
     return 1;
 }
 
-/* Subprocess helper 1: test what happens when CSIDL_FAVORITES is set to a
- * nonexistent directory.
- */
-static void testNonExistentPath1(void)
-{
-    HRESULT hr;
-    LPITEMIDLIST pidl;
-    char *p, path[MAX_PATH];
-
-    /* test some failure cases first: */
-    hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES, NULL,
-     SHGFP_TYPE_CURRENT, path);
-    ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-     "SHGetFolderPath returned 0x%08x, expected 0x80070002\n", hr);
-    pidl = NULL;
-    hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, NULL, 0,
-     &pidl);
-    ok(hr == E_FAIL || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-     "SHGetFolderLocation returned 0x%08x\n", hr);
-    if (SUCCEEDED(hr) && pidl)
-        IMalloc_Free(pMalloc, pidl);
-    ok(!pSHGetSpecialFolderPathA(NULL, path, CSIDL_FAVORITES, FALSE),
-     "SHGetSpecialFolderPath succeeded, expected failure\n");
-    pidl = NULL;
-    hr = pSHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
-    ok(hr == E_FAIL || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
-       "SHGetFolderLocation returned 0x%08x\n", hr);
-    if (SUCCEEDED(hr) && pidl)
-        IMalloc_Free(pMalloc, pidl);
-    /* now test success: */
-    hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, NULL,
-     SHGFP_TYPE_CURRENT, path);
-    if (SUCCEEDED(hr))
-    {
-        BOOL ret;
-
-        trace("CSIDL_FAVORITES was changed to %s\n", path);
-        ret = CreateDirectoryA(path, NULL);
-        ok(!ret,
-         "CreateDirectoryA succeeded but should have failed "
-         "with ERROR_ALREADY_EXISTS\n");
-        if (!ret)
-            ok(GetLastError() == ERROR_ALREADY_EXISTS,
-             "CreateDirectoryA failed with %d, "
-             "expected ERROR_ALREADY_EXISTS\n",
-             GetLastError());
-        p = path + strlen(path);
-        strcpy(p, "\\desktop.ini");
-        DeleteFileA(path);
-        *p = 0;
-        SetFileAttributesA( path, FILE_ATTRIBUTE_NORMAL );
-        ret = RemoveDirectoryA(path);
-        ok( ret, "failed to remove %s error %u\n", path, GetLastError() );
-    }
-    ok(SUCCEEDED(hr),
-     "SHGetFolderPath(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, "
-     "NULL, SHGFP_TYPE_CURRENT, path) failed: 0x%08x\n", hr);
-}
-
-/* Subprocess helper 2: make sure SHGetFolderPath still succeeds when the
- * original value of CSIDL_FAVORITES is restored.
- */
-static void testNonExistentPath2(void)
-{
-    HRESULT hr;
-    char path[MAX_PATH];
-
-    hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, NULL,
-     SHGFP_TYPE_CURRENT, path);
-    ok(SUCCEEDED(hr), "SHGetFolderPath failed: 0x%08x\n", hr);
-}
-
 static void doChild(const char *arg)
 {
+    char path[MAX_PATH];
+    HRESULT hr;
+
     if (arg[0] == '1')
-        testNonExistentPath1();
+    {
+        LPITEMIDLIST pidl;
+        char *p;
+
+        /* test what happens when CSIDL_FAVORITES is set to a nonexistent directory */
+
+        /* test some failure cases first: */
+        hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES, NULL, SHGFP_TYPE_CURRENT, path);
+        ok(hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
+            "SHGetFolderPath returned 0x%08x, expected 0x80070002\n", hr);
+
+        pidl = NULL;
+        hr = pSHGetFolderLocation(NULL, CSIDL_FAVORITES, NULL, 0, &pidl);
+        ok(hr == E_FAIL || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
+            "SHGetFolderLocation returned 0x%08x\n", hr);
+        if (hr == S_OK && pidl) IMalloc_Free(pMalloc, pidl);
+
+        ok(!pSHGetSpecialFolderPathA(NULL, path, CSIDL_FAVORITES, FALSE),
+            "SHGetSpecialFolderPath succeeded, expected failure\n");
+
+        pidl = NULL;
+        hr = pSHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
+        ok(hr == E_FAIL || hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND),
+            "SHGetFolderLocation returned 0x%08x\n", hr);
+
+        if (hr == S_OK && pidl) IMalloc_Free(pMalloc, pidl);
+
+        /* now test success: */
+        hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, NULL,
+                               SHGFP_TYPE_CURRENT, path);
+        ok (hr == S_OK, "got 0x%08x\n", hr);
+        if (hr == S_OK)
+        {
+            BOOL ret;
+
+            trace("CSIDL_FAVORITES was changed to %s\n", path);
+            ret = CreateDirectoryA(path, NULL);
+            ok(!ret, "expected failure with ERROR_ALREADY_EXISTS\n");
+            if (!ret)
+                ok(GetLastError() == ERROR_ALREADY_EXISTS,
+                  "got %d, expected ERROR_ALREADY_EXISTS\n", GetLastError());
+
+            p = path + strlen(path);
+            strcpy(p, "\\desktop.ini");
+            DeleteFileA(path);
+            *p = 0;
+            SetFileAttributesA( path, FILE_ATTRIBUTE_NORMAL );
+            ret = RemoveDirectoryA(path);
+            ok( ret, "failed to remove %s error %u\n", path, GetLastError() );
+        }
+    }
     else if (arg[0] == '2')
-        testNonExistentPath2();
+    {
+        /* make sure SHGetFolderPath still succeeds when the
+           original value of CSIDL_FAVORITES is restored. */
+        hr = pSHGetFolderPathA(NULL, CSIDL_FAVORITES | CSIDL_FLAG_CREATE, NULL,
+            SHGFP_TYPE_CURRENT, path);
+        ok(hr == S_OK, "SHGetFolderPath failed: 0x%08x\n", hr);
+    }
 }
 
 /* Tests the return values from the various shell functions both with and
@@ -808,7 +764,7 @@ static void doChild(const char *arg)
  * covered by other unit tests; I just print out something about failure to
  * help trace what's going on.
  */
-static void testNonExistentPath(void)
+static void test_NonExistentPath(void)
 {
     static const char userShellFolders[] = 
      "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
@@ -884,7 +840,6 @@ START_TEST(shellpath)
     loadShell32();
     pGetSystemWow64DirectoryA = (void *)GetProcAddress( GetModuleHandleA("kernel32.dll"),
                                                         "GetSystemWow64DirectoryA" );
-
     if (myARGC >= 3)
         doChild(myARGV[2]);
     else
@@ -894,14 +849,14 @@ START_TEST(shellpath)
             win_skip("SHGetFolderLocation is not available\n");
 
         /* first test various combinations of parameters: */
-        testApiParameters();
+        test_parameters();
 
         /* check known values: */
-        testPidlTypes();
-        testGUIDs();
-        testEnvVars();
+        test_PidlTypes();
+        test_GUIDs();
+        test_EnvVars();
         testWinDir();
         testSystemDir();
-        testNonExistentPath();
+        test_NonExistentPath();
     }
 }

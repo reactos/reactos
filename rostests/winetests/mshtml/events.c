@@ -483,9 +483,7 @@ static void _test_event_x(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_x(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_x failed: %08x\n", hres);
-    if(exl == -10) /* don't test the exact value */
-        todo_wine ok_(__FILE__,line)(l > 0, "x = %d\n", l);
-    else
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "x = %d, expected %d\n", l, exl);
 }
 
@@ -496,9 +494,7 @@ static void _test_event_y(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_y(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_y failed: %08x\n", hres);
-    if(exl == -10) /* don't test the exact value */
-        todo_wine ok_(__FILE__,line)(l > 0, "y = %d\n", l);
-    else
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "y = %d, expected %d\n", l, exl);
 }
 
@@ -509,14 +505,8 @@ static void _test_event_clientx(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_clientX(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_clientX failed: %08x\n", hres);
-    if(exl == -10)  {/* don't test the exact value */
-        if(xy_todo)
-            todo_wine ok_(__FILE__,line)(l > 0, "clientX = %d\n", l);
-        else
-            ok_(__FILE__,line)(l > 0, "clientX = %d\n", l);
-    }else {
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "clientX = %d, expected %d\n", l, exl);
-    }
 }
 
 static void _test_event_clienty(unsigned line, IHTMLEventObj *event, LONG exl)
@@ -526,14 +516,8 @@ static void _test_event_clienty(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_clientY(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_clientY failed: %08x\n", hres);
-    if(exl == -10)  {/* don't test the exact value */
-        if(xy_todo)
-            todo_wine ok_(__FILE__,line)(l > 0, "clientY = %d\n", l);
-        else
-            ok_(__FILE__,line)(l > 0, "clientY = %d\n", l);
-    }else {
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "clientY = %d, expected %d\n", l, exl);
-    }
 }
 
 static void _test_event_offsetx(unsigned line, IHTMLEventObj *event, LONG exl)
@@ -543,9 +527,7 @@ static void _test_event_offsetx(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_offsetX(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_offsetX failed: %08x\n", hres);
-    if(exl == -10) /* don't test the exact value */
-        todo_wine ok_(__FILE__,line)(l > 0, "offsetX = %d\n", l);
-    else
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "offsetX = %d, expected %d\n", l, exl);
 }
 
@@ -556,9 +538,7 @@ static void _test_event_offsety(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_offsetY(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_offsetY failed: %08x\n", hres);
-    if(exl == -10) /* don't test the exact value */
-        todo_wine ok_(__FILE__,line)(l > 0, "offsetY = %d\n", l);
-    else
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "offsetY = %d, expected %d\n", l, exl);
 }
 
@@ -569,14 +549,8 @@ static void _test_event_screenx(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_screenX(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_screenX failed: %08x\n", hres);
-    if(exl == -10) { /* don't test the exact value */
-        if(xy_todo)
-            todo_wine ok_(__FILE__,line)(l > 0, "screenX = %d\n", l);
-        else
-            ok_(__FILE__,line)(l > 0, "screenX = %d\n", l);
-    }else {
+    if(exl != -10) /* don't test the exact value */
         ok_(__FILE__,line)(l == exl, "screenX = %d, expected %d\n", l, exl);
-    }
 }
 
 static void _test_event_screeny(unsigned line, IHTMLEventObj *event, LONG exl)
@@ -586,14 +560,8 @@ static void _test_event_screeny(unsigned line, IHTMLEventObj *event, LONG exl)
 
     hres = IHTMLEventObj_get_screenY(event, &l);
     ok_(__FILE__,line)(hres == S_OK, "get_screenY failed: %08x\n", hres);
-    if(exl == -10) { /* don't test the exact value */
-        if(xy_todo)
-            todo_wine ok_(__FILE__,line)(l > 0, "screenY = %d\n", l);
-        else
-            ok_(__FILE__,line)(l > 0, "screenY = %d\n", l);
-    }else {
+    if(exl != -10) /* don't test the exact value for -10 */
         ok_(__FILE__,line)(l == exl, "screenY = %d, expected %d\n", l, exl);
-    }
 }
 
 static void _test_event_type(unsigned line, IHTMLEventObj *event, const char *exstr)
@@ -1203,6 +1171,10 @@ static void test_onclick(IHTMLDocument2 *doc)
     V_DISPATCH(&v) = (IDispatch*)&div_onclick_obj;
     hres = IHTMLElement_put_onclick(div, v);
     ok(hres == S_OK, "put_onclick failed: %08x\n", hres);
+
+    V_VT(&v) = VT_NULL;
+    hres = IHTMLElement_put_ondblclick(div, v);
+    ok(hres == S_OK, "put_ondblclick failed: %08x\n", hres);
 
     V_VT(&v) = VT_EMPTY;
     hres = IHTMLElement_get_onclick(div, &v);

@@ -149,7 +149,6 @@ static void init_strings(void)
     {
         HKEY key;
         DWORD size;
-        LONG res;
 
         /* Older Win9x and NT4 */
 
@@ -162,7 +161,7 @@ static void init_strings(void)
 
         RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders", &key);
         size = sizeof(commonprograms);
-        res = RegQueryValueExA(key, "Common Programs", NULL, NULL, (LPBYTE)&commonprograms, &size);
+        RegQueryValueExA(key, "Common Programs", NULL, NULL, (LPBYTE)&commonprograms, &size);
         RegCloseKey(key);
     }
 

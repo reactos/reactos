@@ -797,6 +797,10 @@ static const char* testfiles[]=
     "%s\\test file.sde",
     "%s\\test file.exe",
     "%s\\test2.exe",
+    "%s\\simple.shlexec",
+    "%s\\drawback_file.noassoc",
+    "%s\\drawback_file.noassoc foo.shlexec",
+    "%s\\drawback_nonexist.noassoc foo.shlexec",
     NULL
 };
 
@@ -851,6 +855,239 @@ static filename_tests_t noquotes_tests[]=
 
     {NULL, NULL, 0}
 };
+
+static void test_lpFile_parsed(void)
+{
+    /* basename tmpdir */
+    const char* shorttmpdir;
+
+    const char *testfile;
+    char fileA[MAX_PATH];
+
+    int rc;
+
+    GetTempPathA(sizeof(fileA), fileA);
+    shorttmpdir = tmpdir + strlen(fileA);
+
+    /* ensure tmpdir is in %TEMP%: GetTempPath() can succeed even if TEMP is undefined */
+    SetEnvironmentVariableA("TEMP", fileA);
+
+    /* existing "drawback_file.noassoc" prevents finding "drawback_file.noassoc foo.shlexec" on wine */
+    testfile = "%s\\drawback_file.noassoc foo.shlexec";
+    sprintf(fileA, testfile, tmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    todo_wine {
+        ok(rc>32,
+            "expected success (33), got %s (%d), lpFile: %s\n",
+            rc > 32 ? "success" : "failure", rc, fileA
+            );
+    }
+
+    /* if quoted, existing "drawback_file.noassoc" not prevents finding "drawback_file.noassoc foo.shlexec" on wine */
+    testfile = "\"%s\\drawback_file.noassoc foo.shlexec\"";
+    sprintf(fileA, testfile, tmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    ok(rc>32 || broken(rc == 2) /* Win95/NT4 */,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+
+    /* error should be 2, not 31 */
+    testfile = "\"%s\\drawback_file.noassoc\" foo.shlexec";
+    sprintf(fileA, testfile, tmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    ok(rc==2,
+        "expected failure (2), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+
+    /* ""command"" not works on wine (and real win9x and w2k) */
+    testfile = "\"\"%s\\simple.shlexec\"\"";
+    sprintf(fileA, testfile, tmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    todo_wine {
+        ok(rc>32 || broken(rc == 2) /* Win9x/2000 */,
+            "expected success (33), got %s (%d), lpFile: %s\n",
+            rc > 32 ? "success" : "failure", rc, fileA
+            );
+    }
+
+    /* nonexisting "drawback_nonexist.noassoc" not prevents finding "drawback_nonexist.noassoc foo.shlexec" on wine */
+    testfile = "%s\\drawback_nonexist.noassoc foo.shlexec";
+    sprintf(fileA, testfile, tmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+
+    /* is SEE_MASK_DOENVSUBST default flag? Should only be when XP emulates 9x (XP bug or real 95 or ME behavior ?) */
+    testfile = "%%TEMP%%\\%s\\simple.shlexec";
+    sprintf(fileA, testfile, shorttmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    todo_wine {
+        ok(rc==2,
+            "expected failure (2), got %s (%d), lpFile: %s\n",
+            rc > 32 ? "success" : "failure", rc, fileA
+            );
+    }
+
+    /* quoted */
+    testfile = "\"%%TEMP%%\\%s\\simple.shlexec\"";
+    sprintf(fileA, testfile, shorttmpdir);
+    rc=shell_execute(NULL, fileA, NULL, NULL);
+    todo_wine {
+        ok(rc==2,
+            "expected failure (2), got %s (%d), lpFile: %s\n",
+            rc > 32 ? "success" : "failure", rc, fileA
+            );
+    }
+
+    /* test SEE_MASK_DOENVSUBST works */
+    testfile = "%%TEMP%%\\%s\\simple.shlexec";
+    sprintf(fileA, testfile, shorttmpdir);
+    rc=shell_execute_ex(SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI, NULL, fileA, NULL, NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+
+    /* quoted lpFile not works only on real win95 and nt4 */
+    testfile = "\"%%TEMP%%\\%s\\simple.shlexec\"";
+    sprintf(fileA, testfile, shorttmpdir);
+    rc=shell_execute_ex(SEE_MASK_DOENVSUBST | SEE_MASK_FLAG_NO_UI, NULL, fileA, NULL, NULL);
+    ok(rc>32 || broken(rc == 2) /* Win95/NT4 */,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+
+}
+
+static void test_argify(void)
+{
+    char fileA[MAX_PATH];
+
+    int rc;
+
+    sprintf(fileA, "%s\\test file.shlexec", tmpdir);
+
+    /* %2 */
+    rc=shell_execute("NoQuotesParam2", fileA, "a b", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        okChildInt("argcA", 5);
+        okChildString("argvA4", "a");
+    }
+
+    /* %2 */
+    /* '"a"""'   -> 'a"' */
+    rc=shell_execute("NoQuotesParam2", fileA, "\"a:\"\"some string\"\"\"", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        okChildInt("argcA", 5);
+        todo_wine {
+            okChildString("argvA4", "a:some string");
+        }
+    }
+
+    /* %2 */
+    /* backslash isn't escape char
+     * '"a\""'   -> '"a\""' */
+    rc=shell_execute("NoQuotesParam2", fileA, "\"a:\\\"some string\\\"\"", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        okChildInt("argcA", 5);
+        todo_wine {
+            okChildString("argvA4", "a:\\");
+        }
+    }
+
+    /* "%2" */
+    /* \t isn't whitespace */
+    rc=shell_execute("QuotedParam2", fileA, "a\tb c", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        okChildInt("argcA", 5);
+        todo_wine {
+            okChildString("argvA4", "a\tb");
+        }
+    }
+
+    /* %* */
+    rc=shell_execute("NoQuotesAllParams", fileA, "a b c d e f g h", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        todo_wine {
+            okChildInt("argcA", 12);
+            okChildString("argvA4", "a");
+            okChildString("argvA11", "h");
+        }
+    }
+
+    /* %* can sometimes contain only whitespaces and no args */
+    rc=shell_execute("QuotedAllParams", fileA, "   ", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        todo_wine {
+            okChildInt("argcA", 5);
+            okChildString("argvA4", "   ");
+        }
+    }
+
+    /* %~3 */
+    rc=shell_execute("NoQuotesParams345etc", fileA, "a b c d e f g h", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        todo_wine {
+            okChildInt("argcA", 11);
+            okChildString("argvA4", "b");
+            okChildString("argvA10", "h");
+        }
+    }
+
+    /* %~3 is rest of command line starting with whitespaces after 2nd arg */
+    rc=shell_execute("QuotedParams345etc", fileA, "a    ", NULL);
+    ok(rc>32,
+        "expected success (33), got %s (%d), lpFile: %s\n",
+        rc > 32 ? "success" : "failure", rc, fileA
+        );
+    if (rc>32)
+    {
+        okChildInt("argcA", 5);
+        todo_wine {
+            okChildString("argvA4", "    ");
+        }
+    }
+
+}
 
 static void test_filename(void)
 {
@@ -1744,7 +1981,7 @@ static void init_test(void)
     }
 
     r = CoInitialize(NULL);
-    ok(SUCCEEDED(r), "CoInitialize failed (0x%08x)\n", r);
+    ok(r == S_OK, "CoInitialize failed (0x%08x)\n", r);
     if (FAILED(r))
         exit(1);
 
@@ -1825,6 +2062,15 @@ static void init_test(void)
     create_test_verb(".shlexec", "QuotedLowerL", 0, "QuotedLowerL \"%l\"");
     create_test_verb(".shlexec", "UpperL", 0, "UpperL %L");
     create_test_verb(".shlexec", "QuotedUpperL", 0, "QuotedUpperL \"%L\"");
+
+    create_test_verb(".shlexec", "NoQuotesParam2", 0, "NoQuotesParam2 %2");
+    create_test_verb(".shlexec", "QuotedParam2", 0, "QuotedParam2 \"%2\"");
+
+    create_test_verb(".shlexec", "NoQuotesAllParams", 0, "NoQuotesAllParams %*");
+    create_test_verb(".shlexec", "QuotedAllParams", 0, "QuotedAllParams \"%*\"");
+
+    create_test_verb(".shlexec", "NoQuotesParams345etc", 0, "NoQuotesParams345etc %~3");
+    create_test_verb(".shlexec", "QuotedParams345etc", 0, "QuotedParams345etc \"%~3\"");
 }
 
 static void cleanup_test(void)
@@ -1938,6 +2184,8 @@ START_TEST(shlexec)
 
     init_test();
 
+    test_argify();
+    test_lpFile_parsed();
     test_filename();
     test_find_executable();
     test_lnks();

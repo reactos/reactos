@@ -24,10 +24,10 @@
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>
 	<file>shlfolder.c</file>
+	<file>shlview.c</file>
 	<file>string.c</file>
 	<file>systray.c</file>
 	<file>testlist.c</file>
-	<file>shfldr_netplaces.c</file>
 	<file>shfldr_special.c</file>
 	<file>rsrc.rc</file>
 </module>
