@@ -25,15 +25,17 @@
 #  include <stdlib.h>
 #  include <limits.h>
 #endif
-#include <io.h>
 #include <fcntl.h>
 
 #ifdef NO_DEFLATE       /* for compatibility with old definition */
 #  define NO_GZCOMPRESS
 #endif
 
-#ifdef _MSC_VER
+#ifdef _WIN32
 #  include <io.h>
+#endif
+
+#ifdef _MSC_VER
 #  define vsnprintf _vsnprintf
 #endif
 
