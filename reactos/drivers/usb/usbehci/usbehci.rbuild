@@ -11,4 +11,5 @@
 	<file>irp.c</file>
 	<file>usbiffn.c</file>
 	<file>urbreq.c</file>
+	<file>usbehci.rc</file>
 </module>

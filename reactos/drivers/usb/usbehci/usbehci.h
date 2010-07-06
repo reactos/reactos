@@ -419,14 +419,6 @@ typedef struct _PDO_DEVICE_EXTENSION
     FAST_MUTEX ListLock;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
-typedef struct _WORKITEM_DATA
-{
-    PIO_WORKITEM IoWorkItem;
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    PDEVICE_OBJECT PortDeviceObject;
-} WORKITEM_DATA, *PWORKITEM_DATA;
-
-
 VOID NTAPI
 UrbWorkerThread(PVOID Context);
 
@@ -478,5 +470,5 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension);
 VOID
 URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-VOID NTAPI
-DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
+PUSB_DEVICE
+DeviceHandleToUsbDevice(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PUSB_DEVICE_HANDLE DeviceHandle);

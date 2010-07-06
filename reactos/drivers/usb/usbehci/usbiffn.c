@@ -38,27 +38,6 @@ PVOID InternalCreateUsbDevice(UCHAR DeviceNumber, ULONG Port, PUSB_DEVICE Parent
     return UsbDevicePointer;
 }
 
-BOOLEAN
-IsHandleValid(PVOID BusContext,
-              PUSB_DEVICE_HANDLE DeviceHandle)
-{
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    LONG i;
-
-    PdoDeviceExtension = (PPDO_DEVICE_EXTENSION) BusContext;
-
-    if (!DeviceHandle)
-        return FALSE;
-
-    for (i = 0; i < 128; i++)
-    {
-        if (PdoDeviceExtension->UsbDevices[i] == DeviceHandle)
-            return TRUE;
-    }
-
-    return FALSE;
-}
-
 VOID
 USB_BUSIFFN
 InterfaceReference(PVOID BusContext)
@@ -86,9 +65,18 @@ CreateUsbDevice(PVOID BusContext,
     PUSB_DEVICE UsbDevice;
     LONG i = 0;
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
-    DPRINT1("CreateUsbDevice: HubDeviceHandle %x, PortStatus %x, PortNumber %x\n", HubDeviceHandle, PortStatus, PortNumber);
+    DPRINT("CreateUsbDevice: HubDeviceHandle %x, PortStatus %x, PortNumber %x\n", HubDeviceHandle, PortStatus, PortNumber);
+
+    if (PdoDeviceExtension->UsbDevices[0] != HubDeviceHandle)
+    {
+        DPRINT1("Not a valid HubDeviceHandle\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     UsbDevice = InternalCreateUsbDevice(PdoDeviceExtension->ChildDeviceCount, PortNumber, HubDeviceHandle, FALSE);
+
+    if (!UsbDevice)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Add it to the list */
     while (TRUE)
@@ -131,7 +119,14 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     DPRINT1("InitializeUsbDevice called, device %x\n", DeviceHandle);
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
     FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)PdoDeviceExtension->ControllerFdo->DeviceExtension;
-    UsbDevice = (PUSB_DEVICE) DeviceHandle;
+
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
+
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, USB_POOL_TAG);
 
@@ -153,7 +148,7 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     CtrlSetup.wLength = 0;
 
     DPRINT1("Setting Address to %x\n", UsbDevice->Address);
-    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, 0, 0, NULL, 0);
+    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, 0, UsbDevice->Port, NULL, 0);
 
     /* Get the Device Descriptor */
     CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
@@ -177,7 +172,10 @@ InitializeUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle)
     DPRINT1("bNumDescriptors %x\n", UsbDevice->DeviceDescriptor.bNumConfigurations);
 
     if (UsbDevice->DeviceDescriptor.bNumConfigurations == 0)
+    {
+        DPRINT1("No Configurations. That cant be good!\n");
         return STATUS_DEVICE_DATA_ERROR;
+    }
 
     UsbDevice->Configs = ExAllocatePoolWithTag(NonPagedPool,
                                                sizeof(PVOID) * UsbDevice->DeviceDescriptor.bNumConfigurations,
@@ -256,8 +254,14 @@ GetUsbDescriptors(PVOID BusContext,
     PUSB_DEVICE UsbDevice;
     DPRINT1("GetUsbDescriptor %x, %x, %x, %x\n", DeviceDescriptorBuffer, *DeviceDescriptorBufferLength, ConfigDescriptorBuffer, *ConfigDescriptorBufferLength);
 
-    UsbDevice = (PUSB_DEVICE) DeviceHandle;
-    DPRINT1("DeviceHandle %x\n", UsbDevice);
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
+
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
+    }
+
     if ((DeviceDescriptorBuffer) && (DeviceDescriptorBufferLength))
     {
         RtlCopyMemory(DeviceDescriptorBuffer, &UsbDevice->DeviceDescriptor, sizeof(USB_DEVICE_DESCRIPTOR));
@@ -284,13 +288,13 @@ RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
 
     PdoDeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)BusContext)->DeviceExtension;
 
-    /* FIXME: Implement DeviceHandleToUsbDevice to validate handles */
-    //UsbDevice = DeviceHandleToUsbDevice(PdoDeviceExtension, DeviceHandle);
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
 
-    UsbDevice = (PUSB_DEVICE) DeviceHandle;
-
-   if (!UsbDevice)
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
         return STATUS_DEVICE_NOT_CONNECTED;
+    }
 
     switch (Flags)
     {
@@ -320,11 +324,11 @@ RemoveUsbDevice(PVOID BusContext, PUSB_DEVICE_HANDLE DeviceHandle, ULONG Flags)
             /* DeConfig Device */
             break;
        case USBD_KEEP_DEVICE_DATA:
-            DPRINT("USBD_KEEP_DEVICE_DATA Not implemented!\n");
+            DPRINT1("USBD_KEEP_DEVICE_DATA Not implemented!\n");
             break;
 
         case USBD_MARK_DEVICE_BUSY:
-            DPRINT("USBD_MARK_DEVICE_BUSY Not implemented!\n");
+            DPRINT1("USBD_MARK_DEVICE_BUSY Not implemented!\n");
             break;
         default:
             DPRINT1("Unknown Remove Flags %x\n", Flags);
@@ -357,17 +361,18 @@ QueryDeviceInformation(PVOID BusContext,
                        PULONG LengthReturned)
 {
     PUSB_DEVICE_INFORMATION_0 DeviceInfo = DeviceInformationBuffer;
-    PUSB_DEVICE UsbDevice = (PUSB_DEVICE) DeviceHandle;
+    PUSB_DEVICE UsbDevice;
     ULONG SizeNeeded;
     LONG i;
 
     DPRINT1("QueryDeviceInformation (%x, %x, %x, %d, %x\n", BusContext, DeviceHandle, DeviceInformationBuffer, DeviceInformationBufferLength, LengthReturned);
 
-    /* Search for a valid usb device in this BusContext */
-    if (!IsHandleValid(BusContext, DeviceHandle))
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
+
+    if (!UsbDevice)
     {
-        DPRINT1("Not a valid DeviceHandle\n");
-        return STATUS_INVALID_PARAMETER;
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        return STATUS_DEVICE_NOT_CONNECTED;
     }
 
     SizeNeeded = FIELD_OFFSET(USB_DEVICE_INFORMATION_0, PipeList[UsbDevice->ActiveInterface->InterfaceDescriptor.bNumEndpoints]);
@@ -505,7 +510,17 @@ PVOID
 USB_BUSIFFN
 GetDeviceBusContext(PVOID HubBusContext, PVOID DeviceHandle)
 {
+    PUSB_DEVICE UsbDevice;
+
     DPRINT1("GetDeviceBusContext called\n");
+    UsbDevice = DeviceHandleToUsbDevice(HubBusContext, DeviceHandle);
+
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+        return NULL;
+    }
+
     return NULL;
 }
 
@@ -549,6 +564,14 @@ VOID
 USB_BUSIFFN
 FlushTransfers(PVOID BusContext, PVOID DeviceHandle)
 {
+    PUSB_DEVICE UsbDevice;
+    UsbDevice = DeviceHandleToUsbDevice(BusContext, DeviceHandle);
+
+    if (!UsbDevice)
+    {
+        DPRINT1("Invalid DeviceHandle or device not connected\n");
+    }
+
     DPRINT1("FlushTransfers\n");
 }
 
@@ -611,5 +634,5 @@ USB_BUSIFFN
 EnumLogEntry(PVOID BusContext, ULONG DriverTag, ULONG EnumTag, ULONG P1, ULONG P2)
 {
     DPRINT1("EnumLogEntry called\n");
-    return STATUS_NOT_SUPPORTED;
+    return STATUS_SUCCESS;
 }

@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/common.c
  * PURPOSE:     Common operations in FDO/PDO.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (mjmartin@reactos.org)
  */
 
 #define INITGUID
@@ -135,7 +135,7 @@ DuplicateUnicodeString(ULONG Flags, PCUNICODE_STRING SourceString, PUNICODE_STRI
         if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
             DestMaxLength += sizeof(UNICODE_NULL);
 
-        DestinationString->Buffer = ExAllocatePool(PagedPool, DestMaxLength);
+        DestinationString->Buffer = ExAllocatePoolWithTag(NonPagedPool, DestMaxLength, USB_POOL_TAG);
         if (DestinationString->Buffer == NULL)
             return STATUS_NO_MEMORY;
 

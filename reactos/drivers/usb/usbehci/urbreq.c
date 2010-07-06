@@ -82,7 +82,10 @@ IntializeHeadQueueForStandardRequest(PQUEUE_HEAD QueueHead,
 
     (*CtrlTD2)->NextPointer = TERMINATE_POINTER;
     (*CtrlTD2)->AlternateNextPointer = TERMINATE_POINTER;
-    (*CtrlTD2)->BufferPointer[0] = (ULONG)MmGetPhysicalAddress((PVOID) (*CtrlData)).LowPart;
+    if (Size == 0)
+        (*CtrlTD2)->BufferPointer[0] = 0;
+    else
+        (*CtrlTD2)->BufferPointer[0] = (ULONG)MmGetPhysicalAddress((PVOID) (*CtrlData)).LowPart;
     (*CtrlTD2)->Token.Bits.DataToggle = TRUE;
     (*CtrlTD2)->Token.Bits.InterruptOnComplete = TRUE;
     (*CtrlTD2)->Token.Bits.TotalBytesToTransfer = Size;
@@ -98,6 +101,7 @@ IntializeHeadQueueForStandardRequest(PQUEUE_HEAD QueueHead,
     (*CtrlTD3)->Token.Bits.Active = TRUE;
     (*CtrlTD3)->Token.Bits.PIDCode = PID_CODE_OUT_TOKEN;
     (*CtrlTD3)->Token.Bits.InterruptOnComplete = TRUE;
+    (*CtrlTD3)->Token.Bits.TotalBytesToTransfer = 0;
     (*CtrlTD3)->Token.Bits.DataToggle = TRUE;
     (*CtrlTD3)->Token.Bits.ErrorCounter = 0x03;
     (*CtrlTD2)->NextPointer = (ULONG) MmGetPhysicalAddress((PVOID)(*CtrlTD3)).LowPart;
@@ -185,11 +189,14 @@ ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_S
 
     for (;;)
     {
-        KeStallExecutionProcessor(10);
+        KeStallExecutionProcessor(100);
         DPRINT("Waiting for completion!\n");
         if (DeviceExtension->AsyncComplete == TRUE)
             break;
     }
+
+    UsbCmd->Run = FALSE;
+    WRITE_REGISTER_ULONG((PULONG)(Base + EHCI_USBCMD), tmp);
 
     if (CtrlSetup->bmRequestType._BM.Dir == BMREQUEST_DEVICE_TO_HOST)
     {

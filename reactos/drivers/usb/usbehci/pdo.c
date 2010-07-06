@@ -446,7 +446,6 @@ PdoDispatchPnp(
             else
             {
                 Status = IoSetDeviceInterfaceState(&InterfaceSymLinkName, TRUE);
-                DPRINT1("Set interface state %x\n", Status);
                 if (!NT_SUCCESS(Status)) 
                     ASSERT(FALSE);
             }
