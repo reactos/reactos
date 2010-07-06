@@ -22,6 +22,10 @@
 #include <wingdi.h>
 #include "wine/test.h"
 
+void WINAPI glClearColor(float red, float green, float blue, float alpha);
+void WINAPI glClear(unsigned int mask);
+void WINAPI glFinish(void);
+#define GL_COLOR_BUFFER_BIT 0x00004000
 const unsigned char * WINAPI glGetString(unsigned int);
 #define GL_VENDOR 0x1F00
 #define GL_RENDERER 0x1F01
@@ -499,6 +503,148 @@ static void test_acceleration(HDC hdc)
     }
 }
 
+static void test_bitmap_rendering(void)
+{
+    PIXELFORMATDESCRIPTOR pfd;
+    int i, iPixelFormat=0;
+    unsigned int nFormats;
+    HGLRC hglrc;
+    BITMAPINFO biDst;
+    HBITMAP bmpDst, oldDst;
+    HDC hdcDst, hdcScreen;
+    UINT32 *dstBuffer;
+
+    memset(&biDst, 0, sizeof(BITMAPINFO));
+    biDst.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    biDst.bmiHeader.biWidth = 2;
+    biDst.bmiHeader.biHeight = -2;
+    biDst.bmiHeader.biPlanes = 1;
+    biDst.bmiHeader.biBitCount = 32;
+    biDst.bmiHeader.biCompression = BI_RGB;
+
+    hdcScreen = CreateCompatibleDC(0);
+    if(GetDeviceCaps(hdcScreen, BITSPIXEL) != 32)
+    {
+        DeleteDC(hdcScreen);
+        trace("Skipping bitmap rendering test\n");
+        return;
+    }
+
+    hdcDst = CreateCompatibleDC(hdcScreen);
+    bmpDst = CreateDIBSection(hdcDst, &biDst, DIB_RGB_COLORS, (void**)&dstBuffer, NULL, 0);
+    oldDst = SelectObject(hdcDst, bmpDst);
+
+    /* Pick a pixel format by hand because ChoosePixelFormat is unreliable */
+    nFormats = DescribePixelFormat(hdcDst, 0, 0, NULL);
+    for(i=1; i<=nFormats; i++)
+    {
+        memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+        DescribePixelFormat(hdcDst, i, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+
+        if((pfd.dwFlags & PFD_DRAW_TO_BITMAP) &&
+           (pfd.dwFlags & PFD_SUPPORT_OPENGL) &&
+           (pfd.cColorBits == 32) &&
+           (pfd.cAlphaBits == 8) )
+        {
+            iPixelFormat = i;
+            break;
+        }
+    }
+
+    if(!iPixelFormat)
+    {
+        skip("Unable to find a suitable pixel format\n");
+    }
+    else
+    {
+        SetPixelFormat(hdcDst, iPixelFormat, &pfd);
+        hglrc = wglCreateContext(hdcDst);
+        todo_wine ok(hglrc != NULL, "Unable to create a context\n");
+
+        if(hglrc)
+        {
+            wglMakeCurrent(hdcDst, hglrc);
+
+            /* Note this is RGBA but we read ARGB back */
+            glClearColor((float)0x22/0xff, (float)0x33/0xff, (float)0x44/0xff, (float)0x11/0xff);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glFinish();
+
+            /* Note apparently the alpha channel is not supported by the software renderer (bitmap only works using software) */
+            ok(dstBuffer[0] == 0x223344, "Expected color=0x223344, received color=%x\n", dstBuffer[0]);
+
+            wglMakeCurrent(NULL, NULL);
+            wglDeleteContext(hglrc);
+        }
+    }
+
+    SelectObject(hdcDst, oldDst);
+    DeleteObject(bmpDst);
+    DeleteDC(hdcDst);
+
+    DeleteDC(hdcScreen);
+}
+
+struct wgl_thread_param
+{
+    HANDLE test_finished;
+    HGLRC hglrc;
+    BOOL hglrc_deleted;
+};
+
+static DWORD WINAPI wgl_thread(void *param)
+{
+    struct wgl_thread_param *p = param;
+
+    p->hglrc_deleted = wglDeleteContext(p->hglrc);
+    SetEvent(p->test_finished);
+
+    return 0;
+}
+
+static void test_deletecontext(HDC hdc)
+{
+    struct wgl_thread_param thread_params;
+    HGLRC hglrc = wglCreateContext(hdc);
+    HANDLE thread_handle;
+    DWORD res, tid;
+
+    if(!hglrc)
+    {
+        skip("wglCreateContext failed!\n");
+        return;
+    }
+
+    res = wglMakeCurrent(hdc, hglrc);
+    if(!res)
+    {
+        skip("wglMakeCurrent failed!\n");
+        return;
+    }
+
+    /* WGL doesn't allow you to delete a context from a different thread than the one in which it is current.
+     * This differs from GLX which does allow it but it delays actual deletion until the context becomes not current.
+     */
+    thread_params.hglrc = hglrc;
+    thread_params.test_finished = CreateEvent(NULL, FALSE, FALSE, NULL);
+    thread_handle = CreateThread(NULL, 0, wgl_thread, &thread_params, 0, &tid);
+    ok(!!thread_handle, "Failed to create thread, last error %#x.\n", GetLastError());
+    if(thread_handle)
+    {
+        WaitForSingleObject(thread_handle, INFINITE);
+        ok(thread_params.hglrc_deleted == FALSE, "Attempt to delete WGL context from another thread passed but should fail!\n");
+    }
+    CloseHandle(thread_params.test_finished);
+
+    res = wglDeleteContext(hglrc);
+    ok(res == TRUE, "wglDeleteContext failed\n");
+
+    /* WGL makes a context not current when deleting it. This differs from GLX behavior where
+     * deletion takes place when the thread becomes not current. */
+    hglrc = wglGetCurrentContext();
+    ok(hglrc == NULL, "A WGL context is active while none was expected\n");
+}
+
 static void test_make_current_read(HDC hdc)
 {
     int res;
@@ -650,6 +796,75 @@ static void test_opengl3(HDC hdc)
     }
 }
 
+static void test_minimized(void)
+{
+    PIXELFORMATDESCRIPTOR pf_desc =
+    {
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,                     /* version */
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+        PFD_TYPE_RGBA,
+        24,                    /* 24-bit color depth */
+        0, 0, 0, 0, 0, 0,      /* color bits */
+        0,                     /* alpha buffer */
+        0,                     /* shift bit */
+        0,                     /* accumulation buffer */
+        0, 0, 0, 0,            /* accum bits */
+        32,                    /* z-buffer */
+        0,                     /* stencil buffer */
+        0,                     /* auxiliary buffer */
+        PFD_MAIN_PLANE,        /* main layer */
+        0,                     /* reserved */
+        0, 0, 0                /* layer masks */
+    };
+    int pixel_format;
+    HWND window;
+    LONG style;
+    HGLRC ctx;
+    BOOL ret;
+    HDC dc;
+
+    window = CreateWindowA("static", "opengl32_test",
+            WS_POPUP | WS_MINIMIZE, 0, 0, 640, 480, 0, 0, 0, 0);
+    ok(!!window, "Failed to create window, last error %#x.\n", GetLastError());
+
+    dc = GetDC(window);
+    ok(!!dc, "Failed to get DC.\n");
+
+    pixel_format = ChoosePixelFormat(dc, &pf_desc);
+    if (!pixel_format)
+    {
+        win_skip("Failed to find pixel format.\n");
+        ReleaseDC(window, dc);
+        DestroyWindow(window);
+        return;
+    }
+
+    ret = SetPixelFormat(dc, pixel_format, &pf_desc);
+    ok(ret, "Failed to set pixel format, last error %#x.\n", GetLastError());
+
+    style = GetWindowLongA(window, GWL_STYLE);
+    ok(style & WS_MINIMIZE, "Window should be minimized, got style %#x.\n", style);
+
+    ctx = wglCreateContext(dc);
+    ok(!!ctx, "Failed to create GL context, last error %#x.\n", GetLastError());
+
+    ret = wglMakeCurrent(dc, ctx);
+    ok(ret, "Failed to make context current, last error %#x.\n", GetLastError());
+
+    style = GetWindowLongA(window, GWL_STYLE);
+    ok(style & WS_MINIMIZE, "window should be minimized, got style %#x.\n", style);
+
+    ret = wglMakeCurrent(NULL, NULL);
+    ok(ret, "Failed to clear current context, last error %#x.\n", GetLastError());
+
+    ret = wglDeleteContext(ctx);
+    ok(ret, "Failed to delete GL context, last error %#x.\n", GetLastError());
+
+    ReleaseDC(window, dc);
+    DestroyWindow(window);
+}
+
 START_TEST(opengl)
 {
     HWND hwnd;
@@ -704,6 +919,8 @@ START_TEST(opengl)
         res = SetPixelFormat(hdc, iPixelFormat, &pfd);
         ok(res, "SetPixelformat failed: %x\n", GetLastError());
 
+        test_bitmap_rendering();
+        test_minimized();
         test_dc(hwnd, hdc);
 
         hglrc = wglCreateContext(hdc);
@@ -732,6 +949,7 @@ START_TEST(opengl)
             return;
         }
 
+        test_deletecontext(hdc);
         test_makecurrent(hdc);
         test_setpixelformat(hdc);
         test_sharelists(hdc);

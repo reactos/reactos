@@ -10,6 +10,15 @@
 	<directory name="advpack">
 		<xi:include href="advpack/advpack.rbuild" />
 	</directory>
+	<directory name="amstream">
+		<xi:include href="amstream/amstream.rbuild" />
+	</directory>
+	<directory name="atl">
+		<xi:include href="atl/atl.rbuild" />
+	</directory>
+	<directory name="avifil32">
+		<xi:include href="avifil32/avifil32.rbuild" />
+	</directory>
 	<directory name="browseui">
 		<xi:include href="browseui/browseui.rbuild" />
 	</directory>
@@ -147,6 +156,9 @@
 	</directory>
 	<directory name="oleaut32">
 		<xi:include href="oleaut32/oleaut32.rbuild" />
+	</directory>
+	<directory name="opengl32">
+		<xi:include href="opengl32/opengl32.rbuild" />
 	</directory>
 	<directory name="pdh">
 		<xi:include href="pdh/pdh.rbuild" />
