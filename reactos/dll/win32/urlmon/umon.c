@@ -24,6 +24,8 @@
 
 #include "winreg.h"
 #include "shlwapi.h"
+#include "hlink.h"
+#include "shellapi.h"
 
 #include "wine/debug.h"
 
@@ -742,7 +744,27 @@ HRESULT WINAPI HlinkSimpleNavigateToString( LPCWSTR szTarget,
     LPCWSTR szLocation, LPCWSTR szTargetFrameName, IUnknown *pUnk,
     IBindCtx *pbc, IBindStatusCallback *pbsc, DWORD grfHLNF, DWORD dwReserved)
 {
-    FIXME("%s\n", debugstr_w( szTarget ) );
+    FIXME("%s %s %s %p %p %p %u %u partial stub\n", debugstr_w( szTarget ), debugstr_w( szLocation ),
+          debugstr_w( szTargetFrameName ), pUnk, pbc, pbsc, grfHLNF, dwReserved);
+
+    /* undocumented: 0 means HLNF_OPENINNEWWINDOW*/
+    if (!grfHLNF) grfHLNF = HLNF_OPENINNEWWINDOW;
+
+    if (grfHLNF == HLNF_OPENINNEWWINDOW)
+    {
+        SHELLEXECUTEINFOW sei;
+        static const WCHAR openW[] = { 'o', 'p', 'e', 'n', 0 };
+
+        memset(&sei, 0, sizeof(sei));
+        sei.cbSize = sizeof(sei);
+        sei.lpVerb = openW;
+        sei.nShow = SW_SHOWNORMAL;
+        sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE;
+        sei.lpFile = szTarget;
+
+        if (ShellExecuteExW(&sei)) return S_OK;
+    }
+
     return E_NOTIMPL;
 }
 

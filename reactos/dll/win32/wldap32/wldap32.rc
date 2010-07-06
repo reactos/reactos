@@ -29,13 +29,15 @@
 #include "wldap32_Nl.rc"
 #include "wldap32_No.rc"
 #include "wldap32_Pl.rc"
-#include "wldap32_Pt.rc"
 #include "wldap32_Sv.rc"
 #include "wldap32_Tr.rc"
 
 /* UTF-8 */
 #include "wldap32_De.rc"
 #include "wldap32_Fr.rc"
+#include "wldap32_Hu.rc"
+#include "wldap32_It.rc"
 #include "wldap32_Lt.rc"
+#include "wldap32_Pt.rc"
 #include "wldap32_Ru.rc"
 #include "wldap32_Uk.rc"

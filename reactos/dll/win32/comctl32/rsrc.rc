@@ -108,6 +108,7 @@ IDI_TT_ERROR_SM ICON LOADONCALL DISCARDABLE idi_tt_error_sm.ico
 #include "comctl_Uk.rc"
 
 /* UTF-8 */
+#include "comctl_Da.rc"
 #include "comctl_De.rc"
 #include "comctl_Fr.rc"
 #include "comctl_Ja.rc"

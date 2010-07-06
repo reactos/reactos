@@ -859,7 +859,7 @@ int BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, B
     return ich;
 }
 
-/* Applies the reorder in reverse. Taking an already reordered string and returing the original */
+/* Applies the reorder in reverse. Taking an already reordered string and returning the original */
 int BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse)
 {
     int ich = 0;

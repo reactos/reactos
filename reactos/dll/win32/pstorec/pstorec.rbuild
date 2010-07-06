@@ -9,6 +9,7 @@
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="pstorec.spec" />
 	<include base="pstorec" root="intermediate">.</include>
+	<define name="__WINESRC__" />
 	<dependency>pstorec_tlb</dependency>
 	<library>wine</library>
 	<library>uuid</library>

@@ -2303,7 +2303,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	  LoadStringW(COMDLG32_hInstance, IDS_OVERWRITEFILE, lpstrOverwrite, 100);
 	  answer = MessageBoxW(hwnd, lpstrOverwrite, fodInfos->title,
 			       MB_YESNO | MB_ICONEXCLAMATION);
-	  if (answer == IDNO)
+	  if (answer == IDNO || answer == IDCANCEL)
 	  {
 	    ret = FALSE;
 	    goto ret;
@@ -2321,7 +2321,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
           LoadStringW(COMDLG32_hInstance, IDS_CREATEFILE, lpstrCreate, 100);
           answer = MessageBoxW(hwnd, lpstrCreate, fodInfos->title,
                                MB_YESNO | MB_ICONEXCLAMATION);
-          if (answer == IDNO)
+          if (answer == IDNO || answer == IDCANCEL)
           {
             ret = FALSE;
             goto ret;

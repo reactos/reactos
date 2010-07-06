@@ -670,7 +670,7 @@ static HRESULT WINAPI ResProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
 
     FreeLibrary(hdll);
 
-    hres = FindMimeFromData(NULL, url_file, NULL, 0, NULL, 0, &mime, 0);
+    hres = FindMimeFromData(NULL, url_file, This->data, This->data_len, NULL, 0, &mime, 0);
     heap_free(url);
     if(SUCCEEDED(hres)) {
         IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_MIMETYPEAVAILABLE, mime);

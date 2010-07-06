@@ -756,16 +756,20 @@ static HRESULT WINAPI TiffFrameDecode_CopyPixels(IWICBitmapFrameDecode *iface,
 
                 if (prc->X+prc->Width > (tile_x+1) * This->decode_info.tile_width)
                     rc.Width = This->decode_info.tile_width - rc.X;
+                else if (prc->X < tile_x * This->decode_info.tile_width)
+                    rc.Width = prc->Width + prc->X - tile_x * This->decode_info.tile_width;
                 else
-                    rc.Width = prc->Width + rc.X - prc->X;
+                    rc.Width = prc->Width;
 
                 if (prc->Y+prc->Height > (tile_y+1) * This->decode_info.tile_height)
                     rc.Height = This->decode_info.tile_height - rc.Y;
+                else if (prc->Y < tile_y * This->decode_info.tile_height)
+                    rc.Height = prc->Height + prc->Y - tile_y * This->decode_info.tile_height;
                 else
-                    rc.Height = prc->Height + rc.Y - prc->Y;
+                    rc.Height = prc->Height;
 
-                dst_tilepos = pbBuffer + (cbStride * (rc.Y - prc->Y)) +
-                    ((This->decode_info.bpp * (rc.X - prc->X) + 7) / 8);
+                dst_tilepos = pbBuffer + (cbStride * ((rc.Y + tile_y * This->decode_info.tile_height) - prc->Y)) +
+                    ((This->decode_info.bpp * ((rc.X + tile_x * This->decode_info.tile_width) - prc->X) + 7) / 8);
 
                 hr = copy_pixels(This->decode_info.bpp, This->cached_tile,
                     This->decode_info.tile_width, This->decode_info.tile_height, This->decode_info.tile_stride,

@@ -375,78 +375,77 @@ STRINGTABLE DISCARDABLE
     IDS_VERIFYFILE          "ファイル名を確認してください。"
     IDS_CREATEFILE          "このファイルは存在しません。\n作成しますか?"
     IDS_OVERWRITEFILE       "ファイルは既に存在します。\n上書きしますか?"
-    IDS_INVALID_FILENAME_TITLE "Invalid character(s) in path"
+    IDS_INVALID_FILENAME_TITLE "ファイル名に使えない文字"
     IDS_INVALID_FILENAME    "ファイル名には以下の文字は使えません:\n                          / : < > |"
-    IDS_PATHNOTEXISTING     "Path does not exist"
-    IDS_FILENOTEXISTING     "File does not exist"
+    IDS_PATHNOTEXISTING     "パスが見つかりません"
+    IDS_FILENOTEXISTING     "ファイルが見つかりません"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_UPFOLDER         "Up One Level"
-    IDS_NEWFOLDER        "Create New Folder"
-    IDS_LISTVIEW         "List"
-    IDS_REPORTVIEW       "Details"
-    IDS_TODESKTOP        "Browse to Desktop"
+    IDS_UPFOLDER         "一つ上のフォルダへ"
+    IDS_NEWFOLDER        "新しいフォルダの作成"
+    IDS_LISTVIEW         "一覧"
+    IDS_REPORTVIEW       "詳細"
+    IDS_TODESKTOP        "デスクトップを参照"
 }
 
 STRINGTABLE DISCARDABLE
 {
-    PD32_PRINT_TITLE       "Print"
+    PD32_PRINT_TITLE       "印刷"
 
     PD32_VALUE_UREADABLE                  "Unreadable Entry"
-    PD32_INVALID_PAGE_RANGE "This value does not lie within the page range.\n\
-Please enter a value between %d and %d."
-    PD32_FROM_NOT_ABOVE_TO                "The 'from' entry cannot exceed the \
-'to' entry."
-    PD32_MARGINS_OVERLAP                  "Margins overlap or fall outside \
-Paper boundaries.\nPlease reenter margins."
-    PD32_NR_OF_COPIES_EMPTY               "The number of 'Number of copies' \
-value cannot be empty."
-    PD32_TOO_LARGE_COPIES                 "This large number of copies is not \
-supported by your printer.\nPlease enter a value between 1 and %d."
-    PD32_PRINT_ERROR                      "A printer error occurred."
-    PD32_NO_DEFAULT_PRINTER               "No default printer defined."
-    PD32_CANT_FIND_PRINTER                "Cannot find the printer."
-    PD32_OUT_OF_MEMORY                    "Out of memory."
-    PD32_GENERIC_ERROR                    "An error occurred."
-    PD32_DRIVER_UNKNOWN                   "Unknown printer driver."
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_INVALID_PAGE_RANGE "この値はページの範囲に含まれません。\n\
+%d から %d までの値を入力してください。"
+    PD32_FROM_NOT_ABOVE_TO                "開始ページの値は、終了ページの値を\
+超えない値にしてください。"
+    PD32_MARGINS_OVERLAP                  "余白が重なっているか、用紙の境界を\
+超えています。\n余白を再入力してください。"
+    PD32_NR_OF_COPIES_EMPTY               "部数は、空にできません。"
+    PD32_TOO_LARGE_COPIES                 "部数がプリンタがサポートしている\
+を超えています。\n1 から %d までの値を入力してください。"
+    PD32_PRINT_ERROR                      "プリンタ エラーが発生しました。"
+    PD32_NO_DEFAULT_PRINTER               "既定のプリンタが定義されていません。"
+    PD32_CANT_FIND_PRINTER                "プリンタが見つかりません。"
+    PD32_OUT_OF_MEMORY                    "メモリ不足です。"
+    PD32_GENERIC_ERROR                    "エラーが発生しました。"
+    PD32_DRIVER_UNKNOWN                   "プリンタ ドライバが不明です。"
+    PD32_NO_DEVICES                       "ページ設定や文書を印刷するなどのプリンタ関連の\
+タスクを実施する前に、プリンタをインストールする必要があります。 \
+プリンタをインストールしてから再度実行してください。"
 
-    PD32_DEFAULT_PRINTER                  "Default Printer; "
-    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "There are %d documents in the queue"
-    PD32_MARGINS_IN_INCHES                "Margins [inches]"
-    PD32_MARGINS_IN_MILLIMETERS           "Margins [mm]"
+    PD32_DEFAULT_PRINTER                  "既定のプリンタ "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "キューに %d つの文書"
+    PD32_MARGINS_IN_INCHES                "余白 [インチ]"
+    PD32_MARGINS_IN_MILLIMETERS           "余白 [mm]"
     PD32_MILLIMETERS                      "mm"
 
-    PD32_PRINTER_STATUS_READY             "Ready"
-    PD32_PRINTER_STATUS_PAUSED            "Paused; "
-    PD32_PRINTER_STATUS_ERROR             "Error; "
-    PD32_PRINTER_STATUS_PENDING_DELETION  "Pending deletion; "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Paper jam; "
-    PD32_PRINTER_STATUS_PAPER_OUT         "Out of paper; "
-    PD32_PRINTER_STATUS_MANUAL_FEED       "Feed paper manual; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Paper problem; "
-    PD32_PRINTER_STATUS_OFFLINE           "Printer offline; "
-    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Active; "
-    PD32_PRINTER_STATUS_BUSY              "Busy; "
-    PD32_PRINTER_STATUS_PRINTING          "Printing; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Output tray is full; "
-    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Not available; "
-    PD32_PRINTER_STATUS_WAITING           "Waiting; "
-    PD32_PRINTER_STATUS_PROCESSING        "Processing; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Initialising; "
-    PD32_PRINTER_STATUS_WARMING_UP        "Warming up; "
-    PD32_PRINTER_STATUS_TONER_LOW         "Toner low; "
-    PD32_PRINTER_STATUS_NO_TONER          "No toner; "
-    PD32_PRINTER_STATUS_PAGE_PUNT         "Page punt; "
-    PD32_PRINTER_STATUS_USER_INTERVENTION "Interrupted by user; "
-    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Out of memory; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "The printer door is open; "
-    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Print server unknown; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Power save mode; "
+    PD32_PRINTER_STATUS_READY             "準備完了"
+    PD32_PRINTER_STATUS_PAUSED            "一時停止 -"
+    PD32_PRINTER_STATUS_ERROR             "エラー -"
+    PD32_PRINTER_STATUS_PENDING_DELETION  "削除待ち -"
+    PD32_PRINTER_STATUS_PAPER_JAM         "紙詰まり -"
+    PD32_PRINTER_STATUS_PAPER_OUT         "用紙切れ -"
+    PD32_PRINTER_STATUS_MANUAL_FEED       "手差し -"
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "用紙の問題 -"
+    PD32_PRINTER_STATUS_OFFLINE           "オフライン -"
+    PD32_PRINTER_STATUS_IO_ACTIVE         "入出力中 -"
+    PD32_PRINTER_STATUS_BUSY              "ビジー -"
+    PD32_PRINTER_STATUS_PRINTING          "印刷中 -"
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "出力トレイが満杯 -"
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "利用不可 -"
+    PD32_PRINTER_STATUS_WAITING           "待機中 -"
+    PD32_PRINTER_STATUS_PROCESSING        "処理中 -"
+    PD32_PRINTER_STATUS_INITIALIZING      "初期化中 -"
+    PD32_PRINTER_STATUS_WARMING_UP        "ウォーミング アップ -"
+    PD32_PRINTER_STATUS_TONER_LOW         "トナー少量 -"
+    PD32_PRINTER_STATUS_NO_TONER          "トナーなし -"
+    PD32_PRINTER_STATUS_PAGE_PUNT         "処理不能 -"
+    PD32_PRINTER_STATUS_USER_INTERVENTION "ユーザー操作が必要 -"
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "メモリ不足 -"
+    PD32_PRINTER_STATUS_DOOR_OPEN         "プリンタ カバー開放 -"
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "プリント サーバ不明 -"
+    PD32_PRINTER_STATUS_POWER_SAVE        "省電力モード -"
 }
 
 STRINGTABLE DISCARDABLE /* Font styles */
@@ -479,7 +478,7 @@ STRINGTABLE DISCARDABLE /* Color names */
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_FONT_SIZE   "Select a font size between %d and %d points."
+    IDS_FONT_SIZE   "フォントサイズを %d ポイントから %d ポイントの間で選択してください。"
     IDS_SAVE_BUTTON "保存(&S)"
     IDS_SAVE_IN     "保存する場所(&I):"
     IDS_SAVE        "保存"

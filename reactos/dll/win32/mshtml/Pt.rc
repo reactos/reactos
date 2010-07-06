@@ -49,8 +49,8 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Instalador Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "O Wine não pôde encontrar o pacote Gecko que é necessário para aplicações com HTML embutido" \
-          "funcionarem corretamente. O Wine pode automaticamente efetuar o download instalá-lo para você.\n\n" \
+    LTEXT "O Wine não pôde encontrar o pacote Gecko que é necessário para aplicações com HTML embutido " \
+          "funcionarem corretamente. O Wine pode automaticamente efetuar o download e instalá-lo para você.\n\n" \
           "Nota: é recomendável usar os pacotes da sua distribuição ao invés disso. \n\
 Veja http://wiki.winehq.org/Gecko para mais detalhes.",
           ID_DWL_STATUS, 10, 10, 240, 60, SS_LEFT
@@ -66,7 +66,7 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Instalador Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "O Wine não conseguiu encontrar o pacote Gecko que é necessário para aplicações com HTML embutido" \
+    LTEXT "O Wine não conseguiu encontrar o pacote Gecko que é necessário para aplicações com HTML embutido " \
           "funcionarem corretamente. O Wine pode automaticamente efetuar o download e instalá-lo por si.\n\n" \
           "Nota: é recomendável usar os pacotes da sua distribuição em vez disso. \n\
 Veja http://wiki.winehq.org/Gecko para mais detalhes.",

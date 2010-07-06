@@ -57,3 +57,4 @@ IDB_CERT_HEADER BITMAP LOADONCALL DISCARDABLE certheader.bmp
 #include "cryptui_Lt.rc"
 #include "cryptui_Nl.rc"
 #include "cryptui_Pt.rc"
+#include "cryptui_Ro.rc"

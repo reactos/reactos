@@ -20,7 +20,7 @@ DelReg=IE.Reg, Settings.Reg
 
 [Classes.Reg]
 HKCR,"CLSID\%CLSID_InternetExplorer%",,,"Internet Explorer(Ver 1.0)"
-HKCR,"CLSID\%CLSID_InternetExplorer%\LocalServer32",,,"iexplore.exe"
+HKCR,"CLSID\%CLSID_InternetExplorer%\LocalServer32",,,"""%16422%\Internet Explorer\iexplore.exe"""
 HKCR,"CLSID\%CLSID_InternetExplorer%\ProgID",,,"InternetExplorer.Application.1"
 HKCR,"CLSID\%CLSID_InternetExplorer%\VersionIndependentProgID",,,"InternetExplorer.Application"
 HKCR,"InternetExplorer.Application",,,"Internet Explorer(Ver 1.0)"

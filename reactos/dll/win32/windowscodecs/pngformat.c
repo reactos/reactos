@@ -1384,7 +1384,7 @@ static HRESULT WINAPI PngEncoder_Commit(IWICBitmapEncoder *iface)
 
     This->committed = TRUE;
 
-    EnterCriticalSection(&This->lock);
+    LeaveCriticalSection(&This->lock);
 
     return S_OK;
 }

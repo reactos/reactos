@@ -213,21 +213,11 @@ static VOID TREEVIEW_UpdateScrollBars(TREEVIEW_INFO *infoPtr);
 static LRESULT TREEVIEW_HScroll(TREEVIEW_INFO *, WPARAM);
 
 /* Random Utilities *****************************************************/
-
-#ifndef NDEBUG
-static inline void
-TREEVIEW_VerifyTree(TREEVIEW_INFO *infoPtr)
-{
-    (void)infoPtr;
-}
-#else
-/* The definition is at the end of the file. */
 static void TREEVIEW_VerifyTree(TREEVIEW_INFO *infoPtr);
-#endif
 
 /* Returns the treeview private data if hwnd is a treeview.
  * Otherwise returns an undefined value. */
-static TREEVIEW_INFO *
+static inline TREEVIEW_INFO *
 TREEVIEW_GetInfoPtr(HWND hwnd)
 {
     return (TREEVIEW_INFO *)GetWindowLongPtrW(hwnd, 0);
@@ -492,7 +482,7 @@ static INT get_notifycode(const TREEVIEW_INFO *infoPtr, INT code)
     return code;
 }
 
-static LRESULT
+static inline BOOL
 TREEVIEW_SendRealNotify(const TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     TRACE("wParam=%ld, lParam=%ld\n", wParam, lParam);
@@ -510,7 +500,7 @@ TREEVIEW_SendSimpleNotify(const TREEVIEW_INFO *infoPtr, UINT code)
     nmhdr.idFrom = GetWindowLongPtrW(hwnd, GWLP_ID);
     nmhdr.code = get_notifycode(infoPtr, code);
 
-    return (BOOL)TREEVIEW_SendRealNotify(infoPtr, nmhdr.idFrom, (LPARAM)&nmhdr);
+    return TREEVIEW_SendRealNotify(infoPtr, nmhdr.idFrom, (LPARAM)&nmhdr);
 }
 
 static VOID
@@ -573,7 +563,7 @@ TREEVIEW_SendTreeviewNotify(const TREEVIEW_INFO *infoPtr, UINT code, UINT action
     nmhdr.ptDrag.x = 0;
     nmhdr.ptDrag.y = 0;
 
-    ret = (BOOL)TREEVIEW_SendRealNotify(infoPtr, nmhdr.hdr.idFrom, (LPARAM)&nmhdr);
+    ret = TREEVIEW_SendRealNotify(infoPtr, nmhdr.hdr.idFrom, (LPARAM)&nmhdr);
     if (!infoPtr->bNtfUnicode)
     {
 	Free(nmhdr.itemOld.pszText);
@@ -603,7 +593,7 @@ TREEVIEW_SendTreeviewDnDNotify(const TREEVIEW_INFO *infoPtr, UINT code,
     nmhdr.ptDrag.x = pt.x;
     nmhdr.ptDrag.y = pt.y;
 
-    return (BOOL)TREEVIEW_SendRealNotify(infoPtr, nmhdr.hdr.idFrom, (LPARAM)&nmhdr);
+    return TREEVIEW_SendRealNotify(infoPtr, nmhdr.hdr.idFrom, (LPARAM)&nmhdr);
 }
 
 
@@ -631,7 +621,7 @@ TREEVIEW_SendCustomDrawNotify(const TREEVIEW_INFO *infoPtr, DWORD dwDrawStage,
     nmcdhdr.clrTextBk = infoPtr->clrBk;
     nmcdhdr.iLevel = 0;
 
-    return (BOOL)TREEVIEW_SendRealNotify(infoPtr, nmcd->hdr.idFrom, (LPARAM)&nmcdhdr);
+    return TREEVIEW_SendRealNotify(infoPtr, nmcd->hdr.idFrom, (LPARAM)&nmcdhdr);
 }
 
 
@@ -648,7 +638,6 @@ TREEVIEW_SendCustomDrawItemNotify(const TREEVIEW_INFO *infoPtr, HDC hdc,
     DWORD dwDrawStage;
     DWORD_PTR dwItemSpec;
     UINT uItemState;
-    INT retval;
 
     dwDrawStage = CDDS_ITEM | uItemDrawState;
     dwItemSpec = (DWORD_PTR)wineItem;
@@ -676,9 +665,7 @@ TREEVIEW_SendCustomDrawItemNotify(const TREEVIEW_INFO *infoPtr, HDC hdc,
 	  nmcd->dwDrawStage, nmcd->hdc, nmcd->dwItemSpec,
 	  nmcd->uItemState, nmcd->lItemlParam);
 
-    retval = TREEVIEW_SendRealNotify(infoPtr, nmcd->hdr.idFrom, (LPARAM)nmcdhdr);
-
-    return retval;
+    return TREEVIEW_SendRealNotify(infoPtr, nmcd->hdr.idFrom, (LPARAM)nmcdhdr);
 }
 
 static BOOL
@@ -695,7 +682,7 @@ TREEVIEW_BeginLabelEditNotify(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *editI
     TREEVIEW_TVItemFromItem(infoPtr, TVIF_HANDLE | TVIF_STATE | TVIF_PARAM | TVIF_TEXT,
                             &tvdi.item, editItem);
 
-    ret = (BOOL)TREEVIEW_SendRealNotify(infoPtr, tvdi.hdr.idFrom, (LPARAM)&tvdi);
+    ret = TREEVIEW_SendRealNotify(infoPtr, tvdi.hdr.idFrom, (LPARAM)&tvdi);
 
     if (!infoPtr->bNtfUnicode)
 	Free(tvdi.item.pszText);
@@ -862,15 +849,9 @@ static INT TREEVIEW_NotifyFormat (TREEVIEW_INFO *infoPtr, HWND hwndFrom, UINT nC
 static VOID
 TREEVIEW_ComputeItemInternalMetrics(const TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item)
 {
-    /* Same effect, different optimisation. */
-#if 0
-    BOOL lar = ((infoPtr->dwStyle & TVS_LINESATROOT)
-		&& (infoPtr->dwStyle & (TVS_HASLINES|TVS_HASBUTTONS)));
-#else
-    BOOL lar = ((infoPtr->dwStyle
-		 & (TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS))
+    /* has TVS_LINESATROOT and (TVS_HASLINES|TVS_HASBUTTONS) */
+    BOOL lar = ((infoPtr->dwStyle & (TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS))
 		> TVS_LINESATROOT);
-#endif
 
     item->linesOffset = infoPtr->uIndent * (lar ? item->iLevel : item->iLevel - 1)
 	- infoPtr->scrollX;
@@ -2865,7 +2846,6 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, const RECT *rc)
 	}
     }
 
-    //
     // This is correct, but is causes and infinite loop of WM_PAINT messages, resulting
     // in continuous painting of the scroll bar in reactos. Comment out until the real
     // bug is found
@@ -2899,7 +2879,7 @@ TREEVIEW_Paint(TREEVIEW_INFO *infoPtr, HDC hdc_ref)
     PAINTSTRUCT ps;
     RECT rc;
 
-    TRACE("\n");
+    TRACE("(%p %p)\n", infoPtr, hdc_ref);
 
     if (hdc_ref)
     {
@@ -3304,7 +3284,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
     RECT scrollRect;
     TREEVIEW_ITEM *nextItem, *tmpItem;
 
-    TRACE("\n");
+    TRACE("(%p, %p, partial=%d, %d\n", infoPtr, wineItem, bExpandPartial, bUser);
 
     if (wineItem->state & TVIS_EXPANDED)
        return TRUE;
@@ -3446,9 +3426,9 @@ TREEVIEW_ExpandMsg(TREEVIEW_INFO *infoPtr, UINT flag, HTREEITEM wineItem)
     if (!TREEVIEW_ValidItem(infoPtr, wineItem))
 	return 0;
 
-    TRACE("For (%s) item:%d, flags %x, state:%d\n",
-	      TREEVIEW_ItemName(wineItem), flag,
-	      TREEVIEW_GetItemIndex(infoPtr, wineItem), wineItem->state);
+    TRACE("For (%s) item:%d, flags 0x%x, state:%d\n",
+	      TREEVIEW_ItemName(wineItem), TREEVIEW_GetItemIndex(infoPtr, wineItem),
+              flag, wineItem->state);
 
     switch (flag & TVE_TOGGLE)
     {
@@ -3466,10 +3446,6 @@ TREEVIEW_ExpandMsg(TREEVIEW_INFO *infoPtr, UINT flag, HTREEITEM wineItem)
     default:
 	return 0;
     }
-
-#if 0
-    TRACE("Exiting, Item %p state is now %d...\n", wineItem, wineItem->state);
-#endif
 }
 
 /* Hit-Testing **********************************************************/
@@ -3861,7 +3837,7 @@ TREEVIEW_EndEditLabelNow(TREEVIEW_INFO *infoPtr, BOOL bCancel)
 	tvdi.item.cchTextMax = 0;
     }
 
-    bCommit = (BOOL)TREEVIEW_SendRealNotify(infoPtr, tvdi.hdr.idFrom, (LPARAM)&tvdi);
+    bCommit = TREEVIEW_SendRealNotify(infoPtr, tvdi.hdr.idFrom, (LPARAM)&tvdi);
 
     if (!bCancel && bCommit)	/* Apply the changes */
     {
@@ -5043,10 +5019,6 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     infoPtr->root->visibleOrder = -1;
 
     infoPtr->hwndNotify = lpcs->hwndParent;
-#if 0
-    infoPtr->bTransparent = ( GetWindowLongW( hwnd, GWL_STYLE) & TBSTYLE_FLAT);
-#endif
-
     infoPtr->hwndToolTip = 0;
 
     infoPtr->bNtfUnicode = IsWindowUnicode (hwnd);
@@ -5823,7 +5795,6 @@ TREEVIEW_Unregister(void)
 
 /* Tree Verification ****************************************************/
 
-#ifdef NDEBUG
 static inline void
 TREEVIEW_VerifyChildren(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *item);
 
@@ -5910,8 +5881,8 @@ TREEVIEW_VerifyRoot(TREEVIEW_INFO *infoPtr)
 static void
 TREEVIEW_VerifyTree(TREEVIEW_INFO *infoPtr)
 {
-    assert(infoPtr != NULL);
+    if (!TRACE_ON(treeview)) return;
 
+    assert(infoPtr != NULL);
     TREEVIEW_VerifyRoot(infoPtr);
 }
-#endif

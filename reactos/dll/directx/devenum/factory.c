@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "devenum_private.h"
@@ -40,7 +40,7 @@ static HRESULT WINAPI DEVENUM_IClassFactory_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
 	IsEqualGUID(riid, &IID_IClassFactory))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	IClassFactory_AddRef(iface);
 	return S_OK;
     }
@@ -49,7 +49,7 @@ static HRESULT WINAPI DEVENUM_IClassFactory_QueryInterface(
         return IClassFactory_CreateInstance(iface, NULL, riid, ppvObj);
     }
 
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+    FIXME("- no interface IID: %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -126,7 +126,7 @@ static HRESULT WINAPI DEVENUM_IClassFactory_LockServer(
 /**********************************************************************
  * IClassFactory_Vtbl
  */
-static IClassFactoryVtbl IClassFactory_Vtbl =
+static const IClassFactoryVtbl IClassFactory_Vtbl =
 {
     DEVENUM_IClassFactory_QueryInterface,
     DEVENUM_IClassFactory_AddRef,

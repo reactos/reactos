@@ -36,6 +36,7 @@ REGINST REGINST jscript.inf
 #include "jscript_Ko.rc"
 #include "jscript_Lt.rc"
 #include "jscript_Nl.rc"
+#include "jscript_No.rc"
 #include "jscript_Pt.rc"
 #include "jscript_Ro.rc"
 #include "jscript_Ru.rc"

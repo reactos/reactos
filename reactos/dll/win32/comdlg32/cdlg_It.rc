@@ -2,6 +2,7 @@
  * Copyright 1996 Tristan Tarrant
  * Copyright 2004 Ivan Leo Puoti
  * Copyright 2006 Antonio Codazzi
+ * Copyright 2010 Luca Bennati
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +22,9 @@
 #include "cdlg.h"
 #include "filedlgbrowser.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
@@ -38,14 +42,14 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Percorso:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "File di &Tipo:", 1089, 6, 104, 90, 9
+ LTEXT "&Tipo di file:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Unita':", 1091, 110, 104, 92, 9
+ LTEXT "&Unit√†:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Apri", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annulla", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Aiuto", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Solo &Lettura", 1040, 208, 68, 52, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sola &Lettura", 1040, 208, 68, 52, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -60,13 +64,13 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Percorso:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "Files di &Tipo:", 1089, 6, 104, 90, 9
+ LTEXT "&Tipo di file:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Unita':", 1091, 110, 104, 92, 9
+ LTEXT "&Unit√†:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Salva come", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annulla", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Aiuto", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Sola lettura", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
@@ -87,7 +91,7 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Configura", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&Da:", 1090, 60, 80, 30, 9
  LTEXT "&A:", 1091, 120, 80, 30, 9
- LTEXT "&Qualita' di Stampa:", 1092, 6, 100, 76, 9
+ LTEXT "&Qualit√† di Stampa:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  CHECKBOX "Stampa su Fi&le", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  CHECKBOX "Condensato", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
@@ -122,10 +126,10 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Font"
+CAPTION "Carattere"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "&Font:",1088 ,6,3,40,9
+    LTEXT           "&Carattere:",1088 ,6,3,40,9
     COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
     LTEXT           "St&ile:",1089 ,108,3,42,9
@@ -236,7 +240,7 @@ FONT 8, "MS Shell Dlg"
 
     GROUPBOX        "Stampante",        grp4,   8,  4, 272,84, WS_GROUP
     CONTROL         "Stampa su fi&le", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
-    PUSHBUTTON      "&Propriet‡",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Propriet√†",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nome:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stato:",        stc8,  16, 36,  36,10, SS_NOPREFIX
@@ -275,7 +279,7 @@ BEGIN
 /*    PUSHBUTTON      "Rete...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Stampante",        grp4,   8,  4, 272,84, WS_GROUP
-    PUSHBUTTON      "&Propriet‡",    psh2, 212, 17,  60,14, WS_GROUP
+    PUSHBUTTON      "&Propriet√†",    psh2, 212, 17,  60,14, WS_GROUP
     LTEXT           "&Nome:",         stc6,  16, 20,  36,8
     COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
     LTEXT           "Stato:",        stc8,  16, 36,  36,10, SS_NOPREFIX
@@ -361,7 +365,7 @@ STRINGTABLE DISCARDABLE
     IDS_FAVORITES           "Preferiti"
     IDS_PATH                "Percorso di Sistema"
     IDS_DESKTOP             "Desktop"
-    IDS_FONTS               "Font"
+    IDS_FONTS               "Carattere"
     IDS_MYCOMPUTER          "Risorse del Computer"
 }
 
@@ -372,9 +376,9 @@ STRINGTABLE DISCARDABLE
     IDS_FILENOTFOUND        "File non trovato"
     IDS_VERIFYFILE          "Controllare che il nome del file fornito sia corretto"
     IDS_CREATEFILE          "Il file non esiste\nCreare il file"
-    IDS_OVERWRITEFILE       "Il file esiste gi‡.\nSovrascriverlo?"
+    IDS_OVERWRITEFILE       "Il file esiste gi√†.\nSovrascriverlo?"
     IDS_INVALID_FILENAME_TITLE "Caratteri invalidi nel percorso"
-    IDS_INVALID_FILENAME    "Il nome di un file non puÚ contenere i seguenrti caratteri:\n                          / : < > |"
+    IDS_INVALID_FILENAME    "Il nome di un file non pu√≤ contenere i seguenrti caratteri:\n                          / : < > |"
     IDS_PATHNOTEXISTING     "Il percorso specificato non esiste"
     IDS_FILENOTEXISTING     "Il file non esiste"
 }
@@ -392,25 +396,19 @@ STRINGTABLE DISCARDABLE
 {
     PD32_PRINT_TITLE       "Stampa"
 
-    PD32_VALUE_UREADABLE                  "Entry non leggibile"
-    PD32_INVALID_PAGE_RANGE "Questo valore non si trova all'interno della pagina.\n\
-Usare un valore compreso tra %d e %d."
-    PD32_FROM_NOT_ABOVE_TO                "La voce 'da' non puÚ eccedere la voce 'a'."
-    PD32_MARGINS_OVERLAP                  "I margini si sovrappongono o si trovano oltre \
-il limite della carta.\nPer favore ridefinire i margini."
-    PD32_NR_OF_COPIES_EMPTY               "Il valore del numero 'Numero di copie' \
-non puÚ essere vuoto."
-    PD32_TOO_LARGE_COPIES                 "Questo alto numero di copie non Ë \
-supportato dalla stampante.\nInserire un valore compreso tra 1 e %d"
-    PD32_PRINT_ERROR                      "Si Ë verificato un errore della stampante."
-    PD32_NO_DEFAULT_PRINTER               "Non Ë stata impostata una stampante predefinita."
+    PD32_VALUE_UREADABLE                  "Elemento non leggibile"
+    PD32_INVALID_PAGE_RANGE "Questo valore non si trova all'interno della pagina.\n\Usare un valore compreso tra %d e %d."
+    PD32_FROM_NOT_ABOVE_TO                "La voce 'da' non pu√≤ eccedere la voce 'a'."
+    PD32_MARGINS_OVERLAP                  "I margini si sovrappongono o si trovano oltre il limite della carta.\nPer favore ridefinire i margini."
+    PD32_NR_OF_COPIES_EMPTY               "Il valore del numero 'Numero di copie' non pu√≤ essere vuoto."
+    PD32_TOO_LARGE_COPIES                 "Questo alto numero di copie non √® supportato dalla stampante.\nInserire un valore compreso tra 1 e %d"
+    PD32_PRINT_ERROR                      "Si √® verificato un errore della stampante."
+    PD32_NO_DEFAULT_PRINTER               "Non √® stata impostata una stampante predefinita."
     PD32_CANT_FIND_PRINTER                "Stampante non trovata."
     PD32_OUT_OF_MEMORY                    "Memoria esaurita."
-    PD32_GENERIC_ERROR                    "Si Ë verificato un errore."
+    PD32_GENERIC_ERROR                    "Si √® verificato un errore."
     PD32_DRIVER_UNKNOWN                   "Driver della stampante sconosciuto."
-    PD32_NO_DEVICES                       "Prima di svolgere compiti relativi alla stampante \
-come impostare una pagina o stampare un documento, bisogna installare una stampante. \
-Si consiglia di installare la stampante e poi ritentare."
+    PD32_NO_DEVICES                       "Prima di svolgere compiti relativi alla stampante come impostare una pagina o stampare un documento, bisogna installare una stampante. Si consiglia di installare la stampante e poi ritentare."
 
     PD32_DEFAULT_PRINTER                  "Stampante predefinita; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "Ci sono %d documenti nella coda di stampa"
@@ -425,25 +423,33 @@ Si consiglia di installare la stampante e poi ritentare."
     PD32_PRINTER_STATUS_PAPER_JAM         "Carta inceppata; "
     PD32_PRINTER_STATUS_PAPER_OUT         "Carta esaurita; "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Alimentazione manuale della carta; "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Si Ë verificato un problema con la carta; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Si √® verificato un problema con la carta; "
     PD32_PRINTER_STATUS_OFFLINE           "Stampante offline; "
     PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Attivo; "
     PD32_PRINTER_STATUS_BUSY              "Stampante occupata; "
     PD32_PRINTER_STATUS_PRINTING          "Stampa in corso; "
-    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Il vassoio di uscita Ë pieno; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Il vassoio di uscita √® pieno; "
     PD32_PRINTER_STATUS_NOT_AVAILABLE     "Non disponibile; "
     PD32_PRINTER_STATUS_WAITING           "Attesa; "
     PD32_PRINTER_STATUS_PROCESSING        "Elaborazione; "
-    PD32_PRINTER_STATUS_INITIALIZING      "Inizializazione; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inizializzazione; "
     PD32_PRINTER_STATUS_WARMING_UP        "La stampante si sta riscaldando; "
-    PD32_PRINTER_STATUS_TONER_LOW         "Il livello del toner Ë basso; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Il livello del toner √® basso; "
     PD32_PRINTER_STATUS_NO_TONER          "Manca il toner; "
     PD32_PRINTER_STATUS_PAGE_PUNT         "Punt della pagina; "
     PD32_PRINTER_STATUS_USER_INTERVENTION "Interrotto dall'utente; "
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Memoria esaurita; "
-    PD32_PRINTER_STATUS_DOOR_OPEN         "La porta stampante Ë aperta; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "La porta stampante √® aperta; "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Server di stampa sconosciuto; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Modalit‡ risparmio energetico; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Modalit√® risparmio energetico; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Regolare"
+    IDS_FONT_BOLD          "Grassetto"
+    IDS_FONT_ITALIC        "Corsivo"
+    IDS_FONT_BOLD_ITALIC   "Grassetto Corsivo"
 }
 
 STRINGTABLE DISCARDABLE /* Color names */
@@ -453,8 +459,8 @@ STRINGTABLE DISCARDABLE /* Color names */
     IDS_COLOR_GREEN     "Verde"
     IDS_COLOR_OLIVE     "Verde oliva"
     IDS_COLOR_NAVY      "Blu oltremare"
-    IDS_COLOR_PURPLE    "Propora"
-    IDS_COLOR_TEAL      "Teal"
+    IDS_COLOR_PURPLE    "Porpora"
+    IDS_COLOR_TEAL      "T√® blu"
     IDS_COLOR_GRAY      "Grigio"
     IDS_COLOR_SILVER    "Argento"
     IDS_COLOR_RED       "Rosso"
