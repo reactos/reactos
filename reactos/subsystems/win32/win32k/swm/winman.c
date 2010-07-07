@@ -614,14 +614,108 @@ SwmSetForeground(HWND hWnd)
 
 VOID
 NTAPI
-SwmCopyBits(const RECT *WindowRect, const RECT *OldRect)
+SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
 {
+    RECTL rcBounds;
+    PDC pDC;
+    PLIST_ENTRY Current;
+    struct region *TempRegion, *ParentRegion, *WinRegion = NULL;
+    rectangle_t rcScreen, rcOldWindow;
+    PSWM_WINDOW Window;
+
     /* Lazily create a global screen DC */
     if (!SwmDc) SwmCreateScreenDc();
 
+    /* Set clipping to prevent touching higher-level windows */
+    pDC = DC_Lock(SwmDc);
+
+    /* Check if we have higher-level windows */
+    if (SwmWin->Entry.Blink != &SwmWindows)
+    {
+        /* Create a whole screen region */
+        rcScreen.left = 0;
+        rcScreen.top = 0;
+        rcScreen.right = pDC->rcVport.right;
+        rcScreen.bottom = pDC->rcVport.bottom;
+        set_region_rect(pDC->Clipping, &rcScreen);
+
+        ParentRegion = create_empty_region();
+
+        /* Compile a total region clipped by parent windows */
+        Current = SwmWin->Entry.Blink;
+        while(Current != &SwmWindows)
+        {
+            Window = CONTAINING_RECORD(Current, SWM_WINDOW, Entry);
+
+            /* Skip hidden windows */
+            if (Window->Hidden)
+            {
+                /* Advance to the next window */
+                Current = Current->Blink;
+                continue;
+            }
+            DPRINT("hwnd: %x\n", Window->hwnd);
+
+            /* Calculate window's region */
+            TempRegion = create_empty_region();
+            set_region_rect(TempRegion, &Window->Window);
+
+            /* Union it with parent if it's not empty and free temp region */
+            if (!is_region_empty(TempRegion))
+                union_region(ParentRegion, ParentRegion, TempRegion);
+            free_region(TempRegion);
+
+            /* Advance to the previous window */
+            Current = Current->Blink;
+        }
+
+        /* Remove parts clipped by parents from the window region */
+        if (!is_region_empty(ParentRegion))
+            subtract_region(pDC->Clipping, pDC->Clipping, ParentRegion);
+
+        /* Set DC clipping */
+        RosGdiUpdateClipping(pDC);
+
+        /* Get the part which was previously hidden by parent area */
+        WinRegion = create_empty_region();
+        rcOldWindow.bottom = OldRect->bottom;
+        rcOldWindow.left = OldRect->left;
+        rcOldWindow.top = OldRect->top;
+        rcOldWindow.right = OldRect->right;
+        set_region_rect(WinRegion, &rcOldWindow);
+
+        intersect_region(WinRegion, WinRegion, ParentRegion);
+        if (!is_region_empty(WinRegion))
+        {
+            /* Offset it to the new position */
+            offset_region(WinRegion,
+                SwmWin->Window.left - OldRect->left,
+                SwmWin->Window.top - OldRect->top);
+
+            /* Paint it */
+            SwmPaintRegion(WinRegion);
+        }
+
+        free_region(WinRegion);
+        free_region(ParentRegion);
+    }
+    else
+    {
+        /* Simple case, use whole viewport as a clipping rect */
+        RECTL_vSetRect(&rcBounds,
+                       0,
+                       0,
+                       pDC->rcVport.right,
+                       pDC->rcVport.bottom);
+        IntEngDeleteClipRegion(pDC->CombinedClip);
+        pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
+    }
+
+    DC_Unlock(pDC);
+
     /* Copy bits */
-    RosGdiBitBlt(SwmDc, WindowRect->left, WindowRect->top, WindowRect->right - WindowRect->left,
-        WindowRect->bottom - WindowRect->top, SwmDc, OldRect->left, OldRect->top, SRCCOPY);
+    RosGdiBitBlt(SwmDc, SwmWin->Window.left, SwmWin->Window.top, SwmWin->Window.right - SwmWin->Window.left,
+        SwmWin->Window.bottom - SwmWin->Window.top, SwmDc, OldRect->left, OldRect->top, SRCCOPY);
 }
 
 VOID
@@ -711,12 +805,7 @@ SwmPosChanged(HWND hWnd, const RECT *WindowRect, const RECT *OldRect, HWND hWndA
     SwmClipAllWindows();
 
     /* Copy bitmap bits if it's a move */
-    if (IsMove)
-    {
-        /* FIXME: The window MUST be foreground, otherwise bits will be
-                  copied incorrectly */
-        SwmCopyBits(WindowRect, OldRect);
-    }
+    if (IsMove) SwmCopyBits(SwmWin, OldRect);
 
     /* Paint area changed after moving or resizing */
     if (Width < OldWidth ||
