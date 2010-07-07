@@ -1266,9 +1266,9 @@
 @ cdecl memchr(ptr long long)
 @ cdecl memcmp(ptr ptr long)
 @ cdecl memcpy(ptr ptr long)
-# @ cdecl memcpy_s(ptr long ptr long) memmove_s
+@ cdecl memcpy_s(ptr long ptr long) memmove_s
 @ cdecl memmove(ptr ptr long)
-# @ cdecl memmove_s(ptr long ptr long)
+@ cdecl memmove_s(ptr long ptr long)
 @ cdecl memset(ptr long long)
 @ cdecl mktime(ptr)
 @ cdecl modf(double ptr)
@@ -1285,7 +1285,7 @@
 # stub qsort_s
 @ cdecl raise(long)
 @ cdecl rand()
-# @ cdecl rand_s(ptr)
+@ cdecl rand_s(ptr)
 @ cdecl realloc(ptr long)
 @ cdecl remove(str)
 @ cdecl rename(str str)
@@ -1405,3 +1405,6 @@
 @ varargs wscanf(wstr) 
 # @ varargs wscanf_s(wstr)
 
+# Functions not exported in native dll:
+@ cdecl _get_invalid_parameter_handler()
+@ cdecl _set_invalid_parameter_handler(ptr)
