@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/win32/newdev/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for newdev
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -11,7 +11,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 IDD_WELCOMEPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Ласкаво просимо",IDC_WELCOMETITLE,120,8,195,24
@@ -19,7 +19,7 @@ BEGIN
                     IDC_STATIC,120,21,195,16
     LTEXT           "Натисніть ""Далі"" для продовження.",IDC_STATIC,120,169,195,17
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,134,36,164,11
-    LTEXT           "ПОПЕРЕДЖЕННЯ! УСТАНОВКА СПЕЦІАЛЬНОГО ПРИСТРОЮ МОЖЕ ЗАМОРОЗИТИ ВАШ КОМП'ЮТЕР АБО ЗРОБИТИ ЙОГО НЕЗДАТНИМ ДО ЗАВАНТАЖЕННЯ!",IDC_STATIC,120,59,195,16
+    LTEXT           "ПОПЕРЕДЖЕННЯ! ВСТАНОВЛЕННЯ ПРИСТРОЮ МОЖЕ ЗАМОРОЗИТИ ВАШ КОМП'ЮТЕР АБО ЗРОБИТИ ЙОГО НЕЗДАТНИМ ДО ЗАВАНТАЖЕННЯ!",IDC_STATIC,120,59,195,24
     CONTROL         "Встановити драйвер автоматично",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,120,112,178,13
     CONTROL         "Встановити драйвер з вказаного місця",IDC_RADIO_MANUAL,
@@ -29,13 +29,13 @@ END
 IDD_NODRIVER DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка не вдалася",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Встановлення не вдалося",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "Пристрій не встановлено, тому що драйвер не знайдено.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Натисніть ""Назад"", якщо у Вас є диск драйвера або знаєте шлях до драйвера.",
+    LTEXT           "Натисніть ""Назад"", якщо у Вас є диск з драйвером або Ви знаєте шлях до драйвера.",
                     IDC_STATIC,120,98,181,24
     CONTROL         "Більше не показувати цей діалог",IDC_DONOTSHOWDLG,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,120,170,180,11
@@ -44,10 +44,10 @@ END
 IDD_INSTALLFAILED DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка не вдалася",IDC_FINISHTITLE,120,8,195,24
+    LTEXT           "Встановлення не вдалося",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "Пристрій не встановлено тому що сталася несподівана помилка.",
                     IDC_STATIC,120,40,195,19
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,134,55,164,11
@@ -55,7 +55,7 @@ END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Пошук по цих шляхах",IDC_RADIO_SEARCHHERE,"Button",
@@ -73,7 +73,7 @@ END
 
 IDD_SEARCHDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,51,20,169,16
@@ -81,7 +81,7 @@ END
 
 IDD_INSTALLDRV DIALOGEX DISCARDABLE  0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "НЕВІДОМИЙ ПРИСТРІЙ",IDC_DEVICE,51,20,169,16
@@ -90,11 +90,11 @@ END
 IDD_NEEDREBOOT DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Ви маєте перезапустити комп’ютер, щоб закінчити установку:",
+    LTEXT           "Встановлення завершене",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Ви маєте перезапустити комп’ютер, щоб закінчити встановлення:",
                     IDC_STATIC,120,32,195,19
     LTEXT           "Натисніть ""Завершити"" для виходу з майстра.",IDC_STATIC,120,174,
                     179,11
@@ -104,11 +104,11 @@ END
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU
-CAPTION "Установка пристрою"
+CAPTION "Встановлення пристрою"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Установка завершена",IDC_FINISHTITLE,120,8,195,11
-    LTEXT           "Майстер закінчив установку драйвера для:",
+    LTEXT           "Встановлення завершене",IDC_FINISHTITLE,120,8,195,11
+    LTEXT           "Майстер закінчив встановлення драйвера для:",
                     IDC_STATIC,120,32,195,19
     LTEXT           "Натисніть ""Завершити"" для виходу з майстра.",IDC_STATIC,120,174,
                     179,11

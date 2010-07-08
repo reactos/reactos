@@ -264,7 +264,7 @@ BEGIN
     IDS_SHORT_MAGNIFY    "Екранна лупа.lnk"
     IDS_SHORT_MPLAY32    "Мультимедійний плеєр.lnk"
     IDS_SHORT_MSCONFIG   "Конфігурація системи.lnk"
-    IDS_SHORT_NOTEPAD    "Notepad.lnk"
+    IDS_SHORT_NOTEPAD    "Блокнот.lnk"
     IDS_SHORT_RDESKTOP   "Віддалене керування робочим столом.lnk"
     IDS_SHORT_REGEDIT    "Редактор реєстру.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"

@@ -2,6 +2,7 @@
  * Regedit (Ukrainian resources)
  *
  * Copyright 2006,2007 Artem Reznikov
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -79,8 +80,8 @@ BEGIN
             MENUITEM "&Рядкове значення",             ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",            ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",               ID_EDIT_NEW_DWORDVALUE
-			MENUITEM "&Мультирядкове значення",			ID_EDIT_NEW_MULTISTRINGVALUE
-			MENUITEM "Роз&ширюване строкове значення",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+			MENUITEM "&Багаторядкове значення",			ID_EDIT_NEW_MULTISTRINGVALUE
+			MENUITEM "Роз&ширюване рядкове значення",	ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM SEPARATOR
         MENUITEM "Дозв&оли...",			ID_EDIT_PERMISSIONS
@@ -112,7 +113,7 @@ BEGIN
     BEGIN
         MENUITEM "&Зміст\tF1",                  ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Про редактор реєстра",       ID_HELP_ABOUT
+        MENUITEM "&Про редактор реєстру",       ID_HELP_ABOUT
     END
 END
 
@@ -136,7 +137,7 @@ BEGIN
             MENUITEM "&Двійкове значення",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",             ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширене рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Розширюване рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
   END
   POPUP ""
@@ -144,13 +145,13 @@ BEGIN
         MENUITEM "Розгорнути/Згорнути",             ID_TREE_EXPANDBRANCH
         POPUP "&Створити"
         BEGIN
-            MENUITEM "Кл&юч",                       ID_EDIT_NEW_KEY
+            MENUITEM "Роз&діл",                       ID_EDIT_NEW_KEY
             MENUITEM SEPARATOR
             MENUITEM "&Рядкове значення",           ID_EDIT_NEW_STRINGVALUE
             MENUITEM "&Двійкове значення",          ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD значення",             ID_EDIT_NEW_DWORDVALUE
             MENUITEM "&Багаторядкове значення",         ID_EDIT_NEW_MULTISTRINGVALUE
-            MENUITEM "&Розширене рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
+            MENUITEM "&Розширюване рядкове значення",    ID_EDIT_NEW_EXPANDABLESTRINGVALUE
         END
         MENUITEM "З&найти",                         ID_EDIT_FIND
         MENUITEM SEPARATOR
@@ -186,7 +187,7 @@ END
 IDD_EDIT_MULTI_STRING DIALOGEX  32, 24, 252, 174
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Редагування мультирядкового значення"
+CAPTION "Редагування багаторядкового значення"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Назва значення:",IDC_STATIC,6,6,134,8
@@ -242,7 +243,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_APP_TITLE           "Редактор реєстра"
+    IDS_APP_TITLE           "Редактор реєстру"
     IDC_REGEDIT             "REGEDIT"
     IDC_REGEDIT_FRAME       "REGEDIT_FRAME"
 END
@@ -264,7 +265,7 @@ BEGIN
     ID_EDIT_NEW_STRINGVALUE "Додає нове рядкове значення"
     ID_EDIT_NEW_BINARYVALUE "Додає нове двійкове значення"
     ID_EDIT_NEW_DWORDVALUE  "Додає нове DWORD-значення"
-    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстра"
+    ID_REGISTRY_IMPORTREGISTRYFILE "Імпортує текстовий файл до реєстру"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Експортує весь реєстр або його частину в текстовий файл"
     ID_REGISTRY_CONNECTNETWORKREGISTRY
@@ -278,7 +279,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    ID_REGISTRY_EXIT        "Виходить з редактора реєстра"
+    ID_REGISTRY_EXIT        "Виходить з редактора реєстру"
     ID_FAVOURITES_ADDTOFAVOURITES "Додає розділ до обраного"
     ID_FAVOURITES_REMOVEFAVOURITE "Видаляє розділ з обраного"
     ID_VIEW_STATUSBAR       "Відображує або ховає рядок стану"

@@ -534,7 +534,7 @@ STRING_VERSION_HELP4, "\n Ця програма є вiльним ПЗ; ви можете перепоширювати її 
  (на ваш вибiр) будь-якої новiшої версiї.\n"
 
 STRING_VERSION_HELP5, "\nВiдсилайте звiти про помилки на <ros-dev@reactos.org>.\n\
-Оновлення достпнi на: http://www.reactos.org"
+Оновлення доступнi на: http://www.reactos.org"
 
 STRING_VERSION_HELP6, "\nFreeDOS-версiя написана:\n"
 
