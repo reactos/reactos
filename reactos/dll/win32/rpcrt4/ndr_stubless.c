@@ -173,7 +173,7 @@ static PFORMAT_STRING client_get_handle(
                 if (pDesc->flag_and_size & HANDLE_PARAM_IS_VIA_PTR)
                     pArg = *(void **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 else
-                    pArg = (void *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
+                    pArg = ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 memcpy(&pObject, pArg, pDesc->flag_and_size & 0xf);
                 pGenPair = &pStubMsg->StubDesc->aGenericBindingRoutinePairs[pDesc->binding_routine_pair_index];
                 *phBinding = pGenPair->pfnBind(pObject);
@@ -256,7 +256,7 @@ static void client_free_handle(
                 if (pDesc->flag_and_size & HANDLE_PARAM_IS_VIA_PTR)
                     pArg = *(void **)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 else
-                    pArg = (void *)ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
+                    pArg = ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 memcpy(&pObject, pArg, pDesc->flag_and_size & 0xf);
                 pGenPair = &pStubMsg->StubDesc->aGenericBindingRoutinePairs[pDesc->binding_routine_pair_index];
                 pGenPair->pfnUnbind(pObject, hBinding);
@@ -579,7 +579,7 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
     void * This = NULL;
     PFORMAT_STRING pHandleFormat;
     /* correlation cache */
-    unsigned long NdrCorrCache[256];
+    ULONG_PTR NdrCorrCache[256];
 
     TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
 
@@ -686,7 +686,8 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
      * 4. PROXY_SENDRECEIVE - send/receive buffer
      * 5. PROXY_UNMARHSAL - unmarshal [out] params from buffer
      */
-    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
+    if ((pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT) ||
+        (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_HAS_COMM_OR_FAULT))
     {
         __TRY
         {
@@ -696,13 +697,56 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
                 switch (phase)
                 {
                 case PROXY_GETBUFFER:
-                    /* allocate the buffer */
-                    NdrProxyGetBuffer(This, &stubMsg);
+                    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
+                    {
+                        /* allocate the buffer */
+                        NdrProxyGetBuffer(This, &stubMsg);
+                    }
+                    else
+                    {
+                        /* allocate the buffer */
+                        if (Oif_flags.HasPipes)
+                            /* NdrGetPipeBuffer(...) */
+                            FIXME("pipes not supported yet\n");
+                        else
+                        {
+                            if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                                NdrNsGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
+#else
+                                FIXME("using auto handle - call NdrNsGetBuffer when it gets implemented\n");
+#endif
+                            else
+                                NdrGetBuffer(&stubMsg, stubMsg.BufferLength, hBinding);
+                        }
+                    }
                     break;
                 case PROXY_SENDRECEIVE:
-                    /* send the [in] params and receive the [out] and [retval]
-                     * params */
-                    NdrProxySendReceive(This, &stubMsg);
+                    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
+                    {
+                        /* send the [in] params and receive the [out] and [retval]
+                         * params */
+                        NdrProxySendReceive(This, &stubMsg);
+                    }
+                    else
+                    {
+                        /* send the [in] params and receive the [out] and [retval]
+                         * params */
+                        if (Oif_flags.HasPipes)
+                            /* NdrPipesSendReceive(...) */
+                            FIXME("pipes not supported yet\n");
+                        else
+                        {
+                            if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                                NdrNsSendReceive(&stubMsg, stubMsg.Buffer, pStubDesc->IMPLICIT_HANDLE_INFO.pAutoHandle);
+#else
+                                FIXME("using auto handle - call NdrNsSendReceive when it gets implemented\n");
+#endif
+                            else
+                                NdrSendReceive(&stubMsg, stubMsg.Buffer);
+                        }
+                    }
 
                     /* convert strings, floating point values and endianess into our
                      * preferred format */
@@ -729,7 +773,33 @@ LONG_PTR WINAPIV NdrClientCall2(PMIDL_STUB_DESC pStubDesc, PFORMAT_STRING pForma
         }
         __EXCEPT_ALL
         {
-            RetVal = NdrProxyErrorHandler(GetExceptionCode());
+            if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
+                RetVal = NdrProxyErrorHandler(GetExceptionCode());
+            else
+            {
+                const COMM_FAULT_OFFSETS *comm_fault_offsets = &pStubDesc->CommFaultOffsets[procedure_number];
+                ULONG *comm_status;
+                ULONG *fault_status;
+
+                TRACE("comm_fault_offsets = {0x%hx, 0x%hx}\n", comm_fault_offsets->CommOffset, comm_fault_offsets->FaultOffset);
+
+                if (comm_fault_offsets->CommOffset == -1)
+                    comm_status = (ULONG *)&RetVal;
+                else if (comm_fault_offsets->CommOffset >= 0)
+                    comm_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->CommOffset);
+                else
+                    comm_status = NULL;
+
+                if (comm_fault_offsets->FaultOffset == -1)
+                    fault_status = (ULONG *)&RetVal;
+                else if (comm_fault_offsets->FaultOffset >= 0)
+                    fault_status = *(ULONG **)ARG_FROM_OFFSET(stubMsg.StackTop, comm_fault_offsets->CommOffset);
+                else
+                    fault_status = NULL;
+
+                NdrMapCommAndFaultStatus(&stubMsg, comm_status, fault_status,
+                                         GetExceptionCode());
+            }
         }
         __ENDTRY
     }
@@ -867,9 +937,14 @@ __declspec(naked) LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigne
 LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned int stack_size);
 __ASM_GLOBAL_FUNC(call_server_func,
     "pushl %ebp\n\t"
-    "movl %esp, %ebp\n\t"
+    __ASM_CFI(".cfi_adjust_cfa_offset 4\n\t")
+    __ASM_CFI(".cfi_rel_offset %ebp,0\n\t")
+    "movl %esp,%ebp\n\t"
+    __ASM_CFI(".cfi_def_cfa_register %ebp\n\t")
     "pushl %edi\n\t"            /* Save registers */
+    __ASM_CFI(".cfi_rel_offset %edi,-4\n\t")
     "pushl %esi\n\t"
+    __ASM_CFI(".cfi_rel_offset %esi,-8\n\t")
     "movl 16(%ebp), %eax\n\t"   /* Get stack size */
     "subl %eax, %esp\n\t"       /* Make room in stack for arguments */
     "andl $~15, %esp\n\t"	/* Make sure stack has 16-byte alignment for Mac OS X */
@@ -882,9 +957,13 @@ __ASM_GLOBAL_FUNC(call_server_func,
     "call *8(%ebp)\n\t"         /* Call function */
     "leal -8(%ebp), %esp\n\t"   /* Restore stack */
     "popl %esi\n\t"             /* Restore registers */
+    __ASM_CFI(".cfi_same_value %esi\n\t")
     "popl %edi\n\t"
+    __ASM_CFI(".cfi_same_value %edi\n\t")
     "popl %ebp\n\t"
-    "ret\n" )
+    __ASM_CFI(".cfi_def_cfa %esp,4\n\t")
+    __ASM_CFI(".cfi_same_value %ebp\n\t")
+    "ret" )
 #else
 #warning call_server_func not implemented for your architecture
 LONG_PTR __cdecl call_server_func(SERVER_ROUTINE func, unsigned char * args, unsigned short stack_size)
@@ -918,6 +997,18 @@ static DWORD calc_arg_size(MIDL_STUB_MESSAGE *pStubMsg, PFORMAT_STRING pFormat)
         TRACE("conformance = %ld\n", pStubMsg->MaxCount);
         pFormat = ComputeVariance(pStubMsg, NULL, pFormat, pStubMsg->MaxCount);
         size = ComplexStructSize(pStubMsg, pFormat);
+        size *= pStubMsg->MaxCount;
+        break;
+    case RPC_FC_C_CSTRING:
+    case RPC_FC_C_WSTRING:
+        if (*pFormat == RPC_FC_C_CSTRING)
+            size = sizeof(CHAR);
+        else
+            size = sizeof(WCHAR);
+        if (pFormat[1] == RPC_FC_STRING_SIZED)
+            ComputeConformance(pStubMsg, NULL, pFormat + 2, 0);
+        else
+            pStubMsg->MaxCount = 0;
         size *= pStubMsg->MaxCount;
         break;
     default:
@@ -1049,7 +1140,8 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                         !pParam->param_attributes.IsByValue &&
                         !pParam->param_attributes.ServerAllocSize)
                     {
-                        pStubMsg->pfnFree(*(void **)pArg);
+                        if (*pTypeFormat != RPC_FC_BIND_CONTEXT)
+                            pStubMsg->pfnFree(*(void **)pArg);
                     }
 
                     if (pParam->param_attributes.ServerAllocSize)
@@ -1061,12 +1153,21 @@ static LONG_PTR *stub_do_args(MIDL_STUB_MESSAGE *pStubMsg,
                              !pParam->param_attributes.ServerAllocSize &&
                              !pParam->param_attributes.IsByValue)
                     {
-                        DWORD size = calc_arg_size(pStubMsg, pTypeFormat);
-
-                        if(size)
+                        if (*pTypeFormat == RPC_FC_BIND_CONTEXT)
                         {
-                            *(void **)pArg = NdrAllocate(pStubMsg, size);
-                            memset(*(void **)pArg, 0, size);
+                            NDR_SCONTEXT ctxt = NdrContextHandleInitialize(
+                                pStubMsg, pTypeFormat);
+                            *(void **)pArg = NDRSContextValue(ctxt);
+                        }
+                        else
+                        {
+                            DWORD size = calc_arg_size(pStubMsg, pTypeFormat);
+
+                            if(size)
+                            {
+                                *(void **)pArg = NdrAllocate(pStubMsg, size);
+                                memset(*(void **)pArg, 0, size);
+                            }
                         }
                     }
                     break;
@@ -1290,10 +1391,6 @@ LONG WINAPI NdrStubCall2(
 
     TRACE("NDR Version: 0x%x\n", pStubDesc->Version);
 
-    /* create the full pointer translation tables, if requested */
-    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
-        stubMsg.FullPtrXlatTables = NdrFullPointerXlatInit(0,XLAT_SERVER);
-
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
     {
         const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
@@ -1367,6 +1464,10 @@ LONG WINAPI NdrStubCall2(
         NdrStubInitialize(pRpcMsg, &stubMsg, pStubDesc, pChannel);
     else
         NdrServerInitializeNew(pRpcMsg, &stubMsg, pStubDesc);
+
+    /* create the full pointer translation tables, if requested */
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
+        stubMsg.FullPtrXlatTables = NdrFullPointerXlatInit(0,XLAT_SERVER);
 
     /* store the RPC flags away */
     if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
@@ -1521,4 +1622,340 @@ void WINAPI NdrServerCall2(PRPC_MESSAGE pRpcMsg)
 {
     DWORD dwPhase;
     NdrStubCall2(NULL, NULL, pRpcMsg, &dwPhase);
+}
+
+struct async_call_data
+{
+    MIDL_STUB_MESSAGE *pStubMsg;
+    const NDR_PROC_HEADER *pProcHeader;
+    PFORMAT_STRING pHandleFormat;
+    PFORMAT_STRING pParamFormat;
+    RPC_BINDING_HANDLE hBinding;
+    /* size of stack */
+    unsigned short stack_size;
+    /* number of parameters. optional for client to give it to us */
+    unsigned char number_of_params;
+    /* correlation cache */
+    ULONG_PTR NdrCorrCache[256];
+};
+
+LONG_PTR WINAPIV NdrAsyncClientCall(PMIDL_STUB_DESC pStubDesc,
+  PFORMAT_STRING pFormat, ...)
+{
+    /* pointer to start of stack where arguments start */
+    PRPC_MESSAGE pRpcMsg;
+    PMIDL_STUB_MESSAGE pStubMsg;
+    RPC_ASYNC_STATE *pAsync;
+    struct async_call_data *async_call_data;
+    /* procedure number */
+    unsigned short procedure_number;
+    /* cache of Oif_flags from v2 procedure header */
+    INTERPRETER_OPT_FLAGS Oif_flags = { 0 };
+    /* cache of extension flags from NDR_PROC_HEADER_EXTS */
+    INTERPRETER_OPT_FLAGS2 ext_flags = { 0 };
+    /* the type of pass we are currently doing */
+    int phase;
+    /* header for procedure string */
+    const NDR_PROC_HEADER * pProcHeader = (const NDR_PROC_HEADER *)&pFormat[0];
+    /* -Oif or -Oicf generated format */
+    BOOL bV2Format = FALSE;
+
+    TRACE("pStubDesc %p, pFormat %p, ...\n", pStubDesc, pFormat);
+
+    /* Later NDR language versions probably won't be backwards compatible */
+    if (pStubDesc->Version > 0x50002)
+    {
+        FIXME("Incompatible stub description version: 0x%x\n", pStubDesc->Version);
+        RpcRaiseException(RPC_X_WRONG_STUB_VERSION);
+    }
+
+    async_call_data = I_RpcAllocate(sizeof(*async_call_data) + sizeof(MIDL_STUB_MESSAGE) + sizeof(RPC_MESSAGE));
+    if (!async_call_data) RpcRaiseException(ERROR_OUTOFMEMORY);
+    async_call_data->number_of_params = ~0;
+    async_call_data->pProcHeader = pProcHeader;
+
+    async_call_data->pStubMsg = pStubMsg = (PMIDL_STUB_MESSAGE)(async_call_data + 1);
+    pRpcMsg = (PRPC_MESSAGE)(pStubMsg + 1);
+
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
+    {
+        const NDR_PROC_HEADER_RPC *pProcHeader = (const NDR_PROC_HEADER_RPC *)&pFormat[0];
+        async_call_data->stack_size = pProcHeader->stack_size;
+        procedure_number = pProcHeader->proc_num;
+        pFormat += sizeof(NDR_PROC_HEADER_RPC);
+    }
+    else
+    {
+        async_call_data->stack_size = pProcHeader->stack_size;
+        procedure_number = pProcHeader->proc_num;
+        pFormat += sizeof(NDR_PROC_HEADER);
+    }
+    TRACE("stack size: 0x%x\n", async_call_data->stack_size);
+    TRACE("proc num: %d\n", procedure_number);
+
+    /* create the full pointer translation tables, if requested */
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
+        pStubMsg->FullPtrXlatTables = NdrFullPointerXlatInit(0,XLAT_CLIENT);
+
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT)
+    {
+        ERR("objects not supported\n");
+        I_RpcFree(async_call_data);
+        RpcRaiseException(RPC_X_BAD_STUB_DATA);
+    }
+
+    NdrClientInitializeNew(pRpcMsg, pStubMsg, pStubDesc, procedure_number);
+
+    TRACE("Oi_flags = 0x%02x\n", pProcHeader->Oi_flags);
+    TRACE("MIDL stub version = 0x%x\n", pStubDesc->MIDLVersion);
+
+    /* needed for conformance of top-level objects */
+#ifdef __i386__
+    pStubMsg->StackTop = I_RpcAllocate(async_call_data->stack_size);
+    /* FIXME: this may read one more DWORD than is necessary, but it shouldn't hurt */
+    memcpy(pStubMsg->StackTop, *(unsigned char **)(&pFormat+1), async_call_data->stack_size);
+#else
+# warning Stack not retrieved for your CPU architecture
+#endif
+
+    pAsync = *(RPC_ASYNC_STATE **)pStubMsg->StackTop;
+    pAsync->StubInfo = async_call_data;
+    async_call_data->pHandleFormat = pFormat;
+
+    pFormat = client_get_handle(pStubMsg, pProcHeader, async_call_data->pHandleFormat, &async_call_data->hBinding);
+    if (!pFormat) return 0;
+
+    bV2Format = (pStubDesc->Version >= 0x20000);
+
+    if (bV2Format)
+    {
+        const NDR_PROC_PARTIAL_OIF_HEADER *pOIFHeader =
+            (const NDR_PROC_PARTIAL_OIF_HEADER *)pFormat;
+
+        Oif_flags = pOIFHeader->Oi2Flags;
+        async_call_data->number_of_params = pOIFHeader->number_of_params;
+
+        pFormat += sizeof(NDR_PROC_PARTIAL_OIF_HEADER);
+    }
+
+    TRACE("Oif_flags = "); dump_INTERPRETER_OPT_FLAGS(Oif_flags);
+
+    if (Oif_flags.HasExtensions)
+    {
+        const NDR_PROC_HEADER_EXTS *pExtensions =
+            (const NDR_PROC_HEADER_EXTS *)pFormat;
+        ext_flags = pExtensions->Flags2;
+        pFormat += pExtensions->Size;
+    }
+
+    async_call_data->pParamFormat = pFormat;
+
+    pStubMsg->BufferLength = 0;
+
+    /* store the RPC flags away */
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCFLAGS)
+        pRpcMsg->RpcFlags = ((const NDR_PROC_HEADER_RPC *)pProcHeader)->rpc_flags;
+
+    /* use alternate memory allocation routines */
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_RPCSSALLOC)
+        NdrRpcSmSetClientToOsf(pStubMsg);
+
+    if (Oif_flags.HasPipes)
+    {
+        FIXME("pipes not supported yet\n");
+        RpcRaiseException(RPC_X_WRONG_STUB_VERSION); /* FIXME: remove when implemented */
+        /* init pipes package */
+        /* NdrPipesInitialize(...) */
+    }
+    if (ext_flags.HasNewCorrDesc)
+    {
+        /* initialize extra correlation package */
+        NdrCorrelationInitialize(pStubMsg, async_call_data->NdrCorrCache, sizeof(async_call_data->NdrCorrCache), 0);
+    }
+
+    /* order of phases:
+     * 1. PROXY_CALCSIZE - calculate the buffer size
+     * 2. PROXY_GETBUFFER - allocate the buffer
+     * 3. PROXY_MARHSAL - marshal [in] params into the buffer
+     * 4. PROXY_SENDRECEIVE - send buffer
+     * Then in NdrpCompleteAsyncClientCall:
+     * 1. PROXY_SENDRECEIVE - receive buffer
+     * 2. PROXY_UNMARHSAL - unmarshal [out] params from buffer
+     */
+    for (phase = PROXY_CALCSIZE; phase <= PROXY_SENDRECEIVE; phase++)
+    {
+        RPC_STATUS status;
+        TRACE("phase = %d\n", phase);
+        switch (phase)
+        {
+        case PROXY_GETBUFFER:
+            /* allocate the buffer */
+            if (Oif_flags.HasPipes)
+                /* NdrGetPipeBuffer(...) */
+                FIXME("pipes not supported yet\n");
+            else
+            {
+                if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                    NdrNsGetBuffer(pStubMsg, pStubMsg->BufferLength, async_call_data->hBinding);
+#else
+                    FIXME("using auto handle - call NdrNsGetBuffer when it gets implemented\n");
+#endif
+                else
+                    NdrGetBuffer(pStubMsg, pStubMsg->BufferLength, async_call_data->hBinding);
+            }
+            pRpcMsg->RpcFlags |= RPC_BUFFER_ASYNC;
+            status = I_RpcAsyncSetHandle(pRpcMsg, pAsync);
+            if (status != RPC_S_OK)
+                RpcRaiseException(status);
+            break;
+        case PROXY_SENDRECEIVE:
+            pRpcMsg->RpcFlags |= RPC_BUFFER_ASYNC;
+            /* send the [in] params only */
+            if (Oif_flags.HasPipes)
+                /* NdrPipesSend(...) */
+                FIXME("pipes not supported yet\n");
+            else
+            {
+                if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                    NdrNsSend(&stubMsg, stubMsg.Buffer, pStubDesc->IMPLICIT_HANDLE_INFO.pAutoHandle);
+#else
+                    FIXME("using auto handle - call NdrNsSend when it gets implemented\n");
+#endif
+                else
+                {
+                    pStubMsg->RpcMsg->BufferLength = pStubMsg->Buffer - (unsigned char *)pStubMsg->RpcMsg->Buffer;
+                    status = I_RpcSend(pStubMsg->RpcMsg);
+                    if (status != RPC_S_OK)
+                        RpcRaiseException(status);
+                }
+            }
+
+            break;
+        case PROXY_CALCSIZE:
+        case PROXY_MARSHAL:
+            if (bV2Format)
+                client_do_args(pStubMsg, pFormat, phase, pStubMsg->StackTop,
+                    async_call_data->number_of_params, NULL);
+            else
+                client_do_args_old_format(pStubMsg, pFormat, phase,
+                    pStubMsg->StackTop, async_call_data->stack_size, NULL,
+                    (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_OBJECT), FALSE);
+            break;
+        default:
+            ERR("shouldn't reach here. phase %d\n", phase);
+            break;
+        }
+    }
+
+    TRACE("returning 0\n");
+    return 0;
+}
+
+RPC_STATUS NdrpCompleteAsyncClientCall(RPC_ASYNC_STATE *pAsync, void *Reply)
+{
+    /* pointer to start of stack where arguments start */
+    PMIDL_STUB_MESSAGE pStubMsg;
+    struct async_call_data *async_call_data;
+    /* the type of pass we are currently doing */
+    int phase;
+    /* header for procedure string */
+    const NDR_PROC_HEADER * pProcHeader;
+    /* -Oif or -Oicf generated format */
+    BOOL bV2Format;
+    RPC_STATUS status = RPC_S_OK;
+
+    if (!pAsync->StubInfo)
+        return RPC_S_INVALID_ASYNC_HANDLE;
+
+    async_call_data = pAsync->StubInfo;
+    pStubMsg = async_call_data->pStubMsg;
+    pProcHeader = async_call_data->pProcHeader;
+
+    bV2Format = (pStubMsg->StubDesc->Version >= 0x20000);
+
+    /* order of phases:
+     * 1. PROXY_CALCSIZE - calculate the buffer size
+     * 2. PROXY_GETBUFFER - allocate the buffer
+     * 3. PROXY_MARHSAL - marshal [in] params into the buffer
+     * 4. PROXY_SENDRECEIVE - send buffer
+     * Then in NdrpCompleteAsyncClientCall:
+     * 1. PROXY_SENDRECEIVE - receive buffer
+     * 2. PROXY_UNMARHSAL - unmarshal [out] params from buffer
+     */
+    for (phase = PROXY_SENDRECEIVE; phase <= PROXY_UNMARSHAL; phase++)
+    {
+        switch (phase)
+        {
+        case PROXY_SENDRECEIVE:
+            pStubMsg->RpcMsg->RpcFlags |= RPC_BUFFER_ASYNC;
+            /* receive the [out] params */
+            if (pProcHeader->handle_type == RPC_FC_AUTO_HANDLE)
+#if 0
+                NdrNsReceive(&stubMsg, stubMsg.Buffer, pStubDesc->IMPLICIT_HANDLE_INFO.pAutoHandle);
+#else
+                FIXME("using auto handle - call NdrNsReceive when it gets implemented\n");
+#endif
+            else
+            {
+                status = I_RpcReceive(pStubMsg->RpcMsg);
+                if (status != RPC_S_OK)
+                    goto cleanup;
+                pStubMsg->BufferLength = pStubMsg->RpcMsg->BufferLength;
+                pStubMsg->BufferStart = pStubMsg->RpcMsg->Buffer;
+                pStubMsg->BufferEnd = pStubMsg->BufferStart + pStubMsg->BufferLength;
+                pStubMsg->Buffer = pStubMsg->BufferStart;
+            }
+
+            /* convert strings, floating point values and endianess into our
+             * preferred format */
+#if 0
+            if ((pStubMsg->RpcMsg.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)
+                NdrConvert(pStubMsg, pFormat);
+#endif
+
+            break;
+        case PROXY_UNMARSHAL:
+            if (bV2Format)
+                client_do_args(pStubMsg, async_call_data->pParamFormat, phase, pStubMsg->StackTop,
+                    async_call_data->number_of_params, Reply);
+            else
+                client_do_args_old_format(pStubMsg, async_call_data->pParamFormat, phase,
+                    pStubMsg->StackTop, async_call_data->stack_size, Reply, FALSE, FALSE);
+            break;
+        default:
+            ERR("shouldn't reach here. phase %d\n", phase);
+            break;
+        }
+    }
+
+cleanup:
+    if (pStubMsg->fHasNewCorrDesc)
+    {
+        /* free extra correlation package */
+        NdrCorrelationFree(pStubMsg);
+    }
+
+    /* free the full pointer translation tables */
+    if (pProcHeader->Oi_flags & RPC_FC_PROC_OIF_FULLPTR)
+        NdrFullPointerXlatFree(pStubMsg->FullPtrXlatTables);
+
+    /* free marshalling buffer */
+    NdrFreeBuffer(pStubMsg);
+    client_free_handle(pStubMsg, pProcHeader, async_call_data->pHandleFormat, async_call_data->hBinding);
+
+    I_RpcFree(pStubMsg->StackTop);
+    I_RpcFree(async_call_data);
+
+    TRACE("-- 0x%x\n", status);
+    return status;
+}
+
+RPCRTAPI LONG RPC_ENTRY NdrAsyncStubCall(struct IRpcStubBuffer* pThis,
+    struct IRpcChannelBuffer* pChannel, PRPC_MESSAGE pRpcMsg,
+    DWORD * pdwStubPhase)
+{
+    FIXME("unimplemented, expect crash!\n");
+    return 0;
 }

@@ -56,7 +56,7 @@ struct protseq_ops
      * new connection was established */
     int (*wait_for_new_connection)(RpcServerProtseq *protseq, unsigned int count, void *wait_array);
     /* opens the endpoint and optionally begins listening */
-    RPC_STATUS (*open_endpoint)(RpcServerProtseq *protseq, LPSTR endpoint);
+    RPC_STATUS (*open_endpoint)(RpcServerProtseq *protseq, const char *endpoint);
 };
 
 typedef struct _RpcServerInterface
@@ -78,5 +78,8 @@ typedef struct _RpcServerInterface
 
 void RPCRT4_new_client(RpcConnection* conn);
 const struct protseq_ops *rpcrt4_get_protseq_ops(const char *protseq);
+
+void RPCRT4_destroy_all_protseqs(void);
+void RPCRT4_ServerFreeAllRegisteredAuthInfo(void);
 
 #endif  /* __WINE_RPC_SERVER_H */

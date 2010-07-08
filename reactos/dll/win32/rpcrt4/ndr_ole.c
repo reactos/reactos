@@ -309,13 +309,12 @@ void WINAPI NdrInterfacePointerBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
 {
   const IID *riid = get_ip_iid(pStubMsg, pMemory, pFormat);
   ULONG size = 0;
-  HRESULT hr;
 
   TRACE("(%p,%p,%p)\n", pStubMsg, pMemory, pFormat);
   if (!LoadCOM()) return;
-  hr = COM_GetMarshalSizeMax(&size, riid, (LPUNKNOWN)pMemory,
-                            pStubMsg->dwDestContext, pStubMsg->pvDestContext,
-                            MSHLFLAGS_NORMAL);
+  COM_GetMarshalSizeMax(&size, riid, (LPUNKNOWN)pMemory,
+                        pStubMsg->dwDestContext, pStubMsg->pvDestContext,
+                        MSHLFLAGS_NORMAL);
   TRACE("size=%d\n", size);
   pStubMsg->BufferLength += sizeof(DWORD) + size;
 }
