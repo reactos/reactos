@@ -12,14 +12,21 @@
 	<library>user32</library>
 	<library>gdi32</library>
 	<library>advapi32</library>
+	<library>win32ksys</library>
 	<library>psapi</library>
+	<library>pseh</library>
 	<pch>w32csr.h</pch>
 	<file>alias.c</file>
-	<file>conio.c</file>
+	<file>coninput.c</file>
+	<file>conoutput.c</file>
+	<file>console.c</file>
 	<file>desktopbg.c</file>
 	<file>dllmain.c</file>
 	<file>exitros.c</file>
 	<file>guiconsole.c</file>
+	<file>handle.c</file>
+	<file>harderror.c</file>
+	<file>lineinput.c</file>
 	<file>tuiconsole.c</file>
 	<file>appswitch.c</file>
 	<file>input.c</file>

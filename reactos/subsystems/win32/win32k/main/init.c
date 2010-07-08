@@ -292,6 +292,19 @@ NtGdiFlushUserBatch(VOID)
     return STATUS_UNSUCCESSFUL;
 }
 
+NTSTATUS
+APIENTRY
+NtUserInitialize(
+  DWORD   dwWinVersion,
+  HANDLE  hPowerRequestEvent,
+  HANDLE  hMediaRequestEvent)
+{
+    /* Connect CSR subsystem */
+    CsrInit();
+
+    return STATUS_SUCCESS;
+}
+
 /* DRIVER ENTRYPOINT *********************************************************/
 
 NTSTATUS

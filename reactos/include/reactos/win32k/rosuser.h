@@ -165,9 +165,6 @@ APIENTRY
 RosUserGetAsyncKeyboardState(BYTE key_state_table[]);
 
 VOID NTAPI
-RosUserConnectCsrss(VOID);
-
-VOID NTAPI
 SwmAddWindow(HWND hWnd, RECT *WindowRect, DWORD style, DWORD ex_style);
 
 VOID NTAPI

@@ -16,7 +16,7 @@ static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
 
 VOID NTAPI
-RosUserConnectCsrss(void)
+CsrInit(void)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName;

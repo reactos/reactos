@@ -10,9 +10,6 @@
 #include "wine/winuser16.h"
 #include "wine/debug.h"
 
-VOID NTAPI
-RosUserConnectCsrss();
-
 WINE_DEFAULT_DEBUG_CHANNEL(userlegacy);
 
 VOID
@@ -36,12 +33,3 @@ PrivateCsrssManualGuiCheck(LONG Check)
 {
     UNIMPLEMENTED;
 }
-
-VOID
-WINAPI
-PrivateCsrssInitialized(VOID)
-{
-    /* Perform a reactos only CSRSS connection */
-    RosUserConnectCsrss();
-}
-

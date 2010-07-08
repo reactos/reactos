@@ -1,100 +1,151 @@
-/* $Id$
- *
- * reactos/subsys/csrss/init.c
- *
- * Initialize the CSRSS subsystem server process.
- *
- * ReactOS Operating System
- *
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CSR Sub System
+ * FILE:            subsys/csr/csrsrv/init.c
+ * PURPOSE:         CSR Server DLL Initialization
+ * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
-#include <csrss.h>
-
+#include "srv.h"
 #define NDEBUG
 #include <debug.h>
 
-/* GLOBALS ******************************************************************/
+/* DATA ***********************************************************************/
 
 HANDLE CsrHeap = (HANDLE) 0;
-
 HANDLE CsrObjectDirectory = (HANDLE) 0;
-
 UNICODE_STRING CsrDirectoryName;
-
 extern HANDLE CsrssApiHeap;
-
-static unsigned InitCompleteProcCount;
-static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
-
-static unsigned HardErrorProcCount;
-static CSRPLUGIN_HARDERROR_PROC *HardErrorProcs = NULL;
-
+static unsigned ServerProcCount;
+static CSRPLUGIN_SERVER_PROCS *ServerProcs = NULL;
 HANDLE hSbApiPort = (HANDLE) 0;
-
 HANDLE hBootstrapOk = (HANDLE) 0;
-
 HANDLE hSmApiPort = (HANDLE) 0;
-
 HANDLE hApiPort = (HANDLE) 0;
 
-/**********************************************************************
- * CsrpAddInitCompleteProc/1
- */
-static NTSTATUS FASTCALL
-CsrpAddInitCompleteProc(CSRPLUGIN_INIT_COMPLETE_PROC Proc)
+/* PRIVATE FUNCTIONS **********************************************************/
+
+ULONG
+InitializeVideoAddressSpace(VOID)
 {
-  CSRPLUGIN_INIT_COMPLETE_PROC *NewProcs;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING PhysMemName = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
+    NTSTATUS Status;
+    HANDLE PhysMemHandle;
+    PVOID BaseAddress;
+    LARGE_INTEGER Offset;
+    SIZE_T ViewSize;
+    CHAR IVTAndBda[1024+256];
+
+    /* Open the physical memory section */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &PhysMemName,
+                               0,
+                               NULL,
+                               NULL);
+    Status = ZwOpenSection(&PhysMemHandle,
+                           SECTION_ALL_ACCESS,
+                           &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't open \\Device\\PhysicalMemory\n");
+        return 0;
+    }
+
+    /* Map the BIOS and device registers into the address space */
+    Offset.QuadPart = 0xa0000;
+    ViewSize = 0x100000 - 0xa0000;
+    BaseAddress = (PVOID)0xa0000;
+    Status = ZwMapViewOfSection(PhysMemHandle,
+                                NtCurrentProcess(),
+                                &BaseAddress,
+                                0,
+                                ViewSize,
+                                &Offset,
+                                &ViewSize,
+                                ViewUnmap,
+                                0,
+                                PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Couldn't map physical memory (%x)\n", Status);
+        ZwClose(PhysMemHandle);
+        return 0;
+    }
+
+    /* Close physical memory section handle */
+    ZwClose(PhysMemHandle);
+
+    if (BaseAddress != (PVOID)0xa0000)
+    {
+        DPRINT1("Couldn't map physical memory at the right address (was %x)\n",
+                BaseAddress);
+        return 0;
+    }
+
+    /* Allocate some low memory to use for the non-BIOS
+     * parts of the v86 mode address space
+     */
+    BaseAddress = (PVOID)0x1;
+    ViewSize = 0xa0000 - 0x1000;
+    Status = ZwAllocateVirtualMemory(NtCurrentProcess(),
+                                     &BaseAddress,
+                                     0,
+                                     &ViewSize,
+                                     MEM_COMMIT,
+                                     PAGE_EXECUTE_READWRITE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to allocate virtual memory (Status %x)\n", Status);
+        return 0;
+    }
+    if (BaseAddress != (PVOID)0x0)
+    {
+        DPRINT1("Failed to allocate virtual memory at right address (was %x)\n",
+                BaseAddress);
+        return 0;
+    }
+
+    /* Get the real mode IVT and BDA from the kernel */
+    Status = NtVdmControl(VdmInitialize, IVTAndBda);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtVdmControl failed (status %x)\n", Status);
+        return 0;
+    }
+
+    /* Return success */
+    return 1;
+}
+
+
+static NTSTATUS FASTCALL
+CsrpAddServerProcs(CSRPLUGIN_SERVER_PROCS *Procs)
+{
+  CSRPLUGIN_SERVER_PROCS *NewProcs;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
   NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
-                             (InitCompleteProcCount + 1)
-                             * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
+                             (ServerProcCount + 1)
+                             * sizeof(CSRPLUGIN_SERVER_PROCS));
   if (NULL == NewProcs)
     {
       return STATUS_NO_MEMORY;
     }
-  if (0 != InitCompleteProcCount)
+  if (0 != ServerProcCount)
     {
-      RtlCopyMemory(NewProcs, InitCompleteProcs,
-                    InitCompleteProcCount * sizeof(CSRPLUGIN_INIT_COMPLETE_PROC));
-      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+      RtlCopyMemory(NewProcs, ServerProcs,
+                    ServerProcCount * sizeof(CSRPLUGIN_SERVER_PROCS));
+      RtlFreeHeap(CsrssApiHeap, 0, ServerProcs);
     }
-  NewProcs[InitCompleteProcCount] = Proc;
-  InitCompleteProcs = NewProcs;
-  InitCompleteProcCount++;
+  NewProcs[ServerProcCount] = *Procs;
+  ServerProcs = NewProcs;
+  ServerProcCount++;
 
   return STATUS_SUCCESS;
-}
-
-static NTSTATUS FASTCALL
-CsrpAddHardErrorProc(CSRPLUGIN_HARDERROR_PROC Proc)
-{
-    CSRPLUGIN_HARDERROR_PROC *NewProcs;
-
-    DPRINT("CSR: %s called\n", __FUNCTION__);
-
-    NewProcs = RtlAllocateHeap(CsrssApiHeap, 0,
-                               (HardErrorProcCount + 1)
-                               * sizeof(CSRPLUGIN_HARDERROR_PROC));
-    if (NULL == NewProcs)
-    {
-        return STATUS_NO_MEMORY;
-    }
-    if (0 != HardErrorProcCount)
-    {
-        RtlCopyMemory(NewProcs, HardErrorProcs,
-            HardErrorProcCount * sizeof(CSRPLUGIN_HARDERROR_PROC));
-        RtlFreeHeap(CsrssApiHeap, 0, HardErrorProcs);
-    }
-
-    NewProcs[HardErrorProcCount] = Proc;
-    HardErrorProcs = NewProcs;
-    HardErrorProcCount++;
-
-    return STATUS_SUCCESS;
 }
 
 /**********************************************************************
@@ -109,13 +160,9 @@ CallInitComplete(void)
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
   Ok = TRUE;
-  if (0 != InitCompleteProcCount)
+  for (i = 0; i < ServerProcCount && Ok; i++)
     {
-      for (i = 0; i < InitCompleteProcCount && Ok; i++)
-        {
-          Ok = (*(InitCompleteProcs[i]))();
-        }
-      RtlFreeHeap(CsrssApiHeap, 0, InitCompleteProcs);
+      Ok = (*ServerProcs[i].InitCompleteProc)();
     }
 
   return Ok;
@@ -131,16 +178,43 @@ CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
     Ok = TRUE;
-    if (0 != HardErrorProcCount)
+    for (i = 0; i < ServerProcCount && Ok; i++)
     {
-        for (i = 0; i < HardErrorProcCount && Ok; i++)
-        {
-            Ok = (*(HardErrorProcs[i]))(ProcessData, HardErrorMessage);
-        }
+        Ok = (*ServerProcs[i].HardErrorProc)(ProcessData, HardErrorMessage);
     }
 
     return Ok;
 }
+
+NTSTATUS
+CallProcessInherit(IN PCSRSS_PROCESS_DATA SourceProcessData,
+                   IN PCSRSS_PROCESS_DATA TargetProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    unsigned i;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
+        Status = (*ServerProcs[i].ProcessInheritProc)(SourceProcessData, TargetProcessData);
+
+    return Status;
+}
+
+NTSTATUS
+CallProcessDeleted(IN PCSRSS_PROCESS_DATA ProcessData)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    unsigned i;
+
+    DPRINT("CSR: %s called\n", __FUNCTION__);
+
+    for (i = 0; i < ServerProcCount && NT_SUCCESS(Status); i++)
+        Status = (*ServerProcs[i].ProcessDeletedProc)(ProcessData);
+
+    return Status;
+}
+
 
 ULONG
 InitializeVideoAddressSpace(VOID);
@@ -232,9 +306,7 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
   CSRPLUGIN_INITIALIZE_PROC InitProc;
   CSRSS_EXPORTED_FUNCS Exports;
   PCSRSS_API_DEFINITION ApiDefinitions;
-  PCSRSS_OBJECT_DEFINITION ObjectDefinitions;
-  CSRPLUGIN_INIT_COMPLETE_PROC InitCompleteProc;
-  CSRPLUGIN_HARDERROR_PROC HardErrorProc;
+  CSRPLUGIN_SERVER_PROCS ServerProcs;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -250,13 +322,8 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
     {
       return Status;
     }
-  Exports.CsrInsertObjectProc = CsrInsertObject;
-  Exports.CsrGetObjectProc = CsrGetObject;
-  Exports.CsrReleaseObjectByPointerProc = CsrReleaseObjectByPointer;
-  Exports.CsrReleaseObjectProc = CsrReleaseObject;
   Exports.CsrEnumProcessesProc = CsrEnumProcesses;
-  if (! (*InitProc)(&ApiDefinitions, &ObjectDefinitions, &InitCompleteProc,
-                    &HardErrorProc, &Exports, CsrssApiHeap))
+  if (! (*InitProc)(&ApiDefinitions, &ServerProcs, &Exports, CsrssApiHeap))
     {
       return STATUS_UNSUCCESSFUL;
     }
@@ -266,34 +333,19 @@ CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
     {
       return Status;
     }
-  Status = CsrRegisterObjectDefinitions(ObjectDefinitions);
-  if (! NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-  if (NULL != InitCompleteProc)
-    {
-      Status = CsrpAddInitCompleteProc(InitCompleteProc);
-    }
-  if (HardErrorProc) Status = CsrpAddHardErrorProc(HardErrorProc);
-
+  Status = CsrpAddServerProcs(&ServerProcs);
   return Status;
 }
 
 CSRSS_API_DEFINITION NativeDefinitions[] =
   {
     CSRSS_DEFINE_API(CREATE_PROCESS,               CsrCreateProcess),
+    CSRSS_DEFINE_API(CREATE_THREAD,                CsrSrvCreateThread),
     CSRSS_DEFINE_API(TERMINATE_PROCESS,            CsrTerminateProcess),
     CSRSS_DEFINE_API(CONNECT_PROCESS,              CsrConnectProcess),
     CSRSS_DEFINE_API(REGISTER_SERVICES_PROCESS,    CsrRegisterServicesProcess),
     CSRSS_DEFINE_API(GET_SHUTDOWN_PARAMETERS,      CsrGetShutdownParameters),
     CSRSS_DEFINE_API(SET_SHUTDOWN_PARAMETERS,      CsrSetShutdownParameters),
-    CSRSS_DEFINE_API(GET_INPUT_HANDLE,             CsrGetInputHandle),
-    CSRSS_DEFINE_API(GET_OUTPUT_HANDLE,            CsrGetOutputHandle),
-    CSRSS_DEFINE_API(CLOSE_HANDLE,                 CsrCloseHandle),
-    CSRSS_DEFINE_API(VERIFY_HANDLE,                CsrVerifyHandle),
-    CSRSS_DEFINE_API(DUPLICATE_HANDLE,             CsrDuplicateHandle),
-    CSRSS_DEFINE_API(GET_INPUT_WAIT_HANDLE,        CsrGetInputWaitHandle),
     { 0, 0, NULL }
   };
 
@@ -305,6 +357,8 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 	NTSTATUS           Status = STATUS_SUCCESS;
 	OBJECT_ATTRIBUTES  PortAttributes;
 	UNICODE_STRING     PortName;
+    HANDLE ServerThread;
+    CLIENT_ID ClientId;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -327,14 +381,22 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 	}
 	Status = RtlCreateUserThread(NtCurrentProcess(),
                                NULL,
-                               FALSE,
+                               TRUE,
                                0,
                                0,
                                0,
                                (PTHREAD_START_ROUTINE) ListenThread,
                                *Port,
-                               NULL,
-                               NULL);
+                               &ServerThread,
+                               &ClientId);
+    
+    if (ListenThread == (PVOID)ClientConnectionThread)
+    {
+        CsrAddStaticServerThread(ServerThread, &ClientId, 0);
+    }
+    
+    NtResumeThread(ServerThread, NULL);
+    NtClose(ServerThread);
 	return Status;
 }
 
@@ -503,48 +565,6 @@ CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 }
 
 /**********************************************************************
- * 	EnvpToUnicodeString/2
- */
-static ULONG FASTCALL
-EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
-{
-	ULONG        CharCount = 0;
-	ULONG        Index = 0;
-	ANSI_STRING  AnsiEnv;
-
-	UnicodeEnv->Buffer = NULL;
-
-	for (Index=0; NULL != envp[Index]; Index++)
-	{
-		CharCount += strlen (envp[Index]);
-		++ CharCount;
-	}
-	++ CharCount;
-
-	AnsiEnv.Buffer = RtlAllocateHeap (RtlGetProcessHeap(), 0, CharCount);
-	if (NULL != AnsiEnv.Buffer)
-	{
-
-		PCHAR WritePos = AnsiEnv.Buffer;
-
-		for (Index=0; NULL != envp[Index]; Index++)
-		{
-			strcpy (WritePos, envp[Index]);
-			WritePos += strlen (envp[Index]) + 1;
-		}
-
-      /* FIXME: the last (double) nullterm should perhaps not be included in Length
-       * but only in MaximumLength. -Gunnar */
-		AnsiEnv.Buffer [CharCount-1] = '\0';
-		AnsiEnv.Length             = CharCount;
-		AnsiEnv.MaximumLength      = CharCount;
-
-		RtlAnsiStringToUnicodeString (UnicodeEnv, & AnsiEnv, TRUE);
-		RtlFreeHeap (RtlGetProcessHeap(), 0, AnsiEnv.Buffer);
-	}
-	return CharCount;
-}
-/**********************************************************************
  * 	CsrpLoadKernelModeDriver/3
  */
 static NTSTATUS
@@ -554,26 +574,26 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 	WCHAR           Data [MAX_PATH + 1];
 	ULONG           DataLength = sizeof Data;
 	ULONG           DataType = 0;
-	UNICODE_STRING  Environment;
+	//UNICODE_STRING  Environment;
 
 
-	DPRINT("SM: %s called\n", __FUNCTION__);
+	DPRINT1("SM: %s called\n", __FUNCTION__);
 
 
-	EnvpToUnicodeString (envp, & Environment);
+	//EnvpToUnicodeString (envp, & Environment);
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
 				    & DataLength,
 				    & DataType,
-				    Environment.Buffer);
-	RtlFreeUnicodeString (& Environment);
+				    NULL);
+	//RtlFreeUnicodeString (& Environment);
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
 		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
 		UNICODE_STRING             ModuleName;
 
-		wcscpy (ImagePath, L"\\??\\");
-		wcscat (ImagePath, Data);
+		wcscpy (ImagePath, L"\\SYSTEMROOT\\system32\\win32k.sys");
+//		wcscat (ImagePath, Data);
 		RtlInitUnicodeString (& ModuleName, ImagePath);
 		Status = NtSetSystemInformation(/* FIXME: SystemLoadAndCallImage */
 		                                SystemExtendServiceTableInformation,
@@ -581,7 +601,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 						sizeof ModuleName);
 		if(!NT_SUCCESS(Status))
 		{
-			DPRINT("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
+			DPRINT1("WIN: %s: loading Kmode failed (Status=0x%08lx)\n",
 				__FUNCTION__, Status);
 		}
 	}
@@ -707,22 +727,12 @@ struct {
 	{TRUE, CsrpRunWinlogon,          "run WinLogon"},
 };
 
-/**********************************************************************
- * NAME
- * 	CsrServerInitialization
- *
- * DESCRIPTION
- * 	Initialize the Win32 environment subsystem server.
- *
- * RETURN VALUE
- * 	TRUE: Initialization OK; otherwise FALSE.
- */
-BOOL WINAPI
-CsrServerInitialization (
-	int argc,
-	char ** argv,
-	char ** envp
-	)
+/* PUBLIC FUNCTIONS ***********************************************************/
+
+NTSTATUS
+NTAPI
+CsrServerInitialization(ULONG ArgumentCount,
+                        PCHAR Arguments[])
 {
 	UINT       i = 0;
 	NTSTATUS  Status = STATUS_SUCCESS;
@@ -731,7 +741,7 @@ CsrServerInitialization (
 
 	for (i=0; i < (sizeof InitRoutine / sizeof InitRoutine[0]); i++)
 	{
-		Status = InitRoutine[i].EntryPoint(argc,argv,envp);
+		Status = InitRoutine[i].EntryPoint(ArgumentCount,Arguments,NULL);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n",
@@ -747,9 +757,23 @@ CsrServerInitialization (
 	if (CallInitComplete())
 	{
 		Status = SmCompleteSession (hSmApiPort,hSbApiPort,hApiPort);
-		return TRUE;
+		return STATUS_SUCCESS;
 	}
-	return FALSE;
+    
+	return STATUS_UNSUCCESSFUL;
+}
+
+BOOL
+NTAPI
+DllMainCRTStartup(HANDLE hDll,
+                  DWORD dwReason,
+                  LPVOID lpReserved)
+{
+    /* We don't do much */
+    UNREFERENCED_PARAMETER(hDll);
+    UNREFERENCED_PARAMETER(dwReason);
+    UNREFERENCED_PARAMETER(lpReserved);
+    return TRUE;
 }
 
 /* EOF */

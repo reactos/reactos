@@ -781,4 +781,3 @@
 # ROS specific exports
 #
 @ stdcall PrivateCsrssManualGuiCheck(long)
-@ stdcall PrivateCsrssInitialized()

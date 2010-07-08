@@ -63,7 +63,6 @@ RosGdiReleaseDC                    1
 RosGdiRoundRect                    7
 RosGdiSwapBuffers                  1
 RosGdiUnrealizePalette             1
-RosUserConnectCsrss                0
 RosUserSetCursor                   1
 RosUserGetCursorPos                1
 RosUserSetCursorPos                2
@@ -92,3 +91,4 @@ SwmPosChanging                     2
 SwmPosChanged                      5
 SwmGetWindowFromPoint              2
 SwmShowWindow                      3
+NtUserInitialize                   3
