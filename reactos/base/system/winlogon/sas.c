@@ -238,7 +238,7 @@ HandleLogon(
 		}
 
 		/* Allocate enough memory */
-		lpFullEnv = HeapAlloc(GetProcessHeap, 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
+		lpFullEnv = HeapAlloc(GetProcessHeap(), 0, (EnvBlockSize + ProfileSize + 1) * sizeof(WCHAR));
 		if (!lpFullEnv)
 		{
 			TRACE("HeapAlloc() failed\n");
