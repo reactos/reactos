@@ -563,49 +563,6 @@ DnsRecordBuild_W()
     return ERROR_OUTOFMEMORY;
 }
 
-BOOL WINAPI
-DnsRecordCompare(PDNS_RECORD pRecord1,
-                 PDNS_RECORD pRecord2)
-{
-    UNIMPLEMENTED;
-    return ERROR_OUTOFMEMORY;
-}
-
-PDNS_RECORD WINAPI
-DnsRecordCopyEx(PDNS_RECORD pRecord,
-                DNS_CHARSET CharSetIn,
-                DNS_CHARSET CharSetOut)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-BOOL WINAPI
-DnsRecordSetCompare(PDNS_RECORD pRR1,
-                    PDNS_RECORD pRR2,
-                    PDNS_RECORD* ppDiff1,
-                    PDNS_RECORD* ppDiff2)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-PDNS_RECORD WINAPI
-DnsRecordSetCopyEx(PDNS_RECORD pRecordSet,
-                   DNS_CHARSET CharSetIn,
-                   DNS_CHARSET CharSetOut)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
-PDNS_RECORD WINAPI
-DnsRecordSetDetach(PDNS_RECORD pRR)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
 DNS_STATUS WINAPI
 DnsRecordStringForType()
 {

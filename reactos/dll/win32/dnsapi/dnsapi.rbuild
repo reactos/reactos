@@ -15,6 +15,7 @@
 		<file>free.c</file>
 		<file>names.c</file>
 		<file>query.c</file>
+		<file>record.c</file>
 		<file>stubs.c</file>
 		<pch>precomp.h</pch>
 	</directory>
