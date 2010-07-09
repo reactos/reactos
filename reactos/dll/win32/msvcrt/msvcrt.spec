@@ -138,7 +138,7 @@
 @ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
 @ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfo
-@ cdecl __crtGetStringTypeW(long long wstr long ptr) kernel32.GetStringTypeW
+@ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
 @ cdecl __dllonexit(ptr ptr ptr)
