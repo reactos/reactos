@@ -1,5 +1,4 @@
-#ifndef _WIN32K_XFORMOBJ_H_
-#define _WIN32K_XFORMOBJ_H_
+#pragma once
 
 ULONG
 NTAPI
@@ -27,12 +26,3 @@ NTAPI
 XFORMOBJ_Inverse(
 	OUT XFORMOBJ *pxoDst,
 	IN XFORMOBJ *pxoSrc);
-
-#define IntDPtoLP(dc, pp, c) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->mxDeviceToWorld, XF_LTOL, c, pp, pp);
-#define IntLPtoDP(dc, pp, c) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->mxWorldToDevice, XF_LTOL, c, pp, pp);
-#define CoordDPtoLP(dc, pp) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->mxDeviceToWorld, XF_LTOL, 1, pp, pp);
-#define CoordLPtoDP(dc, pp) XFORMOBJ_bApplyXform((XFORMOBJ*)&(dc)->mxWorldToDevice, XF_LTOL, 1, pp, pp);
-#define XForm2MatrixS(m, x) XFORMOBJ_iSetXform((XFORMOBJ*)m, (XFORML*)x)
-#define MatrixS2XForm(x, m) XFORMOBJ_iGetXform((XFORMOBJ*)m, (XFORML*)x)
-
-#endif /* not _WIN32K_XFORMOBJ_H_ */

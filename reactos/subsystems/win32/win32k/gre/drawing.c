@@ -64,8 +64,8 @@ typedef struct _Rect
 	int width, height;	/* width and height of rect */
 } Rect, *PRect;
 
-int FASTCALL IntFillRect(DC *dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSHGDI pbrush, PPOINTL BrushOrg, BOOL Pen);
-int FASTCALL app_fill_rect(DC *dc, Rect r, PBRUSHGDI pbrush, BOOL Pen);
+int FASTCALL IntFillRect(DC *dc, INT XLeft, INT YLeft, INT Width, INT Height, PBRUSH pbrush, PPOINTL BrushOrg, BOOL Pen);
+int FASTCALL app_fill_rect(DC *dc, Rect r, PBRUSH pbrush, BOOL Pen);
 
 static
 POINT
@@ -122,7 +122,7 @@ rect(int x, int y, int width, int height)
 static
 int
 INTERNAL_CALL
-app_draw_ellipse(DC *g, Rect r, PBRUSHGDI pbrush, PPOINTL brushOrg)
+app_draw_ellipse(DC *g, Rect r, PBRUSH pbrush, PPOINTL brushOrg)
 {
 	/* Outer ellipse: e(x,y) = b*b*x*x + a*a*y*y - a*a*b*b */
 
@@ -365,7 +365,7 @@ app_fill_arc_rect(DC *g,
 	POINT p2, // End
 	int start_angle,
 	int end_angle,
-	PBRUSHGDI pbrush,
+	PBRUSH pbrush,
 	PPOINTL brushOrg,
 	BOOL Pen)
 {
@@ -606,7 +606,7 @@ app_fill_arc_rect(DC *g,
 static
 int
 FASTCALL
-app_fill_ellipse(DC *g, Rect r, PBRUSHGDI pbrush, PPOINTL brushOrg)
+app_fill_ellipse(DC *g, Rect r, PBRUSH pbrush, PPOINTL brushOrg)
 {
 	/* e(x,y) = b*b*x*x + a*a*y*y - a*a*b*b */
 
@@ -761,7 +761,7 @@ app_boundary_point(Rect r, int angle)
 
 int
 FASTCALL
-app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSHGDI pbrush, PPOINTL brushOrg, BOOL Chord)
+app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrush, PPOINTL brushOrg, BOOL Chord)
 {
 	/* e(x,y) = b*b*x*x + a*a*y*y - a*a*b*b */
 
@@ -924,7 +924,7 @@ app_fill_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSHGDI pbrush, PP
 	return result;
 }
 
-int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSHGDI pbrushPen, PPOINTL brushOrg, BOOL Chord)
+int app_draw_arc(DC *g, Rect r, int start_angle, int end_angle, PBRUSH pbrushPen, PPOINTL brushOrg, BOOL Chord)
 {
 	/* Outer ellipse: e(x,y) = b*b*x*x + a*a*y*y - a*a*b*b */
 
@@ -1188,7 +1188,7 @@ IntFillRect( DC *dc,
              INT YLeft,
              INT Width,
              INT Height,
-             PBRUSHGDI pbrush,
+             PBRUSH pbrush,
              PPOINTL BrushOrigin,
              BOOL Pen)
 {
@@ -1199,7 +1199,7 @@ IntFillRect( DC *dc,
 
     ASSERT(pbrush);
 
-    psurf = dc->pBitmap;
+    psurf = dc->dclevel.pSurface;
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -1239,7 +1239,7 @@ IntFillRect( DC *dc,
                      &DestRect,
                      NULL,
                      NULL,
-                     Pen ? &dc->pLineBrush->BrushObj : &dc->pFillBrush->BrushObj,
+                     Pen ? &dc->eboLine.BrushObject : &dc->eboFill.BrushObject,
                      BrushOrigin,
                      ROP3_TO_ROP4(ROP),
                      TRUE);
@@ -1268,7 +1268,7 @@ GrepFillArc( PDC dc,
   ret = app_fill_arc(dc, rect( XLeft, YLeft, Width, Height),
                     -End, //(dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -End : -Start,
                     -Start, //(dc->dclevel.flPath & DCPATH_CLOCKWISE) ? -Start : -End,
-                     dc->pFillBrush, BrushOrigin, Chord);
+                     dc->dclevel.pbrFill, BrushOrigin, Chord);
 }
 
 BOOLEAN
@@ -1281,7 +1281,7 @@ GrepDrawArc( PDC dc,
             double StartArc,
             double EndArc,
             ARCTYPE arctype,
-            PBRUSHGDI pbrush,
+            PBRUSH pbrush,
             PPOINTL BrushOrigin)
 {
   int Start = ceil(StartArc);
@@ -1301,7 +1301,7 @@ GrepDrawEllipse(PDC dc,
                 INT YLeft,
                 INT Width,
                 INT Height,
-                PBRUSHGDI pbrush,
+                PBRUSH pbrush,
                 PPOINTL brushOrg)
 {
   return (BOOLEAN)app_draw_ellipse(dc, rect( XLeft, YLeft, Width, Height), pbrush, brushOrg);
@@ -1314,7 +1314,7 @@ GrepFillEllipse(PDC dc,
                 INT YLeft,
                 INT Width,
                 INT Height,
-                PBRUSHGDI pbrush,
+                PBRUSH pbrush,
                 PPOINTL brushOrg)
 {
   return (BOOLEAN)app_fill_ellipse(dc, rect( XLeft, YLeft, Width, Height), pbrush, brushOrg);

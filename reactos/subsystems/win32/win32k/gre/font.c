@@ -15,7 +15,7 @@
 /* PRIVATE FUNCTIONS *********************************************************/
 
 static void SharpGlyphMono(PDC physDev, INT x, INT y,
-                           void *bitmap, GlyphInfo *gi, BRUSHGDI *pTextBrush)
+                           void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
 {
 #if 1
     unsigned char   *srcLine = bitmap, *src;
@@ -58,9 +58,9 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
                 } while (bits & bitsMask);
                 rcBounds.left = xspan; rcBounds.top = y;
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
-                GreLineTo(&physDev->pBitmap->SurfObj,
+                GreLineTo(&physDev->dclevel.pSurface->SurfObj,
                     physDev->CombinedClip,
-                    &pTextBrush->BrushObj,
+                    &pTextBrush->BrushObject,
                     xspan,
                     y,
                     xspan + lenspan,
@@ -109,7 +109,7 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
     rcTarget.right = x + szSize.cx; rcTarget.bottom = y + szSize.cy;
 
     GrepBitBltEx(
-        &physDev->pBitmap->SurfObj,
+        &physDev->dclevel.pSurface->SurfObj,
         pSurfObj,
         NULL,
         NULL,
@@ -117,19 +117,19 @@ static void SharpGlyphMono(PDC physDev, INT x, INT y,
         &rcTarget,
         &ptSrc,
         NULL,
-        &physDev->pLineBrush->BrushObj,
+        &physDev->dclevel.pbrLine->BrushObject,
         &ptBrush,
         ROP3_TO_ROP4(SRCCOPY),
         TRUE);
 
     EngUnlockSurface(pSurfObj);
 
-    GreDeleteBitmap(hBmp);
+    GreDeleteObject(hBmp);
 #endif
 }
 
 static void SharpGlyphGray(PDC physDev, INT x, INT y,
-                           void *bitmap, GlyphInfo *gi, BRUSHGDI *pTextBrush)
+                           void *bitmap, GlyphInfo *gi, EBRUSHOBJ *pTextBrush)
 {
     unsigned char   *srcLine = bitmap, *src, bits;
     int             width = gi->width;
@@ -163,9 +163,9 @@ static void SharpGlyphGray(PDC physDev, INT x, INT y,
                 } while (bits >= 0x80);
                 rcBounds.left = xspan; rcBounds.top = y;
                 rcBounds.right = xspan+lenspan; rcBounds.bottom = y+1;
-                GreLineTo(&physDev->pBitmap->SurfObj,
+                GreLineTo(&physDev->dclevel.pSurface->SurfObj,
                     physDev->CombinedClip,
-                    &pTextBrush->BrushObj,
+                    &pTextBrush->BrushObject,
                     xspan,
                     y,
                     xspan + lenspan,
@@ -201,14 +201,22 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
 {
     POINT offset = {0, 0};
     INT idx;
-    BRUSHGDI *pTextPen;
+    EBRUSHOBJ pTextPen;
+    PBRUSH ppen;
+    HPEN hpen;
 
     /* Create pen for text output */
-    pTextPen = GreCreatePen(PS_SOLID, 1, 0, pDC->crForegroundClr, 0, 0, 0, NULL, 0, TRUE);
+    hpen  = GreCreatePen(PS_SOLID, 1, pDC->crForegroundClr, NULL);
+    if(!hpen)
+        return;
+    ppen = PEN_ShareLockPen(hpen); 
+    if(!ppen)
+        return;
+    EBRUSHOBJ_vInit(&pTextPen, ppen, pDC);
 
-    if(aa_type == AA_None || pDC->pBitmap->SurfObj.iBitmapFormat == BMF_1BPP)
+    if(aa_type == AA_None || pDC->dclevel.pSurface->SurfObj.iBitmapFormat == BMF_1BPP)
     {
-        void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, BRUSHGDI *);
+        void (* sharp_glyph_fn)(PDC, INT, INT, void *, GlyphInfo *, EBRUSHOBJ *);
 
         if(aa_type == AA_None)
             sharp_glyph_fn = SharpGlyphMono;
@@ -219,19 +227,19 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
             sharp_glyph_fn(pDC,
                            pDC->rcDcRect.left + pDC->rcVport.left + x + offset.x,
                            pDC->rcDcRect.top + pDC->rcVport.top + y + offset.y,
-                           formatEntry->bitmaps[wstr[idx]],
-                           &formatEntry->gis[wstr[idx]],
-                           pTextPen);
+                formatEntry->bitmaps[wstr[idx]],
+                &formatEntry->gis[wstr[idx]],
+                &pTextPen);
             if(lpDx)
             {
                 if(flags & ETO_PDY)
                 {
                     offset.x += lpDx[idx * 2];
                     offset.y += lpDx[idx * 2 + 1];
-                }
+            }
                 else
                     offset.x += lpDx[idx];
-            }
+        }
             else
             {
                 offset.x += formatEntry->gis[wstr[idx]].xOff;
@@ -353,7 +361,10 @@ GreTextOut(PDC pDC, INT x, INT y, UINT flags,
     }
 //no_image:
 
-    GreFreeBrush(pTextPen);
+    //Cleanup the temporary pen
+    EBRUSHOBJ_vCleanup(&pTextPen);
+    BRUSH_ShareUnlockBrush(ppen);
+    GreDeleteObject(hpen);
 }
 
 /* EOF */

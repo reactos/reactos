@@ -35,7 +35,7 @@ GreBitBlt(PDC pDevDst, INT xDst, INT yDst,
 BOOLEAN NTAPI
 GrePatBlt(PDC dc, INT XLeft, INT YLeft,
           INT Width, INT Height, DWORD ROP,
-          PBRUSHGDI BrushObj);
+          PBRUSH BrushObj);
 
 ULONG NTAPI
 GrepBitmapFormat(WORD Bits, DWORD Compression);
@@ -122,7 +122,9 @@ BitsPerFormat(ULONG Format);
 
 /* bitmap.c */
 extern HGDIOBJ hStockBmp;
-VOID CreateStockBitmap();
+extern HGDIOBJ hStockPalette;
+extern HGDIOBJ hNullPen;
+VOID CreateStockObjects();
 
 /* device.c */
 LONG FASTCALL GreChangeDisplaySettings(PUNICODE_STRING pDeviceName,
@@ -156,7 +158,7 @@ GrepDrawArc( PDC dc,
             double StartArc,
             double EndArc,
             ARCTYPE arctype,
-            PBRUSHGDI pbrush,
+            PBRUSH pbrush,
             PPOINTL BrushOrigin);
 
 BOOLEAN
@@ -166,7 +168,7 @@ GrepDrawEllipse(PDC dc,
                 INT YLeft,
                 INT Width,
                 INT Height,
-                PBRUSHGDI pbrush,
+                PBRUSH pbrush,
                 PPOINTL brushOrg);
 
 BOOLEAN
@@ -176,7 +178,7 @@ GrepFillEllipse(PDC dc,
                 INT YLeft,
                 INT Width,
                 INT Height,
-                PBRUSHGDI pbrush,
+                PBRUSH pbrush,
                 PPOINTL brushOrg);
 
 /* ellipse.c */
@@ -367,6 +369,13 @@ SEtoNW(SURFOBJ* OutputObj, CLIPOBJ* Clip,
 
 /* Mouse pointer */
 
+VOID
+NTAPI
+GreMovePointer(
+    HDC hdc,
+    LONG x,
+    LONG y);
+
 ULONG
 NTAPI
 GreSetPointerShape(
@@ -378,22 +387,61 @@ GreSetPointerShape(
     LONG x,
     LONG y);
 
-VOID
-NTAPI
-GreMovePointer(
-    HDC hdc,
-    LONG x,
-    LONG y);
+INT INTERNAL_CALL
+MouseSafetyOnDrawStart(
+    SURFOBJ *pso,
+    LONG HazardX1,
+    LONG HazardY1,
+    LONG HazardX2,
+    LONG HazardY2);
 
-INT FASTCALL
-MouseSafetyOnDrawStart(SURFOBJ *pso,
-                       LONG HazardX1,
-                       LONG HazardY1,
-                       LONG HazardX2,
-                       LONG HazardY2);
+INT INTERNAL_CALL
+MouseSafetyOnDrawEnd(
+    SURFOBJ *pso);
 
-INT FASTCALL
-MouseSafetyOnDrawEnd(SURFOBJ *pso);
+RGBQUAD *
+FASTCALL
+DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
+
+HBRUSH
+APIENTRY
+GreCreateDIBBrush(
+    CONST BITMAPINFO *BitmapInfo,
+    UINT ColorSpec,
+    UINT BitmapInfoSize,
+    CONST VOID *PackedDIB);
+
+HBRUSH
+APIENTRY
+GreCreateHatchBrush(
+    INT Style,
+    COLORREF Color);
+
+HBRUSH
+APIENTRY
+GreCreatePatternBrush(
+    HBITMAP hBitmap);
+
+HBRUSH
+APIENTRY
+GreCreateSolidBrush(
+    COLORREF Color);
+
+HBRUSH
+APIENTRY
+GreCreateNullBrush(VOID);
+
+HBRUSH APIENTRY GreSelectBrush( HDC hdc, HBRUSH hbrush );
+
+UINT APIENTRY
+GreGetSystemPaletteEntries(HDC  hDC,
+                           UINT  StartIndex,
+                           UINT  Entries,
+                           LPPALETTEENTRY  pe);
+
+HPALETTE
+FASTCALL
+BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType);
 
 /* Test functions */
 VOID NTAPI GrePerformTests();

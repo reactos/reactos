@@ -133,7 +133,6 @@ EngCopyBits(SURFOBJ *psoDest,
     BltInfo.SourceSurface = psoSource;
     BltInfo.PatternSurface = NULL;
     BltInfo.XlateSourceToDest = ColorTranslation;
-    BltInfo.XlatePatternToDest = NULL;
     BltInfo.Rop4 = SRCCOPY;
 
     switch(clippingType)
@@ -252,7 +251,7 @@ EngCreateDeviceSurface(IN DHSURF dhSurf,
 
     if (!pSurf->pBitsLock)
     {
-        SURFACE_Unlock(pSurf);
+        SURFACE_UnlockSurface(pSurf);
         GDIOBJ_FreeObjByHandle(hSurf, GDI_OBJECT_TYPE_BITMAP);
         return 0;
     }
@@ -270,7 +269,7 @@ EngCreateDeviceSurface(IN DHSURF dhSurf,
 
     pSurf->flHooks = 0;
 
-    SURFACE_Unlock(pSurf);
+    SURFACE_UnlockSurface(pSurf);
 
     return hSurf;
 }
@@ -283,7 +282,7 @@ EngDeleteSurface(IN HSURF hSurf)
     GDIOBJ_SetOwnership(hSurf, PsGetCurrentProcess());
 
     /* Delete this bitmap */
-    GreDeleteBitmap((HGDIOBJ)hSurf);
+    GreDeleteObject((HGDIOBJ)hSurf);
 
     /* Indicate success */
     return TRUE;
@@ -297,7 +296,7 @@ EngLockSurface(IN HSURF hSurf)
     DPRINT("EngLockSurface(%x)\n", hSurf);
 
     /* Get a pointer to the surface */
-    Surface = SURFACE_ShareLock(hSurf);
+    Surface = SURFACE_ShareLockSurface(hSurf);
 
     /* Return pointer to SURFOBJ object */
     return &Surface->SurfObj;
@@ -311,7 +310,7 @@ EngUnlockSurface(IN SURFOBJ* pSurfObj)
     DPRINT("EngUnlockSurface(%p)\n", pSurface);
 
     /* Release the surface */
-    SURFACE_ShareUnlock(pSurface);
+    SURFACE_ShareUnlockSurface(pSurface);
 }
 
 BOOL
@@ -325,7 +324,7 @@ EngAssociateSurface(IN HSURF hSurf,
     DPRINT("EngAssociateSurface(%x %x)\n", hSurf, hDev);
 
     /* Get a pointer to the surface */
-    pSurface = SURFACE_Lock(hSurf);
+    pSurface = SURFACE_LockSurface(hSurf);
 
     /* Associate it */
     pSurface->SurfObj.hdev = hDev;
@@ -337,7 +336,7 @@ EngAssociateSurface(IN HSURF hSurf,
     DPRINT1("flHooks: 0x%x\n", flHooks);
 
     /* Release the pointer */
-    SURFACE_Unlock(pSurface);
+    SURFACE_UnlockSurface(pSurface);
 
     /* Indicate success */
     return TRUE;

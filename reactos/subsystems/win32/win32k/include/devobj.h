@@ -3,8 +3,8 @@
 
 typedef struct _PDEVOBJ
 {
-    DEVINFO                   DevInfo;
-    GDIINFO                   GDIInfo;
+    DEVINFO                   devinfo;
+    GDIINFO                   gdiinfo;
     POINTL                    ptlPointer;
     PFN_DrvMovePointer        pfnMovePointer;
     DHPDEV                    hPDev;

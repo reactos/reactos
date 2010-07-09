@@ -32,18 +32,18 @@ GreLineTo(SURFOBJ *psoDest,
 {
     BOOLEAN ret;
     SURFACE *psurfDest;
-    PBRUSHGDI GdiBrush;
+    PEBRUSHOBJ GdiBrush;
     RECTL b;
 
     ASSERT(psoDest);
     psurfDest = CONTAINING_RECORD(psoDest, SURFACE, SurfObj);
     ASSERT(psurfDest);
 
-    GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
+    GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
     ASSERT(GdiBrush);
 
     /* Don't do anything if null pen is selected */
-    if (GdiBrush->flAttrs & GDIBRUSH_IS_NULL)
+    if (GdiBrush->flattrs & GDIBRUSH_IS_NULL)
         return TRUE;
 
     /* No success yet */
@@ -110,9 +110,8 @@ GrePolyline(PDC pDC,
     INT i;
 
     /* Draw pen-based polygon */
-    if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pDC->dclevel.pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
-        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
@@ -126,9 +125,9 @@ GrePolyline(PDC pDC,
             DestRect.right = max(ptLine[0].x, ptLine[1].x);
             DestRect.bottom = max(ptLine[0].y, ptLine[1].y);
 
-            bRet = GreLineTo(&pDC->pBitmap->SurfObj,
+            bRet = GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                              pDC->CombinedClip,
-                             &pDC->pLineBrush->BrushObj,
+                             &pDC->eboLine.BrushObject,
                              ptLine[0].x,
                              ptLine[0].y,
                              ptLine[1].x,

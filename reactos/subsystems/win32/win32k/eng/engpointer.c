@@ -1,22 +1,149 @@
 /*
- * PROJECT:         ReactOS Win32K
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            subsystems/win32/win32k/eng/engpoint.c
- * PURPOSE:         Pointer Support Routines
- * PROGRAMMERS:     Stefan Ginsberg (stefan__100__@hotmail.com)
+ * PROJECT:          ReactOS win32 subsystem
+ * PURPOSE:          Mouse pointer functions
+ * FILE:             subsystems/win32k/eng/mouse.c
+ * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                   Timo Kreuzer (timo.kreuzer@reactos.org)
+ * REVISION HISTORY:
+ *       06-06-2001  CSH  Created
  */
-
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
+
 #define NDEBUG
 #include <debug.h>
 
-#define TAG_MOUSE       TAG('M', 'O', 'U', 'S') /* mouse */
+/* FUNCTIONS *****************************************************************/
 
-/* PUBLIC FUNCTIONS **********************************************************/
+BOOL
+APIENTRY
+EngSetPointerTag(
+	IN HDEV hdev,
+	IN SURFOBJ *psoMask,
+	IN SURFOBJ *psoColor,
+	IN XLATEOBJ *pxlo,
+	IN FLONG fl)
+{
+    // This function is obsolete for Windows 2000 and later.
+    // This function is still supported, but always returns FALSE.
+    // www.osr.com/ddk/graphics/gdifncs_4yav.htm
+    return FALSE;
+}
+
+/*
+ * FUNCTION: Notify the mouse driver that drawing is about to begin in
+ * a rectangle on a particular surface.
+ */
+INT INTERNAL_CALL
+MouseSafetyOnDrawStart(
+    SURFOBJ *pso,
+    LONG HazardX1,
+    LONG HazardY1,
+    LONG HazardX2,
+    LONG HazardY2)
+{
+    LONG tmp;
+    PDEVOBJ *ppdev;
+    GDIPOINTER *pgp;
+
+    ASSERT(pso != NULL);
+
+    ppdev = GDIDEV(pso);
+    if (ppdev == NULL)
+    {
+        return FALSE;
+    }
+
+    pgp = &ppdev->Pointer;
+
+    if (pgp->Exclude.right == -1)
+    {
+        return FALSE;
+    }
+
+    ppdev->SafetyRemoveCount++;
+
+    if (ppdev->SafetyRemoveLevel != 0)
+    {
+        return FALSE;
+    }
+
+    if (HazardX1 > HazardX2)
+    {
+        tmp = HazardX2;
+        HazardX2 = HazardX1;
+        HazardX1 = tmp;
+    }
+    if (HazardY1 > HazardY2)
+    {
+        tmp = HazardY2;
+        HazardY2 = HazardY1;
+        HazardY1 = tmp;
+    }
+
+    if (pgp->Exclude.right >= HazardX1
+            && pgp->Exclude.left <= HazardX2
+            && pgp->Exclude.bottom >= HazardY1
+            && pgp->Exclude.top <= HazardY2)
+    {
+        ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
+        ppdev->pfnMovePointer(pso, -1, -1, NULL);
+    }
+
+    return(TRUE);
+}
+
+/*
+ * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
+ */
+INT INTERNAL_CALL
+MouseSafetyOnDrawEnd(
+    SURFOBJ *pso)
+{
+    PDEVOBJ *ppdev;
+    GDIPOINTER *pgp;
+#if 1
+    POINT CursorPos;
+#endif
+
+    ASSERT(pso != NULL);
+
+    ppdev = (PDEVOBJ*)pso->hdev;
+
+    if (ppdev == NULL)
+    {
+        return(FALSE);
+    }
+
+    pgp = &ppdev->Pointer;
+
+    if (pgp->Exclude.right == -1)
+    {
+        return FALSE;
+    }
+
+    if (--ppdev->SafetyRemoveCount >= ppdev->SafetyRemoveLevel)
+    {
+        return FALSE;
+    }
+
+#if 0
+    ppdev->pfnMovePointer(pso, gpsi->ptCursor.x, gpsi->ptCursor.y, &pgp->Exclude);
+#else
+    UserGetCursorPos(&CursorPos);
+    ppdev->pfnMovePointer(pso, CursorPos.x, CursorPos.y, &pgp->Exclude);
+#endif
+
+    ppdev->SafetyRemoveLevel = 0;
+
+    return(TRUE);
+}
+
+/* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
 VOID
+INTERNAL_CALL
 IntHideMousePointer(
     PDEVOBJ *ppdev,
     SURFOBJ *psoDest)
@@ -40,6 +167,7 @@ IntHideMousePointer(
 
     if (!pgp->psurfSave)
     {
+        DPRINT1("No SaveSurface!\n");
         return;
     }
 
@@ -70,6 +198,7 @@ IntHideMousePointer(
 }
 
 VOID
+INTERNAL_CALL
 IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 {
     GDIPOINTER *pgp;
@@ -180,91 +309,6 @@ IntShowMousePointer(PDEVOBJ *ppdev, SURFOBJ *psoDest)
 }
 
 /*
- * FUNCTION: Notify the mouse driver that drawing is about to begin in
- * a rectangle on a particular surface.
- */
-INT FASTCALL
-MouseSafetyOnDrawStart(SURFOBJ *pso,
-                       LONG HazardX1,
-                       LONG HazardY1,
-                       LONG HazardX2,
-                       LONG HazardY2)
-{
-    LONG tmp;
-    PDEVOBJ *ppdev;
-    GDIPOINTER *pgp;
-
-    ASSERT(pso != NULL);
-
-    ppdev = GDIDEV(pso);
-    if (!ppdev) return FALSE;
-
-    pgp = &ppdev->Pointer;
-
-    if (pgp->Exclude.right == -1)
-        return FALSE;
-
-    ppdev->SafetyRemoveCount++;
-
-    if (ppdev->SafetyRemoveLevel != 0)
-        return FALSE;
-
-    if (HazardX1 > HazardX2)
-    {
-        tmp = HazardX2;
-        HazardX2 = HazardX1;
-        HazardX1 = tmp;
-    }
-    if (HazardY1 > HazardY2)
-    {
-        tmp = HazardY2;
-        HazardY2 = HazardY1;
-        HazardY1 = tmp;
-    }
-
-    if (pgp->Exclude.right >= HazardX1
-        && pgp->Exclude.left <= HazardX2
-        && pgp->Exclude.bottom >= HazardY1
-        && pgp->Exclude.top <= HazardY2)
-    {
-        ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
-        ppdev->pfnMovePointer(pso, -1, -1, NULL);
-    }
-
-    return TRUE;
-}
-
-/*
- * FUNCTION: Notify the mouse driver that drawing has finished on a surface.
- */
-INT FASTCALL
-MouseSafetyOnDrawEnd(SURFOBJ *pso)
-{
-    PDEVOBJ *ppdev;
-    GDIPOINTER *pgp;
-
-    ASSERT(pso != NULL);
-
-    ppdev = (PDEVOBJ*)pso->hdev;
-
-    if (!ppdev) return FALSE;
-
-    pgp = &ppdev->Pointer;
-
-    if (pgp->Exclude.right == -1)
-        return FALSE;
-
-    if (--ppdev->SafetyRemoveCount >= ppdev->SafetyRemoveLevel)
-        return FALSE;
-
-    ppdev->pfnMovePointer(pso, CursorInfo.CursorPos.x, CursorInfo.CursorPos.y, &pgp->Exclude);
-
-    ppdev->SafetyRemoveLevel = 0;
-
-    return TRUE;
-}
-
-/*
  * @implemented
  */
 ULONG APIENTRY
@@ -321,21 +365,21 @@ EngSetPointerShape(
     if (pgp->psurfColor)
     {
         EngDeleteSurface(pgp->psurfColor->BaseObject.hHmgr);
-        SURFACE_ShareUnlock(pgp->psurfColor);
+        SURFACE_ShareUnlockSurface(pgp->psurfColor);
         pgp->psurfColor = NULL;
     }
 
     if (pgp->psurfMask)
     {
         EngDeleteSurface(pgp->psurfMask->BaseObject.hHmgr);
-        SURFACE_ShareUnlock(pgp->psurfMask);
+        SURFACE_ShareUnlockSurface(pgp->psurfMask);
         pgp->psurfMask = NULL;
     }
 
     if (pgp->psurfSave != NULL)
     {
         EngDeleteSurface(pgp->psurfSave->BaseObject.hHmgr);
-        SURFACE_ShareUnlock(pgp->psurfSave);
+        SURFACE_ShareUnlockSurface(pgp->psurfSave);
         pgp->psurfSave = NULL;
     }
 
@@ -363,48 +407,42 @@ EngSetPointerShape(
                            pso->iBitmapFormat,
                            BMF_TOPDOWN | BMF_NOZEROINIT,
                            NULL);
-    pgp->psurfSave = SURFACE_ShareLock(hbmp);
+    pgp->psurfSave = SURFACE_ShareLockSurface(hbmp);
 
     /* Create a mask surface */
     if (psoMask)
     {
-        XLATEOBJ *xlo;
-        //PPALETTE ppal;
+        EXLATEOBJ exlo;
+        PPALETTE ppal;
 
         hbmp = EngCreateBitmap(psoMask->sizlBitmap,
                                lDelta,
                                pso->iBitmapFormat,
                                BMF_TOPDOWN | BMF_NOZEROINIT,
                                NULL);
-        pgp->psurfMask = SURFACE_ShareLock(hbmp);
+        pgp->psurfMask = SURFACE_ShareLockSurface(hbmp);
 
         if(pgp->psurfMask)
         {
-            //ppal = PALETTE_LockPalette(ppdev->DevInfo.hpalDefault);
-            /*EXLATEOBJ_vInitialize(&exlo,
+            ppal = PALETTE_LockPalette(ppdev->devinfo.hpalDefault);
+            EXLATEOBJ_vInitialize(&exlo,
                                   &gpalMono,
                                   ppal,
                                   0,
                                   RGB(0xff,0xff,0xff),
-                                  RGB(0,0,0));*/
-            xlo = IntEngCreateSrcMonoXlate(ppdev->DevInfo.hpalDefault,
-                                           RGB(0x0,0x0,0x0),
-                                           RGB(0xff,0xff,0xff)
-                                           );
+                                  RGB(0,0,0));
 
             rcl.bottom = psoMask->sizlBitmap.cy;
-
             GreCopyBits(&pgp->psurfMask->SurfObj,
                            psoMask,
                            NULL,
-                           xlo,
+                           &exlo.xlo,
                            &rcl,
                            (POINTL*)&rcl);
 
-            //EXLATEOBJ_vCleanup(&exlo);
-            EngDeleteXlate(xlo);
-            //if (ppal)
-            //    PALETTE_UnlockPalette(ppal);
+            EXLATEOBJ_vCleanup(&exlo);
+            if (ppal)
+                PALETTE_UnlockPalette(ppal);
         }
     }
     else
@@ -420,7 +458,7 @@ EngSetPointerShape(
                                pso->iBitmapFormat,
                                BMF_TOPDOWN | BMF_NOZEROINIT,
                                NULL);
-        pgp->psurfColor = SURFACE_ShareLock(hbmp);
+        pgp->psurfColor = SURFACE_ShareLockSurface(hbmp);
         if (pgp->psurfColor)
         {
             rcl.bottom = psoColor->sizlBitmap.cy;
@@ -496,19 +534,220 @@ EngMovePointer(
             prcl->right = prcl->left + pgp->Size.cx;
             prcl->bottom = prcl->top + pgp->Size.cy;
         }
-    } else if (prcl != NULL)
+    } 
+    else if (prcl != NULL)
+    {
         prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
+    }
 }
 
-BOOL
-APIENTRY
-EngSetPointerTag(
-  IN HDEV  hdev,
-  IN SURFOBJ  *psoMask,
-  IN SURFOBJ  *psoColor,
-  IN XLATEOBJ  *pxlo,
-  IN FLONG  fl)
+VOID APIENTRY
+IntEngMovePointer(
+    IN SURFOBJ *pso,
+    IN LONG x,
+    IN LONG y,
+    IN RECTL *prcl)
 {
-    UNIMPLEMENTED;
-	return FALSE;
+    SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+    PPDEVOBJ ppdev = (PPDEVOBJ)pso->hdev;
+
+    SURFACE_LockBitmapBits(psurf);
+    ppdev->pfnMovePointer(pso, x, y, prcl);
+    SURFACE_UnlockBitmapBits(psurf);
 }
+
+ULONG APIENTRY
+IntEngSetPointerShape(
+   IN SURFOBJ *pso,
+   IN SURFOBJ *psoMask,
+   IN SURFOBJ *psoColor,
+   IN XLATEOBJ *pxlo,
+   IN LONG xHot,
+   IN LONG yHot,
+   IN LONG x,
+   IN LONG y,
+   IN RECTL *prcl,
+   IN FLONG fl)
+{
+    ULONG ulResult = SPS_DECLINE;
+    SURFACE *psurf = CONTAINING_RECORD(pso, SURFACE, SurfObj);
+    PFN_DrvSetPointerShape pfnSetPointerShape;
+    PPDEVOBJ ppdev = GDIDEV(pso);
+
+    pfnSetPointerShape = GDIDEVFUNCS(pso).SetPointerShape;
+
+    SURFACE_LockBitmapBits(psurf);
+    if (pfnSetPointerShape)
+    {
+        ulResult = pfnSetPointerShape(pso,
+                                      psoMask,
+                                      psoColor,
+                                      pxlo,
+                                      xHot,
+                                      yHot,
+                                      x,
+                                      y,
+                                      prcl,
+                                      fl);
+    }
+
+    /* Check if the driver accepted it */
+    if (ulResult == SPS_ACCEPT_NOEXCLUDE)
+    {
+        /* Set MovePointer to the driver function */
+        ppdev->pfnMovePointer = GDIDEVFUNCS(pso).MovePointer;
+    }
+    else
+    {
+        /* Set software pointer */
+        ulResult = EngSetPointerShape(pso,
+                                      psoMask,
+                                      psoColor,
+                                      pxlo,
+                                      xHot,
+                                      yHot,
+                                      x,
+                                      y,
+                                      prcl,
+                                      fl);
+        /* Set MovePointer to the eng function */
+        ppdev->pfnMovePointer = EngMovePointer;
+    }
+
+    SURFACE_UnlockBitmapBits(psurf);
+
+    return ulResult;
+}
+
+ULONG
+NTAPI
+GreSetPointerShape(
+    HDC hdc,
+    HBITMAP hbmMask,
+    HBITMAP hbmColor,
+    LONG xHot,
+    LONG yHot,
+    LONG x,
+    LONG y)
+{
+    PDC pdc;
+    PSURFACE psurf, psurfMask, psurfColor;
+    EXLATEOBJ exlo;
+    FLONG fl = 0;
+    ULONG ulResult = 0;
+#if 1
+    HPALETTE hpal, hColorPal;
+    PPALETTE ppal, pColorPal;
+#endif
+
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        DPRINT1("Failed to lock the DC.\n");
+        return 0;
+    }
+
+    psurf = pdc->dclevel.pSurface;
+    if (!psurf)
+    {
+        DPRINT1("DC has no surface.\n");
+        DC_UnlockDc(pdc);
+        return 0;
+    }
+
+    /* Lock the mask bitmap */
+    if (hbmMask)
+        psurfMask = SURFACE_ShareLockSurface(hbmMask);
+    else
+        psurfMask = NULL;
+
+    /* Check for color bitmap */
+    if (hbmColor)
+    {
+        /* We have one, lock it */
+        psurfColor = SURFACE_ShareLockSurface(hbmColor);
+        
+        if (psurfColor)
+        {
+            /* Create an XLATEOBJ, no mono support */
+#if 0
+            EXLATEOBJ_vInitialize(&exlo, psurfColor->ppal, psurf->ppal, 0, 0, 0);
+#else
+            hpal = psurf->hDIBPalette;
+            if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
+            ppal = PALETTE_LockPalette(hpal);
+
+            hColorPal = psurf->hDIBPalette;
+            if (!hColorPal) hColorPal = pPrimarySurface->devinfo.hpalDefault;
+            pColorPal = PALETTE_LockPalette(hpal);
+
+            EXLATEOBJ_vInitialize(&exlo, ppal, pColorPal, 0, 0, 0);
+#endif
+        }
+    }
+    else
+        psurfColor = NULL;
+
+    /* Call the driver or eng function */
+    ulResult = IntEngSetPointerShape(&psurf->SurfObj,
+                                     psurfMask ? &psurfMask->SurfObj : NULL,
+                                     psurfColor ? &psurfColor->SurfObj : NULL,
+                                     psurfColor ? &exlo.xlo : NULL,
+                                     xHot,
+                                     yHot,
+                                     x,
+                                     y,
+                                     &pdc->ppdev->Pointer.Exclude,
+                                     fl | SPS_CHANGE);
+
+    /* Cleanup */
+    if (psurfColor)
+    {
+        EXLATEOBJ_vCleanup(&exlo);
+#if 1
+        PALETTE_UnlockPalette(ppal);
+        PALETTE_UnlockPalette(pColorPal);
+#endif
+        SURFACE_ShareUnlockSurface(psurfColor);
+    }
+
+    if (psurfMask)
+        SURFACE_ShareUnlockSurface(psurfMask);
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+
+    /* Return result */
+    return ulResult;
+}
+
+VOID
+NTAPI
+GreMovePointer(
+    HDC hdc,
+    LONG x,
+    LONG y)
+{
+    PDC pdc;
+    PRECTL prcl;
+
+    /* Lock the DC */
+    pdc = DC_LockDc(hdc);
+    if (!pdc)
+    {
+        DPRINT1("Failed to lock the DC.\n");
+        return;
+    }
+
+    /* Store the cursor exclude position in the PDEV */
+    prcl = &pdc->ppdev->Pointer.Exclude;
+
+    /* Call Eng/Drv function */
+    IntEngMovePointer(&pdc->dclevel.pSurface->SurfObj, x, y, prcl);
+
+    /* Unlock the DC */
+    DC_UnlockDc(pdc);
+}
+
+
+/* EOF */

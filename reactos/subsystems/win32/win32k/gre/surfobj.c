@@ -125,6 +125,110 @@ BITMAP_GetWidthBytes(INT bmWidth, INT bpp)
     return ((bmWidth * bpp + 15) & ~15) >> 3;
 }
 
+UINT FASTCALL
+BITMAP_GetRealBitsPixel(UINT nBitsPixel)
+{
+    if (nBitsPixel <= 1)
+        return 1;
+    if (nBitsPixel <= 4)
+        return 4;
+    if (nBitsPixel <= 8)
+        return 8;
+    if (nBitsPixel <= 16)
+        return 16;
+    if (nBitsPixel <= 24)
+        return 24;
+    if (nBitsPixel <= 32)
+        return 32;
+
+    return 0;
+}
+
+
+INT APIENTRY
+BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
+{
+    PBITMAP pBitmap;
+
+    if (!buffer) return sizeof(BITMAP);
+    if ((UINT)Count < sizeof(BITMAP)) return 0;
+
+    /* always fill a basic BITMAP structure */
+    pBitmap = buffer;
+    pBitmap->bmType = 0;
+    pBitmap->bmWidth = psurf->SurfObj.sizlBitmap.cx;
+    pBitmap->bmHeight = psurf->SurfObj.sizlBitmap.cy;
+    pBitmap->bmWidthBytes = abs(psurf->SurfObj.lDelta);
+    pBitmap->bmPlanes = 1;
+    pBitmap->bmBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+#if 0
+    /* Check for DIB section */
+    if (psurf->hSecure)
+    {
+        /* Set bmBits in this case */
+        pBitmap->bmBits = psurf->SurfObj.pvBits;
+
+        if (Count >= sizeof(DIBSECTION))
+        {
+            /* Fill rest of DIBSECTION */
+            PDIBSECTION pds = buffer;
+
+            pds->dsBmih.biSize = sizeof(BITMAPINFOHEADER);
+            pds->dsBmih.biWidth = pds->dsBm.bmWidth;
+            pds->dsBmih.biHeight = pds->dsBm.bmHeight;
+            pds->dsBmih.biPlanes = pds->dsBm.bmPlanes;
+            pds->dsBmih.biBitCount = pds->dsBm.bmBitsPixel;
+            switch (psurf->SurfObj.iBitmapFormat)
+            {
+                /* FIXME: What about BI_BITFIELDS? */
+                case BMF_1BPP:
+                case BMF_4BPP:
+                case BMF_8BPP:
+                case BMF_16BPP:
+                case BMF_24BPP:
+                case BMF_32BPP:
+                   pds->dsBmih.biCompression = BI_RGB;
+                   break;
+                case BMF_4RLE:
+                   pds->dsBmih.biCompression = BI_RLE4;
+                   break;
+                case BMF_8RLE:
+                   pds->dsBmih.biCompression = BI_RLE8;
+                   break;
+                case BMF_JPEG:
+                   pds->dsBmih.biCompression = BI_JPEG;
+                   break;
+                case BMF_PNG:
+                   pds->dsBmih.biCompression = BI_PNG;
+                   break;
+            }
+            pds->dsBmih.biSizeImage = psurf->SurfObj.cjBits;
+            pds->dsBmih.biXPelsPerMeter = 0;
+            pds->dsBmih.biYPelsPerMeter = 0;
+            //pds->dsBmih.biClrUsed = psurf->biClrUsed;
+            //pds->dsBmih.biClrImportant = psurf->biClrImportant;
+            //pds->dsBitfields[0] = psurf->dsBitfields[0];
+            //pds->dsBitfields[1] = psurf->dsBitfields[1];
+            //pds->dsBitfields[2] = psurf->dsBitfields[2];
+            //pds->dshSection = psurf->hDIBSection;
+            //pds->dsOffset = psurf->dwOffset;
+
+            return sizeof(DIBSECTION);
+        }
+    }
+    else
+    {
+        /* not set according to wine test, confirmed in win2k */
+        pBitmap->bmBits = NULL;
+    }
+#else
+    pBitmap->bmBits = NULL;
+#endif
+
+    return sizeof(BITMAP);
+}
+
+
 VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta, ULONG Format)
 {
     INT x = 0;
@@ -204,6 +308,73 @@ VOID DecompressBitmap(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, 
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
+
+HBITMAP FASTCALL
+BITMAP_CopyBitmap(HBITMAP hBitmap)
+{
+    HBITMAP res;
+    BITMAP bm;
+    SURFACE *Bitmap, *resBitmap;
+    SIZEL Size;
+
+    if (hBitmap == NULL)
+    {
+        return 0;
+    }
+
+    Bitmap = GDIOBJ_LockObj(hBitmap, GDI_OBJECT_TYPE_BITMAP);
+    if (Bitmap == NULL)
+    {
+        return 0;
+    }
+
+    BITMAP_GetObject(Bitmap, sizeof(BITMAP), (PVOID)&bm);
+    bm.bmBits = NULL;
+    if (Bitmap->SurfObj.lDelta >= 0)
+        bm.bmHeight = -bm.bmHeight;
+
+    Size.cx = abs(bm.bmWidth);
+    Size.cy = abs(bm.bmHeight);
+    res = GreCreateBitmap(Size,
+                          bm.bmWidthBytes,
+                          GrepBitmapFormat(bm.bmBitsPixel * bm.bmPlanes, BI_RGB),
+                          (bm.bmHeight < 0 ? BMF_TOPDOWN : 0) | BMF_NOZEROINIT,
+                          NULL);
+
+    if (res)
+    {
+        PBYTE buf;
+
+        resBitmap = GDIOBJ_LockObj(res, GDI_OBJECT_TYPE_BITMAP);
+        if (resBitmap)
+        {
+            buf = ExAllocatePoolWithTag(PagedPool,
+                                        bm.bmWidthBytes * abs(bm.bmHeight),
+                                        TAG_BITMAP);
+            if (buf == NULL)
+            {
+                GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
+                GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
+                GreDeleteObject(res);
+                return 0;
+            }
+            GreGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
+            GreSetBitmapBits(resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
+            ExFreePoolWithTag(buf,TAG_BITMAP);
+            resBitmap->ulFlags = Bitmap->ulFlags;
+            GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
+        }
+        else
+        {
+            GreDeleteObject(res);
+            res = NULL;
+        }
+    }
+
+    GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
+
+    return  res;
+}
 
 HBITMAP
 GreCreateBitmap(IN SIZEL Size,
@@ -316,20 +487,83 @@ GreCreateBitmap(IN SIZEL Size,
     ExInitializeFastMutex(pSurface->pBitsLock);
 
     /* Unlock the surface */
-    SURFACE_Unlock(pSurface);
+    SURFACE_UnlockSurface(pSurface);
 
     /* Return handle to it */
     return hSurface;
 }
 
-VOID FASTCALL
-GreDeleteBitmap(HGDIOBJ hBitmap)
+                
+HBITMAP APIENTRY
+IntGdiCreateBitmap(
+    INT Width,
+    INT Height,
+    UINT Planes,
+    UINT BitsPixel,
+    IN OPTIONAL LPBYTE pBits)
 {
-    /* Get ownership */
-    GDIOBJ_SetOwnership(hBitmap, PsGetCurrentProcess());
+    HBITMAP hBitmap;
+    SIZEL Size;
+    LONG WidthBytes;
+    PSURFACE psurfBmp;
 
-    /* Free it */
-    GDIOBJ_FreeObjByHandle(hBitmap, GDI_OBJECT_TYPE_BITMAP);
+    /* NOTE: Windows also doesn't store nr. of planes separately! */
+    BitsPixel = BITMAP_GetRealBitsPixel(BitsPixel * Planes);
+
+    /* Check parameters */
+    if (BitsPixel == 0 || Width <= 0 || Width >= 0x8000000 || Height == 0)
+    {
+        DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
+                Width, Height, BitsPixel);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    WidthBytes = BITMAP_GetWidthBytes(Width, BitsPixel);
+
+    Size.cx = Width;
+    Size.cy = abs(Height);
+
+    /* Make sure that cjBits will not overflow */
+    if ((ULONGLONG)WidthBytes * Size.cy >= 0x100000000ULL)
+    {
+        DPRINT1("Width = %d, Height = %d BitsPixel = %d\n",
+                Width, Height, BitsPixel);
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    /* Create the bitmap object. */
+    hBitmap = GreCreateBitmap(Size, WidthBytes,
+                              GrepBitmapFormat(BitsPixel, BI_RGB),
+                              (Height < 0 ? BMF_TOPDOWN : 0) |
+                              (NULL == pBits ? 0 : BMF_NOZEROINIT), NULL);
+    if (!hBitmap)
+    {
+        DPRINT("IntGdiCreateBitmap: returned 0\n");
+        return 0;
+    }
+
+    psurfBmp = SURFACE_LockSurface(hBitmap);
+    if (psurfBmp == NULL)
+    {
+        GreDeleteObject(hBitmap);
+        return NULL;
+    }
+
+//    psurfBmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+
+    if (NULL != pBits)
+    {
+        GreSetBitmapBits(psurfBmp, psurfBmp->SurfObj.cjBits, pBits);
+    }
+
+    SURFACE_UnlockSurface(psurfBmp);
+
+    DPRINT("IntGdiCreateBitmap : %dx%d, %d BPP colors, topdown %d, returning %08x\n",
+           Size.cx, Size.cy, BitsPixel, (Height < 0 ? 1 : 0), hBitmap);
+
+    return hBitmap;
 }
 
 BOOL APIENTRY
@@ -599,7 +833,7 @@ GreGetPixel(
         return CLR_INVALID;
 
     /* Get DC's surface */
-    psurf = pDC->pBitmap;
+    psurf = pDC->dclevel.pSurface;
 
     if (!psurf) return CLR_INVALID;
 
@@ -616,29 +850,6 @@ GreGetPixel(
 
     /* Return found pixel color */
     return crPixel;
-}
-
-VOID
-NTAPI
-GreSetPixel(
-    PDC pDC,
-    UINT x,
-    UINT y,
-    COLORREF crColor)
-{
-    PBRUSHGDI pOldBrush = pDC->pFillBrush;
-
-    /* Create a solid brush with this color */
-    pDC->pFillBrush = GreCreateSolidBrush(pDC->pBitmap->hDIBPalette, crColor);
-
-    /* Put pixel */
-    GrePatBlt(pDC, x, y, 1, 1, PATCOPY, pDC->pFillBrush);
-
-    /* Free the created brush */
-    GreFreeBrush(pDC->pFillBrush);
-
-    /* Restore the old brush */
-    pDC->pFillBrush = pOldBrush;
 }
 
 BOOL

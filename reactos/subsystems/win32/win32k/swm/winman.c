@@ -72,7 +72,7 @@ SwmCreateScreenDc()
     RosGdiCreateDC(&RosDc, &SwmDc, NULL, NULL, NULL, NULL);
 
     /* Set clipping to full screen */
-    pDC = DC_Lock(SwmDc);
+    pDC = DC_LockDc(SwmDc);
     RECTL_vSetRect(&rcBounds,
                    0,
                    0,
@@ -80,7 +80,7 @@ SwmCreateScreenDc()
                    pDC->rcVport.bottom);
     IntEngDeleteClipRegion(pDC->CombinedClip);
     pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
     //RosGdiSetDeviceClipping(SwmDc, 1, &rcBounds, &rcBounds);
 
     /* Make it global */
@@ -627,7 +627,7 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
     if (!SwmDc) SwmCreateScreenDc();
 
     /* Set clipping to prevent touching higher-level windows */
-    pDC = DC_Lock(SwmDc);
+    pDC = DC_LockDc(SwmDc);
 
     /* Check if we have higher-level windows */
     if (SwmWin->Entry.Blink != &SwmWindows)
@@ -711,7 +711,7 @@ SwmCopyBits(const PSWM_WINDOW SwmWin, const RECT *OldRect)
         pDC->CombinedClip = IntEngCreateClipRegion(1, &rcBounds, &rcBounds);
     }
 
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Copy bits */
     RosGdiBitBlt(SwmDc, SwmWin->Window.left, SwmWin->Window.top, SwmWin->Window.right - SwmWin->Window.left,
@@ -1007,51 +1007,56 @@ VOID
 NTAPI
 SwmDebugDrawRect(HDC hDC, rectangle_t *Rect, ULONG Color)
 {
+#if 0
     PDC pDC;
     ULONG Scale = 4;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(hDC);
+    pDC = DC_LockDc(hDC);
 
-    pDC->pLineBrush->BrushObj.iSolidColor = Color;
+    pDC->dclevel.pbrLine->BrushObject.iSolidColor = Color;
 
     GreRectangle(pDC, Rect->left / Scale, Rect->top / Scale, Rect->right / Scale, Rect->bottom / Scale);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
+#endif
 }
 
 VOID
 NTAPI
 SwmDebugDrawRegion(HDC hDC, struct region *Region, ULONG Color)
 {
+#if 0
     PDC pDC;
     ULONG Scale = 4, i;
 
     if (is_region_empty(Region)) return;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(hDC);
+    pDC = DC_LockDc(hDC);
 
-    pDC->pLineBrush->BrushObj.iSolidColor = Color;
+    pDC->dclevel.pbrLine->BrushObject.iSolidColor = Color;
 
     for (i=0; i<Region->num_rects; i++)
         GreRectangle(pDC, Region->rects[i].left / Scale, Region->rects[i].top / Scale,
             Region->rects[i].right / Scale, Region->rects[i].bottom / Scale);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
+#endif
 }
 
 VOID
 NTAPI
 SwmDebugDrawWindows()
 {
+#if 0
     PLIST_ENTRY Current;
     PSWM_WINDOW Window;
     HDC ScreenDc = 0;
     ROS_DCINFO RosDc = {0};
-    PBRUSHGDI Brush, BrushBack;
+    PEBRUSHOBJ Brush, BrushBack;
     PDC pDC;
     RECTL rcSafeBounds;
 
@@ -1062,9 +1067,9 @@ SwmDebugDrawWindows()
     Brush = GreCreateSolidBrush(NULL, RGB(0xFF, 0, 0));
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(ScreenDc);
-    GreFreeBrush(pDC->pLineBrush);
-    pDC->pLineBrush = Brush;
+    pDC = DC_LockDc(ScreenDc);
+    GreFreeBrush(pDC->dclevel.pbrLine);
+    pDC->dclevel.pbrLine = Brush;
 
     /* Set the clipping object */
     IntEngDeleteClipRegion(pDC->CombinedClip);
@@ -1077,13 +1082,13 @@ SwmDebugDrawWindows()
     pDC->CombinedClip = IntEngCreateClipRegion(1, &rcSafeBounds, &rcSafeBounds);
 
     /* Clear the area */
-    BrushBack = pDC->pFillBrush;
-    pDC->pFillBrush = GreCreateSolidBrush(NULL, RGB(0,0,0));
+    BrushBack = pDC->dclevel.pbrFill;
+    pDC->dclevel.pbrFill = GreCreateSolidBrush(NULL, RGB(0,0,0));
     GreRectangle(pDC, 0, 0, 800/4, 600/4);
-    GreFreeBrush(pDC->pFillBrush);
-    pDC->pFillBrush = BrushBack;
+    GreFreeBrush(pDC->dclevel.pbrFill);
+    pDC->dclevel.pbrFill = BrushBack;
 
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Traverse the list to find our window */
     Current = SwmWindows.Flink;
@@ -1101,6 +1106,7 @@ SwmDebugDrawWindows()
     /* Delete screen dc */
     GreFreeBrush(Brush);
     RosGdiDeleteDC(ScreenDc);
+#endif
 }
 
 VOID

@@ -30,7 +30,7 @@ typedef struct _BASEOBJECT
   USHORT      cExclusiveLock;
   USHORT      BaseFlags;
   PTHREADINFO Tid;
-} BASEOBJECT, *PBASEOBJECT;
+} BASEOBJECT, *PBASEOBJECT, *POBJ;;
 
 typedef BOOL (APIENTRY *GDICLEANUPPROC)(PVOID ObjectBody);
 
@@ -69,6 +69,8 @@ ULONG       FASTCALL GDIOBJ_UnlockObjByPtr(PBASEOBJECT Object);
 
 PVOID       APIENTRY GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 
+VOID        FASTCALL GreDeleteObject(HGDIOBJ hBitmap);
+
 /* Inlines */
 ULONG
 FORCEINLINE
@@ -84,6 +86,9 @@ GDIOBJ_ShareUnlockObjByPtr(PBASEOBJECT Object)
     }
     return cLocks;
 }
+
+#define GDIOBJ_GetObjectType(Handle) \
+  GDI_HANDLE_GET_TYPE(Handle)
 
 /* Handle mapping */
 VOID NTAPI GDI_InitHandleMapping();

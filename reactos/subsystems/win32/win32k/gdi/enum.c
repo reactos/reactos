@@ -50,13 +50,13 @@ INT APIENTRY RosGdiGetDeviceCaps( HDC physDev, INT cap )
     INT iCaps;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Get device caps from the DC */
     iCaps = GreGetDeviceCaps(pDC, cap);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Return result */
     return iCaps;

@@ -21,7 +21,7 @@ BOOL APIENTRY RosGdiEllipse( HDC physDev, INT left, INT top, INT right, INT bott
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Add DC origin */
     left += pDC->rcVport.left + pDC->rcDcRect.left;
@@ -32,7 +32,7 @@ BOOL APIENTRY RosGdiEllipse( HDC physDev, INT left, INT top, INT right, INT bott
     GreEllipse(pDC, left, top, right, bottom);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
@@ -59,13 +59,13 @@ BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Call GRE routine */
     GreTextOut(pDC, x, y, flags, lprect, wstr, count, lpDx, formatEntry, aa_type);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
@@ -79,7 +79,7 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     DPRINT("LineTo: (%d,%d)-(%d,%d)\n", x1, y1, x2, y2);
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Set points */
     pt[0].x = x1; pt[0].y = y1;
@@ -91,19 +91,16 @@ BOOL APIENTRY RosGdiLineTo( HDC physDev, INT x1, INT y1, INT x2, INT y2 )
     pt[1].x += pDC->rcVport.left + pDC->rcDcRect.left;
     pt[1].y += pDC->rcVport.top + pDC->rcDcRect.top;
 
-    /* Update the pen */
-    GreUpdateBrush(pDC->pLineBrush, pDC);
-
-    GreLineTo(&pDC->pBitmap->SurfObj,
+    GreLineTo(&pDC->dclevel.pSurface->SurfObj,
               pDC->CombinedClip,
-              &(pDC->pLineBrush->BrushObj),
+              &pDC->eboLine.BrushObject,
               pt[0].x, pt[0].y,
               pt[1].x, pt[1].y,
               &scrRect,
               0);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
@@ -114,7 +111,7 @@ BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Add DC origin */
     left += pDC->rcVport.left + pDC->rcDcRect.left;
@@ -129,7 +126,7 @@ BOOL APIENTRY RosGdiArc( HDC physDev, INT left, INT top, INT right, INT bottom,
     GrepArc(pDC, left, top, right, bottom, xstart, ystart, xend, yend, arc);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
@@ -156,7 +153,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     ULONG i;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Capture the points buffer */
     _SEH2_TRY
@@ -179,7 +176,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     if (!NT_SUCCESS(Status))
     {
         /* Release the object */
-        DC_Unlock(pDC);
+        DC_UnlockDc(pDC);
 
         /* Free the buffer if it was allocated */
         if (pPoints != pStackBuf) ExFreePool(pPoints);
@@ -212,7 +209,7 @@ BOOL APIENTRY RosGdiPolygon( HDC physDev, const POINT* pUserBuffer, INT count )
     GrePolygon(pDC, pPoints, count, &rcBound);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Free the buffer if it was allocated */
     if (pPoints != pStackBuf) ExFreePool(pPoints);
@@ -226,13 +223,13 @@ BOOL APIENTRY RosGdiPolyline( HDC physDev, const POINT* pt, INT count )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Draw the polyline */
     GrePolyline(pDC, pt, count);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
@@ -254,13 +251,13 @@ BOOL APIENTRY RosGdiRectangle(HDC physDev, PRECT rc)
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Draw the rectangle */
     GreRectangle(pDC, rc->left, rc->top, rc->right, rc->bottom);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }

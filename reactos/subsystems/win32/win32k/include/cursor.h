@@ -20,16 +20,4 @@ typedef struct _GDIPOINTER
   RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
 } GDIPOINTER, *PGDIPOINTER;
 
-typedef struct _CURSORICONENTRY
-{
-    LIST_ENTRY Entry;
-    ICONINFO   IconInfo;
-    HANDLE     Self;
-    HANDLE     hbmMaskUser; // temporary
-    HANDLE     hbmColorUser; // temporary
-} CURSORICONENTRY, *PCURSORICONENTRY;
-
-extern SYSTEM_CURSORINFO CursorInfo;
-
-PCURSORICONENTRY NTAPI USER_GetCursorIcon(HCURSOR Handle);
-
+VOID UserGetCursorPos(LPPOINT pt);

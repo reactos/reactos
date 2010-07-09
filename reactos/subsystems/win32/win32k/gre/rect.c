@@ -34,16 +34,15 @@ GreRectangle(PDC pDC,
     DestRect.top = TopRect + pDC->rcDcRect.top + pDC->rcVport.top;
     DestRect.bottom = BottomRect + pDC->rcDcRect.top + pDC->rcVport.top;
 
-    BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
-    BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
+    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
+    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
 
     /* Draw brush-based rectangle */
-    if (pDC->pFillBrush)
+    if (pDC->dclevel.pbrFill)
     {
-        if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pDC->dclevel.pbrFill->flAttrs & GDIBRUSH_IS_NULL))
         {
-            GreUpdateBrush(pDC->pFillBrush, pDC);
-            bRet = GrepBitBltEx(&pDC->pBitmap->SurfObj,
+            bRet = GrepBitBltEx(&pDC->dclevel.pSurface->SurfObj,
                                NULL,
                                NULL,
                                pDC->CombinedClip,
@@ -51,7 +50,7 @@ GreRectangle(PDC pDC,
                                &DestRect,
                                NULL,
                                NULL,
-                               &pDC->pFillBrush->BrushObj,
+                               &pDC->eboFill.BrushObject,
                                &BrushOrigin,
                                ROP3_TO_ROP4(PATCOPY),
                                TRUE);
@@ -60,34 +59,33 @@ GreRectangle(PDC pDC,
 
 
     /* Draw pen-based rectangle */
-    if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pDC->dclevel.pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
-        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
-        GreLineTo(&pDC->pBitmap->SurfObj,
+        GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                   pDC->CombinedClip,
-                  &pDC->pLineBrush->BrushObj,
+                  &pDC->eboLine.BrushObject,
                   DestRect.left, DestRect.top, DestRect.right, DestRect.top,
                   &DestRect, // Bounding rectangle
                   Mix);
 
-        GreLineTo(&pDC->pBitmap->SurfObj,
+        GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                   pDC->CombinedClip,
-                  &pDC->pLineBrush->BrushObj,
+                  &pDC->eboLine.BrushObject,
                   DestRect.right, DestRect.top, DestRect.right, DestRect.bottom,
                   &DestRect, // Bounding rectangle
                   Mix);
 
-        GreLineTo(&pDC->pBitmap->SurfObj,
+        GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                   pDC->CombinedClip,
-                  &pDC->pLineBrush->BrushObj,
+                  &pDC->eboLine.BrushObject,
                   DestRect.right, DestRect.bottom, DestRect.left, DestRect.bottom,
                   &DestRect, // Bounding rectangle
                   Mix);
 
-        GreLineTo(&pDC->pBitmap->SurfObj,
+        GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                   pDC->CombinedClip,
-                  &pDC->pLineBrush->BrushObj,
+                  &pDC->eboLine.BrushObject,
                   DestRect.left, DestRect.bottom, DestRect.left, DestRect.top,
                   &DestRect, // Bounding rectangle
                   Mix);
@@ -106,18 +104,17 @@ GrePolygon(PDC pDC,
     INT i;
     POINT BrushOrigin;
 
-    BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
-    BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
+    BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
+    BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
 
     /* Draw brush-based polygon */
-    if (pDC->pFillBrush)
+    if (pDC->dclevel.pbrFill)
     {
-        if (!(pDC->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
+        if (!(pDC->dclevel.pbrFill->flAttrs & GDIBRUSH_IS_NULL))
         {
-            GreUpdateBrush(pDC->pFillBrush, pDC);
             GrepFillPolygon(pDC,
-                            &pDC->pBitmap->SurfObj,
-                            &pDC->pFillBrush->BrushObj,
+                            &pDC->dclevel.pSurface->SurfObj,
+                            &pDC->eboFill.BrushObject,
                             ptPoints,
                             count,
                             DestRect,
@@ -126,15 +123,14 @@ GrePolygon(PDC pDC,
     }
 
     /* Draw pen-based polygon */
-    if (!(pDC->pLineBrush->flAttrs & GDIBRUSH_IS_NULL))
+    if (!(pDC->dclevel.pbrLine->flAttrs & GDIBRUSH_IS_NULL))
     {
-        GreUpdateBrush(pDC->pLineBrush, pDC);
         Mix = ROP2_TO_MIX(R2_COPYPEN);/*pdcattr->jROP2*/
         for (i=0; i<count-1; i++)
         {
-            bRet = GreLineTo(&pDC->pBitmap->SurfObj,
+            bRet = GreLineTo(&pDC->dclevel.pSurface->SurfObj,
                              pDC->CombinedClip,
-                             &pDC->pLineBrush->BrushObj,
+                             &pDC->eboLine.BrushObject,
                              ptPoints[i].x,
                              ptPoints[i].y,
                              ptPoints[i+1].x,

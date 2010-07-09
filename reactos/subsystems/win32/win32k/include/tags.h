@@ -16,5 +16,9 @@
 #define TAG_PALETTE     '8alG'
 #define TAG_RTLREGISTRY 'vrqR' /* RTL registry */
 #define TAG_XLATEOBJ    'OALX' /* xlate object */
+#define TAG_PENSTYLES   'ytsG' /* pen styles */
+#define TAG_BRUSH       '@alG'
+#define TAG_BITMAP      'PMTB' /* bitmap */
+#define GDITAG_RBRUSH   'rbdG'
 
 #endif /* _WIN32K_TAGS_H */

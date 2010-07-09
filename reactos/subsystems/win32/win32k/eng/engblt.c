@@ -53,15 +53,15 @@ BltMask(SURFOBJ* psoDest,
     BYTE *pjMskLine, *pjMskCurrent;
     BYTE fjMaskBit0, fjMaskBit;
     /* Pattern brushes */
-    PBRUSHGDI pebo = NULL;
+    PEBRUSHOBJ pebo = NULL;
     SURFOBJ *psoPattern = NULL;
     PSURFACE psurfPattern;
     ULONG PatternWidth = 0, PatternHeight = 0;
     LONG PatternX0 = 0, PatternX = 0, PatternY = 0;
     PFN_DIB_PutPixel fnDest_PutPixel = NULL;
     PFN_DIB_GetPixel fnPattern_GetPixel = NULL;
-    XLATEOBJ *XlateObj;
     ULONG Pattern = 0;
+    HBITMAP hbmPattern;
 
     if (psoMask == NULL)
     {
@@ -70,16 +70,17 @@ BltMask(SURFOBJ* psoDest,
 
     if (pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        pebo = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
+        pebo = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
 
-        psurfPattern = SURFACE_Lock(pebo->hbmPattern);
+        hbmPattern = EBRUSHOBJ_pvGetEngBrush(pebo);
+        psurfPattern = SURFACE_LockSurface(hbmPattern);
         if (psurfPattern != NULL)
         {
             psoPattern = &psurfPattern->SurfObj;
             PatternWidth = psoPattern->sizlBitmap.cx;
             PatternHeight = psoPattern->sizlBitmap.cy;
+            fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
         }
-        fnPattern_GetPixel = DibFunctionsForBitmapFormat[psoPattern->iBitmapFormat].DIB_GetPixel;
     }
     else
         psurfPattern = NULL;
@@ -90,7 +91,6 @@ BltMask(SURFOBJ* psoDest,
     fnDest_PutPixel = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_PutPixel;
     if (psurfPattern)
     {
-        XlateObj = pebo ? pebo->XlateObject : NULL;
         PatternY = (prclDest->top - pptlBrush->y) % PatternHeight;
         if (PatternY < 0)
         {
@@ -113,8 +113,7 @@ BltMask(SURFOBJ* psoDest,
                 if (*pjMskCurrent & fjMaskBit)
                 {
                     fnDest_PutPixel(psoDest, x, y,
-                        XLATEOBJ_iXlate(XlateObj, 
-                            fnPattern_GetPixel(psoPattern, PatternX, PatternY)));
+                        fnPattern_GetPixel(psoPattern, PatternX, PatternY));
                 }
                 fjMaskBit = _rotr8(fjMaskBit, 1);
                 pjMskCurrent += (fjMaskBit >> 7);
@@ -148,7 +147,7 @@ BltMask(SURFOBJ* psoDest,
     }
 
     if (psurfPattern)
-        SURFACE_Unlock(psurfPattern);
+        SURFACE_UnlockSurface(psurfPattern);
 
     return TRUE;
 }
@@ -186,9 +185,10 @@ CallDibBitBlt(SURFOBJ* OutputObj,
               ROP4 Rop4)
 {
     BLTINFO BltInfo;
-    PBRUSHGDI GdiBrush = NULL;
+    PEBRUSHOBJ GdiBrush = NULL;
     SURFACE *psurfPattern;
     BOOLEAN Result;
+    HBITMAP hbmPattern;
 
     BltInfo.DestSurface = OutputObj;
     BltInfo.SourceSurface = InputObj;
@@ -200,7 +200,6 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     if (ROP3_TO_ROP4(SRCCOPY) == Rop4)
         return DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
-    BltInfo.XlatePatternToDest = NULL;
     BltInfo.Brush = pbo;
     BltInfo.BrushOrigin = *BrushOrigin;
     BltInfo.Rop4 = Rop4;
@@ -208,27 +207,33 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     /* Pattern brush */
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
-        if ((psurfPattern = SURFACE_Lock(GdiBrush->hbmPattern)))
+        GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+        hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
+        psurfPattern = SURFACE_LockSurface(hbmPattern);
+        if (psurfPattern)
         {
-            BltInfo.PatternSurface = GreRealizeBrush(GdiBrush, psurfPattern, OutputObj);
+            BltInfo.PatternSurface = &psurfPattern->SurfObj;
         }
         else
         {
             /* FIXME - What to do here? */
         }
-        BltInfo.XlatePatternToDest = GdiBrush->XlateObject;
     }
     else
     {
         psurfPattern = NULL;
     }
 
+    psurfPattern = NULL;
+
+
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
     /* Pattern brush */
     if (psurfPattern)
-        SURFACE_Unlock(psurfPattern);
+    {
+        SURFACE_UnlockSurface(psurfPattern);
+    }
 
     return Result;
 }
@@ -247,9 +252,10 @@ CallDibStretchBlt(SURFOBJ* psoDest,
 {
     POINTL RealBrushOrigin;
     SURFACE* psurfPattern;
-    PBRUSHGDI GdiBrush = NULL;
+    PEBRUSHOBJ GdiBrush = NULL;
     SURFOBJ* PatternSurface = NULL;
-    XLATEOBJ* XlatePatternToDest = NULL;
+    BOOL bResult;
+    HBITMAP hbmPattern;
 
     if (BrushOrigin == NULL)
     {
@@ -263,8 +269,9 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     /* Pattern brush */
     if (ROP4_USES_PATTERN(Rop4) && pbo && pbo->iSolidColor == 0xFFFFFFFF)
     {
-        GdiBrush = CONTAINING_RECORD(pbo, BRUSHGDI, BrushObj);
-        psurfPattern = SURFACE_Lock(GdiBrush->hbmPattern);
+        GdiBrush = CONTAINING_RECORD(pbo, EBRUSHOBJ, BrushObject);
+        hbmPattern = EBRUSHOBJ_pvGetEngBrush(GdiBrush);
+        psurfPattern = SURFACE_LockSurface(hbmPattern);
         if (psurfPattern)
         {
             PatternSurface = &psurfPattern->SurfObj;
@@ -273,23 +280,24 @@ CallDibStretchBlt(SURFOBJ* psoDest,
         {
             /* FIXME - What to do here? */
         }
-        XlatePatternToDest = GdiBrush->XlateObject;
     }
     else
     {
         psurfPattern = NULL;
     }
 
-    return DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
-               psoDest, psoSource, Mask, PatternSurface, 
-               OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin, 
-               ColorTranslation, XlatePatternToDest, Rop4);
+    bResult = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_StretchBlt(
+               psoDest, psoSource, Mask, PatternSurface,
+               OutputRect, InputRect, MaskOrigin, pbo, &RealBrushOrigin,
+               ColorTranslation, Rop4);
 
     /* Pattern brush */
     if (psurfPattern)
     {
-        //SURFACE_UnlockSurface(psurfPattern);
+        SURFACE_UnlockSurface(psurfPattern);
     }
+
+    return bResult;
 }
 
 BOOL APIENTRY

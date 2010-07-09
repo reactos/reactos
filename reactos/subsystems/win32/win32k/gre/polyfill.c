@@ -605,7 +605,7 @@ GrepFillPolygon(
     BRUSHOBJ *BrushObj,
     CONST POINT *Points,
     int Count,
-    CONST PRECTL DestRect,
+    PRECTL DestRect,
     POINTL *BrushOrigin)
 {
     FILL_EDGE_LIST *list = 0;

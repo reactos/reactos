@@ -47,7 +47,7 @@ static const
 OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 {
   {0, 0,                     0,                NULL},             /* 00 reserved entry */
-  {0, sizeof(DC),            TAG_DC,           GDI_CleanupDummy}, /* 01 DC */
+  {0, sizeof(DC),            TAG_DC,           DC_Cleanup},       /* 01 DC */
   {0, 0,                     0,                NULL},             /* 02 reserved entry */
   {0, 0,                     0,                NULL},             /* 03 reserved entry */
   {0, 0,                     0,                NULL},             /* 04 reserved entry */
@@ -62,7 +62,7 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
   {0, 0,                     0,                NULL},             /* 0d PFT, unused */
   {0, 0,                     0,                NULL},             /* 0e ICMCXF, */
   {0, 0,                     0,                NULL},             /* 0f SPRITE, unused */
-  {0, 0,                     0,                NULL},             /* 10 BRUSH, PEN, EXTPEN */
+  {0, sizeof(BRUSH),         TAG_BRUSH,        BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
   {0, 0,                     0,                NULL},             /* 11 UMPD, unused */
   {0, 0,                     0,                NULL},             /* 12 UNUSED4 */
   {0, 0,                     0,                NULL},             /* 13 SPACE, unused */
@@ -83,6 +83,60 @@ OBJ_TYPE_INFO ObjTypeInfo[BASE_OBJTYPE_COUNT] =
 static LARGE_INTEGER ShortDelay;
 
 /** INTERNAL FUNCTIONS ********************************************************/
+
+
+// Audit Functions
+int tDC = 0;
+int tBRUSH = 0;
+int tBITMAP = 0;
+int tFONT = 0;
+int tRGN = 0;
+
+VOID
+AllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH++;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC++;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP++;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT++;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN++;
+          break;
+    }
+}
+
+VOID
+DeAllocTypeDataDump(INT TypeInfo)
+{
+    switch( TypeInfo & GDI_HANDLE_TYPE_MASK )
+    {
+       case GDILoObjType_LO_BRUSH_TYPE:
+          tBRUSH--;
+          break;
+       case GDILoObjType_LO_DC_TYPE:
+          tDC--;
+          break;
+       case GDILoObjType_LO_BITMAP_TYPE:
+          tBITMAP--;
+          break;
+       case GDILoObjType_LO_FONT_TYPE:
+          tFONT--;
+          break;
+       case GDILoObjType_LO_REGION_TYPE:
+          tRGN--;
+          break;
+    }
+}
 
 /*
  * Dummy GDI Cleanup Callback
@@ -361,6 +415,7 @@ GDIOBJ_AllocObjWithHandle(ULONG ObjectType)
     if (W32Process && W32Process->GDIHandleCount >= 0x2710)
     {
         DPRINT1("Too many objects for process!!!\n");
+        DPRINT1("DC %d BRUSH %d BITMAP %d FONT %d RGN %d\n",tDC,tBRUSH,tBITMAP,tFONT,tRGN);
         GDIDBG_DUMPHANDLETABLE();
         return NULL;
     }
@@ -417,6 +472,8 @@ LockHandle:
             newObject->ulShareCount = 0;
             newObject->cExclusiveLock = 1;
             newObject->Tid = Thread;
+
+			AllocTypeDataDump(TypeInfo);
 
             /* unlock the entry */
             (void)InterlockedExchangePointer((PVOID*)&Entry->ProcessId, CurrentProcessId);
@@ -562,6 +619,8 @@ LockHandle:
                 /* call the cleanup routine. */
                 TypeIndex = GDI_OBJECT_GET_TYPE_INDEX(HandleType);
                 Ret = ObjTypeInfo[TypeIndex].CleanupProc(Object);
+
+				DeAllocTypeDataDump(HandleType);
 
                 /* Now it's time to free the memory */
                 GDIOBJ_FreeObj(Object, TypeIndex);
@@ -1445,6 +1504,20 @@ GDI_MapHandleTable(PSECTION_OBJECT SectionObject, PEPROCESS Process)
         return NULL;
 
     return MappedView;
+}
+
+VOID FASTCALL
+GreDeleteObject(HGDIOBJ hObject)
+{
+    if (GDI_HANDLE_IS_STOCKOBJ(hObject))
+        return;
+
+    /* Get ownership */
+    GDIOBJ_SetOwnership(hObject, PsGetCurrentProcess());
+
+    /* Free it */
+    GDIOBJ_FreeObjByHandle(hObject, GDIOBJ_GetObjectType(hObject));
+
 }
 
 /* Usermode -> kernelmode handle mapping */

@@ -8,7 +8,6 @@ typedef struct _SWM_WINDOW
     struct region *Visible;
     BOOLEAN Hidden;
     BOOLEAN Topmost;
-    PCURSORICONENTRY Cursor;
 
     LIST_ENTRY Entry;
 } SWM_WINDOW, *PSWM_WINDOW;

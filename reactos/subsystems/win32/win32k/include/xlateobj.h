@@ -1,38 +1,50 @@
-#ifndef __WIN32K_XLATEOBJ_H
-#define __WIN32K_XLATEOBJ_H
+ /*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS kernel
+ * PURPOSE:           XLATEOBJ structures and functions
+ * FILE:              subsystem/win32/win32k/eng/objects.h
+ * PROGRAMER:         Timo Kreuzer
+ *
+ */
 
-typedef struct _XLATEGDI {
-    XLATEOBJ XlateObj;
-    HPALETTE DestPal;
-    HPALETTE SourcePal;
-    BOOL UseShiftAndMask;
+struct _EXLATEOBJ;
 
-    //  union {
-    //    struct {            /* For Shift Translations */
-    ULONG RedMask;
-    ULONG GreenMask;
-    ULONG BlueMask;
-    INT RedShift;
-    INT GreenShift;
-    INT BlueShift;
-    //    };
-    //    struct {            /* For Color -> Mono Translations */
-    ULONG BackgroundColor;
-    //    };
-    //  };
-} XLATEGDI;
+typedef ULONG (FASTCALL *PFN_XLATE)(struct _EXLATEOBJ *pexlo, ULONG iColor);
 
-XLATEOBJ* NTAPI
-IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
-                  HPALETTE PaletteDest, HPALETTE PaletteSource);
+typedef struct _EXLATEOBJ
+{
+    XLATEOBJ xlo;
 
-XLATEOBJ* FASTCALL
-IntEngCreateSrcMonoXlate(HPALETTE PaletteDest, ULONG Color0, ULONG Color1);
+    PFN_XLATE pfnXlate;
 
-VOID FASTCALL
-EngDeleteXlate(XLATEOBJ *XlateObj);
+    PPALETTE ppalSrc;
+    PPALETTE ppalDst;
+    PPALETTE ppalDstDc;
 
-XLATEOBJ* FASTCALL
-IntCreateXlateForBlt(PDC pDCDest, PDC pDCSrc, SURFACE* psurfDest, SURFACE* psurfSrc);
+    HANDLE hColorTransform;
 
-#endif
+    union
+    {
+        ULONG aulXlate[6];
+        struct
+        {
+            ULONG ulRedMask;
+            ULONG ulGreenMask;
+            ULONG ulBlueMask;
+            ULONG ulRedShift;
+            ULONG ulGreenShift;
+            ULONG ulBlueShift;
+        };
+    };
+} EXLATEOBJ, *PEXLATEOBJ;
+
+void
+DbgCmpXlate(XLATEOBJ *pxlo1, XLATEOBJ *pxlo2);
+
+VOID NTAPI EXLATEOBJ_vInitialize(PEXLATEOBJ pexlo, PALETTE *ppalSrc, PALETTE *ppalDst, ULONG, ULONG, ULONG);
+VOID NTAPI EXLATEOBJ_vInitXlateFromDCs(PEXLATEOBJ pexlo, PDC pdcSrc, PDC pdcDst);
+VOID NTAPI EXLATEOBJ_vInitBrushXlate(PEXLATEOBJ pexlo, BRUSH *pbrush, SURFACE *psurf, COLORREF crForegroundClr, COLORREF crBackgroundClr);
+VOID NTAPI EXLATEOBJ_vInitSrcMonoXlate(PEXLATEOBJ pexlo, PPALETTE ppalDst, ULONG Color0, ULONG Color1);
+VOID NTAPI EXLATEOBJ_vCleanup(PEXLATEOBJ pexlo);
+
+//#define XLATEOBJ_iXlate(pxo, Color) ((EXLATEOBJ*)pxo)->pfnXlate(pxo, Color)

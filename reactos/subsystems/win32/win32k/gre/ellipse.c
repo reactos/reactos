@@ -26,11 +26,10 @@ GreEllipse(PDC dc,
     LONG PenWidth, PenOrigWidth;
     LONG RadiusX, RadiusY, CenterX, CenterY;
     POINTL BrushOrigin;
-    PBRUSHGDI pbrush;
+    PBRUSH pbrush;
 
     /* Update line brush and temporarily change its width */
-    GreUpdateBrush(dc->pLineBrush, dc);
-    pbrush = dc->pLineBrush;
+    pbrush = dc->dclevel.pbrLine;
 
     PenOrigWidth = PenWidth = pbrush->ptPenWidth.x;
     if (pbrush->ulPenStyle == PS_NULL) PenWidth = 0;
@@ -65,19 +64,18 @@ GreEllipse(PDC dc,
     DPRINT("Ellipse 2: XLeft: %d, YLeft: %d, Width: %d, Height: %d\n",
                CenterX - RadiusX, CenterY + RadiusY, RadiusX*2, RadiusY*2);
 
-    BrushOrigin.x = dc->ptBrushOrg.x + dc->rcDcRect.left;
-    BrushOrigin.y = dc->ptBrushOrg.y + dc->rcDcRect.top;
+    BrushOrigin.x = dc->dclevel.ptlBrushOrigin.x + dc->rcDcRect.left;
+    BrushOrigin.y = dc->dclevel.ptlBrushOrigin.y + dc->rcDcRect.top;
 
     /* Draw filled part */
-    if (dc->pFillBrush && !(dc->pFillBrush->flAttrs & GDIBRUSH_IS_NULL))
+    if (dc->dclevel.pbrFill && !(dc->dclevel.pbrFill->flAttrs & GDIBRUSH_IS_NULL))
     {
-        GreUpdateBrush(dc->pFillBrush, dc);
         ret = GrepFillEllipse(dc,
                               CenterX - RadiusX,
                               CenterY - RadiusY,
                               RadiusX*2, // Width
                               RadiusY*2, // Height
-                              dc->pFillBrush,
+                              dc->dclevel.pbrFill,
                               &BrushOrigin);
     }
 

@@ -281,8 +281,8 @@ RosUserEnumDisplayMonitors(
 		safeHMonitorList[i] = Monitor->Handle;
 		safeRectList[i].left = 0; /* FIXME: get origin */
 		safeRectList[i].top = 0; /* FIXME: get origin */
-		safeRectList[i].right = safeRectList->left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-		safeRectList[i].bottom = safeRectList->top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+		safeRectList[i].right = safeRectList->left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+		safeRectList[i].bottom = safeRectList->top + Monitor->GdiDevice->gdiinfo.ulVertRes;
 	
 		i++;
    }
@@ -409,8 +409,8 @@ RosUserGetMonitorInfo(
    /* fill monitor info */
    MonitorInfo.rcMonitor.left = 0; /* FIXME: get origin */
    MonitorInfo.rcMonitor.top = 0; /* FIXME: get origin */
-   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->GDIInfo.ulHorzRes;
-   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
+   MonitorInfo.rcMonitor.right = MonitorInfo.rcMonitor.left + Monitor->GdiDevice->gdiinfo.ulHorzRes;
+   MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->gdiinfo.ulVertRes;
    MonitorInfo.rcWork = MonitorInfo.rcMonitor; /* FIXME: use DEVMODE panning to calculate work area? */
    MonitorInfo.dwFlags = 0;
 

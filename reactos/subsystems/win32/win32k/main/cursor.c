@@ -10,9 +10,13 @@
 #define NDEBUG
 #include <debug.h>
 
-SYSTEM_CURSORINFO CursorInfo;
+static SYSTEM_CURSORINFO CursorInfo;
 
-extern PDEVOBJ PrimarySurface;
+VOID 
+UserGetCursorPos(LPPOINT pt)
+{
+    *pt = CursorInfo.CursorPos;
+}
 
 BOOL
 APIENTRY

@@ -1,23 +1,36 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
+typedef struct _DCLEVEL
+{
+    HPALETTE hpal;
+    struct _PALETTE * ppal;
+
+    PSURFACE pSurface;
+
+    PBRUSH   pbrFill;
+    PBRUSH   pbrLine;
+
+    POINTL   ptlBrushOrigin;
+} DCLEVEL, *PDCLEVEL;
+
 typedef struct _DC
 {
     BASEOBJECT    BaseObject;
 
-    PPDEVOBJ     pPDevice;
+    PPDEVOBJ     ppdev;
 
-    PSURFACE     pBitmap;
-    PBRUSHGDI    pFillBrush;
-    PBRUSHGDI    pLineBrush;
+    DCLEVEL     dclevel;
+
     COLORREF     crForegroundClr;
     COLORREF     crBackgroundClr;
-    HPALETTE     hPalette;
+
+    EBRUSHOBJ   eboFill;
+    EBRUSHOBJ   eboLine;
 
     /* Origins and extents */
     RECT         rcDcRect; /* Relative to Vport */
     RECT         rcVport;
-    POINT        ptBrushOrg;
 
     /* Combined clipping region */
     struct region *Clipping;
@@ -25,11 +38,14 @@ typedef struct _DC
     PSWM_WINDOW  pWindow;
 } DC, *PDC;
 
-#define  DC_Lock(hDC)  \
+#define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
-#define  DC_Unlock(pDC)  \
+#define  DC_UnlockDc(pDC)  \
   GDIOBJ_UnlockObjByPtr ((PBASEOBJECT)pDC)
 
 VOID APIENTRY RosGdiUpdateClipping(PDC pDC);
+
+
+BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
 
 #endif

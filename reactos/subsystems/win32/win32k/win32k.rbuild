@@ -39,13 +39,15 @@
 		<file>dib16bpp.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
-		<file>dibXXbpp.c</file>
 		<file>dib.c</file>
+		<file>floodfill.c</file>
+		<file>stretchblt.c</file>
 
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>dib24bpp_hline.s</file>
 				<file>dib32bpp_hline.s</file>
+				<file>dib32bpp_colorfill.s</file>
 			</directory>
 		</if>
 		<ifnot property="ARCH" value="i386">
@@ -71,7 +73,7 @@
 		<file>engpaint.c</file>
 		<file>engpal.c</file>
 		<file>engpath.c</file>
-		<file>engpoint.c</file>
+		<file>engpointer.c</file>
 		<file>engprint.c</file>
 		<file>engquery.c</file>
 		<file>engrtl.c</file>
@@ -104,13 +106,10 @@
 		<file>font.c</file>
 		<file>gdiobj.c</file>
 		<file>lineto.c</file>
-		<file>palobj.c</file>
+		<file>pen.c</file>
 		<file>polyfill.c</file>
 		<file>rect.c</file>
 		<file>surfobj.c</file>
-		<file>xformobj.c</file>
-		<file>xlateobj.c</file>
-		<file>cursoricon.c</file>
 	</directory>
 	<directory name="main">
 		<file>csr.c</file>

@@ -330,10 +330,10 @@ IntPrepareDriver()
                                        L"",
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
-                                       sizeof(PrimarySurface.GDIInfo),
-                                       &PrimarySurface.GDIInfo,
-                                       sizeof(PrimarySurface.DevInfo),
-                                       &PrimarySurface.DevInfo,
+                                       sizeof(PrimarySurface.gdiinfo),
+                                       &PrimarySurface.gdiinfo,
+                                       sizeof(PrimarySurface.devinfo),
+                                       &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
                                        (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
@@ -360,10 +360,10 @@ IntPrepareDriver()
                                        L"",
                                        HS_DDI_MAX,
                                        PrimarySurface.FillPatterns,
-                                       sizeof(PrimarySurface.GDIInfo),
-                                       &PrimarySurface.GDIInfo,
-                                       sizeof(PrimarySurface.DevInfo),
-                                       &PrimarySurface.DevInfo,
+                                       sizeof(PrimarySurface.gdiinfo),
+                                       &PrimarySurface.gdiinfo,
+                                       sizeof(PrimarySurface.devinfo),
+                                       &PrimarySurface.devinfo,
                                        NULL,
                                        L"",
                                        (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
@@ -377,10 +377,10 @@ IntPrepareDriver()
             }
 
             /* Update the primary surface with what we really got */
-            PrimarySurface.DMW.dmPelsWidth = PrimarySurface.GDIInfo.ulHorzRes;
-            PrimarySurface.DMW.dmPelsHeight = PrimarySurface.GDIInfo.ulVertRes;
-            PrimarySurface.DMW.dmBitsPerPel = PrimarySurface.GDIInfo.cBitsPixel;
-            PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.GDIInfo.ulVRefresh;
+            PrimarySurface.DMW.dmPelsWidth = PrimarySurface.gdiinfo.ulHorzRes;
+            PrimarySurface.DMW.dmPelsHeight = PrimarySurface.gdiinfo.ulVertRes;
+            PrimarySurface.DMW.dmBitsPerPel = PrimarySurface.gdiinfo.cBitsPixel;
+            PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.gdiinfo.ulVRefresh;
         }
 
         if (!PrimarySurface.DMW.dmDriverExtra)
@@ -396,15 +396,15 @@ IntPrepareDriver()
         }
 
         /* Set LogPixels defaults */
-        if (!PrimarySurface.GDIInfo.ulLogPixelsX)
+        if (!PrimarySurface.gdiinfo.ulLogPixelsX)
         {
             DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
-            PrimarySurface.GDIInfo.ulLogPixelsX = 96;
+            PrimarySurface.gdiinfo.ulLogPixelsX = 96;
         }
-        if (!PrimarySurface.GDIInfo.ulLogPixelsY)
+        if (!PrimarySurface.gdiinfo.ulLogPixelsY)
         {
             DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
-            PrimarySurface.GDIInfo.ulLogPixelsY = 96;
+            PrimarySurface.gdiinfo.ulLogPixelsY = 96;
         }
 
         PrimarySurface.Pointer.Exclude.right = -1;
@@ -1183,8 +1183,8 @@ INT APIENTRY
 GreGetDeviceCaps(PDC pDC, INT cap)
 {
     /* Get a pointer to the physical device */
-    PPDEVOBJ ppDevObj = pDC->pPDevice;
-    GDIINFO *pGdiInfo = &ppDevObj->GDIInfo;
+    PPDEVOBJ ppDevObj = pDC->ppdev;
+    GDIINFO *pGdiInfo = &ppDevObj->gdiinfo;
     ULONG palette_size=0;
 
     switch(cap)

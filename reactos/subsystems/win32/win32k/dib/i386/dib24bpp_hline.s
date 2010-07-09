@@ -1,22 +1,10 @@
-/* 
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 2004, 2005, 2006 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+/*
+ * PROJECT:         Win32 subsystem
+ * LICENSE:         See COPYING in the top level directory
+ * FILE:            subsystems/win32/win32k/dib/i386/dib24bpp_hline.c
+ * PURPOSE:         ASM optimised 24bpp HLine
+ * PROGRAMMERS:     Magnus Olsen
  */
-/* $Id: */
 
 .globl _DIB_24BPP_HLine
 .intel_syntax noprefix
@@ -46,7 +34,7 @@
                          mov     esi, edx
                          mov     [esp+4], eax
                          ja      Align4byte
-                         lea     eax, [edx-1]                                                  
+                         lea     eax, [edx-1]
                          mov     [esp], eax
                          inc     eax
                          jnz     small_fill
@@ -55,7 +43,7 @@
                          pop     esi
                          pop     edi
                          ret
-                    
+
                         /* For small fills, don't bother doing anything fancy */
                small_fill:
                          movzx   ecx, word ptr [esp+58]
@@ -76,7 +64,7 @@
                          pop     esi
                          pop     edi
                          ret
-                         
+
                Align4byte:
                          /* Align to 4-byte address */ 
                          test    al, 3
@@ -84,7 +72,7 @@
                          jz      loop1
                          lea     esi, [esi+0]
                          lea     edi, [edi+0]
-                         
+
            loopasmversion:
                         /* This is about 30% faster than the generic C code below */
                          movzx   edx, word ptr [esp+58]

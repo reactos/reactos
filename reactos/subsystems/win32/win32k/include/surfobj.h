@@ -22,8 +22,13 @@ GreCreateBitmap(IN SIZEL Size,
                 IN ULONG Flags,
                 IN PVOID Bits);
 
-VOID FASTCALL
-GreDeleteBitmap(HGDIOBJ hBitmap);
+HBITMAP APIENTRY
+IntGdiCreateBitmap(
+    INT Width,
+    INT Height,
+    UINT Planes,
+    UINT BitsPixel,
+    IN OPTIONAL LPBYTE pBits);
 
 LONG FASTCALL
 GreGetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits);
@@ -34,19 +39,22 @@ GreSetBitmapBits(PSURFACE pSurf, ULONG ulBytes, PVOID pBits);
 INT FASTCALL
 BITMAP_GetWidthBytes(INT bmWidth, INT bpp);
 
+HBITMAP FASTCALL
+BITMAP_CopyBitmap(HBITMAP hBitmap);
+
 BOOL APIENTRY
 SURFACE_Cleanup(PVOID ObjectBody);
 
 #define GDIDEV(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))
 #define GDIDEVFUNCS(SurfObj) ((PDEVOBJ *)((SurfObj)->hdev))->DriverFunctions
 
-#define  SURFACE_Lock(hBMObj) \
+#define  SURFACE_LockSurface(hBMObj) \
   ((PSURFACE) GDIOBJ_LockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
-#define  SURFACE_ShareLock(hBMObj) \
+#define  SURFACE_ShareLockSurface(hBMObj) \
   ((PSURFACE) GDIOBJ_ShareLockObj ((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP))
-#define  SURFACE_Unlock(pBMObj)  \
+#define  SURFACE_UnlockSurface(pBMObj)  \
   GDIOBJ_UnlockObjByPtr ((PBASEOBJECT)pBMObj)
-#define  SURFACE_ShareUnlock(pBMObj)  \
+#define  SURFACE_ShareUnlockSurface(pBMObj)  \
   GDIOBJ_ShareUnlockObjByPtr ((PBASEOBJECT)pBMObj)
 
 #define SURFACE_LockBitmapBits(pBMObj) ExEnterCriticalRegionAndAcquireFastMutexUnsafe((pBMObj)->pBitsLock)

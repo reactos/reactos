@@ -20,7 +20,34 @@
 extern PDEVOBJ PrimarySurface;
 BOOL FASTCALL IntCreatePrimarySurface();
 
+/* GLOBALS *******************************************************************/
+HGDIOBJ hStockBmp;
+HGDIOBJ hStockPalette;
+HGDIOBJ hNullPen;
+
 /* PUBLIC FUNCTIONS **********************************************************/
+
+BOOL INTERNAL_CALL
+DC_Cleanup(PVOID ObjectBody)
+{
+    PDC pDC = (PDC)ObjectBody;
+
+    /* Release the surface */
+    SURFACE_ShareUnlockSurface(pDC->dclevel.pSurface);
+
+    /* Dereference default brushes */
+    BRUSH_ShareUnlockBrush(pDC->eboFill.pbrush);
+    BRUSH_ShareUnlockBrush(pDC->eboLine.pbrush);
+
+    GreDeleteObject(pDC->eboFill.pbrush->BaseObject.hHmgr);
+    GreDeleteObject(pDC->eboLine.pbrush->BaseObject.hHmgr);
+
+    /* Cleanup the dc brushes */
+    EBRUSHOBJ_vCleanup(&pDC->eboFill);
+    EBRUSHOBJ_vCleanup(&pDC->eboLine);
+
+    return TRUE;
+}
 
 BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR device,
                             LPCWSTR output, const DEVMODEW* initData )
@@ -40,7 +67,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     hNewDC = pNewDC->BaseObject.hHmgr;
 
     /* Set physical device pointer */
-    pNewDC->pPDevice = (PVOID)&PrimarySurface;
+    pNewDC->ppdev = (PVOID)&PrimarySurface;
 
     /* Set default fg/bg colors */
     pNewDC->crBackgroundClr = RGB(255, 255, 255);
@@ -53,13 +80,20 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     }
 
     /* Create default NULL brushes */
-    pNewDC->pLineBrush = GreCreateNullBrush();
-    pNewDC->pFillBrush = GreCreateNullBrush();
+    pNewDC->dclevel.pbrLine = BRUSH_ShareLockBrush(GreCreateNullBrush());
+    EBRUSHOBJ_vInit(&pNewDC->eboLine, pNewDC->dclevel.pbrLine, pNewDC);
+
+    pNewDC->dclevel.pbrFill = BRUSH_ShareLockBrush(GreCreateNullBrush());
+    EBRUSHOBJ_vInit(&pNewDC->eboFill, pNewDC->dclevel.pbrFill, pNewDC);
+
+    /* Set the default palette */
+    pNewDC->dclevel.hpal = hStockPalette;
+    pNewDC->dclevel.ppal = PALETTE_ShareLockPalette(pNewDC->dclevel.hpal);
 
     if (dc->dwType == OBJ_MEMDC)
     {
         DPRINT("Creating a memory DC %x\n", hNewDC);
-        pNewDC->pBitmap = SURFACE_ShareLock(hStockBmp);
+        pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(hStockBmp);
 
         /* Set DC rectangles */
         pNewDC->rcDcRect.left = 0; pNewDC->rcDcRect.top = 0;
@@ -69,13 +103,13 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     else
     {
         DPRINT("Creating a display DC %x\n", hNewDC);
-        pNewDC->pBitmap = SURFACE_ShareLock(PrimarySurface.pSurface);
+        pNewDC->dclevel.pSurface = SURFACE_ShareLockSurface(PrimarySurface.pSurface);
 
         /* Set DC rectangles */
         pNewDC->rcVport.left = 0;
         pNewDC->rcVport.top = 0;
-        pNewDC->rcVport.right = PrimarySurface.GDIInfo.ulHorzRes;
-        pNewDC->rcVport.bottom = PrimarySurface.GDIInfo.ulVertRes;
+        pNewDC->rcVport.right = PrimarySurface.gdiinfo.ulHorzRes;
+        pNewDC->rcVport.bottom = PrimarySurface.gdiinfo.ulVertRes;
 
         pNewDC->rcDcRect = pNewDC->rcVport;
     }
@@ -86,13 +120,13 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
     pNewDC->pWindow = NULL;
 
     /* Set default palette */
-    pNewDC->hPalette = hSystemPal;
+    pNewDC->dclevel.hpal = hStockPalette;
 
     /* Give handle to the caller */
     *pdev = hNewDC;
 
     /* Unlock the DC */
-    DC_Unlock(pNewDC);
+    DC_UnlockDc(pNewDC);
 
     /* Indicate success */
     return TRUE;
@@ -100,15 +134,7 @@ BOOL APIENTRY RosGdiCreateDC( PROS_DCINFO dc, HDC *pdev, LPCWSTR driver, LPCWSTR
 
 BOOL APIENTRY RosGdiDeleteDC( HDC physDev )
 {
-    PDC pDC = DC_Lock(physDev);
-
     DPRINT("RosGdiDeleteDC(%x)\n", physDev);
-
-    /* Release the surface */
-    SURFACE_ShareUnlock(pDC->pBitmap);
-
-    /* Unlock DC */
-    DC_Unlock(pDC);
 
     /* Free DC */
     GDIOBJ_FreeObjByHandle(physDev, GDI_OBJECT_TYPE_DC);
@@ -154,14 +180,14 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
     DPRINT("Selecting %x bitmap to hdc %x\n", hBmpKern, physDev);
 
     /* Get a pointer to the DC and the bitmap*/
-    pDC = DC_Lock(physDev);
-    pSurface = SURFACE_ShareLock(hBmpKern);
+    pDC = DC_LockDc(physDev);
+    pSurface = SURFACE_ShareLockSurface(hBmpKern);
 
     /* Release the old bitmap */
-    SURFACE_ShareUnlock(pDC->pBitmap);
+    SURFACE_ShareUnlockSurface(pDC->dclevel.pSurface);
 
     /* Select it */
-    pDC->pBitmap = pSurface;
+    pDC->dclevel.pSurface = pSurface;
 
     /* Set DC rectangles */
     pDC->rcVport.left = 0;
@@ -171,106 +197,96 @@ BOOL APIENTRY RosGdiSelectBitmap( HDC physDev, HBITMAP hbitmap, BOOL bStock )
     pDC->rcDcRect = pDC->rcVport;
 
     /* Release the DC object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     return TRUE;
 }
 
-// TODO: Move somewhere, give it a better name
-XLATEOBJ *GrepBrushCreateXlate(PDC pDC, PBRUSHGDI pBrush, COLORREF lbColor)
+HBRUSH APIENTRY GreCreateBrush(LOGBRUSH *pLogBrush)
 {
-    SURFACE *pSurfPattern;
-    HPALETTE hPalette;
-
-    pSurfPattern = SURFACE_Lock(pBrush->hbmPattern);
-    if (!pSurfPattern) return NULL;
-
-    /* Get default palette */
-    hPalette = pDC->pBitmap->hDIBPalette;
-    if (!hPalette) hPalette = pPrimarySurface->DevInfo.hpalDefault;
-
-    /* Special case: 1bpp pattern */
-    if (pSurfPattern->SurfObj.iBitmapFormat == BMF_1BPP)
-    {
-        if (BitsPerFormat(pDC->pBitmap->SurfObj.iBitmapFormat) != 1)
-        {
-            pBrush->XlateObject =
-                IntEngCreateSrcMonoXlate(hPalette,
-                                         pDC->crBackgroundClr,
-                                         lbColor);
-        }
-    }
-    else if (pBrush->flAttrs & GDIBRUSH_IS_DIB)
-    {
-        pBrush->XlateObject =
-            IntEngCreateXlate(0, 0, hPalette, pSurfPattern->hDIBPalette);
-    }
-
-    SURFACE_Unlock(pSurfPattern);
-
-    return pBrush->XlateObject;
-}
-
-VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
-{
-    PDC pDC;
     HGDIOBJ hBmpKern;
-
-    /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
-
-    DPRINT("RosGdiSelectBrush(): dc %x, brush style %x, brush color %x\n", physDev, pLogBrush->lbStyle, pLogBrush->lbColor);
-
-    /* Free previous brush */
-    if (pDC->pFillBrush)
-    {
-        GreFreeBrush(pDC->pFillBrush);
-        pDC->pFillBrush = NULL;
-    }
 
     /* Create the brush */
     switch(pLogBrush->lbStyle)
     {
     case BS_NULL:
-        DPRINT("BS_NULL\n" );
-        pDC->pFillBrush = GreCreateNullBrush();
-        break;
-
+        return GreCreateNullBrush();
     case BS_SOLID:
-        DPRINT("BS_SOLID\n" );
-        pDC->pFillBrush = GreCreateSolidBrush(pDC->pBitmap->hDIBPalette, pLogBrush->lbColor);
-        break;
-
+        return GreCreateSolidBrush(pLogBrush->lbColor);
     case BS_HATCHED:
-        DPRINT("BS_HATCHED\n" );
-        pDC->pFillBrush = GreCreateHatchedBrush(pLogBrush->lbHatch, pLogBrush->lbColor);
-        break;
-
+        return GreCreateHatchBrush(pLogBrush->lbHatch, pLogBrush->lbColor);
     case BS_PATTERN:
-        DPRINT("BS_PATTERN\n");
         hBmpKern = GDI_MapUserHandle((HBITMAP)pLogBrush->lbHatch);
         if (!hBmpKern)
         {
-            DPRINT1("Trying to select an unknown bitmap %x to the DC %x!\n", pLogBrush->lbHatch, physDev);
-            break;
+            DPRINT1("Trying to create a pattern brush with an unknown bitmap %x !\n", pLogBrush->lbHatch);
+            return NULL;
         }
         GDIOBJ_SetOwnership(hBmpKern, NULL);
-        pDC->pFillBrush = GreCreatePatternBrush(hBmpKern);
-        break;
-
+        return GreCreatePatternBrush(hBmpKern);
     case BS_DIBPATTERN:
+    default:
         UNIMPLEMENTED;
-        break;
+        return NULL;
     }
+}
 
-    /* Create XLATE for hatched/pattern brushes */
-    if (pLogBrush->lbStyle == BS_HATCHED || pLogBrush->lbStyle == BS_PATTERN)
+HBRUSH APIENTRY GreSelectBrush( HDC hdc, HBRUSH hbrush )
+{
+    //PDC_ATTR pdcattr = pdc->pdcattr;
+    PDC pdc;
+    PBRUSH pbrFill;
+    HBRUSH hbrushOld;
+
+    /* Lock the dc */
+    pdc = DC_LockDc(hdc);
+
+    hbrushOld = pdc->dclevel.pbrFill->BaseObject.hHmgr;
+
+    /* Check if the brush handle has changed */
+    if (hbrush != hbrushOld)
     {
-        GrepBrushCreateXlate(pDC, pDC->pFillBrush, pLogBrush->lbColor);
+        /* Try to lock the new brush */
+        pbrFill = BRUSH_ShareLockBrush(hbrush);
+        if (pbrFill)
+        {
+            /* Unlock old brush, set new brush */
+            BRUSH_ShareUnlockBrush(pdc->dclevel.pbrFill);
+            pdc->dclevel.pbrFill = pbrFill;
+
+            /* Update eboFill */
+            EBRUSHOBJ_vUpdate(&pdc->eboFill, pdc->dclevel.pbrFill, pdc);
+        }
     }
 
-    /* Release the object */
-    DC_Unlock(pDC);
+#if 0
+    /* Check for DC brush */
+    if (pdcattr->hbrush == StockObjects[DC_BRUSH])
+    {
+        /* ROS HACK, should use surf xlate */
+        /* Update the eboFill's solid color */
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboFill, pdcattr->crPenClr);
+    }
+#endif
+
+    /* Release the dc */
+    DC_UnlockDc(pdc);
+
+    return hbrushOld;
+}
+
+VOID APIENTRY RosGdiSelectBrush( HDC physDev, LOGBRUSH *pLogBrush )
+{
+    HBRUSH hbrNew,hbrOld;
+    
+    hbrNew = GreCreateBrush(pLogBrush);
+
+    if(hbrNew == NULL)
+        return;
+
+    hbrOld = GreSelectBrush(physDev, hbrNew);
+
+    GreDeleteObject(hbrOld);
 }
 
 HFONT APIENTRY RosGdiSelectFont( HDC physDev, HFONT hfont, HANDLE gdiFont )
@@ -279,66 +295,82 @@ HFONT APIENTRY RosGdiSelectFont( HDC physDev, HFONT hfont, HANDLE gdiFont )
     return 0;
 }
 
+HPEN GreSelectPen( HDC hdc, HPEN hpen)
+{
+    PDC pdc;
+    //PDC_ATTR pdcattr = pdc->pdcattr;
+    PBRUSH pbrLine;
+    HPEN hpenOld;
+
+    /* Lock the dc */
+    pdc = DC_LockDc(hdc);
+
+    hpenOld = pdc->dclevel.pbrLine->BaseObject.hHmgr;
+
+    /* Check if the pen handle has changed */
+    if (hpen != hpenOld)
+    {
+        /* Try to lock the new pen */
+        pbrLine = PEN_ShareLockPen(hpen);
+        if (pbrLine)
+        {
+            /* Unlock old brush, set new brush */
+            BRUSH_ShareUnlockBrush(pdc->dclevel.pbrLine);
+            pdc->dclevel.pbrLine = pbrLine;
+
+            /* Update eboLine */
+            EBRUSHOBJ_vUpdate(&pdc->eboLine, pdc->dclevel.pbrLine, pdc);
+        }
+    }
+
+#if 0
+    /* Check for DC pen */
+    if (pdcattr->hpen == StockObjects[DC_PEN])
+    {
+        /* Update the eboLine's solid color */
+        EBRUSHOBJ_vSetSolidBrushColor(&pdc->eboLine, pdcattr->crPenClr);
+    }
+#endif
+
+    /* Release the dc */
+    DC_UnlockDc(pdc);
+
+    return hpenOld;
+}
+
 VOID APIENTRY RosGdiSelectPen( HDC physDev, LOGPEN *pLogPen, EXTLOGPEN *pExtLogPen )
 {
-    PDC pDC;
+    HPEN new_pen, old_pen;
 
-    /* Check parameters */
-    if (!pLogPen && !pExtLogPen) return;
-
-    /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
-
-    DPRINT("RosGdiSelectPen(): dc %x, pen style %x, pen color %x\n", physDev, pLogPen->lopnStyle, pLogPen->lopnColor);
-
-    /* Free previous brush */
-    if (pDC->pLineBrush) GreFreeBrush(pDC->pLineBrush);
-
-    /* Create the pen */
-    if (!pExtLogPen)
+    if(pExtLogPen)
     {
-        pDC->pLineBrush =
-            GreCreatePen(pLogPen->lopnStyle,
-                         pLogPen->lopnWidth.x,
-                         BS_SOLID,
-                         pLogPen->lopnColor,
-                         0,
-                         0,
-                         0,
-                         NULL,
-                         0,
-                         TRUE);
-
-        /* Create XLATE if necessary */
-        if (pDC->pLineBrush && pDC->pLineBrush->flAttrs & GDIBRUSH_IS_BITMAP)
-        {
-            GrepBrushCreateXlate(pDC, pDC->pLineBrush, pLogPen->lopnColor);
-        }
+        new_pen = GreExtCreatePen(pExtLogPen->elpPenStyle, 
+                                  pExtLogPen->elpWidth,
+                                  pExtLogPen->elpPenStyle, 
+                                  pExtLogPen->elpColor,
+                                  pExtLogPen->elpHatch,
+                                  pExtLogPen->elpHatch,
+                                  pExtLogPen->elpNumEntries,
+                                  pExtLogPen->elpStyleEntry,
+                                  0,
+                                  FALSE,
+                                  NULL);
+        new_pen = NULL;
     }
     else
-    {
-        /* Extended pen information */
-        pDC->pLineBrush =
-            GreCreatePen(pExtLogPen->elpPenStyle,
-                         pExtLogPen->elpWidth,
-                         pExtLogPen->elpBrushStyle,
-                         pExtLogPen->elpColor,
-                         0,
-                         pExtLogPen->elpHatch,
-                         pExtLogPen->elpNumEntries,
-                         pExtLogPen->elpStyleEntry,
-                         0,
-                         FALSE);
-
-        /* Create XLATE if necessary */
-        if (pDC->pLineBrush && pDC->pLineBrush->flAttrs & GDIBRUSH_IS_BITMAP)
-        {
-            GrepBrushCreateXlate(pDC, pDC->pLineBrush, pExtLogPen->elpColor);
-        }
+    {       
+        new_pen = GreCreatePen(pLogPen->lopnStyle, 
+                               pLogPen->lopnWidth.x, 
+                               pLogPen->lopnColor, 
+                               NULL);
     }
 
-    /* Release the object */
-    DC_Unlock(pDC);
+    if(new_pen == NULL)
+        return;
+
+    old_pen = GreSelectPen(physDev, new_pen);
+
+    GreDeleteObject(old_pen);
 }
 
 COLORREF APIENTRY RosGdiSetBkColor( HDC physDev, COLORREF color )
@@ -346,13 +378,13 @@ COLORREF APIENTRY RosGdiSetBkColor( HDC physDev, COLORREF color )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Set the color */
     pDC->crBackgroundClr = color;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Return the color set */
     return color;
@@ -375,14 +407,14 @@ VOID APIENTRY RosGdiSetBrushOrg( HDC physDev, INT x, INT y )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Set brush origin */
-    pDC->ptBrushOrg.x = x;
-    pDC->ptBrushOrg.y = y;
+    pDC->dclevel.ptlBrushOrigin.x = x;
+    pDC->dclevel.ptlBrushOrigin.y = y;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 }
 
 COLORREF APIENTRY RosGdiSetDCPenColor( HDC physDev, COLORREF crColor )
@@ -431,7 +463,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     NTSTATUS Status = STATUS_SUCCESS;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Capture the rects buffer */
     _SEH2_TRY
@@ -461,7 +493,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     if (!NT_SUCCESS(Status))
     {
         /* Release the object */
-        DC_Unlock(pDC);
+        DC_UnlockDc(pDC);
 
         /* Free the buffer if it was allocated */
         if (pSafeRects != pStackBuf) ExFreePool(pSafeRects);
@@ -502,8 +534,8 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
         RECTL_vSetRect(&rcSurface,
                        0,
                        0,
-                       pDC->pBitmap->SurfObj.sizlBitmap.cx,
-                       pDC->pBitmap->SurfObj.sizlBitmap.cy);
+                       pDC->dclevel.pSurface->SurfObj.sizlBitmap.cx,
+                       pDC->dclevel.pSurface->SurfObj.sizlBitmap.cy);
 
         RECTL_bIntersectRect(&rcSafeBounds, &rcSafeBounds, &rcSurface);
 
@@ -529,7 +561,7 @@ void APIENTRY RosGdiSetDeviceClipping( HDC physDev, UINT count, PRECTL pRects, P
     RosGdiUpdateClipping(pDC);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Free the buffer if it was allocated */
     if (pSafeRects != pStackBuf) ExFreePool(pSafeRects);
@@ -554,13 +586,13 @@ COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Set the color */
     pDC->crForegroundClr = color;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Return the color set */
     return color;
@@ -571,7 +603,7 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     _SEH2_TRY
     {
@@ -589,7 +621,7 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     _SEH2_END;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 }
 
 VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
@@ -597,7 +629,7 @@ VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     _SEH2_TRY
     {
@@ -615,7 +647,7 @@ VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     _SEH2_END;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 }
 
 VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
@@ -626,13 +658,13 @@ VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
     SwmAcquire();
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* Get a pointer to this window */
     pDC->pWindow = SwmFindByHwnd(hwnd);
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 
     /* Release SWM lock */
     SwmRelease();
@@ -643,13 +675,62 @@ VOID APIENTRY RosGdiReleaseDC(HDC physDev)
     PDC pDC;
 
     /* Get a pointer to the DC */
-    pDC = DC_Lock(physDev);
+    pDC = DC_LockDc(physDev);
 
     /* No window clipping is to be performed */
     pDC->pWindow = NULL;
 
     /* Release the object */
-    DC_Unlock(pDC);
+    DC_UnlockDc(pDC);
 }
 
+
+static
+HPEN
+FASTCALL
+IntCreateStockPen(DWORD dwPenStyle,
+                  DWORD dwWidth,
+                  ULONG ulBrushStyle,
+                  ULONG ulColor)
+{
+    HPEN hPen;
+    PBRUSH pbrushPen = PEN_AllocPenWithHandle();
+
+    if ((dwPenStyle & PS_STYLE_MASK) == PS_NULL) dwWidth = 1;
+
+    pbrushPen->ptPenWidth.x = abs(dwWidth);
+    pbrushPen->ptPenWidth.y = 0;
+    pbrushPen->ulPenStyle = dwPenStyle;
+    pbrushPen->BrushAttr.lbColor = ulColor;
+    pbrushPen->ulStyle = ulBrushStyle;
+    pbrushPen->hbmClient = (HANDLE)NULL;
+    pbrushPen->dwStyleCount = 0;
+    pbrushPen->pStyle = 0;
+    pbrushPen->flAttrs = GDIBRUSH_IS_OLDSTYLEPEN;
+
+    switch (dwPenStyle & PS_STYLE_MASK)
+    {
+        case PS_NULL:
+            pbrushPen->flAttrs |= GDIBRUSH_IS_NULL;
+            break;
+
+        case PS_SOLID:
+            pbrushPen->flAttrs |= GDIBRUSH_IS_SOLID;
+            break;
+    }
+    hPen = pbrushPen->BaseObject.hHmgr;
+    PEN_UnlockPen(pbrushPen);
+    return hPen;
+}
+
+VOID CreateStockObjects()
+{
+    hStockBmp = IntGdiCreateBitmap(1, 1, 1, 1, NULL);
+    hStockPalette = (HGDIOBJ)PALETTE_Init();
+    hNullPen = IntCreateStockPen(PS_NULL, 0, BS_SOLID, 0);
+
+    GDIOBJ_ConvertToStockObj(&hStockBmp);
+    GDIOBJ_ConvertToStockObj(&hStockPalette);
+    GDIOBJ_ConvertToStockObj(&hNullPen);
+}
 /* EOF */

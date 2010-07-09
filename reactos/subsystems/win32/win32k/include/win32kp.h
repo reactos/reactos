@@ -6,9 +6,9 @@
  * PROGRAMMER:      Aleksey Bragin <aleksey@reactos.org>
  */
 
-#ifndef _INCLUDE_INTERNAL_WIN32K_H
-#define _INCLUDE_INTERNAL_WIN32K_H
+#pragma once
 
+#define INTERNAL_CALL APIENTRY
 /* INCLUDES ******************************************************************/
 
 /* Prototypes */
@@ -54,6 +54,8 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <xlateobj.h>
 #include <gre.h>
 #include <monitor.h>
+#include <color.h>
+#include <pen.h>
 
 #include "winesup.h"
 
@@ -89,4 +91,3 @@ VOID UserLeave(VOID);
 VOID UserCleanup(VOID);
 VOID UserInitialize(VOID);
 
-#endif

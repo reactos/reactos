@@ -21,7 +21,7 @@
 #define PUTPIXEL(x,y,BrushInst)        \
   ret = ret && GreLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
-       &BrushInst->BrushObj,                   \
+       &BrushInst.BrushObject,                    \
        x, y, (x)+1, y,                           \
        &RectBounds,                              \
        ROP2_TO_MIX(R2_COPYPEN/*pdcattr->jROP2*/));
@@ -29,7 +29,7 @@
 #define PUTLINE(x1,y1,x2,y2,BrushInst) \
   ret = ret && GreLineTo(&psurf->SurfObj, \
        dc->CombinedClip,                         \
-       &BrushInst->BrushObj,                   \
+       &BrushInst.BrushObject,                    \
        x1, y1, x2, y2,                           \
        &RectBounds,                              \
        ROP2_TO_MIX(R2_COPYPEN/*pdcattr->jROP2*/));
@@ -51,7 +51,7 @@ GrepArc(PDC  dc,
         ARCTYPE arctype)
 {
     RECTL RectBounds, RectSEpts;
-    PBRUSHGDI pbrushPen;
+    PBRUSH pbrushPen;
     SURFACE *psurf;
     BOOLEAN ret = TRUE;
     LONG PenWidth, PenOrigWidth;
@@ -75,8 +75,7 @@ GrepArc(PDC  dc,
         (Bottom - Top == 1))))
        return TRUE;
 
-    GreUpdateBrush(dc->pLineBrush, dc);
-    pbrushPen = dc->pLineBrush;
+    pbrushPen = dc->dclevel.pbrLine;
     PenOrigWidth = PenWidth = pbrushPen->ptPenWidth.x;
     if (pbrushPen->ulPenStyle == PS_NULL) PenWidth = 0;
 
@@ -126,7 +125,6 @@ GrepArc(PDC  dc,
 
     if ((arctype == GdiTypePie) || (arctype == GdiTypeChord))
     {
-        GreUpdateBrush(dc->pFillBrush, dc);
         GrepFillArc( dc,
               RectBounds.left,
               RectBounds.top,
@@ -149,7 +147,7 @@ GrepArc(PDC  dc,
               pbrushPen,
               &BrushOrg);
 
-    psurf = dc->pBitmap;
+    psurf = dc->dclevel.pSurface;
     if (NULL == psurf)
     {
         DPRINT1("Arc Fail 2\n");
@@ -159,11 +157,11 @@ GrepArc(PDC  dc,
 
     if (arctype == GdiTypePie)
     {
-       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->pLineBrush);
-       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, dc->pLineBrush);
+       PUTLINE(CenterX, CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
+       PUTLINE(EfCx + CenterX, EfCy + CenterY, CenterX, CenterY, dc->eboLine);
     }
     if (arctype == GdiTypeChord)
-        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->pLineBrush);
+        PUTLINE(EfCx + CenterX, EfCy + CenterY, SfCx + CenterX, SfCy + CenterY, dc->eboLine);
 
     pbrushPen->ptPenWidth.x = PenOrigWidth;
 

@@ -265,7 +265,7 @@ GreAlphaBlend(PDC pDest, INT XDest, INT YDest,
 {
     RECTL DestRect, SrcRect;
     BOOL Status;
-    XLATEOBJ *XlateObj;
+    EXLATEOBJ exlo;
     BLENDOBJ BlendObj;
     BlendObj.BlendFunction = blendfn;
 
@@ -290,29 +290,18 @@ GreAlphaBlend(PDC pDest, INT XDest, INT YDest,
     SrcRect.bottom += pSrc->rcVport.top + pSrc->rcDcRect.top;
 
     /* Create the XLATEOBJ. */
-    XlateObj = IntCreateXlateForBlt(pDest, pSrc, pDest->pBitmap, pSrc->pBitmap);
+    EXLATEOBJ_vInitXlateFromDCs(&exlo, pSrc, pDest);
 
-    if (XlateObj == (XLATEOBJ*)-1)
-    {
-        DPRINT1("couldn't create XlateObj\n");
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        XlateObj = NULL;
-        Status = FALSE;
-    }
-    else
-    {
-        /* Perform the alpha blend operation */
-        Status = GrepAlphaBlend(&pDest->pBitmap->SurfObj,
-                                &pSrc->pBitmap->SurfObj,
-                                pDest->CombinedClip,
-                                XlateObj,
-                                &DestRect,
-                                &SrcRect,
-                                &BlendObj);
-    }
+    /* Perform the alpha blend operation */
+    Status = GrepAlphaBlend(&pDest->dclevel.pSurface->SurfObj,
+                            &pSrc->dclevel.pSurface->SurfObj,
+                            pDest->CombinedClip,
+                            &exlo.xlo,
+                            &DestRect,
+                            &SrcRect,
+                            &BlendObj);
 
-    if (XlateObj != NULL)
-        EngDeleteXlate(XlateObj);
+    EXLATEOBJ_vCleanup(&exlo);
 
     return Status;
 }
@@ -326,6 +315,7 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
     BOOLEAN bRet;
     POINT SourcePoint, BrushOrigin;
     RECTL DestRect;
+    EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     BOOL UsesSource = ROP3_USES_SOURCE(rop);
 
@@ -348,41 +338,34 @@ GreBitBlt(PDC pDest, INT XDest, INT YDest,
         SourcePoint.y += pSrc->rcDcRect.top + pSrc->rcVport.top;
     }
 
-    /* Create the XLATEOBJ */
+    /* Create the XLATEOBJ. */
     if (UsesSource)
     {
-        XlateObj = IntCreateXlateForBlt(pDest, pSrc, pDest->pBitmap, pSrc->pBitmap);
-
-        if (XlateObj == (XLATEOBJ*)-1)
-        {
-            DPRINT1("couldn't create XlateObj\n");
-            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            XlateObj = NULL;
-            return FALSE;
-        }
+        EXLATEOBJ_vInitXlateFromDCs(&exlo, pSrc, pDest);
+        XlateObj = &exlo.xlo;
     }
 
-    BrushOrigin.x = pDest->ptBrushOrg.x + pDest->rcDcRect.left;
-    BrushOrigin.y = pDest->ptBrushOrg.y + pDest->rcDcRect.top;
+    BrushOrigin.x = pDest->dclevel.ptlBrushOrigin.x + pDest->rcDcRect.left;
+    BrushOrigin.y = pDest->dclevel.ptlBrushOrigin.y + pDest->rcDcRect.top;
 
     /* Perform the bitblt operation */
     bRet = GrepBitBltEx(
-        &pDest->pBitmap->SurfObj,
-        pSrc ? &pSrc->pBitmap->SurfObj : NULL,
+        &pDest->dclevel.pSurface->SurfObj,
+        pSrc ? &pSrc->dclevel.pSurface->SurfObj : NULL,
         NULL,
         pDest->CombinedClip,
         XlateObj,
         &DestRect,
         &SourcePoint,
         NULL,
-        &pDest->pFillBrush->BrushObj,
+        &pDest->eboFill.BrushObject,
         &BrushOrigin,
         ROP3_TO_ROP4(rop),
         TRUE);
 
     /* Free XlateObj if it was created */
-    if (UsesSource && XlateObj)
-        EngDeleteXlate(XlateObj);
+    if (UsesSource)
+        EXLATEOBJ_vCleanup(&exlo);
 
     return bRet;
 }
@@ -391,7 +374,7 @@ BOOLEAN
 NTAPI
 GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
           INT Width, INT Height, DWORD ROP,
-          PBRUSHGDI BrushObj)
+          PBRUSH BrushObj)
 {
     RECTL DestRect;
     POINTL BrushOrigin = {0, 0};
@@ -428,13 +411,11 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
         DestRect.right += pDC->rcVport.left + pDC->rcDcRect.left;
         DestRect.bottom += pDC->rcVport.top + pDC->rcDcRect.top;
 
-        BrushOrigin.x = pDC->ptBrushOrg.x + pDC->rcDcRect.left;
-        BrushOrigin.y = pDC->ptBrushOrg.y + pDC->rcDcRect.top;
-
-        GreUpdateBrush(pDC->pFillBrush, pDC);
+        BrushOrigin.x = pDC->dclevel.ptlBrushOrigin.x + pDC->rcDcRect.left;
+        BrushOrigin.y = pDC->dclevel.ptlBrushOrigin.y + pDC->rcDcRect.top;
 
         bRet = GrepBitBltEx(
-            &pDC->pBitmap->SurfObj,
+            &pDC->dclevel.pSurface->SurfObj,
             NULL,
             NULL,
             pDC->CombinedClip,
@@ -442,7 +423,7 @@ GrePatBlt(PDC pDC, INT XLeft, INT YLeft,
             &DestRect,
             NULL,
             NULL,
-            &pDC->pFillBrush->BrushObj,
+            &pDC->eboFill.BrushObject,
             &BrushOrigin,
             ROP3_TO_ROP4(ROP),
             TRUE);
@@ -472,6 +453,7 @@ GreStretchBltMask(
     RECTL DestRect;
     RECTL SourceRect;
     BOOL Status = FALSE;
+    EXLATEOBJ exlo;
     XLATEOBJ *XlateObj = NULL;
     POINTL BrushOrigin;
     BOOL UsesSource = ROP3_USES_SOURCE(ROP);
@@ -505,35 +487,30 @@ GreStretchBltMask(
         SourceRect.bottom += DCSrc->rcVport.top + DCSrc->rcDcRect.top;
     }
 
-    BrushOrigin.x = DCDest->ptBrushOrg.x + DCDest->rcDcRect.left;
-    BrushOrigin.y = DCDest->ptBrushOrg.y + DCDest->rcDcRect.top;
+    BrushOrigin.x = DCDest->dclevel.ptlBrushOrigin.x + DCDest->rcDcRect.left;
+    BrushOrigin.y = DCDest->dclevel.ptlBrushOrigin.y + DCDest->rcDcRect.top;
 
     /* Determine surfaces to be used in the bitblt */
-    BitmapDest = DCDest->pBitmap;
+    BitmapDest = DCDest->dclevel.pSurface;
     if (BitmapDest == NULL)
         goto failed;
     if (UsesSource)
     {
         {
-            BitmapSrc = DCSrc->pBitmap;
+            BitmapSrc = DCSrc->dclevel.pSurface;
             if (BitmapSrc == NULL)
                 goto failed;
         }
 
         /* Create the XLATEOBJ. */
-        XlateObj = IntCreateXlateForBlt(DCDest, DCSrc, BitmapDest, BitmapSrc);
-        if (XlateObj == (XLATEOBJ*)-1)
-        {
-            SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-            XlateObj = NULL;
-            goto failed;
-        }
+        EXLATEOBJ_vInitXlateFromDCs(&exlo, DCSrc, DCDest);
+        XlateObj = &exlo.xlo;
     }
 
     /* Make mask surface for source surface */
     if (BitmapSrc && DCMask)
     {
-            BitmapMask = DCMask->pBitmap;
+            BitmapMask = DCMask->dclevel.pSurface;
             if (BitmapMask && 
                 (BitmapMask->SurfObj.sizlBitmap.cx != WidthSrc ||
                  BitmapMask->SurfObj.sizlBitmap.cy != HeightSrc))
@@ -552,12 +529,15 @@ GreStretchBltMask(
                             &DestRect,
                             &SourceRect,
                             NULL, 
-                            &DCDest->pFillBrush->BrushObj,
+                            &DCDest->eboFill.BrushObject,
                             &BrushOrigin,
                             ROP3_TO_ROP4(ROP));
 
 failed:
-    if (XlateObj) EngDeleteXlate(XlateObj);
+    if (UsesSource)
+    {
+        EXLATEOBJ_vCleanup(&exlo);
+    }
 
     return Status;
 }
@@ -582,33 +562,24 @@ GreSetDIBits(
     SIZEL       SourceSize;
     POINTL      ZeroPoint;
     RECTL       DestRect;
-    XLATEOBJ   *XlateObj;
-    PPALETTE     hDCPalette;
-    RGBQUAD    *lpRGB;
+    EXLATEOBJ   exlo;
+    PPALETTE    ppalDDB, ppalDIB;
+    //RGBQUAD    *lpRGB;
     HPALETTE    DDB_Palette, DIB_Palette;
-    ULONG       DDB_Palette_Type, DIB_Palette_Type;
+    ULONG       DIB_Palette_Type;
     INT         DIBWidth;
 
     // Check parameters
-    if (!(bitmap = SURFACE_Lock(hBitmap)))
+    if (!(bitmap = SURFACE_LockSurface(hBitmap)))
     {
         return 0;
     }
-
-    if (!ScanLines || (StartScan >= bitmap->SurfObj.sizlBitmap.cy))
-    {
-        SURFACE_Unlock(bitmap);
-        return 0;
-    }
-
-    if (StartScan + ScanLines > bitmap->SurfObj.sizlBitmap.cy)
-        ScanLines = bitmap->SurfObj.sizlBitmap.cy - StartScan;
 
     // Get RGB values
-    if (ColorUse == DIB_PAL_COLORS)
-      lpRGB = DIB_MapPaletteColors(DC, bmi);
-    else
-      lpRGB = (RGBQUAD *)&bmi->bmiColors;
+    //if (ColorUse == DIB_PAL_COLORS)
+    //  lpRGB = DIB_MapPaletteColors(hDC, bmi);
+    //else
+    //  lpRGB = &bmi->bmiColors;
 
     DestSurf = &bitmap->SurfObj;
 
@@ -626,7 +597,7 @@ GreSetDIBits(
                                    (PVOID) Bits);
     if (0 == SourceBitmap)
     {
-        SURFACE_Unlock(bitmap);
+        SURFACE_UnlockSurface(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -635,7 +606,7 @@ GreSetDIBits(
     if (NULL == SourceSurf)
     {
         EngDeleteSurface((HSURF)SourceBitmap);
-        SURFACE_Unlock(bitmap);
+        SURFACE_UnlockSurface(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
@@ -648,20 +619,18 @@ GreSetDIBits(
     else
     {
         // Destination palette obtained from the hDC
-        DDB_Palette = DC->pPDevice->DevInfo.hpalDefault;
+        DDB_Palette = DC->ppdev->devinfo.hpalDefault;
     }
 
-    hDCPalette = PALETTE_LockPalette(DDB_Palette);
-    if (NULL == hDCPalette)
+    ppalDDB = PALETTE_LockPalette(DDB_Palette);
+    if (NULL == ppalDDB)
     {
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
-        SURFACE_Unlock(bitmap);
+        SURFACE_UnlockSurface(bitmap);
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return 0;
     }
-    DDB_Palette_Type = hDCPalette->Mode;
-    PALETTE_UnlockPalette(hDCPalette);
 
     // Source palette obtained from the BITMAPINFO
     DIB_Palette = BuildDIBPalette((PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type);
@@ -669,22 +638,15 @@ GreSetDIBits(
     {
         EngUnlockSurface(SourceSurf);
         EngDeleteSurface((HSURF)SourceBitmap);
-        SURFACE_Unlock(bitmap);
+        SURFACE_UnlockSurface(bitmap);
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
         return 0;
     }
 
-    // Determine XLATEOBJ for color translation
-    XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
-    if (NULL == XlateObj)
-    {
-        PALETTE_FreePaletteByHandle(DIB_Palette);
-        EngUnlockSurface(SourceSurf);
-        EngDeleteSurface((HSURF)SourceBitmap);
-        SURFACE_Unlock(bitmap);
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        return 0;
-    }
+    ppalDIB = PALETTE_LockPalette(DIB_Palette);
+
+    /* Initialize XLATEOBJ for color translation */
+    EXLATEOBJ_vInitialize(&exlo, ppalDIB, ppalDDB, 0, 0, 0);
 
     // Zero point
     ZeroPoint.x = 0;
@@ -696,56 +658,28 @@ GreSetDIBits(
     DestRect.right	= SourceSize.cx;
     DestRect.bottom	= DestRect.top + ScanLines;
 
-    copyBitsResult = GreCopyBits(DestSurf, SourceSurf, NULL, XlateObj, &DestRect, &ZeroPoint);
+    copyBitsResult = GreCopyBits(DestSurf, SourceSurf, NULL, &exlo.xlo, &DestRect, &ZeroPoint);
 
     // If it succeeded, return number of scanlines copies
     if (copyBitsResult == TRUE)
     {
         result = SourceSize.cy;
+// or
+//        result = abs(bmi->bmiHeader.biHeight) - StartScan;
     }
 
     // Clean up
-    EngDeleteXlate(XlateObj);
+    EXLATEOBJ_vCleanup(&exlo);
+    PALETTE_UnlockPalette(ppalDIB);
+    PALETTE_UnlockPalette(ppalDDB);
     PALETTE_FreePaletteByHandle(DIB_Palette);
     EngUnlockSurface(SourceSurf);
     EngDeleteSurface((HSURF)SourceBitmap);
 
-#if 0
-  /* optimisation for the case where the input bits are in exactly the same
-   * format as the internal representation and copying to the app bits is
-   * cheap - saves a round trip to the X server */
-  if (bmi->bmiHeader.biCompression == BI_RGB &&
-      ColorUse == DIB_RGB_COLORS &&
-      bmi->bmiHeader.biBitCount == BitsPerFormat(bitmap->SurfObj.iBitmapFormat)/* && bmi->bmiHeader.biBitCount != 1*/)
-  {
-      unsigned int srcwidthb = abs(bitmap->SurfObj.lDelta);
-      int dstwidthb = abs(bitmap->SurfObj.lDelta);//DIB_GetDIBWidthBytes( bmi->bmiHeader.biWidth, bmi->bmiHeader.biBitCount );
-      LPBYTE dbits = bitmap->SurfObj.pvBits, sbits = (LPBYTE)Bits + (StartScan * srcwidthb);
-      int widthb;
-      UINT y;
+//    if (ColorUse == DIB_PAL_COLORS)
+//        WinFree((LPSTR)lpRGB);
 
-      //DPRINT("syncing compatible set bits to app bits\n");
-      if ((bmi->bmiHeader.biHeight < 0) ^ (bitmap->SurfObj.lDelta > 0))
-      {
-          dbits += dstwidthb * (ScanLines-1);
-          dstwidthb = -dstwidthb;
-      }
-
-      widthb = min(srcwidthb, abs(dstwidthb));
-
-      DPRINT1("srcwidthb %d, dstwidthb %d, widthb %d\n", srcwidthb, dstwidthb, widthb);
-      DPRINT1("src bitcount %d, dst bitformat %d, dst bytesize %d vs scanlines * width %d\n",
-          bmi->bmiHeader.biBitCount, bitmap->SurfObj.iBitmapFormat, bitmap->SurfObj.cjBits,
-          ScanLines * dstwidthb);
-
-      for (y = 0; y < ScanLines; y++, dbits += dstwidthb, sbits += srcwidthb)
-        memcpy(dbits, sbits, widthb);
-
-      result = ScanLines;
-  }
-#endif
-
-    SURFACE_Unlock(bitmap);
+    SURFACE_UnlockSurface(bitmap);
 
     return result;
 }
@@ -766,15 +700,14 @@ GreGetDIBits(
     HBITMAP hDestBitmap = NULL;
     HPALETTE hSourcePalette = NULL;
     HPALETTE hDestPalette = NULL;
-    PPALETTE SourcePalette = NULL;
-    PPALETTE DestPalette = NULL;
+    PPALETTE ppalSrc = NULL;
+    PPALETTE ppalDst = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG Result = 0;
     BOOL bPaletteMatch = FALSE;
     PBYTE ChkBits = Bits;
     PVOID ColorPtr;
     RGBQUAD *rgbQuads;
-    ULONG SourcePaletteType = 0;
     ULONG DestPaletteType;
     ULONG Index;
 
@@ -804,14 +737,14 @@ GreGetDIBits(
     }
 
     /* Get a pointer to the source bitmap object */
-    psurf = SURFACE_Lock(hBitmap);
+    psurf = SURFACE_LockSurface(hBitmap);
     if (psurf == NULL)
         return 0;
 
     hSourcePalette = psurf->hDIBPalette;
     if (!hSourcePalette)
     {
-        hSourcePalette = pPrimarySurface->DevInfo.hpalDefault;
+        hSourcePalette = pPrimarySurface->devinfo.hpalDefault;
     }
 
     ColorPtr = ((PBYTE)Info + Info->bmiHeader.biSize);
@@ -819,32 +752,30 @@ GreGetDIBits(
 
     /* Copy palette information
      * Always create a palette for 15 & 16 bit. */
-    if (Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat) &&
-        Info->bmiHeader.biBitCount != 15 && Info->bmiHeader.biBitCount != 16)
+    if ((Info->bmiHeader.biBitCount == BitsPerFormat(psurf->SurfObj.iBitmapFormat) &&
+         Info->bmiHeader.biBitCount != 15 && Info->bmiHeader.biBitCount != 16) ||
+         !ChkBits)
     {
         hDestPalette = hSourcePalette;
         bPaletteMatch = TRUE;
     }
     else
-        hDestPalette = BuildDIBPalette(Info, (PINT)&DestPaletteType); //hDestPalette = Dc->DevInfo->hpalDefault;
+        hDestPalette = BuildDIBPalette(Info, (PINT)&DestPaletteType); //hDestPalette = Dc->devinfo->hpalDefault;
 
-    SourcePalette = PALETTE_LockPalette(hSourcePalette);
-    /* FIXME - SourcePalette can be NULL!!! Don't assert here! */
-    ASSERT(SourcePalette);
-    SourcePaletteType = SourcePalette->Mode;
-    PALETTE_UnlockPalette(SourcePalette);
+    ppalSrc = PALETTE_LockPalette(hSourcePalette);
+    /* FIXME - ppalSrc can be NULL!!! Don't assert here! */
+    ASSERT(ppalSrc);
 
-    if (bPaletteMatch)
+    if (!bPaletteMatch)
     {
-        DestPalette = PALETTE_LockPalette(hDestPalette);
-        /* FIXME - DestPalette can be NULL!!!! Don't assert here!!! */
-        DPRINT("DestPalette : %p\n", DestPalette);
-        ASSERT(DestPalette);
-        DestPaletteType = DestPalette->Mode;
+        ppalDst = PALETTE_LockPalette(hDestPalette);
+        /* FIXME - ppalDst can be NULL!!!! Don't assert here!!! */
+        DPRINT("ppalDst : %p\n", ppalDst);
+        ASSERT(ppalDst);
     }
     else
     {
-        DestPalette = SourcePalette;
+        ppalDst = ppalSrc;
     }
 
     /* Copy palette. */
@@ -860,15 +791,15 @@ GreGetDIBits(
             {
                 if (Usage == DIB_RGB_COLORS)
                 {
-                    if (DestPalette->NumColors != 1 << Info->bmiHeader.biBitCount)
-                        Info->bmiHeader.biClrUsed = DestPalette->NumColors;
+                    if (ppalDst->NumColors != 1 << Info->bmiHeader.biBitCount)
+                        Info->bmiHeader.biClrUsed = ppalDst->NumColors;
                     for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
+                         Index < (1 << Info->bmiHeader.biBitCount) && Index < ppalDst->NumColors;
                          Index++)
                     {
-                        rgbQuads[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
-                        rgbQuads[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
-                        rgbQuads[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
+                        rgbQuads[Index].rgbRed   = ppalDst->IndexedColors[Index].peRed;
+                        rgbQuads[Index].rgbGreen = ppalDst->IndexedColors[Index].peGreen;
+                        rgbQuads[Index].rgbBlue  = ppalDst->IndexedColors[Index].peBlue;
                         rgbQuads[Index].rgbReserved = 0;
                     }
                 }
@@ -898,12 +829,12 @@ GreGetDIBits(
                 else if (Info->bmiHeader.biBitCount > 1  && bPaletteMatch)
                 {
                     for (Index = 0;
-                         Index < (1 << Info->bmiHeader.biBitCount) && Index < DestPalette->NumColors;
+                         Index < (1 << Info->bmiHeader.biBitCount) && Index < ppalDst->NumColors;
                          Index++)
                     {
-                        Info->bmiColors[Index].rgbRed   = DestPalette->IndexedColors[Index].peRed;
-                        Info->bmiColors[Index].rgbGreen = DestPalette->IndexedColors[Index].peGreen;
-                        Info->bmiColors[Index].rgbBlue  = DestPalette->IndexedColors[Index].peBlue;
+                        Info->bmiColors[Index].rgbRed   = ppalDst->IndexedColors[Index].peRed;
+                        Info->bmiColors[Index].rgbGreen = ppalDst->IndexedColors[Index].peGreen;
+                        Info->bmiColors[Index].rgbBlue  = ppalDst->IndexedColors[Index].peBlue;
                         Info->bmiColors[Index].rgbReserved = 0;
                     }
                 }
@@ -973,8 +904,8 @@ GreGetDIBits(
             break;
     }
 
-    if (bPaletteMatch)
-        PALETTE_UnlockPalette(DestPalette);
+    if (!bPaletteMatch)
+        PALETTE_UnlockPalette(ppalDst);
 
     /* fill out the BITMAPINFO struct */
     if (!ChkBits)
@@ -1082,14 +1013,11 @@ GreGetDIBits(
 
         if (NT_SUCCESS(Status))
         {
-            XLATEOBJ *XlateObj;
+            EXLATEOBJ exlo;
             SURFOBJ *DestSurfObj;
             RECTL DestRect;
 
-            XlateObj = IntEngCreateXlate(DestPaletteType,
-                                         SourcePaletteType,
-                                         hDestPalette,
-                                         hSourcePalette);
+            EXLATEOBJ_vInitialize(&exlo, ppalSrc, ppalDst, 0, 0, 0);
 
             SourcePoint.x = 0;
             SourcePoint.y = psurf->SurfObj.sizlBitmap.cy - (StartScan + ScanLines);
@@ -1103,30 +1031,32 @@ GreGetDIBits(
             DestSurfObj = EngLockSurface((HSURF)hDestBitmap);
 
             if (GreCopyBits(DestSurfObj,
-                            &psurf->SurfObj,
-                            NULL,
-                            XlateObj,
-                            &DestRect,
-                            &SourcePoint))
+                               &psurf->SurfObj,
+                               NULL,
+                               &exlo.xlo,
+                               &DestRect,
+                               &SourcePoint))
             {
                 DPRINT("GetDIBits %d \n",abs(Info->bmiHeader.biHeight) - StartScan);
                 Result = ScanLines;
             }
 
-            EngDeleteXlate(XlateObj);
+            EXLATEOBJ_vCleanup(&exlo);
             EngUnlockSurface(DestSurfObj);
         }
     }
 cleanup:
+    PALETTE_UnlockPalette(ppalSrc);
+
     if (hDestBitmap != NULL)
         EngDeleteSurface((HSURF)hDestBitmap);
 
     if (hDestPalette != NULL && bPaletteMatch == FALSE)
         PALETTE_FreePaletteByHandle(hDestPalette);
 
-    SURFACE_Unlock(psurf);
+    SURFACE_UnlockSurface(psurf);
 
-    DPRINT("leaving GreGetDIBits\n");
+    DPRINT("leaving NtGdiGetDIBitsInternal\n");
 
     return Result;
 }
@@ -1156,18 +1086,18 @@ GreSetDIBitsToDevice(
     POINTL ptSource;
     INT DIBWidth;
     SIZEL SourceSize;
-    XLATEOBJ *XlateObj = NULL;
-    PPALETTE pDCPalette;
+    EXLATEOBJ exlo;
+    PPALETTE pDDBPalette, pDIBPalette;
     HPALETTE DDBPalette, DIBPalette = NULL;
     ULONG DDBPaletteType, DIBPaletteType;
 
     if (!Bits) return 0;
 
     /* Use destination palette obtained from the DC by default */
-    DDBPalette = pDC->pPDevice->DevInfo.hpalDefault;
+    DDBPalette = pDC->ppdev->devinfo.hpalDefault;
 
     /* Try to use hDIBPalette if it exists */
-    pSurf = pDC->pBitmap;
+    pSurf = pDC->dclevel.pSurface;
     if (pSurf && pSurf->hDIBPalette)
     {
         DDBPalette = pSurf->hDIBPalette;
@@ -1209,16 +1139,15 @@ GreSetDIBitsToDevice(
     }
 
     /* Obtain destination palette */
-    pDCPalette = PALETTE_LockPalette(DDBPalette);
-    if (!pDCPalette)
+    pDDBPalette = PALETTE_LockPalette(DDBPalette);
+    if (!pDDBPalette)
     {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         Status = STATUS_UNSUCCESSFUL;
         goto Exit;
     }
 
-    DDBPaletteType = pDCPalette->Mode;
-    PALETTE_UnlockPalette(pDCPalette);
+    DDBPaletteType = pDDBPalette->Mode;
 
     DIBPalette = BuildDIBPalette(bmi, (PINT)&DIBPaletteType);
     if (!DIBPalette)
@@ -1228,21 +1157,24 @@ GreSetDIBitsToDevice(
         goto Exit;
     }
 
-    /* Determine XlateObj */
-    XlateObj = IntEngCreateXlate(DDBPaletteType, DIBPaletteType, DDBPalette, DIBPalette);
-    if (!XlateObj)
+    /* Obtain destination palette */
+    pDIBPalette = PALETTE_LockPalette(DIBPalette);
+    if (!pDIBPalette)
     {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        Status = STATUS_NO_MEMORY;
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        Status = STATUS_UNSUCCESSFUL;
         goto Exit;
     }
+
+    /* Initialize EXLATEOBJ */
+    EXLATEOBJ_vInitialize(&exlo, pDIBPalette, pDDBPalette, 0, 0, 0);
 
     /* Copy the bits */
     Status = GrepBitBltEx(pDestSurf,
                           pSourceSurf,
                           NULL,
                           pDC->CombinedClip,
-                          XlateObj,
+                          &exlo.xlo,
                           &rcDest,
                           &ptSource,
                           NULL,
@@ -1250,6 +1182,13 @@ GreSetDIBitsToDevice(
                           NULL,
                           ROP3_TO_ROP4(SRCCOPY),
                           TRUE);
+
+    /* Cleanup EXLATEOBJ */
+    EXLATEOBJ_vCleanup(&exlo);
+
+    PALETTE_UnlockPalette(pDDBPalette);
+    PALETTE_UnlockPalette(pDIBPalette);
+
 Exit:
     if (NT_SUCCESS(Status))
     {
@@ -1259,7 +1198,6 @@ Exit:
 
     if (pSourceSurf) EngUnlockSurface(pSourceSurf);
     if (hSourceBitmap) EngDeleteSurface((HSURF)hSourceBitmap);
-    if (XlateObj) EngDeleteXlate(XlateObj);
     if (DIBPalette) PALETTE_FreePaletteByHandle(DIBPalette);
 
     return ret;
@@ -1278,7 +1216,7 @@ GreSetDIBColorTable(
     UINT Index;
     ULONG biBitCount;
 
-    psurf = dc->pBitmap;
+    psurf = dc->dclevel.pSurface;
     if (psurf == NULL)
     {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1313,5 +1251,130 @@ GreSetDIBColorTable(
 
     return Entries;
 }
+
+RGBQUAD *
+FASTCALL
+DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
+{
+    RGBQUAD *lpRGB;
+    ULONG nNumColors,i;
+    USHORT *lpIndex;
+    PPALETTE palGDI;
+
+    palGDI = PALETTE_LockPalette(dc->dclevel.hpal);
+
+    if (NULL == palGDI)
+    {
+        return NULL;
+    }
+
+    if (palGDI->Mode != PAL_INDEXED)
+    {
+        PALETTE_UnlockPalette(palGDI);
+        return NULL;
+    }
+
+    nNumColors = 1 << lpbmi->bmiHeader.biBitCount;
+    if (lpbmi->bmiHeader.biClrUsed)
+    {
+        nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
+    }
+
+    lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
+    if (lpRGB == NULL)
+    {
+        PALETTE_UnlockPalette(palGDI);
+        return NULL;
+    }
+
+    lpIndex = (USHORT *)&lpbmi->bmiColors[0];
+
+    for (i = 0; i < nNumColors; i++)
+    {
+        if (*lpIndex < palGDI->NumColors)
+        {
+            lpRGB[i].rgbRed = palGDI->IndexedColors[*lpIndex].peRed;
+            lpRGB[i].rgbGreen = palGDI->IndexedColors[*lpIndex].peGreen;
+            lpRGB[i].rgbBlue = palGDI->IndexedColors[*lpIndex].peBlue;
+        }
+        else
+        {
+            lpRGB[i].rgbRed = 0;
+            lpRGB[i].rgbGreen = 0;
+            lpRGB[i].rgbBlue = 0;
+        }
+        lpRGB[i].rgbReserved = 0;
+        lpIndex++;
+    }
+    PALETTE_UnlockPalette(palGDI);
+
+    return lpRGB;
+}
+
+
+HPALETTE
+FASTCALL
+BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
+{
+    BYTE bits;
+    ULONG ColorCount;
+    PALETTEENTRY *palEntries = NULL;
+    HPALETTE hPal;
+    ULONG RedMask, GreenMask, BlueMask;
+
+    // Determine Bits Per Pixel
+    bits = bmi->bmiHeader.biBitCount;
+
+    // Determine paletteType from Bits Per Pixel
+    if (bits <= 8)
+    {
+        *paletteType = PAL_INDEXED;
+        RedMask = GreenMask = BlueMask = 0;
+    }
+    else if (bmi->bmiHeader.biCompression == BI_BITFIELDS)
+    {
+        *paletteType = PAL_BITFIELDS;
+        RedMask = ((ULONG *)bmi->bmiColors)[0];
+        GreenMask = ((ULONG *)bmi->bmiColors)[1];
+        BlueMask = ((ULONG *)bmi->bmiColors)[2];
+    }
+    else if (bits < 24)
+    {
+        *paletteType = PAL_BITFIELDS;
+        RedMask = 0x7c00;
+        GreenMask = 0x03e0;
+        BlueMask = 0x001f;
+    }
+    else
+    {
+        *paletteType = PAL_BGR;
+        RedMask = 0xff0000;
+        GreenMask = 0x00ff00;
+        BlueMask = 0x0000ff;
+    }
+
+    if (bmi->bmiHeader.biClrUsed == 0)
+    {
+        ColorCount = 1 << bmi->bmiHeader.biBitCount;
+    }
+    else
+    {
+        ColorCount = bmi->bmiHeader.biClrUsed;
+    }
+
+    if (PAL_INDEXED == *paletteType)
+    {
+        hPal = PALETTE_AllocPaletteIndexedRGB(ColorCount, (RGBQUAD*)bmi->bmiColors);
+    }
+    else
+    {
+        hPal = PALETTE_AllocPalette(*paletteType, ColorCount,
+                                    (ULONG*) palEntries,
+                                    RedMask, GreenMask, BlueMask);
+    }
+
+    return hPal;
+}
+
 
 /* EOF */
