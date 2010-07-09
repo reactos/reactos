@@ -763,17 +763,17 @@ LogonUserW(LPWSTR lpszUsername,
                            GENERIC_ALL,
                            OwnerSid);
 
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-                              1,
-                              SECURITY_LOCAL_SYSTEM_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              SECURITY_NULL_RID,
-                              &LocalSystemSid);
+    RtlAllocateAndInitializeSid(&SystemAuthority,
+                                1,
+                                SECURITY_LOCAL_SYSTEM_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                SECURITY_NULL_RID,
+                                &LocalSystemSid);
 
     /* SID: S-1-5-18 */
     RtlAddAccessAllowedAce(Dacl,
