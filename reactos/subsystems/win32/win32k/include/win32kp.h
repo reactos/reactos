@@ -44,7 +44,7 @@ W32KAPI UINT APIENTRY wine_server_call(void *req_ptr);
 #include <surfobj.h>
 #include <cursor.h>
 #include <devobj.h>
-#include <brushobj.h>
+#include <brush.h>
 #include <swm.h>
 #include <dc.h>
 #include <palobj.h>
