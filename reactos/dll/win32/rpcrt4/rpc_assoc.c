@@ -84,15 +84,6 @@ static RPC_STATUS RpcAssoc_Alloc(LPCSTR Protseq, LPCSTR NetworkAddr,
     return RPC_S_OK;
 }
 
-static BOOL compare_networkoptions(LPCWSTR opts1, LPCWSTR opts2)
-{
-    if ((opts1 == NULL) && (opts2 == NULL))
-        return TRUE;
-    if ((opts1 == NULL) || (opts2 == NULL))
-        return FALSE;
-    return !strcmpW(opts1, opts2);
-}
-
 RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
                                  LPCSTR Endpoint, LPCWSTR NetworkOptions,
                                  RpcAssoc **assoc_out)
@@ -106,7 +97,7 @@ RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
         if (!strcmp(Protseq, assoc->Protseq) &&
             !strcmp(NetworkAddr, assoc->NetworkAddr) &&
             !strcmp(Endpoint, assoc->Endpoint) &&
-            compare_networkoptions(NetworkOptions, assoc->NetworkOptions))
+            ((!assoc->NetworkOptions && !NetworkOptions) || !strcmpW(NetworkOptions, assoc->NetworkOptions)))
         {
             assoc->refs++;
             *assoc_out = assoc;
@@ -134,7 +125,7 @@ RPC_STATUS RPCRT4_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
 
 RPC_STATUS RpcServerAssoc_GetAssociation(LPCSTR Protseq, LPCSTR NetworkAddr,
                                          LPCSTR Endpoint, LPCWSTR NetworkOptions,
-                                         ULONG assoc_gid,
+                                         unsigned long assoc_gid,
                                          RpcAssoc **assoc_out)
 {
     RpcAssoc *assoc;
@@ -232,7 +223,7 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
     RPC_MESSAGE msg;
     RPC_STATUS status;
     unsigned char *auth_data = NULL;
-    ULONG auth_length;
+    unsigned long auth_length;
 
     TRACE("sending bind request to server\n");
 
@@ -263,19 +254,18 @@ static RPC_STATUS RpcAssoc_BindConnection(const RpcAssoc *assoc, RpcConnection *
         {
             unsigned short remaining = msg.BufferLength -
             ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4);
-            RpcResultList *results = (RpcResultList*)((ULONG_PTR)server_address +
-                ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4));
-            if ((results->num_results == 1) &&
-                (remaining >= FIELD_OFFSET(RpcResultList, results[results->num_results])))
+            RpcResults *results = (RpcResults*)((ULONG_PTR)server_address +
+                                                ROUND_UP(FIELD_OFFSET(RpcAddressString, string[server_address->length]), 4));
+            if ((results->num_results == 1) && (remaining >= sizeof(*results)))
             {
                 switch (results->results[0].result)
                 {
                 case RESULT_ACCEPT:
                     /* respond to authorization request */
                     if (auth_length > sizeof(RpcAuthVerifier))
-                        status = RPCRT4_ClientConnectionAuth(conn,
-                                                             auth_data + sizeof(RpcAuthVerifier),
-                                                             auth_length);
+                        status = RPCRT4_AuthorizeConnection(conn,
+                                                            auth_data + sizeof(RpcAuthVerifier),
+                                                            auth_length);
                     if (status == RPC_S_OK)
                     {
                         conn->assoc_group_id = response_hdr->bind_ack.assoc_gid;
@@ -404,7 +394,6 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
     if (status != RPC_S_OK)
         return status;
 
-    NewConnection->assoc = assoc;
     status = RPCRT4_OpenClientConnection(NewConnection);
     if (status != RPC_S_OK)
     {
@@ -427,7 +416,6 @@ RPC_STATUS RpcAssoc_GetClientConnection(RpcAssoc *assoc,
 void RpcAssoc_ReleaseIdleConnection(RpcAssoc *assoc, RpcConnection *Connection)
 {
     assert(!Connection->server);
-    Connection->async_state = NULL;
     EnterCriticalSection(&assoc->cs);
     if (!assoc->assoc_group_id) assoc->assoc_group_id = Connection->assoc_group_id;
     list_add_head(&assoc->free_connection_pool, &Connection->conn_pool_entry);

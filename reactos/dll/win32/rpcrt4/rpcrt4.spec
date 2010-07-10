@@ -1,5 +1,5 @@
 @ stdcall CreateProxyFromTypeInfo(ptr ptr ptr ptr ptr)
-@ stdcall CreateStubFromTypeInfo(ptr ptr ptr ptr)
+@ stub CreateStubFromTypeInfo
 @ stdcall CStdStubBuffer_AddRef(ptr)
 @ stdcall CStdStubBuffer_Connect(ptr ptr)
 @ stdcall CStdStubBuffer_CountRefs(ptr)
@@ -116,9 +116,8 @@
 @ stdcall NDRSContextUnmarshallEx(ptr ptr ptr)
 @ stub NDRcopy
 @ stdcall NdrAllocate(ptr long)
-@ varargs NdrAsyncClientCall(ptr ptr)
+@ stub NdrAsyncClientCall
 @ stub NdrAsyncServerCall
-@ stdcall NdrAsyncStubCall(ptr ptr ptr ptr)
 @ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
 @ stdcall NdrByteCountPointerFree(ptr ptr ptr)
 @ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
@@ -341,10 +340,10 @@
 @ stdcall RpcBindingFree(ptr)
 @ stdcall RpcBindingFromStringBindingA(str  ptr)
 @ stdcall RpcBindingFromStringBindingW(wstr ptr)
-@ stdcall RpcBindingInqAuthClientA(ptr ptr ptr ptr ptr ptr)
-@ stdcall RpcBindingInqAuthClientExA(ptr ptr ptr ptr ptr ptr long)
-@ stdcall RpcBindingInqAuthClientExW(ptr ptr ptr ptr ptr ptr long)
-@ stdcall RpcBindingInqAuthClientW(ptr ptr ptr ptr ptr ptr)
+@ stub RpcBindingInqAuthClientA
+@ stub RpcBindingInqAuthClientExA
+@ stub RpcBindingInqAuthClientExW
+@ stub RpcBindingInqAuthClientW
 @ stdcall RpcBindingInqAuthInfoA(ptr ptr ptr ptr ptr ptr)
 @ stdcall RpcBindingInqAuthInfoExA(ptr ptr ptr ptr ptr ptr long ptr)
 @ stdcall RpcBindingInqAuthInfoExW(ptr ptr ptr ptr ptr ptr long ptr)
@@ -371,7 +370,7 @@
 @ stdcall RpcEpRegisterA(ptr ptr ptr str)
 @ stub RpcEpRegisterNoReplaceA
 @ stub RpcEpRegisterNoReplaceW
-@ stdcall RpcEpRegisterW(ptr ptr ptr wstr)
+@ stub RpcEpRegisterW
 @ stdcall RpcEpResolveBinding(ptr ptr)
 @ stdcall RpcEpUnregister(ptr ptr ptr)
 @ stub RpcErrorAddRecord # wxp

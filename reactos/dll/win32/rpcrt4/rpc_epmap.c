@@ -116,18 +116,18 @@ static BOOL start_rpcss(void)
 
 static inline BOOL is_epm_destination_local(RPC_BINDING_HANDLE handle)
 {
-    RpcBinding *bind = handle;
+    RpcBinding *bind = (RpcBinding *)handle;
     const char *protseq = bind->Protseq;
     const char *network_addr = bind->NetworkAddr;
 
-    return (!strcmp(protseq, "ncalrpc") ||
-           (!strcmp(protseq, "ncacn_np") &&
+    return ((!strcmp(protseq, "ncalrpc") && !network_addr) ||
+            (!strcmp(protseq, "ncacn_np") &&
                 (!network_addr || !strcmp(network_addr, "."))));
 }
 
 static RPC_STATUS get_epm_handle_client(RPC_BINDING_HANDLE handle, RPC_BINDING_HANDLE *epm_handle)
 {
-    RpcBinding *bind = handle;
+    RpcBinding *bind = (RpcBinding *)handle;
     const char * pszEndpoint = NULL;
     RPC_STATUS status;
     RpcBinding* epm_bind;
@@ -149,7 +149,7 @@ static RPC_STATUS get_epm_handle_client(RPC_BINDING_HANDLE handle, RPC_BINDING_H
     status = RpcBindingCopy(handle, epm_handle);
     if (status != RPC_S_OK) return status;
 
-    epm_bind = *epm_handle;
+    epm_bind = (RpcBinding*)*epm_handle;
     if (epm_bind->AuthInfo)
     {
         /* don't bother with authenticating against the EPM by default
@@ -187,8 +187,8 @@ static LONG WINAPI rpc_filter(EXCEPTION_POINTERS *__eptr)
 RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                   UUID_VECTOR *UuidVector, RPC_CSTR Annotation )
 {
-  PRPC_SERVER_INTERFACE If = IfSpec;
-  ULONG i;
+  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  unsigned long i;
   RPC_STATUS status = RPC_S_OK;
   error_status_t status2;
   ept_entry_t *entries;
@@ -197,13 +197,13 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
   TRACE("(%p,%p,%p,%s)\n", IfSpec, BindingVector, UuidVector, debugstr_a((char*)Annotation));
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
   for (i=0; i<BindingVector->Count; i++) {
-    RpcBinding* bind = BindingVector->BindingH[i];
-    TRACE(" protseq[%d]=%s\n", i, debugstr_a(bind->Protseq));
-    TRACE(" endpoint[%d]=%s\n", i, debugstr_a(bind->Endpoint));
+    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+    TRACE(" protseq[%ld]=%s\n", i, debugstr_a(bind->Protseq));
+    TRACE(" endpoint[%ld]=%s\n", i, debugstr_a(bind->Endpoint));
   }
   if (UuidVector) {
     for (i=0; i<UuidVector->Count; i++)
-      TRACE(" obj[%d]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
+      TRACE(" obj[%ld]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
   }
 
   if (!BindingVector->Count) return RPC_S_OK;
@@ -222,9 +222,10 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
   for (i = 0; i < BindingVector->Count; i++)
   {
       unsigned j;
-      RpcBinding* bind = BindingVector->BindingH[i];
+      RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
       for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
       {
+          int len = strlen((char *)Annotation);
           status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax,
                                   bind->Protseq, bind->Endpoint,
                                   bind->NetworkAddr,
@@ -235,9 +236,7 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
               memcpy(&entries[i * UuidVector->Count].object, &UuidVector->Uuid[j], sizeof(GUID));
           else
               memset(&entries[i].object, 0, sizeof(entries[i].object));
-          if (Annotation)
-              memcpy(entries[i].annotation, Annotation,
-                     min(strlen((char *)Annotation) + 1, ept_max_annotation_size));
+          memcpy(entries[i].annotation, Annotation, min(len + 1, ept_max_annotation_size));
       }
   }
 
@@ -282,28 +281,13 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
 }
 
 /***********************************************************************
- *             RpcEpRegisterW (RPCRT4.@)
- */
-RPC_STATUS WINAPI RpcEpRegisterW( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
-                                  UUID_VECTOR *UuidVector, RPC_WSTR Annotation )
-{
-  LPSTR annA = RPCRT4_strdupWtoA(Annotation);
-  RPC_STATUS status;
-
-  status = RpcEpRegisterA(IfSpec, BindingVector, UuidVector, (RPC_CSTR)annA);
-
-  HeapFree(GetProcessHeap(), 0, annA);
-  return status;
-}
-
-/***********************************************************************
  *             RpcEpUnregister (RPCRT4.@)
  */
 RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *BindingVector,
                                    UUID_VECTOR *UuidVector )
 {
-  PRPC_SERVER_INTERFACE If = IfSpec;
-  ULONG i;
+  PRPC_SERVER_INTERFACE If = (PRPC_SERVER_INTERFACE)IfSpec;
+  unsigned long i;
   RPC_STATUS status = RPC_S_OK;
   error_status_t status2;
   ept_entry_t *entries;
@@ -312,13 +296,13 @@ RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bin
   TRACE("(%p,%p,%p)\n", IfSpec, BindingVector, UuidVector);
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
   for (i=0; i<BindingVector->Count; i++) {
-    RpcBinding* bind = BindingVector->BindingH[i];
-    TRACE(" protseq[%d]=%s\n", i, debugstr_a(bind->Protseq));
-    TRACE(" endpoint[%d]=%s\n", i, debugstr_a(bind->Endpoint));
+    RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
+    TRACE(" protseq[%ld]=%s\n", i, debugstr_a(bind->Protseq));
+    TRACE(" endpoint[%ld]=%s\n", i, debugstr_a(bind->Endpoint));
   }
   if (UuidVector) {
     for (i=0; i<UuidVector->Count; i++)
-      TRACE(" obj[%d]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
+      TRACE(" obj[%ld]=%s\n", i, debugstr_guid(UuidVector->Uuid[i]));
   }
 
   entries = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*entries) * BindingVector->Count * (UuidVector ? UuidVector->Count : 1));
@@ -335,7 +319,7 @@ RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bin
   for (i = 0; i < BindingVector->Count; i++)
   {
       unsigned j;
-      RpcBinding* bind = BindingVector->BindingH[i];
+      RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[i]);
       for (j = 0; j < (UuidVector ? UuidVector->Count : 1); j++)
       {
           status = TowerConstruct(&If->InterfaceId, &If->TransferSyntax,
@@ -388,8 +372,8 @@ RPC_STATUS WINAPI RpcEpUnregister( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bin
  */
 RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE IfSpec )
 {
-  PRPC_CLIENT_INTERFACE If = IfSpec;
-  RpcBinding* bind = Binding;
+  PRPC_CLIENT_INTERFACE If = (PRPC_CLIENT_INTERFACE)IfSpec;
+  RpcBinding* bind = (RpcBinding*)Binding;
   RPC_STATUS status;
   error_status_t status2;
   handle_t handle;
