@@ -2,7 +2,7 @@
  * COPYRIGHT:   LGPL, See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/sdk/crt/time/time.c
- * PURPOSE:     Implementation of _time (_tim32, _tim64)
+ * PURPOSE:     Implementation of _time (_time32, _time64)
  * PROGRAMER:   Timo Kreuzer
  */
 #include <precomp.h>
