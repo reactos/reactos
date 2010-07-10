@@ -189,7 +189,7 @@
 	<property name="BASEADDRESS_SHLWAPI"		value="0x76100000" />
 	<property name="BASEADDRESS_INETCOMM"		value="0x76140000" />
 	<property name="BASEADDRESS_COMCTL32"		value="0x76170000" />
-	<property name="BASEADDRESS_COMDLG32"		value="0x76220000" />
+	<property name="BASEADDRESS_COMDLG32"		value="0x76230000" />
 	<property name="BASEADDRESS_WINSTA"		value="0x762f0000" />
 	<property name="BASEADDRESS_IMM32"		value="0x76320000" />
 	<property name="BASEADDRESS_D3D8THK"		value="0x76340000" />
