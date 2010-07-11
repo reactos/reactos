@@ -1032,7 +1032,7 @@ CreateWindowStationAndDesktops(
 	Session->InteractiveWindowStation = CreateWindowStationW(
 		Session->InteractiveWindowStationName,
 		0,
-		WINSTA_CREATEDESKTOP,
+		GENERIC_ALL,
 		&DefaultSecurity);
 	if (!Session->InteractiveWindowStation)
 	{
