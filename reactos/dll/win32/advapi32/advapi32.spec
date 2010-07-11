@@ -373,7 +373,7 @@
 @ stdcall LsaLookupNames(long long ptr ptr ptr)
 @ stdcall LsaLookupNames2(ptr long long ptr ptr ptr)
 @ stub LsaLookupPrivilegeDisplayName
-@ stub LsaLookupPrivilegeName
+@ stdcall LsaLookupPrivilegeName(ptr ptr ptr)
 @ stdcall LsaLookupPrivilegeValue(ptr ptr ptr)
 @ stdcall LsaLookupSids(ptr long ptr ptr ptr)
 @ stdcall LsaNtStatusToWinError(long)

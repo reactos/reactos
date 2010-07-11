@@ -429,7 +429,7 @@ LsaLookupPrivilegeName(IN LSA_HANDLE PolicyHandle,
     PRPC_UNICODE_STRING NameBuffer = NULL;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p) stub\n", PolicyHandle, Value, Name);
+    TRACE("(%p,%p,%p)\n", PolicyHandle, Value, Name);
 
     RpcTryExcept
     {
@@ -463,7 +463,7 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
     LUID Luid;
     NTSTATUS Status;
 
-    TRACE("(%p,%p,%p) stub\n", PolicyHandle, Name, Value);
+    TRACE("(%p,%p,%p)\n", PolicyHandle, Name, Value);
 
     RpcTryExcept
     {
@@ -483,7 +483,7 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS
 WINAPI
@@ -494,36 +494,49 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
     PLSA_TRANSLATED_NAME *Names)
 {
-    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
-    PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
-    PLSA_TRANSLATED_NAME LocalNames;
+    LSAPR_SID_ENUM_BUFFER SidEnumBuffer;
+    LSAPR_TRANSLATED_NAMES TranslatedNames;
+    ULONG MappedCount = 0;
+    NTSTATUS  Status;
 
-    TRACE("(%p,%u,%p,%p,%p) stub\n", PolicyHandle, Count, Sids,
+    TRACE("(%p,%u,%p,%p,%p)\n", PolicyHandle, Count, Sids,
           ReferencedDomains, Names);
 
-    WARN("LsaLookupSids(): stub. Always returning 'Administrator'\n");
-    if (Count != 1)
-        return STATUS_NONE_MAPPED;
-    LocalDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_TRANSLATED_SID));
-    if (!LocalDomains)
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
-    LocalNames = RtlAllocateHeap(RtlGetProcessHeap(), 0,  sizeof(LSA_TRANSLATED_NAME) + UserName.MaximumLength);
-    if (!LocalNames)
-    {
-        LsaFreeMemory(LocalDomains);
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
-    }
-    LocalDomains[0].Entries = 0;
-    LocalDomains[0].Domains = NULL;
-    LocalNames[0].Use = SidTypeWellKnownGroup;
-    LocalNames[0].Name.Buffer = (LPWSTR)((ULONG_PTR)(LocalNames) + sizeof(LSA_TRANSLATED_NAME));
-    LocalNames[0].Name.Length = UserName.Length;
-    LocalNames[0].Name.MaximumLength = UserName.MaximumLength;
-    RtlCopyMemory(LocalNames[0].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+    if (Count == 0)
+        return STATUS_INVALID_PARAMETER;
 
-    *ReferencedDomains = LocalDomains;
-    *Names = LocalNames;
-    return STATUS_SUCCESS;
+    SidEnumBuffer.Entries = Count;
+    SidEnumBuffer.SidInfo = (PLSAPR_SID_INFORMATION)Sids;
+
+    RpcTryExcept
+    {
+        *ReferencedDomains = NULL;
+        *Names = NULL;
+
+        TranslatedNames.Entries = 0;
+        TranslatedNames.Names = NULL;
+
+        Status = LsarLookupSids((LSAPR_HANDLE)PolicyHandle,
+                                &SidEnumBuffer,
+                                (PLSAPR_REFERENCED_DOMAIN_LIST *)ReferencedDomains,
+                                &TranslatedNames,
+                                LsapLookupWksta,
+                                &MappedCount);
+
+        *Names = (PLSA_TRANSLATED_NAME)TranslatedNames.Names;
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        if (TranslatedNames.Names != NULL)
+        {
+            MIDL_user_free(TranslatedNames.Names);
+        }
+
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
+
+    return Status;
 }
 
 /******************************************************************************

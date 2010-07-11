@@ -347,8 +347,44 @@ NTSTATUS LsarLookupSids(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
+    PLSAPR_TRANSLATED_NAME OutputNames = NULL;
+    ULONG OutputNamesLength;
+    ULONG i;
+
+    TRACE("LsarLookupSids(%p, %p, %p, %p, %d, %p)\n",
+          PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
+          LookupLevel, MappedCount);
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NULL;
+    *ReferencedDomains = NULL;
+
+    OutputNamesLength = SidEnumBuffer->Entries * sizeof(LSA_TRANSLATED_NAME);
+    OutputNames = MIDL_user_allocate(OutputNamesLength);
+    if (OutputNames == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(OutputNames, OutputNamesLength);
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        OutputNames[i].Use = SidTypeWellKnownGroup;
+        OutputNames[i].DomainIndex = 0;
+        OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
+        OutputNames[i].Name.Length = UserName.Length;
+        OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
+        RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+    }
+
+    *MappedCount = SidEnumBuffer->Entries;
+
+    TranslatedNames->Entries =  SidEnumBuffer->Entries;
+    TranslatedNames->Names = OutputNames;
+
+    return STATUS_SUCCESS;
 }
 
 
