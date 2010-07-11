@@ -597,7 +597,7 @@
 @ cdecl _ltow(long ptr long)
 # stub _ltow_s
 @ cdecl _makepath(ptr str str str str)
-# stub _makepath_s
+@ cdecl _makepath_s(ptr long str str str str)
 # stub _malloc_dbg
 @ cdecl _matherr(ptr)
 @ cdecl _mbbtombc(long)
@@ -756,7 +756,7 @@
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
-# stub _osplatform
+@ extern _osplatform _osplatform
 @ extern _osver _osver
 @ stub _outp #(long long)
 @ stub _outpd #(long long)
@@ -1086,7 +1086,7 @@
 # stub _winput_s
 @ extern _winver
 @ cdecl _wmakepath(wstr wstr wstr wstr wstr)
-# stub _wmakepath_s
+@ cdecl _wmakepath_s(ptr long wstr wstr wstr wstr)
 @ cdecl _wmkdir(wstr)
 @ cdecl _wmktemp(wstr)
 # stub _wmktemp_s
