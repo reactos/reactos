@@ -184,5 +184,7 @@ struct fd_ops
 };
 
 PVOID NTAPI ExReallocPool(PVOID OldPtr, ULONG NewSize, ULONG OldSize);
+time_t SystemTimeToUnixTime(const PLARGE_INTEGER SystemTime);
+
 
 #endif

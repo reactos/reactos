@@ -84,7 +84,7 @@ extern void free_process_user_handles( PPROCESSINFO process );
 
 /* clipboard functions */
 
-extern void cleanup_clipboard_thread( struct thread *thread );
+extern void cleanup_clipboard_thread( PTHREADINFO thread );
 
 /* hook functions */
 

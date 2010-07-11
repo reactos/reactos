@@ -165,4 +165,17 @@ ExReallocPool(PVOID OldPtr, ULONG NewSize, ULONG OldSize)
     return NewPtr;
 }
 
+#define DIFFTIME 0x19db1ded53e8000ULL
+
+time_t
+SystemTimeToUnixTime(const PLARGE_INTEGER SystemTime)
+{
+    ULARGE_INTEGER ULargeInt;
+
+    ULargeInt.QuadPart = SystemTime->QuadPart;
+    ULargeInt.QuadPart -= DIFFTIME;
+
+    return ULargeInt.QuadPart / 10000000;
+}
+
 /* EOF */

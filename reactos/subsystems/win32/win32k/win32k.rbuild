@@ -138,6 +138,7 @@
 	<directory name="wine">
 		<file>atom.c</file>
 		<file>class.c</file>
+		<file>clipboard.c</file>
 		<file>directory.c</file>
 		<file>handle.c</file>
 		<file>hook.c</file>

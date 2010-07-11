@@ -598,11 +598,6 @@ DECL_HANDLER(get_named_pipe_info)
     UNIMPLEMENTED;
 }
 
-DECL_HANDLER(set_clipboard_info)
-{
-    UNIMPLEMENTED;
-}
-
 DECL_HANDLER(open_token)
 {
     UNIMPLEMENTED;
