@@ -238,6 +238,9 @@ GrePolyline(PDC pDC,
            const POINT *ptPoints,
            INT count);
 
+BOOL NTAPI 
+GreFloodFill( PDC dc, POINTL *Pt, COLORREF Color, UINT FillType );
+
 BOOLEAN NTAPI
 RECTL_bIntersectRect(RECTL* prclDst, const RECTL* prcl1, const RECTL* prcl2);
 

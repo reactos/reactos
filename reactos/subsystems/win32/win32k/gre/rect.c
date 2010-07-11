@@ -9,6 +9,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <win32k.h>
+#include "object.h"
+#include "handle.h"
+#include "user.h"
 #define NDEBUG
 #include <debug.h>
 
@@ -139,6 +142,51 @@ GrePolygon(PDC pDC,
                              Mix);
         }
     }
+}
+
+BOOL NTAPI GreFloodFill( PDC dc, POINTL *Pt, COLORREF Color, UINT FillType )
+{
+    SURFACE    *psurf = NULL;
+    HPALETTE   hpal;
+    PPALETTE   ppal;
+    EXLATEOBJ  exlo;
+    BOOL       Ret = FALSE;
+    RECTL      DestRect;
+    ULONG      ConvColor;
+    rectangle_t r;
+
+    Ret = point_in_region(dc->Clipping, Pt->x, Pt->y);
+    if (!Ret)
+        return FALSE;
+
+    get_region_extents(dc->Clipping ,&r);
+
+    DestRect.bottom = r.bottom;
+    DestRect.left = r.left;
+    DestRect.right = r.right;
+    DestRect.top = r.top;
+
+    psurf = dc->dclevel.pSurface;
+    if (!psurf)
+        return FALSE;
+
+    hpal = dc->dclevel.pSurface->hDIBPalette;
+    if (!hpal) hpal = pPrimarySurface->devinfo.hpalDefault;
+    ppal = PALETTE_ShareLockPalette(hpal);
+    
+    EXLATEOBJ_vInitialize(&exlo, &gpalRGB, ppal, 0, 0xffffff, 0);
+
+    /* Only solid fills supported for now
+     * How to support pattern brushes and non standard surfaces (not offering dib functions):
+     * Version a (most likely slow): call DrvPatBlt for every pixel
+     * Version b: create a flood mask and let MaskBlt blit a masked brush */
+    ConvColor = XLATEOBJ_iXlate(&exlo.xlo, Color);
+    Ret = DIB_XXBPP_FloodFillSolid(&psurf->SurfObj, &dc->eboFill.BrushObject, &DestRect, Pt, ConvColor, FillType);
+
+    EXLATEOBJ_vCleanup(&exlo);
+    PALETTE_ShareUnlockPalette(ppal);
+
+    return Ret;
 }
 
 BOOLEAN

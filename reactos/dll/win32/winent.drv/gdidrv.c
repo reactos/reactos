@@ -347,8 +347,14 @@ INT CDECL RosDrv_ExtEscape( NTDRV_PDEVICE *physDev, INT escape, INT in_count, LP
 BOOL CDECL RosDrv_ExtFloodFill( NTDRV_PDEVICE *physDev, INT x, INT y, COLORREF color,
                      UINT fillType )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    POINT ptPixel;
+
+    /* Transform to device coordinates */
+    ptPixel.x = x; ptPixel.y = y;
+
+    LPtoDP(physDev->hUserDC, &ptPixel, 1);
+
+    return RosGdiExtFloodFill(physDev->hKernelDC, ptPixel.x, ptPixel.y, color, fillType);
 }
 
 BOOL CDECL RosDrv_ExtTextOut( NTDRV_PDEVICE *physDev, INT x, INT y, UINT flags,

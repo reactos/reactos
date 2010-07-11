@@ -44,11 +44,32 @@ INT APIENTRY RosGdiExtEscape( HDC physDev, INT escape, INT in_count, LPCVOID in_
     return 0;
 }
 
-BOOL APIENTRY RosGdiExtFloodFill( HDC physDev, INT x, INT y, COLORREF color,
-                     UINT fillType )
+BOOL APIENTRY RosGdiExtFloodFill( HDC hDC, INT XStart, INT YStart, COLORREF Color,
+                     UINT FillType )
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PDC dc;
+    BOOL Ret;
+    POINTL Pt;
+
+    /* Get a pointer to the DC */
+    dc = DC_LockDc(hDC);
+    if (!dc)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+
+    /* Add DC origin */
+    Pt.x = XStart + dc->rcVport.left + dc->rcDcRect.left;
+    Pt.y = YStart + dc->rcVport.top + dc->rcDcRect.top;
+
+    /* Call GRE routine */
+    Ret = GreFloodFill(dc, &Pt, Color, FillType);
+
+    /* Release the object */
+    DC_UnlockDc(dc);
+    return Ret;
+
 }
 
 BOOL APIENTRY RosGdiExtTextOut( HDC physDev, INT x, INT y, UINT flags,
