@@ -158,7 +158,7 @@ Win32kThreadCallout(PETHREAD Thread,
 
         /* USER thread-level cleanup */
         UserEnterExclusive();
-            //cleanup_clipboard_thread();
+            cleanup_clipboard_thread(Win32Thread);
             destroy_thread_windows(Win32Thread);
             //free_msg_queue(Win32Thread); // FIXME!
             close_thread_desktop(Win32Thread);
