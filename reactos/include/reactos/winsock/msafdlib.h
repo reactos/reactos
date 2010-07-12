@@ -404,7 +404,7 @@ SockEnterApiFast(OUT PWINSOCK_TEB_DATA *ThreadData)
     /* Make sure we aren't terminating and get our thread data */
     if (!(SockProcessTerminating) &&
         (SockWspStartupCount > 0) &&
-        ((*ThreadData == NtCurrentTeb()->WinSockData)))
+        ((*ThreadData = NtCurrentTeb()->WinSockData)))
     {
         /* Everything is good, return */
         return NO_ERROR;
