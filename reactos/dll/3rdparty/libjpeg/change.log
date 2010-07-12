@@ -1,6 +1,104 @@
 CHANGE LOG for Independent JPEG Group's JPEG software
 
 
+Version 8b  16-May-2010
+-----------------------
+
+Repair problem in new memory source manager with corrupt JPEG data.
+Thank to Ted Campbell and Samuel Chun for the report.
+
+Repair problem in Makefile.am test target.
+Thank to anonymous user for the report.
+
+Support MinGW installation with automatic configure.
+Thank to Volker Grabsch for the suggestion.
+
+
+Version 8a  28-Feb-2010
+-----------------------
+
+Writing tables-only datastreams via jpeg_write_tables works again.
+
+Support 32-bit BMPs (RGB image with Alpha channel) for read in cjpeg.
+Thank to Brett Blackham for the suggestion.
+
+Improve accuracy in floating point IDCT calculation.
+Thank to Robert Hooke for the hint.
+
+
+Version 8  10-Jan-2010
+----------------------
+
+jpegtran now supports the same -scale option as djpeg for "lossless" resize.
+An implementation of the JPEG SmartScale extension is required for this
+feature.  A (draft) specification of the JPEG SmartScale extension is
+available as a contributed document at ITU and ISO.  Revision 2 or later
+of the document is required (latest document version is Revision 3).
+The SmartScale extension will enable more features beside lossless resize
+in future implementations, as described in the document (new compression
+options).
+
+Add sanity check in BMP reader module to avoid cjpeg crash for empty input
+image (thank to Isaev Ildar of ISP RAS, Moscow, RU for reporting this error).
+
+Add data source and destination managers for read from and write to
+memory buffers.  New API functions jpeg_mem_src and jpeg_mem_dest.
+Thank to Roberto Boni from Italy for the suggestion.
+
+
+Version 7  27-Jun-2009
+----------------------
+
+New scaled DCTs implemented.
+djpeg now supports scalings N/8 with all N from 1 to 16.
+cjpeg now supports scalings 8/N with all N from 1 to 16.
+Scaled DCTs with size larger than 8 are now also used for resolving the
+common 2x2 chroma subsampling case without additional spatial resampling.
+Separate spatial resampling for those kind of files is now only necessary
+for N>8 scaling cases.
+Furthermore, separate scaled DCT functions are provided for direct resolving
+of the common asymmetric subsampling cases (2x1 and 1x2) without additional
+spatial resampling.
+
+cjpeg -quality option has been extended for support of separate quality
+settings for luminance and chrominance (or in general, for every provided
+quantization table slot).
+New API function jpeg_default_qtables() and q_scale_factor array in library.
+
+Added -nosmooth option to cjpeg, complementary to djpeg.
+New variable "do_fancy_downsampling" in library, complement to fancy
+upsampling.  Fancy upsampling now uses direct DCT scaling with sizes
+larger than 8.  The old method is not reversible and has been removed.
+
+Support arithmetic entropy encoding and decoding.
+Added files jaricom.c, jcarith.c, jdarith.c.
+
+Straighten the file structure:
+Removed files jidctred.c, jcphuff.c, jchuff.h, jdphuff.c, jdhuff.h.
+
+jpegtran has a new "lossless" cropping feature.
+
+Implement -perfect option in jpegtran, new API function
+jtransform_perfect_transform() in transupp. (DP 204_perfect.dpatch)
+
+Better error messages for jpegtran fopen failure.
+(DP 203_jpegtran_errmsg.dpatch)
+
+Fix byte order issue with 16bit PPM/PGM files in rdppm.c/wrppm.c:
+according to Netpbm, the de facto standard implementation of the PNM formats,
+the most significant byte is first. (DP 203_rdppm.dpatch)
+
+Add -raw option to rdjpgcom not to mangle the output.
+(DP 205_rdjpgcom_raw.dpatch)
+
+Make rdjpgcom locale aware. (DP 201_rdjpgcom_locale.dpatch)
+
+Add extern "C" to jpeglib.h.
+This avoids the need to put extern "C" { ... } around #include "jpeglib.h"
+in your C++ application.  Defining the symbol DONT_USE_EXTERN_C in the
+configuration prevents this. (DP 202_jpeglib.h_c++.dpatch)
+
+
 Version 6b  27-Mar-1998
 -----------------------
 

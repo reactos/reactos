@@ -15,4 +15,4 @@ typedef unsigned char boolean;
 #undef NEED_SHORT_EXTERNAL_NAMES
 #undef INCOMPLETE_TYPES_BROKEN
 
-typedef long INT32;
+// typedef long INT32;

@@ -7,8 +7,10 @@
 	<define name="JPEG_DLL" />
 	<define name="main">mainptr</define>
 	<include base="libjpeg">.</include>
+	<file>jaricom.c</file>
 	<file>jcapimin.c</file>
 	<file>jcapistd.c</file>
+	<file>jcarith.c</file>
 	<file>jccoefct.c</file>
 	<file>jccolor.c</file>
 	<file>jcdctmgr.c</file>
@@ -19,12 +21,12 @@
 	<file>jcmaster.c</file>
 	<file>jcomapi.c</file>
 	<file>jcparam.c</file>
-	<file>jcphuff.c</file>
 	<file>jcprepct.c</file>
 	<file>jcsample.c</file>
 	<file>jctrans.c</file>
 	<file>jdapimin.c</file>
 	<file>jdapistd.c</file>
+	<file>jdarith.c</file>
 	<file>jdatadst.c</file>
 	<file>jdatasrc.c</file>
 	<file>jdcoefct.c</file>
@@ -36,7 +38,6 @@
 	<file>jdmarker.c</file>
 	<file>jdmaster.c</file>
 	<file>jdmerge.c</file>
-	<file>jdphuff.c</file>
 	<file>jdpostct.c</file>
 	<file>jdsample.c</file>
 	<file>jdtrans.c</file>
@@ -47,7 +48,6 @@
 	<file>jidctflt.c</file>
 	<file>jidctfst.c</file>
 	<file>jidctint.c</file>
-	<file>jidctred.c</file>
 	<file>jquant1.c</file>
 	<file>jquant2.c</file>
 	<file>jutils.c</file>

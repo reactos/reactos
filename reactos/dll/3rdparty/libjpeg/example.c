@@ -3,7 +3,7 @@
  *
  * This file illustrates how to use the IJG code as a subroutine library
  * to read or write JPEG image files.  You should look at this code in
- * conjunction with the documentation file libjpeg.doc.
+ * conjunction with the documentation file libjpeg.txt.
  *
  * This code will not do anything useful as-is, but it may be helpful as a
  * skeleton for constructing routines that call the JPEG library.  
@@ -196,7 +196,7 @@ write_JPEG_file (char * filename, int quality)
  * files for anything that doesn't fit within the maximum-memory setting.
  * (Note that temp files are NOT needed if you use the default parameters.)
  * On some systems you may need to set up a signal handler to ensure that
- * temporary files are deleted if the program is interrupted.  See libjpeg.doc.
+ * temporary files are deleted if the program is interrupted.  See libjpeg.txt.
  *
  * Scanlines MUST be supplied in top-to-bottom order if you want your JPEG
  * files to be compatible with everyone else's.  If you cannot readily read
@@ -335,7 +335,7 @@ read_JPEG_file (char * filename)
   /* We can ignore the return value from jpeg_read_header since
    *   (a) suspension is not possible with the stdio data source, and
    *   (b) we passed TRUE to reject a tables-only JPEG file as an error.
-   * See libjpeg.doc for more info.
+   * See libjpeg.txt for more info.
    */
 
   /* Step 4: set parameters for decompression */
@@ -413,14 +413,14 @@ read_JPEG_file (char * filename)
  * In the above code, we ignored the return value of jpeg_read_scanlines,
  * which is the number of scanlines actually read.  We could get away with
  * this because we asked for only one line at a time and we weren't using
- * a suspending data source.  See libjpeg.doc for more info.
+ * a suspending data source.  See libjpeg.txt for more info.
  *
  * We cheated a bit by calling alloc_sarray() after jpeg_start_decompress();
  * we should have done it beforehand to ensure that the space would be
  * counted against the JPEG max_memory setting.  In some systems the above
  * code would risk an out-of-memory error.  However, in general we don't
  * know the output image dimensions before jpeg_start_decompress(), unless we
- * call jpeg_calc_output_dimensions().  See libjpeg.doc for more about this.
+ * call jpeg_calc_output_dimensions().  See libjpeg.txt for more about this.
  *
  * Scanlines are returned in the same order as they appear in the JPEG file,
  * which is standardly top-to-bottom.  If you must emit data bottom-to-top,
@@ -429,5 +429,5 @@ read_JPEG_file (char * filename)
  *
  * As with compression, some operating modes may require temporary files.
  * On some systems you may need to set up a signal handler to ensure that
- * temporary files are deleted if the program is interrupted.  See libjpeg.doc.
+ * temporary files are deleted if the program is interrupted.  See libjpeg.txt.
  */

@@ -2,6 +2,7 @@
  * djpeg.c
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
+ * Modified 2009 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -26,7 +27,6 @@
 #include "cdjpeg.h"		/* Common decls for cjpeg/djpeg applications */
 #include "jversion.h"		/* for version message */
 
-#include <locale.h>		/* to declare setlocal() */
 #include <ctype.h>		/* to declare isprint() */
 
 #ifdef USE_CCOMMAND		/* command-line reader for Macintosh */
@@ -328,7 +328,7 @@ parse_switches (j_decompress_ptr cinfo, int argc, char **argv,
       if (++argn >= argc)	/* advance to next argument */
 	usage();
       if (sscanf(argv[argn], "%d/%d",
-		 &cinfo->scale_num, &cinfo->scale_denom) != 2)
+		 &cinfo->scale_num, &cinfo->scale_denom) < 1)
 	usage();
 
     } else if (keymatch(arg, "targa", 1)) {
@@ -386,9 +386,6 @@ print_text_marker (j_decompress_ptr cinfo)
 	      cinfo->unread_marker - JPEG_APP0, (long) length);
   }
 
-  if (traceit) {
-    setlocale(LC_ALL, "");
-  }
   while (--length >= 0) {
     ch = jpeg_getc(cinfo);
     if (traceit) {

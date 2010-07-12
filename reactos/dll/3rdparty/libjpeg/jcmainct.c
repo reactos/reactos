@@ -118,17 +118,17 @@ process_data_simple_main (j_compress_ptr cinfo,
 
   while (main->cur_iMCU_row < cinfo->total_iMCU_rows) {
     /* Read input data if we haven't filled the main buffer yet */
-    if (main->rowgroup_ctr < DCTSIZE)
+    if (main->rowgroup_ctr < (JDIMENSION) cinfo->min_DCT_v_scaled_size)
       (*cinfo->prep->pre_process_data) (cinfo,
 					input_buf, in_row_ctr, in_rows_avail,
 					main->buffer, &main->rowgroup_ctr,
-					(JDIMENSION) DCTSIZE);
+					(JDIMENSION) cinfo->min_DCT_v_scaled_size);
 
     /* If we don't have a full iMCU row buffered, return to application for
      * more data.  Note that preprocessor will always pad to fill the iMCU row
      * at the bottom of the image.
      */
-    if (main->rowgroup_ctr != DCTSIZE)
+    if (main->rowgroup_ctr != (JDIMENSION) cinfo->min_DCT_v_scaled_size)
       return;
 
     /* Send the completed row to the compressor */
@@ -269,10 +269,10 @@ jinit_c_main_controller (j_compress_ptr cinfo, boolean need_full_buffer)
 	 ci++, compptr++) {
       main->whole_image[ci] = (*cinfo->mem->request_virt_sarray)
 	((j_common_ptr) cinfo, JPOOL_IMAGE, FALSE,
-	 compptr->width_in_blocks * DCTSIZE,
+	 compptr->width_in_blocks * compptr->DCT_h_scaled_size,
 	 (JDIMENSION) jround_up((long) compptr->height_in_blocks,
 				(long) compptr->v_samp_factor) * DCTSIZE,
-	 (JDIMENSION) (compptr->v_samp_factor * DCTSIZE));
+	 (JDIMENSION) (compptr->v_samp_factor * compptr->DCT_v_scaled_size));
     }
 #else
     ERREXIT(cinfo, JERR_BAD_BUFFER_MODE);
@@ -286,8 +286,8 @@ jinit_c_main_controller (j_compress_ptr cinfo, boolean need_full_buffer)
 	 ci++, compptr++) {
       main->buffer[ci] = (*cinfo->mem->alloc_sarray)
 	((j_common_ptr) cinfo, JPOOL_IMAGE,
-	 compptr->width_in_blocks * DCTSIZE,
-	 (JDIMENSION) (compptr->v_samp_factor * DCTSIZE));
+	 compptr->width_in_blocks * compptr->DCT_h_scaled_size,
+	 (JDIMENSION) (compptr->v_samp_factor * compptr->DCT_v_scaled_size));
     }
   }
 }

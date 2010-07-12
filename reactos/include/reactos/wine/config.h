@@ -605,6 +605,21 @@
 #define HAVE_STRNCASECMP 1
 #endif
 
+/* Define to 1 if you have the <tiffio.h> header file. */
+#define HAVE_TIFFIO_H 1
+
+/* Define to the soname of the libtiff library. */
+#define SONAME_LIBTIFF 1
+
+/* Define to 1 if you have the <png.h> header file. */
+#define HAVE_PNG_H 1
+
+/* Define to 1 if libpng has the png_set_expand_gray_1_2_4_to_8 function. */
+#define HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8 1
+
+/* Define to the soname of the libpng library. */
+#define SONAME_LIBPNG 1
+
 /* Define to 1 if `direction' is member of `struct ff_effect'. */
 /* #undef HAVE_STRUCT_FF_EFFECT_DIRECTION */
 

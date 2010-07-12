@@ -1,6 +1,9 @@
 #define HAVE_PROTOTYPES
 #define HAVE_UNSIGNED_CHAR
 
+#define HAVE_STDDEF_H
+#define HAVE_STDLIB_H
+
 #ifndef __RPCNDR_H__		/* don't conflict if rpcndr.h already read */
 typedef unsigned char boolean;
 #endif
@@ -12,3 +15,4 @@ typedef unsigned char boolean;
 #undef NEED_SHORT_EXTERNAL_NAMES
 #undef INCOMPLETE_TYPES_BROKEN
 
+// typedef long INT32;
