@@ -60,7 +60,7 @@ WSPAPI
 NewIcfConnection(IN PSOCK_ICF_DATA IcfData)
 {
     /* Load the ICF DLL */
-    IcfData->DllHandle = LoadLibraryW(L"hhnetcfg.dll");
+    IcfData->DllHandle = LoadLibraryW(L"hnetcfg.dll");
     if (IcfData->DllHandle)
     {
         /* Get the entrypoints */
