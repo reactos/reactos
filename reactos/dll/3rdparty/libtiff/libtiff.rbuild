@@ -6,7 +6,8 @@
 	<define name="_WINDOWS" />
 	<define name="_USRDLL" />
 	<include base="libtiff">.</include>
-	<include base="ReactOS">lib/3rdparty/zlib</include>
+	<include base="ReactOS">include/reactos/libs/zlib</include>
+	<include base="ReactOS">include/reactos/libs/libtiff</include>
 	<library>user32</library>
 	<library>zlib</library>
 	<file>mkg3states.c</file>

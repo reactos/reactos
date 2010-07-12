@@ -6,7 +6,8 @@
 	<define name="_WINDOWS" />
 	<define name="PNG_BUILD_DLL" />
 	<include base="libpng">.</include>
-	<include base="ReactOS">lib/3rdparty/zlib</include>
+	<include base="ReactOS">include/reactos/libs/zlib</include>
+	<include base="ReactOS">include/reactos/libs/libpng</include>
 	<library>zlib</library>
 	<file>png.c</file>
 	<file>pngerror.c</file>

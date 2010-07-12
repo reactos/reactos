@@ -7,6 +7,8 @@
 	<define name="JPEG_DLL" />
 	<define name="main">mainptr</define>
 	<include base="libjpeg">.</include>
+	<include base="ReactOS">include/reactos/libs/libjpeg</include>
+	<include base="ReactOS">include/reactos/libs/zlib</include>
 	<file>jaricom.c</file>
 	<file>jcapimin.c</file>
 	<file>jcapistd.c</file>
