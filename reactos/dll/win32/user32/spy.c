@@ -2148,7 +2148,7 @@ static void SPY_GetMsgStuff( SPY_INSTANCE *sp_e )
 
         if (sp_e->msgnum >= 0xc000)
         {
-            if (GlobalGetAtomNameA( sp_e->msgnum, sp_e->msg_name+1, sizeof(sp_e->msg_name)-2 ))
+            if (UserGetAtomNameA( sp_e->msgnum, sp_e->msg_name+1, sizeof(sp_e->msg_name)-2 ))
             {
                 sp_e->msg_name[0] = '\"';
                 strcat( sp_e->msg_name, "\"" );

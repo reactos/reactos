@@ -223,7 +223,7 @@ INT WINAPI EnumPropsExA(HWND hwnd, PROPENUMPROCEXA func, LPARAM lParam)
         for (i = 0; i < count; i++)
         {
             char string[ATOM_BUFFER_SIZE];
-            if (!GlobalGetAtomNameA( list[i].atom, string, ATOM_BUFFER_SIZE )) continue;
+            if (!UserGetAtomNameA( list[i].atom, string, ATOM_BUFFER_SIZE )) continue;
             if (!(ret = func( hwnd, string, (HANDLE)(ULONG_PTR)list[i].data, lParam ))) break;
         }
         HeapFree( GetProcessHeap(), 0, list );
@@ -245,7 +245,7 @@ INT WINAPI EnumPropsExW(HWND hwnd, PROPENUMPROCEXW func, LPARAM lParam)
         for (i = 0; i < count; i++)
         {
             WCHAR string[ATOM_BUFFER_SIZE];
-            if (!GlobalGetAtomNameW( list[i].atom, string, ATOM_BUFFER_SIZE )) continue;
+            if (!UserGetAtomNameW( list[i].atom, string, ATOM_BUFFER_SIZE )) continue;
             if (!(ret = func( hwnd, string, (HANDLE)(ULONG_PTR)list[i].data, lParam ))) break;
         }
         HeapFree( GetProcessHeap(), 0, list );

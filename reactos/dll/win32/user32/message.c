@@ -3919,7 +3919,7 @@ DWORD WINAPI WaitForInputIdle( HANDLE hProcess, DWORD dwTimeOut )
  */
 UINT WINAPI RegisterWindowMessageA( LPCSTR str )
 {
-    UINT ret = GlobalAddAtomA(str);
+    UINT ret = UserAddAtomA(str);
     TRACE("%s, ret=%x\n", str, ret);
     return ret;
 }
@@ -3930,7 +3930,7 @@ UINT WINAPI RegisterWindowMessageA( LPCSTR str )
  */
 UINT WINAPI RegisterWindowMessageW( LPCWSTR str )
 {
-    UINT ret = GlobalAddAtomW(str);
+    UINT ret = UserAddAtomW(str);
     TRACE("%s ret=%x\n", debugstr_w(str), ret);
     return ret;
 }

@@ -258,6 +258,14 @@ extern void SPY_ExitMessage( INT iFlag, HWND hwnd, UINT msg,
                              LRESULT lReturn, WPARAM wParam, LPARAM lParam ) DECLSPEC_HIDDEN;
 extern int SPY_Init(void) DECLSPEC_HIDDEN;
 
+extern ATOM UserAddAtomA(LPCSTR lpString);
+extern ATOM UserAddAtomW(LPCWSTR lpString);
+extern ATOM UserDeleteAtom(ATOM nAtom);
+extern ATOM UserFindAtomA(LPCSTR lpString);
+extern ATOM UserFindAtomW(LPCWSTR lpString);
+extern UINT UserGetAtomNameA(ATOM nAtom, LPSTR lpBuffer, int nSize);
+extern UINT UserGetAtomNameW(ATOM nAtom, LPWSTR lpBuffer, int nSize);
+
 #include "pshpack1.h"
 
 typedef struct

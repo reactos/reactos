@@ -17,6 +17,7 @@
 	<library>win32ksys</library>
 	<library>pseh</library>
 
+	<file>atom.c</file>
 	<file>button.c</file>
 	<file>caret.c</file>
 	<file>class.c</file>

@@ -316,7 +316,7 @@ static CLASS *CLASS_RegisterClass( LPCWSTR name, HINSTANCE hInstance, BOOL local
 
     classPtr->atomName = get_int_atom_value( name );
     if (!classPtr->atomName && name) strcpyW( classPtr->name, name );
-    else GlobalGetAtomNameW( classPtr->atomName, classPtr->name, sizeof(classPtr->name)/sizeof(WCHAR) );
+    else UserGetAtomNameW( classPtr->atomName, classPtr->name, sizeof(classPtr->name)/sizeof(WCHAR) );
 
     SERVER_START_REQ( create_class )
     {
@@ -908,7 +908,7 @@ static ULONG_PTR CLASS_SetClassLong( HWND hwnd, INT offset, LONG_PTR newval,
         if (!set_server_info( hwnd, offset, newval, size )) break;
         retval = class->atomName;
         class->atomName = newval;
-        GlobalGetAtomNameW( newval, class->name, sizeof(class->name)/sizeof(WCHAR) );
+        UserGetAtomNameW( newval, class->name, sizeof(class->name)/sizeof(WCHAR) );
         break;
     case GCL_CBCLSEXTRA:  /* cannot change this one */
         SetLastError( ERROR_INVALID_PARAMETER );
@@ -974,7 +974,7 @@ INT WINAPI GetClassNameW( HWND hwnd, LPWSTR buffer, INT count )
     {
         WCHAR tmpbuf[MAX_ATOM_LEN + 1];
 
-        ret = GlobalGetAtomNameW( GetClassLongW( hwnd, GCW_ATOM ), tmpbuf, MAX_ATOM_LEN + 1 );
+        ret = UserGetAtomNameW( GetClassLongW( hwnd, GCW_ATOM ), tmpbuf, MAX_ATOM_LEN + 1 );
         if (ret)
         {
             ret = min(count - 1, ret);
@@ -1173,7 +1173,7 @@ BOOL16 WINAPI ClassNext16( CLASSENTRY *pClassEntry )
     }
     pClassEntry->hInst = class->hInstance;
     pClassEntry->wNext++;
-    GlobalGetAtomNameA( class->atomName, pClassEntry->szClassName,
+    UserGetAtomNameA( class->atomName, pClassEntry->szClassName,
                           sizeof(pClassEntry->szClassName) );
     return TRUE;
 }
