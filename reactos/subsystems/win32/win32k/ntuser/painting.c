@@ -1206,8 +1206,7 @@ UserScrollDC(
       {
          return FALSE;
       }
-      hrgnVisible = pDC->rosdc.hVisRgn;  // pDC->prgnRao?
-      DC_UnlockDc(pDC);
+      hrgnVisible = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;  // pDC->prgnRao?
 
       /* Begin with the shifted and then clipped scroll rect */
       rcDst = rcScroll;
@@ -1234,6 +1233,9 @@ UserScrollDC(
       NtGdiCombineRgn(hrgnTmp, hrgnTmp, hrgnVisible, RGN_AND);
       NtGdiOffsetRgn(hrgnTmp, dx, dy);
       Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
+
+	  /* DO NOT Unlock DC while messing with prgnVis! */
+	  DC_UnlockDc(pDC);
 
       REGION_FreeRgnByHandle(hrgnTmp);
 

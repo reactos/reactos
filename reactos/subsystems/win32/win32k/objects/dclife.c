@@ -191,14 +191,14 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
             //
             if (!GDIOBJ_SetOwnership(pDC->rosdc.hClipRgn, Owner)) return FALSE;
         }
-        if (pDC->rosdc.hVisRgn)
+        if (pDC->prgnVis)
         {   // FIXME! HAX!!!
-            Index = GDI_HANDLE_GET_INDEX(pDC->rosdc.hVisRgn);
+            Index = GDI_HANDLE_GET_INDEX(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr);
             Entry = &GdiHandleTable->Entries[Index];
             if (Entry->UserData) FreeObjectAttr(Entry->UserData);
             Entry->UserData = NULL;
             //
-            if (!GDIOBJ_SetOwnership(pDC->rosdc.hVisRgn, Owner)) return FALSE;
+            if (!GDIOBJ_SetOwnership(((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr, Owner)) return FALSE;
         }
         if (pDC->rosdc.hGCClipRgn)
         {   // FIXME! HAX!!!
@@ -525,9 +525,9 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
         GreDeleteObject(DCToDelete->rosdc.hClipRgn);
     }
-    if (DCToDelete->rosdc.hVisRgn)
+    if (DCToDelete->prgnVis)
     {
-        GreDeleteObject(DCToDelete->rosdc.hVisRgn);
+        GreDeleteObject(DCToDelete->prgnVis->BaseObject.hHmgr);
     }
     if (NULL != DCToDelete->rosdc.CombinedClip)
     {
