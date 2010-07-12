@@ -59,6 +59,8 @@ VOID
 WSPAPI
 NewIcfConnection(IN PSOCK_ICF_DATA IcfData)
 {
+    BOOLEAN Failed = FALSE;
+
     /* Load the ICF DLL */
     IcfData->DllHandle = LoadLibraryW(L"hnetcfg.dll");
     if (IcfData->DllHandle)
@@ -66,16 +68,34 @@ NewIcfConnection(IN PSOCK_ICF_DATA IcfData)
         /* Get the entrypoints */
         IcfData->IcfOpenDynamicFwPort = GetProcAddress(IcfData->DllHandle,
                                                        "IcfOpenDynamicFwPort");
+        if (!IcfData->IcfOpenDynamicFwPort)
+        {
+            DbgPrint("FIXME: Implement IcfOpenDynamicFwPort in hnetcfg.dll for MSWSOCK!\n");
+            Failed = TRUE;
+        }
+
         IcfData->IcfConnect = (PICF_CONNECT)GetProcAddress(IcfData->DllHandle,
                                                            "IcfConnect");
+        if (!IcfData->IcfConnect)
+        {
+            DbgPrint("FIXME: Implement IcfConnect in hnetcfg.dll for MSWSOCK!\n");
+            Failed = TRUE;
+        }
+
         IcfData->IcfDisconnect = GetProcAddress(IcfData->DllHandle,
                                                 "IcfDisconnect");
+        if (!IcfData->IcfDisconnect)
+        {
+            DbgPrint("FIXME: Implement IcfDisconnect in hnetcfg.dll for MSWSOCK!\n");
+            Failed = TRUE;
+        }
 
         /* Now call IcfConnect */
-        if (!IcfData->IcfConnect(IcfData))
+        if (Failed || !IcfData->IcfConnect(IcfData))
         {
             /* We failed, release the library */
             FreeLibrary(IcfData->DllHandle);
+            IcfData->DllHandle = NULL;
         }
     }
 }
@@ -103,7 +123,7 @@ CloseIcfConnection(IN PSOCK_ICF_DATA IcfData)
     if (IcfData->IcfHandle)
     {
         /* Call IcfDisconnect */
-        IcfData->IcfConnect(IcfData);
+        IcfData->IcfDisconnect(IcfData);
 
         /* Release the library */
         FreeLibrary(IcfData->DllHandle);
