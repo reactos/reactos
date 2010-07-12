@@ -609,7 +609,7 @@
 #define HAVE_TIFFIO_H 1
 
 /* Define to the soname of the libtiff library. */
-#define SONAME_LIBTIFF 1
+#define SONAME_LIBTIFF "libtiff"
 
 /* Define to 1 if you have the <png.h> header file. */
 #define HAVE_PNG_H 1
@@ -618,7 +618,7 @@
 #define HAVE_PNG_SET_EXPAND_GRAY_1_2_4_TO_8 1
 
 /* Define to the soname of the libpng library. */
-#define SONAME_LIBPNG 1
+#define SONAME_LIBPNG "libpng"
 
 /* Define to 1 if `direction' is member of `struct ff_effect'. */
 /* #undef HAVE_STRUCT_FF_EFFECT_DIRECTION */
