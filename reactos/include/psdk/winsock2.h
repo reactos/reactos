@@ -410,6 +410,8 @@ struct protoent {
 
 #endif /* !WSABASEERR */
 
+#define WSANO_ADDRESS WSANO_DATA
+
 #define CF_ACCEPT 0x0000
 #define CF_REJECT 0x0001
 #define CF_DEFER 0x0002
