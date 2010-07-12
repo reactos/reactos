@@ -214,6 +214,30 @@ AfdSetDisconnectDataSize(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 static NTSTATUS NTAPI
+AfdGetTdiHandles(PDEVICE_OBJECT DeviceObject, PIRP Irp,
+                PIO_STACK_LOCATION IrpSp)
+{
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PULONG HandleFlags = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
+    PAFD_TDI_HANDLE_DATA HandleData = Irp->UserBuffer;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp);
+
+    if (IrpSp->Parameters.DeviceIoControl.InputBufferLength < sizeof(ULONG) ||
+        IrpSp->Parameters.DeviceIoControl.OutputBufferLength < sizeof(*HandleData))
+        return UnlockAndMaybeComplete(FCB, STATUS_BUFFER_TOO_SMALL, Irp, 0);
+
+    if ((*HandleFlags) & AFD_ADDRESS_HANDLE)
+        HandleData->TdiAddressHandle = FCB->AddressFile.Handle;
+
+    if ((*HandleFlags) & AFD_CONNECTION_HANDLE)
+        HandleData->TdiConnectionHandle = FCB->Connection.Handle;
+
+    return UnlockAndMaybeComplete(FCB, STATUS_SUCCESS, Irp, 0);
+}
+
+static NTSTATUS NTAPI
 AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 		PIO_STACK_LOCATION IrpSp) {
     PAFD_FCB FCB;
@@ -694,8 +718,7 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    return AfdSetDisconnectOptionsSize(DeviceObject, Irp, IrpSp);
 
 	case IOCTL_AFD_GET_TDI_HANDLES:
-	    DbgPrint("IOCTL_AFD_GET_TDI_HANDLES is UNIMPLEMENTED!\n");
-	    break;
+	    return AfdGetTdiHandles(DeviceObject, Irp, IrpSp);
 
 	case IOCTL_AFD_DEFER_ACCEPT:
 	    DbgPrint("IOCTL_AFD_DEFER_ACCEPT is UNIMPLEMENTED!\n");
