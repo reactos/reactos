@@ -5,7 +5,6 @@
 	<include base="mmixer"></include>
 	<library>advapi32</library>
 	<library>setupapi</library>
-	<library>kernel32</library>
 	<library>winmm</library>
 	<library>mmixer</library>
 	<library>ksuser</library>
