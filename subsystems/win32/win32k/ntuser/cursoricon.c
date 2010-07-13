@@ -1324,12 +1324,9 @@ UserDrawIconEx(
         return FALSE;
     }
 
-    /* NtGdiCreateCompatibleBitmap will create a monochrome bitmap
-       when cxWidth or cyHeight is 0 */
+    /* Check for alpha */
     if (hbmColor
             && (bmpColor.bmBitsPixel == 32)
-            && (cxWidth != 0)
-            && (cyHeight != 0)
             && (diFlags & DI_IMAGE))
     {
         SURFACE *psurfOff = NULL;
