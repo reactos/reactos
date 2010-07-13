@@ -38,6 +38,9 @@ struct ntdrv_win_data
     HCURSOR     cursor;         /* current cursor */
 };
 
+/* clipboard.c */
+void NTDRV_InitClipboard(void);
+
 /* gdidrv.c */
 int DIB_GetBitmapInfoEx( const BITMAPINFOHEADER *header, LONG *width,
                                 LONG *height, WORD *planes, WORD *bpp,

@@ -205,64 +205,6 @@ void CDECL RosDrv_SetScreenSaveActive( BOOL on )
     UNIMPLEMENTED;
 }
 
-INT CDECL RosDrv_AcquireClipboard( HWND hwnd )
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-BOOL CDECL RosDrv_CountClipboardFormats(void)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-void CDECL RosDrv_EmptyClipboard( BOOL keepunowned )
-{
-    UNIMPLEMENTED;
-}
-
-void CDECL RosDrv_EndClipboardUpdate(void)
-{
-    UNIMPLEMENTED;
-}
-
-UINT CDECL RosDrv_EnumClipboardFormats( UINT format )
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-BOOL CDECL RosDrv_GetClipboardData( UINT format )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-INT CDECL RosDrv_GetClipboardFormatName( UINT format, LPWSTR buffer, UINT len )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL CDECL RosDrv_IsClipboardFormatAvailable( UINT format )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-UINT CDECL RosDrv_RegisterClipboardFormat( LPCWSTR name )
-{
-    //UNIMPLEMENTED;
-    return 0;
-}
-
-BOOL CDECL RosDrv_SetClipboardData( UINT format )
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 LONG CDECL RosDrv_ChangeDisplaySettingsEx( LPCWSTR name, LPDEVMODEW mode, HWND hwnd,
                                              DWORD flags, LPVOID lparam )
 {

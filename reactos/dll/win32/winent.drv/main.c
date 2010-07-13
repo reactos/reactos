@@ -10,10 +10,20 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#define WIN32_NO_STATUS
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "wingdi.h"
 #include "shellapi.h"
+#define NTOS_USER_MODE
+#include <ndk/ntndk.h>
+#include <winddi.h>
+#include <win32k/ntgdityp.h>
+#include "ntrosgdi.h"
+#include "win32k/rosuser.h"
+#include "winent.h"
+#include "wine/server.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rosuserdrv);
@@ -73,6 +83,7 @@ BOOL WINAPI DllMain( HINSTANCE hinst, DWORD reason, LPVOID reserved )
     {
     case DLL_PROCESS_ATTACH:
         InitializeCriticalSection(&NTDRV_CritSection);
+        NTDRV_InitClipboard();
         //ret = process_attach();
         break;
     case DLL_THREAD_DETACH:

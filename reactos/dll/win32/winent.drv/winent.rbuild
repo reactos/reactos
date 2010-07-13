@@ -6,6 +6,7 @@
 	<redefine name="_WIN32_WINNT">0x0501</redefine>
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
+	<file>clipboard.c</file>
 	<file>font.c</file>
 	<file>gdidrv.c</file>
 	<file>main.c</file>
