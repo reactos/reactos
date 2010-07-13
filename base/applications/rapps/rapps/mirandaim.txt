@@ -12,7 +12,7 @@ URLDownload = http://miranda.googlecode.com/files/miranda-im-v0.8.26-unicode.exe
 CDPath = none
 
 [Section.0407]
-Description = Open source Multiprotocol Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
+Description = Open source Multiprotokoll Instant Messaging Anwendung - funktioniert möglicherweise nicht vollständig.
 
 [Section.040a]
 Description = Aplicación de mensajería instantánea multiprotocolo de código abierto - Puede no funcionar en su totalidad.

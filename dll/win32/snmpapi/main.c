@@ -112,6 +112,8 @@ static void asn_any_free(AsnAny *any)
     any->asnType = ASN_NULL;
 }
 
+static ULONGLONG startTime;
+
 /***********************************************************************
  *		DllMain for SNMPAPI
  */
@@ -127,12 +129,28 @@ BOOL WINAPI DllMain(
         return FALSE;  /* prefer native version */
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hInstDLL);
+        startTime = GetTickCount64();
         break;
     case DLL_PROCESS_DETACH:
         break;
     }
 
     return TRUE;
+}
+
+/***********************************************************************
+ *      SnmpSvcGetUptime        (SNMPAPI.@)
+ *
+ * BUGS
+ *  This returns the number of centiseconds since the DLL was loaded,
+ *  rather than the number of centiseconds since the SNMP service was
+ *  started, since there isn't yet any SNMP service in Wine.
+ */
+DWORD WINAPI SnmpSvcGetUptime(void)
+{
+    ULONGLONG now = GetTickCount64();
+
+    return (now - startTime) / 10;
 }
 
 /***********************************************************************
@@ -145,7 +163,7 @@ BOOL WINAPI DllMain(
  *  probably ignored by Microsoft's compiler in this case. So declare it
  *  correctly in Wine so it works with all compilers.
  */
-VOID WINAPI SnmpUtilDbgPrint(INT loglevel, LPSTR format, ...)
+VOID WINAPIV SnmpUtilDbgPrint(INT loglevel, LPSTR format, ...)
 {
     FIXME("(%d, %s)\n", loglevel, debugstr_a(format));
 }

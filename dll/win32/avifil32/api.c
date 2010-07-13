@@ -1447,7 +1447,7 @@ BOOL WINAPI AVISaveOptions(HWND hWnd, UINT uFlags, INT nStreams,
     return AVIERR_BADPARAM;
 
   /* save options in case the user presses cancel */
-  if (ppOptions != NULL && nStreams > 1) {
+  if (nStreams > 1) {
     pSavedOptions = HeapAlloc(GetProcessHeap(), 0, nStreams * sizeof(AVICOMPRESSOPTIONS));
     if (pSavedOptions == NULL)
       return FALSE;
@@ -1629,7 +1629,7 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
       /* remember first video stream -- needed for interleaving */
       if (lFirstVideo < 0)
 	lFirstVideo = curStream;
-    } else if (!dwInterleave && plpOptions != NULL) {
+    } else if (!dwInterleave) {
       /* check if any non-video stream wants to be interleaved */
       WARN("options.flags=0x%X options.dwInterleave=%u\n",plpOptions[curStream]->dwFlags,plpOptions[curStream]->dwInterleaveEvery);
       if (plpOptions[curStream] != NULL &&
@@ -1639,7 +1639,7 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
 
     /* create de-/compressed stream interface if needed */
     pInStreams[curStream] = NULL;
-    if (plpOptions != NULL && plpOptions[curStream] != NULL) {
+    if (plpOptions[curStream] != NULL) {
       if (plpOptions[curStream]->fccHandler ||
 	  plpOptions[curStream]->lpFormat != NULL) {
 	DWORD dwKeySave = plpOptions[curStream]->dwKeyFrameEvery;

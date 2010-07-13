@@ -126,9 +126,9 @@ typedef struct _DC
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
-  PREGION     prgnAPI; /* PROSRGNDATA */
-  PREGION     prgnVis; /* Visible region (must never be 0) */
-  PREGION     prgnRao;
+  PROSRGNDATA prgnAPI; /* PROSRGNDATA */
+  PROSRGNDATA prgnVis; /* Visible region (must never be 0) */
+  PROSRGNDATA prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
   EBRUSHOBJ   eboLine;

@@ -4,11 +4,12 @@
  * FILE:            dll/cpl/desk/effappdlg.c
  * PURPOSE:         Effects appearance dialog
  *
- * PROGRAMMER:     Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)
+ * PROGRAMMER:      Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)
  *
  */
 
 #include "desk.h"
+#include "theme.h"
 #include "appearance.h"
 
 /* Update all the controls with the current values for the selected screen element */

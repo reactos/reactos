@@ -2207,6 +2207,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 ac_config_headers="$ac_config_headers config.h"
 
+
 ac_aux_dir=
 for ac_dir in "$srcdir" "$srcdir/.." "$srcdir/../.."; do
   if test -f "$ac_dir/install-sh"; then
@@ -2324,7 +2325,7 @@ case $host_os in *\ *) host_os=`echo "$host_os" | sed 's/ /-/g'`;; esac
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=6
+LIBXML_MICRO_VERSION=7
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -5472,8 +5473,8 @@ esac
 
 
 
-macro_version='2.2.6'
-macro_revision='1.3012'
+macro_version='2.2.6b'
+macro_revision='1.3017'
 
 
 
@@ -5949,13 +5950,13 @@ if test "${lt_cv_nm_interface+set}" = set; then
 else
   lt_cv_nm_interface="BSD nm"
   echo "int some_variable = 0;" > conftest.$ac_ext
-  (eval echo "\"\$as_me:5952: $ac_compile\"" >&5)
+  (eval echo "\"\$as_me:5953: $ac_compile\"" >&5)
   (eval "$ac_compile" 2>conftest.err)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5955: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
+  (eval echo "\"\$as_me:5956: $NM \\\"conftest.$ac_objext\\\"\"" >&5)
   (eval "$NM \"conftest.$ac_objext\"" 2>conftest.err > conftest.out)
   cat conftest.err >&5
-  (eval echo "\"\$as_me:5958: output\"" >&5)
+  (eval echo "\"\$as_me:5959: output\"" >&5)
   cat conftest.out >&5
   if $GREP 'External.*some_variable' conftest.out > /dev/null; then
     lt_cv_nm_interface="MS dumpbin"
@@ -7157,7 +7158,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 7160 "configure"' > conftest.$ac_ext
+  echo '#line 7161 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -8495,6 +8496,10 @@ _lt_linker_boilerplate=`cat conftest.err`
 $RM -r conftest*
 
 
+## CAVEAT EMPTOR:
+## There is no encapsulation within the following macros, do not change
+## the running order or otherwise move them around unless you know exactly
+## what you are doing...
 if test -n "$compiler"; then
 
 lt_prog_compiler_no_builtin_flag=
@@ -8520,11 +8525,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8523: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8528: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8527: \$? = $ac_status" >&5
+   echo "$as_me:8532: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8859,11 +8864,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8862: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8867: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8866: \$? = $ac_status" >&5
+   echo "$as_me:8871: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings other than the usual output.
@@ -8964,11 +8969,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8967: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8972: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8971: \$? = $ac_status" >&5
+   echo "$as_me:8976: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9019,11 +9024,11 @@ else
    -e 's:.*FLAGS}\{0,1\} :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:9022: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:9027: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:9026: \$? = $ac_status" >&5
+   echo "$as_me:9031: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -11822,7 +11827,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11825 "configure"
+#line 11830 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11918,7 +11923,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<_LT_EOF
-#line 11921 "configure"
+#line 11926 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12147,10 +12152,14 @@ CC="$lt_save_CC"
 
 
 VERSION_SCRIPT_FLAGS=
-$(/usr/bin/ld --help 2>&1 | grep -- --version-script >/dev/null) && \
-    VERSION_SCRIPT_FLAGS=-Wl,--version-script=
-test "`uname`" == "SunOS" && \
-    VERSION_SCRIPT_FLAGS="-Wl,-M -Wl,"
+# lt_cv_prog_gnu_ld is from libtool 2.+
+if test "$lt_cv_prog_gnu_ld" = yes; then
+  VERSION_SCRIPT_FLAGS=-Wl,--version-script=
+else
+  case $host in
+  *-*-sunos*) VERSION_SCRIPT_FLAGS="-Wl,-M -Wl,";;
+  esac
+fi
 
  if test -n "$VERSION_SCRIPT_FLAGS"; then
   USE_VERSION_SCRIPT_TRUE=
@@ -18926,7 +18935,7 @@ fi
 { $as_echo "$as_me:$LINENO: checking for type of socket length (socklen_t)" >&5
 $as_echo_n "checking for type of socket length (socklen_t)... " >&6; }
 cat > conftest.$ac_ext <<EOF
-#line 18929 "configure"
+#line 18938 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -18937,7 +18946,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (socklen_t *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:18940: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:18949: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
   { $as_echo "$as_me:$LINENO: result: socklen_t *" >&5
@@ -18949,7 +18958,7 @@ else
   rm -rf conftest*
 
   cat > conftest.$ac_ext <<EOF
-#line 18952 "configure"
+#line 18961 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -18960,7 +18969,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (size_t *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:18963: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:18972: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
     { $as_echo "$as_me:$LINENO: result: size_t *" >&5
@@ -18972,7 +18981,7 @@ else
   rm -rf conftest*
 
     cat > conftest.$ac_ext <<EOF
-#line 18975 "configure"
+#line 18984 "configure"
 #include "confdefs.h"
 
 #include <stddef.h>
@@ -18983,7 +18992,7 @@ int main(void) {
 (void)getsockopt (1, 1, 1, NULL, (int *)NULL)
 ; return 0; }
 EOF
-if { (eval echo configure:18986: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
+if { (eval echo configure:18995: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; _out=`eval $ac_compile 2>&1` && test "x$_out" = x; }; then
   rm -rf conftest*
 
       { $as_echo "$as_me:$LINENO: result: int *" >&5
@@ -19880,7 +19889,7 @@ fi
 		    PYTHON_SITE_PACKAGES=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib()"`
 	    fi
 	fi
-	PYTHON_LIBS=`python$PYTHON_VERSION-config --libs`
+	PYTHON_LIBS=`python$PYTHON_VERSION-config --ldflags`
     fi
     if test "$with_python" != ""
     then
@@ -19993,6 +20002,10 @@ _ACEOF
 
 fi
 
+  ;;
+  *-*-mingw*)
+  MODULE_EXTENSION=".dll"
+  WITH_MODULES=1
   ;;
   *)
   { $as_echo "$as_me:$LINENO: checking for shl_load" >&5

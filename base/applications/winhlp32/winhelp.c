@@ -912,7 +912,10 @@ static BOOL WINHELP_HandleTextMouse(WINHELP_WINDOW* win, UINT msg, LPARAM lParam
                 if ((hlpfile = WINHELP_LookupHelpFile(link->string)))
                 {
                     if (link->window == -1)
+                    {
                         wi = win->info;
+                        if (wi->win_style & WS_POPUP) wi = Globals.active_win->info;
+                    }
                     else if (link->window < hlpfile->numWindows)
                         wi = &hlpfile->windows[link->window];
                     else
@@ -971,9 +974,10 @@ static BOOL WINHELP_CheckPopup(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam
             (HWND)lParam == Globals.active_popup->hMainWnd ||
             GetWindow((HWND)lParam, GW_OWNER) == Globals.active_win->hMainWnd)
             break;
+        /* fall through */
     case WM_LBUTTONDOWN:
-        if (WINHELP_HandleTextMouse(Globals.active_popup, msg, lParam))
-            return FALSE;
+        if (msg == WM_LBUTTONDOWN)
+            WINHELP_HandleTextMouse(Globals.active_popup, msg, lParam);
         /* fall through */
     case WM_MBUTTONDOWN:
     case WM_RBUTTONDOWN:

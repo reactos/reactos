@@ -1836,9 +1836,10 @@ static HRESULT WINAPI OLEFontImpl_Load(
   MultiByteToWideChar( CP_ACP, 0, readBuffer, bStringSize, this->description.lpstrName, len );
   this->description.lpstrName[len] = 0;
 
-  /* Ensure use of this font causes a new one to be created @@@@ */
+  /* Ensure use of this font causes a new one to be created */
   dec_int_ref(this->gdiFont);
   this->gdiFont = 0;
+  this->dirty = TRUE;
 
   return S_OK;
 }

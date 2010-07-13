@@ -469,8 +469,12 @@ FATAddEntry(
     CcSetDirtyPinnedData(Context, NULL);
     CcUnpinData(Context);
 
-    /* FIXME: check status */
-    vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
+    Status = vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
+    if (!NT_SUCCESS(Status))
+    {
+        ExFreePoolWithTag(Buffer, TAG_VFAT);
+        return Status;
+    }
 
     DPRINT("new : entry=%11.11s\n", (*Fcb)->entry.Fat.Filename);
     DPRINT("new : entry=%11.11s\n", DirContext.DirEntry.Fat.Filename);

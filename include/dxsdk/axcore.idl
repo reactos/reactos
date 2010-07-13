@@ -47,7 +47,10 @@ typedef enum _PinDirection
 cpp_quote("#define MAX_PIN_NAME    128")
 cpp_quote("#define MAX_FILTER_NAME 128")
 
+cpp_quote("#ifndef REFERENCE_TIME_DEFINED")
+cpp_quote("#define REFERENCE_TIME_DEFINED")
 typedef LONGLONG REFERENCE_TIME;
+cpp_quote("#endif")
 
 cpp_quote("#ifndef REFTIME_DEFINED")
 cpp_quote("#define REFTIME_DEFINED")

@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/games/winemine/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for WineMine
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 #include "resource.h"
@@ -56,7 +56,7 @@ BEGIN
 	LTEXT           "",              IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",              IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "OK",           IDOK,      127,  57,  50,  15
-	PUSHBUTTON      "&Скидання результатів", IDRESET,    18,  57,  67,  15
+	PUSHBUTTON      "&Скидання результатів", IDRESET,    18,  57,  77,  15
 END
 
 IDD_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60

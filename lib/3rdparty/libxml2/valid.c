@@ -2679,7 +2679,8 @@ xmlIsID(xmlDocPtr doc, xmlNodePtr elem, xmlAttrPtr attr) {
         (!strcmp((char *) attr->ns->prefix, "xml")))
 	return(1);
     if (doc == NULL) return(0);
-    if ((doc->intSubset == NULL) && (doc->extSubset == NULL)) {
+    if ((doc->intSubset == NULL) && (doc->extSubset == NULL) &&
+        (doc->type != XML_HTML_DOCUMENT_NODE)) {
 	return(0);
     } else if (doc->type == XML_HTML_DOCUMENT_NODE) {
         if ((xmlStrEqual(BAD_CAST "id", attr->name)) ||

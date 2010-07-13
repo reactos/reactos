@@ -3027,7 +3027,7 @@ PnpBusTypeGuidGet(IN USHORT Index,
     
     /* Release lock and return status */
     ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
-    return Index;
+    return Status;
 }
 
 NTSTATUS

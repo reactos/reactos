@@ -71,7 +71,7 @@ IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Настройки...",               ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Налаштування...",               ID_DESKTOPBAR_SETTINGS
         MENUITEM "Д&испетчер завдань...",       ID_TASKMGR
         MENUITEM SEPARATOR
         MENUITEM "&Про Провідник...",           ID_ABOUT_EXPLORER
@@ -173,7 +173,7 @@ CAPTION "Властивості робочого стола"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Оберіть найбільш зручний для вас алгоритм вирівнювання значків:",
-                    IDC_STATIC,7,7,166,8
+                    IDC_STATIC,7,7,166,16
     CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
     CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
@@ -208,11 +208,11 @@ CAPTION "Властивості панелі завдань"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "Відобра&жати годинник",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,152,52,10
+                    WS_TABSTOP,2,152,102,10
     CONTROL         "При&ховувати невикористовувані значки",
                     ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,174,111,10
-    PUSHBUTTON      "&Сповіщення...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+                    WS_TABSTOP,2,174,151,10
+    PUSHBUTTON      "&Сповіщення...",ID_CONFIG_NOTIFYAREA,153,173,52,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOGEX DISCARDABLE  0, 0, 210, 194
@@ -231,25 +231,25 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Текст Підказки:",IDC_LABEL1,7,44,40,8
-    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
-    LTEXT           "Заголовок В&ікна:",IDC_LABEL2,7,63,44,8
-    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Шлях до Модуля:",IDC_LABEL3,7,81,43,8
-    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Режим Відображення",IDC_LABEL4,7,96,157,28
+    LTEXT           "&Текст Підказки:",IDC_LABEL1,7,44,60,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,66,42,135,14,ES_AUTOHSCROLL
+    LTEXT           "Заголовок В&ікна:",IDC_LABEL2,7,63,64,8
+    EDITTEXT        IDC_NOTIFY_TITLE,66,60,135,14,ES_AUTOHSCROLL
+    LTEXT           "&Шлях до Модуля:",IDC_LABEL3,7,81,63,8
+    EDITTEXT        IDC_NOTIFY_MODULE,66,78,135,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Режим Відображення",IDC_LABEL4,7,96,177,28
     CONTROL         "&показати",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
-                    WS_TABSTOP,15,108,33,10
+                    WS_TABSTOP,15,108,44,10
     CONTROL         "&сховати",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
-                    108,29,10
+                    108,40,10
     CONTROL         "а&втоприховання",IDC_NOTIFY_AUTOHIDE,"Button",
-                    BS_AUTORADIOBUTTON,112,108,43,10
+                    BS_AUTORADIOBUTTON,112,108,69,10
     ICON            "",IDC_PICTURE,173,101,21,20
-    LTEXT           "&Остання зміна:",IDC_LABEL6,7,132,43,8
+    LTEXT           "&Остання зміна:",IDC_LABEL6,7,132,65,8
     EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
                     ES_READONLY
     CONTROL         "пока&зати приховане",ID_SHOW_HIDDEN_ICONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,86,10
     DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
     PUSHBUTTON      "&Скасувати",IDCANCEL,151,153,50,14
 END
@@ -337,7 +337,7 @@ BEGIN
     IDS_DOCUMENTS           "Документи"
     IDS_FAVORITES           "Обране"
     IDS_PROGRAMS            "Програми"
-    IDS_SETTINGS            "Настройки"
+    IDS_SETTINGS            "Налаштування"
     IDS_EXPLORE             "Огляд"
     IDS_EMPTY               "(Порожньо)"
     IDS_RECENT              "Недавні документи"
@@ -368,7 +368,7 @@ BEGIN
     IDS_CONNECTIONS         "Мережні підключення"
     IDS_DRIVES              "Диски"
     IDS_SEARCH_COMPUTER     "Пошук комп’ютера..."
-    IDS_SETTINGS_MENU       "Меню Настройка"
+    IDS_SETTINGS_MENU       "Меню Налаштувань"
     IDS_CONTROL_PANEL       "Панель керування"
     IDS_PRINTERS            "Принтери"
     IDS_BROWSE              "Огляд файлів"
@@ -378,7 +378,7 @@ BEGIN
     IDS_ABOUT_EXPLORER      "&Про Провідник..."
     IDS_LAUNCH_MANY_PROGRAMS
                             "Ви обрали більше однієї програми.\nВи впевнені, що хочете запустити їх всі?"
-    IDS_DESKTOPBAR_SETTINGS "Настройки робочого стола"
+    IDS_DESKTOPBAR_SETTINGS "Налаштування робочого стола"
     IDS_DESKTOP             "Робочий Стіл"
     IDS_TASKBAR             "Панель завдань"
     IDS_NAMECOLUMN          "Ім'я"

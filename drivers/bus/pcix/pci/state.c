@@ -16,4 +16,13 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+PciInitializeState(IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    /* Set the initial state */
+    DeviceExtension->DeviceState = PciNotStarted;
+    DeviceExtension->TentativeNextState = PciNotStarted;
+}
+
 /* EOF */

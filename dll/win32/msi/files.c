@@ -50,39 +50,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 static void msi_file_update_ui( MSIPACKAGE *package, MSIFILE *f, const WCHAR *action )
 {
     MSIRECORD *uirow;
-    LPWSTR uipath, p;
 
-    /* the UI chunk */
     uirow = MSI_CreateRecord( 9 );
     MSI_RecordSetStringW( uirow, 1, f->FileName );
-    uipath = strdupW( f->TargetPath );
-    p = strrchrW(uipath,'\\');
-    if (p)
-        p[1]=0;
-    MSI_RecordSetStringW( uirow, 9, uipath);
+    MSI_RecordSetStringW( uirow, 9, f->Component->Directory );
     MSI_RecordSetInteger( uirow, 6, f->FileSize );
-    ui_actiondata( package, action, uirow);
+    ui_actiondata( package, action, uirow );
     msiobj_release( &uirow->hdr );
-    msi_free( uipath );
-    ui_progress( package, 2, f->FileSize, 0, 0);
-}
-
-/* compares the version of a file read from the filesystem and
- * the version specified in the File table
- */
-static int msi_compare_file_version(MSIFILE *file)
-{
-    WCHAR version[MAX_PATH];
-    DWORD size;
-    UINT r;
-
-    size = MAX_PATH;
-    version[0] = '\0';
-    r = MsiGetFileVersionW(file->TargetPath, version, &size, NULL, NULL);
-    if (r != ERROR_SUCCESS)
-        return 0;
-
-    return lstrcmpW(version, file->Version);
+    ui_progress( package, 2, f->FileSize, 0, 0 );
 }
 
 static void schedule_install_files(MSIPACKAGE *package)
@@ -174,11 +149,29 @@ static UINT copy_install_file(MSIPACKAGE *package, MSIFILE *file, LPWSTR source)
     return gle;
 }
 
+static UINT msi_create_directory( MSIPACKAGE *package, const WCHAR *dir )
+{
+    MSIFOLDER *folder;
+    WCHAR *install_path;
+
+    install_path = resolve_folder( package, dir, FALSE, FALSE, TRUE, &folder );
+    if (!install_path)
+        return ERROR_FUNCTION_FAILED;
+
+    if (folder->State == 0)
+    {
+        create_full_pathW( install_path );
+        folder->State = 2;
+    }
+    msi_free( install_path );
+    return ERROR_SUCCESS;
+}
+
 static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
                             LPWSTR *path, DWORD *attrs, PVOID user)
 {
     static MSIFILE *f = NULL;
-    MSIMEDIAINFO *mi = user;
+    UINT_PTR disk_id = (UINT_PTR)user;
 
     if (action == MSICABEXTRACT_BEGINEXTRACT)
     {
@@ -189,10 +182,11 @@ static BOOL installfiles_cb(MSIPACKAGE *package, LPCWSTR file, DWORD action,
             return FALSE;
         }
 
-        if (f->disk_id != mi->disk_id || (f->state != msifs_missing && f->state != msifs_overwrite))
+        if (f->disk_id != disk_id || (f->state != msifs_missing && f->state != msifs_overwrite))
             return FALSE;
 
         msi_file_update_ui(package, f, szInstallFiles);
+        msi_create_directory(package, f->Component->Directory);
 
         *path = strdupW(f->TargetPath);
         *attrs = f->Attributes;
@@ -224,14 +218,6 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
     schedule_install_files(package);
 
-    /*
-     * Despite MSDN specifying that the CreateFolders action
-     * should be called before InstallFiles, some installers don't
-     * do that, and they seem to work correctly.  We need to create
-     * directories here to make sure that the files can be copied.
-     */
-    msi_create_component_directories( package );
-
     mi = msi_alloc_zero( sizeof(MSIMEDIAINFO) );
 
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
@@ -254,7 +240,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
             data.mi = mi;
             data.package = package;
             data.cb = installfiles_cb;
-            data.user = mi;
+            data.user = (PVOID)(UINT_PTR)mi->disk_id;
 
             if (file->IsCompressed &&
                 !msi_cabextract(package, mi, &data))
@@ -273,6 +259,8 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
                   debugstr_w(file->TargetPath));
 
             msi_file_update_ui(package, file, szInstallFiles);
+            msi_create_directory(package, file->Component->Directory);
+
             rc = copy_install_file(package, file, source);
             if (rc != ERROR_SUCCESS)
             {
@@ -974,7 +962,8 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
     LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
         MSIRECORD *uirow;
-        LPWSTR dir, uipath, p;
+        LPWSTR dir, p;
+        VS_FIXEDFILEINFO *ver;
 
         if ( file->state == msifs_installed )
             ERR("removing installed file %s\n", debugstr_w(file->TargetPath));
@@ -983,11 +972,17 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
              file->Component->Installed == INSTALLSTATE_SOURCE )
             continue;
 
-        /* don't remove a file if the old file
-         * is strictly newer than the version to be installed
-         */
-        if ( msi_compare_file_version( file ) < 0 )
-            continue;
+        if (file->Version)
+        {
+            ver = msi_get_disk_file_version( file->TargetPath );
+            if (ver && msi_compare_file_versions( ver, file->Version ) > 0)
+            {
+                TRACE("newer version detected, not removing file\n");
+                msi_free( ver );
+                continue;
+            }
+            msi_free( ver );
+        }
 
         TRACE("removing %s\n", debugstr_w(file->File) );
         if (!DeleteFileW( file->TargetPath ))
@@ -1003,17 +998,11 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         }
         file->state = msifs_missing;
 
-        /* the UI chunk */
         uirow = MSI_CreateRecord( 9 );
         MSI_RecordSetStringW( uirow, 1, file->FileName );
-        uipath = strdupW( file->TargetPath );
-        p = strrchrW(uipath,'\\');
-        if (p)
-            p[1]=0;
-        MSI_RecordSetStringW( uirow, 9, uipath);
-        ui_actiondata( package, szRemoveFiles, uirow);
+        MSI_RecordSetStringW( uirow, 9, file->Component->Directory );
+        ui_actiondata( package, szRemoveFiles, uirow );
         msiobj_release( &uirow->hdr );
-        msi_free( uipath );
         /* FIXME: call ui_progress here? */
     }
 

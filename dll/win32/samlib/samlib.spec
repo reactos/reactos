@@ -1,9 +1,9 @@
 @ stub SamAddMemberToAlias
 @ stub SamAddMemberToGroup
 @ stub SamAddMultipleMembersToAlias
-@ stub SamChangePasswordUser
 @ stub SamChangePasswordUser2
 @ stub SamChangePasswordUser3
+@ stub SamChangePasswordUser
 @ stub SamCloseHandle
 @ stub SamConnect
 @ stub SamConnectWithCreds
@@ -42,6 +42,8 @@
 @ stub SamRemoveMemberFromForeignDomain
 @ stub SamRemoveMemberFromGroup
 @ stub SamRemoveMultipleMembersFromAlias
+@ stub SamRidToSid
+@ stub SamSetInformationAlias
 @ stub SamSetInformationDomain
 @ stub SamSetInformationGroup
 @ stub SamSetInformationUser
@@ -51,8 +53,9 @@
 @ stub SamTestPrivateFunctionsDomain
 @ stub SamTestPrivateFunctionsUser
 @ stub SamiChangeKeys
-@ stub SamiChangePasswordUser
 @ stub SamiChangePasswordUser2
+@ stub SamiChangePasswordUser3
+@ stub SamiChangePasswordUser
 @ stub SamiEncryptPasswords
 @ stub SamiGetBootKeyInformation
 @ stub SamiLmChangePasswordUser

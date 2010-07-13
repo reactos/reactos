@@ -4,6 +4,7 @@
  * Copyright 1996 Ulrich Schmid
  * Copyright 2002 Sylvain Petreolle <spetreolle@yahoo.fr>
  * Copyright 2004 Piotr Caban
+ * Copyright 2010 £ukasz Wojni³owicz
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,9 +23,11 @@
 
 #include "winhelp_res.h"
 
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
  POPUP "&Plik" {
   MENUITEM "&Otwórz", MNID_FILE_OPEN
@@ -43,20 +46,20 @@ MAIN_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
    MENUITEM "&Zdefiniuj...", MNID_BKMK_DEFINE
  }
  POPUP "&Options" {
-   POPUP	"Help always visible"
+   POPUP	"Pomoc zawsze widoczna"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
-     MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "Domyœlnie",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Widoczna",	MNID_OPTS_HELP_VISIBLE
+     MENUITEM "Niewidoczna",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "Historia",		MNID_OPTS_HISTORY
+  POPUP    "Czcionki"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
-    MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Ma³e",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Normalne",    	MNID_OPTS_FONTS_NORMAL
+    MENUITEM "Du¿e",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "U¿yj kolorów systemowych",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "Pomo&c" {
    MENUITEM "&Pomoc", MNID_HELP_HELPON
@@ -69,7 +72,7 @@ MAIN_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
  }
 }
 
-IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Indeks"
@@ -77,8 +80,16 @@ CAPTION "Indeks"
     LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
 }
 
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Szukaj"
+{
+    LTEXT  "Nie zaimplementowane", -1, 10, 10, 180, 150
+}
+
 /* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+STRINGTABLE DISCARDABLE
 {
 STID_WINE_HELP, 	"WINE - Pomoc"
 STID_WHERROR, 		"B£¥D"
@@ -92,12 +103,12 @@ STID_BACK, 		"&Wstecz"
 STID_ALL_FILES, 	"Wszystkie pliki (*.*)"
 STID_HELP_FILES_HLP, 	"Pliki pomocy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Nie znaleziono pliku '%s'. Czy chcesz poszukaæ tego pliku samodzielnie?"
-STID_NO_RICHEDIT	"Nie uda³o siê znaleŸæ modu³u richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
-STID_PSH_INDEX,		"Help topics: "
+STID_NO_RICHEDIT	"Nie znaleziono implementacji richedit... Wyœwietlenie pomocy nie jest mo¿liwe"
+STID_PSH_INDEX,		"Tematy pomocy: "
 }
 
 
-CONTEXT_MENU MENU LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+CONTEXT_MENU MENU
 BEGIN
 	POPUP ""
 	BEGIN

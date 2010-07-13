@@ -37,6 +37,7 @@
 #include "msvfw32_Fr.rc"
 #include "msvfw32_It.rc"
 #include "msvfw32_Lt.rc"
+#include "msvfw32_Ro.rc"
 #include "msvfw32_Ru.rc"
 #include "msvfw32_Si.rc"
 #include "msvfw32_Uk.rc"

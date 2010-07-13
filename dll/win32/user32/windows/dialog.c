@@ -159,7 +159,7 @@ DIALOGINFO * DIALOG_get_info( HWND hWnd, BOOL create )
 
             SETDLGINFO( hWnd, dlgInfo );
 
-            NtUserCallHwndParam( hWnd, (DWORD)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
+            NtUserCallHwndParam( hWnd, (DWORD_PTR)dlgInfo, HWNDPARAM_ROUTINE_SETDIALOGPOINTER );
         }
         else
         {
@@ -342,7 +342,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
                                         MulDiv(info.y, dlgInfo->yBaseUnit, 8),
                                         MulDiv(info.cx, dlgInfo->xBaseUnit, 4),
                                         MulDiv(info.cy, dlgInfo->yBaseUnit, 8),
-                                        hwnd, (HMENU)info.id,
+                                        hwnd, (HMENU)(ULONG_PTR)info.id,
                                         hInst, (LPVOID)info.data );
         }
         else
@@ -373,7 +373,7 @@ static BOOL DIALOG_CreateControls32( HWND hwnd, LPCSTR template, const DLG_TEMPL
                                             MulDiv(info.y, dlgInfo->yBaseUnit, 8),
                                             MulDiv(info.cx, dlgInfo->xBaseUnit, 4),
                                             MulDiv(info.cy, dlgInfo->yBaseUnit, 8),
-                                            hwnd, (HMENU)info.id,
+                                            hwnd, (HMENU)(ULONG_PTR)info.id,
                                             hInst, (LPVOID)info.data );
             }
             else
@@ -618,7 +618,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             p++;
             break;
         case 0xffff:
-            result->menuName = (LPCWSTR)(UINT)GET_WORD( p + 1 );
+            result->menuName = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
             break;
         default:
@@ -636,7 +636,7 @@ static LPCSTR DIALOG_ParseTemplate32( LPCSTR template, DLG_TEMPLATE * result )
             p++;
             break;
         case 0xffff:
-            result->className = (LPCWSTR)(UINT)GET_WORD( p + 1 );
+            result->className = (LPCWSTR)(UINT_PTR)GET_WORD( p + 1 );
             p += 2;
             break;
         default:

@@ -1864,7 +1864,7 @@ static void xmlSHRINK (xmlParserCtxtPtr ctxt) {
 
 static void xmlGROW (xmlParserCtxtPtr ctxt) {
     xmlParserInputGrow(ctxt->input, INPUT_CHUNK);
-    if ((*ctxt->input->cur == 0) &&
+    if ((ctxt->input->cur != NULL) && (*ctxt->input->cur == 0) &&
         (xmlParserInputGrow(ctxt->input, INPUT_CHUNK) <= 0))
 	    xmlPopInput(ctxt);
 }
@@ -11546,7 +11546,7 @@ xmldecl_done:
          */
         if ((ctxt->instate == XML_PARSER_START) && (ctxt->input != NULL) &&
             (ctxt->input->buf != NULL) && (ctxt->input->buf->encoder != NULL)) {
-            int len = 45;
+            unsigned int len = 45;
 
             if ((xmlStrcasestr(BAD_CAST ctxt->input->buf->encoder->name,
                                BAD_CAST "UTF-16")) ||
@@ -11562,8 +11562,17 @@ xmldecl_done:
             if (ctxt->input->buf->rawconsumed < len)
                 len -= ctxt->input->buf->rawconsumed;
 
-            remain = size - len;
-            size = len;
+            /*
+             * Change size for reading the initial declaration only
+             * if size is greater than len. Otherwise, memmove in xmlBufferAdd
+             * will blindly copy extra bytes from memory.
+             */
+            if (size > len) {
+                remain = size - len;
+                size = len;
+            } else {
+                remain = 0;
+            }
         }
 	res =xmlParserInputBufferPush(ctxt->input->buf, size, chunk);
 	if (res < 0) {
@@ -12870,22 +12879,22 @@ xmlParseInNodeContext(xmlNodePtr node, const char *data, int datalen,
     if (doc->type == XML_DOCUMENT_NODE)
 	ctxt = xmlCreateMemoryParserCtxt((char *) data, datalen);
 #ifdef LIBXML_HTML_ENABLED
-    else if (doc->type == XML_HTML_DOCUMENT_NODE)
+    else if (doc->type == XML_HTML_DOCUMENT_NODE) {
 	ctxt = htmlCreateMemoryParserCtxt((char *) data, datalen);
+        /*
+         * When parsing in context, it makes no sense to add implied
+         * elements like html/body/etc...
+         */
+        options |= HTML_PARSE_NOIMPLIED;
+    }
 #endif
     else
         return(XML_ERR_INTERNAL_ERROR);
 
     if (ctxt == NULL)
         return(XML_ERR_NO_MEMORY);
-    fake = xmlNewComment(NULL);
-    if (fake == NULL) {
-        xmlFreeParserCtxt(ctxt);
-	return(XML_ERR_NO_MEMORY);
-    }
-    xmlAddChild(node, fake);
 
-    /* 
+    /*
      * Use input doc's dict if present, else assure XML_PARSE_NODICT is set.
      * We need a dictionary for xmlDetectSAX2, so if there's no doc dict
      * we must wait until the last moment to free the original one.
@@ -12897,9 +12906,31 @@ xmlParseInNodeContext(xmlNodePtr node, const char *data, int datalen,
     } else
         options |= XML_PARSE_NODICT;
 
+    if (doc->encoding != NULL) {
+        xmlCharEncodingHandlerPtr hdlr;
+
+        if (ctxt->encoding != NULL)
+	    xmlFree((xmlChar *) ctxt->encoding);
+        ctxt->encoding = xmlStrdup((const xmlChar *) doc->encoding);
+
+        hdlr = xmlFindCharEncodingHandler(doc->encoding);
+        if (hdlr != NULL) {
+            xmlSwitchToEncoding(ctxt, hdlr);
+	} else {
+            return(XML_ERR_UNSUPPORTED_ENCODING);
+        }
+    }
+
     xmlCtxtUseOptionsInternal(ctxt, options, NULL);
     xmlDetectSAX2(ctxt);
     ctxt->myDoc = doc;
+
+    fake = xmlNewComment(NULL);
+    if (fake == NULL) {
+        xmlFreeParserCtxt(ctxt);
+	return(XML_ERR_NO_MEMORY);
+    }
+    xmlAddChild(node, fake);
 
     if (node->type == XML_ELEMENT_NODE) {
 	nodePush(ctxt, node);

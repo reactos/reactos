@@ -1,5 +1,6 @@
 /*
- * Copyright 2005,2007 YunSong Hwang
+ * Copyright 2003 Ulrich Czekalla for CodeWeavers
+ * Copyright 2005,2007,2010 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -56,7 +57,7 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMODCAPTION  "컨트롤 더하기"
 }
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 299, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "특별하게  붙여넣기"
 FONT 9, "MS Shell Dlg"
@@ -66,14 +67,14 @@ BEGIN
                   1, 44, 55, 10
     CONTROL       "링크로 붙여넣기(&L)", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
                   1, 61, 69, 10
-    LTEXT         "다른 이름으로(&A):", -1, 67, 25, 53, 8, WS_VISIBLE | WS_GROUP
-    LISTBOX       IDC_PS_PASTELIST,     66, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
-    LISTBOX       IDC_PS_PASTELINKLIST, 66, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
-    LISTBOX       IDC_PS_DISPLAYLIST,   66, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
-    CONTROL       "확인", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
-    CONTROL       "취소", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
-    CONTROL       "도움말(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
-    CONTROL       "아이콘으로 보기(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    LTEXT         "다른 이름으로(&A):", -1, 73, 25, 59, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     73, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 73, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   73, 36, 150, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "확인", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 226, 6, 66, 14
+    CONTROL       "취소", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 226, 23, 66, 14
+    CONTROL       "도움말(&H)", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 226, 42, 66, 14
+    CONTROL       "아이콘으로 보기(&D)", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 226, 59, 70, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
     CONTROL       "아이콘 바꾸기(&I)...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
@@ -93,5 +94,5 @@ STRINGTABLE DISCARDABLE
     IDS_PS_NON_OLE                        "당신의 문서에 클립보드의 내용 삽입하기."
     IDS_PS_UNKNOWN_TYPE                   "알수 없는 형식"
     IDS_PS_UNKNOWN_SRC                    "알수 없는 원본"
-    IDS_PS_UNKNOWN_APP                    "이 프로그램은 알 수 없는 프로그램으로 만들어졌습니다"
+    IDS_PS_UNKNOWN_APP                    "내가 만든 프로그램"
 }

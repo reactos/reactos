@@ -176,4 +176,16 @@ InitiateSystemShutdownExW(LPWSTR lpMachineName,
      return TRUE;
 }
 
+BOOL WINAPI
+InitiateSystemShutdownExA(LPSTR lpMachineName,
+                          LPSTR lpMessage,
+                          DWORD dwTimeout,
+                          BOOL bForceAppsClosed,
+                          BOOL bRebootAfterShutdown,
+                          DWORD dwReason)
+{
+     UNIMPLEMENTED;
+     return TRUE;
+}
+
 /* EOF */

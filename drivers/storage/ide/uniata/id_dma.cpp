@@ -251,7 +251,7 @@ AtapiDmaSetup(
         return FALSE;
     }
     //KdPrint2((PRINT_PREFIX "  checkpoint 3\n" ));
-    if((ULONG)data & deviceExtension->AlignmentMask) {
+    if((ULONG_PTR)data & deviceExtension->AlignmentMask) {
         KdPrint2((PRINT_PREFIX "AtapiDmaSetup: unaligned data: %#x (%#x)\n", data, deviceExtension->AlignmentMask));
         return FALSE;
     }
@@ -293,7 +293,7 @@ retry_DB_IO:
         return FALSE;
     }
 
-    dma_count = min(count, (PAGE_SIZE - ((ULONG)data & PAGE_MASK)));
+    dma_count = min(count, (PAGE_SIZE - ((ULONG_PTR)data & PAGE_MASK)));
     data += dma_count;
     count -= dma_count;
     i = 0;
@@ -495,10 +495,10 @@ AtapiDmaStart(
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11) |
+                AtapiWritePortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) |
                           (Channel ? 0x08 : 0x02));
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       ((Srb->SrbFlags & SRB_FLAGS_DATA_IN) ? 0x05000000 : 0x06000000) | (Srb->DataTransferLength >> 1)
                       );
             }
@@ -562,10 +562,10 @@ AtapiDmaDone(
         if(ChipType == PRNEW) {
             ULONG Channel = deviceExtension->Channel + lChannel;
             if(chan->ChannelCtrlFlags & CTRFLAGS_LBA48) {
-                AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11,
-                      AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x11) &
+                AtapiWritePortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11,
+                      AtapiReadPortEx1(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),0x11) &
                           ~(Channel ? 0x08 : 0x02));
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(Channel ? 0x24 : 0x20),
                       0
                       );
             }
@@ -1083,18 +1083,18 @@ set_new_acard:
             apiomode = 4;
         for(i=udmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_UDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_udmatiming[udmamode]);
                 return;
             }
         }
         for(i=wdmamode; i>=0; i--) {
             if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_WDMA0 + i)) {
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
+                AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_wdmatiming[wdmamode]);
                 return;
             }
         }
         if(AtaSetTransferMode(deviceExtension, DeviceNumber, lChannel, LunExt, ATA_PIO0 + apiomode)) {
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
+            AtapiWritePortEx4(chan, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0), mode_reg, cyr_piotiming[apiomode]);
             return;
         }
         return;
@@ -1837,8 +1837,8 @@ cyrix_timing(
     case ATA_WDMA2:       reg24 = 0x00002020; break;
     case ATA_UDMA2:       reg24 = 0x00911030; break;
     }
-    AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x20, reg20);
-    AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x24, reg24);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x20, reg20);
+    AtapiWritePortEx4(NULL, (ULONG_PTR)(&deviceExtension->BaseIoAddressBM_0),(dev*8) + 0x24, reg24);
 } // cyrix_timing()
 
 VOID

@@ -82,31 +82,27 @@ typedef struct
 
 typedef struct
 {
-    WORD wXHotspot;                 // Number of Color Planes in the XOR image
-    WORD wYHotspot;                 // Bits per pixel in the XOR image
+    WORD   wWidth;
+    WORD   wHeight;
 } CURSORDIR;
 
 typedef struct
-{
-    BYTE bWidth;                    // Width, in pixels, of the icon image
-    BYTE bHeight;                   // Height, in pixels, of the icon image
-    BYTE bColorCount;               // Number of colors in image (0 if >=8bpp)
-    BYTE bReserved;                 // Reserved ( must be 0)
-    union
-    {
-        ICONDIR icon;
-        CURSORDIR  cursor;
-    } Info;
-    DWORD dwBytesInRes;             // How many bytes in this resource?
-    DWORD dwImageOffset;            // Where in the file is this image?
+{   union
+    { ICONRESDIR icon;
+      CURSORDIR  cursor;
+    } ResInfo;
+    WORD   wPlanes;
+    WORD   wBitCount;
+    DWORD  dwBytesInRes;
+    WORD   wResId;
 } CURSORICONDIRENTRY;
 
 typedef struct
 {
-    WORD idReserved;                // Reserved (must be 0)
-    WORD idType;                    // Resource Type (1 for icons, 0 for cursors)
-    WORD idCount;                   // How many images?
-    CURSORICONDIRENTRY idEntries[1];// An entry for idCount number of images
+    WORD                idReserved;
+    WORD                idType;
+    WORD                idCount;
+    CURSORICONDIRENTRY  idEntries[1];
 } CURSORICONDIR;
 
 typedef struct

@@ -1085,29 +1085,6 @@ typedef struct _RTL_RESOURCE
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
 //
-// RTL Message Structures for PE Resources
-//
-typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
-{
-    USHORT Length;
-    USHORT Flags;
-    CHAR Text[1];
-} RTL_MESSAGE_RESOURCE_ENTRY, *PRTL_MESSAGE_RESOURCE_ENTRY;
-
-typedef struct _RTL_MESSAGE_RESOURCE_BLOCK
-{
-    ULONG LowId;
-    ULONG HighId;
-    ULONG OffsetToEntries;
-} RTL_MESSAGE_RESOURCE_BLOCK, *PRTL_MESSAGE_RESOURCE_BLOCK;
-
-typedef struct _RTL_MESSAGE_RESOURCE_DATA
-{
-    ULONG NumberOfBlocks;
-    RTL_MESSAGE_RESOURCE_BLOCK Blocks[1];
-} RTL_MESSAGE_RESOURCE_DATA, *PRTL_MESSAGE_RESOURCE_DATA;
-
-//
 // Structures for RtlCreateUserProcess
 //
 typedef struct _RTL_USER_PROCESS_PARAMETERS

@@ -1220,6 +1220,9 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGdiDib(GDIPCONST BITMAPINFO* info,
 
     FIXME("(%p, %p, %p) - partially implemented\n", info, bits, bitmap);
 
+    if (!info || !bits || !bitmap)
+        return InvalidParameter;
+
     height = abs(info->bmiHeader.biHeight);
     stride = ((info->bmiHeader.biWidth * info->bmiHeader.biBitCount + 31) >> 3) & ~3;
 
@@ -1239,8 +1242,14 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGdiDib(GDIPCONST BITMAPINFO* info,
     case 8:
         format = PixelFormat8bppIndexed;
         break;
+    case 16:
+        format = PixelFormat16bppRGB555;
+        break;
     case 24:
         format = PixelFormat24bppRGB;
+        break;
+    case 32:
+        format = PixelFormat32bppRGB;
         break;
     default:
         FIXME("don't know how to handle %d bpp\n", info->bmiHeader.biBitCount);
@@ -1381,6 +1390,8 @@ GpStatus WINGDIPAPI GdipCreateBitmapFromGraphics(INT width, INT height,
 {
     static int calls;
     GpStatus ret;
+
+    TRACE("(%d, %d, %p, %p)\n", width, height, target, bitmap);
 
     if(!target || !bitmap)
         return InvalidParameter;
@@ -1795,9 +1806,56 @@ GpStatus WINGDIPAPI GdipCreateCachedBitmap(GpBitmap *bitmap, GpGraphics *graphic
 
 GpStatus WINGDIPAPI GdipCreateHICONFromBitmap(GpBitmap *bitmap, HICON *hicon)
 {
-    FIXME("(%p, %p)\n", bitmap, hicon);
+    GpStatus stat;
+    BitmapData lockeddata;
+    ULONG andstride, xorstride, bitssize;
+    LPBYTE andbits, xorbits, androw, xorrow, srcrow;
+    UINT x, y;
 
-    return NotImplemented;
+    TRACE("(%p, %p)\n", bitmap, hicon);
+
+    if (!bitmap || !hicon)
+        return InvalidParameter;
+
+    stat = GdipBitmapLockBits(bitmap, NULL, ImageLockModeRead,
+        PixelFormat32bppPARGB, &lockeddata);
+    if (stat == Ok)
+    {
+        andstride = ((lockeddata.Width+31)/32)*4;
+        xorstride = lockeddata.Width*4;
+        bitssize = (andstride + xorstride) * lockeddata.Height;
+
+        andbits = GdipAlloc(bitssize);
+
+        if (andbits)
+        {
+            xorbits = andbits + andstride * lockeddata.Height;
+
+            for (y=0; y<lockeddata.Height; y++)
+            {
+                srcrow = ((LPBYTE)lockeddata.Scan0) + lockeddata.Stride * y;
+
+                androw = andbits + andstride * y;
+                for (x=0; x<lockeddata.Width; x++)
+                    if (srcrow[3+4*x] >= 128)
+                        androw[x/8] |= 1 << (7-x%8);
+
+                xorrow = xorbits + xorstride * y;
+                memcpy(xorrow, srcrow, xorstride);
+            }
+
+            *hicon = CreateIcon(NULL, lockeddata.Width, lockeddata.Height, 1, 32,
+                andbits, xorbits);
+
+            GdipFree(andbits);
+        }
+        else
+            stat = OutOfMemory;
+
+        GdipBitmapUnlockBits(bitmap, &lockeddata);
+    }
+
+    return stat;
 }
 
 GpStatus WINGDIPAPI GdipDeleteCachedBitmap(GpCachedBitmap *cachedbmp)
@@ -2077,6 +2135,8 @@ GpStatus WINGDIPAPI GdipGetImagePixelFormat(GpImage *image, PixelFormat *format)
 
 GpStatus WINGDIPAPI GdipGetImageRawFormat(GpImage *image, GUID *format)
 {
+    TRACE("(%p, %p)\n", image, format);
+
     if(!image || !format)
         return InvalidParameter;
 
@@ -2139,6 +2199,8 @@ GpStatus WINGDIPAPI GdipGetMetafileHeaderFromMetafile(GpMetafile * metafile,
 {
     static int calls;
 
+    TRACE("(%p, %p)\n", metafile, header);
+
     if(!metafile || !header)
         return InvalidParameter;
 
@@ -2155,6 +2217,8 @@ GpStatus WINGDIPAPI GdipGetAllPropertyItems(GpImage *image, UINT size,
 {
     static int calls;
 
+    TRACE("(%p, %u, %u, %p)\n", image, size, num, items);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -2164,6 +2228,8 @@ GpStatus WINGDIPAPI GdipGetAllPropertyItems(GpImage *image, UINT size,
 GpStatus WINGDIPAPI GdipGetPropertyCount(GpImage *image, UINT* num)
 {
     static int calls;
+
+    TRACE("(%p, %p)\n", image, num);
 
     if(!(calls++))
         FIXME("not implemented\n");
@@ -2175,6 +2241,8 @@ GpStatus WINGDIPAPI GdipGetPropertyIdList(GpImage *image, UINT num, PROPID* list
 {
     static int calls;
 
+    TRACE("(%p, %u, %p)\n", image, num, list);
+
     if(!(calls++))
         FIXME("not implemented\n");
 
@@ -2185,6 +2253,8 @@ GpStatus WINGDIPAPI GdipGetPropertyItem(GpImage *image, PROPID id, UINT size,
     PropertyItem* buffer)
 {
     static int calls;
+
+    TRACE("(%p, %u, %u, %p)\n", image, id, size, buffer);
 
     if(!(calls++))
         FIXME("not implemented\n");
@@ -2255,6 +2325,8 @@ GpStatus WINGDIPAPI GdipImageGetFrameCount(GpImage *image,
 GpStatus WINGDIPAPI GdipImageGetFrameDimensionsCount(GpImage *image,
     UINT* count)
 {
+    TRACE("(%p, %p)\n", image, count);
+
     /* Native gdiplus 1.1 does not yet support multiple frame dimensions. */
 
     if(!image || !count)
@@ -2297,6 +2369,8 @@ GpStatus WINGDIPAPI GdipImageSelectActiveFrame(GpImage *image,
     GDIPCONST GUID* dimensionID, UINT frameidx)
 {
     static int calls;
+
+    TRACE("(%p, %s, %u)\n", image, debugstr_guid(dimensionID), frameidx);
 
     if(!image || !dimensionID)
         return InvalidParameter;
@@ -3241,6 +3315,21 @@ GpStatus WINGDIPAPI GdipGetImageEncoders(UINT numEncoders, UINT size, ImageCodec
     return Ok;
 }
 
+GpStatus WINGDIPAPI GdipGetEncoderParameterListSize(GpImage *image,
+    GDIPCONST CLSID* clsidEncoder, UINT *size)
+{
+    static int calls;
+
+    TRACE("(%p,%s,%p)\n", image, debugstr_guid(clsidEncoder), size);
+
+    if(!(calls++))
+        FIXME("not implemented\n");
+
+    *size = 0;
+
+    return NotImplemented;
+}
+
 /*****************************************************************************
  * GdipCreateBitmapFromHBITMAP [GDIPLUS.@]
  */
@@ -3447,7 +3536,7 @@ GpStatus WINGDIPAPI GdipRecordMetafileFileNameI(GDIPCONST WCHAR* fileName, HDC h
 
 GpStatus WINGDIPAPI GdipImageForceValidation(GpImage *image)
 {
-    FIXME("%p\n", image);
+    TRACE("%p\n", image);
 
     return Ok;
 }
@@ -3459,9 +3548,46 @@ GpStatus WINGDIPAPI GdipGetImageThumbnail(GpImage *image, UINT width, UINT heigh
                             GpImage **ret_image, GetThumbnailImageAbort cb,
                             VOID * cb_data)
 {
-    FIXME("(%p %u %u %p %p %p) stub\n",
+    GpStatus stat;
+    GpGraphics *graphics;
+    UINT srcwidth, srcheight;
+
+    TRACE("(%p %u %u %p %p %p)\n",
         image, width, height, ret_image, cb, cb_data);
-    return NotImplemented;
+
+    if (!image || !ret_image)
+        return InvalidParameter;
+
+    if (!width) width = 120;
+    if (!height) height = 120;
+
+    GdipGetImageWidth(image, &srcwidth);
+    GdipGetImageHeight(image, &srcheight);
+
+    stat = GdipCreateBitmapFromScan0(width, height, 0, PixelFormat32bppARGB,
+        NULL, (GpBitmap**)ret_image);
+
+    if (stat == Ok)
+    {
+        stat = GdipGetImageGraphicsContext(*ret_image, &graphics);
+
+        if (stat == Ok)
+        {
+            stat = GdipDrawImageRectRectI(graphics, image,
+                0, 0, width, height, 0, 0, srcwidth, srcheight, UnitPixel,
+                NULL, NULL, NULL);
+
+            GdipDeleteGraphics(graphics);
+        }
+
+        if (stat != Ok)
+        {
+            GdipDisposeImage(*ret_image);
+            *ret_image = NULL;
+        }
+    }
+
+    return stat;
 }
 
 /*****************************************************************************

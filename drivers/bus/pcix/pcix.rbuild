@@ -5,6 +5,7 @@
 	<include base="pcix">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<dependency>pciclass</dependency>
     <directory name="arb">
         <file>ar_busno.c</file>
         <file>ar_memio.c</file>

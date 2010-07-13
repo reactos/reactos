@@ -19,11 +19,14 @@
 
 #include "resource.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
 UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Insersci oggetto"
+CAPTION "Inserisci oggetto"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
@@ -53,6 +56,46 @@ STRINGTABLE DISCARDABLE
   IDS_RESULTOBJDESC	"Inserisci un nuovo oggetto %s nel documento"
   IDS_RESULTFILEOBJDESC	"Inserisci i contenuti del file come un oggetto nel documento in modo da poterlo attivare usando il programma che lo ha creato."
   IDS_BROWSE            "Esplora"
-  IDS_NOTOLEMOD         "Il file non sembra essere un module OLE valido. Impossibile registrare il controllo OLE."
+  IDS_NOTOLEMOD         "Il file non sembra essere un modulo OLE valido. Impossibile registrare il controllo OLE."
   IDS_NOTOLEMODCAPTION  "Aggiungi Controllo"
+}
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Incolla Speciale"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Sorgente:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "&Incolla", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "Incolla &Collegamento", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&Come:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "Annulla", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "&Aiuto", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "&Mostra come icona", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "Cambia &icona...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< testo qua >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "Result", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "Inserisce i contenuti degli appunti nel tuo documento come %s."
+    IDS_PS_PASTE_OBJECT                   "Inserisce i contenuti degli appunti nel tuo documento permettendoti di attivarlo usando %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Inserisce i contenuti degli appunti nel tuo documento permettendoti di attivarlo usando %s.  Sarà mostrato come un'icona."
+    IDS_PS_PASTE_LINK_DATA                "Inserisce i contenuti degli appunti nel tuo documento come %s. I dati sono collegati al file sorgente in modo che i cambiamenti in quello si riflettano sul tuo documento."
+    IDS_PS_PASTE_LINK_OBJECT              "Inserisce un'immagine degli appunti nel tuo documento. L'immagine è collegata al file sorgente in modo che i cambiamenti in quello si riflettano sul tuo documento."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Inserisce una scorciatoia che punta alla locazione dei contenuti degli appunti. La scorciatoia è collegata al file sorgente in modo che i cambiamenti in quello si riflettano sul tuo documento."
+    IDS_PS_NON_OLE                        "Inserisce i contenuti degli appunti nel tuo documento."
+    IDS_PS_UNKNOWN_TYPE                   "Tipo Sconosciuto"
+    IDS_PS_UNKNOWN_SRC                    "Sorgente Sconosciuta"
+    IDS_PS_UNKNOWN_APP                    "il programma che lo ha creato"
 }

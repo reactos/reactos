@@ -3,6 +3,7 @@
  * Portuguese Language Support
  *
  * Copyright 2008 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milar√©
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,15 +22,50 @@
 
 #include "resource.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "&Conte˙dos"
-    IDS_INDEX        "&Õndice"
+    IDS_CONTENTS     "&Conte√∫dos"
+    IDS_INDEX        "&√çndice"
     IDS_SEARCH       "&Pesquisar"
     IDS_FAVORITES    "&Favoritos"
 END
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE
+BEGIN
+    IDTB_EXPAND      "Mostrar"
+    IDTB_CONTRACT    "Ocultar"
+    IDTB_STOP        "Parar"
+    IDTB_REFRESH     "Recarregar"
+    IDTB_BACK        "Voltar"
+    IDTB_HOME        "In√≠cio"
+    IDTB_SYNC        "Sincronizar"
+    IDTB_PRINT       "Imprimir"
+    IDTB_OPTIONS     "Op√ß√µes"
+    IDTB_FORWARD     "Avan√ßar"
+    IDTB_NOTES       "IDTB_NOTES"
+    IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
+    IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
+    IDTB_CONTENTS    "IDTB_CONTENTS"
+    IDTB_INDEX       "IDTB_INDEX"
+    IDTB_SEARCH      "IDTB_SEARCH"
+    IDTB_HISTORY     "IDTB_HISTORY"
+    IDTB_FAVORITES   "IDTB_FAVORITES"
+    IDTB_JUMP1       "Jump1"
+    IDTB_JUMP2       "Jump2"
+    IDTB_CUSTOMIZE   "Personalizar"
+    IDTB_ZOOM        "Zoom"
+    IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
+    IDTB_TOC_PREV    "IDTB_TOC_PREV"
+END
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE
 BEGIN
@@ -38,11 +74,11 @@ BEGIN
     IDTB_STOP        "Parar"
     IDTB_REFRESH     "Actualizar"
     IDTB_BACK        "Retroceder"
-    IDTB_HOME        "InÌcio"
+    IDTB_HOME        "In√≠cio"
     IDTB_SYNC        "Sincronizar"
     IDTB_PRINT       "Imprimir"
-    IDTB_OPTIONS     "OpÁıes"
-    IDTB_FORWARD     "AvanÁar"
+    IDTB_OPTIONS     "Op√ß√µes"
+    IDTB_FORWARD     "Avan√ßar"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"

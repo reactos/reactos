@@ -96,8 +96,10 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
     HTMLDocument *This = OLEOBJ_THIS(iface);
     IDocHostUIHandler *pDocHostUIHandler = NULL;
     IOleCommandTarget *cmdtrg = NULL;
+    IOleWindow *ole_window;
     BOOL hostui_setup;
     VARIANT silent;
+    HWND hwnd;
     HRESULT hres;
 
     TRACE("(%p)->(%p)\n", This, pClientSite);
@@ -121,6 +123,9 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
     if(!pClientSite)
         return S_OK;
 
+    IOleClientSite_AddRef(pClientSite);
+    This->doc_obj->client = pClientSite;
+
     hostui_setup = This->doc_obj->hostui_setup;
 
     hres = IOleObject_QueryInterface(pClientSite, &IID_IDocHostUIHandler, (void**)&pDocHostUIHandler);
@@ -128,6 +133,8 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
         DOCHOSTUIINFO hostinfo;
         LPOLESTR key_path = NULL, override_key_path = NULL;
         IDocHostUIHandler2 *pDocHostUIHandler2;
+
+        This->doc_obj->hostui = pDocHostUIHandler;
 
         memset(&hostinfo, 0, sizeof(DOCHOSTUIINFO));
         hostinfo.cbSize = sizeof(DOCHOSTUIINFO);
@@ -166,19 +173,16 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
 
             This->doc_obj->hostui_setup = TRUE;
         }
+    }else {
+        This->doc_obj->hostui = NULL;
     }
 
     /* Native calls here GetWindow. What is it for?
      * We don't have anything to do with it here (yet). */
-    if(pClientSite) {
-        IOleWindow *pOleWindow = NULL;
-        HWND hwnd;
-
-        hres = IOleClientSite_QueryInterface(pClientSite, &IID_IOleWindow, (void**)&pOleWindow);
-        if(SUCCEEDED(hres)) {
-            IOleWindow_GetWindow(pOleWindow, &hwnd);
-            IOleWindow_Release(pOleWindow);
-        }
+    hres = IOleClientSite_QueryInterface(pClientSite, &IID_IOleWindow, (void**)&ole_window);
+    if(SUCCEEDED(hres)) {
+        IOleWindow_GetWindow(ole_window, &hwnd);
+        IOleWindow_Release(ole_window);
     }
 
     hres = IOleClientSite_QueryInterface(pClientSite, &IID_IOleCommandTarget, (void**)&cmdtrg);
@@ -203,10 +207,6 @@ static HRESULT WINAPI OleObject_SetClientSite(IOleObject *iface, IOleClientSite 
 
         IOleCommandTarget_Release(cmdtrg);
     }
-
-    IOleClientSite_AddRef(pClientSite);
-    This->doc_obj->client = pClientSite;
-    This->doc_obj->hostui = pDocHostUIHandler;
 
     if(This->doc_obj->usermode == UNKNOWN_USERMODE)
         IOleControl_OnAmbientPropertyChange(CONTROL(This), DISPID_AMBIENT_USERMODE);

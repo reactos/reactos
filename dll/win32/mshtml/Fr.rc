@@ -3,6 +3,7 @@
  * French Language Support
  *
  * Copyright 2005-2009 Jonathan Ernst
+ * Copyright 2010      Frédéric Delanoy
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,18 +35,20 @@ STRINGTABLE DISCARDABLE
     IDS_INSTALLING      "Installation..."
 }
 
-ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
+ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 110
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Programme d'installation de Gecko pour Wine"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine could not find a Gecko package which is needed for applications embedding HTML " \
-          "to work correctly. Wine can automatically download and install it for you.\n\n" \
-          "Note: it's recommended to use distro packages instead. See http://wiki.winehq.org/Gecko for details.",
+    LTEXT "Wine n'a pu trouver de paquet Gecko, qui est nécessaire pour que les applications "\
+          "incorporant du HTML puissent fonctionner correctement.\nWine peut automatiquement "\
+          "le télécharger et l'installer pour vous.\n\n" \
+          "Note : il est recommandé d'utiliser le paquet de votre distribution si disponible. " \
+          "Consultez http://wiki.winehq.org/Gecko pour plus de détails.",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
-    CONTROL "Progression", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 50, 240, 12
-    DEFPUSHBUTTON "&Installer", ID_DWL_INSTALL, 200, 70, 50, 15, WS_GROUP | WS_TABSTOP
-    PUSHBUTTON "&Annuler", IDCANCEL, 140, 70, 50, 15, WS_GROUP | WS_TABSTOP
+    CONTROL "Progression", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 65, 240, 12
+    DEFPUSHBUTTON "&Installer", ID_DWL_INSTALL, 200, 85, 50, 15, WS_GROUP | WS_TABSTOP
+    PUSHBUTTON "&Annuler", IDCANCEL, 140, 85, 50, 15, WS_GROUP | WS_TABSTOP
 }
 
 IDD_HYPERLINK DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 250, 65

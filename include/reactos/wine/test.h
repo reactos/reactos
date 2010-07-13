@@ -65,6 +65,14 @@ extern void winetest_wait_child_process( HANDLE process );
 extern const char *wine_dbgstr_wn( const WCHAR *str, int n );
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
+/* strcmpW is avaiable for tests compiled under Wine, but not in standalone
+ * builds under Windows, so we reimplement it under a different name. */
+static inline int winetest_strcmpW( const WCHAR *str1, const WCHAR *str2 )
+{
+    while (*str1 && (*str1 == *str2)) { str1++; str2++; }
+    return *str1 - *str2;
+}
+
 #ifdef STANDALONE
 #define START_TEST(name) \
   static void func_##name(void); \
@@ -74,23 +82,31 @@ static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_w
 #define START_TEST(name) void func_##name(void)
 #endif
 
+#if defined(__x86_64__) && defined(__GNUC__) && defined(__WINE_USE_MSVCRT)
+#define __winetest_cdecl __cdecl
+#define __winetest_va_list __builtin_ms_va_list
+#else
+#define __winetest_cdecl
+#define __winetest_va_list va_list
+#endif
+
 extern int broken( int condition );
-extern int winetest_vok( int condition, const char *msg, va_list ap );
-extern void winetest_vskip( const char *msg, va_list ap );
+extern int winetest_vok( int condition, const char *msg, __winetest_va_list ap );
+extern void winetest_vskip( const char *msg, __winetest_va_list ap );
 
 #ifdef __GNUC__
 
-extern void winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
-extern void winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
-extern void winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
-extern void winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
+extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... ) __attribute__((format (printf,2,3) ));
+extern void __winetest_cdecl winetest_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
+extern void __winetest_cdecl winetest_win_skip( const char *msg, ... ) __attribute__((format (printf,1,2)));
+extern void __winetest_cdecl winetest_trace( const char *msg, ... ) __attribute__((format (printf,1,2)));
 
 #else /* __GNUC__ */
 
-extern void winetest_ok( int condition, const char *msg, ... );
-extern void winetest_skip( const char *msg, ... );
-extern void winetest_win_skip( const char *msg, ... );
-extern void winetest_trace( const char *msg, ... );
+extern void __winetest_cdecl winetest_ok( int condition, const char *msg, ... );
+extern void __winetest_cdecl winetest_skip( const char *msg, ... );
+extern void __winetest_cdecl winetest_win_skip( const char *msg, ... );
+extern void __winetest_cdecl winetest_trace( const char *msg, ... );
 
 #endif /* __GNUC__ */
 
@@ -159,6 +175,14 @@ extern void winetest_trace( const char *msg, ... );
 #ifdef STANDALONE
 
 #include <stdio.h>
+
+#if defined(__x86_64__) && defined(__GNUC__) && defined(__WINE_USE_MSVCRT)
+# define __winetest_va_start(list,arg) __builtin_ms_va_start(list,arg)
+# define __winetest_va_end(list) __builtin_ms_va_end(list)
+#else
+# define __winetest_va_start(list,arg) va_start(list,arg)
+# define __winetest_va_end(list) va_end(list)
+#endif
 
 struct test
 {
@@ -275,7 +299,7 @@ int broken( int condition )
  * Return:
  *   0 if condition does not have the expected value, 1 otherwise
  */
-int winetest_vok( int condition, const char *msg, va_list args )
+int winetest_vok( int condition, const char *msg, __winetest_va_list args )
 {
     tls_data* data=get_tls_data();
 
@@ -322,30 +346,30 @@ int winetest_vok( int condition, const char *msg, va_list args )
     }
 }
 
-void winetest_ok( int condition, const char *msg, ... )
+void __winetest_cdecl winetest_ok( int condition, const char *msg, ... )
 {
-    va_list valist;
- 
-    va_start(valist, msg);
+    __winetest_va_list valist;
+
+    __winetest_va_start(valist, msg);
     winetest_vok(condition, msg, valist);
-    va_end(valist);
+    __winetest_va_end(valist);
 }
 
-void winetest_trace( const char *msg, ... )
+void __winetest_cdecl winetest_trace( const char *msg, ... )
 {
-    va_list valist;
+    __winetest_va_list valist;
     tls_data* data=get_tls_data();
 
     if (winetest_debug > 0)
     {
         fprintf( stdout, "%s:%d: ", data->current_file, data->current_line );
-        va_start(valist, msg);
+        __winetest_va_start(valist, msg);
         vfprintf(stdout, msg, valist);
-        va_end(valist);
+        __winetest_va_end(valist);
     }
 }
 
-void winetest_vskip( const char *msg, va_list args )
+void winetest_vskip( const char *msg, __winetest_va_list args )
 {
     tls_data* data=get_tls_data();
 
@@ -354,23 +378,23 @@ void winetest_vskip( const char *msg, va_list args )
     skipped++;
 }
 
-void winetest_skip( const char *msg, ... )
+void __winetest_cdecl winetest_skip( const char *msg, ... )
 {
-    va_list valist;
-    va_start(valist, msg);
+    __winetest_va_list valist;
+    __winetest_va_start(valist, msg);
     winetest_vskip(msg, valist);
-    va_end(valist);
+    __winetest_va_end(valist);
 }
 
-void winetest_win_skip( const char *msg, ... )
+void __winetest_cdecl winetest_win_skip( const char *msg, ... )
 {
-    va_list valist;
-    va_start(valist, msg);
+    __winetest_va_list valist;
+    __winetest_va_start(valist, msg);
     if (strcmp(winetest_platform, "windows") == 0)
         winetest_vskip(msg, valist);
     else
         winetest_vok(0, msg, valist);
-    va_end(valist);
+    __winetest_va_end(valist);
 }
 
 void winetest_start_todo( const char* platform )

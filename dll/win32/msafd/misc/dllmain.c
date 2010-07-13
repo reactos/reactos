@@ -382,24 +382,6 @@ TranslateNtStatusError(NTSTATUS Status)
     }
 }
 
-DWORD MsafdReturnWithErrno(NTSTATUS Status,
-                           LPINT Errno,
-                           DWORD Received,
-                           LPDWORD ReturnedBytes)
-{
-    *Errno = TranslateNtStatusError(Status);
-
-    if (ReturnedBytes)
-    {
-        if (!*Errno)
-            *ReturnedBytes = Received;
-        else
-            *ReturnedBytes = 0;
-    }
-
-    return *Errno ? SOCKET_ERROR : 0;
-}
-
 /*
  * FUNCTION: Closes an open socket
  * ARGUMENTS:
@@ -2088,7 +2070,16 @@ WSPSetSockOpt(
     }
 
 
-    /* FIXME: We should handle some cases here */
+    /* FIXME: We should handle some more cases here */
+    if (level == SOL_SOCKET)
+    {
+        switch (optname)
+        {
+           case SO_BROADCAST:
+              Socket->SharedData.Broadcast = (*optval != 0) ? 1 : 0;
+              return 0;
+        }
+    }
 
 
     *lpErrno = Socket->HelperData->WSHSetSocketInformation(Socket->HelperContext,

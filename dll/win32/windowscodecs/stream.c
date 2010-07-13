@@ -23,6 +23,7 @@
 #include "winbase.h"
 #include "winreg.h"
 #include "objbase.h"
+#include "shlwapi.h"
 #include "wincodec.h"
 #include "wincodecs_private.h"
 
@@ -434,8 +435,35 @@ static HRESULT WINAPI IWICStreamImpl_InitializeFromIStream(IWICStream *iface,
 static HRESULT WINAPI IWICStreamImpl_InitializeFromFilename(IWICStream *iface,
     LPCWSTR wzFileName, DWORD dwDesiredAccess)
 {
-    FIXME("(%p): stub\n", iface);
-    return E_NOTIMPL;
+    IWICStreamImpl *This = (IWICStreamImpl*)iface;
+    HRESULT hr;
+    DWORD dwMode;
+    IStream *stream;
+
+    TRACE("(%p, %s, %u)\n", iface, debugstr_w(wzFileName), dwDesiredAccess);
+
+    if (This->pStream) return WINCODEC_ERR_WRONGSTATE;
+
+    if(dwDesiredAccess & GENERIC_WRITE)
+        dwMode = STGM_SHARE_DENY_WRITE | STGM_WRITE | STGM_CREATE;
+    else if(dwDesiredAccess & GENERIC_READ)
+        dwMode = STGM_SHARE_DENY_WRITE | STGM_READ | STGM_FAILIFTHERE;
+    else
+        return E_INVALIDARG;
+
+    hr = SHCreateStreamOnFileW(wzFileName, dwMode, &stream);
+
+    if (SUCCEEDED(hr))
+    {
+        if (InterlockedCompareExchangePointer((void**)&This->pStream, stream, NULL))
+        {
+            /* Some other thread set the stream first. */
+            IStream_Release(stream);
+            hr = WINCODEC_ERR_WRONGSTATE;
+        }
+    }
+
+    return hr;
 }
 
 /******************************************

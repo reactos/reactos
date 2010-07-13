@@ -84,6 +84,21 @@ static HRESULT WINAPI Uri_GetPropertyBSTR(IUri *iface, Uri_PROPERTY uriProp, BST
 {
     Uri *This = URI_THIS(iface);
     FIXME("(%p)->(%d %p %x)\n", This, uriProp, pbstrProperty, dwFlags);
+
+    if(!pbstrProperty)
+        return E_POINTER;
+
+    if(uriProp > Uri_PROPERTY_STRING_LAST) {
+        /* Windows allocates an empty BSTR for invalid Uri_PROPERTY's. */
+        *pbstrProperty = SysAllocStringLen(NULL, 0);
+
+        /* It only returns S_FALSE for the ZONE property... */
+        if(uriProp == Uri_PROPERTY_ZONE)
+            return S_FALSE;
+        else
+            return S_OK;
+    }
+
     return E_NOTIMPL;
 }
 
@@ -91,6 +106,14 @@ static HRESULT WINAPI Uri_GetPropertyLength(IUri *iface, Uri_PROPERTY uriProp, D
 {
     Uri *This = URI_THIS(iface);
     FIXME("(%p)->(%d %p %x)\n", This, uriProp, pcchProperty, dwFlags);
+
+    if(!pcchProperty)
+        return E_INVALIDARG;
+
+    /* Can only return a length for a property if it's a string. */
+    if(uriProp > Uri_PROPERTY_STRING_LAST)
+        return E_INVALIDARG;
+
     return E_NOTIMPL;
 }
 
@@ -112,13 +135,22 @@ static HRESULT WINAPI Uri_GetPropertyDWORD(IUri *iface, Uri_PROPERTY uriProp, DW
         return E_NOTIMPL;
     }
 
+    if(uriProp < Uri_PROPERTY_DWORD_START) {
+        *pcchProperty = 0;
+        return E_INVALIDARG;
+    }
+
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI Uri_HasProperty(IUri *iface, Uri_PROPERTY uriProp, BOOL *pfHasProperty)
 {
     Uri *This = URI_THIS(iface);
-    FIXME("(%p)->()\n", This);
+    FIXME("(%p)->(%d %p)\n", This, uriProp, pfHasProperty);
+
+    if(!pfHasProperty)
+        return E_INVALIDARG;
+
     return E_NOTIMPL;
 }
 
@@ -192,6 +224,10 @@ static HRESULT WINAPI Uri_GetHost(IUri *iface, BSTR *pstrHost)
 {
     Uri *This = URI_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pstrHost);
+
+    if(!pstrHost)
+        return E_POINTER;
+
     return E_NOTIMPL;
 }
 
@@ -335,12 +371,28 @@ static HRESULT WINAPI Uri_GetProperties(IUri *iface, DWORD *pdwProperties)
 {
     Uri *This = URI_THIS(iface);
     FIXME("(%p)->(%p)\n", This, pdwProperties);
+
+    if(!pdwProperties)
+        return E_INVALIDARG;
+
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI Uri_IsEqual(IUri *iface, IUri *pUri, BOOL *pfEqual)
 {
     Uri *This = URI_THIS(iface);
+    TRACE("(%p)->(%p %p)\n", This, pUri, pfEqual);
+
+    if(!pfEqual)
+        return E_POINTER;
+
+    if(!pUri) {
+        *pfEqual = FALSE;
+
+        /* For some reason Windows returns S_OK here... */
+        return S_OK;
+    }
+
     FIXME("(%p)->(%p %p)\n", This, pUri, pfEqual);
     return E_NOTIMPL;
 }

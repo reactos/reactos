@@ -1519,7 +1519,7 @@ static inline unsigned int MSFT_Tell(const TLBContext *pcx)
     return pcx->pos;
 }
 
-static inline void MSFT_Seek(TLBContext *pcx, long where)
+static inline void MSFT_Seek(TLBContext *pcx, LONG where)
 {
     if (where != DO_NOT_SEEK)
     {
@@ -1527,7 +1527,7 @@ static inline void MSFT_Seek(TLBContext *pcx, long where)
         if (where > pcx->length)
         {
             /* FIXME */
-            ERR("seek beyond end (%ld/%d)\n", where, pcx->length );
+            ERR("seek beyond end (%d/%d)\n", where, pcx->length );
             TLB_abort();
         }
         pcx->pos = where;
@@ -1535,9 +1535,9 @@ static inline void MSFT_Seek(TLBContext *pcx, long where)
 }
 
 /* read function */
-static DWORD MSFT_Read(void *buffer,  DWORD count, TLBContext *pcx, long where )
+static DWORD MSFT_Read(void *buffer,  DWORD count, TLBContext *pcx, LONG where )
 {
-    TRACE_(typelib)("pos=0x%08x len=0x%08x 0x%08x 0x%08x 0x%08lx\n",
+    TRACE_(typelib)("pos=0x%08x len=0x%08x 0x%08x 0x%08x 0x%08x\n",
        pcx->pos, count, pcx->oStart, pcx->length, where);
 
     MSFT_Seek(pcx, where);
@@ -1548,7 +1548,7 @@ static DWORD MSFT_Read(void *buffer,  DWORD count, TLBContext *pcx, long where )
 }
 
 static DWORD MSFT_ReadLEDWords(void *buffer,  DWORD count, TLBContext *pcx,
-			       long where )
+                               LONG where )
 {
   DWORD ret;
 
@@ -1559,7 +1559,7 @@ static DWORD MSFT_ReadLEDWords(void *buffer,  DWORD count, TLBContext *pcx,
 }
 
 static DWORD MSFT_ReadLEWords(void *buffer,  DWORD count, TLBContext *pcx,
-			      long where )
+                              LONG where )
 {
   DWORD ret;
 
@@ -2714,7 +2714,7 @@ static HRESULT TLB_ReadTypeLib(LPCWSTR pszFileName, LPWSTR pszPath, UINT cchPath
     if(index_str && *++index_str != '\0')
     {
         LPWSTR end_ptr;
-        long idx = strtolW(index_str, &end_ptr, 10);
+        LONG idx = strtolW(index_str, &end_ptr, 10);
         if(*end_ptr == '\0')
         {
             int str_len = index_str - pszFileName - 1;
@@ -2834,7 +2834,7 @@ static ITypeLibImpl* TypeLibImpl_Constructor(void)
 static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
 {
     TLBContext cx;
-    long lPSegDir;
+    LONG lPSegDir;
     MSFT_Header tlbHeader;
     MSFT_SegDir tlbSegDir;
     ITypeLibImpl * pTypeLibImpl;
@@ -2867,14 +2867,14 @@ static ITypeLib2* ITypeLib2_Constructor_MSFT(LPVOID pLib, DWORD dwTLBLength)
     lPSegDir = sizeof(tlbHeader) + (tlbHeader.nrtypeinfos)*4 + ((tlbHeader.varflags & HELPDLLFLAG)? 4 :0);
 
     /* now read the segment directory */
-    TRACE("read segment directory (at %ld)\n",lPSegDir);
+    TRACE("read segment directory (at %d)\n",lPSegDir);
     MSFT_ReadLEDWords(&tlbSegDir, sizeof(tlbSegDir), &cx, lPSegDir);
     cx.pTblDir = &tlbSegDir;
 
     /* just check two entries */
     if ( tlbSegDir.pTypeInfoTab.res0c != 0x0F || tlbSegDir.pImpInfo.res0c != 0x0F)
     {
-        ERR("cannot find the table directory, ptr=0x%lx\n",lPSegDir);
+        ERR("cannot find the table directory, ptr=0x%x\n",lPSegDir);
 	HeapFree(GetProcessHeap(),0,pTypeLibImpl);
 	return NULL;
     }

@@ -1,7 +1,9 @@
 /*
  * Korean resources for MSI
  *
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005 Mike McCormack
+ * Copyright 2010 Detlef Riekenberg
+ * Copyright 2010 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,30 +30,30 @@ STRINGTABLE DISCARDABLE
 	5 "%s  경로를 찾을수 없습니다"
 	9 "디스크 %s 삽입"
 	10 "Windows Installer %s\n\n" \
-	"Usage:\n" \
-	"msiexec command {required parameter} [optional parammeter]\n\n" \
-	"Install a product:\n" \
+	"사용법:\n" \
+	"msiexec 명령 {필수 매개변수}  [선택적 매개변수]\n\n" \
+	"제품 설치:\n" \
 	"\t/i {package|productcode} [property]\n" \
 	"\t/package {package|productcode} [property]\n" \
 	"\t/a package [property]\n" \
-	"Repair an installation:\n" \
+	"설치 복구:\n" \
 	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
-	"Uninstall a product:\n" \
+	"제품 제거:\n" \
 	"\t/uninstall {package|productcode} [property]\n" \
 	"\t/x {package|productcode} [property]\n" \
-	"Advertise a product:\n" \
+	"제품 알리기:\n" \
 	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
-	"Apply a patch:\n" \
+	"패치 추가:\n" \
 	"\t/p patchpackage [property]\n" \
 	"\t/p patchpackage /a package [property]\n" \
-	"Log and UI Modifiers for above commands:\n" \
+	"위의 명령어를 위한 Log 와 UI 한정자 :\n" \
 	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
 	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
-	"Register MSI Service:\n" \
+	"MSI 서비스  등록:\n" \
 	"\t/y\n" \
-	"Unregister MSI Service:\n" \
+	"MSI 서비스 등록 해제:\n" \
 	"\t/z\n" \
-	"Display this help:\n" \
+	"도움말  보기:\n" \
 	"\t/help\n" \
 	"\t/?\n"
 	11 "%s를 포함하는 폴더를 입력하세여"

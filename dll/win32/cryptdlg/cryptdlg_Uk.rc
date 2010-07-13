@@ -28,15 +28,15 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_CERT_POLICY "Certificate Policy"
-    IDS_POLICY_ID "Policy Identifier: "
-    IDS_POLICY_QUALIFIER_INFO "Policy Qualifier Info"
-    IDS_POLICY_QUALIFIER_ID "Policy Qualifier Id="
+    IDS_CERT_POLICY "Політика сертифікату"
+    IDS_POLICY_ID "Ідентифікатор політики: "
+    IDS_POLICY_QUALIFIER_INFO "Інформація про вказівник політики"
+    IDS_POLICY_QUALIFIER_ID "Id вказівника політики="
     IDS_CPS "CPS" /* Certification Practice Statement */
-    IDS_USER_NOTICE "User Notice"
-    IDS_QUALIFIER "Qualifier"
-    IDS_NOTICE_REF "Notice Reference"
+    IDS_USER_NOTICE "Повідомлення користувача"
+    IDS_QUALIFIER "Визначник"
+    IDS_NOTICE_REF "Посилання повідомлення"
     IDS_ORGANIZATION "Організація="
-    IDS_NOTICE_NUM "Notice Number="
-    IDS_NOTICE_TEXT "Notice Text="
+    IDS_NOTICE_NUM "Номер повідомлення="
+    IDS_NOTICE_TEXT "Текст повідомлення="
 }

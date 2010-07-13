@@ -13,6 +13,7 @@
 #include "Lt.rc"
 #include "No.rc"
 #include "Pt.rc"
+#include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
 #include "Uk.rc"

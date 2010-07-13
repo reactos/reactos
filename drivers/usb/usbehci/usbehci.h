@@ -9,7 +9,7 @@
 #include <usbioctl.h>
 #include <usb.h>
 
-#define USB_POOL_TAG (ULONG)'UsbR'
+#define USB_POOL_TAG (ULONG)'ebsu'
 
 #define	DEVICEINTIALIZED		0x01
 #define	DEVICESTARTED			0x02
@@ -419,14 +419,6 @@ typedef struct _PDO_DEVICE_EXTENSION
     FAST_MUTEX ListLock;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
-typedef struct _WORKITEM_DATA
-{
-    PIO_WORKITEM IoWorkItem;
-    PPDO_DEVICE_EXTENSION PdoDeviceExtension;
-    PDEVICE_OBJECT PortDeviceObject;
-} WORKITEM_DATA, *PWORKITEM_DATA;
-
-
 VOID NTAPI
 UrbWorkerThread(PVOID Context);
 
@@ -463,6 +455,9 @@ GetPhysicalDeviceObjectName(PDEVICE_OBJECT DeviceObject);
 NTSTATUS NTAPI
 PdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+NTSTATUS NTAPI
+FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
 BOOLEAN
 ExecuteControlRequest(PFDO_DEVICE_EXTENSION DeviceExtension, PUSB_DEFAULT_PIPE_SETUP_PACKET SetupPacket, UCHAR Address, ULONG Port, PVOID Buffer, ULONG BufferLength);
 
@@ -475,5 +470,5 @@ CompletePendingURBRequest(PPDO_DEVICE_EXTENSION DeviceExtension);
 VOID
 URBRequestCancel (PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-VOID NTAPI
-DeviceArrivalWorkItem(PDEVICE_OBJECT DeviceObject, PVOID Context);
+PUSB_DEVICE
+DeviceHandleToUsbDevice(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PUSB_DEVICE_HANDLE DeviceHandle);

@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/eventvwr/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for ReactOS Event Viewer
- * TRANSLATORS: Rostislav Zabolotny, Artem Reznikov
+ * TRANSLATORS: Rostislav Zabolotny, Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -101,4 +101,17 @@ BEGIN
 	IDC_EVENTLOG_AUDIT_FAILURE     "Аудит відмов"
 	IDC_EVENTLOG_SUCCESS           "Успіх"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Невідома подія"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Тип"
+    IDS_COLUMNDATE      "Дата"
+    IDS_COLUMNTIME      "Час"
+    IDS_COLUMNSOURCE    "Джерело"
+    IDS_COLUMNCATEGORY  "Категорія"
+    IDS_COLUMNEVENT     "Подія"
+    IDS_COLUMNUSER      "Користувач"
+    IDS_COLUMNCOMPUTER  "Комп'ютер"
+    IDS_COLUMNEVENTDATA "Дані події"
 END

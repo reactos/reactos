@@ -53,8 +53,8 @@ XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \n\
 Where:\n\
 \n\
-[/I]  Assume directory if destination does not exist and copying 2 or\n\
-\tmore files\n\
+[/I]  Assume directory if destination does not exist and copying two or\n\
+\      more files\n\
 [/S]  Copy directories and subdirectories\n\
 [/E]  Copy directories and subdirectories, including any empty ones\n\
 [/Q]  Do not list names during copy, ie quiet.\n\
@@ -72,7 +72,7 @@ Where:\n\
 [/C]  Continue even if an error occurs during the copy\n\
 [/A]  Only copy files with archive attribute set\n\
 [/M]  Only copy files with archive attribute set, removes\n\
-\tarchive attribute\n\
+\      archive attribute\n\
 [/D | /D:m-d-y] Copy new files or those modified after the supplied date.\n\
 \t\tIf no date is supplied, only copy if destination is older\n\
 \t\tthan source\n\n"

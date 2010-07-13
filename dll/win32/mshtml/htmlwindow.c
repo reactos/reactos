@@ -58,7 +58,7 @@ static void window_set_docnode(HTMLWindow *window, HTMLDocumentNode *doc_node)
             htmldoc_addref(&doc_node->basedoc);
     }
 
-    if(doc_node && window->doc_obj->usermode == EDITMODE) {
+    if(doc_node && window->doc_obj && window->doc_obj->usermode == EDITMODE) {
         nsIDOMNSHTMLDocument *nshtmldoc;
         nsAString mode_str;
         nsresult nsres;

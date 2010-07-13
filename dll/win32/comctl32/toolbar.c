@@ -2710,6 +2710,9 @@ TOOLBAR_AddBitmapToImageList(TOOLBAR_INFO *infoPtr, HIMAGELIST himlDef, const TB
     /* Add bitmaps to the default image list */
     if (bitmap->hInst == NULL)         /* a handle was passed */
         hbmLoad = CopyImage(ULongToHandle(bitmap->nID), IMAGE_BITMAP, 0, 0, 0);
+    else if (bitmap->hInst == COMCTL32_hModule)
+        hbmLoad = LoadImageW( bitmap->hInst, MAKEINTRESOURCEW(bitmap->nID),
+                              IMAGE_BITMAP, 0, 0, LR_CREATEDIBSECTION );
     else
         hbmLoad = CreateMappedBitmap(bitmap->hInst, bitmap->nID, 0, NULL, 0);
 
@@ -2757,7 +2760,7 @@ TOOLBAR_CheckImageListIconSize(TOOLBAR_INFO *infoPtr)
         cx, cy, infoPtr->nBitmapWidth, infoPtr->nBitmapHeight);
 
     himlNew = ImageList_Create(infoPtr->nBitmapWidth, infoPtr->nBitmapHeight,
-                                ILC_COLORDDB|ILC_MASK, 8, 2);
+                                ILC_COLOR32|ILC_MASK, 8, 2);
     for (i = 0; i < infoPtr->nNumBitmapInfos; i++)
         TOOLBAR_AddBitmapToImageList(infoPtr, himlNew, &infoPtr->bitmaps[i]);
     TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlNew, 0);
@@ -2854,7 +2857,7 @@ TOOLBAR_AddBitmap (TOOLBAR_INFO *infoPtr, INT count, const TBADDBITMAP *lpAddBmp
 	TRACE ("creating default image list!\n");
 
         himlDef = ImageList_Create (infoPtr->nBitmapWidth, infoPtr->nBitmapHeight,
-                                    ILC_COLORDDB | ILC_MASK, info.nButtons, 2);
+                                    ILC_COLOR32 | ILC_MASK, info.nButtons, 2);
 	TOOLBAR_InsertImageList(&infoPtr->himlDef, &infoPtr->cimlDef, himlDef, 0);
         infoPtr->himlInt = himlDef;
     }

@@ -102,6 +102,12 @@ HANDLE WINAPI CreateFileW (LPCWSTR			lpFileName,
    PVOID EaBuffer = NULL;
    ULONG EaLength = 0;
 
+   if (!lpFileName || !lpFileName[0])
+   {
+       SetLastError( ERROR_PATH_NOT_FOUND );
+       return INVALID_HANDLE_VALUE;
+   }
+
    TRACE("CreateFileW(lpFileName %S)\n",lpFileName);
 
    /* validate & translate the creation disposition */

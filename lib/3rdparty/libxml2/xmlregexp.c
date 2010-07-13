@@ -4892,6 +4892,17 @@ xmlFAParseCharClassEsc(xmlRegParserCtxtPtr ctxt) {
 		}
 	    }
 	} else if (ctxt->atom->type == XML_REGEXP_RANGES) {
+            switch (cur) {
+                case 'n':
+                    cur = '\n';
+                    break;
+                case 'r':
+                    cur = '\r';
+                    break;
+                case 't':
+                    cur = '\t';
+                    break;
+            }
 	    xmlRegAtomAddRange(ctxt, ctxt->atom, ctxt->neg,
 			       XML_REGEXP_CHARVAL, cur, cur, NULL);
 	}

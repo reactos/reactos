@@ -1,218 +1,234 @@
+/*
+ * DNS support
+ *
+ * Copyright (C) 2006 Matthew Kehrer
+ * Copyright (C) 2006 Hans Leidekker
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
 #include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
 
-static BOOL
-DnsIntNameContainsDots(LPCWSTR Name)
-{
-    return wcschr(Name, '.') ? TRUE : FALSE;
-}
-
-static BOOL
-DnsIntTwoConsecutiveDots(LPCWSTR Name)
-{
-    return wcsstr(Name, L"..") ? TRUE : FALSE;
-}
-
-static BOOL
-DnsIntContainsUnderscore(LPCWSTR Name)
-{
-    return wcschr(Name, '_') ? TRUE : FALSE;
-}
-
-/* DnsValidateName *********************
- * Use some different algorithms to validate the given name as suitable for
- * use with DNS.
+/******************************************************************************
+ * DnsNameCompare_A               [DNSAPI.@]
  *
- * Name      -- The name to evaluate.
- * Format    -- Format to use:
- *               DnsNameDomain
- *               DnsNameDomainLabel
- *               DnsNameHostnameFull
- *               DnsNameHostnameLabel
- *               DnsNameWildcard
- *               DnsNameSrvRecord
- * RETURNS:
- * ERROR_SUCCESS                -- All good
- * ERROR_INVALID_NAME           --
- *  Name greater than 255 chars.
- *  Label greater than 63 chars.
- *  Two consecutive dots, or starts with dot.
- *  Contains a dot, but a Label check was specified.
- * DNS_ERROR_INVALID_NAME_CHAR
- *  Contains any invalid char: " {|}~[\]^':;<=>?@!"#$%^`()+/,"
- *  Contains an *, except when it is the first label and Wildcard was
- *  specified.
- * DNS_ERROR_NUMERIC_NAME
- *  Set if the name contains only numerics, unless Domain is specified.
- * DNS_ERROR_NON_RFC_NAME
- *  If the name contains underscore.
- *  If there is an underscore in any position but the first in the SrvRecord
- *   case.
- *  If the name contains a non-ascii character.
  */
-
-DNS_STATUS WINAPI
-DnsValidateName_W(LPCWSTR Name,
-                  DNS_NAME_FORMAT Format)
+BOOL WINAPI DnsNameCompare_A( LPCSTR name1, LPCSTR name2 )
 {
-    BOOL AllowDot = FALSE;
-    BOOL AllowLeadingAst = FALSE;
-    BOOL AllowLeadingUnderscore = FALSE;
-    BOOL AllowAllDigits = FALSE;
-    const WCHAR *NextLabel, *CurrentLabel, *CurrentChar;
+    BOOL ret;
+    PWSTR name1W, name2W;
 
-    switch(Format)
+    name1W = dns_strdup_aw( name1 );
+    name2W = dns_strdup_aw( name2 );
+
+    ret = DnsNameCompare_W( name1W, name2W );
+
+    HeapFree(GetProcessHeap(), 0, name1W );
+    HeapFree(GetProcessHeap(), 0, name2W );
+
+    return ret;
+}
+
+/******************************************************************************
+ * DnsNameCompare_W               [DNSAPI.@]
+ *
+ */
+BOOL WINAPI DnsNameCompare_W( PCWSTR name1, PCWSTR name2 )
+{
+    PCWSTR p, q;
+
+    if (!name1 && !name2) return TRUE;
+    if (!name1 || !name2) return FALSE;
+ 
+    p = name1 + lstrlenW( name1 ) - 1;
+    q = name2 + lstrlenW( name2 ) - 1;
+
+    while (*p == '.' && p >= name1) p--;
+    while (*q == '.' && q >= name2) q--;
+
+    if (p - name1 != q - name2) return FALSE;
+
+    while (name1 <= p)
     {
-        case DnsNameDomain:
-            AllowAllDigits = TRUE;
-            AllowDot = TRUE;
-            break;
+        if (towupper( *name1 ) != towupper( *name2 ))
+            return FALSE;
 
-        case DnsNameDomainLabel:
-            AllowAllDigits = TRUE;
-            break;
+        name1++;
+        name2++;
+    }
+    return TRUE;
+}
 
-        case DnsNameHostnameFull:
-            AllowDot = TRUE;
-            break;
+/******************************************************************************
+ * DnsValidateName_A              [DNSAPI.@]
+ *
+ */
+DNS_STATUS WINAPI DnsValidateName_A( PCSTR name, DNS_NAME_FORMAT format )
+{
+    PWSTR nameW;
+    DNS_STATUS ret;
 
-        case DnsNameHostnameLabel:
-            break;
+    nameW = dns_strdup_aw( name );
+    ret = DnsValidateName_W( nameW, format );
 
-        case DnsNameWildcard:
-            AllowLeadingAst = TRUE;
-            AllowDot = TRUE;
-            break;
+    HeapFree(GetProcessHeap(), 0, nameW );
+    return ret;
+}
 
-        case DnsNameSrvRecord:
-            AllowLeadingUnderscore = TRUE;
-            break;
+/******************************************************************************
+ * DnsValidateName_UTF8           [DNSAPI.@]
+ *
+ */
+DNS_STATUS WINAPI DnsValidateName_UTF8( PCSTR name, DNS_NAME_FORMAT format )
+{
+    PWSTR nameW;
+    DNS_STATUS ret;
 
-        default:
-            break;
+    nameW = dns_strdup_uw( name );
+    ret = DnsValidateName_W( nameW, format );
+
+    HeapFree(GetProcessHeap(), 0, nameW );
+    return ret;
+}
+
+#define HAS_EXTENDED        0x0001
+#define HAS_NUMERIC         0x0002
+#define HAS_NON_NUMERIC     0x0004
+#define HAS_DOT             0x0008
+#define HAS_DOT_DOT         0x0010
+#define HAS_SPACE           0x0020
+#define HAS_INVALID         0x0040
+#define HAS_ASTERISK        0x0080
+#define HAS_UNDERSCORE      0x0100
+#define HAS_LONG_LABEL      0x0200
+
+/******************************************************************************
+ * DnsValidateName_W              [DNSAPI.@]
+ *
+ */
+DNS_STATUS WINAPI DnsValidateName_W( PCWSTR name, DNS_NAME_FORMAT format )
+{
+    PCWSTR p;
+    unsigned int i, j, state = 0;
+    static const WCHAR invalid[] = {
+        '{','|','}','~','[','\\',']','^','\'',':',';','<','=','>',
+        '?','@','!','\"','#','$','%','^','`','(',')','+','/',',',0 };
+
+    if (!name) return ERROR_INVALID_NAME;
+
+    for (p = name, i = 0, j = 0; *p; p++, i++, j++)
+    {
+        if (*p == '.')
+        {
+            j = 0;
+            state |= HAS_DOT;
+            if (p[1] == '.') state |= HAS_DOT_DOT;
+        }
+        else if (*p < '0' || *p > '9') state |= HAS_NON_NUMERIC;
+        else state |= HAS_NUMERIC;
+
+        if (j > 62) state |= HAS_LONG_LABEL;
+
+        if (wcschr( invalid, *p )) state |= HAS_INVALID;
+        else if ((unsigned)*p > 127) state |= HAS_EXTENDED;
+        else if (*p == ' ') state |= HAS_SPACE;
+        else if (*p == '_') state |= HAS_UNDERSCORE;
+        else if (*p == '*') state |= HAS_ASTERISK;
     }
 
-    /* Preliminary checks */
-    if(Name[0] == 0)
-        return ERROR_INVALID_NAME; /* XXX arty: Check this */
+    if (i == 0 || i > 255 ||
+        (state & HAS_LONG_LABEL) ||
+        (state & HAS_DOT_DOT) ||
+        (name[0] == '.' && name[1])) return ERROR_INVALID_NAME;
 
-    /* Name too long */
-    if(wcslen(Name) > 255)
-        return ERROR_INVALID_NAME;
-
-    /* Violations about dots */
-    if((!AllowDot && DnsIntNameContainsDots(Name)) || Name[0] == '.' || DnsIntTwoConsecutiveDots(Name))
-        return ERROR_INVALID_NAME;
-
-    /* Check component sizes */
-    CurrentLabel = Name;
-
-    do
+    switch (format)
     {
-        NextLabel = CurrentLabel;
-        while(*NextLabel && *NextLabel != '.')
-            NextLabel++;
-
-        if(NextLabel - CurrentLabel > 63)
-            return ERROR_INVALID_NAME;
-
-        CurrentLabel = NextLabel;
-    } while(*CurrentLabel);
-
-    CurrentChar = Name;
-
-    while(*CurrentChar)
+    case DnsNameDomain:
     {
-        if(wcschr(L" {|}~[\\]^':;<=>?@!\"#$%^`()+/,",*CurrentChar))
-            return DNS_ERROR_INVALID_NAME_CHAR;
-
-        CurrentChar++;
-    }
-
-    if((!AllowLeadingAst && Name[0] == '*') || (AllowLeadingAst && Name[0] == '*' && Name[1] && Name[1] != '.'))
-        return DNS_ERROR_INVALID_NAME_CHAR;
-
-    if(wcschr(Name + 1, '*'))
-        return DNS_ERROR_INVALID_NAME_CHAR;
-
-    CurrentChar = Name;
-
-    while(!AllowAllDigits && *CurrentChar)
-    {
-        if(*CurrentChar == '.' || (*CurrentChar >= '0' && *CurrentChar <= '9'))
+        if (!(state & HAS_NON_NUMERIC) && (state & HAS_NUMERIC))
             return DNS_ERROR_NUMERIC_NAME;
+        if ((state & HAS_EXTENDED) || (state & HAS_UNDERSCORE))
+            return DNS_ERROR_NON_RFC_NAME;
+        if ((state & HAS_SPACE) ||
+            (state & HAS_INVALID) ||
+            (state & HAS_ASTERISK)) return DNS_ERROR_INVALID_NAME_CHAR;
+        break;
     }
-
-    if(((AllowLeadingUnderscore && Name[0] == '_') || Name[0] != '_') && !DnsIntContainsUnderscore(Name + 1))
-        return DNS_ERROR_NON_RFC_NAME;
-
+    case DnsNameDomainLabel:
+    {
+        if (state & HAS_DOT) return ERROR_INVALID_NAME;
+        if ((state & HAS_EXTENDED) || (state & HAS_UNDERSCORE))
+            return DNS_ERROR_NON_RFC_NAME;
+        if ((state & HAS_SPACE) ||
+            (state & HAS_INVALID) ||
+            (state & HAS_ASTERISK)) return DNS_ERROR_INVALID_NAME_CHAR;
+        break;
+    }
+    case DnsNameHostnameFull:
+    {
+        if (!(state & HAS_NON_NUMERIC) && (state & HAS_NUMERIC))
+            return DNS_ERROR_NUMERIC_NAME;
+        if ((state & HAS_EXTENDED) || (state & HAS_UNDERSCORE))
+            return DNS_ERROR_NON_RFC_NAME;
+        if ((state & HAS_SPACE) ||
+            (state & HAS_INVALID) ||
+            (state & HAS_ASTERISK)) return DNS_ERROR_INVALID_NAME_CHAR;
+        break;
+    }
+    case DnsNameHostnameLabel:
+    {
+        if (state & HAS_DOT) return ERROR_INVALID_NAME;
+        if (!(state & HAS_NON_NUMERIC) && (state & HAS_NUMERIC))
+            return DNS_ERROR_NUMERIC_NAME;
+        if ((state & HAS_EXTENDED) || (state & HAS_UNDERSCORE))
+            return DNS_ERROR_NON_RFC_NAME;
+        if ((state & HAS_SPACE) ||
+            (state & HAS_INVALID) ||
+            (state & HAS_ASTERISK)) return DNS_ERROR_INVALID_NAME_CHAR;
+        break;
+    }
+    case DnsNameWildcard:
+    {
+        if (!(state & HAS_NON_NUMERIC) && (state & HAS_NUMERIC))
+            return ERROR_INVALID_NAME;
+        if (name[0] != '*') return ERROR_INVALID_NAME;
+        if (name[1] && name[1] != '.')
+            return DNS_ERROR_INVALID_NAME_CHAR;
+        if ((state & HAS_EXTENDED) ||
+            (state & HAS_SPACE) ||
+            (state & HAS_INVALID)) return ERROR_INVALID_NAME;
+        break;
+    }
+    case DnsNameSrvRecord:
+    {
+        if (!(state & HAS_NON_NUMERIC) && (state & HAS_NUMERIC))
+            return ERROR_INVALID_NAME;
+        if (name[0] != '_') return ERROR_INVALID_NAME;
+        if ((state & HAS_UNDERSCORE) && !name[1])
+            return DNS_ERROR_NON_RFC_NAME;
+        if ((state & HAS_EXTENDED) ||
+            (state & HAS_SPACE) ||
+            (state & HAS_INVALID)) return ERROR_INVALID_NAME;
+        break;
+    }
+    default:
+        DPRINT1( "unknown format: %d\n", format );
+        break;
+    }
     return ERROR_SUCCESS;
-}
-
-DNS_STATUS WINAPI
-DnsValidateName_UTF8(LPCSTR Name,
-                     DNS_NAME_FORMAT Format)
-{
-    PWCHAR Buffer;
-    int StrLenWc;
-    DNS_STATUS Status;
-
-    StrLenWc = mbstowcs(NULL, Name, 0);
-    Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(WCHAR) * (StrLenWc + 1));
-    mbstowcs(Buffer, Name, StrLenWc + 1);
-    Status = DnsValidateName_W(Buffer, Format);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, Buffer);
-
-    return Status;
-}
-
-DNS_STATUS WINAPI
-DnsValidateName_A(LPCSTR Name,
-                  DNS_NAME_FORMAT Format)
-{
-    return DnsValidateName_UTF8(Name, Format);
-}
-
-/* DnsNameCompare **********************
- * Return TRUE if the names are identical.
- *
- * Name1 & Name2 -- Names.
- */
-BOOL WINAPI
-DnsNameCompare_W(LPWSTR Name1,
-                 LPWSTR Name2)
-{
-    int offset = 0;
-
-    while(Name1[offset] && Name2[offset] && towupper(Name1[offset]) == towupper(Name2[offset]))
-        offset++;
-
-    return
-        (!Name1[offset] && !Name2[offset]) ||
-        (!Name1[offset] && !wcscmp(Name2 + offset, L".")) ||
-        (!Name2[offset] && !wcscmp(Name1 + offset, L"."));
-}
-
-BOOL WINAPI
-DnsNameCompare_UTF8(LPCSTR Name1,
-                    LPCSTR Name2)
-{
-    int offset = 0;
-
-    while(Name1[offset] && Name2[offset] && toupper(Name1[offset]) == toupper(Name2[offset]))
-        offset++;
-
-    return
-        (!Name1[offset] && !Name2[offset]) ||
-        (!Name1[offset] && !strcmp(Name2 + offset, ".")) ||
-        (!Name2[offset] && !strcmp(Name1 + offset, "."));
-}
-
-BOOL WINAPI
-DnsNameCompare_A(LPSTR Name1,
-                 LPSTR Name2)
-{
-    return DnsNameCompare_UTF8(Name1, Name2);
 }

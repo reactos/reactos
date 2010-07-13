@@ -508,7 +508,7 @@
 @ stdcall RtlCreateActivationContext(ptr ptr)
 //@ stdcall RtlCreateAndSetSD
 @ stdcall RtlCreateAtomTable(long ptr)
-//@ stdcall RtlCreateBootStatusDataFile
+@ stdcall RtlCreateBootStatusDataFile()
 @ stdcall RtlCreateEnvironment(long ptr)
 @ stdcall RtlCreateHeap(long ptr long long ptr ptr)
 @ stdcall RtlCreateProcessParameters(ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)

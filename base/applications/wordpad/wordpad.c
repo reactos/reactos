@@ -2435,7 +2435,7 @@ static LRESULT OnCommand( HWND hWnd, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_TABSTOPS:
-        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_PARAFORMAT), hWnd, tabstops_proc);
+        DialogBoxW(GetModuleHandleW(0), MAKEINTRESOURCEW(IDD_TABSTOPS), hWnd, tabstops_proc);
         break;
 
     case ID_ABOUT:
@@ -2546,7 +2546,7 @@ static LRESULT OnSize( HWND hWnd, WPARAM wParam, LPARAM lParam )
     HWND hwndEditor = preview_isactive() ? GetDlgItem(hWnd, IDC_PREVIEW) : GetDlgItem(hWnd, IDC_EDITOR);
     HWND hwndStatusBar = GetDlgItem(hWnd, IDC_STATUSBAR);
     HWND hwndReBar = GetDlgItem(hWnd, IDC_REBAR);
-    HWND hRulerWnd = GetDlgItem(hWnd, IDC_RULER);
+    HWND hRulerWnd = GetDlgItem(hwndReBar, IDC_RULER);
     int rebarHeight = 0;
 
     if (hwndStatusBar)

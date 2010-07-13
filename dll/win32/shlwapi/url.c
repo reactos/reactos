@@ -486,7 +486,9 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     while ((nLen > 0) && ((lpszUrlCpy[nLen-1] <= ' ')))
         lpszUrlCpy[--nLen]=0;
 
-    if(dwFlags & (URL_UNESCAPE | URL_FILE_USE_PATHURL))
+    if((dwFlags & URL_UNESCAPE) ||
+       ((dwFlags & URL_FILE_USE_PATHURL) && nByteLen >= sizeof(wszFile)
+                && !memcmp(wszFile, pszUrl, sizeof(wszFile))))
         UrlUnescapeW(lpszUrlCpy, NULL, &nLen, URL_UNESCAPE_INPLACE);
 
     if((EscapeFlags = dwFlags & (URL_ESCAPE_UNSAFE |

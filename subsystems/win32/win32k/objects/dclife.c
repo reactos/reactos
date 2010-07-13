@@ -385,8 +385,6 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
     PDC pDC;
     BOOL ret = FALSE;
 
-    /* FIXME: This function has broken error handling */
-
     if (!GDIOBJ_SetOwnership(hDC, Owner))
     {
         DPRINT1("GDIOBJ_SetOwnership failed\n");
@@ -831,7 +829,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
         DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n", hDC);
     }
-
+    
     return TRUE;
 }
 

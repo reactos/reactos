@@ -1,5 +1,3 @@
-# aclui.dll exports
-
- 1 stdcall CreateSecurityPage(ptr)
- 2 stdcall EditSecurity(ptr ptr)
-16 extern IID_ISecurityInformation
+@ stdcall CreateSecurityPage(ptr)
+@ stdcall EditSecurity(long ptr)
+@ extern  IID_ISecurityInformation

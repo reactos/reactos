@@ -26,10 +26,13 @@
 
 #include "crypt32_En.rc"
 #include "crypt32_Ko.rc"
+#include "crypt32_Pl.rc"
 
 /* UTF-8 */
 #include "crypt32_De.rc"
 #include "crypt32_Fr.rc"
+#include "crypt32_Hu.rc"
+#include "crypt32_It.rc"
 #include "crypt32_Lt.rc"
 #include "crypt32_Nl.rc"
 #include "crypt32_No.rc"

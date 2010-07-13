@@ -85,7 +85,7 @@ RegisterTasklist(DWORD x)
 }
 
 EXTINLINE DWORD WINAPI
-DragObject(HWND hwnd1, HWND hwnd2, UINT u1, DWORD dw1, HCURSOR hc1)
+DragObject(HWND hwnd1, HWND hwnd2, UINT u1, ULONG_PTR dw1, HCURSOR hc1)
 {
     return NtUserDragObject(hwnd1, hwnd2, u1, dw1, hc1);
 }

@@ -377,7 +377,7 @@ GetPropW(HWND hWnd, LPCWSTR lpString)
   }
   else
   {
-     Atom = LOWORD((DWORD)lpString);
+     Atom = LOWORD((DWORD_PTR)lpString);
   }
   Prop = IntGetProp(hWnd, Atom);
   if (Prop != NULL) Data = Prop->Data;
@@ -428,7 +428,7 @@ RemovePropW(HWND hWnd,
     }
   else
     {
-      Atom = LOWORD((DWORD)lpString);
+      Atom = LOWORD((DWORD_PTR)lpString);
     }
   return(NtUserRemoveProp(hWnd, Atom));
 }
@@ -476,7 +476,7 @@ SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
     }
   else
     {
-      Atom = LOWORD((DWORD)lpString);
+      Atom = LOWORD((DWORD_PTR)lpString);
     }
 
   return(NtUserSetProp(hWnd, Atom, hData));

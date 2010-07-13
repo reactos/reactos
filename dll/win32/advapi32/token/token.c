@@ -184,6 +184,28 @@ AccessCheck(IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
     return TRUE;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL WINAPI AccessCheckByType(
+    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
+    PSID PrincipalSelfSid,
+    HANDLE ClientToken, 
+    DWORD DesiredAccess, 
+    POBJECT_TYPE_LIST ObjectTypeList,
+    DWORD ObjectTypeListLength,
+    PGENERIC_MAPPING GenericMapping,
+    PPRIVILEGE_SET PrivilegeSet,
+    LPDWORD PrivilegeSetLength, 
+    LPDWORD GrantedAccess,
+    LPBOOL AccessStatus)
+{
+	FIXME("stub\n");
+
+	*AccessStatus = TRUE;
+
+	return !*AccessStatus;
+}
 
 /*
  * @implemented

@@ -35,7 +35,9 @@
 	<library>uuid</library>
 	<library>rpcrt4</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>shlwapi</library>
+	<library>shell32</library>
 	<library>wininet</library>
 	<library>user32</library>
 	<library>advapi32</library>

@@ -45,9 +45,10 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
    if (Dc->rosdc.hClipRgn == NULL)
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, hRgnVis, 0, RGN_COPY);
-   else // FYI: Vis == NULL! source of "IntGdiCombineRgn requires hSrc2 != NULL for combine mode 1!"
+      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr, 0, RGN_COPY);
+   else
       NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, hRgnVis, RGN_AND);
+
    NtGdiOffsetRgn(Dc->rosdc.hGCClipRgn, Dc->ptlDCOrig.x, Dc->ptlDCOrig.y);
 
    if((CombinedRegion = RGNOBJAPI_Lock(Dc->rosdc.hGCClipRgn, NULL)))
@@ -97,13 +98,13 @@ GdiSelectVisRgn(HDC hdc, HRGN hrgn)
   if (dc->prgnVis == NULL)
   {
     dc->prgnVis = IntSysCreateRectpRgn(0, 0, 0, 0);
-    GDIOBJ_CopyOwnership(hdc, dc->prgnVis->BaseObject.hHmgr);
+    GDIOBJ_CopyOwnership(hdc, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr);
   }
 
-  retval = NtGdiCombineRgn(dc->prgnVis->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
+  retval = NtGdiCombineRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
   {
-    IntGdiOffsetRgn(dc->prgnVis, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
+    NtGdiOffsetRgn(((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, -dc->ptlDCOrig.x, -dc->ptlDCOrig.y);
     CLIPPING_UpdateGCRegion(dc);
   }
   DC_UnlockDc(dc);
@@ -138,12 +139,10 @@ int FASTCALL GdiExtSelectClipRgn(PDC dc,
   {
     if (!dc->rosdc.hClipRgn)
     {
-      PROSRGNDATA Rgn;
       RECTL rect;
-      if((Rgn = RGNOBJAPI_Lock(dc->prgnVis->BaseObject.hHmgr, NULL)))
+      if(dc->prgnVis)
       {
-        REGION_GetRgnBox(Rgn, &rect);
-        RGNOBJAPI_Unlock(Rgn);
+		REGION_GetRgnBox(dc->prgnVis, &rect);
         dc->rosdc.hClipRgn = IntSysCreateRectRgnIndirect(&rect);
       }
       else
@@ -185,10 +184,10 @@ int APIENTRY NtGdiExtSelectClipRgn(HDC  hDC,
 INT FASTCALL
 GdiGetClipBox(HDC hDC, PRECTL rc)
 {
-   PROSRGNDATA Rgn;
    INT retval;
    PDC dc;
-   HRGN hRgnNew, hRgn = NULL;
+   PROSRGNDATA pRgnNew, pRgn = NULL;
+   BOOL Unlock = FALSE; //Small hack
 
    if (!(dc = DC_LockDc(hDC)))
    {
@@ -198,45 +197,41 @@ GdiGetClipBox(HDC hDC, PRECTL rc)
    /* FIXME! Rao and Vis only! */
    if (dc->prgnAPI) // APIRGN
    {
-      hRgn = ((PROSRGNDATA)dc->prgnAPI)->BaseObject.hHmgr;
+      pRgn = dc->prgnAPI;
    }
    else if (dc->dclevel.prgnMeta) // METARGN
    {
-      hRgn = ((PROSRGNDATA)dc->dclevel.prgnMeta)->BaseObject.hHmgr;
+      pRgn = dc->dclevel.prgnMeta;
    }
    else
    {
-      hRgn = dc->rosdc.hClipRgn; // CLIPRGN
+	   Unlock = TRUE ;
+       pRgn = REGION_LockRgn(dc->rosdc.hClipRgn); // CLIPRGN
    }
 
-   if (hRgn)
+   if (pRgn)
    {
-      hRgnNew = IntSysCreateRectRgn( 0, 0, 0, 0 );
+      pRgnNew = IntSysCreateRectpRgn( 0, 0, 0, 0 );
 
-      NtGdiCombineRgn(hRgnNew, dc->prgnVis->BaseObject.hHmgr, hRgn, RGN_AND);
-
-      if (!(Rgn = RGNOBJAPI_Lock(hRgnNew, NULL)))
+	  if (!pRgnNew)
       {
          DC_UnlockDc(dc);
+		 if(Unlock) REGION_UnlockRgn(pRgn);
          return ERROR;
       }
 
-      retval = REGION_GetRgnBox(Rgn, rc);
+      IntGdiCombineRgn(pRgnNew, dc->prgnVis, pRgn, RGN_AND);
 
-      REGION_FreeRgnByHandle(hRgnNew);
-      RGNOBJAPI_Unlock(Rgn);
+      retval = REGION_GetRgnBox(pRgnNew, rc);
+
+	  REGION_FreeRgnByHandle(pRgnNew->BaseObject.hHmgr);
 
       DC_UnlockDc(dc);
+	  if(Unlock) REGION_UnlockRgn(pRgn);
       return retval;
    }
 
-   if (!(Rgn = RGNOBJAPI_Lock(dc->prgnVis->BaseObject.hHmgr, NULL)))
-   {
-      DC_UnlockDc(dc);
-      return ERROR;
-   }
-   retval = REGION_GetRgnBox(Rgn, rc);
-   RGNOBJAPI_Unlock(Rgn);
+   retval = REGION_GetRgnBox(dc->prgnVis, rc);
    IntDPtoLP(dc, (LPPOINT)rc, 2);
    DC_UnlockDc(dc);
 
@@ -308,7 +303,7 @@ int APIENTRY NtGdiExcludeClipRect(HDC  hDC,
       if (!dc->rosdc.hClipRgn)
       {
          dc->rosdc.hClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
-         NtGdiCombineRgn(dc->rosdc.hClipRgn, dc->prgnVis->BaseObject.hHmgr, NewRgn, RGN_DIFF);
+         NtGdiCombineRgn(dc->rosdc.hClipRgn, ((PROSRGNDATA)dc->prgnVis)->BaseObject.hHmgr, NewRgn, RGN_DIFF);
          Result = SIMPLEREGION;
       }
       else

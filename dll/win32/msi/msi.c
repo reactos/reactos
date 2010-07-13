@@ -299,13 +299,56 @@ done:
     return r;
 }
 
+static UINT get_patch_product_codes( LPCWSTR szPatchPackage, WCHAR **product_codes )
+{
+    MSIHANDLE patch, info = 0;
+    UINT r, type;
+    DWORD size;
+    static WCHAR empty[] = {0};
+    WCHAR *codes;
+
+    r = MsiOpenDatabaseW( szPatchPackage, MSIDBOPEN_READONLY, &patch );
+    if (r != ERROR_SUCCESS)
+        return r;
+
+    r = MsiGetSummaryInformationW( patch, NULL, 0, &info );
+    if (r != ERROR_SUCCESS)
+        goto done;
+
+    size = 0;
+    r = MsiSummaryInfoGetPropertyW( info, PID_TEMPLATE, &type, NULL, NULL, empty, &size );
+    if (r != ERROR_MORE_DATA || !size || type != VT_LPSTR)
+    {
+        ERR("Failed to read product codes from patch\n");
+        r = ERROR_FUNCTION_FAILED;
+        goto done;
+    }
+
+    codes = msi_alloc( ++size * sizeof(WCHAR) );
+    if (!codes)
+    {
+        r = ERROR_OUTOFMEMORY;
+        goto done;
+    }
+
+    r = MsiSummaryInfoGetPropertyW( info, PID_TEMPLATE, &type, NULL, NULL, codes, &size );
+    if (r != ERROR_SUCCESS)
+        msi_free( codes );
+    else
+        *product_codes = codes;
+
+done:
+    MsiCloseHandle( info );
+    MsiCloseHandle( patch );
+    return r;
+}
+
 static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWSTR szCommandLine)
 {
-    MSIHANDLE patch = 0, info = 0;
-    UINT r = ERROR_SUCCESS, type;
-    DWORD size = 0;
+    UINT r;
+    DWORD size;
     LPCWSTR cmd_ptr = szCommandLine;
-    LPWSTR beg, end, cmd = NULL, codes = NULL;
+    LPWSTR beg, end, cmd, codes = NULL;
     BOOL succeeded = FALSE;
 
     static const WCHAR patcheq[] = {'P','A','T','C','H','=',0};
@@ -314,34 +357,8 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     if (!szPatchPackage || !szPatchPackage[0])
         return ERROR_INVALID_PARAMETER;
 
-    if (!szProductCode)
-    {
-        r = MsiOpenDatabaseW(szPatchPackage, MSIDBOPEN_READONLY, &patch);
-        if (r != ERROR_SUCCESS)
-            return r;
-
-        r = MsiGetSummaryInformationW(patch, NULL, 0, &info);
-        if (r != ERROR_SUCCESS)
-            goto done;
-
-        r = MsiSummaryInfoGetPropertyW(info, PID_TEMPLATE, &type, NULL, NULL, empty, &size);
-        if (r != ERROR_MORE_DATA || !size || type != VT_LPSTR)
-        {
-            ERR("Failed to read product codes from patch\n");
-            goto done;
-        }
-
-        codes = msi_alloc(++size * sizeof(WCHAR));
-        if (!codes)
-        {
-            r = ERROR_OUTOFMEMORY;
-            goto done;
-        }
-
-        r = MsiSummaryInfoGetPropertyW(info, PID_TEMPLATE, &type, NULL, NULL, codes, &size);
-        if (r != ERROR_SUCCESS)
-            goto done;
-    }
+    if (!szProductCode && (r = get_patch_product_codes( szPatchPackage, &codes )))
+        return r;
 
     if (!szCommandLine)
         cmd_ptr = empty;
@@ -350,8 +367,8 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
     cmd = msi_alloc(size * sizeof(WCHAR));
     if (!cmd)
     {
-        r = ERROR_OUTOFMEMORY;
-        goto done;
+        msi_free(codes);
+        return ERROR_OUTOFMEMORY;
     }
 
     lstrcpyW(cmd, cmd_ptr);
@@ -380,13 +397,8 @@ static UINT MSI_ApplyPatchW(LPCWSTR szPatchPackage, LPCWSTR szProductCode, LPCWS
             r = ERROR_SUCCESS;
     }
 
-done:
     msi_free(cmd);
     msi_free(codes);
-
-    MsiCloseHandle(info);
-    MsiCloseHandle(patch);
-
     return r;
 }
 
@@ -813,7 +825,7 @@ UINT WINAPI MsiGetProductCodeA(LPCSTR szComponent, LPSTR szBuffer)
     UINT r;
     WCHAR szwBuffer[GUID_SIZE];
 
-    TRACE("%s %s\n",debugstr_a(szComponent), debugstr_a(szBuffer));
+    TRACE("%s %p\n", debugstr_a(szComponent), szBuffer);
 
     if( szComponent )
     {
@@ -2148,6 +2160,9 @@ INSTALLSTATE WINAPI MsiLocateComponentA(LPCSTR szComponent, LPSTR lpPathBuf,
 
     TRACE("%s %p %p\n", debugstr_a(szComponent), lpPathBuf, pcchBuf);
 
+    if (!szComponent || !pcchBuf)
+        return INSTALLSTATE_INVALIDARG;
+
     if (MsiGetProductCodeA( szComponent, szProduct ) != ERROR_SUCCESS)
         return INSTALLSTATE_UNKNOWN;
 
@@ -2160,6 +2175,9 @@ INSTALLSTATE WINAPI MsiLocateComponentW(LPCWSTR szComponent, LPWSTR lpPathBuf,
     WCHAR szProduct[GUID_SIZE];
 
     TRACE("%s %p %p\n", debugstr_w(szComponent), lpPathBuf, pcchBuf);
+
+    if (!szComponent || !pcchBuf)
+        return INSTALLSTATE_INVALIDARG;
 
     if (MsiGetProductCodeW( szComponent, szProduct ) != ERROR_SUCCESS)
         return INSTALLSTATE_UNKNOWN;

@@ -799,6 +799,11 @@ static DWORD MIDI_mciOpen(UINT wDevID, DWORD dwFlags, LPMCI_OPEN_PARMSW lpParms)
     } else {
 	wmm->dwPositionMS = 0;
 	wmm->dwStatus = MCI_MODE_STOP;
+	if (dwFlags & MCI_NOTIFY) {
+	    TRACE("MCI_NOTIFY_SUCCESSFUL %08lX !\n", lpParms->dwCallback);
+	    mciDriverNotify(HWND_32(LOWORD(lpParms->dwCallback)),
+			    wmm->wNotifyDeviceID, MCI_NOTIFY_SUCCESSFUL);
+        }
     }
     return dwRet;
 }

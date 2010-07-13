@@ -467,11 +467,35 @@ SockReenableAsyncSelectEvent (
     IN PSOCKET_INFORMATION Socket,
     IN ULONG Event
     );
-    
-DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
-			    LPDWORD ReturnedBytes );
 
 typedef VOID (*PASYNC_COMPLETION_ROUTINE)(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock);
+    
+DWORD
+FORCEINLINE
+MsafdReturnWithErrno(NTSTATUS Status,
+                     LPINT Errno,
+                     DWORD Received,
+                     LPDWORD ReturnedBytes)
+{
+    if (Errno)
+    {
+        *Errno = TranslateNtStatusError(Status);
+
+        if (ReturnedBytes)
+            *ReturnedBytes = (*Errno == 0) ? Received : 0;
+
+        return (*Errno == 0) ? 0 : SOCKET_ERROR;
+    }
+    else
+    {
+        DbgPrint("%s: Received invalid lpErrno pointer!\n", __FUNCTION__);
+
+        if (ReturnedBytes)
+            *ReturnedBytes = (Status == STATUS_SUCCESS) ? Received : 0;
+
+        return (Status == STATUS_SUCCESS) ? 0 : SOCKET_ERROR;
+    }
+}
 
 #endif /* __MSAFD_H */
 

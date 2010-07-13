@@ -48,18 +48,16 @@
 	</directory>
 	<directory name="windows">
 		<file>accel.c</file>
-		<file>bitmap.c</file>
 		<file>caret.c</file>
 		<file>class.c</file>
 		<file>clipboard.c</file>
-		<file>cursor.c</file>
+		<file>cursoricon.c</file>
 		<file>dc.c</file>
 		<file>defwnd.c</file>
 		<file>dialog.c</file>
 		<file>draw.c</file>
 		<file>font.c</file>
 		<file>hook.c</file>
-		<file>icon.c</file>
 		<file>input.c</file>
 		<file>mdi.c</file>
 		<file>menu.c</file>

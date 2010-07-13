@@ -295,6 +295,7 @@
 #define ERROR_ARITHMETIC_OVERFLOW                          534
 #define ERROR_PIPE_CONNECTED                               535
 #define ERROR_PIPE_LISTENING                               536
+#define ERROR_HANDLES_CLOSED                               676
 #define ERROR_EA_ACCESS_DENIED                             994
 #define ERROR_OPERATION_ABORTED                            995
 #define ERROR_IO_INCOMPLETE                                996
@@ -2490,6 +2491,10 @@
 #define NTE_BAD_KEYSET_PARAM                               _HRESULT_TYPEDEF_(0x8009001FL)
 #define NTE_FAIL                                           _HRESULT_TYPEDEF_(0x80090020L)
 #define NTE_SYS_ERR                                        _HRESULT_TYPEDEF_(0x80090021L)
+#define NTE_SILENT_CONTEXT                                 _HRESULT_TYPEDEF_(0x80090022L)
+#define NTE_TOKEN_KEYSET_STORAGE_FULL                      _HRESULT_TYPEDEF_(0x80090023L)
+#define NTE_TEMPORARY_PROFILE                              _HRESULT_TYPEDEF_(0x80090024L)
+#define NTE_FIXEDPARAMETER                                 _HRESULT_TYPEDEF_(0x80090025L)
 #define NTE_OP_OK                                          _HRESULT_TYPEDEF_(0)
 /* #define NTE_TOKEN_KEYSET_STORAGE ??? */
 

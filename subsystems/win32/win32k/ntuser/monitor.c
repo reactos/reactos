@@ -492,7 +492,6 @@ NtUserEnumDisplayMonitors(
    if (hDC != NULL)
    {
       PDC dc;
-      HRGN dcVisRgn;
       INT regionType;
 
       /* get visible region bounding rect */
@@ -503,10 +502,9 @@ NtUserEnumDisplayMonitors(
          /* FIXME: setlasterror? */
          return -1;
       }
-      dcVisRgn = dc->prgnVis->BaseObject.hHmgr;
+      regionType = REGION_GetRgnBox(dc->prgnVis, &dcRect);
       DC_UnlockDc(dc);
 
-      regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);
       if (regionType == 0)
       {
          DPRINT("NtGdiGetRgnBox() failed!\n");

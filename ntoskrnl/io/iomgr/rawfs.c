@@ -312,6 +312,7 @@ RawMountVolume(IN PIO_STACK_LOCATION IoStackLocation)
     NTSTATUS Status;
     PDEVICE_OBJECT DeviceObject;
     PVOLUME_DEVICE_OBJECT Volume;
+    PFILE_OBJECT FileObject = NULL;
     PAGED_CODE();
 
     /* Remember our owner */
@@ -349,6 +350,36 @@ RawMountVolume(IN PIO_STACK_LOCATION IoStackLocation)
     Volume->DeviceObject.SectorSize = DeviceObject->SectorSize;
     Volume->DeviceObject.Flags |= DO_DIRECT_IO;
     Volume->DeviceObject.Flags &= ~DO_DEVICE_INITIALIZING;
+
+    /* Try to get associated FO (for notification) */
+    _SEH2_TRY
+    {
+        FileObject = IoCreateStreamFileObjectLite(NULL,
+                                                  &(Volume->DeviceObject));
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        /* Get the exception code */
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END;
+
+    /* If failed, delete devive */
+    if (!NT_SUCCESS(Status))
+    {
+        IoDeleteDevice((PDEVICE_OBJECT)Volume);
+        return Status;
+    }
+
+    /* Increment OpenCount by two to avoid dismount when RawClose() will be called on ObDereferenceObject() */
+    Volume->Vcb.OpenCount += 2;
+    /* Notify for sucessful mount */
+    FsRtlNotifyVolumeEvent(FileObject, FSRTL_VOLUME_MOUNT);
+    /* Decrease refcount to 0 to make FileObject being released */
+    ObDereferenceObject(FileObject);
+    /* It's not open anymore, go back to 0 */
+    Volume->Vcb.OpenCount -= 2;
+
     return Status;
 }
 
@@ -439,8 +470,26 @@ RawUserFsCtrl(IN PIO_STACK_LOCATION IoStackLocation,
             break;
     }
 
-    /* Unlock device and return */
+    /* Unlock device */
     KeReleaseMutex(&Vcb->Mutex, FALSE);
+
+    /* In case of status change, notify */
+    switch (IoStackLocation->Parameters.FileSystemControl.FsControlCode)
+    {
+        case FSCTL_LOCK_VOLUME:
+            FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, (NT_SUCCESS(Status) ? FSRTL_VOLUME_LOCK : FSRTL_VOLUME_LOCK_FAILED));
+            break;
+        case FSCTL_UNLOCK_VOLUME:
+            if (NT_SUCCESS(Status))
+            {
+                FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, FSRTL_VOLUME_UNLOCK);
+            }
+            break;
+        case FSCTL_DISMOUNT_VOLUME:
+            FsRtlNotifyVolumeEvent(IoStackLocation->FileObject, (NT_SUCCESS(Status) ? FSRTL_VOLUME_DISMOUNT : FSRTL_VOLUME_DISMOUNT_FAILED));
+            break;
+    }
+
     return Status;
 }
 

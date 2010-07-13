@@ -42,21 +42,21 @@ MAIN_MENU MENU LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
  POPUP "&Marcador" {
    MENUITEM "&Definir...", MNID_BKMK_DEFINE
  }
- POPUP "&Options" {
-   POPUP	"Help always visible"
+ POPUP "&Opciones" {
+   POPUP	"Ayuda siempre visible"
    BEGIN
-     MENUITEM "Default",	MNID_OPTS_HELP_DEFAULT
+     MENUITEM "Por defecto",	MNID_OPTS_HELP_DEFAULT
      MENUITEM "Visible",	MNID_OPTS_HELP_VISIBLE
-     MENUITEM "Non visible",	MNID_OPTS_HELP_NONVISIBLE
+     MENUITEM "No visible",	MNID_OPTS_HELP_NONVISIBLE
   END
-  MENUITEM "History",		MNID_OPTS_HISTORY
-  POPUP    "Fonts"
+  MENUITEM "Historial",		MNID_OPTS_HISTORY
+  POPUP    "Fuentes"
   BEGIN
-    MENUITEM "Small",		MNID_OPTS_FONTS_SMALL
+    MENUITEM "Pequeña",		MNID_OPTS_FONTS_SMALL
     MENUITEM "Normal",    	MNID_OPTS_FONTS_NORMAL
-    MENUITEM "Large",     	MNID_OPTS_FONTS_LARGE
+    MENUITEM "Grande",     	MNID_OPTS_FONTS_LARGE
   END
-  MENUITEM "Use system colors",	MNID_OPTS_SYSTEM_COLORS
+  MENUITEM "Usar colores del sistema",	MNID_OPTS_SYSTEM_COLORS
  }
  POPUP "A&yuda" {
    MENUITEM "&Ayuda sobre la ayuda", MNID_HELP_HELPON
@@ -69,6 +69,22 @@ MAIN_MENU MENU LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
  }
 }
 
+IDD_INDEX DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Índice"
+{
+    LISTBOX IDC_INDEXLIST, 10, 10, 180, 150, LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_BORDER
+}
+
+IDD_SEARCH DIALOG DISCARDABLE 0, 0, 200, 190 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Buscar"
+{
+    LTEXT  "Aún no implementado", -1, 10, 10, 180, 150
+}
+
 /* Strings */
 STRINGTABLE DISCARDABLE LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 {
@@ -79,11 +95,11 @@ STID_INFO,  		"Información"
 STID_NOT_IMPLEMENTED, 	"Aún no implementado"
 STID_HLPFILE_ERROR_s, 	"Error al leer el archivo de ayuda `%s'"
 STID_INDEX, 		"&Índice"
-STID_CONTENTS,		"Summary"
+STID_CONTENTS,		"Resumen"
 STID_BACK, 		"&Anterior"
 STID_ALL_FILES, 	"Todos los archivos (*.*)"
 STID_HELP_FILES_HLP, 	"Archivos de ayuda (*.hlp)"
-STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
-STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
+STID_FILE_NOT_FOUND_s	"No se pudo encontrar '%s'. ¿Desea buscar este archivo usted mismo?"
+STID_NO_RICHEDIT	"No se pudo encontrar una implementación de richedit... Abortando"
+STID_PSH_INDEX,		"Temas de ayuda: "
 }

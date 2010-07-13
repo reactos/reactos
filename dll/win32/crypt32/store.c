@@ -724,6 +724,34 @@ static PWINECRYPT_CERTSTORE CRYPT_PKCSOpenStore(HCRYPTPROV hCryptProv,
     return store;
 }
 
+static PWINECRYPT_CERTSTORE CRYPT_SerializedOpenStore(HCRYPTPROV hCryptProv,
+ DWORD dwFlags, const void *pvPara)
+{
+    HCERTSTORE store;
+    const CRYPT_DATA_BLOB *data = pvPara;
+
+    TRACE("(%ld, %08x, %p)\n", hCryptProv, dwFlags, pvPara);
+
+    if (dwFlags & CERT_STORE_DELETE_FLAG)
+    {
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return NULL;
+    }
+
+    store = CertOpenStore(CERT_STORE_PROV_MEMORY, 0, 0,
+     CERT_STORE_CREATE_NEW_FLAG, NULL);
+    if (store)
+    {
+        if (!CRYPT_ReadSerializedStoreFromBlob(data, store))
+        {
+            CertCloseStore(store, 0);
+            store = NULL;
+        }
+    }
+    TRACE("returning %p\n", store);
+    return (PWINECRYPT_CERTSTORE)store;
+}
+
 static PWINECRYPT_CERTSTORE CRYPT_PhysOpenStoreW(HCRYPTPROV hCryptProv,
  DWORD dwFlags, const void *pvPara)
 {
@@ -760,6 +788,9 @@ HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
             break;
         case LOWORD(CERT_STORE_PROV_PKCS7):
             openFunc = CRYPT_PKCSOpenStore;
+            break;
+        case LOWORD(CERT_STORE_PROV_SERIALIZED):
+            openFunc = CRYPT_SerializedOpenStore;
             break;
         case LOWORD(CERT_STORE_PROV_REG):
             openFunc = CRYPT_RegOpenStore;
@@ -799,6 +830,10 @@ HCERTSTORE WINAPI CertOpenStore(LPCSTR lpszStoreProvider,
         openFunc = CRYPT_FileOpenStore;
     else if (!strcasecmp(lpszStoreProvider, sz_CERT_STORE_PROV_SYSTEM))
         openFunc = CRYPT_SysOpenStoreW;
+    else if (!strcasecmp(lpszStoreProvider, sz_CERT_STORE_PROV_PKCS7))
+        openFunc = CRYPT_PKCSOpenStore;
+    else if (!strcasecmp(lpszStoreProvider, sz_CERT_STORE_PROV_SERIALIZED))
+        openFunc = CRYPT_SerializedOpenStore;
     else if (!strcasecmp(lpszStoreProvider, sz_CERT_STORE_PROV_COLLECTION))
         openFunc = CRYPT_CollectionOpenStore;
     else if (!strcasecmp(lpszStoreProvider, sz_CERT_STORE_PROV_SYSTEM_REGISTRY))

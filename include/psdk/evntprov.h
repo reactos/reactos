@@ -20,6 +20,8 @@
 
 #pragma once
 
+#define _EVNTPROV_
+
 #ifndef EVNTAPI
 #ifndef MIDL_PASS
 #ifdef _EVNT_SOURCE_
@@ -67,11 +69,13 @@ typedef struct _EVENT_DESCRIPTOR {
 } EVENT_DESCRIPTOR, *PEVENT_DESCRIPTOR;
 typedef const EVENT_DESCRIPTOR *PCEVENT_DESCRIPTOR;
 
+#ifndef _EVNTRACE_
 typedef struct _EVENT_FILTER_DESCRIPTOR {
   ULONGLONG Ptr;
   ULONG Size;
   ULONG Type;
 } EVENT_FILTER_DESCRIPTOR, *PEVENT_FILTER_DESCRIPTOR;
+#endif
 
 typedef struct _EVENT_FILTER_HEADER {
   USHORT Id;

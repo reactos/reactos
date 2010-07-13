@@ -32,6 +32,7 @@
 #include "objbase.h"
 #include "objidl.h"
 #include "winnls.h"
+#include "winver.h"
 #include "wine/list.h"
 #include "wine/debug.h"
 
@@ -380,7 +381,6 @@ typedef struct tagMSIFEATURE
     INSTALLSTATE Action;
     struct list Children;
     struct list Components;
-    INT Cost;
 } MSIFEATURE;
 
 typedef struct tagMSICOMPONENT
@@ -811,6 +811,10 @@ extern LPWSTR msi_reg_get_val_str( HKEY hkey, LPCWSTR name );
 extern BOOL msi_reg_get_val_dword( HKEY hkey, LPCWSTR name, DWORD *val);
 
 extern DWORD msi_version_str_to_dword(LPCWSTR p);
+extern void msi_parse_version_string(LPCWSTR, PDWORD, PDWORD);
+extern VS_FIXEDFILEINFO *msi_get_disk_file_version(LPCWSTR);
+extern int msi_compare_file_versions(VS_FIXEDFILEINFO *, const WCHAR *);
+
 
 extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
 extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
@@ -1002,7 +1006,6 @@ extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
 extern BOOL check_unique_action(const MSIPACKAGE *, LPCWSTR);
 extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
-extern UINT msi_create_component_directories( MSIPACKAGE *package );
 extern UINT msi_set_last_used_source(LPCWSTR product, LPCWSTR usersid,
                         MSIINSTALLCONTEXT context, DWORD options, LPCWSTR value);
 extern UINT msi_get_local_package_name(LPWSTR path, LPCWSTR suffix);

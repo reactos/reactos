@@ -24,14 +24,14 @@ RtlFindMessage(
     ULONG Type,
     ULONG Language,
     ULONG MessageId,
-    PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry)
+    PMESSAGE_RESOURCE_ENTRY *MessageResourceEntry)
 {
     LDR_RESOURCE_INFO ResourceInfo;
     PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
-    PRTL_MESSAGE_RESOURCE_DATA MessageTable;
+    PMESSAGE_RESOURCE_DATA MessageTable;
     NTSTATUS Status;
     ULONG EntryOffset = 0, IdOffset = 0;
-    PRTL_MESSAGE_RESOURCE_ENTRY MessageEntry;
+    PMESSAGE_RESOURCE_ENTRY MessageEntry;
     ULONG i;
 
     DPRINT("RtlFindMessage()\n");
@@ -92,7 +92,7 @@ RtlFindMessage(
         return STATUS_MESSAGE_NOT_FOUND;
     }
 
-    MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)
+    MessageEntry = (PMESSAGE_RESOURCE_ENTRY)
         ((PUCHAR)MessageTable + MessageTable->Blocks[i].OffsetToEntries);
 
     DPRINT("EntryOffset 0x%08lx\n", EntryOffset);
@@ -101,7 +101,7 @@ RtlFindMessage(
     DPRINT("MessageEntry: %p\n", MessageEntry);
     for (i = 0; i < IdOffset; i++)
     {
-        MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)
+        MessageEntry = (PMESSAGE_RESOURCE_ENTRY)
             ((PUCHAR)MessageEntry + (ULONG)MessageEntry->Length);
     }
 

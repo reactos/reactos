@@ -2,6 +2,7 @@
  * cryptdlg dll Portuguese resources
  *
  * Copyright 2008 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,6 +22,23 @@
 #include "cryptres.h"
 
 #pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_CERT_POLICY "Política de Certificados"
+    IDS_POLICY_ID "Identificador da Política: "
+    IDS_POLICY_QUALIFIER_INFO "Informação do Qualificador da Política"
+    IDS_POLICY_QUALIFIER_ID "ID do Qualificador da Política="
+    IDS_CPS "CPS" /* Certification Practice Statement */
+    IDS_USER_NOTICE "Aviso ao Usuário"
+    IDS_QUALIFIER "Qualificador"
+    IDS_NOTICE_REF "Referência do Aviso"
+    IDS_ORGANIZATION "Organização="
+    IDS_NOTICE_NUM "Número do Aviso="
+    IDS_NOTICE_TEXT "Texto do Aviso="
+}
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 

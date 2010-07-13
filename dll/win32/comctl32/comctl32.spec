@@ -101,10 +101,10 @@
 402 stdcall -noname FindMRUStringW(long wstr ptr)
 403 stdcall -noname EnumMRUListW(long long ptr long)
 404 stdcall -noname CreateMRUListLazyW(ptr long long long)
-410 stdcall -noname SetWindowSubclass(long ptr long long)
-411 stdcall -noname GetWindowSubclass(long ptr long ptr)
-412 stdcall -noname RemoveWindowSubclass(long ptr long)
-413 stdcall -noname DefSubclassProc(long long long long)
+410 stdcall -ordinal SetWindowSubclass(long ptr long long)
+411 stdcall -ordinal GetWindowSubclass(long ptr long ptr)
+412 stdcall -ordinal RemoveWindowSubclass(long ptr long)
+413 stdcall -ordinal DefSubclassProc(long long long long)
 414 stdcall -noname MirrorIcon(ptr ptr)
 415 stdcall -noname DrawTextWrap(long wstr long ptr long) user32.DrawTextW
 416 stdcall -noname DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW

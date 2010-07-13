@@ -216,8 +216,8 @@ typedef struct _CLIENTINFO
     PPROCESSINFO ppi;
 } CLIENTINFO, *PCLIENTINFO;
 
-/* Make sure it fits exactly into the TEB */
-C_ASSERT(sizeof(CLIENTINFO) == FIELD_OFFSET(TEB, glDispatchTable) - FIELD_OFFSET(TEB, Win32ClientInfo));
+/* Make sure it fits into the TEB */
+C_ASSERT(sizeof(CLIENTINFO) <= sizeof(((PTEB)0)->Win32ClientInfo));
 
 #define GetWin32ClientInfo() ((PCLIENTINFO)(NtCurrentTeb()->Win32ClientInfo))
 
@@ -3118,8 +3118,8 @@ typedef struct tagKMDDELPARAM
     {
       struct
         {
-          UINT uiLo;
-          UINT uiHi;
+          UINT_PTR uiLo;
+          UINT_PTR uiHi;
         } Packed;
       LPARAM Unpacked;
     } Value;

@@ -259,7 +259,7 @@ KspReadMediaCategory(
     /* open the key */
     Status = ZwOpenKey(&hKey, GENERIC_READ, &ObjectAttributes);
 
-    DPRINT("ZwOpenKey() status 0x%08lx %S\n", Status, Path.Buffer);
+    DPRINT("ZwOpenKey() status 0x%08lx %wZ\n", Status, &Path);
 
     /* free path buffer */
     FreeItem(Path.Buffer);

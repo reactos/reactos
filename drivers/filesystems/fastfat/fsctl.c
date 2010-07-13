@@ -585,6 +585,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    }
    VolumeFcb->Flags |= VCB_IS_DIRTY;
 
+   FsRtlNotifyVolumeEvent(DeviceExt->FATFileObject, FSRTL_VOLUME_MOUNT);
+
    Status = STATUS_SUCCESS;
 ByeBye:
 

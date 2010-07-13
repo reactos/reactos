@@ -221,7 +221,7 @@ CsrpFormatMessages(
     NTSTATUS Status;
     UNICODE_STRING FileNameU, TempStringU, FormatU;
     ANSI_STRING FormatA;
-    PRTL_MESSAGE_RESOURCE_ENTRY MessageResource;
+    PMESSAGE_RESOURCE_ENTRY MessageResource;
     PWSTR FormatString;
     ULONG Size, ExceptionCode;
 
@@ -251,7 +251,7 @@ CsrpFormatMessages(
         }
         else
         {
-            RtlInitAnsiString(&FormatA, MessageResource->Text);
+            RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
             RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
         }
     }
@@ -355,7 +355,7 @@ CsrpFormatMessages(
                 }
                 else
                 {
-                    RtlInitAnsiString(&FormatA, MessageResource->Text);
+                    RtlInitAnsiString(&FormatA, (PCHAR)MessageResource->Text);
                     RtlAnsiStringToUnicodeString(&FormatU, &FormatA, TRUE);
                 }
                 FormatString = FormatU.Buffer;

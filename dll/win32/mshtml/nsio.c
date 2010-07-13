@@ -222,13 +222,15 @@ nsresult on_start_uri_open(NSContainer *nscontainer, nsIURI *uri, PRBool *_retva
     }
 
     if(!wine_uri->is_doc_uri) {
+        wine_uri->is_doc_uri = TRUE;
+
         if(!wine_uri->container) {
             nsIWebBrowserChrome_AddRef(NSWBCHROME(nscontainer));
             wine_uri->container = nscontainer;
         }
 
-        wine_uri->is_doc_uri = TRUE;
-        *_retval = translate_url(nscontainer->doc, wine_uri);
+        if(nscontainer->doc)
+            *_retval = translate_url(nscontainer->doc, wine_uri);
     }
 
     nsIURI_Release(NSURI(wine_uri));

@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Visual Studio 2008 Runtime
+Name = Microsoft Visual C++ 2008 Redistributable Package
 Version = 8.0
 Licence = Unknown
 Description = Visual Studio 2008 Runtime.

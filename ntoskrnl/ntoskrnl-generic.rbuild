@@ -30,6 +30,7 @@
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
+	<library>ioevent</library>
 	<dependency>bugcodes</dependency>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
@@ -506,6 +507,9 @@
 	</directory>
 	<directory name="wmi">
 		<file>wmi.c</file>
+	</directory>
+	<directory name="vf">
+		<file>driver.c</file>
 	</directory>
 	<file>ntoskrnl.rc</file>
 	<linkerscript>ntoskrnl_$(ARCH).lnk</linkerscript>

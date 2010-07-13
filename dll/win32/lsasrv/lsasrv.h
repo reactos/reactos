@@ -12,3 +12,12 @@ NTSTATUS StartAuthenticationPort(VOID);
 
 /* lsarpc.c */
 VOID LsarStartRpcServer(VOID);
+
+/* privileges.c */
+NTSTATUS
+LsarpLookupPrivilegeName(PLUID Value,
+                         PUNICODE_STRING *Name);
+
+NTSTATUS
+LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
+                          PLUID Value);

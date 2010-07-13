@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        dll/cpl/input/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for input.dll
- * PROGRAMMERS: Artem Reznikov
+ * TRANSLATORS: Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -19,7 +19,7 @@ BEGIN
     PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "В&идалити...", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "В&ластивості...", IDC_PROP_BUTTON, 175, 142, 70, 14
-    GROUPBOX "Настройка", -1, 7, 185, 240, 36
+    GROUPBOX "Налаштування", -1, 7, 185, 240, 36
     PUSHBUTTON "&Параметри клавіатури...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
@@ -29,7 +29,7 @@ CAPTION "Додаткові параметри клавіатури"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Вимкнення режиму Caps Lock", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "&при натисненні клавіші CAPS LOCK", IDC_PRESS_CL_KEY_RB, 14, 17, 120, 11, WS_GROUP
+    AUTORADIOBUTTON "&при натисненні клавіші CAPS LOCK", IDC_PRESS_CL_KEY_RB, 10, 17, 130, 11, WS_GROUP
     AUTORADIOBUTTON "при &натисненні клавіші SHIFT", IDC_PRESS_SHIFT_KEY_RB, 144, 17, 120, 11, NOT WS_TABSTOP
     GROUPBOX "Сполучення клавіш для мов вводу", -1, 7, 37, 258, 95
     LTEXT "Дія", -1, 14, 47, 60, 9
@@ -47,7 +47,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "&Мова вводу:", -1, 7, 7, 61, 10
     COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 36, 110, 10
+    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 36, 140, 10
     COMBOBOX IDC_KEYBOARD_LO_COMBO, 7, 47, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 169, 68, 50, 14
@@ -59,12 +59,12 @@ CAPTION "Зміна сполучення клавіш"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "", -1, 9, 5, 155, 110
-    AUTOCHECKBOX "&Переключати мови ввод", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
+    AUTOCHECKBOX "&Перемикати мови вводу", IDC_SWITCH_INPUT_LANG_CB, 15, 15, 105, 12
     LTEXT "Shift", -1, 73, 37, 27, 12
     CTEXT "+", -1, 62, 37, 8, 9
     AUTORADIOBUTTON "&Ctrl", IDC_CTRL_LANG, 29, 31, 30, 11
     AUTORADIOBUTTON "ALT з&ліва", IDC_LEFT_ALT_LANG, 29, 45, 46, 12
-    AUTOCHECKBOX "Пере&ключати розкладки клавіатури", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
+    AUTOCHECKBOX "Переми&кати розкладки клавіатури", IDC_SWITCH_KBLAYOUTS_CB, 16, 65, 141, 12
     LTEXT "Shift", -1, 74, 87, 27, 12
     CTEXT "+", -1, 63, 87, 8, 9
     AUTORADIOBUTTON "C&trl", IDC_CTRL_LAYOUT, 30, 81, 30, 11
@@ -80,7 +80,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Мова вводу:", -1, 7, 7, 61, 8
     LTEXT "", IDC_INPUT_LANG_STR, 73, 7, 129, 8
-    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 21, 110, 10
+    LTEXT "&Розкладка клавіатури або засіб вводу (IME):", -1, 7, 21, 150, 10
     COMBOBOX IDC_KB_LAYOUT_IME_COMBO, 7, 32, 212, 150, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
     PUSHBUTTON "Скасувати", IDCANCEL, 169, 53, 52, 14
@@ -104,7 +104,7 @@ BEGIN
     IDS_LAYOUT_EXISTS2       "Ця розкладка вже існує і не може бути додана."
     IDS_CTRL_SHIFT           "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT       "Alt зліва+Shift"
-    IDS_SWITCH_BET_INLANG    "Переключення мов вводу"
+    IDS_SWITCH_BET_INLANG    "Перемикання мов вводу"
 END
 
 STRINGTABLE

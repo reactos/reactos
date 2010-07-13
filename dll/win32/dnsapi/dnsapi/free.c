@@ -33,9 +33,3 @@ DnsFree(PVOID Data,
     }
 }
 
-VOID WINAPI
-DnsRecordListFree(PDNS_RECORD Data,
-                  DNS_FREE_TYPE FreeType)
-{
-    DnsFree(Data, FreeType);
-}

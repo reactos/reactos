@@ -29,8 +29,11 @@
 /* UTF-8 */
 #include "oleacc_De.rc"
 #include "oleacc_Fr.rc"
+#include "oleacc_Hu.rc"
+#include "oleacc_It.rc"
 #include "oleacc_Lt.rc"
 #include "oleacc_No.rc"
 #include "oleacc_Pt.rc"
 #include "oleacc_Ro.rc"
-
+#include "oleacc_Si.rc"
+#include "oleacc_Uk.rc"

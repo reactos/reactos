@@ -11,12 +11,14 @@
 	<library>wine</library>
 	<library>uuid</library>
 	<library>ole32</library>
+	<library>shlwapi</library>
 	<library>advapi32</library>
 
 	<file>bmpdecode.c</file>
 	<file>bmpencode.c</file>
 	<file>clsfactory.c</file>
 	<file>converter.c</file>
+	<file>fliprotate.c</file>
 	<file>gifformat.c</file>
 	<file>icoformat.c</file>
 	<file>imgfactory.c</file>

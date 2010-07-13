@@ -197,7 +197,7 @@ SetSysColorsTemp(const COLORREF *pPens,
     }
     if (!pPens && !pBrushes) /* "restore" call */
     {
-        LPVOID pOldCol = (LPVOID)n; /* FIXME: not 64-bit safe */
+        LPVOID pOldCol = (LPVOID)n;
         LPVOID p = pOldCol;
         DWORD nCount = *(DWORD *)p;
         p = (char*)p + sizeof(DWORD);

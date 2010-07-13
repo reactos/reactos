@@ -2631,7 +2631,29 @@ InterlockedPushListSList(
 NTSYSAPI
 VOID
 NTAPI
-RtlFreeRangeList(IN PRTL_RANGE_LIST RangeList);
+RtlInitializeRangeList(
+    IN OUT PRTL_RANGE_LIST RangeList
+);
+    
+NTSYSAPI
+VOID
+NTAPI
+RtlFreeRangeList(
+    IN PRTL_RANGE_LIST RangeList
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlAddRange(
+    IN OUT PRTL_RANGE_LIST RangeList,
+    IN ULONGLONG Start,
+    IN ULONGLONG End,
+    IN UCHAR Attributes,
+    IN ULONG Flags,
+    IN PVOID UserData OPTIONAL,
+    IN PVOID Owner OPTIONAL
+);
 
 //
 // Debug Functions
@@ -2796,7 +2818,7 @@ RtlFindMessage(
     IN ULONG Type,
     IN ULONG Language,
     IN ULONG MessageId,
-    OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
+    OUT PMESSAGE_RESOURCE_ENTRY *MessageResourceEntry
 );
 
 NTSYSAPI
@@ -3321,6 +3343,44 @@ NTAPI
 RtlFlushSecureMemoryCache(
     IN PVOID MemoryCache,
     IN OPTIONAL SIZE_T MemoryLength
+);
+#endif
+
+//
+// Boot Status Data Functions
+//
+#ifdef NTOS_MODE_USER
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCreateBootStatusDataFile(
+    VOID
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetSetBootStatusData(
+    HANDLE FileHandle,
+    BOOLEAN WriteMode,
+    DWORD DataClass,
+    PVOID Buffer,
+    ULONG BufferSize,
+    DWORD DataClass2
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlLockBootStatusData(
+    HANDLE FileHandle
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlUnlockBootStatusData(
+    HANDLE FileHandle
 );
 #endif
 

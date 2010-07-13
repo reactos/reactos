@@ -282,7 +282,7 @@ Enum(
         HeapFree(GetProcessHeap(), 0, DetailData);
         return MM_STATUS_NO_MEMORY;
     }
-
+	DPRINT1("DeviceName %S\n", DetailData->DevicePath);
     wcscpy(*DeviceName, DetailData->DevicePath);
     HeapFree(GetProcessHeap(), 0, DetailData);
 
@@ -354,10 +354,11 @@ WdmAudInitUserModeMixer()
     return TRUE;
 }
 
-VOID
-WdmAudCleanupMMixer()
+MMRESULT
+WdmAudCleanupByMMixer()
 {
     /* TODO */
+    return MMSYSERR_NOERROR;
 }
 
 MMRESULT
@@ -444,7 +445,7 @@ WdmAudGetWaveInCapabilities(
 }
 
 MMRESULT
-WdmAudSetWdmWaveDeviceFormatByMMixer(
+WdmAudSetWaveDeviceFormatByMMixer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  DWORD DeviceId,
     IN  PWAVEFORMATEX WaveFormat,
@@ -518,7 +519,10 @@ WdmAudOpenSoundDeviceByMMixer(
     IN  struct _SOUND_DEVICE* SoundDevice,
     OUT PVOID* Handle)
 {
-    return WdmAudInitUserModeMixer();
+    if (WdmAudInitUserModeMixer())
+        return MMSYSERR_NOERROR;
+    else
+        return MMSYSERR_ERROR;
 }
 
 MMRESULT
@@ -561,7 +565,7 @@ WdmAudCloseSoundDeviceByMMixer(
 }
 
 MMRESULT
-WdmAudGetNumDevsByMMixer(
+WdmAudGetNumWdmDevsByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     OUT DWORD* DeviceCount)
 {
@@ -647,7 +651,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
 }
 
 MMRESULT
-WdmAudSetWdmWaveStateByMMixer(
+WdmAudSetWaveStateByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN BOOL bStart)
 {
@@ -678,7 +682,7 @@ WdmAudResetStreamByMMixer(
 }
 
 MMRESULT
-WdmAudGetWdmPositionByMMixer(
+WdmAudGetWavePositionByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time)
 {

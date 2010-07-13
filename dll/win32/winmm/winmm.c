@@ -760,7 +760,7 @@ UINT WINAPI auxGetVolume(UINT uDeviceID, DWORD* lpdwVolume)
 
     TRACE("(%04X, %p) !\n", uDeviceID, lpdwVolume);
 
-    if ((wmld = MMDRV_Get((HANDLE)uDeviceID, MMDRV_AUX, TRUE)) == NULL)
+    if ((wmld = MMDRV_Get(UlongToHandle(uDeviceID), MMDRV_AUX, TRUE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
     return MMDRV_Message(wmld, AUXDM_GETVOLUME, (DWORD_PTR)lpdwVolume, 0L);
 }
@@ -774,7 +774,7 @@ UINT WINAPI auxSetVolume(UINT uDeviceID, DWORD dwVolume)
 
     TRACE("(%04X, %u) !\n", uDeviceID, dwVolume);
 
-    if ((wmld = MMDRV_Get((HANDLE)uDeviceID, MMDRV_AUX, TRUE)) == NULL)
+    if ((wmld = MMDRV_Get(UlongToHandle(uDeviceID), MMDRV_AUX, TRUE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
     return MMDRV_Message(wmld, AUXDM_SETVOLUME, dwVolume, 0L);
 }
@@ -786,7 +786,7 @@ UINT WINAPI auxOutMessage(UINT uDeviceID, UINT uMessage, DWORD_PTR dw1, DWORD_PT
 {
     LPWINE_MLD		wmld;
 
-    if ((wmld = MMDRV_Get((HANDLE)uDeviceID, MMDRV_AUX, TRUE)) == NULL)
+    if ((wmld = MMDRV_Get(UlongToHandle(uDeviceID), MMDRV_AUX, TRUE)) == NULL)
 	return MMSYSERR_INVALHANDLE;
 
     return MMDRV_Message(wmld, uMessage, dw1, dw2);
@@ -929,7 +929,7 @@ static	LPWINE_MIDI	MIDI_OutAlloc(HMIDIOUT* lphMidiOut, DWORD_PTR* lpdwCallback,
 /**************************************************************************
  * 				midiOutOpen    		[WINMM.@]
  */
-UINT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT uDeviceID,
+MMRESULT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT uDeviceID,
                        DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     HMIDIOUT		hMidiOut;
@@ -1220,7 +1220,7 @@ UINT WINAPI midiInGetDevCapsA(UINT_PTR uDeviceID, LPMIDIINCAPSA lpCaps, UINT uSi
 /**************************************************************************
  * 				midiInOpen		[WINMM.@]
  */
-UINT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT uDeviceID,
+MMRESULT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT uDeviceID,
 		       DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     HANDLE		hMidiIn;
@@ -1466,7 +1466,7 @@ static	BOOL	MMSYSTEM_GetMidiStream(HMIDISTRM hMidiStrm, WINE_MIDIStream** lpMidi
 	return FALSE;
     }
 
-    *lpMidiStrm = (WINE_MIDIStream*)lpwm->mod.rgIds.dwStreamID;
+    *lpMidiStrm = (WINE_MIDIStream*)(ULONG_PTR)lpwm->mod.rgIds.dwStreamID; // FIXME: not 64 bit safe
 
     return *lpMidiStrm != NULL;
 }
@@ -1581,7 +1581,8 @@ static	BOOL	MMSYSTEM_MidiStream_MessageHandler(WINE_MIDIStream* lpMidiStrm, LPWI
 #endif
 	if (((LPMIDIEVENT)lpData)->dwStreamID != 0 &&
 	    ((LPMIDIEVENT)lpData)->dwStreamID != 0xFFFFFFFF &&
-	    ((LPMIDIEVENT)lpData)->dwStreamID != (DWORD)lpMidiStrm) {
+	    /* FIXME: not 64 bit safe */
+	    ((LPMIDIEVENT)lpData)->dwStreamID != (DWORD_PTR)lpMidiStrm) {
 	    FIXME("Dropping bad %s lpMidiHdr (streamID=%08x)\n",
 		  (lpMidiHdr->dwFlags & MHDR_ISSTRM) ? "stream" : "regular",
 		  ((LPMIDIEVENT)lpData)->dwStreamID);
@@ -1800,7 +1801,7 @@ MMRESULT WINAPI midiStreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID,
     lpMidiStrm->dwTimeDiv = 480; 	/* 480 is 120 quarter notes per minute *//* FIXME ??*/
     lpMidiStrm->dwPositionMS = 0;
 
-    mosm.dwStreamID = (DWORD)lpMidiStrm;
+    mosm.dwStreamID = (DWORD_PTR)lpMidiStrm; // FIXME: not 64 bit safe
     /* FIXME: the correct value is not allocated yet for MAPPER */
     mosm.wDeviceID  = *lpuDeviceID;
     lpwm = MIDI_OutAlloc(&hMidiOut, &dwCallback, &dwInstance, &fdwOpen, 1, &mosm);

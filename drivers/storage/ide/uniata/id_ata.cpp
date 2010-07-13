@@ -240,7 +240,7 @@ VOID \
 DDKFASTAPI \
 AtapiWritePort##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN _type  data \
     ) \
 { \
@@ -272,7 +272,7 @@ VOID \
 DDKFASTAPI \
 AtapiWritePortEx##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN ULONG offs, \
     IN _type  data \
     ) \
@@ -305,7 +305,7 @@ _type \
 DDKFASTAPI \
 AtapiReadPort##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port \
+    IN ULONG_PTR _port \
     ) \
 { \
     PIORES res; \
@@ -336,7 +336,7 @@ _type \
 DDKFASTAPI \
 AtapiReadPortEx##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN ULONG offs \
     ) \
 { \
@@ -367,7 +367,7 @@ VOID \
 DDKFASTAPI \
 AtapiReadBuffer##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN PVOID Buffer, \
     IN ULONG Count,   \
     IN ULONG Timing   \
@@ -412,7 +412,7 @@ VOID \
 DDKFASTAPI \
 AtapiWriteBuffer##sz( \
     IN PHW_CHANNEL chan, \
-    IN ULONG _port, \
+    IN ULONG_PTR _port, \
     IN PVOID Buffer, \
     IN ULONG Count,   \
     IN ULONG Timing   \
@@ -2047,16 +2047,16 @@ AtapiResetController__(
                 goto default_reset;
             offset = ((Channel & 1) << 7) + ((Channel & 2) << 8);
             /* disable PHY state change interrupt */
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x148 + offset, 0);
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x148 + offset, 0);
 
             UniataSataClearErr(HwDeviceExtension, j, UNIATA_SATA_IGNORE_CONNECT);
 
             /* reset controller part for this channel */
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48,
-                 AtapiReadPortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48) | (0xc0 >> Channel));
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48,
+                 AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48) | (0xc0 >> Channel));
             AtapiStallExecution(1000);
-            AtapiWritePortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48,
-                 AtapiReadPortEx4(NULL, (ULONG)(&deviceExtension->BaseIoAddressSATA_0), 0x48) & ~(0xc0 >> Channel));
+            AtapiWritePortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48,
+                 AtapiReadPortEx4(NULL, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0, 0x48) & ~(0xc0 >> Channel));
 
 
             break; }
@@ -3619,7 +3619,7 @@ AtapiCheckInterrupt__(
         switch(ChipType) {
         case PROLD:
         case PRNEW:
-            status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x1c);
+            status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x1c);
             if (!DmaTransfer)
                 break;
             if (!(status &
@@ -3639,10 +3639,10 @@ AtapiCheckInterrupt__(
             }
             break;
         case PRMIO:
-            status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x0040);
+            status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x0040);
             if(ChipFlags & PRSATA) {
-                pr_status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x006c);
-                AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressBM_0),0x006c, pr_status & 0x000000ff);
+                pr_status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x006c);
+                AtapiWritePortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressBM_0,0x006c, pr_status & 0x000000ff);
             }
             if(pr_status & (0x11 << Channel)) {
                 // TODO: reset channel
@@ -3668,11 +3668,11 @@ AtapiCheckInterrupt__(
 
         /* get and clear interrupt status */
         if(ChipFlags & NVQ) {
-            pr_status = AtapiReadPortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs);
-            AtapiWritePortEx4(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs, (0x0fUL << shift) | 0x00f000f0);
+            pr_status = AtapiReadPortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs);
+            AtapiWritePortEx4(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs, (0x0fUL << shift) | 0x00f000f0);
         } else {
-            pr_status = AtapiReadPortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs);
-            AtapiWritePortEx1(chan, (ULONG)(&deviceExtension->BaseIoAddressSATA_0),offs, (0x0f << shift));
+            pr_status = AtapiReadPortEx1(chan,(ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs);
+            AtapiWritePortEx1(chan, (ULONG_PTR)&deviceExtension->BaseIoAddressSATA_0,offs, (0x0f << shift));
         }
         KdPrint2((PRINT_PREFIX "  pr_status %x\n", pr_status));
 

@@ -138,7 +138,7 @@
 @ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
 @ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
 @ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfo
-@ cdecl __crtGetStringTypeW(long long wstr long ptr) kernel32.GetStringTypeW
+@ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
 @ cdecl __dllonexit(ptr ptr ptr)
@@ -597,7 +597,7 @@
 @ cdecl _ltow(long ptr long)
 # stub _ltow_s
 @ cdecl _makepath(ptr str str str str)
-# stub _makepath_s
+@ cdecl _makepath_s(ptr long str str str str)
 # stub _malloc_dbg
 @ cdecl _matherr(ptr)
 @ cdecl _mbbtombc(long)
@@ -756,7 +756,7 @@
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
-# stub _osplatform
+@ extern _osplatform _osplatform
 @ extern _osver _osver
 @ stub _outp #(long long)
 @ stub _outpd #(long long)
@@ -1086,7 +1086,7 @@
 # stub _winput_s
 @ extern _winver
 @ cdecl _wmakepath(wstr wstr wstr wstr wstr)
-# stub _wmakepath_s
+@ cdecl _wmakepath_s(ptr long wstr wstr wstr wstr)
 @ cdecl _wmkdir(wstr)
 @ cdecl _wmktemp(wstr)
 # stub _wmktemp_s
@@ -1266,9 +1266,9 @@
 @ cdecl memchr(ptr long long)
 @ cdecl memcmp(ptr ptr long)
 @ cdecl memcpy(ptr ptr long)
-# @ cdecl memcpy_s(ptr long ptr long) memmove_s
+@ cdecl memcpy_s(ptr long ptr long) memmove_s
 @ cdecl memmove(ptr ptr long)
-# @ cdecl memmove_s(ptr long ptr long)
+@ cdecl memmove_s(ptr long ptr long)
 @ cdecl memset(ptr long long)
 @ cdecl mktime(ptr)
 @ cdecl modf(double ptr)
@@ -1285,7 +1285,7 @@
 # stub qsort_s
 @ cdecl raise(long)
 @ cdecl rand()
-# @ cdecl rand_s(ptr)
+@ cdecl rand_s(ptr)
 @ cdecl realloc(ptr long)
 @ cdecl remove(str)
 @ cdecl rename(str str)
@@ -1405,3 +1405,6 @@
 @ varargs wscanf(wstr) 
 # @ varargs wscanf_s(wstr)
 
+# Functions not exported in native dll:
+@ cdecl _get_invalid_parameter_handler()
+@ cdecl _set_invalid_parameter_handler(ptr)

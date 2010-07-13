@@ -367,6 +367,8 @@ BOOL WINAPI Shell_NotifyIconA(DWORD,PNOTIFYICONDATAA);
 BOOL WINAPI Shell_NotifyIconW(DWORD,PNOTIFYICONDATAW);
 int WINAPI ShellAboutA(HWND,LPCSTR,LPCSTR,HICON);
 int WINAPI ShellAboutW(HWND,LPCWSTR,LPCWSTR,HICON);
+int WINAPI ShellMessageBoxA(HINSTANCE,HWND,LPCSTR,LPCSTR,UINT,...);
+int WINAPI ShellMessageBoxW(HINSTANCE,HWND,LPCWSTR,LPCWSTR,UINT,...);
 HINSTANCE WINAPI ShellExecuteA(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,INT);
 HINSTANCE WINAPI ShellExecuteW(HWND,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR,INT);
 BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA);
@@ -403,6 +405,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutW
 #define ShellExecute ShellExecuteW
 #define ShellExecuteEx ShellExecuteExW
+#define ShellMessageBox ShellMessageBoxW
 #define SHFileOperation SHFileOperationW
 #define SHGetFileInfo SHGetFileInfoW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
@@ -429,6 +432,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutA
 #define ShellExecute ShellExecuteA
 #define ShellExecuteEx ShellExecuteExA
+#define ShellMessageBox ShellMessageBoxA
 #define SHFileOperation SHFileOperationA
 #define SHGetFileInfo SHGetFileInfoA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA

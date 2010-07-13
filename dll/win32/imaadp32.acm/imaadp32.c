@@ -657,7 +657,6 @@ static	LRESULT	ADPCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
 	adfs->cbwfxDst < sizeof(PCMWAVEFORMAT) ||
 	adfs->pwfxSrc->wFormatTag == adfs->pwfxDst->wFormatTag ||
 	ADPCM_GetFormatIndex(adfs->pwfxSrc) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
-    /* FIXME: should do those tests against the real size (according to format tag */
 
     /* If no suggestion for destination, then copy source value */
     if (!(adfs->fdwSuggest & ACM_FORMATSUGGESTF_NCHANNELS))
@@ -684,12 +683,14 @@ static	LRESULT	ADPCM_FormatSuggest(PACMDRVFORMATSUGGEST adfs)
     switch (adfs->pwfxDst->wFormatTag)
     {
     case WAVE_FORMAT_PCM:
+        if (adfs->cbwfxSrc < sizeof(IMAADPCMWAVEFORMAT)) return ACMERR_NOTPOSSIBLE;
         adfs->pwfxDst->nBlockAlign = (adfs->pwfxDst->nChannels * adfs->pwfxDst->wBitsPerSample) / 8;
         adfs->pwfxDst->nAvgBytesPerSec = adfs->pwfxDst->nSamplesPerSec * adfs->pwfxDst->nBlockAlign;
         /* check if result is ok */
         if (ADPCM_GetFormatIndex(adfs->pwfxDst) == 0xFFFFFFFF) return ACMERR_NOTPOSSIBLE;
         break;
     case WAVE_FORMAT_IMA_ADPCM:
+        if (adfs->cbwfxDst < sizeof(IMAADPCMWAVEFORMAT)) return ACMERR_NOTPOSSIBLE;
         init_wfx_ima_adpcm((IMAADPCMWAVEFORMAT*)adfs->pwfxDst);
         /* FIXME: not handling header overhead */
         TRACE("setting spb=%u\n", ((IMAADPCMWAVEFORMAT*)adfs->pwfxDst)->wSamplesPerBlock);

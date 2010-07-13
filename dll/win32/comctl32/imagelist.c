@@ -143,7 +143,6 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
                             int width, int height, HBITMAP hbmImage, HBITMAP hbmMask )
 {
     BOOL ret = FALSE;
-    HDC hdcMask = 0;
     BITMAP bm;
     BITMAPINFO *info, *mask_info = NULL;
     DWORD *bits = NULL;
@@ -154,8 +153,9 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
 
     if (!GetObjectW( hbmImage, sizeof(bm), &bm )) return FALSE;
 
-    /* if neither the imagelist nor the source bitmap can have an alpha channel, bail out now */
-    if (himl->uBitsPixel != 32 && bm.bmBitsPixel != 32) return FALSE;
+    /* if either the imagelist or the source bitmap don't have an alpha channel, bail out now */
+    if (!himl->has_alpha) return FALSE;
+    if (bm.bmBitsPixel != 32) return FALSE;
 
     SelectObject( hdc, hbmImage );
     mask_width = (bm.bmWidth + 31) / 32 * 4;
@@ -182,10 +182,9 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
         mask_info->bmiHeader = info->bmiHeader;
         mask_info->bmiHeader.biBitCount = 1;
         mask_info->bmiHeader.biSizeImage = mask_width * height;
-        if (!(mask_bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage ))) goto done;
+        if (!(mask_bits = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, info->bmiHeader.biSizeImage )))
+            goto done;
         if (!GetDIBits( hdc, hbmMask, 0, height, mask_bits, mask_info, DIB_RGB_COLORS )) goto done;
-        hdcMask = CreateCompatibleDC( 0 );
-        SelectObject( hdcMask, hbmMask );
     }
 
     for (n = 0; n < count; n++)
@@ -207,12 +206,10 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
                         bits[i * bm.bmWidth + j] |= 0xff000000;
                     else
                         bits[i * bm.bmWidth + j] = 0;
-            if (hdcMask) StretchBlt( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
-                                     hdcMask, n * width, 0, width, height, SRCCOPY );
         }
         else
         {
-            if (himl->has_alpha) himl->has_alpha[pos + n] = 1;
+            himl->has_alpha[pos + n] = 1;
 
             if (mask_info && himl->hbmMask)  /* generate the mask from the alpha channel */
             {
@@ -222,18 +219,17 @@ static BOOL add_with_alpha( HIMAGELIST himl, HDC hdc, int pos, int count,
                             mask_bits[i * mask_width + j / 8] &= ~(0x80 >> (j % 8));
                         else
                             mask_bits[i * mask_width + j / 8] |= 0x80 >> (j % 8);
-                StretchDIBits( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
-                               n * width, 0, width, height, mask_bits, mask_info, DIB_RGB_COLORS, SRCCOPY );
             }
         }
         StretchDIBits( himl->hdcImage, pt.x, pt.y, himl->cx, himl->cy,
                        n * width, 0, width, height, bits, info, DIB_RGB_COLORS, SRCCOPY );
-
+        if (mask_info)
+            StretchDIBits( himl->hdcMask, pt.x, pt.y, himl->cx, himl->cy,
+                           n * width, 0, width, height, mask_bits, mask_info, DIB_RGB_COLORS, SRCCOPY );
     }
     ret = TRUE;
 
 done:
-    if (hdcMask) DeleteDC( hdcMask );
     HeapFree( GetProcessHeap(), 0, info );
     HeapFree( GetProcessHeap(), 0, mask_info );
     HeapFree( GetProcessHeap(), 0, bits );
@@ -264,12 +260,12 @@ IMAGELIST_InternalExpandBitmaps(HIMAGELIST himl, INT nImageCount)
     INT     nNewCount;
     SIZE    sz;
 
-    TRACE("%p has %d allocated %d images\n", himl, himl->cCurImage, himl->cMaxImage);
+    TRACE("%p has allocated %d, max %d, grow %d images\n", himl, himl->cCurImage, himl->cMaxImage, himl->cGrow);
 
-    if (himl->cCurImage + nImageCount <= himl->cMaxImage)
-	return;
+    if (himl->cCurImage + nImageCount < himl->cMaxImage)
+        return;
 
-    nNewCount = himl->cCurImage + max(nImageCount, himl->cGrow) + 1;
+    nNewCount = himl->cMaxImage + max(nImageCount, himl->cGrow) + 1;
 
     imagelist_get_bitmap_size(himl, nNewCount, &sz);
 
@@ -756,7 +752,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
     else
         himl->hbmMask = 0;
 
-    if (himl->uBitsPixel == 32)
+    if (ilc == ILC_COLOR32)
         himl->has_alpha = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, himl->cMaxImage );
     else
         himl->has_alpha = NULL;
@@ -1157,7 +1153,8 @@ ImageList_DrawEx (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y,
 
 
 static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
-                               int src_x, int src_y, int cx, int cy, BLENDFUNCTION func )
+                               int src_x, int src_y, int cx, int cy, BLENDFUNCTION func,
+                               UINT style, COLORREF blend_col )
 {
     BOOL ret = FALSE;
     HDC hdc;
@@ -1184,7 +1181,31 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
     SelectObject( hdc, bmp );
     BitBlt( hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY );
 
-    if (himl->uBitsPixel == 32)  /* we already have an alpha channel in this case */
+    if (blend_col != CLR_NONE)
+    {
+        BYTE r = GetRValue( blend_col );
+        BYTE g = GetGValue( blend_col );
+        BYTE b = GetBValue( blend_col );
+
+        if (style & ILD_BLEND25)
+        {
+            for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
+                *ptr = ((*ptr & 0xff000000) |
+                        ((((*ptr & 0x00ff0000) * 3 + (r << 16)) / 4) & 0x00ff0000) |
+                        ((((*ptr & 0x0000ff00) * 3 + (g << 8))  / 4) & 0x0000ff00) |
+                        ((((*ptr & 0x000000ff) * 3 + (b << 0))  / 4) & 0x000000ff));
+        }
+        else if (style & ILD_BLEND50)
+        {
+            for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
+                *ptr = ((*ptr & 0xff000000) |
+                        ((((*ptr & 0x00ff0000) + (r << 16)) / 2) & 0x00ff0000) |
+                        ((((*ptr & 0x0000ff00) + (g << 8))  / 2) & 0x0000ff00) |
+                        ((((*ptr & 0x000000ff) + (b << 0))  / 2) & 0x000000ff));
+        }
+    }
+
+    if (himl->has_alpha)  /* we already have an alpha channel in this case */
     {
         /* pre-multiply by the alpha channel */
         for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
@@ -1302,8 +1323,15 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     has_alpha = (himl->has_alpha && himl->has_alpha[pimldp->i]);
     if (!bMask && (has_alpha || (fState & ILS_ALPHA)))
     {
-        COLORREF colour;
+        COLORREF colour, blend_col = CLR_NONE;
         BLENDFUNCTION func;
+
+        if (bBlend)
+        {
+            blend_col = pimldp->rgbFg;
+            if (blend_col == CLR_DEFAULT) blend_col = GetSysColor( COLOR_HIGHLIGHT );
+            else if (blend_col == CLR_NONE) blend_col = GetTextColor( pimldp->hdcDst );
+        }
 
         func.BlendOp = AC_SRC_OVER;
         func.BlendFlags = 0;
@@ -1313,7 +1341,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
         if (bIsTransparent)
         {
             bResult = alpha_blend_image( himl, pimldp->hdcDst, pimldp->x, pimldp->y,
-                                         pt.x, pt.y, cx, cy, func );
+                                         pt.x, pt.y, cx, cy, func, fStyle, blend_col );
             goto end;
         }
         colour = pimldp->rgbBk;
@@ -1322,7 +1350,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
 
         hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
         PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
-        alpha_blend_image( himl, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func );
+        alpha_blend_image( himl, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
         DeleteObject (SelectObject (hImageDC, hOldBrush));
         bResult = BitBlt( pimldp->hdcDst, pimldp->x,  pimldp->y, cx, cy, hImageDC, 0, 0, SRCCOPY );
         goto end;
@@ -2005,7 +2033,7 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
     if (himlDst)
     {
         imagelist_point_from_index( himl1, i1, &pt1 );
-        imagelist_point_from_index( himl1, i2, &pt2 );
+        imagelist_point_from_index( himl2, i2, &pt2 );
 
         /* copy image */
         BitBlt (himlDst->hdcImage, 0, 0, cxDst, cyDst, himl1->hdcImage, 0, 0, BLACKNESS);
@@ -2488,7 +2516,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
     if (hdcImage == 0)
 	ERR("invalid hdcImage!\n");
 
-    if (himl->uBitsPixel == 32)
+    if (himl->has_alpha)
     {
         if (!ii.hbmColor)
         {
@@ -2498,13 +2526,13 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT nIndex, HICON hIcon)
             SelectObject( hdcImage, color );
             SelectObject( hdcMask, ii.hbmMask );
             BitBlt( hdcImage, 0, 0, bmp.bmWidth, height, hdcMask, 0, height, SRCCOPY );
-            add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, height, color, ii.hbmMask );
+            ret = add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, height, color, ii.hbmMask );
             DeleteDC( hdcMask );
             DeleteObject( color );
+            if (ret) goto done;
         }
-        else add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, bmp.bmHeight, ii.hbmColor, ii.hbmMask );
-
-        goto done;
+        else if (add_with_alpha( himl, hdcImage, nIndex, 1, bmp.bmWidth, bmp.bmHeight,
+                                 ii.hbmColor, ii.hbmMask )) goto done;
     }
 
     imagelist_point_from_index(himl, nIndex, &pt);
@@ -2824,6 +2852,17 @@ ImageList_SetImageCount (HIMAGELIST himl, UINT iImageCount)
     }
 
     DeleteDC (hdcBitmap);
+
+    if (himl->has_alpha)
+    {
+        char *new_alpha = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, himl->has_alpha, nNewCount );
+        if (new_alpha) himl->has_alpha = new_alpha;
+        else
+        {
+            HeapFree( GetProcessHeap(), 0, himl->has_alpha );
+            himl->has_alpha = NULL;
+        }
+    }
 
     /* Update max image count and current image count */
     himl->cMaxImage = nNewCount;

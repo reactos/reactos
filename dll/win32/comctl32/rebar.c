@@ -2452,7 +2452,7 @@ REBAR_InsertBandT(REBAR_INFO *infoPtr, INT iIndex, LPREBARBANDINFOW lprbbi, BOOL
     REBAR_DumpBand (infoPtr);
 
     REBAR_Layout(infoPtr);
-    InvalidateRect(infoPtr->hwndSelf, 0, TRUE);
+    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 
     return TRUE;
 }
@@ -2653,7 +2653,7 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, INT iBand, LPREBARBANDINFOW lprbbi, BOOL
 
     if (uChanged & (RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_STYLE | RBBIM_IMAGE)) {
 	  REBAR_Layout(infoPtr);
-	  InvalidateRect(infoPtr->hwndSelf, 0, 1);
+	  InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
     }
 
     return TRUE;
@@ -2779,7 +2779,7 @@ REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show)
 {
     REBAR_BAND *lpBand;
 
-    if (iBand < 0 || iBand > infoPtr->uNumBands)
+    if (iBand < 0 || iBand >= infoPtr->uNumBands)
 	return FALSE;
 
     lpBand = REBAR_GetBand(infoPtr, iBand);
@@ -2798,7 +2798,7 @@ REBAR_ShowBand (REBAR_INFO *infoPtr, INT iBand, BOOL show)
     }
 
     REBAR_Layout(infoPtr);
-    InvalidateRect(infoPtr->hwndSelf, 0, 1);
+    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 
     return TRUE;
 }
@@ -3399,7 +3399,7 @@ REBAR_SetRedraw (REBAR_INFO *infoPtr, BOOL redraw)
 	if (infoPtr->fStatus & BAND_NEEDS_REDRAW) {
 	    REBAR_MoveChildWindows (infoPtr, 0, infoPtr->uNumBands);
 	    REBAR_ForceResize (infoPtr);
-	    InvalidateRect (infoPtr->hwndSelf, 0, TRUE);
+	    InvalidateRect (infoPtr->hwndSelf, NULL, TRUE);
 	}
 	infoPtr->fStatus &= ~BAND_NEEDS_REDRAW;
     }

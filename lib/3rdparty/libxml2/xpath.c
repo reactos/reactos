@@ -11333,6 +11333,7 @@ xmlXPathCompRelativeLocationPath
 	SKIP_BLANKS;
     }
     xmlXPathCompStep(ctxt);
+    CHECK_ERROR;
     SKIP_BLANKS;
     while (CUR == '/') {
 	if ((CUR == '/') && (NXT(1) == '/')) {
@@ -11392,6 +11393,7 @@ xmlXPathCompLocationPath(xmlXPathParserContextPtr ctxt) {
 		     (CUR == '@') || (CUR == '*')))
 		    xmlXPathCompRelativeLocationPath(ctxt);
 	    }
+	    CHECK_ERROR;
 	}
     }
 }

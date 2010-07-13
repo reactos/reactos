@@ -2,7 +2,6 @@
 	<importlibrary definition="batt.spec" />
 	<include base="batt">.</include>
 	<library>setupapi</library>
-	<library>kernel32</library>
 	<library>ntdll</library>
 	<file>batt.c</file>
 	<file>batt.rc</file>

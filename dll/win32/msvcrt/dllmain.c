@@ -35,6 +35,7 @@ extern int BlockEnvToEnvironW(void);
 extern void FreeEnvironment(char **environment);
 extern void _atexit_cleanup(void);
 
+extern unsigned int _osplatform;
 extern unsigned int _osver;
 extern unsigned int _winminor;
 extern unsigned int _winmajor;
@@ -72,6 +73,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         _winver     = (osvi.dwMajorVersion << 8) | osvi.dwMinorVersion;
         _winmajor   = osvi.dwMajorVersion;
         _winminor   = osvi.dwMinorVersion;
+        _osplatform = osvi.dwPlatformId;
         _osver      = osvi.dwBuildNumber;
         hHeap = HeapCreate(0, 100000, 0);
         if (hHeap == NULL)

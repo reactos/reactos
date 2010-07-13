@@ -3,7 +3,6 @@
 <module name="liccpa" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_LICCPA}"  installbase="system32" installname="liccpa.cpl" unicode="yes">
 	<importlibrary definition="liccpa.def" />
 	<include base="liccpa">.</include>
-	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>comctl32</library>

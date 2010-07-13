@@ -50,7 +50,7 @@ typedef struct tagMSISIGNATURE
     LPWSTR   Languages;
 }MSISIGNATURE;
 
-static void ACTION_VerStrToInteger(LPCWSTR verStr, PDWORD ms, PDWORD ls)
+void msi_parse_version_string(LPCWSTR verStr, PDWORD ms, PDWORD ls)
 {
     const WCHAR *ptr;
     int x1 = 0, x2 = 0, x3 = 0, x4 = 0;
@@ -109,13 +109,13 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
     minVersion = msi_dup_record_field(row,3);
     if (minVersion)
     {
-        ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS, &sig->MinVersionLS);
+        msi_parse_version_string( minVersion, &sig->MinVersionMS, &sig->MinVersionLS );
         msi_free( minVersion );
     }
     maxVersion = msi_dup_record_field(row,4);
     if (maxVersion)
     {
-        ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS);
+        msi_parse_version_string( maxVersion, &sig->MaxVersionMS, &sig->MaxVersionLS );
         msi_free( maxVersion );
     }
     sig->MinSize = MSI_RecordGetInteger(row,5);

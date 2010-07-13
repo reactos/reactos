@@ -448,8 +448,8 @@ MMRESULT WINAPI acmFilterTagEnumW(HACMDRIVER had, PACMFILTERTAGDETAILSW paftd,
 		    }
 		}
 	    }
+	    acmDriverClose(had, 0);
 	}
-	acmDriverClose(had, 0);
     }
     return MMSYSERR_NOERROR;
 }

@@ -893,8 +893,8 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
 		   }
 	        }
 	     }
+	     acmDriverClose(had, 0);
           }
-          acmDriverClose(had, 0);
        }
     }
     return MMSYSERR_NOERROR;

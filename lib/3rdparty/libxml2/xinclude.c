@@ -2479,7 +2479,6 @@ xmlXIncludeProcessTreeFlagsData(xmlNodePtr tree, int flags, void *data) {
  */
 int
 xmlXIncludeProcessFlagsData(xmlDocPtr doc, int flags, void *data) {
-    xmlXIncludeCtxtPtr ctxt;
     xmlNodePtr tree;
 
     if (doc == NULL)

@@ -30,7 +30,7 @@ MMRESULT
 WdmAudOpenSoundDeviceByLegacy();
 
 MMRESULT
-WdmAudGetNumDevsByMMixer(
+WdmAudGetNumWdmDevsByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     OUT DWORD* DeviceCount);
 
@@ -92,7 +92,7 @@ WdmAudGetControlDetails(
     IN ULONG Flags);
 
 MMRESULT
-WdmAudSetWdmWaveDeviceFormatByMMixer(
+WdmAudSetWaveDeviceFormatByMMixer(
     IN  PSOUND_DEVICE_INSTANCE Instance,
     IN  DWORD DeviceId,
     IN  PWAVEFORMATEX WaveFormat,
@@ -121,7 +121,7 @@ WdmAudQueryMixerInfoByMMixer(
     IN DWORD Flags);
 
 MMRESULT
-WdmAudSetWdmWaveStateByMMixer(
+WdmAudSetWaveStateByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN BOOL bStart);
 
@@ -132,7 +132,7 @@ WdmAudResetStreamByMMixer(
     IN  BOOLEAN bStartReset);
 
 MMRESULT
-WdmAudGetWdmPositionByMMixer(
+WdmAudGetWavePositionByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
     IN  MMTIME* Time);
 

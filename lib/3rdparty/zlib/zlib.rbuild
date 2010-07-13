@@ -3,6 +3,7 @@
 <group>
 <module name="zlib" type="staticlibrary" allowwarnings="true">
 	<include base="zlib">.</include>
+	<define name="NO_VIZ"/>
 	<file>adler32.c</file>
 	<file>compress.c</file>
 	<file>crc32.c</file>
@@ -21,6 +22,7 @@
 </module>
 <module name="zlibhost" type="hoststaticlibrary" allowwarnings="true">
 	<include base="zlibhost">.</include>
+	<define name="NO_VIZ"/>
 	<file>adler32.c</file>
 	<file>compress.c</file>
 	<file>crc32.c</file>

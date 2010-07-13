@@ -6,16 +6,26 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
+#include <string.h>
+
+#include "lsasrv.h"
 #include "lsa_s.h"
 
 #include <wine/debug.h>
 
+typedef enum _LSA_DB_HANDLE_TYPE
+{
+    LsaDbIgnoreHandle,
+    LsaDbPolicyHandle,
+    LsaDbAccountHandle
+} LSA_DB_HANDLE_TYPE, *PLSA_DB_HANDLE_TYPE;
+
 typedef struct _LSA_DB_HANDLE
 {
     ULONG Signature;
-    ULONG Type;
+    LSA_DB_HANDLE_TYPE HandleType;
     LONG RefCount;
-    ACCESS_MASK AccessGranted;
+    ACCESS_MASK Access;
 } LSA_DB_HANDLE, *PLSA_DB_HANDLE;
 
 #define LSAP_DB_SIGNATURE 0x12345678
@@ -28,7 +38,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 /* FUNCTIONS ***************************************************************/
 
 static LSAPR_HANDLE
-LsapCreateDbHandle(ULONG Type)
+LsapCreateDbHandle(LSA_DB_HANDLE_TYPE HandleType,
+                   ACCESS_MASK DesiredAccess)
 {
     PLSA_DB_HANDLE DbHandle;
 
@@ -41,7 +52,8 @@ LsapCreateDbHandle(ULONG Type)
     {
         DbHandle->Signature = LSAP_DB_SIGNATURE;
         DbHandle->RefCount = 1;
-        DbHandle->Type = Type;
+        DbHandle->HandleType = HandleType;
+        DbHandle->Access = DesiredAccess;
     }
 
 //    RtlLeaveCriticalSection(&PolicyHandleTableLock);
@@ -51,7 +63,8 @@ LsapCreateDbHandle(ULONG Type)
 
 
 static BOOL
-LsapValidateDbHandle(LSAPR_HANDLE Handle)
+LsapValidateDbHandle(LSAPR_HANDLE Handle,
+                     LSA_DB_HANDLE_TYPE HandleType)
 {
     PLSA_DB_HANDLE DbHandle = (PLSA_DB_HANDLE)Handle;
     BOOL bValid = FALSE;
@@ -59,7 +72,12 @@ LsapValidateDbHandle(LSAPR_HANDLE Handle)
     _SEH2_TRY
     {
         if (DbHandle->Signature == LSAP_DB_SIGNATURE)
-            bValid = TRUE;
+        {
+            if (HandleType == LsaDbIgnoreHandle)
+                bValid = TRUE;
+            else if (DbHandle->HandleType == HandleType)
+                bValid = TRUE;
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -81,7 +99,7 @@ LsarStartRpcServer(VOID)
 
     RtlInitializeCriticalSection(&PolicyHandleTableLock);
 
-    TRACE("LsarStartRpcServer() called");
+    TRACE("LsarStartRpcServer() called\n");
 
     Status = RpcServerUseProtseqEpW(L"ncacn_np",
                                     10,
@@ -129,7 +147,7 @@ NTSTATUS LsarClose(
 
 //    RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    if (LsapValidateDbHandle(*ObjectHandle))
+    if (LsapValidateDbHandle(*ObjectHandle, LsaDbIgnoreHandle))
     {
         RtlFreeHeap(RtlGetProcessHeap(), 0, *ObjectHandle);
         *ObjectHandle = NULL;
@@ -213,7 +231,8 @@ NTSTATUS LsarOpenPolicy(
 
     RtlEnterCriticalSection(&PolicyHandleTableLock);
 
-    *PolicyHandle = LsapCreateDbHandle(0);
+    *PolicyHandle = LsapCreateDbHandle(LsaDbPolicyHandle,
+                                       DesiredAccess);
     if (*PolicyHandle == NULL)
         Status = STATUS_INSUFFICIENT_RESOURCES;
 
@@ -328,8 +347,44 @@ NTSTATUS LsarLookupSids(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
+    PLSAPR_TRANSLATED_NAME OutputNames = NULL;
+    ULONG OutputNamesLength;
+    ULONG i;
+
+    TRACE("LsarLookupSids(%p, %p, %p, %p, %d, %p)\n",
+          PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
+          LookupLevel, MappedCount);
+
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
+    TranslatedNames->Names = NULL;
+    *ReferencedDomains = NULL;
+
+    OutputNamesLength = SidEnumBuffer->Entries * sizeof(LSA_TRANSLATED_NAME);
+    OutputNames = MIDL_user_allocate(OutputNamesLength);
+    if (OutputNames == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlZeroMemory(OutputNames, OutputNamesLength);
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        OutputNames[i].Use = SidTypeWellKnownGroup;
+        OutputNames[i].DomainIndex = 0;
+        OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
+        OutputNames[i].Name.Length = UserName.Length;
+        OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
+        RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
+    }
+
+    *MappedCount = SidEnumBuffer->Entries;
+
+    TranslatedNames->Entries =  SidEnumBuffer->Entries;
+    TranslatedNames->Names = OutputNames;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -504,8 +559,23 @@ NTSTATUS LsarLookupPrivilegeValue(
     PRPC_UNICODE_STRING Name,
     PLUID Value)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeValue(%p, %wZ, %p)\n",
+          PolicyHandle, Name, Value);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    TRACE("Privilege: %wZ\n", Name);
+
+    Status = LsarpLookupPrivilegeValue((PUNICODE_STRING)Name,
+                                       Value);
+
+    return Status;
 }
 
 
@@ -515,8 +585,20 @@ NTSTATUS LsarLookupPrivilegeName(
     PLUID Value,
     PRPC_UNICODE_STRING *Name)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+
+    TRACE("LsarLookupPrivilegeName(%p, %p, %p)\n",
+          PolicyHandle, Value, Name);
+
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
+    {
+        ERR("Invalid handle\n");
+        return STATUS_INVALID_HANDLE;
+    }
+
+    Status = LsarpLookupPrivilegeName(Value, (PUNICODE_STRING*)Name);
+
+    return Status;
 }
 
 
@@ -562,7 +644,7 @@ NTSTATUS LsarEnmuerateAccountRights(
 {
     FIXME("(%p,%p,%p) stub\n", PolicyHandle, AccountSid, UserRights);
 
-    if (!LsapValidateDbHandle(PolicyHandle))
+    if (!LsapValidateDbHandle(PolicyHandle, LsaDbPolicyHandle))
         return STATUS_INVALID_HANDLE;
 
     UserRights->Entries = 0;

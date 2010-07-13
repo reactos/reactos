@@ -1044,10 +1044,11 @@ HRESULT WINAPI AtlAxAttachControl(IUnknown* pControl, HWND hWnd, IUnknown** ppUn
 
     TRACE( "%p %p %p\n", pControl, hWnd, ppUnkContainer );
 
-    *ppUnkContainer = NULL;
+    if (!pControl)
+        return E_INVALIDARG;
 
     hr = IOCS_Create( hWnd, pControl, &pUnkContainer );
-    if ( SUCCEEDED( hr ) )
+    if ( SUCCEEDED( hr ) && ppUnkContainer)
     {
         *ppUnkContainer = (IUnknown*) pUnkContainer;
     }
@@ -1150,7 +1151,7 @@ static LPDLGTEMPLATEW AX_ConvertDialogTemplate(LPCDLGTEMPLATEW src_tmpl)
 
         tmp = src;
         if (ext)
-            src += 11;
+            src += 12;
         else
             src += 9;
         PUT_BLOCK(tmp, src-tmp);
@@ -1236,7 +1237,7 @@ HWND WINAPI AtlAxCreateDialogW(HINSTANCE hInst, LPCWSTR name, HWND owner, DLGPRO
     LPDLGTEMPLATEW newptr;
     HWND res;
 
-    FIXME("(%p %s %p %p %lx) - not tested\n", hInst, debugstr_w(name), owner, dlgProc, param);
+    TRACE("(%p %s %p %p %lx)\n", hInst, debugstr_w(name), owner, dlgProc, param);
 
     hrsrc = FindResourceW( hInst, name, (LPWSTR)RT_DIALOG );
     if ( !hrsrc )

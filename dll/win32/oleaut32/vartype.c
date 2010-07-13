@@ -5368,7 +5368,7 @@ typedef union
 {
     struct
     {
-        unsigned long m : 23;
+        unsigned int m : 23;
         unsigned int exp_bias : 8;
         unsigned int sign : 1;
     } i;
@@ -5427,7 +5427,7 @@ typedef union
 {
     struct
     {
-        unsigned long m_lo : 32;    /* 52 bits of precision */
+        unsigned int m_lo : 32;     /* 52 bits of precision */
         unsigned int m_hi : 20;
         unsigned int exp_bias : 11; /* bias == 1023 */
         unsigned int sign : 1;
@@ -6932,20 +6932,21 @@ HRESULT WINAPI VarBstrCat(BSTR pbstrLeft, BSTR pbstrRight, BSTR *pbstrOut)
   if (!pbstrOut)
     return E_INVALIDARG;
 
-  lenLeft = pbstrLeft ? SysStringLen(pbstrLeft) : 0;
-  lenRight = pbstrRight ? SysStringLen(pbstrRight) : 0;
+  /* use byte length here to properly handle ansi-allocated BSTRs */
+  lenLeft = pbstrLeft ? SysStringByteLen(pbstrLeft) : 0;
+  lenRight = pbstrRight ? SysStringByteLen(pbstrRight) : 0;
 
-  *pbstrOut = SysAllocStringLen(NULL, lenLeft + lenRight);
+  *pbstrOut = SysAllocStringByteLen(NULL, lenLeft + lenRight);
   if (!*pbstrOut)
     return E_OUTOFMEMORY;
 
   (*pbstrOut)[0] = '\0';
 
   if (pbstrLeft)
-    memcpy(*pbstrOut, pbstrLeft, lenLeft * sizeof(WCHAR));
+    memcpy(*pbstrOut, pbstrLeft, lenLeft);
 
   if (pbstrRight)
-    memcpy(*pbstrOut + lenLeft, pbstrRight, lenRight * sizeof(WCHAR));
+    memcpy((CHAR*)*pbstrOut + lenLeft, pbstrRight, lenRight);
 
   TRACE("%s\n", debugstr_wn(*pbstrOut, SysStringLen(*pbstrOut)));
   return S_OK;
@@ -7426,7 +7427,8 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
     LOCALE_SABBREVDAYNAME1, LOCALE_SABBREVDAYNAME2, LOCALE_SABBREVDAYNAME3,
     LOCALE_SABBREVDAYNAME4, LOCALE_SABBREVDAYNAME5, LOCALE_SABBREVDAYNAME6,
     LOCALE_SABBREVDAYNAME7,
-    LOCALE_S1159, LOCALE_S2359
+    LOCALE_S1159, LOCALE_S2359,
+    LOCALE_SDATE
   };
   static const BYTE ParseDateMonths[] =
   {
@@ -7498,7 +7500,7 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
             dp.dwFlags[dp.dwCount] |= (DP_MONTH|DP_DATESEP);
             dp.dwCount++;
           }
-          else if (i > 39)
+          else if (i > 39 && i < 42)
           {
             if (!dp.dwCount || dp.dwParseFlags & (DP_AM|DP_PM))
               hRet = DISP_E_TYPEMISMATCH;
@@ -7545,7 +7547,16 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       if (!dp.dwCount || !strIn[1])
         hRet = DISP_E_TYPEMISMATCH;
       else
-        dp.dwFlags[dp.dwCount - 1] |= DP_TIMESEP;
+        if (tokens[42][0] == *strIn)
+        {
+          dwDateSeps++;
+          if (dwDateSeps > 2)
+            hRet = DISP_E_TYPEMISMATCH;
+          else
+            dp.dwFlags[dp.dwCount - 1] |= DP_DATESEP;
+        }
+        else
+          dp.dwFlags[dp.dwCount - 1] |= DP_TIMESEP;
     }
     else if (*strIn == '-' || *strIn == '/')
     {
@@ -7607,14 +7618,6 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       break;
 
     case 0x3: /* TTT TTTDD TTTDDD */
-      if (iDate && dp.dwCount == 3)
-        {
-          /* DDD */
-          if ((dp.dwFlags[0] & (DP_AM|DP_PM)) || (dp.dwFlags[1] & (DP_AM|DP_PM)) ||
-              (dp.dwFlags[2] & (DP_AM|DP_PM)))
-            hRet = DISP_E_TYPEMISMATCH;
-          break;
-        }
       if (dp.dwCount > 4 &&
           ((dp.dwFlags[3] & (DP_AM|DP_PM)) || (dp.dwFlags[4] & (DP_AM|DP_PM)) ||
           (dp.dwFlags[5] & (DP_AM|DP_PM))))
@@ -7707,13 +7710,6 @@ HRESULT WINAPI VarDateFromStr(OLECHAR* strIn, LCID lcid, ULONG dwFlags, DATE* pd
       dp.dwCount -= 3;
       break;
 
-    case 0x1B: /* localized DDDTTT */
-      if (!iDate)
-        {
-          hRet = DISP_E_TYPEMISMATCH;
-          break;
-        }
-      /* .. fall through .. */
     case 0x18: /* DDDTTT */
       if ((dp.dwFlags[0] & (DP_AM|DP_PM)) || (dp.dwFlags[1] & (DP_AM|DP_PM)) ||
           (dp.dwFlags[2] & (DP_AM|DP_PM)))

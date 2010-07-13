@@ -118,3 +118,29 @@ coclass ShellFolderViewOC
     [default]         interface     IFolderViewOC;
     [default, source] dispinterface DShellFolderViewEvents;
 }
+
+/*****************************************************************************
+ * IAsyncOperation interface
+ */
+[
+    uuid(3d8b0590-f691-11d2-8ea9-006097df5bd4),
+    object,
+]
+
+interface IAsyncOperation : IUnknown
+{
+    typedef [unique] IAsyncOperation *LPASYNCOPERATION;
+
+    HRESULT SetAsyncMode([in] BOOL fDoOpAsync);
+
+    HRESULT GetAsyncMode([out] BOOL *pfIsOpAsync);
+
+    HRESULT StartOperation([in, unique, optional] IBindCtx *pbcReserved);
+
+    HRESULT InOperation([out] BOOL *pfInAsyncOp);
+
+    HRESULT EndOperation(
+            [in] HRESULT hResult,
+            [in, unique] IBindCtx *pbcReserved,
+            [in] DWORD dwEffects);
+}

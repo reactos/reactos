@@ -1,5 +1,7 @@
 ## Process this file with automake to produce Makefile.in
 
+ACLOCAL_AMFLAGS = -I m4
+
 SUBDIRS = include . doc example xstc @PYTHON_SUBDIR@
 
 DIST_SUBDIRS = include . doc example python xstc
@@ -157,7 +159,7 @@ testModule_LDADD= $(LDADDS)
 
 noinst_LTLIBRARIES = testdso.la
 testdso_la_SOURCES = testdso.c
-testdso_la_LDFLAGS = -module -rpath $(libdir)
+testdso_la_LDFLAGS = -module -no-undefined -avoid-version -rpath $(libdir)
 
 # that one forces the rebuild when "make rebuild" is run on doc/
 rebuild_testapi:

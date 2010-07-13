@@ -23,49 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#include <pshpack1.h>
-
-typedef struct _ROUTING_SLOT
-{
-  UCHAR  BusNumber;
-  UCHAR  DeviceNumber;
-  UCHAR  LinkA;
-  USHORT BitmapA;
-  UCHAR  LinkB;
-  USHORT BitmapB;
-  UCHAR  LinkC;
-  USHORT BitmapC;
-  UCHAR  LinkD;
-  USHORT BitmapD;
-  UCHAR  SlotNumber;
-  UCHAR  Reserved;
-} ROUTING_SLOT, *PROUTING_SLOT;
-
-typedef struct _PCI_IRQ_ROUTING_TABLE
-{
-  ULONG Signature;
-  USHORT Version;
-  USHORT Size;
-  UCHAR  RouterBus;
-  UCHAR  RouterSlot;
-  USHORT ExclusiveIRQs;
-  ULONG CompatibleRouter;
-  ULONG MiniportData;
-  UCHAR  Reserved[11];
-  UCHAR  Checksum;
-  ROUTING_SLOT Slot[1];
-} PCI_IRQ_ROUTING_TABLE, *PPCI_IRQ_ROUTING_TABLE;
-
-#include <poppack.h>
-
-typedef struct _PCI_REGISTRY_INFO
-{
-    UCHAR MajorRevision;
-    UCHAR MinorRevision;
-    UCHAR NoBuses;
-    UCHAR HardwareMechanism;
-} PCI_REGISTRY_INFO, *PPCI_REGISTRY_INFO;
-
 static PPCI_IRQ_ROUTING_TABLE
 GetPciIrqRoutingTable(VOID)
 {
@@ -77,14 +34,14 @@ GetPciIrqRoutingTable(VOID)
   Table = (PPCI_IRQ_ROUTING_TABLE)0xF0000;
   while ((ULONG_PTR)Table < 0x100000)
     {
-      if (Table->Signature == 0x52495024)
+      if (Table->Signature == 'RIP$')
 	{
 	  DPRINTM(DPRINT_HWDETECT,
 		    "Found signature\n");
 
 	  Ptr = (PUCHAR)Table;
 	  Sum = 0;
-	  for (i = 0; i < Table->Size; i++)
+	  for (i = 0; i < Table->TableSize; i++)
 	    {
 	      Sum += Ptr[i];
 	    }
@@ -156,11 +113,11 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
   Table = GetPciIrqRoutingTable();
   if (Table != NULL)
     {
-      DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->Size);
+      DPRINTM(DPRINT_HWDETECT, "Table size: %u\n", Table->TableSize);
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_PARTIAL_RESOURCE_LIST, PartialDescriptors) +
-         2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->Size;
+         2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + Table->TableSize;
       PartialResourceList = MmHeapAlloc(Size);
       if (PartialResourceList == NULL)
       {
@@ -184,10 +141,10 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
       PartialDescriptor = &PartialResourceList->PartialDescriptors[1];
       PartialDescriptor->Type = CmResourceTypeDeviceSpecific;
       PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
-      PartialDescriptor->u.DeviceSpecificData.DataSize = Table->Size;
+      PartialDescriptor->u.DeviceSpecificData.DataSize = Table->TableSize;
 
       memcpy(&PartialResourceList->PartialDescriptors[2],
-          Table, Table->Size);
+          Table, Table->TableSize);
 
       FldrCreateComponentKey(BusKey,
                              PeripheralClass,

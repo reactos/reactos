@@ -43,14 +43,9 @@ BEGIN
 
     LTEXT           "&Öznitelikler:", -1, 5, 59, 44, 8, NOT WS_GROUP
 
-#if 0
-    COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
-                    CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP |
-                    CBS_OWNERDRAWFIXED | CBS_HASSTRINGS
-#else
     COMBOBOX        IDD_ACMFORMATCHOOSE_CMB_FORMAT, 50, 57, 170, 60,
                     CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-#endif
+
     DEFPUSHBUTTON   "Tamam", IDOK, 48, 80, 40, 14
     PUSHBUTTON      "Ýptal", IDCANCEL, 92, 80, 40, 14
     PUSHBUTTON      "&Yardým", IDD_ACMFORMATCHOOSE_BTN_HELP, 136, 80, 40, 14

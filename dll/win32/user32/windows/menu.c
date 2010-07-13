@@ -1804,7 +1804,7 @@ LRESULT WINAPI PopupMenuWndProcA(HWND Wnd, UINT Message, WPARAM wParam, LPARAM l
     case WM_CREATE:
       {
         CREATESTRUCTA *cs = (CREATESTRUCTA *) lParam;
-        SetWindowLongPtrA(Wnd, 0, (LONG) cs->lpCreateParams);
+        SetWindowLongPtrA(Wnd, 0, (LONG_PTR)cs->lpCreateParams);
         return 0;
       }
 
@@ -1877,7 +1877,7 @@ PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
       {
         CREATESTRUCTW *cs = (CREATESTRUCTW *) lParam;
-        SetWindowLongPtrW(Wnd, 0, (LONG) cs->lpCreateParams);
+        SetWindowLongPtrW(Wnd, 0, (LONG_PTR)cs->lpCreateParams);
         return 0;
       }
 
@@ -3722,7 +3722,7 @@ MenuSetItemData(
   {
     mii->fType |= MFT_OWNERDRAW;
     mii->fMask |= MIIM_DATA;
-    mii->dwItemData = (DWORD) NewItem;
+    mii->dwItemData = (DWORD_PTR) NewItem;
   }
   else if (Flags & MF_SEPARATOR)
   {
@@ -4140,7 +4140,7 @@ GetMenu(HWND hWnd)
        if (!Wnd)
                return NULL;
 
-       return (HMENU)Wnd->IDMenu;
+       return UlongToHandle(Wnd->IDMenu);
 }
 
 
