@@ -1393,6 +1393,7 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 {
     BITMAP ColorBitmap;
 	BITMAP MaskBitmap;
+	ICONINFO safeIconInfo;
 
 	if(!iconinfo)
 	{
@@ -1400,13 +1401,15 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 		return (HICON)0;
 	}
 
-	if(!GetObjectW(iconinfo->hbmMask, sizeof(BITMAP), &MaskBitmap))
+	safeIconInfo = *iconinfo;
+
+	if(!GetObjectW(safeIconInfo.hbmMask, sizeof(BITMAP), &MaskBitmap))
 	{
 		return (HICON)0;
 	}
 
 	/* Try to get color bitmap */
-	if (GetObjectW(iconinfo->hbmColor, sizeof(BITMAP), &ColorBitmap))
+	if (GetObjectW(safeIconInfo.hbmColor, sizeof(BITMAP), &ColorBitmap))
 	{
 		/* Compare size of color and mask bitmap*/
 		if (ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
@@ -1416,8 +1419,22 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 			SetLastError(ERROR_INVALID_PARAMETER);
 			return (HICON)0;
 		}
+		/* Test if they are inverted */
+		if(ColorBitmap.bmBitsPixel == 1)
+		{
+			if(MaskBitmap.bmBitsPixel != 1)
+			{
+				safeIconInfo.hbmMask = iconinfo->hbmColor;
+				safeIconInfo.hbmColor = iconinfo->hbmMask;
+			}
+			else
+			{
+				/* Wine tests say so */
+				safeIconInfo.hbmColor = NULL;
+			}
+		}
 	}
-	return (HICON)NtUserCreateCursorIconHandle(iconinfo, TRUE);
+	return (HICON)NtUserCreateCursorIconHandle(&safeIconInfo, TRUE);
 }
 
 /******************************************************************************

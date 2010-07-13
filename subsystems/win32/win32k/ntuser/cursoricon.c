@@ -528,8 +528,8 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
                 GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
                 if(CurIcon->IconInfo.hbmColor)
                 {
-                    CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
-                    GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+					CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
+					GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
                 }
             }
             if (CurIcon->IconInfo.hbmColor &&
@@ -1376,7 +1376,7 @@ UserDrawIconEx(
         hDestDC = NtGdiCreateCompatibleDC(hDc);
         if(!hDestDC)
         {
-            DPRINT1("NtGdiCreateCompatibleBitmap failed!\n");
+            DPRINT1("NtGdiCreateCompatibleDC failed!\n");
             Ret = FALSE;
             goto Cleanup ;
         }
@@ -1397,7 +1397,92 @@ UserDrawIconEx(
     iOldTxtColor = IntGdiSetTextColor(hDc, 0); //black
     iOldBkColor = IntGdiSetBkColor(hDc, 0x00FFFFFF); //white
 
-    if ((diFlags & DI_MASK) && (!bAlpha || !(diFlags & DI_IMAGE)))
+	if(bAlpha && (diFlags & DI_IMAGE))
+	{
+		BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
+        DWORD Pixel;
+        BYTE Red, Green, Blue, Alpha;
+        DWORD Count = 0;
+        INT i, j;
+        PSURFACE psurf;
+        PBYTE pBits ;
+        HBITMAP hMemBmp = NULL;
+
+        pBits = ExAllocatePoolWithTag(PagedPool,
+                                      bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                                      TAG_BITMAP);
+        if (pBits == NULL)
+        {
+            Ret = FALSE;
+            goto CleanupAlpha;
+        }
+
+        hMemBmp = BITMAP_CopyBitmap(hbmColor);
+        if(!hMemBmp)
+        {
+            DPRINT1("BITMAP_CopyBitmap failed!");
+            goto CleanupAlpha;
+        }
+
+        psurf = SURFACE_LockSurface(hMemBmp);
+        if(!psurf)
+        {
+            DPRINT1("SURFACE_LockSurface failed!\n");
+            goto CleanupAlpha;
+        }
+        /* get color bits */
+        IntGetBitmapBits(psurf,
+                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                         pBits);
+
+        /* premultiply with the alpha channel value */
+        for (i = 0; i < cyHeight; i++)
+        {
+            for (j = 0; j < cxWidth; j++)
+            {
+                Pixel = *(DWORD *)(pBits + Count);
+
+                Alpha = ((BYTE)(Pixel >> 24) & 0xff);
+
+                Red   = (((BYTE)(Pixel >>  0)) * Alpha) / 0xff;
+                Green = (((BYTE)(Pixel >>  8)) * Alpha) / 0xff;
+                Blue  = (((BYTE)(Pixel >> 16)) * Alpha) / 0xff;
+
+                *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
+
+                Count += sizeof(DWORD);
+            }
+        }
+
+        /* set mem bits */
+        IntSetBitmapBits(psurf,
+                         bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
+                         pBits);
+        SURFACE_UnlockSurface(psurf);
+
+        hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
+
+        Ret = NtGdiAlphaBlend(hDestDC,
+					          x,
+						      y,
+                              cxWidth,
+                              cyHeight,
+                              hMemDC,
+                              0,
+                              0,
+                              pIcon->Size.cx,
+                              pIcon->Size.cy,
+                              pixelblend,
+                              NULL);
+        NtGdiSelectBitmap(hMemDC, hTmpBmp);
+    CleanupAlpha:
+        if(pBits) ExFreePoolWithTag(pBits, TAG_BITMAP);
+        if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
+		if(Ret) goto done;
+    }
+
+
+    if (diFlags & DI_MASK)
     {
         hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmMask);
         NtGdiStretchBlt(hDestDC,
@@ -1417,89 +1502,7 @@ UserDrawIconEx(
 
     if(diFlags & DI_IMAGE)
     {
-        if (bAlpha)
-        {
-            BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-            DWORD Pixel;
-            BYTE Red, Green, Blue, Alpha;
-            DWORD Count = 0;
-            INT i, j;
-            PSURFACE psurf;
-            PBYTE pBits ;
-            HBITMAP hMemBmp = NULL;
-
-            pBits = ExAllocatePoolWithTag(PagedPool,
-                                          bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                                          TAG_BITMAP);
-            if (pBits == NULL)
-            {
-                Ret = FALSE;
-                goto CleanupAlpha;
-            }
-
-            hMemBmp = BITMAP_CopyBitmap(hbmColor);
-            if(!hMemBmp)
-            {
-                DPRINT1("BITMAP_CopyBitmap failed!");
-                goto CleanupAlpha;
-            }
-
-            psurf = SURFACE_LockSurface(hMemBmp);
-            if(!psurf)
-            {
-                DPRINT1("SURFACE_LockSurface failed!\n");
-                goto CleanupAlpha;
-            }
-            /* get color bits */
-            IntGetBitmapBits(psurf,
-                             bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                             pBits);
-
-            /* premultiply with the alpha channel value */
-            for (i = 0; i < cyHeight; i++)
-            {
-                for (j = 0; j < cxWidth; j++)
-                {
-                    Pixel = *(DWORD *)(pBits + Count);
-
-                    Alpha = ((BYTE)(Pixel >> 24) & 0xff);
-
-                    Red   = (((BYTE)(Pixel >>  0)) * Alpha) / 0xff;
-                    Green = (((BYTE)(Pixel >>  8)) * Alpha) / 0xff;
-                    Blue  = (((BYTE)(Pixel >> 16)) * Alpha) / 0xff;
-
-                    *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
-
-                    Count += sizeof(DWORD);
-                }
-            }
-
-            /* set mem bits */
-            IntSetBitmapBits(psurf,
-                             bmpColor.bmWidthBytes * abs(bmpColor.bmHeight),
-                             pBits);
-            SURFACE_UnlockSurface(psurf);
-
-            hTmpBmp = NtGdiSelectBitmap(hMemDC, hMemBmp);
-
-            NtGdiAlphaBlend(hDestDC,
-                            x,
-                            y,
-                            cxWidth,
-                            cyHeight,
-                            hMemDC,
-                            0,
-                            0,
-                            pIcon->Size.cx,
-                            pIcon->Size.cy,
-                            pixelblend,
-                            NULL);
-            NtGdiSelectBitmap(hMemDC, hTmpBmp);
-        CleanupAlpha:
-            if(pBits) ExFreePoolWithTag(pBits, TAG_BITMAP);
-            if(hMemBmp) NtGdiDeleteObjectApp(hMemBmp);
-        }
-        else if (hbmColor)
+		if (hbmColor)
         {
             DWORD rop = (diFlags & DI_MASK) ? SRCINVERT : SRCCOPY ;
             hTmpBmp = NtGdiSelectBitmap(hMemDC, hbmColor);
@@ -1538,6 +1541,7 @@ UserDrawIconEx(
         }
     }
 
+done:
     if(hDestDC != hDc)
     {
         NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, cyHeight, hDestDC, 0, 0, SRCCOPY, 0, 0);
