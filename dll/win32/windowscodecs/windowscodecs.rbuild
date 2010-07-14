@@ -1,9 +1,12 @@
-<module name="windowscodecs" type="win32dll" baseaddress="${BASEADDRESS_WINDOWSCODECS}" installbase="system32" installname="windowscodecs.dll" allowwarnings="true">
+<module name="windowscodecs" type="win32dll" baseaddress="${BASEADDRESS_WINDOWSCODECS}" installbase="system32" installname="windowscodecs.dll" allowwarnings="true" crt="msvcrt">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="windowscodecs.spec" />
 	<include base="windowscodecs">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="ReactOS">include/reactos/libs/libjpeg</include>
+	<include base="ReactOS">include/reactos/libs/zlib</include>
+	<include base="ReactOS">include/reactos/libs/libpng</include>
+	<include base="ReactOS">include/reactos/libs/libtiff</include>
 	<define name="__WINESRC__" />
 
 	<redefine name="_WIN32_WINNT">0x600</redefine>

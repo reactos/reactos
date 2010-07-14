@@ -146,6 +146,7 @@ LocateProvider(LPWSAPROTOCOL_INFOW lpProtocolInfo)
                 (lpProtocolInfo->iSocketType    == SOCK_RAW)))
             {
                 //LeaveCriticalSection(&CatalogLock);
+                lpProtocolInfo->dwCatalogEntryId = Provider->ProtocolInfo.dwCatalogEntryId;
                 WS_DbgPrint(MID_TRACE, ("Returning provider at (0x%X).\n", Provider));
                 return Provider;
             }

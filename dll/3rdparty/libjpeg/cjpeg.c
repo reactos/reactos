@@ -2,6 +2,7 @@
  * cjpeg.c
  *
  * Copyright (C) 1991-1998, Thomas G. Lane.
+ * Modified 2003-2008 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -149,13 +150,16 @@ usage (void)
 #endif
 
   fprintf(stderr, "Switches (names may be abbreviated):\n");
-  fprintf(stderr, "  -quality N     Compression quality (0..100; 5-95 is useful range)\n");
+  fprintf(stderr, "  -quality N[,...]   Compression quality (0..100; 5-95 is useful range)\n");
   fprintf(stderr, "  -grayscale     Create monochrome JPEG file\n");
 #ifdef ENTROPY_OPT_SUPPORTED
   fprintf(stderr, "  -optimize      Optimize Huffman table (smaller file, but slow compression)\n");
 #endif
 #ifdef C_PROGRESSIVE_SUPPORTED
   fprintf(stderr, "  -progressive   Create progressive JPEG file\n");
+#endif
+#ifdef DCT_SCALING_SUPPORTED
+  fprintf(stderr, "  -scale M/N     Scale image by fraction M/N, eg, 1/2\n");
 #endif
 #ifdef TARGA_SUPPORTED
   fprintf(stderr, "  -targa         Input file is Targa format (usually not needed)\n");
@@ -173,6 +177,7 @@ usage (void)
   fprintf(stderr, "  -dct float     Use floating-point DCT method%s\n",
 	  (JDCT_DEFAULT == JDCT_FLOAT ? " (default)" : ""));
 #endif
+  fprintf(stderr, "  -nosmooth      Don't use high-quality downsampling\n");
   fprintf(stderr, "  -restart N     Set restart interval in rows, or in blocks with B\n");
 #ifdef INPUT_SMOOTHING_SUPPORTED
   fprintf(stderr, "  -smooth N      Smooth dithered input (N=1..100 is strength)\n");
@@ -209,21 +214,16 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 {
   int argn;
   char * arg;
-  int quality;			/* -quality parameter */
-  int q_scale_factor;		/* scaling percentage for -qtables */
   boolean force_baseline;
   boolean simple_progressive;
+  char * qualityarg = NULL;	/* saves -quality parm if any */
   char * qtablefile = NULL;	/* saves -qtables filename if any */
   char * qslotsarg = NULL;	/* saves -qslots parm if any */
   char * samplearg = NULL;	/* saves -sample parm if any */
   char * scansarg = NULL;	/* saves -scans parm if any */
 
   /* Set up default JPEG parameters. */
-  /* Note that default -quality level need not, and does not,
-   * match the default scaling for an explicit -qtables argument.
-   */
-  quality = 75;			/* default -quality value */
-  q_scale_factor = 100;		/* default to no scaling for -qtables */
+
   force_baseline = FALSE;	/* by default, allow 16-bit quantizers */
   simple_progressive = FALSE;
   is_targa = FALSE;
@@ -300,6 +300,10 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 	lval *= 1000L;
       cinfo->mem->max_memory_to_use = lval * 1000L;
 
+    } else if (keymatch(arg, "nosmooth", 3)) {
+      /* Suppress fancy downsampling */
+      cinfo->do_fancy_downsampling = FALSE;
+
     } else if (keymatch(arg, "optimize", 1) || keymatch(arg, "optimise", 1)) {
       /* Enable entropy parm optimization. */
 #ifdef ENTROPY_OPT_SUPPORTED
@@ -328,13 +332,10 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 #endif
 
     } else if (keymatch(arg, "quality", 1)) {
-      /* Quality factor (quantization table scaling factor). */
+      /* Quality ratings (quantization table scaling factors). */
       if (++argn >= argc)	/* advance to next argument */
 	usage();
-      if (sscanf(argv[argn], "%d", &quality) != 1)
-	usage();
-      /* Change scale factor in case -qtables is present. */
-      q_scale_factor = jpeg_quality_scaling(quality);
+      qualityarg = argv[argn];
 
     } else if (keymatch(arg, "qslots", 2)) {
       /* Quantization table slot numbers. */
@@ -382,7 +383,15 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
        * default sampling factors.
        */
 
-    } else if (keymatch(arg, "scans", 2)) {
+    } else if (keymatch(arg, "scale", 4)) {
+      /* Scale the image by a fraction M/N. */
+      if (++argn >= argc)	/* advance to next argument */
+	usage();
+      if (sscanf(argv[argn], "%d/%d",
+		 &cinfo->scale_num, &cinfo->scale_denom) != 2)
+	usage();
+
+    } else if (keymatch(arg, "scans", 4)) {
       /* Set scan script. */
 #ifdef C_MULTISCAN_FILES_SUPPORTED
       if (++argn >= argc)	/* advance to next argument */
@@ -422,11 +431,12 @@ parse_switches (j_compress_ptr cinfo, int argc, char **argv,
 
     /* Set quantization tables for selected quality. */
     /* Some or all may be overridden if -qtables is present. */
-    jpeg_set_quality(cinfo, quality, force_baseline);
+    if (qualityarg != NULL)	/* process -quality if it was present */
+      if (! set_quality_ratings(cinfo, qualityarg, force_baseline))
+	usage();
 
     if (qtablefile != NULL)	/* process -qtables if it was present */
-      if (! read_quant_tables(cinfo, qtablefile,
-			      q_scale_factor, force_baseline))
+      if (! read_quant_tables(cinfo, qtablefile, force_baseline))
 	usage();
 
     if (qslotsarg != NULL)	/* process -qslots if it was present */

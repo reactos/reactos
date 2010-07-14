@@ -759,7 +759,6 @@
 ; @ stdcall CharNextExW(long wstr long)
 ; @ stdcall CharPrevExW(long wstr wstr long)
 ; @ stub ClientThreadConnect
-@ stdcall CopyCursor(long) ; In msdn it is written, that function is available, but in win 2k3 r2 it is absent
 ; @ stub EnumDisplayDeviceModesA ;(str long ptr long)
 ; @ stub EnumDisplayDeviceModesW ;(wstr long ptr long)
 ; @ stdcall GetMenuIndex(ptr ptr)
