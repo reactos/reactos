@@ -3165,13 +3165,6 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved);
 
-/* Use ONEPARAM_ROUTINE_CREATEEMPTYCURSOROBJECT (0x21) ? */
-HANDLE
-NTAPI
-NtUserCreateCursorIconHandle(
-  PICONINFO IconInfo,
-  BOOL Indirect);
-
 
 /* Should be done in usermode and use NtUserGetCPD. */
 ULONG_PTR
