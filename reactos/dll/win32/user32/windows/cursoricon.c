@@ -76,8 +76,8 @@ static
 HICON
 CreateCursorIconHandle( PICONINFO IconInfo )
 {
-	HICON hIcon = (HICON)NtUserCallOneParam(0, //FIXME ?
-									 ONEPARAM_ROUTINE_CREATECURICONHANDLE);
+	HICON hIcon = (HICON)NtUserCallOneParam(0,
+									 ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
 	if(!hIcon)
 		return NULL;
 

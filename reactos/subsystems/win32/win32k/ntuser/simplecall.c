@@ -192,7 +192,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
          RETURN( (DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param));
 
-      case ONEPARAM_ROUTINE_CREATECURICONHANDLE:
+      case ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT:
          {
             PCURICON_OBJECT CurIcon;
 			DWORD_PTR Result ;
