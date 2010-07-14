@@ -485,8 +485,8 @@ static BOOL create_icon_bitmaps( const BITMAPINFO *bmi, int width, int height,
     else
     {
         if (!(*mask = CreateBitmap( width, height, 1, 1, NULL ))) goto done;
-        if (!(*color = CreateBitmap( width, height, GetDeviceCaps( screen_dc, PLANES ),
-                                     GetDeviceCaps( screen_dc, BITSPIXEL ), NULL )))
+        if (!(*color = CreateBitmap( width, height, bmi->bmiHeader.biPlanes,
+                                     bmi->bmiHeader.biBitCount, NULL )))
         {
             DeleteObject( *mask );
             goto done;
@@ -1475,10 +1475,29 @@ HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
         height = bmpXor.bmHeight;
         if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
         {
-            color = CreateCompatibleBitmap( screen_dc, width, height );
+            color = CreateBitmap( width, height, bmpXor.bmPlanes, bmpXor.bmBitsPixel, NULL );
+			if(!color)
+			{
+				ERR("Unable to create color bitmap!\n");
+				return NULL;
+			}
             mask = CreateBitmap( width, height, 1, 1, NULL );
+			if(!mask)
+			{
+				ERR("Unable to create mask bitmap!\n");
+				DeleteObject(color);
+				return NULL;
+			}
         }
-        else mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+        else 
+		{
+			mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+			if(!mask)
+			{
+				ERR("Unable to create mask bitmap!\n");
+				return NULL;
+			}
+		}
     }
     else
     {
