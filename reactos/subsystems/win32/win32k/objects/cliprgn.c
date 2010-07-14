@@ -26,7 +26,7 @@ int FASTCALL
 CLIPPING_UpdateGCRegion(DC* Dc)
 {
    PROSRGNDATA CombinedRegion;
-   HRGN hRgnVis = NULL;
+   HRGN hRgnVis = Dc->prgnVis->BaseObject.hHmgr;
 
    /* Experiment with API region based on wine.. */
    if (Dc->rosdc.hClipRgn && Dc->dclevel.prgnMeta)
@@ -56,7 +56,7 @@ CLIPPING_UpdateGCRegion(DC* Dc)
       Dc->rosdc.hGCClipRgn = IntSysCreateRectRgn(0, 0, 0, 0);
 
    if (Dc->rosdc.hClipRgn == NULL)
-      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, ((PROSRGNDATA)Dc->prgnVis)->BaseObject.hHmgr, 0, RGN_COPY);
+      NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, hRgnVis, 0, RGN_COPY);
    else
       NtGdiCombineRgn(Dc->rosdc.hGCClipRgn, Dc->rosdc.hClipRgn, hRgnVis, RGN_AND);
 
