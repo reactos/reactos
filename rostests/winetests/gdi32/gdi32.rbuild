@@ -12,7 +12,9 @@
 	<file>clipping.c</file>
 	<file>dc.c</file>
 	<file>gdiobj.c</file>
-	<file>generated.c</file>
+	<ifnot property="ARCH" value="amd64">
+		<file>generated.c</file>
+	</ifnot>
 	<file>icm.c</file>
 	<file>font.c</file>
 	<file>mapping.c</file>
