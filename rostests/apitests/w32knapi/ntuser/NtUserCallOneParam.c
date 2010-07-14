@@ -26,6 +26,26 @@ Test_OneParamRoutine_WindowFromDC(PTESTINFO pti) /* 0x1f */
 }
 
 INT
+Test_OneParamRoutine_CreateEmptyCurObject(PTESTINFO pti) /* XP/2k3 : 0x21, vista 0x25 */
+{
+	HICON hIcon ;
+
+	/* Test 0 */
+	hIcon = (HICON) NtUserCallOneParam(0, _ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+	TEST(hIcon != NULL);
+
+	TEST(NtUserDestroyCursor(hIcon, 0) == TRUE);
+
+	/* Test Garbage */
+	hIcon = (HICON) NtUserCallOneParam(0xdeadbeef, _ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT);
+	TEST(hIcon != NULL);
+
+	TEST(NtUserDestroyCursor(hIcon, 0xbaadf00d) == TRUE);
+
+	return APISTATUS_NORMAL;
+}
+
+INT
 Test_OneParamRoutine_MapDesktopObject(PTESTINFO pti) /* 0x30 */
 {
 	DWORD pObject;
@@ -66,6 +86,7 @@ Test_NtUserCallOneParam(PTESTINFO pti)
 {
 	Test_OneParamRoutine_BeginDeferWindowPos(pti); /* 0x1e */
 	Test_OneParamRoutine_WindowFromDC(pti); /* 0x1f */
+	Test_OneParamRoutine_CreateEmptyCurObject(pti); /* XP/2k3 : 0x21, vista 0x25 */
 	Test_OneParamRoutine_MapDesktopObject(pti); /* 0x30 */
 
 	Test_OneParamRoutine_SwapMouseButtons(pti); /* 0x42 */

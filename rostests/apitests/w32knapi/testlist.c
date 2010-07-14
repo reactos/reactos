@@ -50,6 +50,7 @@
 #include "ntuser/NtUserEnumDisplaySettings.c"
 #include "ntuser/NtUserFindExistingCursorIcon.c"
 #include "ntuser/NtUserGetClassInfo.c"
+#include "ntuser/NtUserGetIconInfo.c"
 #include "ntuser/NtUserGetTitleBarInfo.c"
 #include "ntuser/NtUserProcessConnect.c"
 #include "ntuser/NtUserRedrawWindow.c"
@@ -114,6 +115,7 @@ TESTENTRY TestList[] =
 	{ L"NtUserEnumDisplaySettings", TEST_NtUserEnumDisplaySettings },
 	{ L"NtUserFindExistingCursorIcon", Test_NtUserFindExistingCursoricon },
 	{ L"NtUserGetClassInfo", Test_NtUserGetClassInfo },
+	{ L"NtUserGetIconInfo", Test_NtUserGetIconInfo },
 	{ L"NtUserGetTitleBarInfo", Test_NtUserGetTitleBarInfo },
 	{ L"NtUserProcessConnect", Test_NtUserProcessConnect },
 	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow },
