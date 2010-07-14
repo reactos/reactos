@@ -516,6 +516,9 @@ thandle_t
 TIFFSetClientdata(TIFF* tif, thandle_t newvalue)
 {
 	thandle_t m = tif->tif_clientdata;
+#ifdef USE_WIN32_FILEIO
+	newvalue = (thandle_t) _get_osfhandle(newvalue);
+#endif /* USE_WIN32_FILEIO */
 	tif->tif_clientdata = newvalue;
 	return m;
 }

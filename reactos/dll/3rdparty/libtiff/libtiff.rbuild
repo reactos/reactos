@@ -3,8 +3,9 @@
 <module name="libtiff" type="win32dll" entrypoint="0" installbase="system32" installname="libtiff.dll" allowwarnings="true" crt="msvcrt">
 	<define name="WIN32" />
 	<define name="NDEBUG" />
-	<define name="_WINDOWS" />
-	<define name="_USRDLL" />
+	<define name="BUILD_LIBTIFF_DLL" />
+	<define name="DLL_EXPORT" />
+	<define name="USE_WIN32_FILEIO" />
 	<include base="libtiff">.</include>
 	<include base="ReactOS">include/reactos/libs/zlib</include>
 	<include base="ReactOS">include/reactos/libs/libtiff</include>
