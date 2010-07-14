@@ -13,7 +13,6 @@
 	<file>dc.c</file>
 	<file>gdiobj.c</file>
 	<file>generated.c</file>
-	</ifnot>
 	<file>icm.c</file>
 	<file>font.c</file>
 	<file>mapping.c</file>
