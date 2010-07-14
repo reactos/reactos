@@ -491,89 +491,6 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PPROCESSINFO Win32Process)
 
 }
 
-/*
- * @implemented
- */
-HANDLE
-APIENTRY
-NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
-{
-    PCURICON_OBJECT CurIcon;
-    PSURFACE psurfBmp;
-    NTSTATUS Status;
-    HANDLE Ret;
-    DECLARE_RETURN(HANDLE);
-
-    DPRINT("Enter NtUserCreateCursorIconHandle\n");
-    UserEnterExclusive();
-
-    if (!(CurIcon = IntCreateCurIconHandle()))
-    {
-        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-        RETURN((HANDLE)0);
-    }
-
-    Ret = CurIcon->Self;
-
-    if (IconInfo)
-    {
-        Status = MmCopyFromCaller(&CurIcon->IconInfo, IconInfo, sizeof(ICONINFO));
-        if (NT_SUCCESS(Status))
-        {
-            /* Copy bitmaps and size info */
-            if (Indirect)
-            {
-                /* Convert bitmaps to unowned objects, so that they can be shared between processes */
-                CurIcon->IconInfo.hbmMask = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmMask);
-                GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
-                if(CurIcon->IconInfo.hbmColor)
-                {
-					CurIcon->IconInfo.hbmColor = BITMAP_CopyBitmap(CurIcon->IconInfo.hbmColor);
-					GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
-                }
-            }
-            if (CurIcon->IconInfo.hbmColor &&
-                    (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmColor)))
-            {
-                CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy;
-                SURFACE_UnlockSurface(psurfBmp);
-                GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
-            }
-            if (CurIcon->IconInfo.hbmMask &&
-                    (psurfBmp = SURFACE_LockSurface(CurIcon->IconInfo.hbmMask)))
-            {
-                if(!CurIcon->IconInfo.hbmColor)
-                {
-                    CurIcon->Size.cx = psurfBmp->SurfObj.sizlBitmap.cx;
-                    CurIcon->Size.cy = psurfBmp->SurfObj.sizlBitmap.cy/2;
-                }
-                SURFACE_UnlockSurface(psurfBmp);
-                GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
-            }
-
-            /* Calculate icon hotspot */
-            if (CurIcon->IconInfo.fIcon == TRUE)
-            {
-                CurIcon->IconInfo.xHotspot = CurIcon->Size.cx >> 1;
-                CurIcon->IconInfo.yHotspot = CurIcon->Size.cy >> 1;
-            }
-        }
-        else
-        {
-            SetLastNtError(Status);
-            /* FIXME - Don't exit here */
-        }
-    }
-
-    UserDereferenceObject(CurIcon);
-    RETURN(Ret);
-
-CLEANUP:
-    DPRINT("Leave NtUserCreateCursorIconHandle, ret=%i\n",_ret_);
-    UserLeave();
-    END_CLEANUP;
-}
 
 /*
  * @implemented
@@ -1057,11 +974,13 @@ NtUserSetCursorContents(
     }
 
     /* Delete old bitmaps */
-    if (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor)
+    if ((CurIcon->IconInfo.hbmColor)
+			&& (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor))
     {
         GreDeleteObject(CurIcon->IconInfo.hbmColor);
     }
-    if (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
+    if ((CurIcon->IconInfo.hbmMask)
+			&& CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
     {
         GreDeleteObject(CurIcon->IconInfo.hbmMask);
     }
@@ -1253,6 +1172,15 @@ NtUserSetCursorIconData(
     }
 
 done:
+	if(Ret)
+	{
+		/* This icon is shared now */
+		GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+		if(CurIcon->IconInfo.hbmColor)
+		{
+			GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+		}
+	}
     UserDereferenceObject(CurIcon);
     RETURN(Ret);
 
