@@ -8,6 +8,11 @@ extern "C" {
 #pragma warning(push)
 #pragma warning(disable:4201)
 #endif
+
+#if !defined(_WIN64)
+#include <pshpack1.h>
+#endif
+
 #define WINSHELLAPI DECLSPEC_IMPORT
 #define ABE_LEFT	0
 #define ABE_TOP	1
@@ -160,7 +165,7 @@ typedef struct _SHCREATEPROCESSINFOW
 
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;
-#include <pshpack1.h>
+
 typedef struct _AppBarData {
 	DWORD	cbSize;
 	HWND	hWnd;
@@ -330,7 +335,6 @@ typedef struct _SHNAMEMAPPINGW {
 	int	cchOldPath;
 	int	cchNewPath;
 } SHNAMEMAPPINGW, *LPSHNAMEMAPPINGW;
-#include <poppack.h>
 
 #define SHERB_NOCONFIRMATION 0x1
 #define SHERB_NOPROGRESSUI   0x2
@@ -440,6 +444,11 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
 #endif
+
+#if !defined(_WIN64)
+#include <pshpack1.h>
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
