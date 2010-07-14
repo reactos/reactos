@@ -67,6 +67,25 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION IconCrst = { &critsect_debug, -1, 0, 0, 0, 0 };
 
+/***********************************************************************
+ *				CreateCursorIconHandle
+ *
+ * Creates a handle with everything in there
+ */
+static
+HICON
+CreateCursorIconHandle( PICONINFO IconInfo )
+{
+	HICON hIcon = (HICON)NtUserCallOneParam(0, //FIXME ?
+									 ONEPARAM_ROUTINE_CREATECURICONHANDLE);
+	if(!hIcon)
+		return NULL;
+
+	NtUserSetCursorContents(hIcon, IconInfo);
+	return hIcon;
+}
+
+
 
 /***********************************************************************
  *             map_fileW
@@ -563,7 +582,7 @@ static HICON CURSORICON_CreateIconFromBMI( BITMAPINFO *bmi,
 	IconInfo.hbmColor = color;
 	IconInfo.hbmMask = mask;
 
-	return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
+	return CreateCursorIconHandle(&IconInfo);
 }
 
 
@@ -1386,55 +1405,120 @@ BOOL WINAPI GetIconInfo(HICON hIcon, PICONINFO iconinfo)
     return NtUserGetIconInfo(hIcon, iconinfo, 0, 0, 0, 0);
 }
 
+/* copy an icon bitmap, even when it can't be selected into a DC */
+/* helper for CreateIconIndirect */
+static void stretch_blt_icon( HDC hdc_dst, int dst_x, int dst_y, int dst_width, int dst_height,
+                              HBITMAP src, int width, int height )
+{
+    HDC hdc = CreateCompatibleDC( 0 );
+
+    if (!SelectObject( hdc, src ))  /* do it the hard way */
+    {
+        BITMAPINFO *info;
+        void *bits;
+
+        if (!(info = HeapAlloc( GetProcessHeap(), 0, FIELD_OFFSET( BITMAPINFO, bmiColors[256] )))) return;
+        info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        info->bmiHeader.biWidth = width;
+        info->bmiHeader.biHeight = height;
+        info->bmiHeader.biPlanes = GetDeviceCaps( hdc_dst, PLANES );
+        info->bmiHeader.biBitCount = GetDeviceCaps( hdc_dst, BITSPIXEL );
+        info->bmiHeader.biCompression = BI_RGB;
+        info->bmiHeader.biSizeImage = height * get_dib_width_bytes( width, info->bmiHeader.biBitCount );
+        info->bmiHeader.biXPelsPerMeter = 0;
+        info->bmiHeader.biYPelsPerMeter = 0;
+        info->bmiHeader.biClrUsed = 0;
+        info->bmiHeader.biClrImportant = 0;
+        bits = HeapAlloc( GetProcessHeap(), 0, info->bmiHeader.biSizeImage );
+        if (bits && GetDIBits( hdc, src, 0, height, bits, info, DIB_RGB_COLORS ))
+            StretchDIBits( hdc_dst, dst_x, dst_y, dst_width, dst_height,
+                           0, 0, width, height, bits, info, DIB_RGB_COLORS, SRCCOPY );
+
+        HeapFree( GetProcessHeap(), 0, bits );
+        HeapFree( GetProcessHeap(), 0, info );
+    }
+    else StretchBlt( hdc_dst, dst_x, dst_y, dst_width, dst_height, hdc, 0, 0, width, height, SRCCOPY );
+
+    DeleteDC( hdc );
+}
+
 /**********************************************************************
  *		CreateIconIndirect (USER32.@)
  */
 HICON WINAPI CreateIconIndirect(PICONINFO iconinfo)
 {
-    BITMAP ColorBitmap;
-	BITMAP MaskBitmap;
-	ICONINFO safeIconInfo;
+    BITMAP bmpXor, bmpAnd;
+    HBITMAP color = 0, mask;
+    int width, height;
+    HDC hdc;
+	ICONINFO iinfo;
 
-	if(!iconinfo)
-	{
-		SetLastError(ERROR_INVALID_PARAMETER);
-		return (HICON)0;
-	}
+    TRACE("color %p, mask %p, hotspot %ux%u, fIcon %d\n",
+           iconinfo->hbmColor, iconinfo->hbmMask,
+           iconinfo->xHotspot, iconinfo->yHotspot, iconinfo->fIcon);
 
-	safeIconInfo = *iconinfo;
+    if (!iconinfo->hbmMask) return 0;
 
-	if(!GetObjectW(safeIconInfo.hbmMask, sizeof(BITMAP), &MaskBitmap))
-	{
-		return (HICON)0;
-	}
+    GetObjectW( iconinfo->hbmMask, sizeof(bmpAnd), &bmpAnd );
+    TRACE("mask: width %d, height %d, width bytes %d, planes %u, bpp %u\n",
+           bmpAnd.bmWidth, bmpAnd.bmHeight, bmpAnd.bmWidthBytes,
+           bmpAnd.bmPlanes, bmpAnd.bmBitsPixel);
 
-	/* Try to get color bitmap */
-	if (GetObjectW(safeIconInfo.hbmColor, sizeof(BITMAP), &ColorBitmap))
-	{
-		/* Compare size of color and mask bitmap*/
-		if (ColorBitmap.bmWidth != MaskBitmap.bmWidth ||
-		    ColorBitmap.bmHeight != MaskBitmap.bmHeight)
-		{
-			ERR("Color and mask size are different!");
-			SetLastError(ERROR_INVALID_PARAMETER);
-			return (HICON)0;
-		}
-		/* Test if they are inverted */
-		if(ColorBitmap.bmBitsPixel == 1)
-		{
-			if(MaskBitmap.bmBitsPixel != 1)
-			{
-				safeIconInfo.hbmMask = iconinfo->hbmColor;
-				safeIconInfo.hbmColor = iconinfo->hbmMask;
-			}
-			else
-			{
-				/* Wine tests say so */
-				safeIconInfo.hbmColor = NULL;
-			}
-		}
-	}
-	return (HICON)NtUserCreateCursorIconHandle(&safeIconInfo, TRUE);
+    if (iconinfo->hbmColor)
+    {
+        GetObjectW( iconinfo->hbmColor, sizeof(bmpXor), &bmpXor );
+        TRACE("color: width %d, height %d, width bytes %d, planes %u, bpp %u\n",
+               bmpXor.bmWidth, bmpXor.bmHeight, bmpXor.bmWidthBytes,
+               bmpXor.bmPlanes, bmpXor.bmBitsPixel);
+
+        width = bmpXor.bmWidth;
+        height = bmpXor.bmHeight;
+        if (bmpXor.bmPlanes * bmpXor.bmBitsPixel != 1)
+        {
+            color = CreateCompatibleBitmap( screen_dc, width, height );
+            mask = CreateBitmap( width, height, 1, 1, NULL );
+        }
+        else mask = CreateBitmap( width, height * 2, 1, 1, NULL );
+    }
+    else
+    {
+        width = bmpAnd.bmWidth;
+        height = bmpAnd.bmHeight;
+        mask = CreateBitmap( width, height, 1, 1, NULL );
+    }
+
+    hdc = CreateCompatibleDC( 0 );
+    SelectObject( hdc, mask );
+    stretch_blt_icon( hdc, 0, 0, width, height, iconinfo->hbmMask, bmpAnd.bmWidth, bmpAnd.bmHeight );
+
+    if (color)
+    {
+        SelectObject( hdc, color );
+        stretch_blt_icon( hdc, 0, 0, width, height, iconinfo->hbmColor, width, height );
+    }
+    else if (iconinfo->hbmColor)
+    {
+        stretch_blt_icon( hdc, 0, height, width, height, iconinfo->hbmColor, width, height );
+    }
+    else height /= 2;
+
+    DeleteDC( hdc );
+
+    iinfo.hbmColor = color ;
+    iinfo.hbmMask = mask ;
+    iinfo.fIcon = iconinfo->fIcon;
+    if (iinfo.fIcon)
+    {
+        iinfo.xHotspot = width / 2;
+        iinfo.yHotspot = height / 2;
+    }
+    else
+    {
+        iinfo.xHotspot = iconinfo->xHotspot;
+        iinfo.yHotspot = iconinfo->yHotspot;
+    }
+
+	return CreateCursorIconHandle(&iinfo);
 }
 
 /******************************************************************************
@@ -2045,23 +2129,6 @@ GetCursorPos(LPPOINT lpPoint)
     res = NtUserGetCursorPos(lpPoint);
 
     return res;
-}
-
-#undef CopyCursor
-/*
- * @implemented
- */
-HCURSOR
-WINAPI
-CopyCursor(HCURSOR pcur)
-{
-    ICONINFO IconInfo;
-
-    if(GetIconInfo((HANDLE)pcur, &IconInfo))
-    {
-        return (HCURSOR)NtUserCreateCursorIconHandle(&IconInfo, FALSE);
-    }
-    return (HCURSOR)0;
 }
 
 /* INTERNAL ******************************************************************/

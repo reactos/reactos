@@ -195,6 +195,7 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_CREATECURICONHANDLE:
          {
             PCURICON_OBJECT CurIcon;
+			DWORD_PTR Result ;
 
             if (!(CurIcon = IntCreateCurIconHandle()))
             {
@@ -202,7 +203,9 @@ NtUserCallOneParam(
                RETURN(0);
             }
 
-            RETURN((DWORD_PTR)CurIcon->Self);
+            Result = (DWORD_PTR)CurIcon->Self;
+			UserDereferenceObject(CurIcon);
+			RETURN(Result);
          }
 
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:

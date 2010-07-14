@@ -1030,11 +1030,13 @@ NtUserSetCursorContents(
     }
 
     /* Delete old bitmaps */
-    if (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor)
+    if ((CurIcon->IconInfo.hbmColor)
+		&& (CurIcon->IconInfo.hbmColor != IconInfo.hbmColor))
     {
         GreDeleteObject(CurIcon->IconInfo.hbmColor);
     }
-    if (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask)
+    if ((CurIcon->IconInfo.hbmMask)
+		&& (CurIcon->IconInfo.hbmMask != IconInfo.hbmMask))
     {
         GreDeleteObject(CurIcon->IconInfo.hbmMask);
     }
@@ -1226,6 +1228,15 @@ NtUserSetCursorIconData(
     }
 
 done:
+	if(Ret)
+	{
+		/* This icon is shared now */
+		GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmMask, NULL);
+		if(CurIcon->IconInfo.hbmColor)
+		{
+			GDIOBJ_SetOwnership(CurIcon->IconInfo.hbmColor, NULL);
+		}
+	}
     UserDereferenceObject(CurIcon);
     RETURN(Ret);
 
