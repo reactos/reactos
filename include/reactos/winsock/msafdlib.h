@@ -169,12 +169,15 @@ typedef struct _WINSOCK_TEB_DATA
 typedef INT
 (WINAPI *PICF_CONNECT)(PVOID IcfData);
 
+typedef INT
+(WINAPI *PICF_DISCONNECT)(PVOID IcfData);
+
 typedef struct _SOCK_ICF_DATA
 {
     HANDLE IcfHandle;
     PVOID IcfOpenDynamicFwPort;
     PICF_CONNECT IcfConnect;
-    PVOID IcfDisconnect;
+    PICF_DISCONNECT IcfDisconnect;
     HINSTANCE DllHandle;
 } SOCK_ICF_DATA, *PSOCK_ICF_DATA;
 
