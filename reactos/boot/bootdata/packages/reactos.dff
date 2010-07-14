@@ -44,9 +44,8 @@ base\applications\cmdutils\reg\reg.exe                  1
 base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
 base\applications\dxdiag\dxdiag.exe                     1
+base\applications\extrac32\extrac32.exe                 1
 base\applications\fontview\fontview.exe                 1
-base\applications\mscutils\devmgmt\devmgmt.exe          1
-base\applications\mscutils\eventvwr\eventvwr.exe        1
 base\applications\games\solitaire\sol.exe               1
 base\applications\games\spider\spider.exe               1
 base\applications\games\winemine\winemine.exe           1
@@ -57,16 +56,20 @@ base\applications\logoff\logoff.exe                     1
 base\applications\magnify\magnify.exe                   1
 base\applications\mplay32\mplay32.exe                   1
 base\applications\msconfig\msconfig.exe                 1
+base\applications\mscutils\devmgmt\devmgmt.exe          1
+base\applications\mscutils\eventvwr\eventvwr.exe        1
+base\applications\mscutils\servman\servman.exe          1
 base\applications\mstsc\mstsc.exe                       1
 base\applications\network\arp\arp.exe                   1
 base\applications\network\dwnl\dwnl.exe                 1
-base\applications\network\route\route.exe               1
 base\applications\network\finger\finger.exe             1
 base\applications\network\ftp\ftp.exe                   1
 base\applications\network\ipconfig\ipconfig.exe         1
+base\applications\network\net\net.exe                   1
 base\applications\network\netstat\netstat.exe           1
 base\applications\network\nslookup\nslookup.exe         1
 base\applications\network\ping\ping.exe                 1
+base\applications\network\route\route.exe               1
 base\applications\network\telnet\telnet.exe             1
 base\applications\network\tracert\tracert.exe           1
 base\applications\network\whois\whois.exe               1
@@ -79,7 +82,6 @@ base\applications\regedt32\regedt32.exe                 1
 base\applications\sc\sc.exe                             1
 base\applications\screensavers\3dtext\3dtext.scr        1
 base\applications\screensavers\logon\logon.scr          1
-base\applications\mscutils\servman\servman.exe          1
 base\applications\shutdown\shutdown.exe                 1
 base\applications\sndrec32\sndrec32.exe                 1
 base\applications\sndvol32\sndvol32.exe                 1
@@ -93,12 +95,12 @@ base\services\audiosrv\audiosrv.exe                 1
 base\services\eventlog\eventlog.exe                 1
 base\services\rpcss\rpcss.exe                       1
 base\services\spoolsv\spoolsv.exe                   1
+base\services\svchost\svchost.exe                   1
 base\services\tcpsvcs\tcpsvcs.exe                   1
-base\services\telnetd\telnetd.exe                   1
 base\services\tcpsvcs\quotes                        5
+base\services\telnetd\telnetd.exe                   1
 base\services\umpnpmgr\umpnpmgr.exe                 1
 base\services\wlansvc\wlansvc.exe                   1
-base\services\svchost\svchost.exe                   1
 
 base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1
@@ -111,6 +113,7 @@ base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
 base\system\bootok\bootok.exe                       1
+base\system\expand\expand.exe                       1
 base\system\format\format.exe                       1
 base\system\lsass\lsass.exe                         1
 base\system\msiexec\msiexec.exe                     1
@@ -118,19 +121,17 @@ base\system\regsvr32\regsvr32.exe                   1
 base\system\rundll32\rundll32.exe                   1
 base\system\runonce\runonce.exe                     1
 base\system\services\services.exe                   1
+base\system\smss\smss.exe                           1
 base\system\userinit\userinit.exe                   1
 base\system\winlogon\winlogon.exe                   1
-base\system\expand\expand.exe                       1
-base\system\smss\smss.exe                           1
-
 
 ; Dynamic Link Libraries
-dll\3rdparty\mesa32\mesa32.dll                      1
+dll\3rdparty\dxtn\dxtn.dll                          1   optional
 dll\3rdparty\libjpeg\libjpeg.dll                    1
 dll\3rdparty\libpng\libpng.dll                      1
 dll\3rdparty\libtiff\libtiff.dll                    1
 dll\3rdparty\libxslt\libxslt.dll                    1
-dll\3rdparty\dxtn\dxtn.dll                          1   optional
+dll\3rdparty\mesa32\mesa32.dll                      1
 
 dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1
@@ -153,6 +154,8 @@ dll\cpl\timedate\timedate.cpl                       1
 
 dll\directx\amstream\amstream.dll                   1
 ;dll\directx\bdaplgin\bdaplgin.ax                    1
+dll\directx\d3d8thk\d3d8thk.dll                     1
+dll\directx\devenum\devenum.dll                     1
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
 dll\directx\dmusic\dmusic.dll                       1
@@ -160,19 +163,17 @@ dll\directx\dplay\dplay.dll                         1
 dll\directx\dplayx\dplayx.dll                       1
 dll\directx\dsound\dsound.dll                       1
 dll\directx\dxdiagn\dxdiagn.dll                     1
-dll\directx\wine\ddraw\ddraw.dll                    1
-dll\directx\d3d8thk\d3d8thk.dll                     1
-dll\directx\devenum\devenum.dll                     1
 dll\directx\ksproxy\ksproxy.ax                      1
 dll\directx\ksuser\ksuser.dll                       1
 dll\directx\msdmo\msdmo.dll                         1
 ;dll\directx\msdvbnp\msdvbnp.ax                      1
 ;dll\directx\msvidctl\msvidctl.dll                   1
-dll\directx\quartz\quartz.dll                       1
 dll\directx\qedit\qedit.dll                         1
+dll\directx\quartz\quartz.dll                       1
+dll\directx\wine\ddraw\ddraw.dll                    1
 dll\directx\wine\d3d8\d3d8.dll                      1
-dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\wine\d3d9\d3d9.dll                      1
+dll\directx\wine\wined3d\wined3d.dll                1
 
 dll\keyboard\kbda1\kbda1.dll                        1
 dll\keyboard\kbda2\kbda2.dll                        1
@@ -182,12 +183,12 @@ dll\keyboard\kbdarme\kbdarme.dll                    1
 dll\keyboard\kbdarmw\kbdarmw.dll                    1
 dll\keyboard\kbdaze\kbdaze.dll                      1
 dll\keyboard\kbdazel\kbdazel.dll                    1
+dll\keyboard\kbdbe\kbdbe.dll                        1
+dll\keyboard\kbdbga\kbdbga.dll                      1
 dll\keyboard\kbdbgm\kbdbgm.dll                      1
 dll\keyboard\kbdbgt\kbdbgt.dll                      1
 dll\keyboard\kbdblr\kbdblr.dll                      1
 dll\keyboard\kbdbr\kbdbr.dll                        1
-dll\keyboard\kbdbga\kbdbga.dll                      1
-dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdbur\kbdbur.dll                      1
 dll\keyboard\kbdcan\kbdcan.dll                      1
 dll\keyboard\kbdcr\kbdcr.dll                        1
@@ -203,8 +204,8 @@ dll\keyboard\kbdfr\kbdfr.dll                        1
 dll\keyboard\kbdgeo\kbdgeo.dll                      1
 dll\keyboard\kbdgerg\kbdgerg.dll                    1
 dll\keyboard\kbdgneo\kbdgneo.dll                    1
-dll\keyboard\kbdgrist\kbdgrist.dll                  1
 dll\keyboard\kbdgr\kbdgr.dll                        1
+dll\keyboard\kbdgrist\kbdgrist.dll                  1
 dll\keyboard\kbdhe\kbdhe.dll                        1
 dll\keyboard\kbdheb\kbdheb.dll                      1
 dll\keyboard\kbdhu\kbdhu.dll                        1
@@ -218,6 +219,7 @@ dll\keyboard\kbdir\kbdir.dll                        1
 dll\keyboard\kbdit\kbdit.dll                        1
 dll\keyboard\kbdja\kbdja.dll                        1
 dll\keyboard\kbdkaz\kbdkaz.dll                      1
+dll\keyboard\kbdko\kbdko.dll                        1
 dll\keyboard\kbdla\kbdla.dll                        1
 dll\keyboard\kbdlt1\kbdlt1.dll                      1
 dll\keyboard\kbdlv\kbdlv.dll                        1
@@ -252,16 +254,15 @@ dll\keyboard\kbduzb\kbduzb.dll                      1
 dll\keyboard\kbdvntc\kbdvntc.dll                    1
 dll\keyboard\kbdycc\kbdycc.dll                      1
 dll\keyboard\kbdycl\kbdycl.dll                      1
-dll\keyboard\kbdko\kbdko.dll                        1
 
 dll\ntdll\ntdll.dll                                 1
 
 dll\win32\acledit\acledit.dll                       1
 dll\win32\aclui\aclui.dll                           1
 dll\win32\activeds\activeds.dll                     1
+dll\win32\actxprxy\actxprxy.dll                     1
 dll\win32\advapi32\advapi32.dll                     1
 dll\win32\advpack\advpack.dll                       1
-dll\win32\actxprxy\actxprxy.dll                     1
 dll\win32\atl\atl.dll                               1
 dll\win32\authz\authz.dll                           1
 dll\win32\avicap32\avicap32.dll                     1
@@ -287,10 +288,10 @@ dll\win32\cryptnet\cryptnet.dll                     1
 dll\win32\cryptui\cryptui.dll                       1
 dll\win32\dbghelp\dbghelp.dll                       1
 dll\win32\dciman32\dciman32.dll                     1
-dll\win32\dwmapi\dwmapi.dll                         1
 dll\win32\devmgr\devmgr.dll                         1
 dll\win32\dhcpcsvc\dhcpcsvc.dll                     1
 dll\win32\dnsapi\dnsapi.dll                         1
+dll\win32\dwmapi\dwmapi.dll                         1
 dll\win32\faultrep\faultrep.dll                     1
 dll\win32\fmifs\fmifs.dll                           1
 dll\win32\fusion\fusion.dll                         1
@@ -320,6 +321,7 @@ dll\win32\kernel32\kernel32.dll                     1
 dll\win32\loadperf\loadperf.dll                     1
 dll\win32\localspl\localspl.dll                     1
 dll\win32\localui\localui.dll                       1
+dll\win32\lpk\lpk.dll                               1
 dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
@@ -399,8 +401,8 @@ dll\win32\query\query.dll                           1
 dll\win32\rasadhlp\rasadhlp.dll                     1
 dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\rasdlg\rasdlg.dll                         1
-dll\win32\resutils\resutils.dll                     1
 dll\win32\rasman\rasman.dll                         1
+dll\win32\resutils\resutils.dll                     1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\riched32\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
@@ -425,6 +427,7 @@ dll\win32\shimgvw\shimgvw.dll                       1
 dll\win32\shlwapi\shlwapi.dll                       1
 dll\win32\slbcsp\slbcsp.dll                         1
 dll\win32\smdll\smdll.dll                           1
+dll\win32\sndblst\sndblst.dll                       1
 dll\win32\snmpapi\snmpapi.dll                       1
 dll\win32\softpub\softpub.dll                       1
 dll\win32\spoolss\spoolss.dll                       1
@@ -452,16 +455,19 @@ dll\win32\usp10\usp10.dll                           1
 dll\win32\uxtheme\uxtheme.dll                       1
 dll\win32\vdmdbg\vdmdbg.dll                         1
 dll\win32\version\version.dll                       1
+dll\win32\wdmaud.drv\wdmaud.drv                     1
 dll\win32\windowscodecs\windowscodecs.dll           1
 dll\win32\winemp3.acm\winemp3.acm                   1
 dll\win32\winfax\winfax.dll                         1
+dll\win32\wing32\wing32.dll                         1
 dll\win32\winhttp\winhttp.dll                       1
 dll\win32\wininet\wininet.dll                       1
 dll\win32\winmm\winmm.dll                           1
+dll\win32\winmm\midimap\midimap.dll                 1
 dll\win32\winspool\winspool.drv                     1
 dll\win32\winsta\winsta.dll                         1
-dll\win32\wlanapi\wlanapi.dll                       1
 dll\win32\wintrust\wintrust.dll                     1
+dll\win32\wlanapi\wlanapi.dll                       1
 dll\win32\wldap32\wldap32.dll                       1
 dll\win32\wmi\wmi.dll                               1
 dll\win32\ws2_32\ws2_32.dll                         1
@@ -476,18 +482,19 @@ dll\win32\xinput1_2\xinput1_2.dll                   1
 dll\win32\xinput1_3\xinput1_3.dll                   1
 dll\win32\xinput9_1_0\xinput9_1_0.dll               1
 dll\win32\xmllite\xmllite.dll                       1
-dll\win32\winmm\midimap\midimap.dll                 1
-dll\win32\wdmaud.drv\wdmaud.drv                     1
 
 ; Shell Extensions
 dll\shellext\deskadp\deskadp.dll                    1
 dll\shellext\deskmon\deskmon.dll                    1
+dll\shellext\devcpux\devcpux.dll                    1
+dll\shellext\fontext\fontext.dll                    1
+dll\shellext\slayer\slayer.dll                      1
 
 ; Drivers
-drivers\base\bootvid\bootvid.dll                    1
 drivers\base\beep\beep.sys                          2
-drivers\base\null\null.sys                          2
+drivers\base\bootvid\bootvid.dll                    1
 drivers\base\nmidebug\nmidebug.sys                  2
+drivers\base\null\null.sys                          2
 
 drivers\battery\battc\battc.sys                     2
 
