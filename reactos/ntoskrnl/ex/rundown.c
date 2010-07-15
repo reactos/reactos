@@ -491,7 +491,7 @@ ExFreeCacheAwareRundownProtection(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAwar
 VOID
 NTAPI
 ExInitializeRundownProtectionCacheAware(IN PEX_RUNDOWN_REF_CACHE_AWARE RunRefCacheAware,
-                                        IN ULONG Count)
+                                        IN SIZE_T Count)
 {
     DBG_UNREFERENCED_PARAMETER(RunRefCacheAware);
     DBG_UNREFERENCED_PARAMETER(Count);
