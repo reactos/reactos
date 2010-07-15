@@ -13,6 +13,12 @@
 #define DbgPrint DbgPrintEarly
 #endif
 
+/* WDK hacks */
+#ifdef _M_AMD64
+#define IoAllocateAdapterChannel _IoAllocateAdapterChannel
+#define KeGetCurrentThread _KeGetCurrentThread
+#endif
+
 /* Version Data */
 #undef __MSVCRT__
 #include <psdk/ntverp.h>
