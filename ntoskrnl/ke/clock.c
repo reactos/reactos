@@ -175,6 +175,7 @@ KeQueryTickCount(IN PLARGE_INTEGER TickCount)
     }
 }
 
+#ifndef _M_AMD64
 /*
  * @implemented
  */
@@ -217,6 +218,7 @@ KeQueryInterruptTime(VOID)
     /* Return the time value */
     return CurrentTime.QuadPart;
 }
+#endif
 
 /*
  * @implemented

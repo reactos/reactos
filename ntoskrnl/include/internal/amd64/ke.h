@@ -316,9 +316,6 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
 
 #endif /* __ASM__ */
 
-#undef KeGetCurrentThread
-#define _KeGetCurrentThread KeGetCurrentThread
-
 // HACK
 extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
 

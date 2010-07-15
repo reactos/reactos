@@ -21,6 +21,7 @@ ULONG IoDeviceHandlerObjectSize;
 
 /* FUNCTIONS *****************************************************************/
 
+#undef IoAllocateAdapterChannel
 /*
  * @implemented
  */

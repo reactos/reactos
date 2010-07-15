@@ -6,6 +6,8 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
+#ifndef _M_AMD64
+
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_TUNING         ((19*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_BOOST          ((32*1024*1024) >> PAGE_SHIFT)
@@ -38,6 +40,8 @@
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
+#endif /* !_M_AMD64 */
+
 /* Make the code cleaner with some definitions for size multiples */
 #define _1KB (1024)
 #define _1MB (1024 * _1KB)
@@ -58,7 +62,9 @@
 #define PDE_COUNT 4096
 #define PTE_COUNT 256
 #else
-#error Define these please!
+#define PD_COUNT  PPE_PER_PAGE
+#define PDE_COUNT PDE_PER_PAGE
+#define PTE_COUNT PTE_PER_PAGE
 #endif
 
 #ifdef _M_IX86

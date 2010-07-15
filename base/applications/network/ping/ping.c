@@ -555,7 +555,6 @@ static BOOL Ping(VOID)
     }
     if (Status == SOCKET_ERROR)
     {
-        LostCount++;
         if (WSAGetLastError() == WSAEHOSTUNREACH)
             printf("Destination host unreachable.\n");
         else
