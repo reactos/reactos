@@ -446,7 +446,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #endif
 
 #if !defined(_WIN64)
-#include <pshpack1.h>
+#include <poppack.h>
 #endif
 
 #ifdef _MSC_VER
