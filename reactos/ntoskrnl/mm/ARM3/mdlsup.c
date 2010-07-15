@@ -28,9 +28,9 @@ PMDL
 NTAPI
 MmCreateMdl(IN PMDL Mdl,
             IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
-    ULONG Size;
+    SIZE_T Size;
     
     //
     // Check if we don't have an MDL built
@@ -55,10 +55,10 @@ MmCreateMdl(IN PMDL Mdl,
 /*
  * @implemented
  */
-ULONG
+SIZE_T
 NTAPI
 MmSizeOfMdl(IN PVOID Base,
-            IN ULONG Length)
+            IN SIZE_T Length)
 {
     //
     // Return the MDL size
