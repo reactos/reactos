@@ -17,7 +17,7 @@ extern UCHAR MmDisablePagingExecutive;
 extern ULONG MmLowestPhysicalPage;
 extern ULONG MmHighestPhysicalPage;
 extern ULONG MmAvailablePages;
-extern ULONG MmResidentAvailablePages;
+extern PFN_NUMBER MmResidentAvailablePages;
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
