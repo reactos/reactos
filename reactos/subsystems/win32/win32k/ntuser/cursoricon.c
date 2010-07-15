@@ -1390,7 +1390,7 @@ UserDrawIconEx(
                           IconSize.cy,
                           SRCCOPY,
                           0,
-						  bAlpha ? 0 : hdcMask,
+                          hdcMask,
                           0,
                           hdcImage ? 0 : IconSize.cy);
     }
