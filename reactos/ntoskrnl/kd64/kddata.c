@@ -526,14 +526,14 @@ KDDEBUGGER_DATA64 KdDebuggerDataBlock =
     //
     // AMD64 GDT/LDT/TSS constants
     //
-    KGDT_64_R0_CODE,
-    KGDT_64_DATA,
-    KGDT_64_DATA,
-    KGDT_64_R3_CODE,
-    KGDT_64_DATA,
-    KGDT_64_DATA,
+    KGDT64_R0_CODE,
+    KGDT64_R3_DATA,
+    KGDT64_R3_DATA,
+    KGDT64_R3_CODE,
+    KGDT64_R3_DATA,
+    KGDT64_R3_DATA,
     0,
-    KGDT_TSS,
+    KGDT64_SYS_TSS,
     0,
     0,
 #else
