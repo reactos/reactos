@@ -430,7 +430,7 @@ NTAPI
 MmDisableVirtualMapping(IN PEPROCESS Process,
                         IN PVOID Address,
                         OUT PBOOLEAN WasDirty,
-                        OUT PPFN_TYPE Page)
+                        OUT PPFN_NUMBER Page)
 {
     //
     // TODO
@@ -557,7 +557,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(IN PEPROCESS Process,
                              IN PVOID Address,
                              IN ULONG Protection,
-                             IN PPFN_TYPE Pages,
+                             IN PPFN_NUMBER Pages,
                              IN ULONG PageCount)
 {
     //
@@ -588,7 +588,7 @@ NTAPI
 MmCreateVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
                        IN ULONG Protection,
-                       IN PPFN_TYPE Pages,
+                       IN PPFN_NUMBER Pages,
                        IN ULONG PageCount)
 {
     ULONG i;
@@ -644,7 +644,7 @@ MmDeleteVirtualMapping(IN PEPROCESS Process,
                        IN PVOID Address,
                        IN BOOLEAN FreePage,
                        OUT PBOOLEAN WasDirty,
-                       OUT PPFN_TYPE Page)
+                       OUT PPFN_NUMBER Page)
 {
     PMMPTE PointerPte;
     MMPTE Pte;
@@ -712,7 +712,7 @@ MmCreatePageFileMapping(IN PEPROCESS Process,
     return 0;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(IN PEPROCESS Process,
                    IN PVOID Address)

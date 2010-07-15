@@ -312,7 +312,7 @@ NTAPI
 MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
-   PFN_TYPE AllocatedPage;
+   PFN_NUMBER AllocatedPage;
 
    Status = MmRequestPageMemoryConsumer(MC_PPOOL, FALSE, &AllocatedPage);
    if (!NT_SUCCESS(Status))

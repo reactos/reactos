@@ -183,7 +183,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 {
     NTSTATUS Status;
     ULONG i, j;
-    PFN_TYPE Pfn[2];
+    PFN_NUMBER Pfn[2];
     PULONG PageDirectory;
     
     DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
@@ -225,7 +225,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
     ULONG PdeOffset = ADDR_TO_PDE_OFFSET(Address);
     NTSTATUS Status;
-    PFN_TYPE Pfn;
+    PFN_NUMBER Pfn;
     ULONG Entry;
     PULONG Pt, PageDir;
     
@@ -344,7 +344,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
     return 0;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
@@ -360,7 +360,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -422,13 +422,13 @@ MmRawDeleteVirtualMapping(PVOID Address)
 VOID
 NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
-                       BOOLEAN* WasDirty, PPFN_TYPE Page)
+                       BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
 {
     BOOLEAN WasValid = FALSE;
-    PFN_TYPE Pfn;
+    PFN_NUMBER Pfn;
     ULONG Pte;
     PULONG Pt;
     
@@ -701,7 +701,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
-                             PPFN_TYPE Pages,
+                             PPFN_NUMBER Pages,
                              ULONG PageCount)
 {
     ULONG Attributes;
@@ -816,7 +816,7 @@ NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
-                       PPFN_TYPE Pages,
+                       PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
     ULONG i;

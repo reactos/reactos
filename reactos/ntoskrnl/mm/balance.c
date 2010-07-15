@@ -23,7 +23,7 @@
 /* TYPES ********************************************************************/
 typedef struct _MM_ALLOCATION_REQUEST
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    LIST_ENTRY ListEntry;
    KEVENT Event;
 }
@@ -101,7 +101,7 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 
 NTSTATUS
 NTAPI
-MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
+MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
 {
    PMM_ALLOCATION_REQUEST Request;
    PLIST_ENTRY Entry;
@@ -171,8 +171,8 @@ MiTrimMemoryConsumer(ULONG Consumer)
 NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
-    PFN_TYPE CurrentPage;
-    PFN_TYPE NextPage;
+    PFN_NUMBER CurrentPage;
+    PFN_NUMBER NextPage;
     NTSTATUS Status;
     
     (*NrFreedPages) = 0;
@@ -228,15 +228,15 @@ MiIsBalancerThread(VOID)
           PsGetCurrentThread() == MiBalancerThreadId.UniqueThread;
 }
 
-VOID NTAPI MiSetConsumer(IN PFN_TYPE Pfn, IN ULONG Consumer);
+VOID NTAPI MiSetConsumer(IN PFN_NUMBER Pfn, IN ULONG Consumer);
 
 NTSTATUS
 NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
-                            PPFN_TYPE AllocatedPage)
+                            PPFN_NUMBER AllocatedPage)
 {
    ULONG OldUsed;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    KIRQL OldIrql;
 
    /*

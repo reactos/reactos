@@ -121,9 +121,9 @@ static BOOLEAN MmSwapSpaceMessage = FALSE;
 
 VOID
 NTAPI
-MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
+MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 {
-    memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
+    memcpy(Mdl + 1, Pages, sizeof(PFN_NUMBER) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
     
     /* FIXME: this flag should be set by the caller perhaps? */
     Mdl->MdlFlags |= MDL_IO_PAGE_READ;
@@ -217,7 +217,7 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
 
 NTSTATUS
 NTAPI
-MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
+MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
@@ -278,7 +278,7 @@ MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 
 NTSTATUS
 NTAPI
-MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
+MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;

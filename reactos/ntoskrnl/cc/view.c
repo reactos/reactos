@@ -330,8 +330,8 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
             KeReleaseGuardedMutex(&ViewLock);
             for (i = 0; i < current->Bcb->CacheSegmentSize / PAGE_SIZE; i++)
             {
-                PFN_TYPE Page;
-                Page = (PFN_TYPE)(MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT);
+                PFN_NUMBER Page;
+                Page = (PFN_NUMBER)(MmGetPhysicalAddress((char*)current->BaseAddress + i * PAGE_SIZE).QuadPart >> PAGE_SHIFT);
                 Status = MmPageOutPhysicalAddress(Page);
             }
             KeAcquireGuardedMutex(&ViewLock);
@@ -842,7 +842,7 @@ CcRosRequestCacheSegment(PBCB Bcb,
 #else
 static VOID
 CcFreeCachePage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
-		PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+		PFN_NUMBER Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
   ASSERT(SwapEntry == 0);
   if (Page != 0)
@@ -861,7 +861,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
   ULONG i;
   ULONG RegionSize;
   ULONG Base;
-  PFN_TYPE Page;
+  PFN_NUMBER Page;
   KIRQL oldIrql;
 #endif
   DPRINT("Freeing cache segment 0x%p\n", CacheSeg);

@@ -15,7 +15,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static PFN_TYPE CcZeroPage = 0;
+static PFN_NUMBER CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH	(256 * 1024)
 #define MAX_RW_LENGTH	(256 * 1024)
@@ -98,7 +98,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  PCACHE_SEGMENT current2;
 	  ULONG current_size;
 	  ULONG i;
-	  PPFN_TYPE MdlPages;
+	  PPFN_NUMBER MdlPages;
 
 	  /*
 	   * Count the maximum number of bytes we could read starting
@@ -119,7 +119,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  current2 = current;
 	  current_size = 0;
-	  MdlPages = (PPFN_TYPE)(Mdl + 1);
+	  MdlPages = (PPFN_NUMBER)(Mdl + 1);
 	  while (current2 != NULL && !current2->Valid && current_size < MAX_RW_LENGTH)
 	    {
 	      PVOID address = current2->BaseAddress;
@@ -619,7 +619,7 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	  Mdl->MdlFlags |= (MDL_PAGES_LOCKED | MDL_IO_PAGE_READ);
 	  for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
 	    {
-	      ((PPFN_TYPE)(Mdl + 1))[i] = CcZeroPage;
+	      ((PPFN_NUMBER)(Mdl + 1))[i] = CcZeroPage;
 	    }
           KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	  Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);

@@ -465,7 +465,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
       PFILE_OBJECT FileObject;
       PBCB Bcb;
       SWAPENTRY SavedSwapEntry;
-      PFN_TYPE Page;
+      PFN_NUMBER Page;
       BOOLEAN IsImageSection;
       ULONG FileOffset;
 
@@ -580,7 +580,7 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 
 NTSTATUS
 NTAPI
-MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
+MiCopyFromUserPage(PFN_NUMBER DestPage, PVOID SourceAddress)
 {
     PEPROCESS Process;
     KIRQL Irql;
@@ -601,7 +601,7 @@ NTSTATUS
 NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
            ULONG SegOffset,
-           PPFN_TYPE Page)
+           PPFN_NUMBER Page)
 /*
  * FUNCTION: Read a page for a section backed memory area.
  * PARAMETERS:
@@ -782,7 +782,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                              BOOLEAN Locked)
 {
    ULONG Offset;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    NTSTATUS Status;
    PVOID PAddress;
    PROS_SECTION_OBJECT Section;
@@ -1267,8 +1267,8 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
 {
    PMM_SECTION_SEGMENT Segment;
    PROS_SECTION_OBJECT Section;
-   PFN_TYPE OldPage;
-   PFN_TYPE NewPage;
+   PFN_NUMBER OldPage;
+   PFN_NUMBER NewPage;
    NTSTATUS Status;
    PVOID PAddress;
    ULONG Offset;
@@ -1435,7 +1435,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 {
    MM_SECTION_PAGEOUT_CONTEXT* PageOutContext;
    BOOLEAN WasDirty;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
 
    PageOutContext = (MM_SECTION_PAGEOUT_CONTEXT*)Context;
    if (Process)
@@ -1482,7 +1482,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                      PVOID Address,
                      PMM_PAGEOP PageOp)
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    MM_SECTION_PAGEOUT_CONTEXT Context;
    SWAPENTRY SwapEntry;
    ULONG Entry;
@@ -1842,7 +1842,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
    ULONG Offset;
    PROS_SECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    SWAPENTRY SwapEntry;
    ULONG Entry;
    BOOLEAN Private;
@@ -2019,7 +2019,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
          {
             ULONG Offset;
             ULONG Entry;
-            PFN_TYPE Page;
+            PFN_NUMBER Page;
 
             Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                      + MemoryArea->Data.SectionData.ViewOffset;
@@ -2128,7 +2128,7 @@ MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
    ULONG Offset;
    ULONG Entry;
    ULONG SavedSwapEntry;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
 
    Page = 0;
 
@@ -3877,7 +3877,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
 
 static VOID
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
-                  PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
+                  PFN_NUMBER Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
    ULONG Entry;
    PFILE_OBJECT FileObject;

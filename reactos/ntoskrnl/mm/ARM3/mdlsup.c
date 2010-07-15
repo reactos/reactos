@@ -573,7 +573,7 @@ MmProbeAndLockPages(IN PMDL Mdl,
                     IN KPROCESSOR_MODE AccessMode,
                     IN LOCK_OPERATION Operation)
 {
-    PPFN_TYPE MdlPages;
+    PPFN_NUMBER MdlPages;
     PVOID Base, Address, LastAddress, StartAddress;
     ULONG LockPages, TotalPages;
     NTSTATUS Status = STATUS_SUCCESS;

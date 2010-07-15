@@ -53,7 +53,7 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
                          PMM_PAGEOP PageOp)
 {
    SWAPENTRY SwapEntry;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    NTSTATUS Status;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
@@ -135,7 +135,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
                        PVOID Address,
                        PMM_PAGEOP PageOp)
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    BOOLEAN WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
@@ -253,7 +253,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
  * NOTES: This function is called with the address space lock held.
  */
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    NTSTATUS Status;
    PMM_REGION Region;
    PMM_PAGEOP PageOp;
@@ -457,7 +457,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
 
       for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
       {
-         PFN_TYPE Page;
+         PFN_NUMBER Page;
 
          if (MmIsPageSwapEntry(Process,
                                (char*)BaseAddress + (i * PAGE_SIZE)))
@@ -853,7 +853,7 @@ static VOID
 MmFreeVirtualMemoryPage(PVOID Context,
                         MEMORY_AREA* MemoryArea,
                         PVOID Address,
-                        PFN_TYPE Page,
+                        PFN_NUMBER Page,
                         SWAPENTRY SwapEntry,
                         BOOLEAN Dirty)
 {

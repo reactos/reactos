@@ -53,7 +53,6 @@ struct _EPROCESS;
 struct _MM_RMAP_ENTRY;
 struct _MM_PAGEOP;
 typedef ULONG SWAPENTRY;
-typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 //
 // MmDbgCopyMemory Flags
@@ -466,7 +465,7 @@ typedef VOID
     PVOID Context,
     PMEMORY_AREA MemoryArea,
     PVOID Address,
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     SWAPENTRY SwapEntry,
     BOOLEAN Dirty
 );
@@ -688,7 +687,7 @@ VOID
 NTAPI
 MmBuildMdlFromPages(
     PMDL Mdl,
-    PULONG Pages
+    PPFN_NUMBER Pages
 );
 
 /* mminit.c ******************************************************************/
@@ -738,7 +737,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(
     SWAPENTRY SwapEntry,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 BOOLEAN
@@ -749,7 +748,7 @@ NTSTATUS
 NTAPI
 MmWriteToSwapPage(
     SWAPENTRY SwapEntry,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -917,18 +916,18 @@ ExUnmapPage(PVOID Addr);
 
 PVOID
 NTAPI
-ExAllocatePageWithPhysPage(PFN_TYPE Page);
+ExAllocatePageWithPhysPage(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
 MiCopyFromUserPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     PVOID SourceAddress
 );
 
 NTSTATUS
 NTAPI
-MiZeroPage(PFN_TYPE Page);
+MiZeroPage(PFN_NUMBER Page);
 
 /* memsafe.s *****************************************************************/
 
@@ -999,7 +998,7 @@ NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(
     ULONG Consumer,
-    PFN_TYPE Page
+    PFN_NUMBER Page
 );
 
 NTSTATUS
@@ -1007,7 +1006,7 @@ NTAPI
 MmRequestPageMemoryConsumer(
     ULONG Consumer,
     BOOLEAN MyWait,
-    PPFN_TYPE AllocatedPage
+    PPFN_NUMBER AllocatedPage
 );
 
 VOID
@@ -1023,18 +1022,18 @@ MmRebalanceMemoryConsumers(VOID);
 VOID
 NTAPI
 MmSetRmapListHeadPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _MM_RMAP_ENTRY* ListHead
 );
 
 struct _MM_RMAP_ENTRY*
 NTAPI
-MmGetRmapListHeadPage(PFN_TYPE Page);
+MmGetRmapListHeadPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
 MmInsertRmap(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _EPROCESS *Process,
     PVOID Address
 );
@@ -1042,7 +1041,7 @@ MmInsertRmap(
 VOID
 NTAPI
 MmDeleteAllRmaps(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     PVOID Context,
     VOID (*DeleteMapping)(PVOID Context, struct _EPROCESS *Process, PVOID Address)
 );
@@ -1050,7 +1049,7 @@ MmDeleteAllRmaps(
 VOID
 NTAPI
 MmDeleteRmap(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     struct _EPROCESS *Process,
     PVOID Address
 );
@@ -1061,29 +1060,29 @@ MmInitializeRmapList(VOID);
 
 VOID
 NTAPI
-MmSetCleanAllRmaps(PFN_TYPE Page);
+MmSetCleanAllRmaps(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmSetDirtyAllRmaps(PFN_TYPE Page);
+MmSetDirtyAllRmaps(PFN_NUMBER Page);
 
 BOOLEAN
 NTAPI
-MmIsDirtyPageRmap(PFN_TYPE Page);
+MmIsDirtyPageRmap(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_TYPE Page);
+MmWritePagePhysicalAddress(PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI
-MmPageOutPhysicalAddress(PFN_TYPE Page);
+MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
 /* freelist.c **********************************************************/
 
 FORCEINLINE
 PMMPFN
-MiGetPfnEntry(IN PFN_TYPE Pfn)
+MiGetPfnEntry(IN PFN_NUMBER Pfn)
 {
     PMMPFN Page;
     extern RTL_BITMAP MiPfnBitMap;
@@ -1111,33 +1110,33 @@ MiGetPfnEntryIndex(IN PMMPFN Pfn1)
     return Pfn1 - MmPfnDatabase;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
-MmGetLRUNextUserPage(PFN_TYPE PreviousPage);
+MmGetLRUNextUserPage(PFN_NUMBER PreviousPage);
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetLRUFirstUserPage(VOID);
 
 VOID
 NTAPI
-MmInsertLRULastUserPage(PFN_TYPE Page);
+MmInsertLRULastUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmRemoveLRUUserPage(PFN_TYPE Page);
+MmRemoveLRUUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmLockPage(PFN_TYPE Page);
+MmLockPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmUnlockPage(PFN_TYPE Page);
+MmUnlockPage(PFN_NUMBER Page);
 
 ULONG
 NTAPI
-MmGetLockCountPage(PFN_TYPE Page);
+MmGetLockCountPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1151,7 +1150,7 @@ MmDumpPfnDatabase(
    VOID
 );
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetContinuousPages(
     ULONG NumberOfBytes,
@@ -1222,7 +1221,7 @@ NTAPI
 MmCreateVirtualMappingForKernel(
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1239,7 +1238,7 @@ MmCreateVirtualMapping(
     struct _EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1249,7 +1248,7 @@ MmCreateVirtualMappingUnsafe(
     struct _EPROCESS* Process,
     PVOID Address,
     ULONG flProtect,
-    PPFN_TYPE Pages,
+    PPFN_NUMBER Pages,
     ULONG PageCount
 );
 
@@ -1284,7 +1283,7 @@ MmDisableVirtualMapping(
     struct _EPROCESS *Process,
     PVOID Address,
     BOOLEAN* WasDirty,
-    PPFN_TYPE Page
+    PPFN_NUMBER Page
 );
 
 VOID
@@ -1324,7 +1323,7 @@ MmIsPageSwapEntry(
 VOID
 NTAPI
 MmTransferOwnershipPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     ULONG NewConsumer
 );
 
@@ -1335,7 +1334,7 @@ MmSetDirtyPage(
     PVOID Address
 );
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmAllocPage(
     ULONG Consumer
@@ -1348,34 +1347,34 @@ MmAllocPagesSpecifyRange(
     PHYSICAL_ADDRESS LowestAddress,
     PHYSICAL_ADDRESS HighestAddress,
     ULONG NumberOfPages,
-    PPFN_TYPE Pages
+    PPFN_NUMBER Pages
 );
 
 VOID
 NTAPI
-MmDereferencePage(PFN_TYPE Page);
+MmDereferencePage(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmReferencePage(PFN_TYPE Page);
+MmReferencePage(PFN_NUMBER Page);
 
 ULONG
 NTAPI
-MmGetReferenceCountPage(PFN_TYPE Page);
+MmGetReferenceCountPage(PFN_NUMBER Page);
 
 BOOLEAN
 NTAPI
-MmIsPageInUse(PFN_TYPE Page);
+MmIsPageInUse(PFN_NUMBER Page);
 
 VOID
 NTAPI
 MmSetSavedSwapEntryPage(
-    PFN_TYPE Page,
+    PFN_NUMBER Page,
     SWAPENTRY SavedSwapEntry);
 
 SWAPENTRY
 NTAPI
-MmGetSavedSwapEntryPage(PFN_TYPE Page);
+MmGetSavedSwapEntryPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1395,7 +1394,7 @@ MmDeletePageTable(
     PVOID Address
 );
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(
     struct _EPROCESS *Process,
@@ -1439,7 +1438,7 @@ MmDeleteVirtualMapping(
     PVOID Address,
     BOOLEAN FreePage,
     BOOLEAN* WasDirty,
-    PPFN_TYPE Page
+    PPFN_NUMBER Page
 );
 
 BOOLEAN
@@ -1451,11 +1450,11 @@ MmIsDirtyPage(
 
 VOID
 NTAPI
-MmMarkPageMapped(PFN_TYPE Page);
+MmMarkPageMapped(PFN_NUMBER Page);
 
 VOID
 NTAPI
-MmMarkPageUnmapped(PFN_TYPE Page);
+MmMarkPageUnmapped(PFN_NUMBER Page);
 
 VOID
 NTAPI

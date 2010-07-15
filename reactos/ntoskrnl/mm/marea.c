@@ -754,7 +754,7 @@ MmFreeMemoryArea(
       {
          BOOLEAN Dirty = FALSE;
          SWAPENTRY SwapEntry = 0;
-         PFN_TYPE Page = 0;
+         PFN_NUMBER Page = 0;
 
          if (MmIsPageSwapEntry(Process, (PVOID)Address))
          {
@@ -1039,7 +1039,7 @@ MmMapMemoryArea(PVOID BaseAddress,
 
    for (i = 0; i < PAGE_ROUND_UP(Length) / PAGE_SIZE; i++)
    {
-      PFN_TYPE Page;
+      PFN_NUMBER Page;
 
       Status = MmRequestPageMemoryConsumer(Consumer, TRUE, &Page);
       if (!NT_SUCCESS(Status))
