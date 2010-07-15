@@ -354,7 +354,7 @@ DECLARE_INTERFACE_(IIrpQueue, IUnknown)
 
     STDMETHOD_(BOOLEAN, GetAcquiredTagRange)(THIS_
         IN PVOID * FirstTag,
-        IN PVOID * LastTag);
+        IN PVOID * LastTag) PURE;
 
 };
 
