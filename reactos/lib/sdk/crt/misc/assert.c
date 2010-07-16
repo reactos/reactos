@@ -1,9 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
+#include <precomp.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
-#include <precomp.h>
 
 
 /*
