@@ -64,8 +64,10 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     if (PointerPde->u.Hard.Valid == 0)
     {
+#ifndef _M_AMD64
         /* This seems to be making the assumption that one PDE is one page long */
         C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+#endif
         
         //
         // Copy it from our double-mapped system page directory
