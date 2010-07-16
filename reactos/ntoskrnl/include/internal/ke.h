@@ -889,7 +889,7 @@ KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL);
 VOID
 NTAPI
 KeRosDumpStackFrames(
-    PULONG Frame,
+    PULONG_PTR Frame,
     ULONG FrameCount
 );
 

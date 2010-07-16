@@ -718,10 +718,10 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
          MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                             (ULONG_PTR)MemoryArea->StartingAddress;
 
-         if (((ULONG)BaseAddress + RegionSize) > (ULONG)MemoryArea->EndingAddress)
+         if (((ULONG_PTR)BaseAddress + RegionSize) > (ULONG_PTR)MemoryArea->EndingAddress)
          {
             DPRINT("BaseAddress + RegionSize %x is larger than MemoryArea's EndingAddress %x\n",
-                  (ULONG)BaseAddress + RegionSize, MemoryArea->EndingAddress);
+                  (ULONG_PTR)BaseAddress + RegionSize, MemoryArea->EndingAddress);
 
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
@@ -1123,7 +1123,7 @@ NTSTATUS NTAPI
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PVOID Address,
                PMEMORY_BASIC_INFORMATION Info,
-               PULONG ResultLength)
+               PSIZE_T ResultLength)
 {
    PMM_REGION Region;
    PVOID RegionBase = NULL;

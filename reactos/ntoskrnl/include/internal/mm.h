@@ -6,21 +6,21 @@
 
 struct _EPROCESS;
 
-extern ULONG MiFreeSwapPages;
-extern ULONG MiUsedSwapPages;
-extern ULONG MmPagedPoolSize;
-extern ULONG MmTotalPagedPoolQuota;
-extern ULONG MmTotalNonPagedPoolQuota;
+extern PFN_NUMBER MiFreeSwapPages;
+extern PFN_NUMBER MiUsedSwapPages;
+extern SIZE_T MmPagedPoolSize;
+extern SIZE_T MmTotalPagedPoolQuota;
+extern SIZE_T MmTotalNonPagedPoolQuota;
 extern PHYSICAL_ADDRESS MmSharedDataPagePhysicalAddress;
-extern ULONG MmNumberOfPhysicalPages;
+extern PFN_NUMBER MmNumberOfPhysicalPages;
 extern UCHAR MmDisablePagingExecutive;
-extern ULONG MmLowestPhysicalPage;
-extern ULONG MmHighestPhysicalPage;
-extern ULONG MmAvailablePages;
+extern PFN_NUMBER MmLowestPhysicalPage;
+extern PFN_NUMBER MmHighestPhysicalPage;
+extern PFN_NUMBER MmAvailablePages;
 extern PFN_NUMBER MmResidentAvailablePages;
 
 extern PVOID MmPagedPoolBase;
-extern ULONG MmPagedPoolSize;
+extern SIZE_T MmPagedPoolSize;
 
 extern PMEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MiFreeDescriptorOrg;
@@ -874,7 +874,7 @@ MmQueryAnonMem(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 VOID
@@ -1548,7 +1548,7 @@ MmQuerySectionView(
     PMEMORY_AREA MemoryArea,
     PVOID Address,
     PMEMORY_BASIC_INFORMATION Info,
-    PULONG ResultLength
+    PSIZE_T ResultLength
 );
 
 NTSTATUS
@@ -1641,8 +1641,8 @@ MiQueryVirtualMemory(
     IN PVOID Address,
     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
     OUT PVOID VirtualMemoryInformation,
-    IN ULONG Length,
-    OUT PULONG ResultLength
+    IN SIZE_T Length,
+    OUT PSIZE_T ResultLength
 );
 
 /* sysldr.c ******************************************************************/

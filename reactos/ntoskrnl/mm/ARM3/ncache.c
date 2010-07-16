@@ -23,7 +23,7 @@
  */
 PVOID
 NTAPI
-MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
+MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
 {
     PFN_NUMBER PageCount, MdlPageCount, PageFrameIndex;
     PHYSICAL_ADDRESS LowAddress, HighAddress, SkipBytes;

@@ -23,8 +23,8 @@
 // figure out the most appropriate values.
 //
 ULONG MmMaximumNonPagedPoolPercent;
-ULONG MmSizeOfNonPagedPoolInBytes;
-ULONG MmMaximumNonPagedPoolInBytes;
+SIZE_T MmSizeOfNonPagedPoolInBytes;
+SIZE_T MmMaximumNonPagedPoolInBytes;
 
 /* Some of the same values, in pages */
 PFN_NUMBER MmMaximumNonPagedPoolInPages;
@@ -36,9 +36,9 @@ PFN_NUMBER MmMaximumNonPagedPoolInPages;
 // They are described on http://support.microsoft.com/default.aspx/kb/126402/ja
 // along with the algorithm that uses them, which is implemented later below.
 //
-ULONG MmMinimumNonPagedPoolSize = 256 * 1024;
+SIZE_T MmMinimumNonPagedPoolSize = 256 * 1024;
 ULONG MmMinAdditionNonPagedPoolPerMb = 32 * 1024;
-ULONG MmDefaultMaximumNonPagedPool = 1024 * 1024; 
+SIZE_T MmDefaultMaximumNonPagedPool = 1024 * 1024; 
 ULONG MmMaxAdditionNonPagedPoolPerMb = 400 * 1024;
 
 //
@@ -107,7 +107,7 @@ PVOID MmPagedPoolEnd;
 //
 // And this is its default size
 //
-ULONG MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
+SIZE_T MmSizeOfPagedPoolInBytes = MI_MIN_INIT_PAGED_POOLSIZE;
 PFN_NUMBER MmSizeOfPagedPoolInPages = MI_MIN_INIT_PAGED_POOLSIZE / PAGE_SIZE;
 
 //
@@ -131,10 +131,10 @@ PVOID MiSessionViewStart;   // 0xBE000000
 PVOID MiSessionPoolEnd;     // 0xBE000000
 PVOID MiSessionPoolStart;   // 0xBD000000
 PVOID MmSessionBase;        // 0xBD000000
-ULONG MmSessionSize;
-ULONG MmSessionViewSize;
-ULONG MmSessionPoolSize;
-ULONG MmSessionImageSize;
+SIZE_T MmSessionSize;
+SIZE_T MmSessionViewSize;
+SIZE_T MmSessionPoolSize;
+SIZE_T MmSessionImageSize;
 
 /*
  * These are the PTE addresses of the boundaries carved out above
@@ -151,7 +151,7 @@ PMMPTE MiSessionLastPte;
 // By default, it is a 16MB region.
 //
 PVOID MiSystemViewStart;
-ULONG MmSystemViewSize;
+SIZE_T MmSystemViewSize;
 
 //
 // A copy of the system page directory (the page directory associated with the
@@ -175,13 +175,13 @@ PMMWSL MmSystemCacheWorkingSetList = MI_SYSTEM_CACHE_WS_START;
 // On systems with more than 32MB, this number is then doubled, and further
 // aligned up to a PDE boundary (4MB).
 //
-ULONG MmNumberOfSystemPtes;
+ULONG_PTR MmNumberOfSystemPtes;
 
 //
 // This is how many pages the PFN database will take up
 // In Windows, this includes the Quark Color Table, but not in ARM³
 //
-ULONG MxPfnAllocation;
+PFN_NUMBER MxPfnAllocation;
 
 //
 // Unlike the old ReactOS Memory Manager, ARM³ (and Windows) does not keep track
@@ -205,7 +205,7 @@ PPHYSICAL_MEMORY_DESCRIPTOR MmPhysicalMemoryBlock;
 //
 // This is where we keep track of the most basic physical layout markers
 //
-ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
+PFN_NUMBER MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
 
 //
 // The total number of pages mapped by the boot loader, which include the kernel
@@ -215,13 +215,13 @@ ULONG MmNumberOfPhysicalPages, MmHighestPhysicalPage, MmLowestPhysicalPage = -1;
 //
 // This number is later aligned up to a PDE boundary.
 //
-ULONG MmBootImageSize;
+SIZE_T MmBootImageSize;
 
 //
 // These three variables keep track of the core separation of address space that
 // exists between kernel mode and user mode.
 //
-ULONG MmUserProbeAddress;
+ULONG_PTR MmUserProbeAddress;
 PVOID MmHighestUserAddress;
 PVOID MmSystemRangeStart;
 
