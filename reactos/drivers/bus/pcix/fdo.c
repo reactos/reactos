@@ -76,9 +76,49 @@ PciFdoIrpStartDevice(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PCM_RESOURCE_LIST Resources;
+    PAGED_CODE();
+
+    /* The device stack must be starting the FDO in a success path */
+    if (!NT_SUCCESS(Irp->IoStatus.Status)) return STATUS_NOT_SUPPORTED;
+
+    /* Attempt to switch the state machine to the started state */
+    Status = PciBeginStateTransition(DeviceExtension, PciStarted);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for any boot-provided resources */
+    Resources = IoStackLocation->Parameters.StartDevice.AllocatedResources;
+    DPRINT1("Resources: %p\n", Resources);
+    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
+    {
+        /* These resources would only be for non-root FDOs, unhandled for now */
+        ASSERT(Resources->Count == 1);
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Initialize the arbiter for this FDO */
+    Status = PciInitializeArbiterRanges(DeviceExtension, Resources);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cancel the transition if this failed */
+        PciCancelStateTransition(DeviceExtension, PciStarted);
+        return Status;
+    }
+
+    /* Again, check for boot-provided resources for non-root FDO */
+    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
+    {
+        /* Unhandled for now */
+        ASSERT(Resources->Count == 1);
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Commit the transition to the started state */
+    PciCommitStateTransition(DeviceExtension, PciStarted);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

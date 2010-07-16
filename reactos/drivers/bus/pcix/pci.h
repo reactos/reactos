@@ -309,7 +309,6 @@ PciCallDownIrpStack(
     IN PIRP Irp
 );
 
-
 //
 // Power Routines
 //
@@ -564,6 +563,13 @@ PcipLinkSecondaryExtension(
     IN PVOID Destructor
 );
 
+PPCI_SECONDARY_EXTENSION
+NTAPI
+PciFindNextSecondaryExtension(
+    IN PSINGLE_LIST_ENTRY ListHead,
+    IN PCI_SIGNATURE ExtensionType
+);
+
 //
 // Configuration Routines
 //
@@ -582,6 +588,28 @@ PciInitializeState(
     IN PPCI_FDO_EXTENSION DeviceExtension
 );
 
+NTSTATUS
+NTAPI
+PciBeginStateTransition(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCI_STATE NewState
+);
+
+NTSTATUS
+NTAPI
+PciCancelStateTransition(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCI_STATE NewState
+);
+
+VOID
+NTAPI
+PciCommitStateTransition(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCI_STATE NewState
+);
+
+
 //
 // Arbiter Support
 //
@@ -589,6 +617,13 @@ NTSTATUS
 NTAPI
 PciInitializeArbiters(
     IN PPCI_FDO_EXTENSION FdoExtension
+);
+
+NTSTATUS
+NTAPI
+PciInitializeArbiterRanges(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCM_RESOURCE_LIST Resources
 );
 
 //

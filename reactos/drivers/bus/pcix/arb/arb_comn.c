@@ -121,4 +121,83 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
     /* Return to caller */
     return Status;
 }
+
+NTSTATUS
+NTAPI
+PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
+                           IN PCM_RESOURCE_LIST Resources)
+{
+    //PPCI_PDO_EXTENSION PdoExtension;
+    CM_RESOURCE_TYPE DesiredType;
+    PVOID Instance;
+    PCI_SIGNATURE ArbiterType;
+
+    /* Arbiters should not already be initialized */
+    if (DeviceExtension->ArbitersInitialized)
+    {
+        /* Duplicated start request, fail initialization */
+        DPRINT1("PCI Warning hot start FDOx %08x, resource ranges not checked.\n", DeviceExtension);
+        return STATUS_INVALID_DEVICE_REQUEST;
+    }
+    
+    /* Check for non-root FDO */
+    if (!PCI_IS_ROOT_FDO(DeviceExtension))
+    {
+        /* Grab the PDO */
+#if 0 // when pdo support
+        PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension->PhysicalDeviceObject->DeviceExtension;
+        ASSERT(PdoExtension->ExtensionType == PciPdoExtensionType);
+#endif
+        /* Multiple FDOs are not yet supported */
+        UNIMPLEMENTED;
+        while (TRUE);
+        return STATUS_SUCCESS;
+    }
+    
+    /* Loop all arbiters */
+    for (ArbiterType = PciArb_Io; ArbiterType <= PciArb_Memory; ArbiterType++)
+    {
+        /* Pick correct resource type for each arbiter */
+        if (ArbiterType == PciArb_Io)
+        {
+            /* I/O Port */
+            DesiredType = CmResourceTypePort;
+        }
+        else if (ArbiterType == PciArb_Memory)
+        {
+            /* Device RAM */
+            DesiredType = CmResourceTypeMemory;
+        }
+        else
+        {
+            /* Ignore anything else */
+            continue;
+        }
+ 
+        /* Find an arbiter of this type */
+        Instance = PciFindNextSecondaryExtension(&DeviceExtension->SecondaryExtension,
+                                                 ArbiterType);
+        if (Instance)
+        {
+            /*
+             * Now we should initialize it, not yet implemented because Arb
+             * library isn't yet implemented, not even the headers.
+             */
+            UNIMPLEMENTED;
+            //while (TRUE);
+        }
+        else
+        {
+            /* The arbiter was not found, this is an error! */
+            DPRINT1("PCI - FDO ext 0x%08x %s arbiter (REQUIRED) is missing.\n",
+                    DeviceExtension,
+                    PciArbiterNames[ArbiterType - PciArb_Io]);
+        }
+    }
+
+    /* Arbiters are now initialized */
+    DeviceExtension->ArbitersInitialized = TRUE;
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
