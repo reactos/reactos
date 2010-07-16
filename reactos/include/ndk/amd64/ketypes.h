@@ -824,9 +824,41 @@ typedef struct _KTSS64
 #define PKTSS PKTSS64
 
 //
-// i386 CPUs don't have exception frames
+// KEXCEPTION_FRAME
 //
-typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+typedef struct _KEXCEPTION_FRAME
+{
+    UINT64 P1Home;
+    UINT64 P2Home;
+    UINT64 P3Home;
+    UINT64 P4Home;
+    UINT64 P5;
+    UINT64 InitialStack;
+    M128A Xmm6;
+    M128A Xmm7;
+    M128A Xmm8;
+    M128A Xmm9;
+    M128A Xmm10;
+    M128A Xmm11;
+    M128A Xmm12;
+    M128A Xmm13;
+    M128A Xmm14;
+    M128A Xmm15;
+    UINT64 TrapFrame;
+    UINT64 CallbackStack;
+    UINT64 OutputBuffer;
+    UINT64 OutputLength;
+    UINT64 MxCsr;
+    UINT64 Rbp;
+    UINT64 Rbx;
+    UINT64 Rdi;
+    UINT64 Rsi;
+    UINT64 R12;
+    UINT64 R13;
+    UINT64 R14;
+    UINT64 R15;
+    UINT64 Return;
+} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 //
 // Inline function to get current KPRCB
