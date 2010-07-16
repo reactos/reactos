@@ -46,7 +46,8 @@ extern SIZE_T MmPagedPoolCommit;
 extern SIZE_T MmPeakCommitment;
 extern SIZE_T MmtotalCommitLimitMaximum;
 
-extern BOOLEAN MiDbgReadyForPhysical;
+extern PVOID MiDebugMapping;
+extern PMMPTE MmDebugPte;
 
 struct _KTRAP_FRAME;
 struct _EPROCESS;

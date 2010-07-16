@@ -409,7 +409,7 @@ MmInitSystem(IN ULONG Phase,
         //
         // Now get the PTE for shared data, and read the PFN that holds it
         //
-        PointerPte = MiAddressToPte(KI_USER_SHARED_DATA);
+        PointerPte = MiAddressToPte((PVOID)KI_USER_SHARED_DATA);
         ASSERT(PointerPte->u.Hard.Valid == 1);
         PageFrameNumber = PFN_FROM_PTE(PointerPte);
         

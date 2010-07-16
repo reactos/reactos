@@ -1990,7 +1990,7 @@ MmArmInitSystem(IN ULONG Phase,
         MiBuildPagedPool();
         
         /* Debugger physical memory support is now ready to be used */
-        MiDbgReadyForPhysical = TRUE;
+        MmDebugPte = MiAddressToPte(MiDebugMapping);
 
         /* Initialize the loaded module list */
         MiInitializeLoadedModuleList(LoaderBlock);
