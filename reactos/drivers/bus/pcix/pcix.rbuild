@@ -16,6 +16,7 @@
         <file>agpintrf.c</file>
         <file>busintrf.c</file>
         <file>cardbus.c</file>
+        <file>devhere.c</file>
         <file>ideintrf.c</file>
         <file>intrface.c</file>
         <file>lddintrf.c</file>

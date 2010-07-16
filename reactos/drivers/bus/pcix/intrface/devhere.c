@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/bus/pci/intrface/cardbus.c
- * PURPOSE:         CardBus Interface
+ * FILE:            drivers/bus/pci/intrface/devhere.c
+ * PURPOSE:         Device Presence Interface
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
@@ -14,39 +14,41 @@
 
 /* GLOBALS ********************************************************************/
 
-PCI_INTERFACE PciCardbusPrivateInterface =
+PCI_INTERFACE PciDevicePresentInterface =
 {
-    &GUID_PCI_CARDBUS_INTERFACE_PRIVATE,
-    sizeof(PCI_CARDBUS_INTERFACE_PRIVATE),
-    PCI_CB_INTRF_VERSION,
-    PCI_CB_INTRF_VERSION,
+    &GUID_PCI_DEVICE_PRESENT_INTERFACE,
+    sizeof(PCI_DEVICE_PRESENT_INTERFACE),
+    PCI_DEVICE_PRESENT_INTERFACE_VERSION,
+    PCI_DEVICE_PRESENT_INTERFACE_VERSION,
     PCI_INTERFACE_PDO,
     0,
-    PciInterface_PciCb,
-    pcicbintrf_Constructor,
-    pcicbintrf_Initializer
+    PciInterface_DevicePresent,
+    devpresent_Constructor,
+    devpresent_Initializer
 };
 
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
-pcicbintrf_Initializer(IN PVOID Instance)
+devpresent_Initializer(IN PVOID Instance)
 {
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI pcicbintrf_Initializer, unexpected call.");
+    ASSERTMSG(FALSE, "PCI devpresent_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
 NTAPI
-pcicbintrf_Constructor(IN PVOID DeviceExtension,
+devpresent_Constructor(IN PVOID DeviceExtension,
                        IN PVOID Instance,
                        IN PVOID InterfaceData,
                        IN USHORT Version,
                        IN USHORT Size,
                        IN PINTERFACE Interface)
 {
+    PAGED_CODE();
+
     /* Not yet implemented */
     UNIMPLEMENTED;
     while (TRUE);

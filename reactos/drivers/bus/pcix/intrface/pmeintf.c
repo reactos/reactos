@@ -14,6 +14,45 @@
 
 /* GLOBALS ********************************************************************/
 
+PCI_INTERFACE PciPmeInterface =
+{
+    &GUID_PCI_PME_INTERFACE,
+    sizeof(PCI_PME_INTERFACE),
+    PCI_PME_INTRF_STANDARD_VER,
+    PCI_PME_INTRF_STANDARD_VER,
+    PCI_INTERFACE_FDO | PCI_INTERFACE_ROOT,
+    0,
+    PciInterface_PmeHandler,
+    PciPmeInterfaceConstructor,
+    PciPmeInterfaceInitializer
+};
+
 /* FUNCTIONS ******************************************************************/
+
+NTSTATUS
+NTAPI
+PciPmeInterfaceInitializer(IN PVOID Instance)
+{
+    /* PnP Interfaces don't get Initialized */
+    ASSERTMSG(FALSE, "PCI PciPmeInterfaceInitializer, unexpected call.");
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+NTAPI
+PciPmeInterfaceConstructor(IN PVOID DeviceExtension,
+                           IN PVOID Instance,
+                           IN PVOID InterfaceData,
+                           IN USHORT Version,
+                           IN USHORT Size,
+                           IN PINTERFACE Interface)
+{
+    /* Only version 1 is supported */
+    if (Version != PCI_PME_INTRF_STANDARD_VER) return STATUS_NOINTERFACE;
+
+    /* Not yet implemented */
+    UNIMPLEMENTED;
+    while (TRUE);
+}
 
 /* EOF */

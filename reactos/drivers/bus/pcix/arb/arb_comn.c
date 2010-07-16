@@ -44,7 +44,7 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
     ASSERT_FDO(FdoExtension);
 
     /* Loop all the arbiters */
-    for (ArbiterType = PciArb_Io; ArbiterType <= PciArb_Memory; ArbiterType++)
+    for (ArbiterType = PciArb_Io; ArbiterType <= PciArb_BusNumber; ArbiterType++)
     {
         /* Check if this is the extension for the Root PCI Bus */
         if (!PCI_IS_ROOT_FDO(FdoExtension))
@@ -113,7 +113,7 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
         /* This arbiter is now initialized, move to the next one */
         DPRINT1("PCI - FDO ext 0x%08x %S arbiter initialized (context 0x%08x).\n",
                 FdoExtension,
-                "ARBITER HEADER MISSING", //ArbiterInterface->CommonInstance.Name,
+                L"ARBITER HEADER MISSING", //ArbiterInterface->CommonInstance.Name,
                 ArbiterInterface);
         Status = STATUS_SUCCESS;
     }

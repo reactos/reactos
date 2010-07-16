@@ -50,26 +50,33 @@
 #define PCI_HACK_HAS_SUBSYSTEM_INFO         0x02
 
 //
+// PCI Interface Flags
+//
+#define PCI_INTERFACE_PDO                   0x01
+#define PCI_INTERFACE_FDO                   0x02
+#define PCI_INTERFACE_ROOT                  0x04
+
+//
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
 typedef enum _PCI_SIGNATURE
 {
-    PciPdoExtensionType = '0Pci',
-    PciFdoExtensionType = '1Pci',
-    PciArb_Io = '2Pci',
-    PciArb_Memory = '3Pci',
-    PciArb_Interrupt = '4Pci',
-    PciArb_BusNumber = '5Pci',
-    PciTrans_Interrupt = '6Pci',
-    PciInterface_BusHandler = '7Pci',
-    PciInterface_IntRouteHandler = '8Pci',
-    PciInterface_PciCb = '9Pci',
-    PciInterface_LegacyDeviceDetection = ':Pci',
-    PciInterface_PmeHandler = ';Pci',
-    PciInterface_DevicePresent = '<Pci',
-    PciInterface_NativeIde = '=Pci',
-    PciInterface_AgpTarget = '>Pci',
-    PciInterface_Location  = '?Pci'
+    PciPdoExtensionType = 'icP0',
+    PciFdoExtensionType = 'icP1',
+    PciArb_Io = 'icP2',
+    PciArb_Memory = 'icP3',
+    PciArb_Interrupt = 'icP4',
+    PciArb_BusNumber = 'icP5',
+    PciTrans_Interrupt = 'icP6',
+    PciInterface_BusHandler = 'icP7',
+    PciInterface_IntRouteHandler = 'icP8',
+    PciInterface_PciCb = 'icP9',
+    PciInterface_LegacyDeviceDetection = 'icP:',
+    PciInterface_PmeHandler = 'icP;',
+    PciInterface_DevicePresent = 'icP<',
+    PciInterface_NativeIde = 'icP=',
+    PciInterface_AgpTarget = 'icP>',
+    PciInterface_Location  = 'icP?'
 } PCI_SIGNATURE, *PPCI_SIGNATURE;
 
 //
@@ -220,7 +227,7 @@ typedef struct _PCI_MJ_DISPATCH_TABLE
 //
 struct _PCI_INTERFACE;
 typedef NTSTATUS (NTAPI *PCI_INTERFACE_CONSTRUCTOR)(
-    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PVOID DeviceExtension,
     IN PVOID Instance,
     IN PVOID InterfaceData,
     IN USHORT Version,
@@ -237,7 +244,7 @@ typedef NTSTATUS (NTAPI *PCI_INTERFACE_INITIALIZER)(
 //
 typedef struct _PCI_INTERFACE
 {
-    LPGUID InterfaceType;
+    CONST GUID *InterfaceType;
     USHORT MinSize;
     USHORT MinVersion;
     USHORT MaxVersion;
@@ -287,6 +294,21 @@ PciIrpNotSupported(
     IN PIO_STACK_LOCATION IoStackLocation,
     IN PPCI_FDO_EXTENSION DeviceExtension
 );
+
+NTSTATUS
+NTAPI
+PciPassIrpFromFdoToPdo(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+PciCallDownIrpStack(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PIRP Irp
+);
+
 
 //
 // Power Routines
@@ -581,10 +603,242 @@ PciDebugIrpDispatchDisplay(
 );
 
 //
+// Interface Support
+//
+NTSTATUS
+NTAPI
+PciQueryInterface(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN CONST GUID* InterfaceType,
+    IN ULONG Size,
+    IN ULONG Version,
+    IN PVOID InterfaceData,
+    IN PINTERFACE Interface,
+    IN BOOLEAN LastChance
+);
+
+NTSTATUS
+NTAPI
+PciPmeInterfaceInitializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+routeintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+arbusno_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+agpintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+tranirq_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+busintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+armem_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+ario_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+locintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+pcicbintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+lddintrf_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+devpresent_Initializer(
+    IN PVOID Instance
+);
+
+NTSTATUS
+NTAPI
+agpintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+arbusno_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+tranirq_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+armem_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+busintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+ario_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+pcicbintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+lddintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+locintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+PciPmeInterfaceConstructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+routeintrf_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+NTSTATUS
+NTAPI
+devpresent_Constructor(
+    IN PVOID DeviceExtension,
+    IN PVOID Instance,
+    IN PVOID InterfaceData,
+    IN USHORT Version,
+    IN USHORT Size,
+    IN PINTERFACE Interface
+);
+
+//
 // External Resources
 //
 extern SINGLE_LIST_ENTRY PciFdoExtensionListHead;
 extern KEVENT PciGlobalLock;
 extern PPCI_INTERFACE PciInterfaces[];
+extern PCI_INTERFACE ArbiterInterfaceBusNumber;
+extern PCI_INTERFACE ArbiterInterfaceMemory;
+extern PCI_INTERFACE ArbiterInterfaceIo;
+extern PCI_INTERFACE BusHandlerInterface;
+extern PCI_INTERFACE PciRoutingInterface;
+extern PCI_INTERFACE PciCardbusPrivateInterface;
+extern PCI_INTERFACE PciLegacyDeviceDetectionInterface;
+extern PCI_INTERFACE PciPmeInterface;
+extern PCI_INTERFACE PciDevicePresentInterface;
+//extern PCI_INTERFACE PciNativeIdeInterface;
+extern PCI_INTERFACE PciLocationInterface;
+extern PCI_INTERFACE AgpTargetInterface;
+extern PCI_INTERFACE TranslatorInterfaceInterrupt;
 
 /* EOF */

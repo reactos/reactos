@@ -102,8 +102,8 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
     PPCI_MN_DISPATCH_TABLE TableArray = NULL, Table;
     USHORT MaxMinor;
-    PCI_DISPATCH_STYLE DispatchStyle;
-    PCI_DISPATCH_FUNCTION DispatchFunction;
+    PCI_DISPATCH_STYLE DispatchStyle = 0;
+    PCI_DISPATCH_FUNCTION DispatchFunction = NULL;
     DPRINT1("PCI: Dispatch IRP\n");
 
     /* Get the extension and I/O stack location for this IRP */
@@ -146,7 +146,7 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
                 /* WMI IRPs */
                 DispatchFunction = IrpDispatchTable->SystemControlIrpDispatchFunction;
                 DispatchStyle = IrpDispatchTable->SystemControlIrpDispatchStyle;
-                MaxMinor = -1;
+                MaxMinor = 0xFFFF;
                 break;
 
             default:
@@ -154,12 +154,12 @@ PciDispatchIrp(IN PDEVICE_OBJECT DeviceObject,
                 /* Unrecognized IRPs */
                 DispatchFunction = IrpDispatchTable->OtherIrpDispatchFunction;
                 DispatchStyle = IrpDispatchTable->OtherIrpDispatchStyle;
-                MaxMinor = -1;
+                MaxMinor = 0xFFFF;
                 break;
         }
 
         /* Only deal with recognized IRPs */
-        if (MaxMinor != -1)
+        if (MaxMinor != 0xFFFF)
         {
             /* Make sure the function is recognized */
             if (IoStackLocation->MinorFunction > MaxMinor)
@@ -260,7 +260,7 @@ PciIrpNotSupported(IN PIRP Irp,
 {
     /* Not supported */
     DPRINT1("WARNING: PCI received unsupported IRP!\n");
-    DbgBreakPoint();
+    //DbgBreakPoint();
     return STATUS_NOT_SUPPORTED;
 }
 

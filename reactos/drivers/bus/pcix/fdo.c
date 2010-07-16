@@ -164,9 +164,73 @@ PciFdoIrpQueryInterface(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+    ASSERT(DeviceExtension->ExtensionType == PciFdoExtensionType);
+
+    /* Deleted extensions don't respond to IRPs */
+    if (DeviceExtension->DeviceState == PciDeleted)
+    {
+        /* Hand it bacO try to deal with it */
+        return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+    }
+
+    /* Query our driver for this interface */
+    Status = PciQueryInterface(DeviceExtension,
+                               IoStackLocation->Parameters.QueryInterface.
+                               InterfaceType,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Size,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Version,
+                               IoStackLocation->Parameters.QueryInterface.
+                               InterfaceSpecificData,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Interface,
+                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* We found it, let the PDO handle it */
+        Irp->IoStatus.Status = Status;
+        return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+    }
+    else if (Status == STATUS_NOT_SUPPORTED)
+    {
+        /* Otherwise, we can't handle it, let someone else down the stack try */
+        Status = PciCallDownIrpStack(DeviceExtension, Irp);
+        if (Status == STATUS_NOT_SUPPORTED)
+        {
+            /* They can't either, try a last-resort interface lookup */
+            Status = PciQueryInterface(DeviceExtension,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       InterfaceType,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Size,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Version,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       InterfaceSpecificData,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Interface,
+                                       TRUE);
+        }
+    }
+
+    /* Has anyone claimed this interface yet? */
+    if (Status == STATUS_NOT_SUPPORTED)
+    {
+        /* No, return the original IRP status */
+        Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        /* Yes, set the new IRP status */
+        Irp->IoStatus.Status = Status;
+    }
+
+    /* Complete this IRP */
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 NTSTATUS
