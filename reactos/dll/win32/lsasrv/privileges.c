@@ -11,166 +11,91 @@
 #include <wine/debug.h>
 
 
-static const WCHAR SE_CREATE_TOKEN_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_ASSIGNPRIMARYTOKEN_NAME_W[] =
- { 'S','e','A','s','s','i','g','n','P','r','i','m','a','r','y','T','o','k','e','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_LOCK_MEMORY_NAME_W[] =
- { 'S','e','L','o','c','k','M','e','m','o','r','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_INCREASE_QUOTA_NAME_W[] =
- { 'S','e','I','n','c','r','e','a','s','e','Q','u','o','t','a','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_MACHINE_ACCOUNT_NAME_W[] =
- { 'S','e','M','a','c','h','i','n','e','A','c','c','o','u','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_TCB_NAME_W[] =
- { 'S','e','T','c','b','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SECURITY_NAME_W[] =
- { 'S','e','S','e','c','u','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_TAKE_OWNERSHIP_NAME_W[] =
- { 'S','e','T','a','k','e','O','w','n','e','r','s','h','i','p','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_LOAD_DRIVER_NAME_W[] =
- { 'S','e','L','o','a','d','D','r','i','v','e','r','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEM_PROFILE_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','P','r','o','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEMTIME_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','t','i','m','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_PROF_SINGLE_PROCESS_NAME_W[] =
- { 'S','e','P','r','o','f','i','l','e','S','i','n','g','l','e','P','r','o','c','e','s','s','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_INC_BASE_PRIORITY_NAME_W[] =
- { 'S','e','I','n','c','r','e','a','s','e','B','a','s','e','P','r','i','o','r','i','t','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_PAGEFILE_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','P','a','g','e','f','i','l','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_PERMANENT_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','P','e','r','m','a','n','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_BACKUP_NAME_W[] =
- { 'S','e','B','a','c','k','u','p','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_RESTORE_NAME_W[] =
- { 'S','e','R','e','s','t','o','r','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SHUTDOWN_NAME_W[] =
- { 'S','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_DEBUG_NAME_W[] =
- { 'S','e','D','e','b','u','g','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_AUDIT_NAME_W[] =
- { 'S','e','A','u','d','i','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYSTEM_ENVIRONMENT_NAME_W[] =
- { 'S','e','S','y','s','t','e','m','E','n','v','i','r','o','n','m','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CHANGE_NOTIFY_NAME_W[] =
- { 'S','e','C','h','a','n','g','e','N','o','t','i','f','y','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_REMOTE_SHUTDOWN_NAME_W[] =
- { 'S','e','R','e','m','o','t','e','S','h','u','t','d','o','w','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_UNDOCK_NAME_W[] =
- { 'S','e','U','n','d','o','c','k','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_SYNC_AGENT_NAME_W[] =
- { 'S','e','S','y','n','c','A','g','e','n','t','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_ENABLE_DELEGATION_NAME_W[] =
- { 'S','e','E','n','a','b','l','e','D','e','l','e','g','a','t','i','o','n','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_MANAGE_VOLUME_NAME_W[] =
- { 'S','e','M','a','n','a','g','e','V','o','l','u','m','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_IMPERSONATE_NAME_W[] =
- { 'S','e','I','m','p','e','r','s','o','n','a','t','e','P','r','i','v','i','l','e','g','e',0 };
-static const WCHAR SE_CREATE_GLOBAL_NAME_W[] =
- { 'S','e','C','r','e','a','t','e','G','l','o','b','a','l','P','r','i','v','i','l','e','g','e',0 };
-
-static const WCHAR * const WellKnownPrivNames[SE_MAX_WELL_KNOWN_PRIVILEGE + 1] =
+typedef struct
 {
-    NULL,
-    NULL,
-    SE_CREATE_TOKEN_NAME_W,
-    SE_ASSIGNPRIMARYTOKEN_NAME_W,
-    SE_LOCK_MEMORY_NAME_W,
-    SE_INCREASE_QUOTA_NAME_W,
-    SE_MACHINE_ACCOUNT_NAME_W,
-    SE_TCB_NAME_W,
-    SE_SECURITY_NAME_W,
-    SE_TAKE_OWNERSHIP_NAME_W,
-    SE_LOAD_DRIVER_NAME_W,
-    SE_SYSTEM_PROFILE_NAME_W,
-    SE_SYSTEMTIME_NAME_W,
-    SE_PROF_SINGLE_PROCESS_NAME_W,
-    SE_INC_BASE_PRIORITY_NAME_W,
-    SE_CREATE_PAGEFILE_NAME_W,
-    SE_CREATE_PERMANENT_NAME_W,
-    SE_BACKUP_NAME_W,
-    SE_RESTORE_NAME_W,
-    SE_SHUTDOWN_NAME_W,
-    SE_DEBUG_NAME_W,
-    SE_AUDIT_NAME_W,
-    SE_SYSTEM_ENVIRONMENT_NAME_W,
-    SE_CHANGE_NOTIFY_NAME_W,
-    SE_REMOTE_SHUTDOWN_NAME_W,
-    SE_UNDOCK_NAME_W,
-    SE_SYNC_AGENT_NAME_W,
-    SE_ENABLE_DELEGATION_NAME_W,
-    SE_MANAGE_VOLUME_NAME_W,
-    SE_IMPERSONATE_NAME_W,
-    SE_CREATE_GLOBAL_NAME_W,
+    LUID Luid;
+    LPCWSTR Name;
+} PRIVILEGE_DATA;
+
+
+static const PRIVILEGE_DATA WellKnownPrivileges[] =
+{
+    {{SE_CREATE_TOKEN_PRIVILEGE, 0}, L"SeCreateTokenPrivilege"},
+    {{SE_ASSIGNPRIMARYTOKEN_PRIVILEGE, 0}, L"SeAssignPrimaryTokenPrivilege"},
+    {{SE_LOCK_MEMORY_PRIVILEGE, 0}, L"SeLockMemoryPrivilege"},
+    {{SE_INCREASE_QUOTA_PRIVILEGE, 0}, L"SeIncreaseQuotaPrivilege"},
+    {{SE_MACHINE_ACCOUNT_PRIVILEGE, 0}, L"SeMachineAccountPrivilege"},
+    {{SE_TCB_PRIVILEGE, 0}, L"SeTcbPrivilege"},
+    {{SE_SECURITY_PRIVILEGE, 0}, L"SeSecurityPrivilege"},
+    {{SE_TAKE_OWNERSHIP_PRIVILEGE, 0}, L"SeTakeOwnershipPrivilege"},
+    {{SE_LOAD_DRIVER_PRIVILEGE, 0}, L"SeLoadDriverPrivilege"},
+    {{SE_SYSTEM_PROFILE_PRIVILEGE, 0}, L"SeSystemProfilePrivilege"},
+    {{SE_SYSTEMTIME_PRIVILEGE, 0}, L"SeSystemtimePrivilege"},
+    {{SE_PROF_SINGLE_PROCESS_PRIVILEGE, 0}, L"SeProfileSingleProcessPrivilege"},
+    {{SE_INC_BASE_PRIORITY_PRIVILEGE, 0}, L"SeIncreaseBasePriorityPrivilege"},
+    {{SE_CREATE_PAGEFILE_PRIVILEGE, 0}, L"SeCreatePagefilePrivilege"},
+    {{SE_CREATE_PERMANENT_PRIVILEGE, 0}, L"SeCreatePermanentPrivilege"},
+    {{SE_BACKUP_PRIVILEGE, 0}, L"SeBackupPrivilege"},
+    {{SE_RESTORE_PRIVILEGE, 0}, L"SeRestorePrivilege"},
+    {{SE_SHUTDOWN_PRIVILEGE, 0}, L"SeShutdownPrivilege"},
+    {{SE_DEBUG_PRIVILEGE, 0}, L"SeDebugPrivilege"},
+    {{SE_AUDIT_PRIVILEGE, 0}, L"SeAuditPrivilege"},
+    {{SE_SYSTEM_ENVIRONMENT_PRIVILEGE, 0}, L"SeSystemEnvironmentPrivilege"},
+    {{SE_CHANGE_NOTIFY_PRIVILEGE, 0}, L"SeChangeNotifyPrivilege"},
+    {{SE_REMOTE_SHUTDOWN_PRIVILEGE, 0}, L"SeRemoteShutdownPrivilege"},
+    {{SE_UNDOCK_PRIVILEGE, 0}, L"SeUndockPrivilege"},
+    {{SE_SYNC_AGENT_PRIVILEGE, 0}, L"SeSyncAgentPrivilege"},
+    {{SE_ENABLE_DELEGATION_PRIVILEGE, 0}, L"SeEnableDelegationPrivilege"},
+    {{SE_MANAGE_VOLUME_PRIVILEGE, 0}, L"SeManageVolumePrivilege"},
+    {{SE_IMPERSONATE_PRIVILEGE, 0}, L"SeImpersonatePrivilege"},
+    {{SE_CREATE_GLOBAL_PRIVILEGE, 0}, L"SeCreateGlobalPrivilege"}
 };
 
-static const WCHAR * const DefaultPrivNames[] =
-{
-    L"SeCreateTokenPrivilege",
-    L"SeAssignPrimaryTokenPrivilege",
-    L"SeLockMemoryPrivilege",
-    L"SeIncreaseQuotaPrivilege",
-    L"SeMachineAccountPrivilege",
-    L"SeTcbPrivilege",
-    L"SeSecurityPrivilege",
-    L"SeTakeOwnershipPrivilege",
-    L"SeLoadDriverPrivilege",
-    L"SeSystemProfilePrivilege",
-    L"SeSystemtimePrivilege",
-    L"SeProfileSingleProcessPrivilege",
-    L"SeIncreaseBasePriorityPrivilege",
-    L"SeCreatePagefilePrivilege",
-    L"SeCreatePermanentPrivilege",
-    L"SeBackupPrivilege",
-    L"SeRestorePrivilege",
-    L"SeShutdownPrivilege",
-    L"SeDebugPrivilege",
-    L"SeAuditPrivilege",
-    L"SeSystemEnvironmentPrivilege",
-    L"SeChangeNotifyPrivilege",
-    L"SeRemoteShutdownPrivilege",
-    L"SeUndockPrivilege",
-    L"SeSyncAgentPrivilege",
-    L"SeEnableDelegationPrivilege",
-    L"SeManageVolumePrivilege",
-    L"SeImpersonatePrivilege",
-    L"SeCreateGlobalPrivilege"
-};
 
+/* FUNCTIONS ***************************************************************/
 
 NTSTATUS
 LsarpLookupPrivilegeName(PLUID Value,
                          PUNICODE_STRING *Name)
 {
     PUNICODE_STRING NameBuffer;
+    ULONG Priv;
 
-    if (Value->HighPart ||
+    if (Value->HighPart != 0 ||
         (Value->LowPart < SE_MIN_WELL_KNOWN_PRIVILEGE ||
          Value->LowPart > SE_MAX_WELL_KNOWN_PRIVILEGE))
     {
         return STATUS_NO_SUCH_PRIVILEGE;
     }
 
-    NameBuffer = MIDL_user_allocate(sizeof(UNICODE_STRING));
-    if (NameBuffer == NULL)
-        return STATUS_NO_MEMORY;
-
-    NameBuffer->Length = wcslen(WellKnownPrivNames[Value->LowPart]) * sizeof(WCHAR);
-    NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
-
-    NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
-    if (NameBuffer == NULL)
+    for (Priv = 0; Priv < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); Priv++)
     {
-        MIDL_user_free(NameBuffer);
-        return STATUS_NO_MEMORY;
+        if (Value->LowPart == WellKnownPrivileges[Priv].Luid.LowPart &&
+            Value->HighPart == WellKnownPrivileges[Priv].Luid.HighPart)
+        {
+            NameBuffer = MIDL_user_allocate(sizeof(UNICODE_STRING));
+            if (NameBuffer == NULL)
+                return STATUS_NO_MEMORY;
+
+            NameBuffer->Length = wcslen(WellKnownPrivileges[Priv].Name) * sizeof(WCHAR);
+            NameBuffer->MaximumLength = NameBuffer->Length + sizeof(WCHAR);
+
+            NameBuffer->Buffer = MIDL_user_allocate(NameBuffer->MaximumLength);
+            if (NameBuffer == NULL)
+            {
+                MIDL_user_free(NameBuffer);
+                return STATUS_NO_MEMORY;
+            }
+
+            wcscpy(NameBuffer->Buffer, WellKnownPrivileges[Priv].Name);
+
+            *Name = NameBuffer;
+
+            return STATUS_SUCCESS;
+        }
     }
 
-    wcscpy(NameBuffer->Buffer, WellKnownPrivNames[Value->LowPart]);
-
-    *Name = NameBuffer;
-
-    return STATUS_SUCCESS;
+    return STATUS_NO_SUCH_PRIVILEGE;
 }
 
 
@@ -183,12 +108,12 @@ LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
     if (Name->Length == 0 || Name->Buffer == NULL)
         return STATUS_NO_SUCH_PRIVILEGE;
 
-    for (Priv = 0; Priv < sizeof(DefaultPrivNames) / sizeof(DefaultPrivNames[0]); Priv++)
+    for (Priv = 0; Priv < sizeof(WellKnownPrivileges) / sizeof(WellKnownPrivileges[0]); Priv++)
     {
-        if (0 == _wcsicmp(Name->Buffer, DefaultPrivNames[Priv]))
+        if (_wcsicmp(Name->Buffer, WellKnownPrivileges[Priv].Name) == 0)
         {
-            Value->LowPart = Priv + SE_MIN_WELL_KNOWN_PRIVILEGE;
-            Value->HighPart = 0;
+            Value->LowPart = WellKnownPrivileges[Priv].Luid.LowPart;
+            Value->HighPart = WellKnownPrivileges[Priv].Luid.HighPart;
             return STATUS_SUCCESS;
         }
     }
