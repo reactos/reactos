@@ -189,6 +189,93 @@ typedef struct _PCI_FDO_EXTENSION
     LONG BusHackFlags;
 } PCI_FDO_EXTENSION, *PPCI_FDO_EXTENSION;
 
+typedef struct _PCI_FUNCTION_RESOURCES
+{
+    IO_RESOURCE_DESCRIPTOR Limit[7];                                               
+    CM_PARTIAL_RESOURCE_DESCRIPTOR Current[7];                                     
+} PCI_FUNCTION_RESOURCES, *PPCI_FUNCTION_RESOURCES;
+
+typedef union _PCI_HEADER_TYPE_DEPENDENT
+{
+    struct
+    {
+        UCHAR Spare[4];
+    } type0;
+    struct
+    {
+        UCHAR PrimaryBus;
+        UCHAR SecondaryBus;
+        UCHAR SubordinateBus;
+        UCHAR SubtractiveDecode:1;
+        UCHAR IsaBitSet:1;
+        UCHAR VgaBitSet:1;
+        UCHAR WeChangedBusNumbers:1;
+        UCHAR IsaBitRequired:1;
+    } type1;
+    struct
+    {
+        UCHAR Spare[4];
+    } type2;
+} PCI_HEADER_TYPE_DEPENDENT, *PPCI_HEADER_TYPE_DEPENDENT;
+
+typedef struct _PCI_PDO_EXTENSION
+{
+    PVOID Next;
+    ULONG ExtensionType;
+    struct _PCI_MJ_DISPATCH_TABLE *IrpDispatchTable;
+    BOOLEAN DeviceState;
+    BOOLEAN TentativeNextState;
+   
+    KEVENT SecondaryExtLock;
+    PCI_SLOT_NUMBER Slot;
+    PDEVICE_OBJECT PhysicalDeviceObject;
+    PPCI_FDO_EXTENSION ParentFdoExtension;
+    SINGLE_LIST_ENTRY SecondaryExtension;
+    LONG BusInterfaceReferenceCount;
+    LONG AgpInterfaceReferenceCount;
+    USHORT VendorId;
+    USHORT DeviceId;
+    USHORT SubsystemVendorId;
+    USHORT SubsystemId;
+    BOOLEAN RevisionId;
+    BOOLEAN ProgIf;
+    BOOLEAN SubClass;
+    BOOLEAN BaseClass;
+    BOOLEAN AdditionalResourceCount;
+    BOOLEAN AdjustedInterruptLine;
+    BOOLEAN InterruptPin;
+    BOOLEAN RawInterruptLine;
+    BOOLEAN CapabilitiesPtr;
+    BOOLEAN SavedLatencyTimer;
+    BOOLEAN SavedCacheLineSize;
+    BOOLEAN HeaderType;
+    BOOLEAN NotPresent;
+    BOOLEAN ReportedMissing;
+    BOOLEAN ExpectedWritebackFailure;
+    BOOLEAN NoTouchPmeEnable;
+    BOOLEAN LegacyDriver;
+    BOOLEAN UpdateHardware;
+    BOOLEAN MovedDevice;
+    BOOLEAN DisablePowerDown;
+    BOOLEAN NeedsHotPlugConfiguration;
+    BOOLEAN SwitchedIDEToNativeMode;
+    BOOLEAN BIOSAllowsIDESwitchToNativeMode;
+    BOOLEAN IoSpaceUnderNativeIdeControl;
+    BOOLEAN OnDebugPath;
+    PCI_POWER_STATE PowerState;
+    PCI_HEADER_TYPE_DEPENDENT Dependent;
+    ULONGLONG HackFlags;
+    PCI_FUNCTION_RESOURCES *Resources;
+    PCI_FDO_EXTENSION *BridgeFdoExtension;
+    struct _PCI_PDO_EXTENSION *NextBridge;
+    struct _PCI_PDO_EXTENSION *NextHashEntry;
+    PCI_LOCK Lock;
+    PCI_PMC PowerCapabilities;
+    BOOLEAN TargetAgpCapabilityId;
+    USHORT CommandEnables;
+    USHORT InitialCommand;
+} PCI_PDO_EXTENSION, *PPCI_PDO_EXTENSION;
+
 //
 // IRP Dispatch Function Type
 //
@@ -579,6 +666,16 @@ PciGetConfigHandlers(
     IN PPCI_FDO_EXTENSION FdoExtension
 );
 
+VOID
+NTAPI
+PciReadSlotConfig(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCI_SLOT_NUMBER Slot,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
 //
 // State Machine Logic Transition Routines
 //
@@ -635,6 +732,12 @@ PciDebugIrpDispatchDisplay(
     IN PIO_STACK_LOCATION IoStackLocation,
     IN PPCI_FDO_EXTENSION DeviceExtension,
     IN USHORT MaxMinor
+);
+
+VOID
+NTAPI
+PciDebugDumpCommonConfig(
+    IN PPCI_COMMON_HEADER PciData
 );
 
 //
@@ -857,6 +960,26 @@ devpresent_Constructor(
 );
 
 //
+// PCI Enumeration and Resources
+//
+NTSTATUS
+NTAPI
+PciQueryDeviceRelations(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN OUT PDEVICE_RELATIONS *pDeviceRelations
+);
+
+//
+// Identification Functions
+//
+PWCHAR
+NTAPI
+PciGetDeviceDescriptionMessage(
+    IN UCHAR BaseClass,
+    IN UCHAR SubClass
+);
+
+//
 // External Resources
 //
 extern SINGLE_LIST_ENTRY PciFdoExtensionListHead;
@@ -875,5 +998,7 @@ extern PCI_INTERFACE PciDevicePresentInterface;
 extern PCI_INTERFACE PciLocationInterface;
 extern PCI_INTERFACE AgpTargetInterface;
 extern PCI_INTERFACE TranslatorInterfaceInterrupt;
+extern PDRIVER_OBJECT PciDriverObject;
+extern PWATCHDOG_TABLE WdTable;
 
 /* EOF */

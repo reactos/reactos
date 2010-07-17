@@ -104,7 +104,7 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
                            IN PPCI_FDO_EXTENSION DeviceExtension,
                            IN USHORT MaxMinor)
 {
-    //PPCI_PDO_EXTENSION PdoDeviceExtension;
+    PPCI_PDO_EXTENSION PdoDeviceExtension;
     ULONG BreakMask, DebugLevel = 0;
     PCHAR IrpString;
 
@@ -147,7 +147,7 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
         {
             DebugLevel = 0x200;
         }
-#if 0 // after commit PDO support
+
         /* For a PDO, print out the bus, device, and function number */
         PdoDeviceExtension = (PVOID)DeviceExtension;
         DPRINT1("PDO(b=0x%x, d=0x%x, f=0x%x)<-%s\n",
@@ -155,7 +155,6 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
                 PdoDeviceExtension->Slot.u.bits.DeviceNumber,
                 PdoDeviceExtension->Slot.u.bits.FunctionNumber,
                 IrpString);
-#endif
     }
     else if (DeviceExtension->ExtensionType == PciFdoExtensionType)
     {
@@ -179,6 +178,20 @@ PciDebugIrpDispatchDisplay(IN PIO_STACK_LOCATION IoStackLocation,
 
     /* Return whether or not the debugger should be broken into for this IRP */
     return ((1 << IoStackLocation->MinorFunction) & BreakMask);
+}
+
+VOID
+NTAPI
+PciDebugDumpCommonConfig(IN PPCI_COMMON_HEADER PciData)
+{
+    USHORT i;
+
+    /* Loop the PCI header */
+    for (i = 0; i < PCI_COMMON_HDR_LENGTH; i += 4)
+    {
+        /* Dump each DWORD and its offset */
+        DPRINT1("  %02x - %08x\n", i, *(PULONG)((ULONG_PTR)PciData + i));
+    }
 }
 
 /* EOF */

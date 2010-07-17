@@ -193,9 +193,25 @@ PciFdoIrpQueryDeviceRelations(IN PIRP Irp,
                               IN PIO_STACK_LOCATION IoStackLocation,
                               IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Are bus relations being queried? */
+    if (IoStackLocation->Parameters.QueryDeviceRelations.Type != BusRelations)
+    {
+        /* The FDO is a bus, so only bus relations can be obtained */
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else
+    {
+        /* Scan the PCI bus and build the device relations for the caller */
+        Status = PciQueryDeviceRelations(DeviceExtension,
+                                         (PDEVICE_RELATIONS*)
+                                         &Irp->IoStatus.Information);
+    }
+
+    /* Return the enumeration status back */
+    return Status;
 }
 
 NTSTATUS

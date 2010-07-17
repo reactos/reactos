@@ -38,6 +38,7 @@ NTAPI
 PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
 {
     PPCI_INTERFACE CurrentInterface, *Interfaces;
+    PPCI_PDO_EXTENSION PdoExtension;
     PPCI_ARBITER_INSTANCE ArbiterInterface;
     NTSTATUS Status;
     PCI_SIGNATURE ArbiterType;
@@ -49,19 +50,17 @@ PciInitializeArbiters(IN PPCI_FDO_EXTENSION FdoExtension)
         /* Check if this is the extension for the Root PCI Bus */
         if (!PCI_IS_ROOT_FDO(FdoExtension))
         {
-#if 0   // at next sync when PDO add
             /* Get the PDO extension */
             PdoExtension = FdoExtension->PhysicalDeviceObject->DeviceExtension;
             ASSERT_PDO(PdoExtension);
 
             /* Skip this bus if it does subtractive decode */
-            if (PdoExtension->Substractive)
+            if (PdoExtension->Dependent.type1.SubtractiveDecode)
             {
                 DPRINT1("PCI Not creating arbiters for subtractive bus %d\n",
-                        PdoExtension->Substractive);
+                        PdoExtension->Dependent.type1.SubtractiveDecode);
                 continue;
             }
-#endif
         }
 
         /* Query all the registered arbiter interfaces */
@@ -127,7 +126,7 @@ NTAPI
 PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
                            IN PCM_RESOURCE_LIST Resources)
 {
-    //PPCI_PDO_EXTENSION PdoExtension;
+    PPCI_PDO_EXTENSION PdoExtension;
     CM_RESOURCE_TYPE DesiredType;
     PVOID Instance;
     PCI_SIGNATURE ArbiterType;
@@ -144,10 +143,9 @@ PciInitializeArbiterRanges(IN PPCI_FDO_EXTENSION DeviceExtension,
     if (!PCI_IS_ROOT_FDO(DeviceExtension))
     {
         /* Grab the PDO */
-#if 0 // when pdo support
         PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension->PhysicalDeviceObject->DeviceExtension;
         ASSERT(PdoExtension->ExtensionType == PciPdoExtensionType);
-#endif
+
         /* Multiple FDOs are not yet supported */
         UNIMPLEMENTED;
         while (TRUE);

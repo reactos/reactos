@@ -47,7 +47,6 @@ agpintrf_Constructor(IN PVOID DeviceExtension,
                      IN USHORT Size,
                      IN PINTERFACE Interface)
 {
-#if 0 // when have PDO commit
     PPCI_PDO_EXTENSION PdoExtension = (PPCI_PDO_EXTENSION)DeviceExtension;
 
     /* Only AGP bridges are supported (which are PCI-to-PCI Bridge Devices) */
@@ -57,7 +56,6 @@ agpintrf_Constructor(IN PVOID DeviceExtension,
         /* Fail any other PDO */
         return STATUS_NOT_SUPPORTED;
     }
-#endif
 
     /* Not yet implemented */
     UNIMPLEMENTED;
