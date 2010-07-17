@@ -197,8 +197,8 @@ typedef struct _PCI_FDO_EXTENSION
 
 typedef struct _PCI_FUNCTION_RESOURCES
 {
-    IO_RESOURCE_DESCRIPTOR Limit[7];                                               
-    CM_PARTIAL_RESOURCE_DESCRIPTOR Current[7];                                     
+    IO_RESOURCE_DESCRIPTOR Limit[7];
+    CM_PARTIAL_RESOURCE_DESCRIPTOR Current[7];
 } PCI_FUNCTION_RESOURCES, *PPCI_FUNCTION_RESOURCES;
 
 typedef union _PCI_HEADER_TYPE_DEPENDENT
@@ -231,7 +231,7 @@ typedef struct _PCI_PDO_EXTENSION
     struct _PCI_MJ_DISPATCH_TABLE *IrpDispatchTable;
     BOOLEAN DeviceState;
     BOOLEAN TentativeNextState;
-   
+
     KEVENT SecondaryExtLock;
     PCI_SLOT_NUMBER Slot;
     PDEVICE_OBJECT PhysicalDeviceObject;
@@ -288,7 +288,7 @@ typedef struct _PCI_PDO_EXTENSION
 typedef NTSTATUS (NTAPI *PCI_DISPATCH_FUNCTION)(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IoStackLocation,
-    IN PPCI_FDO_EXTENSION DeviceExtension
+    IN PVOID DeviceExtension
 );
 
 //
@@ -400,6 +400,14 @@ NTAPI
 PciCallDownIrpStack(
     IN PPCI_FDO_EXTENSION DeviceExtension,
     IN PIRP Irp
+);
+
+NTSTATUS
+NTAPI
+PciIrpInvalidDeviceRequest(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_FDO_EXTENSION DeviceExtension
 );
 
 //
@@ -542,6 +550,210 @@ PciFdoIrpQueryLegacyBusInformation(
     IN PIO_STACK_LOCATION IoStackLocation,
     IN PPCI_FDO_EXTENSION DeviceExtension
 );
+
+//
+// Device PDO Routines
+//
+NTSTATUS
+NTAPI
+PciPdoCreate(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN PCI_SLOT_NUMBER Slot,
+    OUT PDEVICE_OBJECT *PdoDeviceObject
+);
+
+NTSTATUS
+NTAPI
+PciPdoWaitWake(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoSetPowerState(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryPower(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpStartDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpCancelRemoveDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpCancelStopDevice(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryDeviceRelations(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryInterface(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryCapabilities(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryResources(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryResourceRequirements(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryDeviceText(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpReadConfig(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpWriteConfig(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryId(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryDeviceState(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryBusInformation(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpDeviceUsageNotification(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpSurpriseRemoval(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciPdoIrpQueryLegacyBusInformation(
+    IN PIRP Irp,
+    IN PIO_STACK_LOCATION IoStackLocation,
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
 
 //
 // HAL Callback/Hook Routines

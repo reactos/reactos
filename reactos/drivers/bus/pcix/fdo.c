@@ -19,41 +19,41 @@ BOOLEAN PciBreakOnDefault;
 
 PCI_MN_DISPATCH_TABLE PciFdoDispatchPowerTable[] =
 {
-    {IRP_DISPATCH, PciFdoWaitWake},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciFdoSetPowerState},
-    {IRP_DOWNWARD, PciFdoIrpQueryPower},
-    {IRP_DOWNWARD, PciIrpNotSupported}
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoWaitWake},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoSetPowerState},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryPower},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported}
 };
 
 PCI_MN_DISPATCH_TABLE PciFdoDispatchPnpTable[] =
 {
-    {IRP_UPWARD,   PciFdoIrpStartDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryRemoveDevice},
-    {IRP_DISPATCH, PciFdoIrpRemoveDevice},
-    {IRP_DOWNWARD, PciFdoIrpCancelRemoveDevice},
-    {IRP_DOWNWARD, PciFdoIrpStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpCancelStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryDeviceRelations},
-    {IRP_DISPATCH, PciFdoIrpQueryInterface},
-    {IRP_UPWARD,   PciFdoIrpQueryCapabilities},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_UPWARD,   PciFdoIrpDeviceUsageNotification},
-    {IRP_DOWNWARD, PciFdoIrpSurpriseRemoval},
-    {IRP_DOWNWARD, PciFdoIrpQueryLegacyBusInformation},
-    {IRP_DOWNWARD, PciIrpNotSupported}
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpStartDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryRemoveDevice},
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoIrpRemoveDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpCancelRemoveDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpCancelStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryDeviceRelations},
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryInterface},
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryCapabilities},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpDeviceUsageNotification},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpSurpriseRemoval},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryLegacyBusInformation},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported}
 };
 
 PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
@@ -63,9 +63,9 @@ PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
     IRP_MN_QUERY_POWER,
     PciFdoDispatchPowerTable,
     IRP_DOWNWARD,
-    PciIrpNotSupported,
+    (PCI_DISPATCH_FUNCTION)PciIrpNotSupported,
     IRP_DOWNWARD,
-    PciIrpNotSupported
+    (PCI_DISPATCH_FUNCTION)PciIrpNotSupported
 };
 
 /* FUNCTIONS ******************************************************************/

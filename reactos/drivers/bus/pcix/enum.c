@@ -95,14 +95,18 @@ NTAPI
 PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     ULONG MaxDevice = PCI_MAX_DEVICES;
+    BOOLEAN ProcessFlag = FALSE;
     ULONG i, j, k;
     LONGLONG HackFlags;
+    PDEVICE_OBJECT DeviceObject;
     UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_HEADER PciData = (PVOID)Buffer;
     PCI_SLOT_NUMBER PciSlot;
+    NTSTATUS Status;
+    PPCI_PDO_EXTENSION PdoExtension, NewExtension;
+    PPCI_PDO_EXTENSION* BridgeExtension;
     PWCHAR DescriptionText;
     USHORT SubVendorId, SubSystemId;
-    PPCI_PDO_EXTENSION PdoExtension;
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%x, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
@@ -217,7 +221,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 
             /* Check if a PDO has already been created for this device */
             PdoExtension = PciFindPdoByFunction(DeviceExtension,
-                                                PciSlot.u.bits.FunctionNumber,
+                                                PciSlot.u.AsULONG,
                                                 PciData);
             if (PdoExtension)
             {
@@ -225,6 +229,91 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 UNIMPLEMENTED;
                 while (TRUE);
             }
+
+            /* Bus processing will need to happen */
+            ProcessFlag = TRUE;
+
+            /* Create the PDO for this device */
+            Status = PciPdoCreate(DeviceExtension, PciSlot, &DeviceObject);
+            ASSERT(NT_SUCCESS(Status));
+            NewExtension = (PPCI_PDO_EXTENSION)DeviceObject->DeviceExtension;
+
+            /* Check for broken devices with wrong/no class codes */
+            if (HackFlags & PCI_HACK_FAKE_CLASS_CODE)
+            {
+                /* Setup a default one */
+                PciData->BaseClass = PCI_CLASS_BASE_SYSTEM_DEV;
+                PciData->SubClass = PCI_SUBCLASS_SYS_OTHER;
+
+                /* Device will behave erratically when reading back data */
+                NewExtension->ExpectedWritebackFailure = TRUE;
+            }
+
+            /* Clone all the information from the header */
+            NewExtension->VendorId = PciData->VendorID;
+            NewExtension->DeviceId = PciData->DeviceID;
+            NewExtension->RevisionId = PciData->RevisionID;
+            NewExtension->ProgIf = PciData->ProgIf;
+            NewExtension->SubClass = PciData->SubClass;
+            NewExtension->BaseClass = PciData->BaseClass;
+            NewExtension->HeaderType = PCI_CONFIGURATION_TYPE(PciData);
+
+            /* Check for PCI or Cardbus bridges, which are supported by this driver */
+            if ((NewExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+                ((NewExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) ||
+                 (NewExtension->SubClass == PCI_SUBCLASS_BR_CARDBUS)))
+            {
+                /* Acquire this device's lock */
+                KeEnterCriticalRegion();
+                KeWaitForSingleObject(&DeviceExtension->ChildListLock,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+
+                /* Scan the bridge list until the first free entry */
+                for (BridgeExtension = &DeviceExtension->ChildBridgePdoList;
+                     *BridgeExtension;
+                     BridgeExtension = &(*BridgeExtension)->NextBridge);
+
+                /* Add this PDO as a bridge */
+                *BridgeExtension = NewExtension;
+                ASSERT(NewExtension->NextBridge == NULL);
+
+                /* Release this device's lock */
+                KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+                KeLeaveCriticalRegion();
+            }
+            
+            /* Check for IDE controllers */
+            if ((NewExtension->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                (NewExtension->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
+            {
+                /* Do not allow them to power down completely */
+                NewExtension->DisablePowerDown = TRUE;
+            }
+     
+            /*
+             * Check if this is a legacy bridge. Note that the i82375 PCI/EISA
+             * bridge that is present on certain NT Alpha machines appears as 
+             * non-classified so detect it manually by scanning for its VID/PID.
+             */
+            if (((NewExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+                ((NewExtension->SubClass == PCI_SUBCLASS_BR_ISA) ||
+                 (NewExtension->SubClass == PCI_SUBCLASS_BR_EISA) ||
+                 (NewExtension->SubClass == PCI_SUBCLASS_BR_MCA))) ||
+                ((NewExtension->VendorId == 0x8086) && (NewExtension->DeviceId == 0x482)))
+            {
+                /* Do not allow these legacy bridges to be powered down */
+                NewExtension->DisablePowerDown = TRUE;
+            }
+            
+            /* Save latency and cache size information */
+            NewExtension->SavedLatencyTimer = PciData->LatencyTimer;
+            NewExtension->SavedCacheLineSize = PciData->CacheLineSize;
+            
+            /* The PDO is now ready to go */
+            DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         }
     }
 

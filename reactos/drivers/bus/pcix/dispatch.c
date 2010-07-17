@@ -264,4 +264,14 @@ PciIrpNotSupported(IN PIRP Irp,
     return STATUS_NOT_SUPPORTED;
 }
 
+NTSTATUS
+NTAPI
+PciIrpInvalidDeviceRequest(IN PIRP Irp,
+                           IN PIO_STACK_LOCATION IoStackLocation,
+                           IN PPCI_FDO_EXTENSION DeviceExtension)
+{
+    /* Not supported */
+    return STATUS_INVALID_DEVICE_REQUEST;
+}
+
 /* EOF */

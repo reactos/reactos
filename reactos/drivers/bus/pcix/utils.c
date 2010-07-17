@@ -718,7 +718,7 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
         if (!PdoExtension->ReportedMissing)
         {
             /* Check if the function number and header data matches */
-            if ((FunctionNumber == PdoExtension->Slot.u.bits.FunctionNumber) &&
+            if ((FunctionNumber == PdoExtension->Slot.u.AsULONG) &&
                 (PdoExtension->VendorId == PciData->VendorID) &&
                 (PdoExtension->DeviceId == PciData->DeviceID) &&
                 (PdoExtension->RevisionId == PciData->RevisionID))
