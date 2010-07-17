@@ -16,16 +16,93 @@
 
 /* FUNCTIONS ******************************************************************/
 
+BOOLEAN
+NTAPI
+PciSkipThisFunction(IN PPCI_COMMON_HEADER PciData,
+                    IN PCI_SLOT_NUMBER Slot,
+                    IN UCHAR OperationType,
+                    IN ULONGLONG HackFlags)
+{
+    do
+    {
+        /* Check if this is device enumeration */
+        if (OperationType == PCI_SKIP_DEVICE_ENUMERATION)
+        {
+            /* Check if there's a hackflag saying not to enumerate this device */
+            if (HackFlags & PCI_HACK_NO_ENUM_AT_ALL) break;
+
+            /* Check if this is the high end of a double decker device */
+            if ((HackFlags & PCI_HACK_DOUBLE_DECKER) &&
+                (Slot.u.bits.DeviceNumber >= 16))
+            {
+                /* It belongs to the same device, so skip it */
+                DPRINT1("    Device (Ven %04x Dev %04x (d=0x%x, f=0x%x)) is a ghost.\n",
+                        PciData->VendorID,
+                        PciData->DeviceID,
+                        Slot.u.bits.DeviceNumber,
+                        Slot.u.bits.FunctionNumber);
+                break;
+            }
+        }
+        else if (OperationType == PCI_SKIP_RESOURCE_ENUMERATION)
+        {
+            /* Resource enumeration, check for a hackflag saying not to do it */
+            if (HackFlags & PCI_HACK_ENUM_NO_RESOURCE) break;
+        }
+        else
+        {
+            /* Logic error in the driver */
+            ASSERTMSG(FALSE, "PCI Skip Function - Operation type unknown.");
+        }
+
+        /* Check for legacy bridges during resource enumeration */
+        if ((PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+            (PciData->SubClass <= PCI_SUBCLASS_BR_MCA) &&
+            (OperationType == PCI_SKIP_RESOURCE_ENUMERATION))
+        {
+            /* Their resources are not enumerated, only PCI and Cardbus/PCMCIA */
+            break;
+        }
+        else if (PciData->BaseClass == PCI_CLASS_NOT_DEFINED)
+        {
+            /* Undefined base class (usually a PCI BIOS/ROM bug) */
+            DPRINT1("    Vendor %04x, Device %04x has class code of PCI_CLASS_NOT_DEFINED\n",
+                    PciData->VendorID,
+                    PciData->DeviceID);
+
+            /*
+             * The Alder has an Intel Extended Express System Support Controller
+             * which presents apparently spurious BARs. When the PCI resource
+             * code tries to reassign these BARs, the second IO-APIC gets
+             * disabled (with disastrous consequences). The first BAR is the
+             * actual IO-APIC, the remaining five bars seem to be spurious
+             * resources, so ignore this device completely.
+             */
+            if ((PciData->VendorID == 0x8086) && (PciData->DeviceID == 8)) break;
+        }
+
+        /* Other normal PCI cards and bridges are enumerated */
+        if (PCI_CONFIGURATION_TYPE(PciData) <= PCI_CARDBUS_BRIDGE_TYPE) return FALSE;
+    } while (FALSE);
+
+    /* Hit one of the known bugs/hackflags, or this is a new kind of PCI unit */
+    DPRINT1("   Device skipped (not enumerated).\n");
+    return TRUE;
+}
+
 NTSTATUS
 NTAPI
 PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     ULONG MaxDevice = PCI_MAX_DEVICES;
     ULONG i, j, k;
+    LONGLONG HackFlags;
     UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_HEADER PciData = (PVOID)Buffer;
     PCI_SLOT_NUMBER PciSlot;
     PWCHAR DescriptionText;
+    USHORT SubVendorId, SubSystemId;
+    PPCI_PDO_EXTENSION PdoExtension;
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%x, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
@@ -86,6 +163,65 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             if (WdTable)
             {
                 /* Check if this PCI device is the ACPI Watchdog Device... */
+                UNIMPLEMENTED;
+                while (TRUE);
+            }
+
+            /* Check for non-simple devices */
+            if ((PCI_MULTIFUNCTION_DEVICE(PciData)) ||
+                (PciData->BaseClass == PCI_CLASS_BRIDGE_DEV))
+            {
+                /* No subsystem data defined for these kinds of bridges */
+                SubVendorId = 0;
+                SubSystemId = 0;
+            }
+            else
+            {
+                /* Read the subsystem information from the PCI header */
+                SubVendorId = PciData->u.type0.SubVendorID;
+                SubSystemId = PciData->u.type0.SubSystemID;
+            }
+
+            /* Get any hack flags for this device */
+            HackFlags = PciGetHackFlags(PciData->VendorID,
+                                        PciData->DeviceID,
+                                        SubVendorId,
+                                        SubSystemId,
+                                        PciData->RevisionID);
+
+            /* Check if this device is considered critical by the OS */
+            if (PciIsCriticalDeviceClass(PciData->BaseClass, PciData->SubClass))
+            {
+                /* Check if normally the decodes would be disabled */
+                if (!(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+                {
+                    /* Because this device is critical, don't disable them */
+                    DPRINT1("Not allowing PM Because device is critical\n");
+                    HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+                }
+            }
+
+            /* PCI bridges with a VGA card are also considered critical */
+            if ((PciData->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
+                (PciData->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) &&
+                (PciData->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA) &&
+               !(HackFlags & PCI_HACK_DONT_DISABLE_DECODES))
+            {
+                /* Do not disable their decodes either */
+                DPRINT1("Not allowing PM because device is VGA\n");
+                HackFlags |= PCI_HACK_CRITICAL_DEVICE;
+            }
+
+            /* Also skip devices that should not be enumerated */
+            if (PciSkipThisFunction(PciData, PciSlot, 1, HackFlags)) continue;
+
+            /* Check if a PDO has already been created for this device */
+            PdoExtension = PciFindPdoByFunction(DeviceExtension,
+                                                PciSlot.u.bits.FunctionNumber,
+                                                PciData);
+            if (PdoExtension)
+            {
+                /* Rescan scenarios are not yet implemented */
                 UNIMPLEMENTED;
                 while (TRUE);
             }

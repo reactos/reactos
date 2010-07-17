@@ -338,9 +338,11 @@ NTAPI
 PciFindParentPciFdoExtension(IN PDEVICE_OBJECT DeviceObject,
                              IN PKEVENT Lock)
 {
-    PPCI_FDO_EXTENSION FoundExtension;
+    PPCI_FDO_EXTENSION DeviceExtension;
+    PPCI_PDO_EXTENSION SearchExtension, FoundExtension;
 
     /* Assume we'll find nothing */
+    SearchExtension = DeviceObject->DeviceExtension;
     FoundExtension = NULL;
 
     /* Check if a lock was specified */
@@ -352,11 +354,31 @@ PciFindParentPciFdoExtension(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Now search for the extension */
-    if (PciFdoExtensionListHead.Next)
+    DeviceExtension = (PPCI_FDO_EXTENSION)PciFdoExtensionListHead.Next;
+    while (DeviceExtension)
     {
-        /* This case should not be hit yet */
-        UNIMPLEMENTED;
-        while (TRUE);
+        /* Acquire this device's lock */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(&DeviceExtension->ChildListLock,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+
+        /* Scan all children PDO, stop when no more PDOs, or found it */
+        for (FoundExtension = DeviceExtension->ChildPdoList;
+             FoundExtension && (FoundExtension != SearchExtension);
+             FoundExtension = FoundExtension->Next);
+
+        /* If we found it, break out */
+        if (FoundExtension) break;
+
+        /* Release this device's lock */
+        KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+        KeLeaveCriticalRegion();
+
+        /* Move to the next device */
+        DeviceExtension = (PPCI_FDO_EXTENSION)DeviceExtension->List.Next;
     }
 
     /* Check if we had acquired a lock previously */
@@ -368,7 +390,7 @@ PciFindParentPciFdoExtension(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Return which extension was found, if any */
-    return FoundExtension;
+    return DeviceExtension;
 }
 
 VOID
@@ -573,6 +595,150 @@ PciFindNextSecondaryExtension(IN PSINGLE_LIST_ENTRY ListHead,
 
     /* Nothing was found */
     return NULL;
+}
+
+ULONGLONG
+NTAPI
+PciGetHackFlags(IN USHORT VendorId,
+                IN USHORT DeviceId,
+                IN USHORT SubVendorId,
+                IN USHORT SubSystemId,
+                IN UCHAR RevisionId)
+{
+    PPCI_HACK_ENTRY HackEntry;
+    ULONGLONG HackFlags;
+    ULONG LastWeight, MatchWeight;
+    ULONG EntryFlags;
+
+    /* Initialize the variables before looping */
+    LastWeight = 0;
+    HackFlags = 0;
+    ASSERT(PciHackTable);
+
+    /* Scan the hack table */
+    for (HackEntry = PciHackTable;
+         HackEntry->VendorID != PCI_INVALID_VENDORID;
+         ++HackEntry)
+    {
+        /* Check if there's an entry for this device */
+        if ((HackEntry->DeviceID == DeviceId) &&
+            (HackEntry->VendorID == VendorId))
+        {
+            /* This is a basic match */
+            EntryFlags = HackEntry->Flags;
+            MatchWeight = 1;
+
+            /* Does the entry have revision information? */
+            if (EntryFlags & PCI_HACK_HAS_REVISION_INFO)
+            {
+                /* Check if the revision matches, if so, this is a better match */
+                if (HackEntry->RevisionID != RevisionId) continue;
+                MatchWeight = 3;
+            }
+
+            /* Does the netry have subsystem information? */
+            if (EntryFlags & PCI_HACK_HAS_SUBSYSTEM_INFO)
+            {
+                /* Check if it matches, if so, this is the best possible match */
+                if ((HackEntry->SubVendorID != SubVendorId) ||
+                    (HackEntry->SubSystemID != SubSystemId))
+                {
+                    continue;
+                }
+                MatchWeight += 4;
+            }
+
+            /* Is this the best match yet? */
+            if (MatchWeight > LastWeight)
+            {
+                /* This is the best match for now, use this as the hack flags */
+                HackFlags = HackEntry->HackFlags;
+                LastWeight = MatchWeight;
+            }
+        }
+    }
+
+    /* Return the best match */
+    return HackFlags;
+}
+
+BOOLEAN
+NTAPI
+PciIsCriticalDeviceClass(IN UCHAR BaseClass,
+                         IN UCHAR SubClass)
+{
+    /* Check for system or bridge devices */
+    if (BaseClass == PCI_CLASS_BASE_SYSTEM_DEV)
+    {
+        /* Interrupt controlers are critical */
+        return SubClass == PCI_SUBCLASS_SYS_INTERRUPT_CTLR;
+    }
+    else if (BaseClass == PCI_CLASS_BRIDGE_DEV)
+    {
+        /* ISA Bridges are critical */
+        return SubClass == PCI_SUBCLASS_BR_ISA;
+    }
+    else
+    {
+        /* All display controllers are critical */
+        return BaseClass == PCI_CLASS_DISPLAY_CTLR;
+    }
+}
+
+PPCI_PDO_EXTENSION
+NTAPI
+PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
+                     IN ULONG FunctionNumber,
+                     IN PPCI_COMMON_HEADER PciData)
+{
+    KIRQL Irql;
+    PPCI_PDO_EXTENSION PdoExtension;
+
+    /* Get the current IRQL when this call was made */
+    Irql = KeGetCurrentIrql();
+
+    /* Is this a low-IRQL call? */
+    if (Irql < DISPATCH_LEVEL)
+    {
+        /* Acquire this device's lock */
+        KeEnterCriticalRegion();
+        KeWaitForSingleObject(&DeviceExtension->ChildListLock,
+                              Executive,
+                              KernelMode,
+                              FALSE,
+                              NULL);
+    }
+
+    /* Loop every child PDO */
+    for (PdoExtension = DeviceExtension->ChildPdoList;
+         PdoExtension;
+         PdoExtension = PdoExtension->Next)
+    {
+        /* Find only enumerated PDOs */
+        if (!PdoExtension->ReportedMissing)
+        {
+            /* Check if the function number and header data matches */
+            if ((FunctionNumber == PdoExtension->Slot.u.bits.FunctionNumber) &&
+                (PdoExtension->VendorId == PciData->VendorID) &&
+                (PdoExtension->DeviceId == PciData->DeviceID) &&
+                (PdoExtension->RevisionId == PciData->RevisionID))
+            {
+                /* This is considered to be the same PDO */
+                break;
+            }
+        }
+    }
+
+    /* Was this a low-IRQL call? */
+    if (Irql < DISPATCH_LEVEL)
+    {
+        /* Release this device's lock */
+        KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+        KeLeaveCriticalRegion();
+    }
+
+    /* If the search found something, this is non-NULL, otherwise it's NULL */
+    return PdoExtension;
 }
 
 /* EOF */

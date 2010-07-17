@@ -57,6 +57,12 @@
 #define PCI_INTERFACE_ROOT                  0x04
 
 //
+// PCI Skip Function FLags
+//
+#define PCI_SKIP_DEVICE_ENUMERATION         0x01
+#define PCI_SKIP_RESOURCE_ENUMERATION       0x02
+
+//
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
 typedef enum _PCI_SIGNATURE
@@ -657,6 +663,31 @@ PciFindNextSecondaryExtension(
     IN PCI_SIGNATURE ExtensionType
 );
 
+ULONGLONG
+NTAPI
+PciGetHackFlags(
+    IN USHORT VendorId,
+    IN USHORT DeviceId,
+    IN USHORT SubVendorId,
+    IN USHORT SubSystemId,
+    IN UCHAR RevisionId
+);
+
+PPCI_PDO_EXTENSION
+NTAPI
+PciFindPdoByFunction(
+    IN PPCI_FDO_EXTENSION DeviceExtension,
+    IN ULONG FunctionNumber,
+    IN PPCI_COMMON_HEADER PciData
+);
+
+BOOLEAN
+NTAPI
+PciIsCriticalDeviceClass(
+    IN UCHAR BaseClass,
+    IN UCHAR SubClass
+);
+
 //
 // Configuration Routines
 //
@@ -1000,5 +1031,6 @@ extern PCI_INTERFACE AgpTargetInterface;
 extern PCI_INTERFACE TranslatorInterfaceInterrupt;
 extern PDRIVER_OBJECT PciDriverObject;
 extern PWATCHDOG_TABLE WdTable;
+extern PPCI_HACK_ENTRY PciHackTable;
 
 /* EOF */

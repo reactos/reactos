@@ -506,11 +506,15 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 if (PciBreakOnDefault)
                 {
                     /* If a second bus is found and there's still no data, crash */
+                    #if 0 // ros bug?
                     KeBugCheckEx(PCI_BUS_DRIVER_INTERNAL,
                                  0xDEAD0010u,
                                  (ULONG_PTR)DeviceObject,
                                  0,
                                  0);
+                    #else
+                    DPRINT1("Windows would crash!\n");
+                    #endif
                 }
 
                 /* Warn that a default configuration will be used, and set bus 0 */
