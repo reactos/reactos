@@ -18,6 +18,40 @@
 
 BOOLEAN
 NTAPI
+PcipIsSameDevice(IN PPCI_PDO_EXTENSION DeviceExtension,
+                 IN PPCI_COMMON_HEADER PciData)
+{
+    BOOLEAN IdMatch, RevMatch, SubsysMatch;
+    ULONGLONG HackFlags = DeviceExtension->HackFlags;
+
+    /* Check if the IDs match */
+    IdMatch = (PciData->VendorID == DeviceExtension->VendorId) &&
+              (PciData->DeviceID == DeviceExtension->DeviceId);
+    if (!IdMatch) return FALSE;
+
+    /* If the device has a valid revision, check if it matches */
+    RevMatch = (HackFlags & PCI_HACK_NO_REVISION_AFTER_D3) ||
+               (PciData->RevisionID == DeviceExtension->RevisionId);
+    if (!RevMatch) return FALSE;
+
+    /* For multifunction devices, this is enough to assume they're the same */
+    if (PCI_MULTIFUNCTION_DEVICE(PciData)) return TRUE;
+
+    /* For bridge devices, there's also nothing else that can be checked */
+    if (DeviceExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) return TRUE;
+
+    /* Devices, on the other hand, have subsystem data that can be compared */
+    SubsysMatch = (HackFlags & (PCI_HACK_NO_SUBSYSTEM |
+                                PCI_HACK_NO_SUBSYSTEM_AFTER_D3)) ||
+                  ((DeviceExtension->SubsystemVendorId ==
+                    PciData->u.type0.SubVendorID) &&
+                   (DeviceExtension->SubsystemId ==
+                    PciData->u.type0.SubSystemID));
+    return SubsysMatch;
+}
+
+BOOLEAN
+NTAPI
 PciSkipThisFunction(IN PPCI_COMMON_HEADER PciData,
                     IN PCI_SLOT_NUMBER Slot,
                     IN UCHAR OperationType,
@@ -100,7 +134,9 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     LONGLONG HackFlags;
     PDEVICE_OBJECT DeviceObject;
     UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
+    UCHAR BiosBuffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_HEADER PciData = (PVOID)Buffer;
+    PPCI_COMMON_HEADER BiosData = (PVOID)BiosBuffer;
     PCI_SLOT_NUMBER PciSlot;
     NTSTATUS Status;
     PPCI_PDO_EXTENSION PdoExtension, NewExtension;
@@ -160,7 +196,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Find description for this device for the debugger's sake */
             DescriptionText = PciGetDeviceDescriptionMessage(PciData->BaseClass,
                                                              PciData->SubClass);
-            DPRINT1("Device Description \"%S\".\n", DescriptionText ? DescriptionText : L"(NULL)");
+            DPRINT1("Device Description \"%S\".\n",
+                    DescriptionText ? DescriptionText : L"(NULL)");
             if (DescriptionText) ExFreePoolWithTag(DescriptionText, 0);
 
             /* Check if there is an ACPI Watchdog Table */
@@ -258,7 +295,7 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             NewExtension->BaseClass = PciData->BaseClass;
             NewExtension->HeaderType = PCI_CONFIGURATION_TYPE(PciData);
 
-            /* Check for PCI or Cardbus bridges, which are supported by this driver */
+            /* Check for modern bridge types, which are managed by the driver */
             if ((NewExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
                 ((NewExtension->SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) ||
                  (NewExtension->SubClass == PCI_SUBCLASS_BR_CARDBUS)))
@@ -281,10 +318,84 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 ASSERT(NewExtension->NextBridge == NULL);
 
                 /* Release this device's lock */
-                KeSetEvent(&DeviceExtension->ChildListLock, IO_NO_INCREMENT, FALSE);
+                KeSetEvent(&DeviceExtension->ChildListLock,
+                           IO_NO_INCREMENT,
+                           FALSE);
                 KeLeaveCriticalRegion();
             }
-            
+
+            /* Get the PCI BIOS configuration saved in the registry */
+            Status = PciGetBiosConfig(NewExtension, BiosData);
+            if (NT_SUCCESS(Status))
+            {
+                /* This path has not yet been fully tested by eVb */
+                DPRINT1("Have BIOS configuration!\n");
+                UNIMPLEMENTED;
+
+                /* Check if the PCI BIOS configuration has changed */
+                if (!PcipIsSameDevice(NewExtension, BiosData))
+                {
+                    /* This is considered failure, and new data will be saved */
+                    Status = STATUS_UNSUCCESSFUL;
+                }
+                else
+                {
+                    /* Data is still correct, check for interrupt line change */
+                    if (BiosData->u.type0.InterruptLine !=
+                        PciData->u.type0.InterruptLine)
+                    {
+                        /* Update the current BIOS with the saved interrupt line */
+                        PciWriteDeviceConfig(NewExtension,
+                                             &BiosData->u.type0.InterruptLine,
+                                             FIELD_OFFSET(PCI_COMMON_HEADER,
+                                                          u.type0.InterruptLine),
+                                             sizeof(UCHAR));
+                    }
+
+                    /* Save the BIOS interrupt line and the initial command */
+                    NewExtension->RawInterruptLine = BiosData->u.type0.InterruptLine;
+                    NewExtension->InitialCommand = BiosData->Command;
+                }
+            }
+
+            /* Check if no saved data was present or if it was a mismatch */
+            if (!NT_SUCCESS(Status))
+            {
+                /* Save the new data */
+                Status = PciSaveBiosConfig(NewExtension, PciData);
+                ASSERT(NT_SUCCESS(Status));
+
+                /* Save the interrupt line and command from the device */
+                NewExtension->RawInterruptLine = PciData->u.type0.InterruptLine;
+                NewExtension->InitialCommand = PciData->Command;
+            }
+
+            /* Save original command from the device and hack flags */
+            NewExtension->CommandEnables = PciData->Command;
+            NewExtension->HackFlags = HackFlags;
+
+            /* Save interrupt pin */
+            NewExtension->InterruptPin = PciData->u.type0.InterruptPin;
+
+            /*
+             * Use either this device's actual IRQ line or, if it's connected on
+             * a master bus whose IRQ line is actually connected to the host, use
+             * the HAL to query the bus' IRQ line and store that as the adjusted
+             * interrupt line instead
+             */
+            NewExtension->AdjustedInterruptLine = PciGetAdjustedInterruptLine(NewExtension);
+
+            /* Check if this device is used for PCI debugger cards */
+            NewExtension->OnDebugPath = PciIsDeviceOnDebugPath(NewExtension);
+
+            /* Check for devices with invalid/bogus subsystem data */
+            if (HackFlags & PCI_HACK_NO_SUBSYSTEM)
+            {
+                /* Set the subsystem information to zero instead */
+                NewExtension->SubsystemVendorId = 0;
+                NewExtension->SubsystemId = 0;
+            }
+
             /* Check for IDE controllers */
             if ((NewExtension->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
                 (NewExtension->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
@@ -292,26 +403,27 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 /* Do not allow them to power down completely */
                 NewExtension->DisablePowerDown = TRUE;
             }
-     
+
             /*
              * Check if this is a legacy bridge. Note that the i82375 PCI/EISA
-             * bridge that is present on certain NT Alpha machines appears as 
+             * bridge that is present on certain NT Alpha machines appears as
              * non-classified so detect it manually by scanning for its VID/PID.
              */
             if (((NewExtension->BaseClass == PCI_CLASS_BRIDGE_DEV) &&
                 ((NewExtension->SubClass == PCI_SUBCLASS_BR_ISA) ||
                  (NewExtension->SubClass == PCI_SUBCLASS_BR_EISA) ||
                  (NewExtension->SubClass == PCI_SUBCLASS_BR_MCA))) ||
-                ((NewExtension->VendorId == 0x8086) && (NewExtension->DeviceId == 0x482)))
+                ((NewExtension->VendorId == 0x8086) &&
+                 (NewExtension->DeviceId == 0x482)))
             {
                 /* Do not allow these legacy bridges to be powered down */
                 NewExtension->DisablePowerDown = TRUE;
             }
-            
+
             /* Save latency and cache size information */
             NewExtension->SavedLatencyTimer = PciData->LatencyTimer;
             NewExtension->SavedCacheLineSize = PciData->CacheLineSize;
-            
+
             /* The PDO is now ready to go */
             DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
         }

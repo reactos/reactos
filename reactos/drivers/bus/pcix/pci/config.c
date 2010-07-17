@@ -18,6 +18,31 @@ BOOLEAN PciAssignBusNumbers;
 
 /* FUNCTIONS ******************************************************************/
 
+UCHAR
+NTAPI
+PciGetAdjustedInterruptLine(IN PPCI_PDO_EXTENSION PdoExtension)
+{
+    UCHAR InterruptLine = 0, PciInterruptLine;
+    ULONG Length;
+    
+    /* Does the device have an interrupt pin? */
+    if (PdoExtension->InterruptPin)
+    {
+        /* Find the associated line on the parent bus */
+        Length = HalGetBusDataByOffset(PCIConfiguration,
+                                       PdoExtension->ParentFdoExtension->BaseBus,
+                                       PdoExtension->Slot.u.AsULONG,
+                                       &PciInterruptLine,
+                                       FIELD_OFFSET(PCI_COMMON_HEADER,
+                                                    u.type0.InterruptLine),
+                                       sizeof(UCHAR));
+        if (Length) InterruptLine = PciInterruptLine;
+    }
+
+    /* Either keep the original interrupt line, or the one on the master bus */
+    return InterruptLine ? PdoExtension->RawInterruptLine : InterruptLine;
+}
+
 VOID
 NTAPI
 PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
@@ -59,6 +84,22 @@ PciReadWriteConfigSpace(IN PPCI_FDO_EXTENSION DeviceExtension,
         HalFunction = Read ? BusData->ReadConfig : BusData->WriteConfig;
         HalFunction(BusHandler, Slot, Buffer, Offset, Length);
     }
+}
+
+VOID
+NTAPI
+PciWriteDeviceConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
+                     IN PVOID Buffer,
+                     IN ULONG Offset,
+                     IN ULONG Length)
+{
+    /* Call the generic worker function */
+    PciReadWriteConfigSpace(DeviceExtension->ParentFdoExtension,
+                            DeviceExtension->Slot,
+                            Buffer,
+                            Offset,
+                            Length,
+                            FALSE);
 }
 
 VOID

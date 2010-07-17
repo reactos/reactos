@@ -57,10 +57,15 @@
 #define PCI_INTERFACE_ROOT                  0x04
 
 //
-// PCI Skip Function FLags
+// PCI Skip Function Flags
 //
 #define PCI_SKIP_DEVICE_ENUMERATION         0x01
 #define PCI_SKIP_RESOURCE_ENUMERATION       0x02
+
+//
+// PCI Debugging Device Support
+//
+#define MAX_DEBUGGING_DEVICES_SUPPORTED     0x04
 
 //
 // Device Extension, Interface, Translator and Arbiter Signatures
@@ -900,6 +905,26 @@ PciIsCriticalDeviceClass(
     IN UCHAR SubClass
 );
 
+BOOLEAN
+NTAPI
+PciIsDeviceOnDebugPath(
+    IN PPCI_PDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciGetBiosConfig(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    OUT PPCI_COMMON_HEADER PciData
+);
+
+NTSTATUS
+NTAPI
+PciSaveBiosConfig(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    OUT PPCI_COMMON_HEADER PciData
+);
+
 //
 // Configuration Routines
 //
@@ -917,6 +942,21 @@ PciReadSlotConfig(
     IN PVOID Buffer,
     IN ULONG Offset,
     IN ULONG Length
+);
+
+VOID
+NTAPI
+PciWriteDeviceConfig(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+UCHAR
+NTAPI
+PciGetAdjustedInterruptLine(
+    IN PPCI_PDO_EXTENSION PdoExtension
 );
 
 //

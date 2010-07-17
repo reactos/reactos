@@ -14,6 +14,8 @@
 
 /* GLOBALS ********************************************************************/
 
+ULONG PciDebugPortsCount;
+
 RTL_RANGE_LIST PciIsaBitExclusionList;
 RTL_RANGE_LIST PciVgaAndIsaBitExclusionList;
 
@@ -739,6 +741,139 @@ PciFindPdoByFunction(IN PPCI_FDO_EXTENSION DeviceExtension,
 
     /* If the search found something, this is non-NULL, otherwise it's NULL */
     return PdoExtension;
+}
+
+BOOLEAN
+NTAPI
+PciIsDeviceOnDebugPath(IN PPCI_PDO_EXTENSION DeviceExtension)
+{
+    PAGED_CODE();
+
+    /* Check for too many, or no, debug ports */
+    ASSERT(PciDebugPortsCount <= MAX_DEBUGGING_DEVICES_SUPPORTED);
+    if (!PciDebugPortsCount) return FALSE;
+
+    /* eVb has not been able to test such devices yet */
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+NTSTATUS
+NTAPI
+PciGetBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
+                 OUT PPCI_COMMON_HEADER PciData)
+{
+    HANDLE KeyHandle, SubKeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName, KeyValue;
+    WCHAR Buffer[32];
+    WCHAR DataBuffer[sizeof(KEY_VALUE_PARTIAL_INFORMATION) + PCI_COMMON_HDR_LENGTH];
+    PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)DataBuffer;
+    NTSTATUS Status;
+    ULONG ResultLength;
+    PAGED_CODE();
+
+    /* Open the PCI key */
+    Status = IoOpenDeviceRegistryKey(DeviceExtension->ParentFdoExtension->
+                                     PhysicalDeviceObject,
+                                     TRUE,
+                                     KEY_ALL_ACCESS,
+                                     &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create a volatile BIOS configuration key */
+    RtlInitUnicodeString(&KeyName, L"BiosConfig");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_KERNEL_HANDLE,
+                               KeyHandle,
+                               NULL);
+    Status = ZwCreateKey(&SubKeyHandle,
+                         KEY_READ,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create the key value based on the device and function number */
+    swprintf(Buffer,
+             L"DEV_%02x&FUN_%02x",
+             DeviceExtension->Slot.u.bits.DeviceNumber,
+             DeviceExtension->Slot.u.bits.FunctionNumber);
+    RtlInitUnicodeString(&KeyValue, Buffer);
+
+    /* Query the value information (PCI BIOS configuration header) */
+    Status = ZwQueryValueKey(SubKeyHandle,
+                             &KeyValue,
+                             KeyValuePartialInformation,
+                             PartialInfo,
+                             sizeof(DataBuffer),
+                             &ResultLength);
+    ZwClose(SubKeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* If any information was returned, go ahead and copy its data */
+    ASSERT(PartialInfo->DataLength == PCI_COMMON_HDR_LENGTH);
+    RtlCopyMemory(PciData, PartialInfo->Data, PCI_COMMON_HDR_LENGTH);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+PciSaveBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
+                  IN PPCI_COMMON_HEADER PciData)
+{
+    HANDLE KeyHandle, SubKeyHandle;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName, KeyValue;
+    WCHAR Buffer[32];
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Open the PCI key */
+    Status = IoOpenDeviceRegistryKey(DeviceExtension->ParentFdoExtension->
+                                     PhysicalDeviceObject,
+                                     TRUE,
+                                     KEY_READ | KEY_WRITE,
+                                     &KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create a volatile BIOS configuration key */
+    RtlInitUnicodeString(&KeyName, L"BiosConfig");
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_KERNEL_HANDLE,
+                               KeyHandle,
+                               NULL);
+    Status = ZwCreateKey(&SubKeyHandle,
+                         KEY_READ | KEY_WRITE,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    ZwClose(KeyHandle);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Create the key value based on the device and function number */
+    swprintf(Buffer,
+             L"DEV_%02x&FUN_%02x",
+             DeviceExtension->Slot.u.bits.DeviceNumber,
+             DeviceExtension->Slot.u.bits.FunctionNumber);
+    RtlInitUnicodeString(&KeyValue, Buffer);
+    
+    /* Set the value data (the PCI BIOS configuration header) */
+    Status = ZwSetValueKey(SubKeyHandle,
+                           &KeyValue,
+                           0,
+                           REG_BINARY,
+                           PciData,
+                           PCI_COMMON_HDR_LENGTH);
+    ZwClose(SubKeyHandle);
+    return Status;
 }
 
 /* EOF */
