@@ -347,10 +347,16 @@ NTSTATUS LsarLookupSids(
     LSAP_LOOKUP_LEVEL LookupLevel,
     DWORD *MappedCount)
 {
+    SID_IDENTIFIER_AUTHORITY IdentifierAuthority = {SECURITY_NT_AUTHORITY};
+    static const UNICODE_STRING DomainName = RTL_CONSTANT_STRING(L"DOMAIN");
     static const UNICODE_STRING UserName = RTL_CONSTANT_STRING(L"Administrator");
+    PLSAPR_REFERENCED_DOMAIN_LIST OutputDomains = NULL;
     PLSAPR_TRANSLATED_NAME OutputNames = NULL;
     ULONG OutputNamesLength;
     ULONG i;
+    PSID Sid;
+    ULONG SidLength;
+    NTSTATUS Status;
 
     TRACE("LsarLookupSids(%p, %p, %p, %p, %d, %p)\n",
           PolicyHandle, SidEnumBuffer, ReferencedDomains, TranslatedNames,
@@ -369,19 +375,65 @@ NTSTATUS LsarLookupSids(
 
     RtlZeroMemory(OutputNames, OutputNamesLength);
 
+    OutputDomains = MIDL_user_allocate(sizeof(LSAPR_REFERENCED_DOMAIN_LIST));
+    if (OutputDomains == NULL)
+    {
+        MIDL_user_free(OutputNames);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    OutputDomains->Entries = SidEnumBuffer->Entries;
+    OutputDomains->Domains = MIDL_user_allocate(SidEnumBuffer->Entries * sizeof(LSA_TRUST_INFORMATION));
+    if (OutputDomains->Domains == NULL)
+    {
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputNames);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    Status = RtlAllocateAndInitializeSid(&IdentifierAuthority,
+                                         2,
+                                         SECURITY_BUILTIN_DOMAIN_RID,
+                                         DOMAIN_ALIAS_RID_ADMINS,
+                                         0, 0, 0, 0, 0, 0,
+                                         &Sid);
+    if (!NT_SUCCESS(Status))
+    {
+        MIDL_user_free(OutputDomains->Domains);
+        MIDL_user_free(OutputDomains);
+        MIDL_user_free(OutputNames);
+        return Status;
+    }
+
+    SidLength = RtlLengthSid(Sid);
+
+    for (i = 0; i < SidEnumBuffer->Entries; i++)
+    {
+        OutputDomains->Domains[i].Sid = MIDL_user_allocate(SidLength);
+        RtlCopyMemory(OutputDomains->Domains[i].Sid, Sid, SidLength);
+
+        OutputDomains->Domains[i].Name.Buffer = MIDL_user_allocate(DomainName.MaximumLength);
+        OutputDomains->Domains[i].Name.Length = DomainName.Length;
+        OutputDomains->Domains[i].Name.MaximumLength = DomainName.MaximumLength;
+        RtlCopyMemory(OutputDomains->Domains[i].Name.Buffer, DomainName.Buffer, DomainName.MaximumLength);
+    }
+
+
     for (i = 0; i < SidEnumBuffer->Entries; i++)
     {
         OutputNames[i].Use = SidTypeWellKnownGroup;
-        OutputNames[i].DomainIndex = 0;
+        OutputNames[i].DomainIndex = i;
         OutputNames[i].Name.Buffer = MIDL_user_allocate(UserName.MaximumLength);
         OutputNames[i].Name.Length = UserName.Length;
         OutputNames[i].Name.MaximumLength = UserName.MaximumLength;
         RtlCopyMemory(OutputNames[i].Name.Buffer, UserName.Buffer, UserName.MaximumLength);
     }
 
+    *ReferencedDomains = OutputDomains;
+
     *MappedCount = SidEnumBuffer->Entries;
 
-    TranslatedNames->Entries =  SidEnumBuffer->Entries;
+    TranslatedNames->Entries = SidEnumBuffer->Entries;
     TranslatedNames->Names = OutputNames;
 
     return STATUS_SUCCESS;
