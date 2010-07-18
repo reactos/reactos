@@ -99,5 +99,51 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 
 	DestroyIcon(hIcon);
 
+	/* Test full param, with foreign icon */
+	hIcon = LoadImageA(GetModuleHandleA("shell32.dll"),
+					   MAKEINTRESOURCE(293),
+					   IMAGE_ICON,
+					   0,
+					   0,
+					   LR_DEFAULTSIZE);
+
+	TEST(hIcon != NULL);
+
+	RtlInitUnicodeString(&hInstStr, NULL);
+	RtlInitUnicodeString(&ResourceStr, NULL);
+
+	TEST(NtUserGetIconInfo(hIcon,
+						   &iinfo,
+						   &hInstStr,
+						   &ResourceStr,
+						   &bpp,
+						   FALSE) == TRUE);
+	
+	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+	TEST(hInstStr.Length == 0);
+	TEST(hInstStr.MaximumLength == 0);
+	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(293));
+	TEST(ResourceStr.Length == 0);
+	TEST(ResourceStr.MaximumLength == 0);
+	TEST(bpp == 32);
+
+	RtlInitUnicodeString(&hInstStr, NULL);
+	RtlInitUnicodeString(&ResourceStr, NULL);
+
+	TEST(NtUserGetIconInfo(hIcon,
+						   &iinfo,
+						   &hInstStr,
+						   &ResourceStr,
+						   &bpp,
+						   TRUE) == TRUE);
+	
+	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+	TEST(hInstStr.Length == 0);
+	TEST(hInstStr.MaximumLength == 0);
+	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(293));
+	TEST(bpp == 32);
+
+	DestroyIcon(hIcon);
+
 	return APISTATUS_NORMAL;
 }
