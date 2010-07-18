@@ -348,47 +348,47 @@ LsaFreeMemory(PVOID Buffer)
  */
 NTSTATUS
 WINAPI
-LsaLookupNames(
-    LSA_HANDLE PolicyHandle,
-    ULONG Count,
-    PLSA_UNICODE_STRING Names,
-    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-    PLSA_TRANSLATED_SID *Sids)
+LsaLookupNames(IN LSA_HANDLE PolicyHandle,
+               IN ULONG Count,
+               IN PLSA_UNICODE_STRING Names,
+               OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+               OUT PLSA_TRANSLATED_SID *Sids)
 {
-    PLSA_TRANSLATED_SID2 Sids2;
-    LSA_TRANSLATED_SID *TranslatedSids;
-    ULONG i;
+    LSAPR_TRANSLATED_SIDS TranslatedSids;
+    ULONG MappedCount = 0;
     NTSTATUS Status;
 
     TRACE("(%p,0x%08x,%p,%p,%p)\n", PolicyHandle, Count, Names,
           ReferencedDomains, Sids);
 
-    /* Call LsaLookupNames2, which supersedes this function */
-    Status = LsaLookupNames2(PolicyHandle, Count, 0, Names, ReferencedDomains, &Sids2);
-    if (!NT_SUCCESS(Status))
-        return Status;
+    RpcTryExcept
+    {
+        *ReferencedDomains = NULL;
+        *Sids = NULL;
 
-    /* Translate the returned structure */
-    TranslatedSids = RtlAllocateHeap(RtlGetProcessHeap(), 0, Count * sizeof(LSA_TRANSLATED_SID));
-    if (!TranslatedSids)
-    {
-        LsaFreeMemory(Sids2);
-        return SCESTATUS_NOT_ENOUGH_RESOURCE;
+        TranslatedSids.Entries = Count;
+        TranslatedSids.Sids = *Sids;
+
+        Status = LsarLookupNames((LSAPR_HANDLE)PolicyHandle,
+                                 Count,
+                                 (PRPC_UNICODE_STRING)Names,
+                                 (PLSAPR_REFERENCED_DOMAIN_LIST *)ReferencedDomains,
+                                 &TranslatedSids,
+                                 LsapLookupWksta,
+                                 &MappedCount);
+
+        *Sids = (PLSA_TRANSLATED_SID)TranslatedSids.Sids;
     }
-    RtlZeroMemory(Sids, Count * sizeof(PLSA_TRANSLATED_SID));
-    for (i = 0; i < Count; i++)
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
-        TranslatedSids[i].Use = Sids2[i].Use;
-        if (Sids2[i].Use != SidTypeInvalid && Sids2[i].Use != SidTypeUnknown)
+        if (TranslatedSids.Sids != NULL)
         {
-            TranslatedSids[i].DomainIndex = Sids2[i].DomainIndex;
-            if (Sids2[i].Use != SidTypeDomain)
-                TranslatedSids[i].RelativeId = *GetSidSubAuthority(Sids2[i].Sid, 0);
+            MIDL_user_free(TranslatedSids.Sids);
         }
-    }
-    LsaFreeMemory(Sids2);
 
-    *Sids = TranslatedSids;
+        Status = I_RpcMapWin32Status(RpcExceptionCode());
+    }
+    RpcEndExcept;
 
     return Status;
 }
@@ -487,12 +487,11 @@ LsaLookupPrivilegeValue(IN LSA_HANDLE PolicyHandle,
  */
 NTSTATUS
 WINAPI
-LsaLookupSids(
-    LSA_HANDLE PolicyHandle,
-    ULONG Count,
-    PSID *Sids,
-    PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
-    PLSA_TRANSLATED_NAME *Names)
+LsaLookupSids(IN LSA_HANDLE PolicyHandle,
+              IN ULONG Count,
+              IN PSID *Sids,
+              OUT PLSA_REFERENCED_DOMAIN_LIST *ReferencedDomains,
+              OUT PLSA_TRANSLATED_NAME *Names)
 {
     LSAPR_SID_ENUM_BUFFER SidEnumBuffer;
     LSAPR_TRANSLATED_NAMES TranslatedNames;

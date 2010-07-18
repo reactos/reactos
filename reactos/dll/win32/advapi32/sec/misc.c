@@ -1177,7 +1177,7 @@ LookupAccountNameA(LPCSTR SystemName,
 /******************************************************************************
  * LookupAccountNameW [ADVAPI32.@]
  *
- * @unimplemented
+ * @implemented
  */
 BOOL
 WINAPI
@@ -1189,78 +1189,94 @@ LookupAccountNameW(LPCWSTR lpSystemName,
                    LPDWORD cchReferencedDomainName,
                    PSID_NAME_USE peUse)
 {
-    /* Default implementation: Always return a default SID */
-    SID_IDENTIFIER_AUTHORITY identifierAuthority = {SECURITY_NT_AUTHORITY};
-    BOOL ret;
-    PSID pSid;
-    static const WCHAR dm[] = {'D','O','M','A','I','N',0};
-    unsigned int i;
+    OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    UNICODE_STRING SystemName;
+    UNICODE_STRING AccountName;
+    LSA_HANDLE PolicyHandle = NULL;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
+    PLSA_TRANSLATED_SID TranslatedSid = NULL;
+    PSID pDomainSid;
+    DWORD dwDomainNameLength;
+    DWORD dwSidLength;
+    UCHAR nSubAuthorities;
+    BOOL bResult;
+    NTSTATUS Status;
 
-    TRACE("%s %s %p %p %p %p %p - stub\n", lpSystemName, lpAccountName,
+    TRACE("%s %s %p %p %p %p %p\n", lpSystemName, lpAccountName,
           Sid, cbSid, ReferencedDomainName, cchReferencedDomainName, peUse);
 
-    if (!ADVAPI_IsLocalComputer(lpSystemName))
+    RtlInitUnicodeString(&SystemName,
+                         lpSystemName);
+
+    Status = LsaOpenPolicy(lpSystemName ? &SystemName : NULL,
+                           &ObjectAttributes,
+                           POLICY_LOOKUP_NAMES,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
     {
-        SetLastError(RPC_S_SERVER_UNAVAILABLE);
+        SetLastError(LsaNtStatusToWinError(Status));
         return FALSE;
     }
 
-    for (i = 0; i < (sizeof(ACCOUNT_SIDS) / sizeof(ACCOUNT_SIDS[0])); i++)
+    RtlInitUnicodeString(&AccountName,
+                         lpAccountName);
+
+    Status = LsaLookupNames(PolicyHandle,
+                            1,
+                            &AccountName,
+                            &ReferencedDomains,
+                            &TranslatedSid);
+
+    LsaClose(PolicyHandle);
+
+    if (!NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED)
     {
-        if (!wcscmp(lpAccountName, ACCOUNT_SIDS[i].account))
-        {
-            if (*cchReferencedDomainName)
-                *ReferencedDomainName = '\0';
-            *cchReferencedDomainName = 0;
-            *peUse = SidTypeWellKnownGroup;
-            return CreateWellKnownSid(ACCOUNT_SIDS[i].type, NULL, Sid, cbSid);
-        }
-    }
-
-    ret = AllocateAndInitializeSid(&identifierAuthority,
-        2,
-        SECURITY_BUILTIN_DOMAIN_RID,
-        DOMAIN_ALIAS_RID_ADMINS,
-        0, 0, 0, 0, 0, 0,
-        &pSid);
-
-    if (!ret)
-        return FALSE;
-
-    if (!RtlValidSid(pSid))
-    {
-        FreeSid(pSid);
-        return FALSE;
-    }
-
-    if (Sid != NULL && (*cbSid >= GetLengthSid(pSid)))
-        CopySid(*cbSid, Sid, pSid);
-
-    if (*cbSid < GetLengthSid(pSid))
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        ret = FALSE;
-    }
-
-    *cbSid = GetLengthSid(pSid);
-
-    if (ReferencedDomainName != NULL && (*cchReferencedDomainName > wcslen(dm)))
-        wcscpy(ReferencedDomainName, dm);
-
-    if ((*cchReferencedDomainName <= wcslen(dm)) || (!ret))
-    {
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-        ret = FALSE;
-        *cchReferencedDomainName = wcslen(dm) + 1;
+        SetLastError(LsaNtStatusToWinError(Status));
+        bResult = FALSE;
     }
     else
     {
-        *cchReferencedDomainName = wcslen(dm);
+        pDomainSid = ReferencedDomains->Domains[TranslatedSid->DomainIndex].Sid;
+        nSubAuthorities = *GetSidSubAuthorityCount(pDomainSid);
+        dwSidLength = GetSidLengthRequired(nSubAuthorities + 1);
+
+        dwDomainNameLength = ReferencedDomains->Domains->Name.Length / sizeof(WCHAR);
+
+        if (*cbSid < dwSidLength ||
+            *cchReferencedDomainName < dwDomainNameLength + 1)
+        {
+            *cbSid = dwSidLength;
+            *cchReferencedDomainName = dwDomainNameLength + 1;
+
+            bResult = FALSE;
+        }
+        else
+        {
+            CopySid(*cbSid, Sid, pDomainSid);
+            *GetSidSubAuthorityCount(Sid) = nSubAuthorities + 1;
+            *GetSidSubAuthority(Sid, (DWORD)nSubAuthorities) = TranslatedSid->RelativeId;
+
+            RtlCopyMemory(ReferencedDomainName, ReferencedDomains->Domains->Name.Buffer, dwDomainNameLength * sizeof(WCHAR));
+            ReferencedDomainName[dwDomainNameLength] = L'\0';
+
+            *cchReferencedDomainName = dwDomainNameLength;
+
+            *peUse = TranslatedSid->Use;
+
+            bResult = TRUE;
+        }
+
+        if (bResult == FALSE)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
     }
 
-    FreeSid(pSid);
+    if (ReferencedDomains != NULL)
+        LsaFreeMemory(ReferencedDomains);
 
-    return ret;
+    if (TranslatedSid != NULL)
+        LsaFreeMemory(TranslatedSid);
+
+    return bResult;
 }
 
 
@@ -1499,11 +1515,11 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
                                     &PrivilegeName);
     if (NT_SUCCESS(Status))
     {
-        if (PrivilegeName->Length + sizeof(WCHAR) > (*cchName) * sizeof(WCHAR))
+        if (PrivilegeName->Length + sizeof(WCHAR) > *cchName * sizeof(WCHAR))
         {
             Status = STATUS_BUFFER_TOO_SMALL;
 
-            (*cchName) = (PrivilegeName->Length + sizeof(WCHAR)) / sizeof(WCHAR);
+            *cchName = (PrivilegeName->Length + sizeof(WCHAR)) / sizeof(WCHAR);
         }
         else
         {
@@ -1512,7 +1528,7 @@ LookupPrivilegeNameW(LPCWSTR lpSystemName,
                           PrivilegeName->Length);
             lpName[PrivilegeName->Length / sizeof(WCHAR)] = 0;
 
-            (*cchName) = PrivilegeName->Length / sizeof(WCHAR);
+            *cchName = PrivilegeName->Length / sizeof(WCHAR);
         }
 
         LsaFreeMemory(PrivilegeName->Buffer);
