@@ -99,5 +99,31 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 
 	DestroyIcon(hIcon);
 
+	/* Test full param, with foreign icon */
+	hIcon = LoadImageA(NULL,
+					   OIC_HAND,
+					   IMAGE_ICON,
+					   0,
+					   0,
+					   LR_DEFAULTSIZE);
+
+	TEST(hIcon != NULL);
+
+	RtlInitUnicodeString(&hInstStr, NULL);
+	RtlInitUnicodeString(&ResourceStr, NULL);
+
+	TEST(NtUserGetIconInfo(hIcon,
+						   &iinfo,
+						   &hInstStr,
+						   &ResourceStr,
+						   &bpp,
+						   FALSE) == TRUE);
+	
+	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(IDI_ICON));
+	TEST(bpp == 32);
+
+	DestroyIcon(hIcon);
+
 	return APISTATUS_NORMAL;
 }
