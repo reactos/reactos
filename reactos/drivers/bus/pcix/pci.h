@@ -68,6 +68,11 @@
 #define MAX_DEBUGGING_DEVICES_SUPPORTED     0x04
 
 //
+// PCI Driver Verifier Failures
+//
+#define PCI_VERIFIER_CODES                  0x04
+ 
+//
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
 typedef enum _PCI_SIGNATURE
@@ -376,6 +381,17 @@ typedef struct PCI_ARBITER_INSTANCE
 } PCI_ARBITER_INSTANCE, *PPCI_ARBITER_INSTANCE;
 
 //
+// PCI Verifier Data
+//
+typedef struct _PCI_VERIFIER_DATA
+{
+    ULONG FailureCode;
+    VF_FAILURE_CLASS FailureClass;
+    ULONG AssertionControl;
+    PCHAR DebuggerMessageText;
+} PCI_VERIFIER_DATA, *PPCI_VERIFIER_DATA;
+
+//
 // IRP Dispatch Routines
 //
 NTSTATUS
@@ -440,6 +456,14 @@ PciFdoIrpQueryPower(
     IN PIRP Irp,
     IN PIO_STACK_LOCATION IoStackLocation,
     IN PPCI_FDO_EXTENSION DeviceExtension
+);
+
+NTSTATUS
+NTAPI
+PciSetPowerManagedDevicePowerState(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN DEVICE_POWER_STATE DeviceState,
+    IN BOOLEAN IrpSet
 );
 
 //
@@ -778,6 +802,12 @@ PciVerifierInit(
     IN PDRIVER_OBJECT DriverObject
 );
 
+PPCI_VERIFIER_DATA
+NTAPI
+PciVerifierRetrieveFailureData(
+    IN ULONG FailureCode
+);
+
 //
 // Utility Routines
 //
@@ -925,6 +955,25 @@ PciSaveBiosConfig(
     OUT PPCI_COMMON_HEADER PciData
 );
 
+UCHAR
+NTAPI
+PciReadDeviceCapability(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN UCHAR Offset,
+    IN ULONG CapabilityId,
+    OUT PPCI_CAPABILITIES_HEADER Buffer,
+    IN ULONG Length
+);
+
+BOOLEAN
+NTAPI
+PciCanDisableDecodes(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN PPCI_COMMON_HEADER Config,
+    IN ULONGLONG HackFlags,
+    IN BOOLEAN ForPowerDown
+);
+
 //
 // Configuration Routines
 //
@@ -947,6 +996,15 @@ PciReadSlotConfig(
 VOID
 NTAPI
 PciWriteDeviceConfig(
+    IN PPCI_PDO_EXTENSION DeviceExtension,
+    IN PVOID Buffer,
+    IN ULONG Offset,
+    IN ULONG Length
+);
+
+VOID
+NTAPI
+PciReadDeviceConfig(
     IN PPCI_PDO_EXTENSION DeviceExtension,
     IN PVOID Buffer,
     IN ULONG Offset,

@@ -24,7 +24,7 @@ PciGetAdjustedInterruptLine(IN PPCI_PDO_EXTENSION PdoExtension)
 {
     UCHAR InterruptLine = 0, PciInterruptLine;
     ULONG Length;
-    
+
     /* Does the device have an interrupt pin? */
     if (PdoExtension->InterruptPin)
     {
@@ -100,6 +100,22 @@ PciWriteDeviceConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
                             Offset,
                             Length,
                             FALSE);
+}
+
+VOID
+NTAPI
+PciReadDeviceConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
+                    IN PVOID Buffer,
+                    IN ULONG Offset,
+                    IN ULONG Length)
+{
+    /* Call the generic worker function */
+    PciReadWriteConfigSpace(DeviceExtension->ParentFdoExtension,
+                            DeviceExtension->Slot,
+                            Buffer,
+                            Offset,
+                            Length,
+                            TRUE);
 }
 
 VOID

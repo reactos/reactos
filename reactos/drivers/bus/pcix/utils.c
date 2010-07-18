@@ -864,7 +864,7 @@ PciSaveBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
              DeviceExtension->Slot.u.bits.DeviceNumber,
              DeviceExtension->Slot.u.bits.FunctionNumber);
     RtlInitUnicodeString(&KeyValue, Buffer);
-    
+
     /* Set the value data (the PCI BIOS configuration header) */
     Status = ZwSetValueKey(SubKeyHandle,
                            &KeyValue,
@@ -874,6 +874,171 @@ PciSaveBiosConfig(IN PPCI_PDO_EXTENSION DeviceExtension,
                            PCI_COMMON_HDR_LENGTH);
     ZwClose(SubKeyHandle);
     return Status;
+}
+
+UCHAR
+NTAPI
+PciReadDeviceCapability(IN PPCI_PDO_EXTENSION DeviceExtension,
+                        IN UCHAR Offset,
+                        IN ULONG CapabilityId,
+                        OUT PPCI_CAPABILITIES_HEADER Buffer,
+                        IN ULONG Length)
+{
+    ULONG CapabilityCount = 0;
+
+    /* If the device has no capabilility list, fail */
+    if (!Offset) return 0;
+
+    /* Validate a PDO with capabilities, a valid buffer, and a valid length */
+    ASSERT(DeviceExtension->ExtensionType == PciPdoExtensionType);
+    ASSERT(DeviceExtension->CapabilitiesPtr != 0);
+    ASSERT(Buffer);
+    ASSERT(Length >= sizeof(PCI_CAPABILITIES_HEADER));
+
+    /* Loop all capabilities */
+    while (Offset)
+    {
+        /* Make sure the pointer is spec-aligned and spec-sized */
+        ASSERT((Offset >= PCI_COMMON_HDR_LENGTH) && ((Offset & 0x3) == 0));
+
+        /* Read the capability header */
+        PciReadDeviceConfig(DeviceExtension,
+                            Buffer,
+                            Offset,
+                            sizeof(PCI_CAPABILITIES_HEADER));
+
+        /* Check if this is the capability being looked up */
+        if ((Buffer->CapabilityID == CapabilityId) || !(CapabilityId))
+        {
+            /* Check if was at a valid offset and length */
+            if ((Offset) && (Length > sizeof(PCI_CAPABILITIES_HEADER)))
+            {
+                /* Sanity check */
+                ASSERT(Length <= (sizeof(PCI_COMMON_CONFIG) - Offset));
+
+                /* Now read the whole capability data into the buffer */
+                PciReadDeviceConfig(DeviceExtension,
+                                    (PVOID)((ULONG_PTR)Buffer +
+                                    sizeof(PCI_CAPABILITIES_HEADER)),
+                                    Offset + sizeof(PCI_CAPABILITIES_HEADER),
+                                    Length - sizeof(PCI_CAPABILITIES_HEADER));
+            }
+
+            /* Return the offset where the capability was found */
+            return Offset;
+        }
+
+        /* Try the next capability instead */
+        CapabilityCount++;
+        Offset = Buffer->Next;
+
+        /* There can't be more than 48 capabilities (256 bytes max) */
+        if (CapabilityCount > 48)
+        {
+            /* Fail, since this is basically a broken PCI device */
+            DPRINT1("PCI device %p capabilities list is broken.\n", DeviceExtension);
+            return 0;
+        }
+    }
+
+    /* Capability wasn't found, fail */
+    return 0;
+}
+
+BOOLEAN
+NTAPI
+PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
+                     IN PPCI_COMMON_HEADER Config,
+                     IN ULONGLONG HackFlags,
+                     IN BOOLEAN ForPowerDown)
+{
+    UCHAR BaseClass, SubClass;
+    BOOLEAN IsVga;
+
+    /* Is there a device extension or should the PCI header be used? */
+    if (DeviceExtension)
+    {
+        /* Never disable decodes for a debug PCI Device */
+        if (DeviceExtension->OnDebugPath) return FALSE;
+
+        /* Hack flags will be obtained from the extension, not the caller */
+        ASSERT(HackFlags == 0);
+
+        /* Get hacks and classification from the device extension */
+        HackFlags = DeviceExtension->HackFlags;
+        SubClass = DeviceExtension->SubClass;
+        BaseClass = DeviceExtension->BaseClass;
+    }
+    else
+    {
+        /* There must be a PCI header, go read the classification information */
+        ASSERT(Config != NULL);
+        BaseClass = Config->BaseClass;
+        SubClass = Config->SubClass;
+    }
+
+    /* Check for hack flags that prevent disabling the decodes */
+    if (HackFlags & (PCI_HACK_PRESERVE_COMMAND |
+                     PCI_HACK_CB_SHARE_CMD_BITS |
+                     PCI_HACK_DONT_DISABLE_DECODES))
+    {
+        /* Don't do it */
+        return FALSE;
+    }
+
+    /* Is this a VGA adapter? */
+    if ((BaseClass == PCI_CLASS_DISPLAY_CTLR) &&
+        (SubClass == PCI_SUBCLASS_VID_VGA_CTLR))
+    {
+        /* Never disable decodes if this is for power down */
+        return ForPowerDown;
+    }
+
+    /* Check for legacy devices */
+    if (BaseClass == PCI_CLASS_PRE_20)
+    {
+        /* Never disable video adapter cards if this is for power down */
+        if (SubClass == PCI_SUBCLASS_PRE_20_VGA) return ForPowerDown;
+    }
+    else if (BaseClass == PCI_CLASS_DISPLAY_CTLR)
+    {
+        /* Never disable VGA adapters if this is for power down */
+        if (SubClass == PCI_SUBCLASS_VID_VGA_CTLR) return ForPowerDown;
+    }
+    else if (BaseClass == PCI_CLASS_BRIDGE_DEV)
+    {
+        /* Check for legacy bridges */
+        if ((SubClass == PCI_SUBCLASS_BR_ISA) ||
+            (SubClass == PCI_SUBCLASS_BR_EISA) ||
+            (SubClass == PCI_SUBCLASS_BR_MCA) ||
+            (SubClass == PCI_SUBCLASS_BR_HOST) ||
+            (SubClass == PCI_SUBCLASS_BR_OTHER))
+        {
+            /* Never disable these */
+            return FALSE;
+        }
+        else if ((SubClass == PCI_SUBCLASS_BR_PCI_TO_PCI) ||
+                 (SubClass == PCI_SUBCLASS_BR_CARDBUS))
+        {
+            /* This is a supported bridge, but does it have a VGA card? */
+            if (!DeviceExtension)
+            {
+                /* Read the bridge control flag from the PCI header */
+                IsVga = Config->u.type1.BridgeControl & PCI_ENABLE_BRIDGE_VGA;
+            }
+            else
+            {
+                /* Read the cached flag in the device extension */
+                IsVga = DeviceExtension->Dependent.type1.VgaBitSet;
+            }
+
+            /* Never disable VGA adapters if this is for power down */
+            if (IsVga) return ForPowerDown;
+        }
+    }
+
+    /* Finally, never disable decodes if there's no power management */
+    return !(HackFlags & PCI_HACK_NO_PM_CAPS);
 }
 
 /* EOF */
