@@ -27,13 +27,9 @@ short _InterlockedCompareExchange16(volatile short * const Destination, const sh
 #pragma intrinsic(_InterlockedCompareExchange16)
 long _InterlockedCompareExchange(volatile long * const Destination, const long Exchange, const long Comperand);
 #pragma intrinsic(_InterlockedCompareExchange)
-void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
-#pragma intrinsic(_InterlockedCompareExchangePointer)
 long _InterlockedExchange(volatile long * const Target, const long Value);
 #pragma intrinsic(_InterlockedExchange)
-void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
-#pragma intrinsic(_InterlockedExchangePointer)
-long _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
+short _InterlockedExchangeAdd16(volatile short * const Addend, const short Value);
 #pragma intrinsic(_InterlockedExchangeAdd16)
 long _InterlockedExchangeAdd(volatile long * const Addend, const long Value);
 #pragma intrinsic(_InterlockedExchangeAdd)
@@ -75,6 +71,10 @@ __int64 _InterlockedExchange64(volatile __int64 * const Target, const __int64 Va
 #pragma intrinsic(_InterlockedExchange64)
 __int64 _InterlockedExchangeAdd64(volatile __int64 * const Addend, const __int64 Value);
 #pragma intrinsic(_InterlockedExchangeAdd64)
+void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand);
+#pragma intrinsic(_InterlockedCompareExchangePointer)
+void * _InterlockedExchangePointer(void * volatile * const Target, void * const Value);
+#pragma intrinsic(_InterlockedExchangePointer)
 __int64 _InterlockedAnd64(volatile __int64 * const value, const __int64 mask);
 #pragma intrinsic(_InterlockedAnd64)
 long _InterlockedOr64(volatile __int64 * const value, const __int64 mask);
