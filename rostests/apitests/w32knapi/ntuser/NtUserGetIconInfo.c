@@ -4,6 +4,9 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 	HICON hIcon;
 	ICONINFO iinfo;
 	HBITMAP mask, color;
+	UNICODE_STRING hInstStr;
+	UNICODE_STRING ResourceStr;
+	DWORD bpp = 0;
 
 	ZeroMemory(&iinfo, sizeof(ICONINFO));
 
@@ -55,6 +58,44 @@ Test_NtUserGetIconInfo(PTESTINFO pti)
 
 	DeleteObject(mask);
 	DeleteObject(color);
+
+	DestroyIcon(hIcon);
+
+	/* Test full param, with local icon */
+	hIcon = LoadImageA(GetModuleHandle(NULL),
+					   MAKEINTRESOURCE(IDI_ICON),
+					   IMAGE_ICON,
+					   0,
+					   0,
+					   LR_DEFAULTSIZE);
+
+	TEST(hIcon != NULL);
+
+	RtlInitUnicodeString(&hInstStr, NULL);
+	RtlInitUnicodeString(&ResourceStr, NULL);
+
+	TEST(NtUserGetIconInfo(hIcon,
+						   &iinfo,
+						   &hInstStr,
+						   &ResourceStr,
+						   &bpp,
+						   FALSE) == TRUE);
+	
+	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(IDI_ICON));
+	TEST(bpp == 32);
+
+	/* Last param doesn't seem to matter*/
+	TEST(NtUserGetIconInfo(hIcon,
+						   &iinfo,
+						   &hInstStr,
+						   &ResourceStr,
+						   &bpp,
+						   TRUE) == TRUE);
+
+	TESTX(hInstStr.Buffer == NULL, "hInstStr.buffer : %p\n", hInstStr.Buffer);
+	TEST((LPCTSTR)ResourceStr.Buffer == MAKEINTRESOURCE(IDI_ICON));
+	TEST(bpp == 32);
 
 	DestroyIcon(hIcon);
 
