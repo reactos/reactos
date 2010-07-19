@@ -122,7 +122,7 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
  */
 NTSTATUS
 NTAPI
-HalAdjustResourceList(IN PCM_RESOURCE_LIST Resources)
+HalAdjustResourceList(IN OUT PIO_RESOURCE_REQUIREMENTS_LIST* pRequirementsList)
 {
     /* Deprecated, return success */
     return STATUS_SUCCESS;
