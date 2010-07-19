@@ -20,7 +20,6 @@
 #include <tchar.h>
 #include <sect_attribs.h>
 #include <locale.h>
-#include <intrin.h>
 
 #ifndef __winitenv
 extern wchar_t *** __MINGW_IMP_SYMBOL(__winitenv);
@@ -52,11 +51,7 @@ extern int * __MINGW_IMP_SYMBOL(_commode);
 #define _commode (* __MINGW_IMP_SYMBOL(_commode))
 extern int _dowildcard;
 
-#if defined(__GNUC__)
 int _MINGW_INSTALL_DEBUG_MATHERR __attribute__((weak)) = 0;
-#else
-int _MINGW_INSTALL_DEBUG_MATHERR = 0;
-#endif
 extern int __defaultmatherr;
 extern _CRTIMP void __cdecl _initterm(_PVFV *, _PVFV *);
 
@@ -251,7 +246,7 @@ __tmainCRTStartup (void)
 #ifdef _MBCS
 	if (_ismbblead (*lpszCommandLine))
 	  {
-	    if (*lpszCommandLine)
+	    if (lpszCommandLine) /* FIXME: Why this check? Should I check for *lpszCommandLine != 0 too? */
 	      lpszCommandLine++;
 	  }
 #endif
@@ -463,12 +458,17 @@ static void duplicate_ppstrings (int ac, char ***av)
 }
 #endif
 
+#ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
+#define __UNUSED_PARAM_1(x) x
+#else
+#define __UNUSED_PARAM_1	__UNUSED_PARAM
+#endif
 static void
-__mingw_invalidParameterHandler (const wchar_t *expression __attribute__ ((__unused__)),
-				 const wchar_t *function __attribute__ ((__unused__)),
-				 const wchar_t *file __attribute__ ((__unused__)),
-				 unsigned int line __attribute__ ((__unused__)),
-				 uintptr_t pReserved __attribute__ ((__unused__)))
+__mingw_invalidParameterHandler (const wchar_t * __UNUSED_PARAM_1(expression),
+				 const wchar_t * __UNUSED_PARAM_1(function),
+				 const wchar_t * __UNUSED_PARAM_1(file),
+				 unsigned int    __UNUSED_PARAM_1(line),
+				 uintptr_t __UNUSED_PARAM(pReserved))
 {
 #ifdef __MINGW_SHOW_INVALID_PARAMETER_EXCEPTION
    wprintf(L"Invalid parameter detected in function %s. File: %s Line: %d\n", function, file, line);

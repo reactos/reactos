@@ -2,9 +2,9 @@
 #define _DECL_DLLMAIN
 #include <process.h>
 
-BOOL WINAPI DllMain (HANDLE hDllHandle __attribute__ ((__unused__)),
-		     DWORD dwReason __attribute__ ((__unused__)),
-		     LPVOID lpreserved __attribute__ ((__unused__)))
+BOOL WINAPI DllMain (HANDLE __UNUSED_PARAM(hDllHandle),
+		     DWORD  __UNUSED_PARAM(dwReason),
+		     LPVOID __UNUSED_PARAM(lpreserved))
 {
   return TRUE;
 }

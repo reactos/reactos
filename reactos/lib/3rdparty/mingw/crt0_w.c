@@ -16,9 +16,9 @@ extern DWORD __mingw_winmain_nShowCmd;
 int wmain (int, wchar_t **, wchar_t **);
 
 /*ARGSUSED*/
-int wmain (int flags __attribute__ ((__unused__)),
-	   wchar_t **cmdline __attribute__ ((__unused__)),
-	   wchar_t **inst __attribute__ ((__unused__)))
+int wmain (int        __UNUSED_PARAM(flags),
+	   wchar_t ** __UNUSED_PARAM(cmdline),
+	   wchar_t ** __UNUSED_PARAM(inst))
 {
   return (int) wWinMain (__mingw_winmain_hInstance, NULL,
 			__mingw_winmain_lpCmdLine, __mingw_winmain_nShowCmd);

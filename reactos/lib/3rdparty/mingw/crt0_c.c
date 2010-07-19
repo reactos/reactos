@@ -11,9 +11,9 @@ extern LPSTR __mingw_winmain_lpCmdLine;
 extern DWORD __mingw_winmain_nShowCmd;
 
 /*ARGSUSED*/
-int main (int flags __attribute__ ((__unused__)),
-	  char **cmdline __attribute__ ((__unused__)),
-	  char **inst __attribute__ ((__unused__)))
+int main (int     __UNUSED_PARAM(flags),
+	  char ** __UNUSED_PARAM(cmdline),
+	  char ** __UNUSED_PARAM(inst))
 {
   return (int) WinMain (__mingw_winmain_hInstance, NULL,
 			__mingw_winmain_lpCmdLine, __mingw_winmain_nShowCmd);

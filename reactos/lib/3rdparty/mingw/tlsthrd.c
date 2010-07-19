@@ -118,9 +118,9 @@ __mingwthr_run_key_dtors (void)
 }
 
 WINBOOL
-__mingw_TLScallback (HANDLE hDllHandle __attribute__ ((__unused__)),
+__mingw_TLScallback (HANDLE __UNUSED_PARAM(hDllHandle),
 		     DWORD reason,
-		     LPVOID reserved __attribute__ ((__unused__)))
+		     LPVOID __UNUSED_PARAM(reserved))
 {
   switch (reason)
     {
