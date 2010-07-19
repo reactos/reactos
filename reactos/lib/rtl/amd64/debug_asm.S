@@ -3,54 +3,47 @@
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Debug Routines
  * FILE:              lib/rtl/i386/debug.S
- * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
+ * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-.intel_syntax noprefix
+#include <reactos/asm.h>
 
 /* GLOBALS ****************************************************************/
 
-.globl _DbgBreakPoint
-.globl _DbgBreakPointWithStatus
-.globl _DbgUserBreakPoint
-.globl _DebugService
-.globl _DebugService2
-.globl _DbgBreakPointNoBugCheck
-.globl _RtlpBreakWithStatusInstruction
+PUBLIC DbgBreakPoint
+PUBLIC DbgBreakPointWithStatus
+PUBLIC DbgUserBreakPoint
+PUBLIC DebugService
+PUBLIC DebugService2
+PUBLIC DbgBreakPointNoBugCheck
+PUBLIC RtlpBreakWithStatusInstruction
 
 /* FUNCTIONS ***************************************************************/
 
-.func DbgBreakPointNoBugCheck
-_DbgBreakPointNoBugCheck:
+.code64
+
+DbgBreakPointNoBugCheck:
     int 3
     ret
-.endfunc
 
-.func DbgBreakPoint
-_DbgBreakPoint:
-_DbgUserBreakPoint:
+DbgBreakPoint:
+DbgUserBreakPoint:
     int 3
     ret
-.endfunc
 
-.func DbgBreakPointWithStatus
-_DbgBreakPointWithStatus:
+DbgBreakPointWithStatus:
     mov eax, ecx
-
-_RtlpBreakWithStatusInstruction:
+RtlpBreakWithStatusInstruction:
     int 3
     ret
-.endfunc
 
-.func DebugService2
-_DebugService2:
+DebugService2:
     ret
     /* Call the interrupt */
 //    mov eax, [rbp+8]
 //    int 0x2D
 //    int 3
 
-.endfunc
 
 /******************************************************************************
  * NTSTATUS NTAPI DebugService(
@@ -60,8 +53,7 @@ _DebugService2:
  *     IN PVOID Argument1,  // <r9>  = [rsp + 32]
  *     IN PVOID Argument2); //         [rsp + 40]
  */
-.func DebugService
-_DebugService:
+DebugService:
 
     /* Prepare registers for interrupt */
     mov eax, ecx       // Service
@@ -71,9 +63,10 @@ _DebugService:
     mov r9, [rsp + 40] // Argument2
 
     /* Call the Interrupt */
-    int 0x2D
+    int HEX(2D)
     int 3
 
    /* Return */
     ret
-.endfunc
+
+END
