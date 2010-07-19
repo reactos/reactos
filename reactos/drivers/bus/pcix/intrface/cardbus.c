@@ -29,6 +29,64 @@ PCI_INTERFACE PciCardbusPrivateInterface =
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+Cardbus_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_MassageHeaderForLimitsDetermination(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_RestoreCurrent(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
+                                         IN PPCI_COMMON_HEADER PciData,
+                                         IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+Cardbus_ChangeResourceSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
 NTSTATUS
 NTAPI
 pcicbintrf_Initializer(IN PVOID Instance)

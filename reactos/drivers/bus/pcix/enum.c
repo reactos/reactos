@@ -14,6 +14,37 @@
 
 /* GLOBALS ********************************************************************/
 
+PCI_CONFIGURATOR PciConfigurators[] =
+{
+    {
+        Device_MassageHeaderForLimitsDetermination,
+        Device_RestoreCurrent,
+        Device_SaveLimits,
+        Device_SaveCurrentSettings,
+        Device_ChangeResourceSettings,
+        Device_GetAdditionalResourceDescriptors,
+        Device_ResetDevice
+    },
+    {
+        PPBridge_MassageHeaderForLimitsDetermination,
+        PPBridge_RestoreCurrent,
+        PPBridge_SaveLimits,
+        PPBridge_SaveCurrentSettings,
+        PPBridge_ChangeResourceSettings,
+        PPBridge_GetAdditionalResourceDescriptors,
+        PPBridge_ResetDevice  
+    },
+    {
+        Cardbus_MassageHeaderForLimitsDetermination,
+        Cardbus_RestoreCurrent,
+        Cardbus_SaveLimits,
+        Cardbus_SaveCurrentSettings,
+        Cardbus_ChangeResourceSettings,
+        Cardbus_GetAdditionalResourceDescriptors,
+        Cardbus_ResetDevice
+    }
+};
+ 
 /* FUNCTIONS ******************************************************************/
 
 /*
@@ -186,9 +217,6 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
     USHORT Command;
     UCHAR RegValue;
 
-    /* There should always be a PDO extension passed in */
-    ASSERT(PdoExtension);
-
     /* Check what kind of hack operation this is */
     switch (OperationType)
     {
@@ -228,6 +256,9 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
          * well as a PAE-specific hack for certain Compaq Hot-Plug Controllers.
          */
         case PCI_HACK_FIXUP_AFTER_CONFIGURATION:
+
+            /* There should always be a PDO extension passed in */
+            ASSERT(PdoExtension);
 
             /*
              * On the OPTi Viper-M IDE controller, Linux doesn't support IDE-DMA
@@ -346,6 +377,9 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
          */
         case PCI_HACK_FIXUP_BEFORE_UPDATE:
 
+            /* There should always be a PDO extension passed in */
+            ASSERT(PdoExtension);
+
             /* Is this an IBM 20H2999 PCI Docking Bridge, used on Thinkpads? */
             if ((PdoExtension->VendorId == 0x1014) &&
                 (PdoExtension->DeviceId == 0x95))
@@ -437,7 +471,6 @@ PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
                              sizeof(ULONG));
     }
 }
-
 
 BOOLEAN
 NTAPI
@@ -665,6 +698,223 @@ PciGetEnhancedCapabilities(IN PPCI_PDO_EXTENSION PdoExtension,
         DPRINT1("PM is off, so assumed device is: %d based on enables\n",
                 PdoExtension->PowerState.CurrentDeviceState);
     }
+}
+
+VOID
+NTAPI
+PciWriteLimitsAndRestoreCurrent(IN PVOID Reserved,
+                                IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    PPCI_COMMON_HEADER PciData, Current;
+    PPCI_PDO_EXTENSION PdoExtension;
+
+    /* Grab all parameters from the context */
+    PdoExtension = Context->PdoExtension;
+    Current = Context->Current;
+    PciData = Context->PciData;
+
+    /* Write the limit discovery header */
+    PciWriteDeviceConfig(PdoExtension, PciData, 0, PCI_COMMON_HDR_LENGTH);
+    
+    /* Now read what the device indicated the limits are */
+    PciReadDeviceConfig(PdoExtension, PciData, 0, PCI_COMMON_HDR_LENGTH);
+    
+    /* Then write back the original configuration header */
+    PciWriteDeviceConfig(PdoExtension, Current, 0, PCI_COMMON_HDR_LENGTH);
+
+    /* Copy back the original command that was saved in the context */
+    Current->Command = Context->Command;
+    if (Context->Command)
+    {
+        /* Program it back into the device */
+        PciWriteDeviceConfig(PdoExtension,
+                             &Context->Command,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                             sizeof(USHORT));
+    }
+
+    /* Copy back the original status that was saved as well */
+    Current->Status = Context->Status;
+    
+    /* Call the configurator to restore any other data that might've changed */
+    Context->Configurator->RestoreCurrent(Context);
+}
+
+NTSTATUS
+NTAPI
+PcipGetFunctionLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    PPCI_CONFIGURATOR Configurator;
+    PPCI_COMMON_HEADER PciData, Current;
+    PPCI_PDO_EXTENSION PdoExtension;
+    PCI_IPI_CONTEXT IpiContext;
+    PIO_RESOURCE_DESCRIPTOR IoDescriptor;
+    ULONG Offset;
+    PAGED_CODE();
+
+    /* Grab all parameters from the context */
+    PdoExtension = Context->PdoExtension;
+    Current = Context->Current;
+    PciData = Context->PciData;
+
+    /* Save the current PCI Command and Status word */
+    Context->Status = Current->Status;
+    Context->Command = Current->Command;
+
+    /* Now that they're saved, clear the status, and disable all decodes */
+    Current->Status = 0;
+    Current->Command &= ~(PCI_ENABLE_IO_SPACE |
+                          PCI_ENABLE_MEMORY_SPACE |
+                          PCI_ENABLE_BUS_MASTER);
+
+    /* Make a copy of the current PCI configuration header (with decodes off) */
+    RtlCopyMemory(PciData, Current, PCI_COMMON_HDR_LENGTH);
+
+    /* Locate the correct resource configurator for this type of device */
+    Configurator = &PciConfigurators[PdoExtension->HeaderType];
+    Context->Configurator = Configurator;
+
+    /* Initialize it, which will typically setup the BARs for limit discovery */
+    Configurator->Initialize(Context);
+
+    /* Check for critical devices and PCI Debugging devices */
+    if ((PdoExtension->HackFlags & PCI_HACK_CRITICAL_DEVICE) ||
+        (PdoExtension->OnDebugPath))
+    {
+        /* Specifically check for a PCI Debugging device */
+        if (PdoExtension->OnDebugPath)
+        {
+            /* Was it enabled for bus mastering? */
+            if (Context->Command & PCI_ENABLE_BUS_MASTER)
+            {
+                /* This decode needs to be re-enabled so debugging can work */
+                PciData->Command |= PCI_ENABLE_BUS_MASTER;
+                Current->Command |= PCI_ENABLE_BUS_MASTER;
+            }
+
+            /* Disable the debugger while the discovery is happening */
+            KdDisableDebugger();
+        }
+
+        /* For these devices, an IPI must be sent to force high-IRQL discovery */
+        IpiContext.Barrier = 1;
+        IpiContext.RunCount = 1;
+        IpiContext.PdoExtension = PdoExtension;
+        IpiContext.Function = PciWriteLimitsAndRestoreCurrent;
+        IpiContext.Context = Context;
+        KeIpiGenericCall(PciExecuteCriticalSystemRoutine, (ULONG_PTR)&IpiContext);
+
+        /* Re-enable the debugger if this was a PCI Debugging Device */
+        if (PdoExtension->OnDebugPath) KdEnableDebugger();
+    }
+    else
+    {
+        /* Otherwise, it's safe to do this in-line at low IRQL */
+        PciWriteLimitsAndRestoreCurrent(PdoExtension, Context);
+    }
+
+    /*
+     * Check if it's valid to compare the headers to see if limit discovery mode
+     * has properly exited (the expected case is that the PCI header would now
+     * be equal to what it was before). In some cases, it is known that this will
+     * fail, because during PciApplyHacks (among other places), software hacks
+     * had to be applied to the header, which the hardware-side will not see, and
+     * thus the headers would appear "different".
+     */
+    if (!PdoExtension->ExpectedWritebackFailure)
+    {
+        /* Read the current PCI header now, after discovery has completed */
+        PciReadDeviceConfig(PdoExtension, PciData + 1, 0, PCI_COMMON_HDR_LENGTH);
+
+        /* Check if the current header at entry, is equal to the header now */
+        Offset = RtlCompareMemory(PciData + 1, Current, PCI_COMMON_HDR_LENGTH);
+        if (Offset != PCI_COMMON_HDR_LENGTH)
+        {
+            /* It's not, which means configuration somehow changed, dump this */
+            DPRINT1("PCI - CFG space write verify failed at offset 0x%x\n", Offset);
+            PciDebugDumpCommonConfig(PciData + 1);
+            DPRINT1("----------\n");
+            PciDebugDumpCommonConfig(Current);
+        }
+    }
+
+    /* This PDO should not already have resources, since this is only done once */
+    ASSERT(PdoExtension->Resources == NULL);
+
+    /* Allocate the structure that will hold the discovered resources and limits */
+    PdoExtension->Resources = ExAllocatePoolWithTag(NonPagedPool,
+                                                    sizeof(PCI_FUNCTION_RESOURCES),
+                                                    'BicP');
+    if (!PdoExtension->Resources) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Clear it out for now */
+    RtlZeroMemory(PdoExtension->Resources, sizeof(PCI_FUNCTION_RESOURCES));
+
+    /* Now call the configurator, which will first store the limits... */
+    Configurator->SaveLimits(Context);
+
+    /* ...and then store the current resources being used */
+    Configurator->SaveCurrentSettings(Context);
+
+    /* Loop all the limit descriptors backwards */
+    IoDescriptor = &PdoExtension->Resources->Limit[PCI_TYPE0_ADDRESSES + 1];
+    while (TRUE)
+    {
+        /* Keep going until a non-null descriptor is found */
+        IoDescriptor--;
+        if (IoDescriptor->Type != CmResourceTypeNull) break;
+
+        /* This is a null descriptor, is it the last one? */
+        if (IoDescriptor == &PdoExtension->Resources->Limit[PCI_TYPE0_ADDRESSES + 1])
+        {
+            /* This means the descriptor is NULL, which means discovery failed */
+            DPRINT1("PCI Resources fail!\n");
+
+            /* No resources will be assigned for the device */
+            ExFreePoolWithTag(PdoExtension->Resources, 0);
+            PdoExtension->Resources = NULL;
+            break;
+        }
+    }
+
+    /* Return success here, even if the device has no assigned resources */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+PciGetFunctionLimits(IN PPCI_PDO_EXTENSION PdoExtension,
+                     IN PPCI_COMMON_HEADER Current,
+                     IN ULONGLONG HackFlags)
+{
+    NTSTATUS Status;
+    PPCI_COMMON_HEADER PciData;
+    PCI_CONFIGURATOR_CONTEXT Context;
+    PAGED_CODE();
+
+    /* Do the hackflags indicate this device should be skipped? */
+    if (PciSkipThisFunction(Current,
+                            PdoExtension->Slot,
+                            PCI_SKIP_RESOURCE_ENUMERATION,
+                            HackFlags))
+    {
+        /* Do not process its resources */
+        return STATUS_SUCCESS;
+    }
+
+    /* Allocate a buffer to hold two PCI configuration headers */
+    PciData = ExAllocatePoolWithTag(0, 2 * PCI_COMMON_HDR_LENGTH, 'BicP');
+    if (!PciData) return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Set up the context for the resource enumeration, and do it */
+    Context.Current = Current;
+    Context.PciData = PciData;
+    Context.PdoExtension = PdoExtension;
+    Status = PcipGetFunctionLimits(&Context);
+
+    /* Enumeration is completed, free the PCI headers and return the status */
+    ExFreePoolWithTag(PciData, 0);
+    return Status;
 }
 
 NTSTATUS
@@ -936,6 +1186,9 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 
             /* Get power, AGP, and other capability data */
             PciGetEnhancedCapabilities(NewExtension, PciData);
+
+            /* Now configure the BARs */
+            Status = PciGetFunctionLimits(NewExtension, PciData, HackFlags);
 
             /* Power up the device */
             PciSetPowerManagedDevicePowerState(NewExtension, PowerDeviceD0, FALSE);

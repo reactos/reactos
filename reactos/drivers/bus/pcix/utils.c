@@ -1041,6 +1041,31 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
     return !(HackFlags & PCI_HACK_NO_PM_CAPS);
 }
 
+ULONG_PTR
+NTAPI
+PciExecuteCriticalSystemRoutine(IN ULONG_PTR IpiContext)
+{
+    PPCI_IPI_CONTEXT Context = (PPCI_IPI_CONTEXT)IpiContext;
+
+    /* Check if the IPI is already running */
+    if (!InterlockedDecrement(&Context->RunCount))
+    {
+        /* Nope, this is the first instance, so execute the IPI function */
+        Context->Function(Context->PdoExtension, Context->Context);
+
+        /* Notify anyone that was spinning that they can stop now */
+        Context->Barrier = 0;
+    }
+    else
+    {
+        /* Spin until it has finished running */
+        while (Context->Barrier);
+    }
+
+    /* Done */
+    return 0;
+}
+
 BOOLEAN
 NTAPI
 PciIsSlotPresentInParentMethod(IN PPCI_PDO_EXTENSION PdoExtension,

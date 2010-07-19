@@ -399,6 +399,89 @@ typedef struct _PCI_VERIFIER_DATA
 } PCI_VERIFIER_DATA, *PPCI_VERIFIER_DATA;
 
 //
+// PCI Configuration Callbacks
+//
+struct _PCI_CONFIGURATOR_CONTEXT;
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_INITIALIZE)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_RESTORE_CURRENT)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_SAVE_LIMITS)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_SAVE_CURRENT_SETTINGS)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_CHANGE_RESOURCE_SETTINGS)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_GET_ADDITIONAL_RESOURCE_DESCRIPTORS)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context,
+    IN PPCI_COMMON_HEADER PciData,
+    IN PIO_RESOURCE_DESCRIPTOR IoDescriptor
+);
+
+typedef VOID (NTAPI *PCI_CONFIGURATOR_RESET_DEVICE)(
+    IN struct _PCI_CONFIGURATOR_CONTEXT* Context
+);
+
+//
+// PCI Configurator
+//
+typedef struct _PCI_CONFIGURATOR
+{
+    PCI_CONFIGURATOR_INITIALIZE Initialize;
+    PCI_CONFIGURATOR_RESTORE_CURRENT RestoreCurrent;
+    PCI_CONFIGURATOR_SAVE_LIMITS SaveLimits;
+    PCI_CONFIGURATOR_SAVE_CURRENT_SETTINGS SaveCurrentSettings;
+    PCI_CONFIGURATOR_CHANGE_RESOURCE_SETTINGS ChangeResourceSettings;
+    PCI_CONFIGURATOR_GET_ADDITIONAL_RESOURCE_DESCRIPTORS GetAdditionalResourceDescriptors;
+    PCI_CONFIGURATOR_RESET_DEVICE ResetDevice;
+} PCI_CONFIGURATOR, *PPCI_CONFIGURATOR;
+
+//
+// PCI Configurator Context
+//
+typedef struct _PCI_CONFIGURATOR_CONTEXT
+{
+    PPCI_PDO_EXTENSION PdoExtension;
+    PPCI_COMMON_HEADER Current;
+    PPCI_COMMON_HEADER PciData;
+    PPCI_CONFIGURATOR Configurator;
+    USHORT SecondaryStatus;
+    USHORT Status;
+    USHORT Command;
+} PCI_CONFIGURATOR_CONTEXT, *PPCI_CONFIGURATOR_CONTEXT;
+
+//
+// PCI IPI Function
+//
+typedef VOID (NTAPI *PCI_IPI_FUNCTION)(
+    IN PVOID Reserved,
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+//
+// PCI IPI Context
+//
+typedef struct _PCI_IPI_CONTEXT
+{
+    LONG RunCount;
+    ULONG Barrier;
+    PPCI_PDO_EXTENSION PdoExtension;
+    PCI_IPI_FUNCTION Function;
+    PVOID Context;
+} PCI_IPI_CONTEXT, *PPCI_IPI_CONTEXT;
+
+//
 // IRP Dispatch Routines
 //
 NTSTATUS
@@ -981,6 +1064,12 @@ PciCanDisableDecodes(
     IN BOOLEAN ForPowerDown
 );
 
+ULONG_PTR
+NTAPI
+PciExecuteCriticalSystemRoutine(
+    IN ULONG_PTR IpiContext
+);
+
 BOOLEAN
 NTAPI
 PciIsSlotPresentInParentMethod(
@@ -1068,7 +1157,6 @@ PciCommitStateTransition(
     IN PPCI_FDO_EXTENSION DeviceExtension,
     IN PCI_STATE NewState
 );
-
 
 //
 // Arbiter Support
@@ -1346,6 +1434,147 @@ NTAPI
 PciGetDeviceDescriptionMessage(
     IN UCHAR BaseClass,
     IN UCHAR SubClass
+);
+
+//
+// CardBUS Support
+//
+VOID
+NTAPI
+Cardbus_MassageHeaderForLimitsDetermination(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Cardbus_SaveCurrentSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Cardbus_SaveLimits(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Cardbus_RestoreCurrent(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Cardbus_GetAdditionalResourceDescriptors(
+    IN PPCI_CONFIGURATOR_CONTEXT Context,
+    IN PPCI_COMMON_HEADER PciData,
+    IN PIO_RESOURCE_DESCRIPTOR IoDescriptor
+);
+
+VOID
+NTAPI
+Cardbus_ResetDevice(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Cardbus_ChangeResourceSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+//
+// PCI Device Support
+//
+VOID
+NTAPI
+Device_MassageHeaderForLimitsDetermination(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Device_SaveCurrentSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Device_SaveLimits(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Device_RestoreCurrent(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Device_GetAdditionalResourceDescriptors(
+    IN PPCI_CONFIGURATOR_CONTEXT Context,
+    IN PPCI_COMMON_HEADER PciData,
+    IN PIO_RESOURCE_DESCRIPTOR IoDescriptor
+);
+
+VOID
+NTAPI
+Device_ResetDevice(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+Device_ChangeResourceSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+//
+// PCI-to-PCI Bridge Device Support
+//
+VOID
+NTAPI
+PPBridge_MassageHeaderForLimitsDetermination(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+PPBridge_SaveCurrentSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+PPBridge_SaveLimits(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+PPBridge_RestoreCurrent(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+PPBridge_GetAdditionalResourceDescriptors(
+    IN PPCI_CONFIGURATOR_CONTEXT Context,
+    IN PPCI_COMMON_HEADER PciData,
+    IN PIO_RESOURCE_DESCRIPTOR IoDescriptor
+);
+
+VOID
+NTAPI
+PPBridge_ResetDevice(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
+);
+
+VOID
+NTAPI
+PPBridge_ChangeResourceSettings(
+    IN PPCI_CONFIGURATOR_CONTEXT Context
 );
 
 //
