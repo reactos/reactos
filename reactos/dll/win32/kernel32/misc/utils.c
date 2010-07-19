@@ -11,6 +11,8 @@
 #include <k32.h>
 #ifdef _M_IX86
 #include "i386/ketypes.h"
+#elif defined _M_AMD64
+#include "amd64/ketypes.h"
 #endif
 
 #define NDEBUG
@@ -189,8 +191,8 @@ BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BasepCreateStack(HANDLE hProcess,
-                 ULONG StackReserve,
-                 ULONG StackCommit,
+                 SIZE_T StackReserve,
+                 SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb)
 {
     NTSTATUS Status;
@@ -290,7 +292,7 @@ BasepCreateStack(HANDLE hProcess,
     /* Create a guard page */
     if (UseGuard)
     {
-        ULONG GuardPageSize = SystemBasicInfo.PageSize;
+        SIZE_T GuardPageSize = SystemBasicInfo.PageSize;
         ULONG Dummy;
         
         /* Attempt maximum space possible */        
@@ -318,7 +320,7 @@ WINAPI
 BasepFreeStack(HANDLE hProcess,
                PINITIAL_TEB InitialTeb)
 {
-    ULONG Dummy = 0;
+    SIZE_T Dummy = 0;
     
     /* Free the Stack */
     NtFreeVirtualMemory(hProcess,
@@ -376,6 +378,44 @@ BasepInitializeContext(IN PCONTEXT Context,
     
     /* Give it some room for the Parameter */
     Context->Esp -= sizeof(PVOID);
+#elif defined(_M_AMD64)
+    DPRINT("BasepInitializeContext: %p\n", Context);
+    
+    /* Setup the Initial Win32 Thread Context */
+    Context->Rax = (ULONG_PTR)StartAddress;
+    Context->Rbx = (ULONG_PTR)Parameter;
+    Context->Rsp = (ULONG_PTR)StackAddress;
+    /* The other registers are undefined */
+
+    /* Setup the Segments */
+    Context->SegGs = KGDT64_R3_DATA | RPL_MASK;
+    Context->SegEs = KGDT64_R3_DATA | RPL_MASK;
+    Context->SegDs = KGDT64_R3_DATA | RPL_MASK;
+    Context->SegCs = KGDT64_R3_CODE | RPL_MASK;
+    Context->SegSs = KGDT64_R3_DATA | RPL_MASK;
+    Context->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
+
+    /* Set the EFLAGS */
+    Context->EFlags = 0x3000; /* IOPL 3 */
+
+    if (ContextType == 1)      /* For Threads */
+    {
+        Context->Rip = (ULONG_PTR)BaseThreadStartupThunk;
+    }
+    else if (ContextType == 2) /* For Fibers */
+    {
+        Context->Rip = (ULONG_PTR)BaseFiberStartup;
+    }
+    else                       /* For first thread in a Process */
+    {
+        Context->Rip = (ULONG_PTR)BaseProcessStartThunk;
+    }
+    
+    /* Set the Context Flags */
+    Context->ContextFlags = CONTEXT_FULL;
+    
+    /* Give it some room for the Parameter */
+    Context->Rsp -= sizeof(PVOID);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;
