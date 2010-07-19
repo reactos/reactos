@@ -16,6 +16,429 @@
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+ * 7. The IO/MEM/Busmaster decodes are disabled for the device.
+ * 8. The PCI bus driver sets the operating mode bits of the Programming
+ *    Interface byte to switch the controller to native mode.
+ *
+ *    Important: When the controller is set to native mode, it must quiet itself
+ *    and must not decode I/O resources or generate interrupts until the operating
+ *    system has enabled the ports in the PCI configuration header.
+ *    The IO/MEM/BusMaster bits will be disabled before the mode change, but it
+ *    is not possible to disable interrupts on the device. The device must not
+ *    generate interrupts (either legacy or native mode) while the decodes are
+ *    disabled in the command register.
+ *
+ *    This operation is expected to be instantaneous and the operating system does
+ *    not stall afterward. It is also expected that the interrupt pin register in
+ *    the PCI Configuration space for this device is accurate. The operating system
+ *    re-reads this data after previously ignoring it.
+ */
+BOOLEAN
+NTAPI
+PciConfigureIdeController(IN PPCI_PDO_EXTENSION PdoExtension,
+                          IN PPCI_COMMON_HEADER PciData,
+                          IN BOOLEAN Initial)
+{
+    UCHAR MasterMode, SlaveMode, MasterFixed, SlaveFixed, ProgIf, NewProgIf;
+    BOOLEAN Switched;
+    USHORT Command;
+
+    /* Assume it won't work */
+    Switched = FALSE;
+
+    /* Get master and slave current settings, and programmability flag */
+    ProgIf = PciData->ProgIf;
+    MasterMode = (ProgIf & 1) == 1;
+    MasterFixed = (ProgIf & 2) == 0;
+    SlaveMode = (ProgIf & 4) == 4;
+    SlaveFixed = (ProgIf & 8) == 0;
+
+    /*
+     * [..] In order for Windows XP SP1 and Windows Server 2003 to switch an ATA
+     * ATA controller from compatible mode to native mode, the following must be
+     * true:
+     *
+     * - The controller must indicate in its programming interface that both channels
+     *   can be switched to native mode. Windows XP SP1 and Windows Server 2003 do
+     *   not support switching only one IDE channel to native mode. See the PCI IDE
+     *   Controller Specification Revision 1.0 for details.
+     */
+    if ((MasterMode != SlaveMode) || (MasterFixed != SlaveFixed))
+    {
+        /* Windows does not support this configuration, fail */
+        DPRINT1("PCI: Warning unsupported IDE controller configuration for VEN_%04x&DEV_%04x!",
+                PdoExtension->VendorId,
+                PdoExtension->DeviceId);
+        return Switched;
+    }
+
+    /* Check if the controller is already in native mode */
+    if ((MasterMode) && (SlaveMode))
+    {
+        /* Check if I/O decodes should be disabled */
+        if ((Initial) || (PdoExtension->IoSpaceUnderNativeIdeControl))
+        {
+            /* Read the current command */
+            PciReadDeviceConfig(PdoExtension,
+                                &Command,
+                                FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                sizeof(USHORT));
+
+            /* Disable I/O space decode */
+            Command &= ~PCI_ENABLE_IO_SPACE;
+
+            /* Update new command in PCI IDE controller */
+            PciWriteDeviceConfig(PdoExtension,
+                                 &Command,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                 sizeof(USHORT));
+
+            /* Save updated command value */
+            PciData->Command = Command;
+        }
+
+        /* The controller is now in native mode */
+        Switched = TRUE;
+    }
+    else if (!(MasterFixed) &&
+             !(SlaveFixed) &&
+             (PdoExtension->BIOSAllowsIDESwitchToNativeMode) &&
+             !(PdoExtension->HackFlags & PCI_HACK_DISABLE_IDE_NATIVE_MODE))
+    {
+        /* Turn off decodes */
+        PciDecodeEnable(PdoExtension, FALSE, NULL);
+
+        /* Update the current command */
+        PciReadDeviceConfig(PdoExtension,
+                            &PciData->Command,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                            sizeof(USHORT));
+
+        /* Enable native mode */
+        ProgIf = PciData->ProgIf | 5;
+        PciWriteDeviceConfig(PdoExtension,
+                             &ProgIf,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, ProgIf),
+                             sizeof(UCHAR));
+
+        /* Verify the setting "stuck" */
+        PciReadDeviceConfig(PdoExtension,
+                            &NewProgIf,
+                            FIELD_OFFSET(PCI_COMMON_HEADER, ProgIf),
+                            sizeof(UCHAR));
+        if (NewProgIf == ProgIf)
+        {
+            /* Update the header and PDO data with the new programming mode */
+            PciData->ProgIf = ProgIf;
+            PdoExtension->ProgIf = NewProgIf;
+
+            /* Clear the first four BARs to reset current BAR setttings */
+            PciData->u.type0.BaseAddresses[0] = 0;
+            PciData->u.type0.BaseAddresses[1] = 0;
+            PciData->u.type0.BaseAddresses[2] = 0;
+            PciData->u.type0.BaseAddresses[3] = 0;
+            PciWriteDeviceConfig(PdoExtension,
+                                 PciData->u.type0.BaseAddresses,
+                                 FIELD_OFFSET(PCI_COMMON_HEADER,
+                                              u.type0.BaseAddresses),
+                                 4 * sizeof(ULONG));
+
+            /* Re-read the BARs to have the latest data for native mode IDE */
+            PciReadDeviceConfig(PdoExtension,
+                                PciData->u.type0.BaseAddresses,
+                                FIELD_OFFSET(PCI_COMMON_HEADER,
+                                             u.type0.BaseAddresses),
+                                4 * sizeof(ULONG));
+
+            /* Re-read the interrupt pin used for native mode IDE */
+            PciReadDeviceConfig(PdoExtension,
+                                &PciData->u.type0.InterruptPin,
+                                FIELD_OFFSET(PCI_COMMON_HEADER,
+                                             u.type0.InterruptPin),
+                                sizeof(UCHAR));
+
+            /* The IDE Controller is now in native mode */
+            Switched = TRUE;
+        }
+        else
+        {
+            /* Settings did not work, fail */
+            DPRINT1("PCI: Warning failed switch to native mode for IDE controller VEN_%04x&DEV_%04x!",
+                    PciData->VendorID,
+                    PciData->DeviceID);
+        }
+   }
+
+   /* Return whether or not native mode was enabled on the IDE controller */
+   return Switched;
+}
+
+VOID
+NTAPI
+PciApplyHacks(IN PPCI_FDO_EXTENSION DeviceExtension,
+              IN PPCI_COMMON_HEADER PciData,
+              IN PCI_SLOT_NUMBER SlotNumber,
+              IN ULONG OperationType,
+              PPCI_PDO_EXTENSION PdoExtension)
+{
+    ULONG LegacyBaseAddress;
+    USHORT Command;
+    UCHAR RegValue;
+
+    /* There should always be a PDO extension passed in */
+    ASSERT(PdoExtension);
+
+    /* Check what kind of hack operation this is */
+    switch (OperationType)
+    {
+        /*
+         * This is mostly concerned with fixing up incorrect class data that can
+         * exist on certain PCI hardware before the 2.0 spec was ratified.
+         */
+        case PCI_HACK_FIXUP_BEFORE_CONFIGURATION:
+
+            /* Note that the i82375 PCI/EISA and the i82378 PCI/ISA bridges that
+             * are present on certain DEC/NT Alpha machines are pre-PCI 2.0 devices
+             * and appear as non-classified, so their correct class/subclass data
+             * is written here instead.
+             */
+            if ((PciData->VendorID == 0x8086) &&
+                ((PciData->DeviceID == 0x482) || (PciData->DeviceID == 0x484)))
+            {
+                /* Note that 0x482 is the i82375 (EISA), 0x484 is the i82378 (ISA) */
+                PciData->SubClass = PciData->DeviceID == 0x482 ?
+                                    PCI_SUBCLASS_BR_EISA : PCI_SUBCLASS_BR_ISA;
+                PciData->BaseClass = PCI_CLASS_BRIDGE_DEV;
+
+                /*
+                 * Because the software is modifying the actual header data from
+                 * the BIOS, this flag tells the driver to ignore failures when
+                 * comparing the original BIOS data with the PCI data.
+                 */
+                if (PdoExtension) PdoExtension->ExpectedWritebackFailure = TRUE;
+            }
+
+            /* Note that in this case, an immediate return is issued */
+            return;
+
+        /*
+         * This is concerned with setting up interrupts correctly for native IDE
+         * mode, but will also handle broken VGA decoding on older bridges as
+         * well as a PAE-specific hack for certain Compaq Hot-Plug Controllers.
+         */
+        case PCI_HACK_FIXUP_AFTER_CONFIGURATION:
+
+            /*
+             * On the OPTi Viper-M IDE controller, Linux doesn't support IDE-DMA
+             * and FreeBSD bug reports indicate that the system crashes when the
+             * feature is enabled (so it's disabled on that OS as well). In the
+             * NT PCI Bus Driver, it seems Microsoft too, completely disables
+             * Native IDE functionality on this controller, so it would seem OPTi
+             * simply frelled up this controller.
+             */
+            if ((PciData->VendorID == 0x1045) && (PciData->DeviceID != 0xC621))
+            {
+                /* Disable native mode */
+                PciData->ProgIf &= ~5;
+                PciData->u.type0.InterruptPin = 0;
+
+                /*
+                 * Because the software is modifying the actual header data from
+                 * the BIOS, this flag tells the driver to ignore failures when
+                 * comparing the original BIOS data with the PCI data.
+                 */
+                PdoExtension->ExpectedWritebackFailure = TRUE;
+            }
+            else if ((PciData->BaseClass == PCI_CLASS_MASS_STORAGE_CTLR) &&
+                    (PciData->SubClass == PCI_SUBCLASS_MSC_IDE_CTLR))
+            {
+                /* For other IDE controllers, start out in compatible mode */
+                PdoExtension->BIOSAllowsIDESwitchToNativeMode = FALSE;
+
+                /*
+                 * Registry must have enabled native mode (typically as a result
+                 * of an INF file directive part of the IDE controller's driver)
+                 * and the system must not be booted in Safe Mode. If that checks
+                 * out, then evaluate the ACPI NATA method to see if the platform
+                 * supports this. See the section "BIOS and Platform Prerequisites
+                 * for Switching a Native-Mode-Capable Controller" in the Storage
+                 * section of the Windows Driver Kit for more details:
+                 *
+                 * 5. For each ATA controller enumerated, the PCI bus driver checks
+                 *    the Programming Interface register of the IDE controller to
+                 *    see if it supports switching both channels to native mode.
+                 * 6. The PCI bus driver checks whether the BIOS/platform supports
+                 *    switching the controller by checking the NATA method described
+                 *    earlier in this article.
+                 *
+                 *    If an ATA controller does not indicate that it is native
+                 *    mode-capable, or if the BIOS NATA control method is missing
+                 *    or does not list that device, the PCI bus driver does not
+                 *    switch the controller and it is assigned legacy resources.
+                 *
+                 *  If both the controller and the BIOS indicate that the controller
+                 *  can be switched, the process of switching the controller begins
+                 *  with the next step.
+                 */
+                if ((PciEnableNativeModeATA) &&
+                    !(InitSafeBootMode) &&
+                    (PciIsSlotPresentInParentMethod(PdoExtension, 'ATAN')))
+                {
+                    /* The platform supports it, remember that */
+                    PdoExtension->BIOSAllowsIDESwitchToNativeMode = TRUE;
+
+                    /*
+                     * Now switch the controller into native mode if both channels
+                     * support native IDE mode. See "How Windows Switches an ATA
+                     * Controller to Native Mode" in the Storage section of the
+                     * Windows Driver Kit for more details.
+                     */
+                    PdoExtension->SwitchedIDEToNativeMode =
+                        PciConfigureIdeController(PdoExtension, PciData, 1);
+                }
+
+                /* Is native mode enabled after all? */
+                if ((PciData->ProgIf & 5) != 5)
+                {
+                    /* Compatible mode, so force ISA-style IRQ14 and IRQ 15 */
+                    PciData->u.type0.InterruptPin = 0;
+                }
+            }
+
+            /* Is this a PCI device with legacy VGA card decodes on the root bus? */
+            if ((PdoExtension->HackFlags & PCI_HACK_VIDEO_LEGACY_DECODE) &&
+                (PCI_IS_ROOT_FDO(DeviceExtension)) &&
+                !(DeviceExtension->BrokenVideoHackApplied))
+            {
+                /* Tell the arbiter to apply a hack for these older devices */
+                ario_ApplyBrokenVideoHack(DeviceExtension);
+            }
+
+            /* Is this a Compaq PCI Hotplug Controller (r17) on a PAE system ? */
+            if ((PciData->VendorID == 0xE11) &&
+                (PciData->DeviceID == 0xA0F7) &&
+                (PciData->RevisionID == 17) &&
+                (ExIsProcessorFeaturePresent(PF_PAE_ENABLED)))
+            {
+                /* Turn off the decodes immediately */
+                PciData->Command &= ~(PCI_ENABLE_IO_SPACE |
+                                      PCI_ENABLE_MEMORY_SPACE |
+                                      PCI_ENABLE_BUS_MASTER);
+                PciWriteDeviceConfig(PdoExtension,
+                                     &PciData->Command,
+                                     FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                     sizeof(USHORT));
+
+                /* Do not EVER turn them on again, this will blow up the system */
+                PdoExtension->CommandEnables &= ~(PCI_ENABLE_IO_SPACE |
+                                                  PCI_ENABLE_MEMORY_SPACE |
+                                                  PCI_ENABLE_BUS_MASTER);
+                PdoExtension->HackFlags |= PCI_HACK_PRESERVE_COMMAND;
+            }
+            break;
+
+        /*
+         * This is called whenever resources are changed and hardware needs to be
+         * updated. It is concerned with two highly specific erratas on an IBM
+         * hot-plug docking bridge used on the Thinkpad 600 Series and on Intel's
+         * ICH PCI Bridges.
+         */
+        case PCI_HACK_FIXUP_BEFORE_UPDATE:
+
+            /* Is this an IBM 20H2999 PCI Docking Bridge, used on Thinkpads? */
+            if ((PdoExtension->VendorId == 0x1014) &&
+                (PdoExtension->DeviceId == 0x95))
+            {
+                /* Read the current command */
+                PciReadDeviceConfig(PdoExtension,
+                                    &Command,
+                                    FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                    sizeof(USHORT));
+
+                /* Turn off the decodes */
+                PciDecodeEnable(PdoExtension, FALSE, &Command);
+
+                /* Apply the required IBM workaround */
+                PciReadDeviceConfig(PdoExtension, &RegValue, 0xE0, sizeof(UCHAR));
+                RegValue &= ~2;
+                RegValue |= 1;
+                PciWriteDeviceConfig(PdoExtension, &RegValue, 0xE0, sizeof(UCHAR));
+
+                /* Restore the command to its original value */
+                PciWriteDeviceConfig(PdoExtension,
+                                     &Command,
+                                     FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                     sizeof(USHORT));
+
+            }
+
+            /*
+             * Check for Intel ICH PCI-to-PCI (i82801) bridges (used on the i810,
+             * i820, i840, i845 Chipsets) that have subtractive decode enabled,
+             * and whose hack flags do not specifiy that this support is broken.
+             */
+            if ((PdoExtension->HeaderType == PCI_BRIDGE_TYPE) &&
+                (PdoExtension->Dependent.type1.SubtractiveDecode) &&
+                ((PdoExtension->VendorId == 0x8086) &&
+                 ((PdoExtension->DeviceId == 0x2418) ||
+                  (PdoExtension->DeviceId == 0x2428) ||
+                  (PdoExtension->DeviceId == 0x244E) ||
+                  (PdoExtension->DeviceId == 0x2448))) &&
+               !(PdoExtension->HackFlags & PCI_HACK_BROKEN_SUBTRACTIVE_DECODE))
+            {
+                /*
+                 * The positive decode window shouldn't be used, these values are
+                 * normally all read-only or initialized to 0 by the BIOS, but
+                 * it appears Intel doesn't do this, so the PCI Bus Driver will
+                 * do it in software instead. Note that this is used to prevent
+                 * certain non-compliant PCI devices from breaking down due to the
+                 * fact that these ICH bridges have a known "quirk" (which Intel
+                 * documents as a known "erratum", although it's not not really
+                 * an ICH bug since the PCI specification does allow for it) in
+                 * that they will sometimes send non-zero addresses during special
+                 * cycles (ie: non-zero data during the address phase). These
+                 * broken PCI cards will mistakenly attempt to claim the special
+                 * cycle and corrupt their I/O and RAM ranges. Again, in Intel's
+                 * defense, the PCI specification only requires stable data, not
+                 * necessarily zero data, during the address phase.
+                 */
+                PciData->u.type1.MemoryBase = 0xFFFF;
+                PciData->u.type1.PrefetchBase = 0xFFFF;
+                PciData->u.type1.IOBase = 0xFF;
+                PciData->u.type1.IOLimit = 0;
+                PciData->u.type1.MemoryLimit = 0;
+                PciData->u.type1.PrefetchLimit = 0;
+                PciData->u.type1.PrefetchBaseUpper32 = 0;
+                PciData->u.type1.PrefetchLimitUpper32 = 0;
+                PciData->u.type1.IOBaseUpper16 = 0;
+                PciData->u.type1.IOLimitUpper16 = 0;
+            }
+            break;
+
+        default:
+            return;
+    }
+
+    /* Finally, also check if this is this a CardBUS device? */
+    if (PCI_CONFIGURATION_TYPE(PciData) == PCI_CARDBUS_BRIDGE_TYPE)
+    {
+        /*
+         * At offset 44h the LegacyBaseAddress is stored, which is cleared by
+         * ACPI-aware versions of Windows, to disable legacy-mode I/O access to
+         * CardBus controllers. For more information, see "Supporting CardBus
+         * Controllers under ACPI" in the "CardBus Controllers and Windows"
+         * Whitepaper on WHDC.
+         */
+        LegacyBaseAddress = 0;
+        PciWriteDeviceConfig(PdoExtension,
+                             &LegacyBaseAddress,
+                             sizeof(PCI_COMMON_HEADER) + sizeof(ULONG),
+                             sizeof(ULONG));
+    }
+}
+
+
 BOOLEAN
 NTAPI
 PcipIsSameDevice(IN PPCI_PDO_EXTENSION DeviceExtension,
@@ -250,7 +673,8 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
 {
     ULONG MaxDevice = PCI_MAX_DEVICES;
     BOOLEAN ProcessFlag = FALSE;
-    ULONG i, j, k;
+    ULONG i, j, k, Size;
+    USHORT CapOffset, TempOffset;
     LONGLONG HackFlags;
     PDEVICE_OBJECT DeviceObject;
     UCHAR Buffer[PCI_COMMON_HDR_LENGTH];
@@ -258,11 +682,13 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
     PPCI_COMMON_HEADER PciData = (PVOID)Buffer;
     PPCI_COMMON_HEADER BiosData = (PVOID)BiosBuffer;
     PCI_SLOT_NUMBER PciSlot;
+    PCHAR Name;
     NTSTATUS Status;
     PPCI_PDO_EXTENSION PdoExtension, NewExtension;
     PPCI_PDO_EXTENSION* BridgeExtension;
     PWCHAR DescriptionText;
     USHORT SubVendorId, SubSystemId;
+    PCI_CAPABILITIES_HEADER CapHeader, PcixCapHeader;
     DPRINT1("PCI Scan Bus: FDO Extension @ 0x%x, Base Bus = 0x%x\n",
             DeviceExtension, DeviceExtension->BaseBus);
 
@@ -302,6 +728,13 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                               &PciData->DeviceID,
                               sizeof(USHORT),
                               PCI_COMMON_HDR_LENGTH - sizeof(USHORT));
+
+            /* Apply any hacks before even analyzing the configuration header */
+            PciApplyHacks(DeviceExtension,
+                          PciData,
+                          PciSlot,
+                          PCI_HACK_FIXUP_BEFORE_CONFIGURATION,
+                          NULL);
 
             /* Dump device that was found */
             DPRINT1("Scan Found Device 0x%x (b=0x%x, d=0x%x, f=0x%x)\n",
@@ -373,8 +806,15 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 HackFlags |= PCI_HACK_CRITICAL_DEVICE;
             }
 
-            /* Also skip devices that should not be enumerated */
-            if (PciSkipThisFunction(PciData, PciSlot, 1, HackFlags)) continue;
+            /* Check if the device should be skipped for whatever reason */
+            if (PciSkipThisFunction(PciData,
+                                    PciSlot,
+                                    PCI_SKIP_DEVICE_ENUMERATION,
+                                    HackFlags))
+            {
+                /* Skip this device */
+                continue;
+            }
 
             /* Check if a PDO has already been created for this device */
             PdoExtension = PciFindPdoByFunction(DeviceExtension,
@@ -500,6 +940,13 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             /* Power up the device */
             PciSetPowerManagedDevicePowerState(NewExtension, PowerDeviceD0, FALSE);
 
+            /* Apply any device hacks required for enumeration */
+            PciApplyHacks(DeviceExtension,
+                          PciData,
+                          PciSlot,
+                          PCI_HACK_FIXUP_AFTER_CONFIGURATION,
+                          NewExtension);
+
             /* Save interrupt pin */
             NewExtension->InterruptPin = PciData->u.type0.InterruptPin;
 
@@ -520,6 +967,81 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
                 /* Set the subsystem information to zero instead */
                 NewExtension->SubsystemVendorId = 0;
                 NewExtension->SubsystemId = 0;
+            }
+
+            /* Scan all capabilities */
+            CapOffset = NewExtension->CapabilitiesPtr;
+            while (CapOffset)
+            {
+                /* Read this header */
+                TempOffset = PciReadDeviceCapability(NewExtension,
+                                                     CapOffset,
+                                                     0,
+                                                     &CapHeader,
+                                                     sizeof(PCI_CAPABILITIES_HEADER));
+                if (TempOffset != CapOffset)
+                {
+                    /* This is a strange issue that shouldn't happen normally */
+                    DPRINT1("PCI - Failed to read PCI capability at offset 0x%02x\n",
+                            CapOffset);
+                    ASSERT(TempOffset == CapOffset);
+                }
+
+                /* Check for capabilities that this driver cares about */
+                switch (CapHeader.CapabilityID)
+                {
+                    /* Power management capability is heavily used by the bus */
+                    case PCI_CAPABILITY_ID_POWER_MANAGEMENT:
+
+                        /* Dump the capability */
+                        Name = "POWER";
+                        Size = sizeof(PCI_PM_CAPABILITY);
+                        break;
+
+                    /* AGP capability is required for AGP bus functionality */
+                    case PCI_CAPABILITY_ID_AGP:
+
+                        /* Dump the capability */
+                        Name = "AGP";
+                        Size = sizeof(PCI_AGP_CAPABILITY);
+                        break;
+
+                    /* This driver doesn't really use anything other than that */
+                    default:
+
+                        /* Windows prints this, we could do a translation later */
+                        Name = "UNKNOWN CAPABILITY";
+                        Size = 0;
+                        break;
+                }
+
+                /* Check if this is a capability that should be dumped */
+                if (Size)
+                {
+                    /* Read the whole capability data */
+                    TempOffset = PciReadDeviceCapability(NewExtension,
+                                                         CapOffset,
+                                                         CapHeader.CapabilityID,
+                                                         &CapHeader,
+                                                         Size);
+
+                    if (TempOffset != CapOffset)
+                    {
+                        /* Again, a strange issue that shouldn't be seen */
+                        DPRINT1("- Failed to read capability data. ***\n");
+                        ASSERT(TempOffset == CapOffset);
+                    }
+                }
+
+                /* Dump this capability */
+                DPRINT1("CAP @%02x ID %02x (%s)\n",
+                        CapOffset, CapHeader.CapabilityID, Name);
+                for (i = 0; i < Size; i += 2)
+                    DPRINT1("  %04x\n", *(PUSHORT)((ULONG_PTR)&CapHeader + i));
+                DPRINT1("\n");
+
+                /* Check the next capability */
+                CapOffset = CapHeader.Next;
             }
 
             /* Check for IDE controllers */
@@ -544,6 +1066,39 @@ PciScanBus(IN PPCI_FDO_EXTENSION DeviceExtension)
             {
                 /* Do not allow these legacy bridges to be powered down */
                 NewExtension->DisablePowerDown = TRUE;
+            }
+
+            /* Check if the BIOS did not configure a cache line size */
+            if (!PciData->CacheLineSize)
+            {
+                /* Check if the device is disabled */
+                if (!(NewExtension->CommandEnables & (PCI_ENABLE_IO_SPACE |
+                                                      PCI_ENABLE_MEMORY_SPACE |
+                                                      PCI_ENABLE_BUS_MASTER)))
+                {
+                    /* Check if this is a PCI-X device*/
+                    TempOffset = PciReadDeviceCapability(NewExtension,
+                                                         NewExtension->CapabilitiesPtr,
+                                                         PCI_CAPABILITY_ID_PCIX,
+                                                         &PcixCapHeader,
+                                                         sizeof(PCI_CAPABILITIES_HEADER));
+
+                    /*
+                     * A device with default cache line size and latency timer
+                     * settings is considered to be unconfigured. Note that on
+                     * PCI-X, the reset value of the latency timer field in the
+                     * header is 64, not 0, hence why the check for PCI-X caps
+                     * was required, and the value used here below.
+                     */
+                    if (!(PciData->LatencyTimer) ||
+                        ((TempOffset) && (PciData->LatencyTimer == 64)))
+                    {
+                        /* Keep track of the fact that it needs configuration */
+                        DPRINT1("PCI - ScanBus, PDOx %x found unconfigured\n",
+                                NewExtension);
+                        NewExtension->NeedsHotPlugConfiguration = TRUE;
+                    }
+                }
             }
 
             /* Save latency and cache size information */

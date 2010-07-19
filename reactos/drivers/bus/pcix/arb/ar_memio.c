@@ -91,6 +91,46 @@ ario_Constructor(IN PVOID DeviceExtension,
     return Status;
 }
 
+VOID
+NTAPI
+ario_ApplyBrokenVideoHack(IN PPCI_FDO_EXTENSION FdoExtension)
+{
+    PPCI_ARBITER_INSTANCE PciArbiter;
+    //PARBITER_INSTANCE CommonInstance;
+    NTSTATUS Status;
+
+    /* Only valid for root FDOs who are being applied the hack for the first time */
+    ASSERT(!FdoExtension->BrokenVideoHackApplied);
+    ASSERT(PCI_IS_ROOT_FDO(FdoExtension));
+
+    /* Find the I/O arbiter */
+    PciArbiter = (PVOID)PciFindNextSecondaryExtension(FdoExtension->
+                                                      SecondaryExtension.Next,
+                                                      PciArb_Io);
+    ASSERT(PciArbiter);
+#if 0 // when arb exist
+    /* Get the Arb instance */
+    CommonInstance = &PciArbiter->CommonInstance;
+
+    /* Free the two lists, enabling full VGA access */
+    ArbFreeOrderingList(&CommonInstance->OrderingList);
+    ArbFreeOrderingList(&CommonInstance->ReservedList);
+
+    /* Build the ordering for broken video PCI access */
+    Status = ArbBuildAssignmentOrdering(CommonInstance,
+                                        L"Pci",
+                                        L"BrokenVideo",
+                                        NULL);
+    ASSERT(NT_SUCCESS(Status));
+#else
+    Status = STATUS_SUCCESS;
+    UNIMPLEMENTED;
+    while (TRUE);
+#endif
+    /* Now the hack has been applied */
+    FdoExtension->BrokenVideoHackApplied = TRUE;
+}
+
 NTSTATUS
 NTAPI
 armem_Initializer(IN PVOID Instance)

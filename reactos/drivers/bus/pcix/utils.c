@@ -1041,4 +1041,117 @@ PciCanDisableDecodes(IN PPCI_PDO_EXTENSION DeviceExtension,
     return !(HackFlags & PCI_HACK_NO_PM_CAPS);
 }
 
+BOOLEAN
+NTAPI
+PciIsSlotPresentInParentMethod(IN PPCI_PDO_EXTENSION PdoExtension,
+                               IN ULONG Method)
+{
+    BOOLEAN FoundSlot;
+    PACPI_METHOD_ARGUMENT Argument;
+    ACPI_EVAL_INPUT_BUFFER InputBuffer;
+    PACPI_EVAL_OUTPUT_BUFFER OutputBuffer;
+    ULONG i, Length;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Assume slot is not part of the parent method */
+    FoundSlot = FALSE;
+
+    /* Allocate a 2KB buffer for the method return parameters */
+    Length = sizeof(ACPI_EVAL_OUTPUT_BUFFER) + 2048;
+    OutputBuffer = ExAllocatePoolWithTag(PagedPool, Length, 'BicP');
+    if (OutputBuffer)
+    {
+        /* Clear out the output buffer */
+        RtlZeroMemory(OutputBuffer, Length);
+
+        /* Initialize the input buffer with the method requested */
+        InputBuffer.Signature = 0;
+        *(PULONG)InputBuffer.MethodName = Method;
+        InputBuffer.Signature = ACPI_EVAL_INPUT_BUFFER_SIGNATURE;
+
+        /* Send it to the ACPI driver */
+        Status = PciSendIoctl(PdoExtension->ParentFdoExtension->PhysicalDeviceObject,
+                              IOCTL_ACPI_EVAL_METHOD,
+                              &InputBuffer,
+                              sizeof(ACPI_EVAL_INPUT_BUFFER),
+                              OutputBuffer,
+                              Length);
+        if (NT_SUCCESS(Status))
+        {
+            /* Scan all output arguments */
+            for (i = 0; i < OutputBuffer->Count; i++)
+            {
+                /* Make sure it's an integer */
+                Argument = &OutputBuffer->Argument[i];
+                if (Argument->Type != ACPI_METHOD_ARGUMENT_INTEGER) continue;
+
+                /* Check if the argument matches this PCI slot structure */
+                if (Argument->Argument == ((PdoExtension->Slot.u.bits.DeviceNumber) |
+                                           ((PdoExtension->Slot.u.bits.FunctionNumber) << 16)))
+                {
+                    /* This slot has been found, return it */
+                    FoundSlot = TRUE;
+                    break;
+                }
+            }
+        }
+
+        /* Finished with the buffer, free it */
+        ExFreePoolWithTag(OutputBuffer, 0);
+    }
+
+    /* Return if the slot was found */
+    return FoundSlot;
+}
+
+VOID
+NTAPI
+PciDecodeEnable(IN PPCI_PDO_EXTENSION PdoExtension,
+                IN BOOLEAN Enable,
+                OUT PUSHORT Command)
+{
+    USHORT CommandValue;
+
+    /*
+     * If decodes are being disabled, make sure it's allowed, and in both cases,
+     * make sure that a hackflag isn't preventing touching the decodes at all.
+     */
+    if (((Enable) || (PciCanDisableDecodes(PdoExtension, 0, 0, 0))) &&
+        !(PdoExtension->HackFlags & PCI_HACK_PRESERVE_COMMAND))
+    {
+        /* Did the caller already have a command word? */
+        if (Command)
+        {
+            /* Use the caller's */
+            CommandValue = *Command;
+        }
+        else
+        {
+            /* Otherwise, read the current command */
+            PciReadDeviceConfig(PdoExtension,
+                                &Command,
+                                FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                                sizeof(USHORT));
+        }
+
+        /* Turn off decodes by default */
+        CommandValue &= ~(PCI_ENABLE_IO_SPACE |
+                          PCI_ENABLE_MEMORY_SPACE |
+                          PCI_ENABLE_BUS_MASTER);
+
+        /* If requested, enable the decodes that were enabled at init time */
+        if (Enable) CommandValue |= PdoExtension->CommandEnables &
+                                    (PCI_ENABLE_IO_SPACE |
+                                     PCI_ENABLE_MEMORY_SPACE |
+                                     PCI_ENABLE_BUS_MASTER);
+
+        /* Update the command word */
+        PciWriteDeviceConfig(PdoExtension,
+                             &CommandValue,
+                             FIELD_OFFSET(PCI_COMMON_HEADER, Command),
+                             sizeof(USHORT));
+    }
+}
+
 /* EOF */

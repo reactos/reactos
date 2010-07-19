@@ -63,6 +63,13 @@
 #define PCI_SKIP_RESOURCE_ENUMERATION       0x02
 
 //
+// PCI Apply Hack Flags
+//
+#define PCI_HACK_FIXUP_BEFORE_CONFIGURATION 0x00
+#define PCI_HACK_FIXUP_AFTER_CONFIGURATION  0x01
+#define PCI_HACK_FIXUP_BEFORE_UPDATE        0x03
+
+//
 // PCI Debugging Device Support
 //
 #define MAX_DEBUGGING_DEVICES_SUPPORTED     0x04
@@ -71,7 +78,7 @@
 // PCI Driver Verifier Failures
 //
 #define PCI_VERIFIER_CODES                  0x04
- 
+
 //
 // Device Extension, Interface, Translator and Arbiter Signatures
 //
@@ -974,6 +981,21 @@ PciCanDisableDecodes(
     IN BOOLEAN ForPowerDown
 );
 
+BOOLEAN
+NTAPI
+PciIsSlotPresentInParentMethod(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN ULONG Method
+);
+
+VOID
+NTAPI
+PciDecodeEnable(
+    IN PPCI_PDO_EXTENSION PdoExtension,
+    IN BOOLEAN Enable,
+    OUT PUSHORT Command
+);
+
 //
 // Configuration Routines
 //
@@ -1234,6 +1256,12 @@ ario_Constructor(
     IN PINTERFACE Interface
 );
 
+VOID
+NTAPI
+ario_ApplyBrokenVideoHack(
+    IN PPCI_FDO_EXTENSION FdoExtension
+);
+
 NTSTATUS
 NTAPI
 pcicbintrf_Constructor(
@@ -1342,5 +1370,9 @@ extern PCI_INTERFACE TranslatorInterfaceInterrupt;
 extern PDRIVER_OBJECT PciDriverObject;
 extern PWATCHDOG_TABLE WdTable;
 extern PPCI_HACK_ENTRY PciHackTable;
+extern BOOLEAN PciEnableNativeModeATA;
+
+/* Exported by NTOS, should this go in the NDK? */
+extern NTSYSAPI BOOLEAN InitSafeBootMode;
 
 /* EOF */
