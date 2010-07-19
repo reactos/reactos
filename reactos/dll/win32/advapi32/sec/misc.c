@@ -906,51 +906,49 @@ LookupAccountSidA(LPCSTR lpSystemName,
                   PSID_NAME_USE peUse)
 {
   UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
-  DWORD szName, szReferencedDomainName;
+  LPWSTR NameBuffer = NULL;
+  LPWSTR ReferencedDomainNameBuffer = NULL;
+  DWORD dwName, dwReferencedDomainName;
   BOOL Ret;
 
   /*
    * save the buffer sizes the caller passed to us, as they may get modified and
    * we require the original values when converting back to ansi
    */
-  szName = *cchName;
-  szReferencedDomainName = *cchReferencedDomainName;
+  dwName = *cchName;
+  dwReferencedDomainName = *cchReferencedDomainName;
 
   /*
    * allocate buffers for the unicode strings to receive
    */
 
-  if(szName > 0)
+  if(dwName > 0)
   {
-    NameW.Length = 0;
-    NameW.MaximumLength = szName * sizeof(WCHAR);
-    NameW.Buffer = (PWSTR)LocalAlloc(LMEM_FIXED, NameW.MaximumLength);
-    if(NameW.Buffer == NULL)
+    NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
+    if(NameBuffer == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
   }
   else
-    NameW.Buffer = NULL;
+    NameBuffer = NULL;
 
-  if(szReferencedDomainName > 0)
+  if(dwReferencedDomainName > 0)
   {
-    ReferencedDomainNameW.Length = 0;
-    ReferencedDomainNameW.MaximumLength = szReferencedDomainName * sizeof(WCHAR);
-    ReferencedDomainNameW.Buffer = (PWSTR)LocalAlloc(LMEM_FIXED, ReferencedDomainNameW.MaximumLength);
-    if(ReferencedDomainNameW.Buffer == NULL)
+    ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
+    if(ReferencedDomainNameBuffer == NULL)
     {
-      if(szName > 0)
+      if(dwName > 0)
       {
-        LocalFree(NameW.Buffer);
+        LocalFree(NameBuffer);
       }
       SetLastError(ERROR_OUTOFMEMORY);
       return FALSE;
     }
   }
   else
-    ReferencedDomainNameW.Buffer = NULL;
+    ReferencedDomainNameBuffer = NULL;
 
   /*
    * convert the system name to unicode - if present
@@ -972,9 +970,9 @@ LookupAccountSidA(LPCSTR lpSystemName,
 
   Ret = LookupAccountSidW(SystemNameW.Buffer,
                           lpSid,
-                          NameW.Buffer,
+                          NameBuffer,
                           cchName,
-                          ReferencedDomainNameW.Buffer,
+                          ReferencedDomainNameBuffer,
                           cchReferencedDomainName,
                           peUse);
   if(Ret)
@@ -989,9 +987,10 @@ LookupAccountSidA(LPCSTR lpSystemName,
       ANSI_STRING NameA;
 
       NameA.Length = 0;
-      NameA.MaximumLength = ((szName <= 0xFFFF) ? (USHORT)szName : 0xFFFF);
+      NameA.MaximumLength = ((dwName <= 0xFFFF) ? (USHORT)dwName : 0xFFFF);
       NameA.Buffer = lpName;
 
+      RtlInitUnicodeString(&NameW, NameBuffer);
       RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
       NameA.Buffer[NameA.Length] = '\0';
     }
@@ -1001,10 +1000,11 @@ LookupAccountSidA(LPCSTR lpSystemName,
       ANSI_STRING ReferencedDomainNameA;
 
       ReferencedDomainNameA.Length = 0;
-      ReferencedDomainNameA.MaximumLength = ((szReferencedDomainName <= 0xFFFF) ?
-                                             (USHORT)szReferencedDomainName : 0xFFFF);
+      ReferencedDomainNameA.MaximumLength = ((dwReferencedDomainName <= 0xFFFF) ?
+                                             (USHORT)dwReferencedDomainName : 0xFFFF);
       ReferencedDomainNameA.Buffer = lpReferencedDomainName;
 
+      RtlInitUnicodeString(&ReferencedDomainNameW, ReferencedDomainNameBuffer);
       RtlUnicodeStringToAnsiString(&ReferencedDomainNameA, &ReferencedDomainNameW, FALSE);
       ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
     }
@@ -1018,13 +1018,13 @@ LookupAccountSidA(LPCSTR lpSystemName,
   {
     RtlFreeUnicodeString(&SystemNameW);
   }
-  if(NameW.Buffer != NULL)
+  if(NameBuffer != NULL)
   {
-    LocalFree(NameW.Buffer);
+    LocalFree(NameBuffer);
   }
-  if(ReferencedDomainNameW.Buffer != NULL)
+  if(ReferencedDomainNameBuffer != NULL)
   {
-    LocalFree(ReferencedDomainNameW.Buffer);
+    LocalFree(ReferencedDomainNameBuffer);
   }
 
   return Ret;
