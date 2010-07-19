@@ -253,7 +253,10 @@ typedef struct _KCALLOUT_FRAME
 //
 // Dummy LDT_ENTRY
 //
+#ifndef _LDT_ENTRY_DEFINED
+#define _LDT_ENTRY_DEFINED
 typedef ULONG LDT_ENTRY;
+#endif
 
 //
 // GDT Entry Definition
