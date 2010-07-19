@@ -31,7 +31,7 @@
 ; ****************************************************************************
 
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
-;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
+%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
 %define WAIT_FOR_KEY
 
@@ -373,9 +373,20 @@ get_fs_structures:
 
 	mov	dl, [DriveNo]			; dl = boot drive
 	mov dh, 0					; dh = boot partition
-	jmp	0:0x8000			; jump into OSLoader
+
+	push 0						; push segment (0x0000)
+	mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
+	add eax, 0x8000             ; RVA -> VA
+	push ax                     ; push offset
+	retf                        ; Transfer control to ROSLDR
+
+	mov eax, [0x8000 + 0xA8]	; load the EntryPoint into eax
+	add eax, 0x8000
+	mov [jmpaddress], eax
 
 
+	db 0xea						; jmp instruction
+	jmpaddress dd 0
 
 ;
 ; searchdir:
@@ -922,38 +933,38 @@ pollchar_and_empty:
 
 
 isolinux_banner	db CR, LF, 'Loading IsoBoot...', CR, LF, 0
-copyright_str	db ' Copyright (C) 1994-2002 H. Peter Anvin', CR, LF, 0
+copyright_str	db ' (C) 1994-2002 H. Peter Anvin', CR, LF, 0
 presskey_msg	db 'Press any key to boot from CD', 0
 dot_msg		db '.',0
 
 %ifdef DEBUG_MESSAGES
-startup_msg:	db 'Starting up, DL = ', 0
-spec_ok_msg:	db 'Loaded spec packet OK, drive = ', 0
-secsize_msg:	db 'Sector size appears to be ', 0
-rootloc_msg:	db 'Root directory location: ', 0
-rootlen_msg:	db 'Root directory length: ', 0
-rootsect_msg:	db 'Root directory length(sectors): ', 0
-fileloc_msg:	db 'SETUPLDR.SYS location: ', 0
-filelen_msg:	db 'SETUPLDR.SYS length: ', 0
-filesect_msg:	db 'SETUPLDR.SYS length(sectors): ', 0
+startup_msg:	db 'Startup, DL = ', 0
+spec_ok_msg:	db 'packet OK, drive = ', 0
+secsize_msg:	db 'size appears to be ', 0
+rootloc_msg:	db 'Root dir loc: ', 0
+rootlen_msg:	db 'Root dir len: ', 0
+rootsect_msg:	db 'Root dir len(sect): ', 0
+fileloc_msg:	db 'SETUPLDR loc: ', 0
+filelen_msg:	db 'SETUPLDR len: ', 0
+filesect_msg:	db 'SETUPLDR len(sect): ', 0
 findfail_msg:	db 'Failed to find file!', 0
 startldr_msg:	db 'Starting SETUPLDR.SYS', 0
 %endif
 
-nosecsize_msg:	db 'Failed to get sector size, assuming 0800', CR, LF, 0
-spec_err_msg:	db 'Loading spec packet failed, trying to wing it...', CR, LF, 0
-maybe_msg:	db 'Found something at drive = ', 0
-alright_msg:	db 'Looks like it might be right, continuing...', CR, LF, 0
-nothing_msg:	db 'Failed to locate CD-ROM device; boot failed.', CR, LF, 0
+nosecsize_msg:	db 'No sector size, assume 0800', CR, LF, 0
+spec_err_msg:	db 'Load spec failed, trying wing ...', CR, LF, 0
+maybe_msg:	db 'Found smth at drive = ', 0
+alright_msg:	db 'might be ok, continuing...', CR, LF, 0
+nothing_msg:	db 'Failed locate CD-ROM; boot failed.', CR, LF, 0
 isolinux_str	db 'IsoBoot: ', 0
 crlf_msg	db CR, LF, 0
 diskerr_msg:	db 'Disk error ', 0
 ondrive_str:	db ', drive ', 0
-err_bootfailed	db CR, LF, 'Boot failed: press a key to retry...'
+err_bootfailed	db CR, LF, 'failed..', 0
 isolinux_dir	db '\LOADER', 0
-no_dir_msg	db 'Could not find the LOADER directory.', CR, LF, 0
+no_dir_msg	db 'LOADER dir not found.', CR, LF, 0
 isolinux_bin	db 'SETUPLDR.SYS', 0
-no_isolinux_msg	db 'Could not find SETUPLDR.SYS.', CR, LF, 0
+no_isolinux_msg	db 'SETUPLDR not found.', CR, LF, 0
 
 ;
 ; El Torito spec packet

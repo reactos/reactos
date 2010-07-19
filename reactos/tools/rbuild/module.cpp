@@ -1132,6 +1132,7 @@ Module::GetDefaultModuleEntrypoint () const
 			return "DllMain";
 		case Win32CUI:
 		case Test:
+		case BootLoader:
 			return "mainCRTStartup";
 		case Win32SCR:
 		case Win32GUI:
@@ -1140,7 +1141,6 @@ Module::GetDefaultModuleEntrypoint () const
 		case StaticLibrary:
 		case HostStaticLibrary:
 		case ObjectLibrary:
-		case BootLoader:
 		case BootSector:
 		case Iso:
 		case LiveIso:
@@ -1187,11 +1187,12 @@ Module::GetDefaultModuleBaseaddress () const
 			return "0x00010000";
 		case ElfExecutable:
 			return "0xe00000";
+		case BootLoader:
+			return "0x8000";
 		case BuildTool:
 		case StaticLibrary:
 		case HostStaticLibrary:
 		case ObjectLibrary:
-		case BootLoader:
 		case BootSector:
 		case Iso:
 		case LiveIso:

@@ -1,8 +1,14 @@
 <?xml version="1.0"?>
+
+<if property="ARCH" value="i386">
+	<property name="BASEADDRESS_FREELDR" value="0x8000" />
+<endif>
+
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
 	<if property="ARCH" value="i386">
-		<module name="freeldr" type="bootloader">
+		<module name="freeldr" type="bootloader" baseaddress="$(BASEADDRESS_FREELDR)">
+			<linkerscript>freeldr_$(ARCH).lnk</linkerscript>
 			<bootstrap installbase="loader" />
 			<library>freeldr_startup</library>
 			<library>freeldr_base64k</library>
@@ -15,8 +21,9 @@
 			<library>rtl</library>
 			<library>libcntpr</library>
 			<group linkerset="ld">
-				<linkerflag>-static</linkerflag>
-				<linkerflag>-lgcc</linkerflag>
+				<!-- linkerflag>-static</linkerflag -->
+				<linkerflag>-nostartfiles</linkerflag>
+
 			</group>
 		</module>
 	</if>

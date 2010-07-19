@@ -2439,13 +2439,7 @@ void
 MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 {
 	fprintf ( fMakefile, "# BOOT LOADER MODULE TARGET\n" );
-	string targetName ( module.output->name );
 	string targetMacro ( GetTargetMacro (module) );
-	string workingDirectory = GetWorkingDirectory ();
-	FileLocation junk_tmp ( TemporaryDirectory,
-	                        "",
-	                        module.name + ".junk.tmp" );
-	CLEAN_FILE ( junk_tmp );
 	string objectsMacro = GetObjectsMacro ( module );
 	string libsMacro = GetLibsMacro ();
 
@@ -2460,33 +2454,34 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
 
-	if (Environment::GetArch() == "arm")
-	{
-		fprintf ( fMakefile,
-		         "\t${gcc} -Wl,--subsystem,native -o %s %s %s %s -nostartfiles -nostdlib\n",
-		         backend->GetFullName ( junk_tmp ).c_str (),
-		         objectsMacro.c_str (),
-		         libsMacro.c_str (),
-		         GetLinkerMacro ().c_str ());
+	string linkerScriptArgument;
+	if ( module.linkerScript != NULL ) {
+        linkerScriptArgument = ssprintf(" -T %s", backend->GetFullName(*module.linkerScript->file).c_str());
 	}
-	else
-	{
-		fprintf ( fMakefile,
-		         "\t${gcc} -Wl,--subsystem,native -Wl,-Ttext,0x8000 -o %s %s %s %s -nostartfiles -nostdlib\n",
-		         backend->GetFullName ( junk_tmp ).c_str (),
-		         objectsMacro.c_str (),
-		         libsMacro.c_str (),
-		         GetLinkerMacro ().c_str ());
-	}
-	fprintf ( fMakefile,
-	          "\t${objcopy} -O binary %s $@\n",
-	          backend->GetFullName ( junk_tmp ).c_str () );
-	GenerateBuildMapCode ( &junk_tmp );
-	fprintf ( fMakefile,
-	          "\t-@${rm} %s 2>$(NUL)\n",
-	          backend->GetFullName ( junk_tmp ).c_str () );
 
-	delete target_file;
+    /* Link the stripped booloader */
+    fprintf(fMakefile,
+            "\t${ld} --strip-all --subsystem native --entry=%s --image-base=%s %s %s $(PROJECT_CCLIBS) "
+            "$(BUILTIN_LDFLAGS) $(PROJECT_LDFLAGS) $(LDFLAG_DRIVER) %s -o $@\n",
+            module.GetEntryPoint().c_str(),
+            module.baseaddress.c_str(),
+            objectsMacro.c_str(),
+            libsMacro.c_str(),
+            linkerScriptArgument.c_str() );
+
+    /* Link an unstripped version */
+	fprintf(fMakefile,
+	        "ifeq ($(ROS_BUILDNOSTRIP),yes)\n"
+	        "\t${ld} --subsystem native --entry=%s --image-base=%s %s %s $(PROJECT_CCLIBS) "
+	        "$(BUILTIN_LDFLAGS) $(PROJECT_LDFLAGS) $(LDFLAG_DRIVER) %s -o %s$(SEP)%s.nostrip.sys\n"
+	        "endif\n",
+	        module.GetEntryPoint().c_str(),
+	        module.baseaddress.c_str(),
+	        objectsMacro.c_str(),
+	        libsMacro.c_str(),
+	        linkerScriptArgument.c_str(),
+	        backend->GetFullPath(*target_file).c_str(),
+	        module.name.c_str());
 }
 
 
