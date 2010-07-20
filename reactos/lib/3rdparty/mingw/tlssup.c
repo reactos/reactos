@@ -12,17 +12,23 @@
 
 #include <sect_attribs.h>
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 #include <stdio.h>
 #include <memory.h>
 #include <malloc.h>
+#ifndef _WIN64
+#include <stdlib.h> /* for _winmajor */
+#endif
 
 #ifndef __INTERNAL_FUNC_DEFINED
 #define __INTERNAL_FUNC_DEFINED
-  typedef void (__cdecl *_PVFV)(void);
-  typedef int (__cdecl *_PIFV)(void);
-  typedef void (__cdecl *_PVFI)(int);
+typedef void (__cdecl *_PVFV)(void);
+typedef int (__cdecl *_PIFV)(void);
+typedef void (__cdecl *_PVFI)(int);
 #endif
 
 extern WINBOOL __mingw_TLScallback (HANDLE hDllHandle, DWORD reason, LPVOID reserved);
@@ -208,5 +214,5 @@ _CRTALLOC(".CRT$XLD") PIMAGE_TLS_CALLBACK __xl_d = (PIMAGE_TLS_CALLBACK) __dyn_t
 
 
 int mingw_initltsdrot_force = 0;
-int mingw_initltsdyn_force=0;
+int mingw_initltsdyn_force = 0;
 int mingw_initltssuo_force = 0;
