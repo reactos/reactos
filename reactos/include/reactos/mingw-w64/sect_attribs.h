@@ -4,13 +4,14 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
-#if defined (__ia64__) || defined (__x86_64)
+#if defined(_MSC_VER)
+
+#if defined(_M_IA64) || defined(_M_AMD64)
 #define _ATTRIBUTES
 #else
 #define _ATTRIBUTES shared
 #endif
 
-#if defined(_MSC_VER)
 /* Reference list of existing section for msvcrt.  */
 #pragma section(".CRTMP$XCA",long,_ATTRIBUTES)
 #pragma section(".CRTMP$XCZ",long,_ATTRIBUTES)
@@ -59,7 +60,7 @@
 #pragma section(".tls",long,read,write)
 #pragma section(".tls$AAA",long,read,write)
 #pragma section(".tls$ZZZ",long,read,write)
-#endif
+#endif /* _MSC_VER */
 
 #if defined(_MSC_VER)
 #define _CRTALLOC(x) __declspec(allocate(x))
@@ -68,3 +69,4 @@
 #else
 #error Your compiler is not supported.
 #endif
+
