@@ -227,7 +227,11 @@ else
 
 ${call RBUILD_intermediate_path_unique,$(1),$(2)}.res: $(2) $(3) $$(wrc_TARGET) | ${call RBUILD_intermediate_dir,$(2)}
 	$$(ECHO_RC)
+ifeq ($(ARCH),amd64)
+	$$(Q)$$(wrc_TARGET) --input=$$< -o $$@ ${call RBUILD_rc_pp_flags,$(1),$(4)} ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+else
 	${call RBUILD_PIPE_CPP,$$<,${call RBUILD_rc_pp_flags,$(1),$(4)}} | $$(wrc_TARGET) -o $$@ ${call RBUILD_rc_flags,$(1),$(4),-I${call RBUILD_dir,$(2)}}
+endif
 
 endif
 
