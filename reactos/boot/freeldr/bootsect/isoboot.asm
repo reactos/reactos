@@ -31,7 +31,7 @@
 ; ****************************************************************************
 
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
-%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
+;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
 %define WAIT_FOR_KEY
 
@@ -373,20 +373,13 @@ get_fs_structures:
 
 	mov	dl, [DriveNo]			; dl = boot drive
 	mov dh, 0					; dh = boot partition
-
 	push 0						; push segment (0x0000)
 	mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
-	add eax, 0x8000             ; RVA -> VA
-	push ax                     ; push offset
-	retf                        ; Transfer control to ROSLDR
-
-	mov eax, [0x8000 + 0xA8]	; load the EntryPoint into eax
-	add eax, 0x8000
-	mov [jmpaddress], eax
+	add eax, 0x8000				; RVA -> VA
+	push ax						; push offset
+	retf						; Transfer control to ROSLDR
 
 
-	db 0xea						; jmp instruction
-	jmpaddress dd 0
 
 ;
 ; searchdir:
