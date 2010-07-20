@@ -10,7 +10,7 @@
 #define _WIN32_IE 0x0501
 #endif
 
-#include_next <commctrl.h>
+#include <psdk/commctrl.h>
 
 #undef DPA_GetPtr
 LPVOID WINAPI DPA_GetPtr(HDPA, INT);

@@ -7,16 +7,18 @@
 void _fpreset (void);
 
 void _fpreset (void)
-{ 
+{
 #ifdef __GNUC__
-    __asm__ ("fninit" );
-#else
-    __asm fninit;
+  __asm__ ("fninit");
+#else /* msvc: */
+  __asm fninit;
 #endif
 }
 
 #ifdef __GNUC__
 void __attribute__ ((alias ("_fpreset"))) fpreset(void);
 #else
-void fpreset(void) { _fpreset(); }
+void fpreset(void) {
+    _fpreset();
+}
 #endif

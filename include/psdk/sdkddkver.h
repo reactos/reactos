@@ -100,9 +100,9 @@ Abstract:
 #define NTDDI_WIN7                          0x06010000
 
 /* Version Fields in NTDDI_VERSION */
-#define OSVERSION_MASK                      0xFFFF0000
-#define SPVERSION_MASK                      0x0000FF00
-#define SUBVERSION_MASK                     0x000000FF
+#define OSVERSION_MASK                      0xFFFF0000UL
+#define SPVERSION_MASK                      0x0000FF00UL
+#define SUBVERSION_MASK                     0x000000FFUL
 
 /* Macros to Extract Version Fields From NTDDI_VERSION */
 #define OSVER(Version)                      ((Version) & OSVERSION_MASK)

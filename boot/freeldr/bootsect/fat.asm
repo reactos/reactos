@@ -209,7 +209,11 @@ FoundFreeLoader:
 		; because they contain a jump instruction to skip
 		; over the helper code in the FreeLoader image.
 		;jmp  0000:8003h
-		jmp  8003h
+		push 0						; push segment (0x0000)
+		mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
+		add eax, 0x8003				; RVA -> VA and skip 3 bytes (jump to fathelper code)
+		push ax						; push offset
+		retf						; Transfer control to FreeLoader
 
 
 
@@ -387,10 +391,10 @@ NoCarryCHS:
 
 
 msgDiskError db 'Disk error',0dh,0ah,0
-msgFreeLdr   db 'freeldr.sys not found',0dh,0ah,0
+msgFreeLdr   db 'ldr not found',0dh,0ah,0
 ; Sorry, need the space...
 ;msgAnyKey    db 'Press any key to restart',0dh,0ah,0
-msgAnyKey    db 'Press any key',0dh,0ah,0
+msgAnyKey    db 'Press a key',0dh,0ah,0
 filename     db 'FREELDR SYS'
 
         times 509-($-$$) db 0   ; Pad to 509 bytes

@@ -390,11 +390,12 @@ LoadFile:
 LoadFileDone:
         mov  dl,[BYTE bp+BootDrive]		; Load boot drive into DL
 		mov  dh,[BootPartition]			; Load boot partition into DH
-        xor  ax,ax
-        push ax					; We loaded at 0000:8000
-        push WORD 8000h			; We will do a far return to 0000:8000h
-        retf                    ; Transfer control to ROSLDR
 
+		push 0						; push segment (0x0000)
+		mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
+		add eax, 0x8000				; RVA -> VA
+		push ax						; push offset
+		retf						; Transfer control to FreeLoader
 
 ; Returns the FAT entry for a given cluster number
 ; On entry EAX has cluster number

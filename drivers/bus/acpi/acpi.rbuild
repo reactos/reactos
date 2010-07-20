@@ -11,6 +11,11 @@
 	<xi:include href="compbatt/compbatt.rbuild" />
 </directory>
 
+<if property="ARCH" value="i386">
+	<group compilerset="msc">
+		<define name="WIN32"/>
+	</group>
+</if>
 
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
 	<bootstrap installbase="$(CDOUTPUT)" />

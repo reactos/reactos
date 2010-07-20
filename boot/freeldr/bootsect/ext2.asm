@@ -438,9 +438,11 @@ LoadFreeLoader:
 
         mov  dl,[BYTE bp+BootDrive]
 		mov  dh,[BYTE bp+BootPartition]
-        push byte 0						; We loaded at 0000:8000
-        push WORD 8000h					; We will do a far return to 0000:8000h
-        retf							; Transfer control to FreeLoader
+		push 0						; push segment (0x0000)
+		mov eax, [0x8000 + 0xA8]	; load the RVA of the EntryPoint into eax
+		add eax, 0x8000				; RVA -> VA
+		push ax						; push offset
+		retf						; Transfer control to FreeLoader
 
 
 
