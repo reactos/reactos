@@ -124,10 +124,11 @@ _module_name_from_addr(const void* addr, void **module_start_addr,
    return psz;
 }
 
-#ifdef _M_IX86
+
 static VOID
 _dump_context(PCONTEXT pc)
 {
+#ifdef _M_IX86
    /*
     * Print out the CPU registers
     */
@@ -138,14 +139,19 @@ _dump_context(PCONTEXT pc)
    DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x   ESP: %.8x\n", pc->Edx,
 	    pc->Ebp, pc->Esi, pc->Esp);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
-}
+#elif defined(_M_AMD64)
+   DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
+   DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
+	    pc->SegFs&0xffff, pc->SegGs&0xfff);
+   DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
+   DbgPrint("RDX: %I64x   RBP: %I64x   RSI: %I64x   RSP: %I64x\n", pc->Rdx, pc->Rbp, pc->Rsi, pc->Rsp);
+   DbgPrint("R8: %I64x   R9: %I64x   R10: %I64x   R11: %I64x\n", pc->R8, pc->R9, pc->R10, pc->R11);
+   DbgPrint("R12: %I64x   R13: %I64x   R14: %I64x   R15: %I64x\n", pc->R12, pc->R13, pc->R14, pc->R15);
+   DbgPrint("EFLAGS: %.8x\n", pc->EFlags);
 #else
 #warning Unknown architecture
-static VOID
-_dump_context(PCONTEXT pc)
-{
-}
 #endif
+}
 
 static LONG
 BasepCheckForReadOnlyResource(IN PVOID Ptr)
@@ -275,7 +281,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    LONG RetValue;
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
-   ULONG ErrorParameters[4];
+   ULONG_PTR ErrorParameters[4];
    ULONG ErrorResponse;
    PEXCEPTION_RECORD ExceptionRecord = ExceptionInfo->ExceptionRecord;
 
@@ -326,7 +332,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
    /* Save exception code and address */
    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG)ExceptionRecord->ExceptionAddress;
+   ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
 
    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {

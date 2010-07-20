@@ -1361,9 +1361,10 @@ UserDrawIconEx(
                          pBits);
 
         /* premultiply with the alpha channel value */
-        for (i = 0; i < cyHeight; i++)
+        for (i = 0; i < abs(bmpColor.bmHeight); i++)
         {
-            for (j = 0; j < cxWidth; j++)
+			Count = i*bmpColor.bmWidthBytes;
+            for (j = 0; j < bmpColor.bmWidth; j++)
             {
                 Pixel = *(DWORD *)(pBits + Count);
 

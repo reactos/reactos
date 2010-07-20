@@ -137,7 +137,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
 #else
     /* FIXME: Function still present? If so what to use instead of HalEnableSystemInterrupt? */
     UNIMPLEMENTED;
-    return ERROR_INVALID_ACCESS;
+    return ERROR_INVALID_FUNCTION;
 #endif
 }
 
@@ -168,6 +168,6 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
 #else
     /* FIXME: Function still present? If so what to use instead of HalDisableSystemInterrupt? */
     UNIMPLEMENTED;
-    return ERROR_INVALID_ACCESS;
+    return ERROR_INVALID_FUNCTION;
 #endif
 }

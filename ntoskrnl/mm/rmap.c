@@ -54,7 +54,7 @@ MmInitializeRmapList(VOID)
 
 NTSTATUS
 NTAPI
-MmWritePagePhysicalAddress(PFN_TYPE Page)
+MmWritePagePhysicalAddress(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
@@ -188,7 +188,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 
 NTSTATUS
 NTAPI
-MmPageOutPhysicalAddress(PFN_TYPE Page)
+MmPageOutPhysicalAddress(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY entry;
    PMEMORY_AREA MemoryArea;
@@ -312,7 +312,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmSetCleanAllRmaps(PFN_TYPE Page)
+MmSetCleanAllRmaps(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -333,7 +333,7 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmSetDirtyAllRmaps(PFN_TYPE Page)
+MmSetDirtyAllRmaps(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -354,7 +354,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
 
 BOOLEAN
 NTAPI
-MmIsDirtyPageRmap(PFN_TYPE Page)
+MmIsDirtyPageRmap(PFN_NUMBER Page)
 {
    PMM_RMAP_ENTRY current_entry;
 
@@ -380,7 +380,7 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
 
 VOID
 NTAPI
-MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
+MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -450,7 +450,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
 
 VOID
 NTAPI
-MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
+MmDeleteAllRmaps(PFN_NUMBER Page, PVOID Context,
                  VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
                                        PVOID Address))
 {
@@ -491,7 +491,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
 
 VOID
 NTAPI
-MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
+MmDeleteRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;

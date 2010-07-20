@@ -53,7 +53,7 @@ MmWritePageVirtualMemory(PMMSUPPORT AddressSpace,
                          PMM_PAGEOP PageOp)
 {
    SWAPENTRY SwapEntry;
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    NTSTATUS Status;
    PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
@@ -135,7 +135,7 @@ MmPageOutVirtualMemory(PMMSUPPORT AddressSpace,
                        PVOID Address,
                        PMM_PAGEOP PageOp)
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    BOOLEAN WasDirty;
    SWAPENTRY SwapEntry;
    NTSTATUS Status;
@@ -253,7 +253,7 @@ MmNotPresentFaultVirtualMemory(PMMSUPPORT AddressSpace,
  * NOTES: This function is called with the address space lock held.
  */
 {
-   PFN_TYPE Page;
+   PFN_NUMBER Page;
    NTSTATUS Status;
    PMM_REGION Region;
    PMM_PAGEOP PageOp;
@@ -457,7 +457,7 @@ MmModifyAttributes(PMMSUPPORT AddressSpace,
 
       for (i=0; i < PAGE_ROUND_UP(RegionSize)/PAGE_SIZE; i++)
       {
-         PFN_TYPE Page;
+         PFN_NUMBER Page;
 
          if (MmIsPageSwapEntry(Process,
                                (char*)BaseAddress + (i * PAGE_SIZE)))
@@ -718,10 +718,10 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
          MemoryAreaLength = (ULONG_PTR)MemoryArea->EndingAddress -
                             (ULONG_PTR)MemoryArea->StartingAddress;
 
-         if (((ULONG)BaseAddress + RegionSize) > (ULONG)MemoryArea->EndingAddress)
+         if (((ULONG_PTR)BaseAddress + RegionSize) > (ULONG_PTR)MemoryArea->EndingAddress)
          {
             DPRINT("BaseAddress + RegionSize %x is larger than MemoryArea's EndingAddress %x\n",
-                  (ULONG)BaseAddress + RegionSize, MemoryArea->EndingAddress);
+                  (ULONG_PTR)BaseAddress + RegionSize, MemoryArea->EndingAddress);
 
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);
@@ -853,7 +853,7 @@ static VOID
 MmFreeVirtualMemoryPage(PVOID Context,
                         MEMORY_AREA* MemoryArea,
                         PVOID Address,
-                        PFN_TYPE Page,
+                        PFN_NUMBER Page,
                         SWAPENTRY SwapEntry,
                         BOOLEAN Dirty)
 {
@@ -1123,7 +1123,7 @@ NTSTATUS NTAPI
 MmQueryAnonMem(PMEMORY_AREA MemoryArea,
                PVOID Address,
                PMEMORY_BASIC_INFORMATION Info,
-               PULONG ResultLength)
+               PSIZE_T ResultLength)
 {
    PMM_REGION Region;
    PVOID RegionBase = NULL;

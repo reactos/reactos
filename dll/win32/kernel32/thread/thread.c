@@ -232,7 +232,7 @@ CreateRemoteThread(HANDLE hProcess,
     }
     
     /* Success */
-    if(lpThreadId) *lpThreadId = (DWORD)ClientId.UniqueThread;
+    if(lpThreadId) *lpThreadId = HandleToUlong(ClientId.UniqueThread);
 
     /* Resume it if asked */
     if (!(dwCreationFlags & CREATE_SUSPENDED))
@@ -344,7 +344,7 @@ DWORD
 WINAPI
 GetCurrentThreadId(VOID)
 {
-    return (DWORD)(NtCurrentTeb()->ClientId).UniqueThread;
+    return HandleToUlong(NtCurrentTeb()->ClientId.UniqueThread);
 }
 
 /*
@@ -684,6 +684,7 @@ GetThreadSelectorEntry(IN HANDLE hThread,
                        IN DWORD dwSelector,
                        OUT LPLDT_ENTRY lpSelectorEntry)
 {
+#ifdef _M_IX86
     DESCRIPTOR_TABLE_ENTRY DescriptionTableEntry;
     NTSTATUS Status;
 
@@ -704,6 +705,10 @@ GetThreadSelectorEntry(IN HANDLE hThread,
     /* Success, return the selector */
     *lpSelectorEntry = DescriptionTableEntry.Descriptor;
     return TRUE;
+#else
+    DPRINT1("Calling GetThreadSelectorEntry!\n");
+    return FALSE;
+#endif
 }
 
 /*
@@ -749,7 +754,7 @@ GetProcessIdOfThread(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueProcess;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueProcess);
 }
 
 /*
@@ -772,7 +777,7 @@ GetThreadId(HANDLE Thread)
     return 0;
   }
 
-  return (DWORD)ThreadBasic.ClientId.UniqueThread;
+  return HandleToUlong(ThreadBasic.ClientId.UniqueThread);
 }
 
 /*

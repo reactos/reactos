@@ -883,7 +883,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PEPROCESS Process;
     NTSTATUS Status = STATUS_SUCCESS;
-    ULONG BytesWritten = 0;
+    SIZE_T BytesWritten = 0;
     PAGED_CODE();
 
     //

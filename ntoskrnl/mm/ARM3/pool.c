@@ -333,8 +333,10 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 //
                 // Save it into our double-buffered system page directory
                 //
+#ifndef _M_AMD64
                 /* This seems to be making the assumption that one PDE is one page long */
                 C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
+#endif
                 MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
                                  sizeof(MMPTE)] = TempPte;
                             

@@ -23,7 +23,7 @@
  */
 PVOID
 NTAPI
-MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
+MmAllocateNonCachedMemory(IN SIZE_T NumberOfBytes)
 {
     PFN_NUMBER PageCount, MdlPageCount, PageFrameIndex;
     PHYSICAL_ADDRESS LowAddress, HighAddress, SkipBytes;
@@ -170,7 +170,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 VOID
 NTAPI
 MmFreeNonCachedMemory(IN PVOID BaseAddress,
-                      IN ULONG NumberOfBytes)
+                      IN SIZE_T NumberOfBytes)
 {
     PMDL Mdl;
     PMMPTE PointerPte;

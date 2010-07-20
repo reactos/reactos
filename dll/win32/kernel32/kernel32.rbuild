@@ -130,6 +130,12 @@
 				<file>thread.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>fiber.S</file>
+				<file>thread.S</file>
+			</directory>
+		</if>
 	</directory>
 	<directory name="misc">
 		<file>icustubs.cpp</file>

@@ -153,10 +153,25 @@
 
 #endif /* __ANONYMOUS_DEFINED */
 
-// FIXME
-#undef UNALIGNED
+#if defined(_M_MRX000) || defined(_M_ALPHA) || defined(_M_PPC) || defined(_M_IA64) || defined(_M_AMD64)
+#define ALIGNMENT_MACHINE
+#define UNALIGNED __unaligned
+#if defined(_WIN64)
+#define UNALIGNED64 __unaligned
+#else
+#define UNALIGNED64
+#endif
+#else
+#undef ALIGNMENT_MACHINE
 #define UNALIGNED
+#define UNALIGNED64
+#endif
+
+#if defined(_M_MRX000) && !(defined(MIDL_PASS) || defined(RC_INVOKED)) && defined(ENABLE_RESTRICTED)
+#define RESTRICTED_POINTER __restrict
+#else
 #define RESTRICTED_POINTER
+#endif
 
 
 #define ARGUMENT_PRESENT(ArgumentPointer) \

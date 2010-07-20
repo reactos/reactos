@@ -19,41 +19,41 @@ BOOLEAN PciBreakOnDefault;
 
 PCI_MN_DISPATCH_TABLE PciFdoDispatchPowerTable[] =
 {
-    {IRP_DISPATCH, PciFdoWaitWake},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciFdoSetPowerState},
-    {IRP_DOWNWARD, PciFdoIrpQueryPower},
-    {IRP_DOWNWARD, PciIrpNotSupported}
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoWaitWake},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoSetPowerState},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryPower},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported}
 };
 
 PCI_MN_DISPATCH_TABLE PciFdoDispatchPnpTable[] =
 {
-    {IRP_UPWARD,   PciFdoIrpStartDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryRemoveDevice},
-    {IRP_DISPATCH, PciFdoIrpRemoveDevice},
-    {IRP_DOWNWARD, PciFdoIrpCancelRemoveDevice},
-    {IRP_DOWNWARD, PciFdoIrpStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpCancelStopDevice},
-    {IRP_DOWNWARD, PciFdoIrpQueryDeviceRelations},
-    {IRP_DISPATCH, PciFdoIrpQueryInterface},
-    {IRP_UPWARD,   PciFdoIrpQueryCapabilities},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_DOWNWARD, PciIrpNotSupported},
-    {IRP_UPWARD,   PciFdoIrpDeviceUsageNotification},
-    {IRP_DOWNWARD, PciFdoIrpSurpriseRemoval},
-    {IRP_DOWNWARD, PciFdoIrpQueryLegacyBusInformation},
-    {IRP_DOWNWARD, PciIrpNotSupported}
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpStartDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryRemoveDevice},
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoIrpRemoveDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpCancelRemoveDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpCancelStopDevice},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryDeviceRelations},
+    {IRP_DISPATCH, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryInterface},
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryCapabilities},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported},
+    {IRP_UPWARD,   (PCI_DISPATCH_FUNCTION)PciFdoIrpDeviceUsageNotification},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpSurpriseRemoval},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciFdoIrpQueryLegacyBusInformation},
+    {IRP_DOWNWARD, (PCI_DISPATCH_FUNCTION)PciIrpNotSupported}
 };
 
 PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
@@ -63,9 +63,9 @@ PCI_MJ_DISPATCH_TABLE PciFdoDispatchTable =
     IRP_MN_QUERY_POWER,
     PciFdoDispatchPowerTable,
     IRP_DOWNWARD,
-    PciIrpNotSupported,
+    (PCI_DISPATCH_FUNCTION)PciIrpNotSupported,
     IRP_DOWNWARD,
-    PciIrpNotSupported
+    (PCI_DISPATCH_FUNCTION)PciIrpNotSupported
 };
 
 /* FUNCTIONS ******************************************************************/
@@ -76,9 +76,49 @@ PciFdoIrpStartDevice(IN PIRP Irp,
                      IN PIO_STACK_LOCATION IoStackLocation,
                      IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PCM_RESOURCE_LIST Resources;
+    PAGED_CODE();
+
+    /* The device stack must be starting the FDO in a success path */
+    if (!NT_SUCCESS(Irp->IoStatus.Status)) return STATUS_NOT_SUPPORTED;
+
+    /* Attempt to switch the state machine to the started state */
+    Status = PciBeginStateTransition(DeviceExtension, PciStarted);
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Check for any boot-provided resources */
+    Resources = IoStackLocation->Parameters.StartDevice.AllocatedResources;
+    DPRINT1("Resources: %p\n", Resources);
+    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
+    {
+        /* These resources would only be for non-root FDOs, unhandled for now */
+        ASSERT(Resources->Count == 1);
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Initialize the arbiter for this FDO */
+    Status = PciInitializeArbiterRanges(DeviceExtension, Resources);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Cancel the transition if this failed */
+        PciCancelStateTransition(DeviceExtension, PciStarted);
+        return Status;
+    }
+
+    /* Again, check for boot-provided resources for non-root FDO */
+    if ((Resources) && !(PCI_IS_ROOT_FDO(DeviceExtension)))
+    {
+        /* Unhandled for now */
+        ASSERT(Resources->Count == 1);
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+
+    /* Commit the transition to the started state */
+    PciCommitStateTransition(DeviceExtension, PciStarted);
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -153,9 +193,25 @@ PciFdoIrpQueryDeviceRelations(IN PIRP Irp,
                               IN PIO_STACK_LOCATION IoStackLocation,
                               IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    /* Are bus relations being queried? */
+    if (IoStackLocation->Parameters.QueryDeviceRelations.Type != BusRelations)
+    {
+        /* The FDO is a bus, so only bus relations can be obtained */
+        Status = STATUS_NOT_SUPPORTED;
+    }
+    else
+    {
+        /* Scan the PCI bus and build the device relations for the caller */
+        Status = PciQueryDeviceRelations(DeviceExtension,
+                                         (PDEVICE_RELATIONS*)
+                                         &Irp->IoStatus.Information);
+    }
+
+    /* Return the enumeration status back */
+    return Status;
 }
 
 NTSTATUS
@@ -164,9 +220,73 @@ PciFdoIrpQueryInterface(IN PIRP Irp,
                         IN PIO_STACK_LOCATION IoStackLocation,
                         IN PPCI_FDO_EXTENSION DeviceExtension)
 {
-    UNIMPLEMENTED;
-    while (TRUE);
-    return STATUS_NOT_SUPPORTED;
+    NTSTATUS Status;
+    PAGED_CODE();
+    ASSERT(DeviceExtension->ExtensionType == PciFdoExtensionType);
+
+    /* Deleted extensions don't respond to IRPs */
+    if (DeviceExtension->DeviceState == PciDeleted)
+    {
+        /* Hand it bacO try to deal with it */
+        return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+    }
+
+    /* Query our driver for this interface */
+    Status = PciQueryInterface(DeviceExtension,
+                               IoStackLocation->Parameters.QueryInterface.
+                               InterfaceType,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Size,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Version,
+                               IoStackLocation->Parameters.QueryInterface.
+                               InterfaceSpecificData,
+                               IoStackLocation->Parameters.QueryInterface.
+                               Interface,
+                               FALSE);
+    if (NT_SUCCESS(Status))
+    {
+        /* We found it, let the PDO handle it */
+        Irp->IoStatus.Status = Status;
+        return PciPassIrpFromFdoToPdo(DeviceExtension, Irp);
+    }
+    else if (Status == STATUS_NOT_SUPPORTED)
+    {
+        /* Otherwise, we can't handle it, let someone else down the stack try */
+        Status = PciCallDownIrpStack(DeviceExtension, Irp);
+        if (Status == STATUS_NOT_SUPPORTED)
+        {
+            /* They can't either, try a last-resort interface lookup */
+            Status = PciQueryInterface(DeviceExtension,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       InterfaceType,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Size,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Version,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       InterfaceSpecificData,
+                                       IoStackLocation->Parameters.QueryInterface.
+                                       Interface,
+                                       TRUE);
+        }
+    }
+
+    /* Has anyone claimed this interface yet? */
+    if (Status == STATUS_NOT_SUPPORTED)
+    {
+        /* No, return the original IRP status */
+        Status = Irp->IoStatus.Status;
+    }
+    else
+    {
+        /* Yes, set the new IRP status */
+        Irp->IoStatus.Status = Status;
+    }
+
+    /* Complete this IRP */
+    IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    return Status;
 }
 
 NTSTATUS
@@ -386,11 +506,15 @@ PciAddDevice(IN PDRIVER_OBJECT DriverObject,
                 if (PciBreakOnDefault)
                 {
                     /* If a second bus is found and there's still no data, crash */
+                    #if 0 // ros bug?
                     KeBugCheckEx(PCI_BUS_DRIVER_INTERNAL,
                                  0xDEAD0010u,
                                  (ULONG_PTR)DeviceObject,
                                  0,
                                  0);
+                    #else
+                    DPRINT1("Windows would crash!\n");
+                    #endif
                 }
 
                 /* Warn that a default configuration will be used, and set bus 0 */

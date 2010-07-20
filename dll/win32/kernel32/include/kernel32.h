@@ -31,7 +31,7 @@
 #endif
 
 #define IsConsoleHandle(h) \
-  (((((ULONG)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
+  (((((ULONG_PTR)h) & 0x10000003) == 0x3) ? TRUE : FALSE)
 
 #define HANDLE_DETACHED_PROCESS    (HANDLE)-2
 #define HANDLE_CREATE_NEW_CONSOLE  (HANDLE)-3
@@ -110,8 +110,8 @@ BasepConvertObjectAttributes(OUT POBJECT_ATTRIBUTES ObjectAttributes,
 NTSTATUS
 WINAPI
 BasepCreateStack(HANDLE hProcess,
-                 ULONG StackReserve,
-                 ULONG StackCommit,
+                 SIZE_T StackReserve,
+                 SIZE_T StackCommit,
                  PINITIAL_TEB InitialTeb);
                  
 VOID

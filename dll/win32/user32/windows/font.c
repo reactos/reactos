@@ -495,6 +495,38 @@ static void TEXT_PathEllipsify (HDC hdc, WCHAR *str, unsigned int max_len,
     }
 }
 
+/* Check the character is Chinese, Japanese, Korean and/or Thai */
+inline BOOL IsCJKT(WCHAR wch)
+{
+    if (0x0E00 <= wch && wch <= 0x0E7F)
+        return TRUE;    /* Thai */
+
+    if (0x3000 <= wch && wch <= 0x9FFF)
+        return TRUE;    /* CJK */
+
+    if (0xAC00 <= wch && wch <= 0xD7FF)
+        return TRUE;    /* Korean */
+
+    if (0xFF00 <= wch && wch <= 0xFFEF)
+        return TRUE;    /* CJK */
+
+    return FALSE;
+}
+
+/* See http://en.wikipedia.org/wiki/Kinsoku_shori */
+static const WCHAR KinsokuClassA[] =
+{
+    0x2010, 0x2013, 0x2019, 0x201D, 0x203C, 0x2047, 0x2048, 0x2049, 0x3001, 
+    0x3002, 0x3005, 0x3009, 0x300B, 0x300D, 0x300F, 0x3011, 0x3015, 0x3017, 
+    0x3019, 0x301C, 0x301F, 0x303B, 0x3041, 0x3043, 0x3045, 0x3047, 0x3049, 
+    0x3063, 0x3083, 0x3085, 0x3087, 0x308E, 0x3095, 0x3096, 0x30A0, 0x30A1, 
+    0x30A3, 0x30A5, 0x30A7, 0x30A9, 0x30C3, 0x30E3, 0x30E5, 0x30E7, 0x30EE, 
+    0x30F5, 0x30F6, 0x30FB, 0x30FC, 0x30FD, 0x30FE, 0x31F0, 0x31F1, 0x31F2, 
+    0x31F3, 0x31F4, 0x31F5, 0x31F6, 0x31F7, 0x31F8, 0x31F9, 0x31FA, 0x31FB, 
+    0x31FC, 0x31FD, 0x31FE, 0x31FF, 0xFF01, 0xFF09, 0xFF0C, 0xFF0E, 0xFF1A, 
+    0xFF1B, 0xFF1F, 0xFF3D, 0xFF5D, 0xFF60, 0
+};
+
 /*********************************************************************
  *                      TEXT_WordBreak (static)
  *
@@ -576,9 +608,10 @@ static void TEXT_WordBreak (HDC hdc, WCHAR *str, unsigned int max_str,
         p--; /* the word just fitted */
     else
     {
-        while (p > str && *(--p) != SPACE)
+        while (p > str && *(--p) != SPACE && (!IsCJKT(p[1]) || 
+                p[1] == L'\0' || wcschr(KinsokuClassA, p[1]) != NULL))
             ;
-        word_fits = (p != str || *p == SPACE);
+        word_fits = (p != str || *p == SPACE || IsCJKT(p[1]));
     }
     /* If there was one or the first character didn't fit then */
     if (word_fits)

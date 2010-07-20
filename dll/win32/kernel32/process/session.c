@@ -73,7 +73,7 @@ ProcessIdToSessionId(IN DWORD dwProcessId,
         return FALSE;
     }
 
-    ClientId.UniqueProcess = (HANDLE)dwProcessId;
+    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     ClientId.UniqueThread = 0;
 
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);

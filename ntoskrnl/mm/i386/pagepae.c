@@ -348,7 +348,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
 {
    NTSTATUS Status;
    ULONG i, j;
-   PFN_TYPE Pfn[7];
+   PFN_NUMBER Pfn[7];
    ULONG Count;
 
    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
@@ -459,7 +459,7 @@ MmFreePageTable(PEPROCESS Process, PVOID Address)
 {
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG i;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
 
    DPRINT("ProcessId %d, Address %x\n", Process->UniqueProcessId, Address);
    if (Process != NULL && Process != CurrentProcess)
@@ -521,7 +521,7 @@ static PULONGLONG
 MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
    NTSTATUS Status;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ULONGLONG Entry;
    ULONGLONG ZeroEntry = 0LL;
    PULONGLONG Pt;
@@ -636,7 +636,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 {
    ULONG PdeOffset = ADDR_TO_PDE_OFFSET(Address);
    NTSTATUS Status;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ULONG Entry;
    PULONG Pt, PageDir;
 
@@ -780,7 +780,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
    return 0;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
@@ -810,7 +810,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 
 VOID
 NTAPI
-MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_TYPE Page)
+MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
@@ -931,13 +931,13 @@ MmRawDeleteVirtualMapping(PVOID Address)
 VOID
 NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
-                       BOOLEAN* WasDirty, PPFN_TYPE Page)
+                       BOOLEAN* WasDirty, PPFN_NUMBER Page)
 /*
  * FUNCTION: Delete a virtual mapping
  */
 {
    BOOLEAN WasValid = FALSE;
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
 
    DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
           Process, Address, FreePage, WasDirty, Page);
@@ -1510,7 +1510,7 @@ NTSTATUS
 NTAPI
 MmCreateVirtualMappingForKernel(PVOID Address,
                                 ULONG flProtect,
-                                PPFN_TYPE Pages,
+                                PPFN_NUMBER Pages,
 				ULONG PageCount)
 {
    ULONG Attributes;
@@ -1727,7 +1727,7 @@ NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
-                             PPFN_TYPE Pages,
+                             PPFN_NUMBER Pages,
                              ULONG PageCount)
 {
    ULONG Attributes;
@@ -1933,7 +1933,7 @@ NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
-                       PPFN_TYPE Pages,
+                       PPFN_NUMBER Pages,
                        ULONG PageCount)
 {
    ULONG i;
@@ -2114,7 +2114,7 @@ MmGetPhysicalAddress(PVOID vaddr)
 
 PVOID
 NTAPI
-MmCreateHyperspaceMapping(PFN_TYPE Page)
+MmCreateHyperspaceMapping(PFN_NUMBER Page)
 {
    PVOID Address;
    ULONG i;
@@ -2241,11 +2241,11 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
    return Address;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
-MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
+MmChangeHyperspaceMapping(PVOID Address, PFN_NUMBER NewPage)
 {
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ASSERT (IS_HYPERSPACE(Address));
    if (Ke386Pae)
    {
@@ -2263,11 +2263,11 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
    return Pfn;
 }
 
-PFN_TYPE
+PFN_NUMBER
 NTAPI
 MmDeleteHyperspaceMapping(PVOID Address)
 {
-   PFN_TYPE Pfn;
+   PFN_NUMBER Pfn;
    ASSERT (IS_HYPERSPACE(Address));
    if (Ke386Pae)
    {

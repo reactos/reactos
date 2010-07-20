@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/bus/pci/intrface/routinf.c
- * PURPOSE:         Routing Interface
+ * FILE:            drivers/bus/pci/intrface/devhere.c
+ * PURPOSE:         Device Presence Interface
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
@@ -14,41 +14,40 @@
 
 /* GLOBALS ********************************************************************/
 
-PCI_INTERFACE PciRoutingInterface =
+PCI_INTERFACE PciDevicePresentInterface =
 {
-    &GUID_INT_ROUTE_INTERFACE_STANDARD,
-    sizeof(INT_ROUTE_INTERFACE_STANDARD),
-    PCI_INT_ROUTE_INTRF_STANDARD_VER,
-    PCI_INT_ROUTE_INTRF_STANDARD_VER,
-    PCI_INTERFACE_FDO,
+    &GUID_PCI_DEVICE_PRESENT_INTERFACE,
+    sizeof(PCI_DEVICE_PRESENT_INTERFACE),
+    PCI_DEVICE_PRESENT_INTERFACE_VERSION,
+    PCI_DEVICE_PRESENT_INTERFACE_VERSION,
+    PCI_INTERFACE_PDO,
     0,
-    PciInterface_IntRouteHandler,
-    routeintrf_Constructor,
-    routeintrf_Initializer
+    PciInterface_DevicePresent,
+    devpresent_Constructor,
+    devpresent_Initializer
 };
 
 /* FUNCTIONS ******************************************************************/
 
 NTSTATUS
 NTAPI
-routeintrf_Initializer(IN PVOID Instance)
+devpresent_Initializer(IN PVOID Instance)
 {
     /* PnP Interfaces don't get Initialized */
-    ASSERTMSG(FALSE, "PCI routeintrf_Initializer, unexpected call.");
+    ASSERTMSG(FALSE, "PCI devpresent_Initializer, unexpected call.");
     return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
 NTAPI
-routeintrf_Constructor(IN PVOID DeviceExtension,
+devpresent_Constructor(IN PVOID DeviceExtension,
                        IN PVOID Instance,
                        IN PVOID InterfaceData,
                        IN USHORT Version,
                        IN USHORT Size,
                        IN PINTERFACE Interface)
 {
-    /* Only version 1 is supported */
-    if (Version != PCI_INT_ROUTE_INTRF_STANDARD_VER) return STATUS_NOINTERFACE;
+    PAGED_CODE();
 
     /* Not yet implemented */
     UNIMPLEMENTED;

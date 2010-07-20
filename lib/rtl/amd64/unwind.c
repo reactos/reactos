@@ -232,7 +232,7 @@ PopReg(PCONTEXT Context, BYTE Reg)
  */
 BOOLEAN
 static
-inline
+__inline
 RtlpTryToUnwindEpilog(
     PCONTEXT Context,
     ULONG64 ImageBase,

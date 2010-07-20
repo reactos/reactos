@@ -42,7 +42,7 @@
 #define PCI_HACK_VIDEO_LEGACY_DECODE                        0x0000000100000000LL
 #define PCI_HACK_FAKE_CLASS_CODE                            0x0000000200000000LL
 #define PCI_HACK_UNUSED_40000000                            0x0000000400000000LL
-#define PCI_HACK_UNUSED_80000000                            0x0000000800000000LL
+#define PCI_HACK_DISABLE_IDE_NATIVE_MODE                    0x0000000800000000LL
 #define PCI_HACK_FAIL_QUERY_REMOVE                          0x0000001000000000LL
 #define PCI_HACK_CRITICAL_DEVICE                            0x0000002000000000LL
 #define PCI_HACK_UNUSED_4000000000                          0x0000004000000000LL
@@ -50,7 +50,9 @@
 #define PCI_HACK_NO_REVISION_AFTER_D3                       0x0000010000000000LL
 #define PCI_HACK_ENABLE_MSI_MAPPING                         0x0000020000000000LL
 #define PCI_HACK_DISABLE_PM_DOWNSTREAM_PCI_BRIDGE           0x0000040000000000LL
-
+#define PCI_HACK_DISABLE_HOT_PLUG                           0x0000080000000000LL
+#define PCI_HACK_IGNORE_AER_CAPABILITY                      0x0000100000000000LL
+        
 //
 // Bit encodes for PCI_COMMON_CONFIG.u.type1.BridgeControl
 //

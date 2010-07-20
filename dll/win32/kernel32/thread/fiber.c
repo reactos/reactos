@@ -258,6 +258,13 @@ BaseFiberStartup(VOID)
     DPRINT("Starting Fiber\n");
     BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
                       (LPVOID)Fiber->Context.Ebx);
+#elif defined(_M_AMD64)
+    PFIBER Fiber = GetFiberData();
+
+    /* Call the Thread Startup Routine */
+    DPRINT1("Starting Fiber\n");
+    BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Rax,
+                      (LPVOID)Fiber->Context.Rbx);
 #else
 #warning Unknown architecture
     UNIMPLEMENTED;

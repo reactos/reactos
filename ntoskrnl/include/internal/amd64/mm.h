@@ -42,6 +42,13 @@
 #define MI_SYSTEM_VIEW_SIZE                    (16 * 1024 * 1024)
 #define MI_NUMBER_SYSTEM_PTES 22000
 
+#define MI_MIN_SECONDARY_COLORS                 8
+#define MI_SECONDARY_COLORS                     64
+#define MI_MAX_SECONDARY_COLORS                 1024
+
+#define MM_HIGHEST_VAD_ADDRESS \
+    (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
+
 PULONG64
 FORCEINLINE
 MmGetPageDirectory(VOID)
