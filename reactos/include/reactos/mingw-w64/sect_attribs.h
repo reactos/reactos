@@ -55,7 +55,9 @@
 #pragma section(".rtc$IZZ",long,read)
 #pragma section(".rtc$TAA",long,read)
 #pragma section(".rtc$TZZ",long,read)
+/* for tlssup.c: */
 #pragma section(".tls",long,read,write)
+#pragma section(".tls$AAA",long,read,write)
 #pragma section(".tls$ZZZ",long,read,write)
 #endif
 
@@ -64,5 +66,5 @@
 #elif defined(__GNUC__)
 #define _CRTALLOC(x) __attribute__ ((section (x) ))
 #else
-#error
+#error Your compiler is not supported.
 #endif
