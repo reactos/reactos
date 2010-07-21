@@ -284,6 +284,11 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
      * can go away.
      */
     MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
+    if (!(MemoryArea) && (Address <= MM_HIGHEST_VAD_ADDRESS))
+    {
+        /* Could this be a VAD fault from user-mode? */
+        MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);
+    }
     if ((!(MemoryArea) && ((ULONG_PTR)Address >= (ULONG_PTR)MmPagedPoolStart)) ||
         ((MemoryArea) && (MemoryArea->Type == MEMORY_AREA_OWNED_BY_ARM3)))
     {
@@ -292,7 +297,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
         //
         DPRINT("ARM3 fault %p\n", MemoryArea);
         return MmArmAccessFault(StoreInstruction, Address, Mode, TrapInformation);
-    }   
+    }
 
     /* Keep same old ReactOS Behaviour */
     if (StoreInstruction)
