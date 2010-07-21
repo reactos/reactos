@@ -252,6 +252,7 @@ User32 -
   reactos/dll/win32/user32/misc/winhelp.c       # Last sync date unknown
   reactos/dll/win32/user32/misc/wsprintf.c      # Synced to Wine-1_1_23
 
+  reactos/dll/win32/user32/windows/cursoricon   # Forked from wine 1.2-rc7
   reactos/dll/win32/user32/windows/defwnd.c     # Forked
   reactos/dll/win32/user32/windows/draw.c       # Forked at Wine-20020904 (uitools.c)
   reactos/dll/win32/user32/windows/mdi.c        # Synced to Wine-1_1_40
