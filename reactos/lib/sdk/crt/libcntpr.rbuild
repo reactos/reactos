@@ -8,6 +8,7 @@
 	<define name="_NTDLLBUILD_" />
 	<define name="_LIBCNT_" />
 	<define name="_CRTBLD" />
+	<define name="__CRT__NO_INLINE" />
 	<if property="ARCH" value="i386">
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 	</if>
@@ -57,6 +58,26 @@
 				<file>sin_asm.s</file>
 				<file>sqrt_asm.s</file>
 				<file>tan_asm.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<file>cos.c</file>
+			<file>sin.c</file>
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>atan2.S</file>
+				<file>ceil.S</file>
+				<file>exp.S</file>
+				<file>fabs.S</file>
+				<file>floor.S</file>
+				<file>fmod.S</file>
+				<file>ldexp.S</file>
+				<file>log.S</file>
+				<file>log10.S</file>
+				<file>pow.S</file>
+				<file>sqrt.S</file>
+				<file>tan.S</file>
 			</directory>
 		</if>
 		<file>abs.c</file>

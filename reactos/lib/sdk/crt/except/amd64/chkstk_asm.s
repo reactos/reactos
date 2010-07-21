@@ -8,24 +8,23 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ndk/amd64/asm.h>
-#include <ndk/amd64/asmmacro.S>
+#include <reactos/asm.h>
 
 .intel_syntax noprefix
 
-.global _MsgUnimplemented
-_MsgUnimplemented:
+.global MsgUnimplemented
+MsgUnimplemented:
 .asciz "WARNING:  %s at %s:%d is UNIMPLEMENTED!\n"
 
 
 .proc _chkstk
     UNIMPLEMENTED chkstk
     ret
-.endproc
+.endp
 
 .proc _alloca_probe
     UNIMPLEMENTED alloca_probe
     ret
-.endproc
+.endp
 
 /* EOF */

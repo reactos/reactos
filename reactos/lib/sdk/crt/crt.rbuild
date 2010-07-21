@@ -113,6 +113,7 @@
 		<file>adjust.c</file>
 		<file>asin.c</file>
 		<file>cabs.c</file>
+		<file>cosf.c</file>
 		<file>cosh.c</file>
 		<file>div.c</file>
 		<file>fdivbug.c</file>
@@ -123,6 +124,7 @@
 		<file>modf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
+		<file>sinf.c</file>
 		<file>sinh.c</file>
 		<file>tanh.c</file>
 		<file>pow_asm.c</file>
@@ -141,9 +143,11 @@
 				<file>aullrem_asm.s</file>
 				<file>aullshr_asm.s</file>
 				<file>ceil_asm.s</file>
+				<file>ceilf.S</file>
 				<file>cos_asm.s</file>
 				<file>fabs_asm.s</file>
 				<file>floor_asm.s</file>
+				<file>floorf.S</file>
 				<file>ftol_asm.s</file>
 				<file>log_asm.s</file>
 				<file>log10_asm.s</file>
@@ -156,7 +160,9 @@
 				<file>ci.c</file>
 				<file>exp.c</file>
 				<file>fmod.c</file>
+				<file>fmodf.c</file>
 				<file>ldexp.c</file>
+				<file>sqrtf.c</file>
 			</directory>
 			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
 			<!--<file>j0_y0.c</file>
@@ -164,11 +170,27 @@
 			<file>jn_yn.c</file>-->
 		</if>
 		<if property="ARCH" value="amd64">
-			<directory name="i386">
-				<file>atan2.c</file>
-				<file>exp.c</file>
-				<file>fmod.c</file>
-				<file>ldexp.c</file>
+			<file>cos.c</file>
+			<file>sin.c</file>
+			<directory name="amd64">
+				<file>alldiv.S</file>
+				<file>atan.S</file>
+				<file>atan2.S</file>
+				<file>ceil.S</file>
+				<file>ceilf.S</file>
+				<file>exp.S</file>
+				<file>fabs.S</file>
+				<file>floor.S</file>
+				<file>floorf.S</file>
+				<file>fmod.S</file>
+				<file>fmodf.S</file>
+				<file>ldexp.S</file>
+				<file>log.S</file>
+				<file>log10.S</file>
+				<file>pow.S</file>
+				<file>sqrt.S</file>
+				<file>sqrtf.S</file>
+				<file>tan.S</file>
 			</directory>
 			<!-- FIXME: we don't actually implement these... they recursively call themselves through an alias -->
 			<!--<file>j0_y0.c</file>
