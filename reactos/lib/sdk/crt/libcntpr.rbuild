@@ -19,6 +19,12 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>chkstk_asm.s</file>
+				<file>seh.s</file>
+			</directory>
+		</if>
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>chkstk_asm.s</file>
@@ -87,6 +93,11 @@
 	<directory name="setjmp">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>setjmp.s</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
 				<file>setjmp.s</file>
 			</directory>
 		</if>
