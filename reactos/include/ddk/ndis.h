@@ -32,6 +32,10 @@
 #ifndef __NDIS_H
 #define __NDIS_H
 
+#ifndef NDIS_WDM
+#define NDIS_WDM 0
+#endif
+
 /* Helper macro to enable gcc's extension.  */
 #ifndef __GNU_EXTENSION
 #ifdef __GNUC__
@@ -42,10 +46,14 @@
 #endif
 
 #include "ntddk.h"
-#include "ntddndis.h"
 #include "netpnp.h"
+#include "ntstatus.h"
 #include "netevent.h"
 #include <qos.h>
+
+typedef int NDIS_STATUS, *PNDIS_STATUS;
+
+#include "ntddndis.h"
 
 #if !defined(_WINDEF_H)
 typedef unsigned int UINT, *PUINT;
@@ -54,6 +62,194 @@ typedef unsigned int UINT, *PUINT;
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifndef __NET_PNP__
+#define __NET_PNP__
+
+typedef enum _NET_DEVICE_POWER_STATE {
+  NetDeviceStateUnspecified = 0,
+  NetDeviceStateD0,
+  NetDeviceStateD1,
+  NetDeviceStateD2,
+  NetDeviceStateD3,
+  NetDeviceStateMaximum
+} NET_DEVICE_POWER_STATE, *PNET_DEVICE_POWER_STATE;
+
+typedef enum _NET_PNP_EVENT_CODE {
+  NetEventSetPower,
+  NetEventQueryPower,
+  NetEventQueryRemoveDevice,
+  NetEventCancelRemoveDevice,
+  NetEventReconfigure,
+  NetEventBindList,
+  NetEventBindsComplete,
+  NetEventPnPCapabilities,
+  NetEventPause,
+  NetEventRestart,
+  NetEventPortActivation,
+  NetEventPortDeactivation,
+  NetEventIMReEnableDevice,
+  NetEventMaximum
+} NET_PNP_EVENT_CODE, *PNET_PNP_EVENT_CODE;
+
+typedef struct _NET_PNP_EVENT {
+  NET_PNP_EVENT_CODE NetEvent;
+  PVOID Buffer;
+  ULONG BufferLength;
+  ULONG_PTR NdisReserved[4];
+  ULONG_PTR TransportReserved[4];
+  ULONG_PTR TdiReserved[4];
+  ULONG_PTR TdiClientReserved[4];
+} NET_PNP_EVENT, *PNET_PNP_EVENT;
+
+#endif /* __NET_PNP__ */
+
+#if !defined(NDIS_WRAPPER)
+
+#if (defined(NDIS_MINIPORT_MAJOR_VERSION) ||  \
+    (defined(NDIS_MINIPORT_MINOR_VERSION)) || \
+    (defined(NDIS_PROTOCOL_MAJOR_VERSION)) || \
+    (defined(NDIS_PROTOCOL_MINOR_VERSION)) || \
+    (defined(NDIS_FILTER_MAJOR_VERSION)) ||   \
+    (defined(NDIS_FILTER_MINOR_VERSION)))
+#error "Driver should not redefine NDIS reserved macros"
+#endif
+
+#if defined(NDIS_MINIPORT_DRIVER)
+
+#if defined(NDIS620_MINIPORT)
+#define NDIS_MINIPORT_MAJOR_VERSION 6
+#define NDIS_MINIPORT_MINOR_VERSION 20
+#elif defined(NDIS61_MINIPORT)
+#define NDIS_MINIPORT_MAJOR_VERSION 6
+#define NDIS_MINIPORT_MINOR_VERSION 1
+#elif defined(NDIS60_MINIPORT)
+#define NDIS_MINIPORT_MAJOR_VERSION 6
+#define NDIS_MINIPORT_MINOR_VERSION 0
+#elif defined(NDIS51_MINIPORT)
+#define NDIS_MINIPORT_MAJOR_VERSION 5
+#define NDIS_MINIPORT_MINOR_VERSION 1
+#elif defined(NDIS50_MINIPORT)
+#define NDIS_MINIPORT_MAJOR_VERSION 5
+#define NDIS_MINIPORT_MINOR_VERSION 0
+#else
+#error "Only NDIS miniport drivers with version >= 5 are supported"
+#endif
+
+#if ((NDIS_MINIPORT_MAJOR_VERSION == 6) &&    \
+       (NDIS_MINIPORT_MINOR_VERSION != 20) && \
+       (NDIS_MINIPORT_MINOR_VERSION != 1) &&  \
+       (NDIS_MINIPORT_MINOR_VERSION != 0))
+#error "Invalid miniport major/minor version combination"
+#elif ((NDIS_MINIPORT_MAJOR_VERSION == 5) &&  \
+       (NDIS_MINIPORT_MINOR_VERSION != 1) &&  \
+       (NDIS_MINIPORT_MINOR_VERSION != 0))
+#error "Invalid miniport major/minor version combination"
+#endif
+
+#if  (NDIS_MINIPORT_MAJOR_VERSION == 6) && \
+     ((NDIS_MINIPORT_MINOR_VERSION == 20 && NTDDI_VERSION < NTDDI_WIN7)  || \
+      (NDIS_MINIPORT_MINOR_VERSION == 1 && NTDDI_VERSION < NTDDI_VISTA) || \
+      (NDIS_MINIPORT_MINOR_VERSION == 0 && NTDDI_VERSION < NTDDI_VISTA))
+#error "Wrong NDIS/DDI version"
+#elif ((NDIS_MINIPORT_MAJOR_VERSION == 5) && \
+       (((NDIS_MINIPORT_MINOR_VERSION == 1) && (NTDDI_VERSION < NTDDI_WINXP)) || \
+         ((NDIS_MINIPORT_MINOR_VERSION == 0) && (NTDDI_VERSION < NTDDI_WIN2K))))
+#error "Wrong NDIS/DDI version"
+#endif
+
+
+#endif /* defined(NDIS_MINIPORT_DRIVER) */
+
+#if defined(NDIS30)
+#error "Only NDIS Protocol drivers version 4 or later are supported"
+#endif
+
+#if defined(NDIS620)
+#define NDIS_PROTOCOL_MAJOR_VERSION 6
+#define NDIS_PROTOCOL_MINOR_VERSION 20
+#define NDIS_FILTER_MAJOR_VERSION 6
+#define NDIS_FILTER_MINOR_VERSION 20
+#elif defined(NDIS61)
+#define NDIS_PROTOCOL_MAJOR_VERSION 6
+#define NDIS_PROTOCOL_MINOR_VERSION 1
+#define NDIS_FILTER_MAJOR_VERSION 6
+#define NDIS_FILTER_MINOR_VERSION 1
+#elif defined(NDIS60)
+#define NDIS_PROTOCOL_MAJOR_VERSION 6
+#define NDIS_PROTOCOL_MINOR_VERSION 0
+#define NDIS_FILTER_MAJOR_VERSION 6
+#define NDIS_FILTER_MINOR_VERSION 0
+#elif defined(NDIS51)
+#define NDIS_PROTOCOL_MAJOR_VERSION 5
+#define NDIS_PROTOCOL_MINOR_VERSION 1
+#elif defined(NDIS50)
+#define NDIS_PROTOCOL_MAJOR_VERSION 5
+#define NDIS_PROTOCOL_MINOR_VERSION 0
+#elif defined(NDIS40)
+#define NDIS_PROTOCOL_MAJOR_VERSION 4
+#define NDIS_PROTOCOL_MINOR_VERSION 0
+#endif
+
+#if !defined(NDIS_MINIPORT_DRIVER) && !defined(NDIS_PROTOCOL_MAJOR_VERSION)
+#define NDIS40
+#define NDIS_PROTOCOL_MAJOR_VERSION 4
+#define NDIS_PROTOCOL_MINOR_VERSION 0
+#endif
+
+#if defined(NDIS_FILTER_MAJOR_VERSION)
+
+#if ((NDIS_FILTER_MAJOR_VERSION == 6) &&  \
+     (NDIS_FILTER_MINOR_VERSION != 20) && \
+     (NDIS_FILTER_MINOR_VERSION != 1) &&  \
+     (NDIS_FILTER_MINOR_VERSION != 0))
+#error "Invalid Filter version"
+#endif
+
+#endif /* defined(NDIS_FILTER_MAJOR_VERSION) */
+
+
+#if defined(NDIS_PROTOCOL_MAJOR_VERSION)
+
+#if ((NDIS_PROTOCOL_MAJOR_VERSION == 6) &&  \
+     (NDIS_PROTOCOL_MINOR_VERSION != 20) && \
+     (NDIS_PROTOCOL_MINOR_VERSION != 1) &&  \
+     (NDIS_PROTOCOL_MINOR_VERSION != 0))
+#error "Invalid Protocol version"
+#elif ((NDIS_PROTOCOL_MAJOR_VERSION == 5) && \
+     (NDIS_PROTOCOL_MINOR_VERSION != 1) && (NDIS_PROTOCOL_MINOR_VERSION != 0))
+#error "Invalid Protocol version"
+#elif ((NDIS_PROTOCOL_MAJOR_VERSION == 4) && (NDIS_PROTOCOL_MINOR_VERSION != 0))
+#error "Invalid Protocol major/minor version"
+#endif
+
+#if ((NDIS_PROTOCOL_MAJOR_VERSION == 6) && (NTDDI_VERSION < NTDDI_VISTA))
+#error "Wrong NDIS/DDI version"
+#endif
+
+#endif /* defined(NDIS_PROTOCOL_MAJOR_VERSION) */
+
+#endif /* !defined(NDIS_WRAPPER) */
+
+#if !defined(NDIS_LEGACY_MINIPORT)
+
+#if ((defined(NDIS_MINIPORT_DRIVER) && (NDIS_MINIPORT_MAJOR_VERSION < 6)) || NDIS_WRAPPER)
+#define NDIS_LEGACY_MINIPORT    1
+#else
+#define NDIS_LEGACY_MINIPORT    0
+#endif
+
+#endif /* !defined(NDIS_LEGACY_MINIPORT) */
+
+#if !defined(NDIS_LEGACY_PROTOCOL)
+
+#if ((defined(NDIS_PROTOCOL_MAJOR_VERSION) && (NDIS_PROTOCOL_MAJOR_VERSION < 6)) || NDIS_WRAPPER)
+#define NDIS_LEGACY_PROTOCOL    1
+#else
+#define NDIS_LEGACY_PROTOCOL    0
+#endif
+
+#endif /* !defined(NDIS_LEGACY_PROTOCOL) */
 
 #if defined(NDIS_WRAPPER)
   #define NDISAPI
@@ -111,7 +307,6 @@ typedef struct _NDIS_EVENT {
 } NDIS_EVENT, *PNDIS_EVENT;
 
 typedef PVOID NDIS_HANDLE, *PNDIS_HANDLE;
-typedef int NDIS_STATUS, *PNDIS_STATUS;
 
 typedef ANSI_STRING NDIS_ANSI_STRING, *PNDIS_ANSI_STRING;
 typedef UNICODE_STRING NDIS_STRING, *PNDIS_STRING;
@@ -278,8 +473,6 @@ typedef struct _NDIS_TIMER {
   KTIMER  Timer;
   KDPC  Dpc;
 } NDIS_TIMER, *PNDIS_TIMER;
-
-
 
 /* Hardware */
 
@@ -689,13 +882,11 @@ typedef struct _NETWORK_ADDRESS_LIST {
 #define	NDIS_PROTOCOL_ID_MAX            0x0F
 #define	NDIS_PROTOCOL_ID_MASK           0x0F
 
-
 /* OID_GEN_TRANSPORT_HEADER_OFFSET */
 typedef struct _TRANSPORT_HEADER_OFFSET {
 	USHORT  ProtocolType;
 	USHORT  HeaderOffset;
 } TRANSPORT_HEADER_OFFSET, *PTRANSPORT_HEADER_OFFSET;
-
 
 /* OID_GEN_CO_LINK_SPEED / OID_GEN_CO_MINIMUM_LINK_SPEED */
 typedef struct _NDIS_CO_LINK_SPEED {
@@ -704,6 +895,7 @@ typedef struct _NDIS_CO_LINK_SPEED {
 } NDIS_CO_LINK_SPEED, *PNDIS_CO_LINK_SPEED;
 
 typedef ULONG NDIS_AF, *PNDIS_AF;
+
 #define CO_ADDRESS_FAMILY_Q2931           ((NDIS_AF)0x1)
 #define CO_ADDRESS_FAMILY_PSCHED          ((NDIS_AF)0x2)
 #define CO_ADDRESS_FAMILY_L2TP            ((NDIS_AF)0x3)
