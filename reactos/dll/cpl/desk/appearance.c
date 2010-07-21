@@ -36,7 +36,7 @@ AppearancePage_OnInit(HWND hwndDlg)
 	g->hbmpColor[0] = g->hbmpColor[1] = g->hbmpColor[2] = NULL;
 	g->bInitializing = FALSE;
 
-	TemplateCount = LoadThemeTemplates(strSelectedStyle);
+	TemplateCount = LoadThemePresetEntries(strSelectedStyle);
 
 	hwndCombo = GetDlgItem(hwndDlg, IDC_APPEARANCE_COLORSCHEME);
 	g->ThemeId = -1;
@@ -105,7 +105,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						g->ThemeId = -1;	/* Customized */
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
 						SetDlgItemText(hwndDlg, IDC_APPEARANCE_COLORSCHEME, TEXT(""));
-						/* SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme); */
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
 					}
 					break;
 
@@ -119,7 +119,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						g->ThemeId = -1;	/* Customized */
 						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_COLORSCHEME, CB_SETCURSEL, (WPARAM)-1, 0);
 						SetDlgItemText(hwndDlg, IDC_APPEARANCE_COLORSCHEME, TEXT(""));
-						/* SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme); */
+						SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&g->Theme);
 					}
 					break;
 
@@ -134,7 +134,7 @@ AppearancePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 						{
 							g->Theme = Theme;
 							g->ThemeId = ThemeId;
-							/* SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&Theme); */
+							SendDlgItemMessage(hwndDlg, IDC_APPEARANCE_PREVIEW, PVM_UPDATETHEME, 0, (LPARAM)&Theme);
 						}
 					}
 					break;

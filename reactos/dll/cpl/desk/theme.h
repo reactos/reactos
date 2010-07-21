@@ -86,4 +86,4 @@ VOID LoadCurrentTheme(THEME* theme);
 BOOL LoadThemeFromReg(THEME* theme, INT ThemeId);
 VOID ApplyTheme(THEME* theme, INT ThemeId);
 BOOL SaveTheme(THEME* theme, LPCTSTR strLegacyName);
-INT LoadThemeTemplates(LPTSTR pszSelectedStyle);
+INT LoadThemePresetEntries(LPTSTR pszSelectedStyle);
