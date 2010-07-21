@@ -649,6 +649,8 @@ enum x11drv_atoms
     XATOM__NET_WM_STATE_MAXIMIZED_VERT,
     XATOM__NET_WM_STATE_SKIP_PAGER,
     XATOM__NET_WM_STATE_SKIP_TASKBAR,
+    XATOM__NET_WM_USER_TIME,
+    XATOM__NET_WM_USER_TIME_WINDOW,
     XATOM__NET_WM_WINDOW_OPACITY,
     XATOM__NET_WM_WINDOW_TYPE,
     XATOM__NET_WM_WINDOW_TYPE_DIALOG,
@@ -770,6 +772,7 @@ extern Drawable create_glxpixmap( Display *display, XVisualInfo *vis, Pixmap par
 extern void flush_gl_drawable( X11DRV_PDEVICE *physDev );
 
 extern void wait_for_withdrawn_state( Display *display, struct x11drv_win_data *data, BOOL set );
+extern void update_user_time( Time time );
 extern void update_net_wm_states( Display *display, struct x11drv_win_data *data );
 extern void make_window_embedded( Display *display, struct x11drv_win_data *data );
 

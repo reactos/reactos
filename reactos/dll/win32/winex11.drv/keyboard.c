@@ -1377,6 +1377,8 @@ void X11DRV_KeyEvent( HWND hwnd, XEvent *xev )
     TRACE_(key)("type %d, window %lx, state 0x%04x, keycode %u\n",
 		event->type, event->window, event->state, event->keycode);
 
+    if (event->type == KeyPress) update_user_time( event->time );
+
     wine_tsx11_lock();
     /* Clients should pass only KeyPress events to XmbLookupString */
     if (xic && event->type == KeyPress)

@@ -922,6 +922,7 @@ void X11DRV_ButtonPress( HWND hwnd, XEvent *xev )
         break;
     }
 
+    update_user_time( event->time );
     update_mouse_state( hwnd, event->window, event->x, event->y, event->state, &pt );
 
     X11DRV_send_mouse_input( hwnd, button_down_flags[buttonNum] | MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE,

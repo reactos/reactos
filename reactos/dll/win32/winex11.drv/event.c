@@ -504,11 +504,14 @@ static void set_focus( Display *display, HWND hwnd, Time time )
 static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
 {
     Atom protocol = (Atom)event->data.l[0];
+    Time event_time = (Time)event->data.l[1];
 
     if (!protocol) return;
 
     if (protocol == x11drv_atom(WM_DELETE_WINDOW))
     {
+        update_user_time( event_time );
+
         if (hwnd == GetDesktopWindow())
         {
             /* The desktop window does not have a close button that we can
@@ -560,7 +563,6 @@ static void handle_wm_protocols( HWND hwnd, XClientMessageEvent *event )
     }
     else if (protocol == x11drv_atom(WM_TAKE_FOCUS))
     {
-        Time event_time = (Time)event->data.l[1];
         HWND last_focus = x11drv_thread_data()->last_focus;
 
         TRACE( "got take focus msg for %p, enabled=%d, visible=%d (style %08x), focus=%p, active=%p, fg=%p, last=%p\n",

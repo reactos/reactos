@@ -945,11 +945,7 @@ void SYSPARAMS_Init(void)
         }
 
         /* last chance, take the default */
-        if (!bOk)
-        {
-            int iNumColors = sscanf( DefSysColors[i*2+1], " %d %d %d", &r, &g, &b );
-            assert (iNumColors==3);
-        }
+        if (!bOk) sscanf( DefSysColors[i*2+1], " %d %d %d", &r, &g, &b );
 
         SYSPARAMS_SetSysColor( i, RGB(r,g,b) );
     }

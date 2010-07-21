@@ -905,6 +905,7 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                 break;
         }
 
+        font_smoothing = TRUE;  /* default to enabled */
 #ifdef SONAME_LIBFONTCONFIG
         if (fontconfig_installed)
         {
@@ -956,9 +957,10 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                     case FC_RGBA_BGR:  entry->aa_default = AA_BGR; break;
                     case FC_RGBA_VRGB: entry->aa_default = AA_VRGB; break;
                     case FC_RGBA_VBGR: entry->aa_default = AA_VBGR; break;
-                    case FC_RGBA_NONE: entry->aa_default = antialias ? AA_Grey : AA_None; break;
+                    case FC_RGBA_NONE: entry->aa_default = AA_Grey; break;
                     }
                 }
+                if (!antialias) font_smoothing = FALSE;
                 pFcPatternDestroy( match );
             }
             pFcPatternDestroy( pattern );
@@ -984,10 +986,13 @@ static int GetCacheEntry(X11DRV_PDEVICE *physDev, LFANDSIZE *plfsz)
                 else if (!strcmp( value, "bgr" )) entry->aa_default = AA_BGR;
                 else if (!strcmp( value, "vrgb" )) entry->aa_default = AA_VRGB;
                 else if (!strcmp( value, "vbgr" )) entry->aa_default = AA_VBGR;
-                else if (!strcmp( value, "none" )) entry->aa_default = antialias ? AA_Grey : AA_None;
+                else if (!strcmp( value, "none" )) entry->aa_default = AA_Grey;
             }
             wine_tsx11_unlock();
+            if (!antialias) font_smoothing = FALSE;
         }
+
+        if (!font_smoothing) entry->aa_default = AA_None;
 
         /* we can't support subpixel without xrender */
         if (!X11DRV_XRender_Installed && entry->aa_default > AA_Grey) entry->aa_default = AA_Grey;
