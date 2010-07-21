@@ -251,38 +251,73 @@ typedef struct _NET_PNP_EVENT {
 
 #endif /* !defined(NDIS_LEGACY_PROTOCOL) */
 
+#if !defined(NDIS_LEGACY_DRIVER)
+
+#if (NDIS_LEGACY_MINIPORT || NDIS_LEGACY_PROTOCOL || NDIS_WRAPPER)
+#define NDIS_LEGACY_DRIVER      1
+#else
+#define NDIS_LEGACY_DRIVER      0
+#endif
+
+#endif /* !defined(NDIS_LEGACY_DRIVER) */
+
+#if !defined(NDIS_SUPPORT_NDIS6)
+
+#if ((defined (NDIS_MINIPORT_MAJOR_VERSION) && (NDIS_MINIPORT_MAJOR_VERSION >= 6)) || \
+     (defined (NDIS60)) || NDIS_WRAPPER)
+#define NDIS_SUPPORT_NDIS6      1
+#else
+#define NDIS_SUPPORT_NDIS6      0
+#endif
+
+#endif /* !defined(NDIS_SUPPORT_NDIS6) */
+
+#if !defined(NDIS_SUPPORT_NDIS61)
+#if  (((defined (NDIS_MINIPORT_MAJOR_VERSION) && (NDIS_MINIPORT_MAJOR_VERSION >= 6)) && \
+       (defined (NDIS_MINIPORT_MINOR_VERSION) && (NDIS_MINIPORT_MINOR_VERSION >= 1))) || \
+      (defined (NDIS61)) || NDIS_WRAPPER)
+#define NDIS_SUPPORT_NDIS61      1
+#else
+#define NDIS_SUPPORT_NDIS61      0
+#endif
+#endif // !defined(NDIS_SUPPORT_NDIS61)
+
+#if !defined(NDIS_SUPPORT_NDIS620)
+
+#if  (((defined (NDIS_MINIPORT_MAJOR_VERSION) && (NDIS_MINIPORT_MAJOR_VERSION >= 6)) && \
+       (defined (NDIS_MINIPORT_MINOR_VERSION) && (NDIS_MINIPORT_MINOR_VERSION >= 20))) || \
+      (defined (NDIS620)) || NDIS_WRAPPER)
+#define NDIS_SUPPORT_NDIS620      1
+#else
+#define NDIS_SUPPORT_NDIS620      0
+#endif
+
+#endif /* !defined(NDIS_SUPPORT_NDIS620) */
+
+#if (NDIS_SUPPORT_NDIS620)
+#undef NDIS_SUPPORT_NDIS61
+#define NDIS_SUPPORT_NDIS61 1
+#endif
+
+#if (NDIS_SUPPORT_NDIS61)
+#undef NDIS_SUPPORT_NDIS6
+#define NDIS_SUPPORT_NDIS6 1
+#endif
+
+#if defined(NDIS61_MINIPORT) || defined(NDIS60_MINIPORT) || defined(NDIS61) || \
+    defined(NDIS60) || defined(NDIS_WRAPPER) || defined(NDIS_LEGACY_DRIVER)
+#define NDIS_SUPPORT_60_COMPATIBLE_API      1
+#else
+#define NDIS_SUPPORT_60_COMPATIBLE_API      0
+#endif
+
 #if defined(NDIS_WRAPPER)
   #define NDISAPI
 #else
   #define NDISAPI DECLSPEC_IMPORT
 #endif
 
-#if defined(NDIS50_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
-#define NDIS_MINIPORT_MAJOR_VERSION 5
-#define NDIS_MINIPORT_MINOR_VERSION 0
-#endif
-
-#if defined(NDIS51_MINIPORT) && !defined(NDIS_MINIPORT_MAJOR_VERSION) && !defined(NDIS_MINIPORT_MINOR_VERSION)
-#define NDIS_MINIPORT_MAJOR_VERSION 5
-#define NDIS_MINIPORT_MINOR_VERSION 1
-#endif
-
-#if defined(NDIS50) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
-#define NDIS_PROTOCOL_MAJOR_VERSION 5
-#define NDIS_PROTOCOL_MINOR_VERSION 0
-#endif
-
-#if defined(NDIS51) && !defined(NDIS_PROTOCOL_MAJOR_VERSION) && !defined(NDIS_PROTOCOL_MINOR_VERSION)
-#define NDIS_PROTOCOL_MAJOR_VERSION 5
-#define NDIS_PROTOCOL_MINOR_VERSION 1
-#endif
-
-#if 1
-/* FIXME: */
-typedef PVOID QUEUED_CLOSE;
-#endif
-
-typedef ULONG NDIS_OID, *PNDIS_OID;
+typedef PVOID QUEUED_CLOSE; //FIXME : Doesn't exist in public headers
 
 typedef struct _X_FILTER FDDI_FILTER, *PFDDI_FILTER;
 typedef struct _X_FILTER TR_FILTER, *PTR_FILTER;
@@ -298,12 +333,12 @@ typedef struct _REFERENCE {
 /* NDIS base types */
 
 typedef struct _NDIS_SPIN_LOCK {
-  KSPIN_LOCK  SpinLock;
-  KIRQL  OldIrql;
-} NDIS_SPIN_LOCK, * PNDIS_SPIN_LOCK;
+  KSPIN_LOCK SpinLock;
+  KIRQL OldIrql;
+} NDIS_SPIN_LOCK, *PNDIS_SPIN_LOCK;
 
 typedef struct _NDIS_EVENT {
-  KEVENT  Event;
+  KEVENT Event;
 } NDIS_EVENT, *PNDIS_EVENT;
 
 typedef PVOID NDIS_HANDLE, *PNDIS_HANDLE;
@@ -561,24 +596,44 @@ typedef struct _NDIS_GUID {
 #define	NDIS_GUID_UNICODE_STRING          0x00000008
 #define	NDIS_GUID_ARRAY	                  0x00000010
 
-typedef HANDLE PNDIS_PACKET_POOL;
+#if NDIS_LEGACY_DRIVER
 
 /* NDIS_PACKET_PRIVATE.Flags constants */
-#define fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO    0x40
-#define fPACKET_ALLOCATED_BY_NDIS               0x80
+#define fPACKET_WRAPPER_RESERVED             0x3f
+#define fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO 0x40
+#define fPACKET_ALLOCATED_BY_NDIS            0x80
+
+#define NDIS_FLAGS_PROTOCOL_ID_MASK          0x0000000f
+#define NDIS_FLAGS_MULTICAST_PACKET          0x00000010
+#define NDIS_FLAGS_RESERVED2                 0x00000020
+#define NDIS_FLAGS_RESERVED3                 0x00000040
+#define NDIS_FLAGS_DONT_LOOPBACK             0x00000080
+#define NDIS_FLAGS_IS_LOOPBACK_PACKET        0x00000100
+#define NDIS_FLAGS_LOOPBACK_ONLY             0x00000200
+#define NDIS_FLAGS_RESERVED4                 0x00000400
+#define NDIS_FLAGS_DOUBLE_BUFFERED           0x00000800
+#define NDIS_FLAGS_SENT_AT_DPC               0x00001000
+#define NDIS_FLAGS_USES_SG_BUFFER_LIST       0x00002000
+#define NDIS_FLAGS_USES_ORIGINAL_PACKET      0x00004000
+#define NDIS_FLAGS_PADDED                    0x00010000
+#define NDIS_FLAGS_XLATE_AT_TOP              0x00020000
+
+typedef NDIS_HANDLE PNDIS_PACKET_POOL;
 
 typedef struct _NDIS_PACKET_PRIVATE {
-  UINT  PhysicalCount;
-  UINT  TotalLength;
-  PNDIS_BUFFER  Head;
-  PNDIS_BUFFER  Tail;
-  PNDIS_PACKET_POOL  Pool;
-  UINT  Count;
-  ULONG  Flags;
-  BOOLEAN	 ValidCounts;
-  UCHAR  NdisPacketFlags;
-  USHORT  NdisPacketOobOffset;
-} NDIS_PACKET_PRIVATE, * PNDIS_PACKET_PRIVATE;
+  UINT PhysicalCount;
+  UINT TotalLength;
+  PNDIS_BUFFER Head;
+  PNDIS_BUFFER Tail;
+  PNDIS_PACKET_POOL Pool;
+  UINT Count;
+  ULONG Flags;
+  BOOLEAN ValidCounts;
+  UCHAR NdisPacketFlags;
+  USHORT NdisPacketOobOffset;
+} NDIS_PACKET_PRIVATE, *PNDIS_PACKET_PRIVATE;
+
+#endif /* NDIS_LEGACY_DRIVER */
 
 typedef struct _NDIS_PACKET {
   NDIS_PACKET_PRIVATE Private;
@@ -600,30 +655,32 @@ typedef struct _NDIS_PACKET {
 } NDIS_PACKET, *PNDIS_PACKET, **PPNDIS_PACKET;
 
 typedef enum _NDIS_CLASS_ID {
-	NdisClass802_3Priority,
-	NdisClassWirelessWanMbxMailbox,
-	NdisClassIrdaPacketInfo,
-	NdisClassAtmAALInfo
+  NdisClass802_3Priority,
+  NdisClassWirelessWanMbxMailbox,
+  NdisClassIrdaPacketInfo,
+  NdisClassAtmAALInfo
 } NDIS_CLASS_ID;
 
-typedef struct MediaSpecificInformation {
-  UINT  NextEntryOffset;
-  NDIS_CLASS_ID  ClassId;
-  UINT  Size;
-  UCHAR  ClassInformation[1];
-} MEDIA_SPECIFIC_INFORMATION;
+typedef struct _MEDIA_SPECIFIC_INFORMATION {
+  UINT NextEntryOffset;
+  NDIS_CLASS_ID ClassId;
+  UINT Size;
+  UCHAR ClassInformation[1];
+} MEDIA_SPECIFIC_INFORMATION, *PMEDIA_SPECIFIC_INFORMATION;
 
+#if NDIS_LEGACY_DRIVER
 typedef struct _NDIS_PACKET_OOB_DATA {
-  _ANONYMOUS_UNION union {
-    ULONGLONG  TimeToSend;
-    ULONGLONG  TimeSent;
-  } DUMMYUNIONNAME;
-  ULONGLONG  TimeReceived;
-  UINT  HeaderSize;
-  UINT  SizeMediaSpecificInfo;
-  PVOID  MediaSpecificInformation;
-  NDIS_STATUS  Status;
+  __MINGW_EXTENSION union {
+    ULONGLONG TimeToSend;
+    ULONGLONG TimeSent;
+  };
+  ULONGLONG TimeReceived;
+  UINT HeaderSize;
+  UINT SizeMediaSpecificInfo;
+  PVOID MediaSpecificInformation;
+  NDIS_STATUS Status;
 } NDIS_PACKET_OOB_DATA, *PNDIS_PACKET_OOB_DATA;
+#endif
 
 typedef struct _NDIS_PM_PACKET_PATTERN {
   ULONG  Priority;
@@ -733,41 +790,45 @@ typedef UCHAR NDIS_DMA_SIZE;
 #define NDIS_DMA_64BITS                         ((NDIS_DMA_SIZE)2)
 
 typedef enum _NDIS_PROCESSOR_TYPE {
-	NdisProcessorX86,
-	NdisProcessorMips,
-	NdisProcessorAlpha,
-	NdisProcessorPpc,
-	NdisProcessorAmd64
+  NdisProcessorX86,
+  NdisProcessorMips,
+  NdisProcessorAlpha,
+  NdisProcessorPpc,
+  NdisProcessorAmd64,
+  NdisProcessorIA64
 } NDIS_PROCESSOR_TYPE, *PNDIS_PROCESSOR_TYPE;
 
 typedef enum _NDIS_ENVIRONMENT_TYPE {
-	NdisEnvironmentWindows,
-	NdisEnvironmentWindowsNt
+  NdisEnvironmentWindows,
+  NdisEnvironmentWindowsNt
 } NDIS_ENVIRONMENT_TYPE, *PNDIS_ENVIRONMENT_TYPE;
 
 /* Possible hardware architecture */
 typedef enum _NDIS_INTERFACE_TYPE {
-	NdisInterfaceInternal = Internal,
-	NdisInterfaceIsa = Isa,
-	NdisInterfaceEisa = Eisa,
-	NdisInterfaceMca = MicroChannel,
-	NdisInterfaceTurboChannel = TurboChannel,
-	NdisInterfacePci = PCIBus,
-	NdisInterfacePcMcia = PCMCIABus,
-	NdisInterfaceCBus = CBus,
-	NdisInterfaceMPIBus = MPIBus,
-	NdisInterfaceMPSABus = MPSABus,
-	NdisInterfaceProcessorInternal = ProcessorInternal,
-	NdisInterfaceInternalPowerBus = InternalPowerBus,
-	NdisInterfacePNPISABus = PNPISABus,
-	NdisInterfacePNPBus = PNPBus,
-	NdisMaximumInterfaceType
+  NdisInterfaceInternal = Internal,
+  NdisInterfaceIsa = Isa,
+  NdisInterfaceEisa = Eisa,
+  NdisInterfaceMca = MicroChannel,
+  NdisInterfaceTurboChannel = TurboChannel,
+  NdisInterfacePci = PCIBus,
+  NdisInterfacePcMcia = PCMCIABus,
+  NdisInterfaceCBus = CBus,
+  NdisInterfaceMPIBus = MPIBus,
+  NdisInterfaceMPSABus = MPSABus,
+  NdisInterfaceProcessorInternal = ProcessorInternal,
+  NdisInterfaceInternalPowerBus = InternalPowerBus,
+  NdisInterfacePNPISABus = PNPISABus,
+  NdisInterfacePNPBus = PNPBus,
+  NdisInterfaceUSB,
+  NdisInterfaceIrda,
+  NdisInterface1394,
+  NdisMaximumInterfaceType
 } NDIS_INTERFACE_TYPE, *PNDIS_INTERFACE_TYPE;
 
 #define NdisInterruptLevelSensitive       LevelSensitive
 #define NdisInterruptLatched              Latched
-typedef KINTERRUPT_MODE NDIS_INTERRUPT_MODE, *PNDIS_INTERRUPT_MODE;
 
+typedef KINTERRUPT_MODE NDIS_INTERRUPT_MODE, *PNDIS_INTERRUPT_MODE;
 
 typedef enum _NDIS_PARAMETER_TYPE {
   NdisParameterInteger,
@@ -777,20 +838,19 @@ typedef enum _NDIS_PARAMETER_TYPE {
   NdisParameterBinary
 } NDIS_PARAMETER_TYPE, *PNDIS_PARAMETER_TYPE;
 
-typedef struct {
-	USHORT  Length;
-	PVOID  Buffer;
+typedef struct _BINARY_DATA {
+  USHORT Length;
+  PVOID Buffer;
 } BINARY_DATA;
 
 typedef struct _NDIS_CONFIGURATION_PARAMETER {
-  NDIS_PARAMETER_TYPE  ParameterType;
+  NDIS_PARAMETER_TYPE ParameterType;
   union {
-    ULONG  IntegerData;
-    NDIS_STRING  StringData;
-    BINARY_DATA  BinaryData;
+    ULONG IntegerData;
+    NDIS_STRING StringData;
+    BINARY_DATA BinaryData;
   } ParameterData;
 } NDIS_CONFIGURATION_PARAMETER, *PNDIS_CONFIGURATION_PARAMETER;
-
 
 typedef PHYSICAL_ADDRESS NDIS_PHYSICAL_ADDRESS, *PNDIS_PHYSICAL_ADDRESS;
 
@@ -800,23 +860,22 @@ typedef struct _NDIS_PHYSICAL_ADDRESS_UNIT {
 } NDIS_PHYSICAL_ADDRESS_UNIT, *PNDIS_PHYSICAL_ADDRESS_UNIT;
 
 typedef struct _NDIS_WAN_LINE_DOWN {
-  UCHAR  RemoteAddress[6];
-  UCHAR  LocalAddress[6];
+  UCHAR RemoteAddress[6];
+  UCHAR LocalAddress[6];
 } NDIS_WAN_LINE_DOWN, *PNDIS_WAN_LINE_DOWN;
 
 typedef struct _NDIS_WAN_LINE_UP {
-  ULONG  LinkSpeed;
-  ULONG  MaximumTotalSize;
-  NDIS_WAN_QUALITY  Quality;
-  USHORT  SendWindow;
-  UCHAR  RemoteAddress[6];
-  OUT UCHAR  LocalAddress[6];
-  ULONG  ProtocolBufferLength;
-  PUCHAR  ProtocolBuffer;
-  USHORT  ProtocolType;
-  NDIS_STRING  DeviceName;
+  ULONG LinkSpeed;
+  ULONG MaximumTotalSize;
+  NDIS_WAN_QUALITY Quality;
+  USHORT SendWindow;
+  UCHAR RemoteAddress[6];
+  OUT UCHAR LocalAddress[6];
+  ULONG ProtocolBufferLength;
+  PUCHAR ProtocolBuffer;
+  USHORT ProtocolType;
+  NDIS_STRING DeviceName;
 } NDIS_WAN_LINE_UP, *PNDIS_WAN_LINE_UP;
-
 
 typedef VOID
 (NTAPI *ADAPTER_SHUTDOWN_HANDLER)(
@@ -1032,12 +1091,14 @@ typedef struct _NDIS_PACKET_EXTENSION {
   PVOID  NdisPacketInfo[MaxPerPacketInfo];
 } NDIS_PACKET_EXTENSION, *PNDIS_PACKET_EXTENSION;
 
+#if NDIS_SUPPORT_NDIS6
 typedef struct _NDIS_GENERIC_OBJECT {
-  NDIS_OBJECT_HEADER  Header;
-  PVOID  Caller;
-  PVOID  CallersCaller;
-  PDRIVER_OBJECT  DriverObject;
+  NDIS_OBJECT_HEADER Header;
+  PVOID Caller;
+  PVOID CallersCaller;
+  PDRIVER_OBJECT DriverObject;
 } NDIS_GENERIC_OBJECT, *PNDIS_GENERIC_OBJECT;
+#endif
 
 /*
  * PNDIS_PACKET
@@ -1230,20 +1291,37 @@ typedef struct _NDIS_TCP_IP_CHECKSUM_PACKET_INFO {
 } NDIS_TCP_IP_CHECKSUM_PACKET_INFO, *PNDIS_TCP_IP_CHECKSUM_PACKET_INFO;
 
 typedef struct _NDIS_WAN_CO_FRAGMENT {
-  ULONG  Errors;
+  ULONG Errors;
 } NDIS_WAN_CO_FRAGMENT, *PNDIS_WAN_CO_FRAGMENT;
 
 typedef struct _NDIS_WAN_FRAGMENT {
-  UCHAR  RemoteAddress[6];
-  UCHAR  LocalAddress[6];
+  UCHAR RemoteAddress[6];
+  UCHAR LocalAddress[6];
 } NDIS_WAN_FRAGMENT, *PNDIS_WAN_FRAGMENT;
 
 typedef struct _WAN_CO_LINKPARAMS {
-  ULONG  TransmitSpeed;
-  ULONG  ReceiveSpeed;
-  ULONG  SendWindow;
+  ULONG TransmitSpeed;
+  ULONG ReceiveSpeed;
+  ULONG SendWindow;
 } WAN_CO_LINKPARAMS, *PWAN_CO_LINKPARAMS;
 
+typedef struct _NDIS_WAN_GET_STATS {
+  UCHAR LocalAddress[6];
+  ULONG BytesSent;
+  ULONG BytesRcvd;
+  ULONG FramesSent;
+  ULONG FramesRcvd;
+  ULONG CRCErrors;
+  ULONG TimeoutErrors;
+  ULONG AlignmentErrors;
+  ULONG SerialOverrunErrors;
+  ULONG FramingErrors;
+  ULONG BufferOverrunErrors;
+  ULONG BytesTransmittedUncompressed;
+  ULONG BytesReceivedUncompressed;
+  ULONG BytesTransmittedCompressed;
+  ULONG BytesReceivedCompressed;
+} NDIS_WAN_GET_STATS, *PNDIS_WAN_GET_STATS;
 
 /* Call Manager */
 
@@ -2116,10 +2194,9 @@ NdisQueryBufferOffset(
  * NDIS_GET_PACKET_HEADER_SIZE(
  *   IN PNDIS_PACKET  Packet);
  */
-#define NDIS_GET_PACKET_HEADER_SIZE(_Packet) \
-	((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-	(_Packet)->Private.NdisPacketOobOffset))->HeaderSize
-
+#define NDIS_GET_PACKET_HEADER_SIZE(_Packet)   \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize
 
 /*
  * NDIS_STATUS
@@ -4238,11 +4315,11 @@ typedef struct _NDIS_MINIPORT_WORK_ITEM {
 
 struct _NDIS_WORK_ITEM;
 typedef VOID (*NDIS_PROC)(struct _NDIS_WORK_ITEM *, PVOID);
-typedef struct _NDIS_WORK_ITEM
-{
-    PVOID Context;
-    NDIS_PROC Routine;
-    UCHAR WrapperReserved[8*sizeof(PVOID)];
+
+typedef struct _NDIS_WORK_ITEM {
+  PVOID Context;
+  NDIS_PROC Routine;
+  UCHAR WrapperReserved[8*sizeof(PVOID)];
 } NDIS_WORK_ITEM, *PNDIS_WORK_ITEM;
 
 typedef struct _NDIS_BIND_PATHS {
@@ -4700,9 +4777,25 @@ struct _NDIS_OPEN_BLOCK
 #endif
 };
 
-
-
 /* Routines for NDIS miniport drivers */
+
+#if NDIS_SUPPORT_NDIS6
+
+NDISAPI
+PNDIS_GENERIC_OBJECT
+NTAPI
+NdisAllocateGenericObject(
+  PDRIVER_OBJECT DriverObject OPTIONAL,
+  ULONG Tag,
+  USHORT Size);
+
+NDISAPI
+VOID
+NTAPI
+NdisFreeGenericObject(
+  IN PNDIS_GENERIC_OBJECT NdisObject);
+
+#endif /* NDIS_SUPPORT_NDIS6 */
 
 NDISAPI
 VOID
