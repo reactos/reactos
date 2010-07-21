@@ -851,7 +851,7 @@ ParsePEHeaders(PFILE_INFO File)
 
     if (File->eh_frame.idx == -1)
     {
-        fprintf(stderr, "No .eh_frame section found\n");
+        //fprintf(stderr, "No .eh_frame section found\n");
         return 0;
     }
 
