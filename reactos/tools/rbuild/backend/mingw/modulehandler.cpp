@@ -2444,11 +2444,26 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 	string libsMacro = GetLibsMacro ();
 
 	GenerateRules ();
+	
+	string objectsDir = "${call RBUILD_intermediate_dir,$(" + module.name + "_TARGET)}";
+	string rspFile = objectsDir + "$(SEP)" + module.name + "_objs.rsp";
+
+	/* Generate the rsp rule */
+	fprintf(fMakefile, "%s: $(%s_OBJS) %s | %s\n"
+	        "\t$(ECHO_RSP)\n"
+	        "\t-@${rm} $@ 2>$(NUL)\n"
+	        "\t${cp} $(NUL) $@ >$(NUL)\n"
+	        "\t$(foreach obj,$(%s_LIBS),$(Q)echo $(QUOTE)$(subst \\,\\\\,$(obj))$(QUOTE)>>$@$(NL))\n\n",
+	        rspFile.c_str(),
+	        module.name.c_str(),
+	        module.xmlbuildFile.c_str(),
+	        objectsDir.c_str(),
+	        module.name.c_str());
 
 	const FileLocation *target_file = GetTargetFilename ( module, NULL );
 	fprintf ( fMakefile, "%s: %s %s | %s\n",
 	          targetMacro.c_str (),
-	          objectsMacro.c_str (),
+	          rspFile.c_str(),
 	          libsMacro.c_str (),
 	          backend->GetFullPath ( *target_file ).c_str () );
 
@@ -2461,24 +2476,22 @@ MingwBootLoaderModuleHandler::GenerateBootLoaderModuleTarget ()
 
     /* Link the stripped booloader */
     fprintf(fMakefile,
-            "\t${ld} --strip-all --subsystem native --entry=%s --image-base=%s %s %s $(PROJECT_CCLIBS) "
+            "\t${ld} --strip-all --subsystem native --entry=%s --image-base=%s @%s $(PROJECT_CCLIBS) "
             "$(BUILTIN_LDFLAGS) $(PROJECT_LDFLAGS) $(LDFLAG_DRIVER) %s -o $@\n",
             module.GetEntryPoint().c_str(),
             module.baseaddress.c_str(),
-            objectsMacro.c_str(),
-            libsMacro.c_str(),
+            rspFile.c_str(),
             linkerScriptArgument.c_str() );
 
     /* Link an unstripped version */
 	fprintf(fMakefile,
 	        "ifeq ($(ROS_BUILDNOSTRIP),yes)\n"
-	        "\t${ld} --subsystem native --entry=%s --image-base=%s %s %s $(PROJECT_CCLIBS) "
+	        "\t${ld} --subsystem native --entry=%s --image-base=%s @%s $(PROJECT_CCLIBS) "
 	        "$(BUILTIN_LDFLAGS) $(PROJECT_LDFLAGS) $(LDFLAG_DRIVER) %s -o %s$(SEP)%s.nostrip.sys\n"
 	        "endif\n",
 	        module.GetEntryPoint().c_str(),
 	        module.baseaddress.c_str(),
-	        objectsMacro.c_str(),
-	        libsMacro.c_str(),
+            rspFile.c_str(),
 	        linkerScriptArgument.c_str(),
 	        backend->GetFullPath(*target_file).c_str(),
 	        module.name.c_str());
