@@ -177,6 +177,8 @@ typedef enum _NDIS_PHYSICAL_MEDIUM
     NdisPhysicalMediumMax
 } NDIS_PHYSICAL_MEDIUM, *PNDIS_PHYSICAL_MEDIUM;
 
+typedef ULONG NDIS_OID, *PNDIS_OID;
+
 /* Required Object IDs (OIDs) */
 #define OID_GEN_SUPPORTED_LIST            0x00010101
 #define OID_GEN_HARDWARE_STATUS           0x00010102
