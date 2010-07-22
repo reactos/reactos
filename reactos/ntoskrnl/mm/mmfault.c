@@ -105,10 +105,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
 
       switch (MemoryArea->Type)
       {
-         case MEMORY_AREA_SYSTEM:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
          case MEMORY_AREA_PAGED_POOL:
             Status = STATUS_SUCCESS;
             break;
@@ -121,10 +117,6 @@ MmpAccessFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
-         case MEMORY_AREA_SHARED_DATA:
             Status = STATUS_ACCESS_VIOLATION;
             break;
 
@@ -153,7 +145,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    BOOLEAN Locked = FromMdl;
-   extern PMMPTE MmSharedUserDataPte;
 
    DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
 
@@ -211,10 +202,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
                break;
             }
 
-         case MEMORY_AREA_SYSTEM:
-            Status = STATUS_ACCESS_VIOLATION;
-            break;
-
          case MEMORY_AREA_SECTION_VIEW:
             Status = MmNotPresentFaultSectionView(AddressSpace,
                                                   MemoryArea,
@@ -223,16 +210,10 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
-         case MEMORY_AREA_PEB_OR_TEB:
             Status = MmNotPresentFaultVirtualMemory(AddressSpace,
                                                     MemoryArea,
                                                     (PVOID)Address,
                                                     Locked);
-            break;
-
-         case MEMORY_AREA_SHARED_DATA:
-              *MiAddressToPte(USER_SHARED_DATA) = *MmSharedUserDataPte;
-              Status = STATUS_SUCCESS;
             break;
 
          default:
@@ -284,7 +265,7 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
      * can go away.
      */
     MemoryArea = MmLocateMemoryAreaByAddress(MmGetKernelAddressSpace(), Address);
-    if (!(MemoryArea) && (Address <= MM_HIGHEST_VAD_ADDRESS))
+    if (!(MemoryArea) && (Address <= MM_HIGHEST_USER_ADDRESS))
     {
         /* Could this be a VAD fault from user-mode? */
         MemoryArea = MmLocateMemoryAreaByAddress(MmGetCurrentAddressSpace(), Address);

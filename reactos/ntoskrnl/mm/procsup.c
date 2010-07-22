@@ -14,35 +14,16 @@
 #include <debug.h>
 
 VOID NTAPI MiRosTakeOverPebTebRanges(IN PEPROCESS Process);
-
+    
 /* FUNCTIONS *****************************************************************/
- 
+
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
 {
-    PVOID BaseAddress;
-    PMEMORY_AREA MemoryArea;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    NTSTATUS Status;
-    PMMSUPPORT ProcessAddressSpace = &Process->Vm;
-    BoundaryAddressMultiple.QuadPart = 0;
-
-    /* Create the shared data page */
-    BaseAddress = (PVOID)USER_SHARED_DATA;
-    Status = MmCreateMemoryArea(ProcessAddressSpace,
-                                MEMORY_AREA_SHARED_DATA,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_EXECUTE_READ,
-                                &MemoryArea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-    
     /* Lock the VAD, ARM3-owned ranges away */                            
     MiRosTakeOverPebTebRanges(Process);
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -53,15 +34,11 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
                                 IN OUT PULONG Flags,
                                 IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PMMSUPPORT ProcessAddressSpace = &Process->Vm;
-    PVOID BaseAddress;
-    PMEMORY_AREA MemoryArea;
-    PHYSICAL_ADDRESS BoundaryAddressMultiple;
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
     PROS_SECTION_OBJECT SectionObject = Section;
-    BoundaryAddressMultiple.QuadPart = 0;
 
     /* Initialize the Addresss Space lock */
     KeInitializeGuardedMutex(&Process->AddressCreationLock);
@@ -73,59 +50,8 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
-
-    /* Protect the highest 64KB of the process address space */
-    BaseAddress = (PVOID)MmUserProbeAddress;
-    Status = MmCreateMemoryArea(ProcessAddressSpace,
-                                MEMORY_AREA_NO_ACCESS,
-                                &BaseAddress,
-                                0x10000,
-                                PAGE_NOACCESS,
-                                &MemoryArea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to protect last 64KB\n");
-        goto exit;
-     }
-
-    /* Protect the 60KB above the shared user page */
-    BaseAddress = (char*)USER_SHARED_DATA + PAGE_SIZE;
-    Status = MmCreateMemoryArea(ProcessAddressSpace,
-                                MEMORY_AREA_NO_ACCESS,
-                                &BaseAddress,
-                                0x10000 - PAGE_SIZE,
-                                PAGE_NOACCESS,
-                                &MemoryArea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to protect the memory above the shared user page\n");
-        goto exit;
-     }
-
-    /* Create the shared data page */
-    BaseAddress = (PVOID)USER_SHARED_DATA;
-    Status = MmCreateMemoryArea(ProcessAddressSpace,
-                                MEMORY_AREA_SHARED_DATA,
-                                &BaseAddress,
-                                PAGE_SIZE,
-                                PAGE_EXECUTE_READ,
-                                &MemoryArea,
-                                FALSE,
-                                0,
-                                BoundaryAddressMultiple);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to create Shared User Data\n");
-        goto exit;
-    }
      
-    /* Lock the VAD, ARM3-owned ranges away */                            
+    /* Lock the VAD, ARM3-owned ranges away */
     MiRosTakeOverPebTebRanges(Process);
 
     /* The process now has an address space */
@@ -207,7 +133,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
         return Status;
     }
 
-exit:
     /* Unlock the Address Space */
     DPRINT("Unlocking\n");
     MmUnlockAddressSpace(ProcessAddressSpace);
@@ -247,22 +172,15 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
              break;
 
          case MEMORY_AREA_VIRTUAL_MEMORY:
-         case MEMORY_AREA_PEB_OR_TEB:
              MmFreeVirtualMemory(Process, MemoryArea);
              break;
 
-         case MEMORY_AREA_SHARED_DATA:
-         case MEMORY_AREA_NO_ACCESS:
          case MEMORY_AREA_OWNED_BY_ARM3:
              MmFreeMemoryArea(&Process->Vm,
                               MemoryArea,
                               NULL,
                               NULL);
              break;
-
-         case MEMORY_AREA_MDL_MAPPING:
-            KeBugCheck(PROCESS_HAS_LOCKED_PAGES);
-            break;
 
          default:
             KeBugCheck(MEMORY_MANAGEMENT);

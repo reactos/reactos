@@ -33,7 +33,7 @@ MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
     Status = MmCreateMemoryArea(&Process->Vm,
                                 MEMORY_AREA_OWNED_BY_ARM3,
                                 &AllocatedBase,
-                                ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - 1) -
+                                ((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - 1) -
                                 (ULONG_PTR)MI_LOWEST_VAD_ADDRESS,
                                 PAGE_READWRITE,
                                 &MemoryArea,
