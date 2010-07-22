@@ -46,16 +46,12 @@
 		<file>mem.c</file>
 		<file>memgen.c</file>
 	</if>
-	<directory name="austin">
-		<file>avl.c</file>
-		<file>tree.c</file>
-	</directory>
-
 	<file>access.c</file>
 	<file>acl.c</file>
 	<file>actctx.c</file>
 	<file>assert.c</file>
 	<file>atom.c</file>
+	<file>avltable.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
 	<file>compress.c</file>

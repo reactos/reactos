@@ -408,6 +408,7 @@
 			<file>procsup.c</file>
 			<file>sysldr.c</file>
 			<file>syspte.c</file>
+			<file>vadnode.c</file>
 			<file>virtual.c</file>
 		</directory>
 		<file>anonmem.c</file>
