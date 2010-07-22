@@ -377,6 +377,7 @@ typedef struct _MI_LARGE_PAGE_RANGES
 extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
+extern MMPDE DemandZeroPde;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
 extern BOOLEAN MmProtectFreedNonPagedPool;

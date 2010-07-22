@@ -20,6 +20,34 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+PMMPTE
+NTAPI
+MiCheckVirtualAddress(IN PVOID VirtualAddress,
+                      OUT PULONG ProtectCode,
+                      OUT PMMVAD *ProtoVad)
+{
+    PMMVAD Vad;
+    
+    /* No prototype/section support for now */
+    *ProtoVad = NULL;
+    
+    /* Only valid for user VADs for now */
+    ASSERT(VirtualAddress <= MM_HIGHEST_USER_ADDRESS);
+    
+    /* Find the VAD, it must exist, since we only handle PEB/TEB */
+    Vad = MiLocateAddress(VirtualAddress);
+    ASSERT(Vad);
+    
+    /* This must be a TEB/PEB VAD */
+    ASSERT(Vad->u.VadFlags.PrivateMemory == TRUE);
+    ASSERT(Vad->u.VadFlags.MemCommit == TRUE);
+    ASSERT(Vad->u.VadFlags.VadType == VadNone);
+    
+    /* Return the protection on it */
+    *ProtectCode = Vad->u.VadFlags.Protection;
+    return NULL;
+}
+ 
 NTSTATUS
 FASTCALL
 MiCheckPdeForPagedPool(IN PVOID Address)
@@ -300,6 +328,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     PEPROCESS CurrentProcess;
     NTSTATUS Status;
     PMMSUPPORT WorkingSet;
+    ULONG ProtectionCode;
+    PMMVAD Vad;
+    PFN_NUMBER PageFrameIndex;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
     
     //
@@ -494,12 +525,101 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
     
-    /* Do something */
+    /* First things first, is the PDE valid? */
+    ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
+    ASSERT(PointerPde->u.Hard.LargePage == 0);
+    if (PointerPde->u.Hard.Valid == 0)
+    {
+        /* Right now, we only handle scenarios where the PDE is totally empty */
+        ASSERT(PointerPde->u.Long == 0);
+
+        /* Check if this address range belongs to a valid allocation (VAD) */
+        MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+        
+        /* Right now, we expect a valid protection mask on the VAD */
+        ASSERT(ProtectionCode != MM_NOACCESS);
+
+        /* Make the PDE demand-zero */
+        MI_WRITE_INVALID_PTE(PointerPde, DemandZeroPde);
+
+        /* And go dispatch the fault on the PDE. This should handle the demand-zero */
+        Status = MiDispatchFault(TRUE,
+                                 PointerPte,
+                                 PointerPde,
+                                 NULL,
+                                 FALSE,
+                                 PsGetCurrentProcess(),
+                                 TrapInformation,
+                                 NULL);
+
+        /* We should come back with APCs enabled, and with a valid PDE */
+        ASSERT(KeAreAllApcsDisabled() == TRUE);
+        ASSERT(PointerPde->u.Hard.Valid == 1);
+    }
+
+    /* Now capture the PTE. We only handle cases where it's totally empty */
+    TempPte = *PointerPte;
+    ASSERT(TempPte.u.Long == 0);
+
+    /* Check if this address range belongs to a valid allocation (VAD) */
+    MiCheckVirtualAddress(Address, &ProtectionCode, &Vad);
+    
+    /* Right now, we expect a valid protection mask on the VAD */
+    ASSERT(ProtectionCode != MM_NOACCESS);
+    PointerPte->u.Soft.Protection = ProtectionCode;
+
+    /* Lock the PFN database since we're going to grab a page */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Grab a page out of there. Later we should grab a colored zero page */
+    PageFrameIndex = MiRemoveAnyPage(0);
+    ASSERT(PageFrameIndex);
+
+    /* Release the lock since we need to do some zeroing */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Zero out the page, since it's for user-mode */
+    MiZeroPfn(PageFrameIndex);
+
+    /* Grab the lock again so we can initialize the PFN entry */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Initialize the PFN entry now */
+    MiInitializePfn(PageFrameIndex, PointerPte, 1);
+
+    /* And we're done with the lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* One more demand-zero fault */
+    InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
+
+    /* Was the fault on an actual user page, or a kernel page for the user? */
+    if (PointerPte <= MiHighestUserPte)
+    {
+        /* User fault, build a user PTE */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  PointerPte->u.Soft.Protection,
+                                  PageFrameIndex);
+    }
+    else
+    {
+        /* Session, kernel, or user PTE, figure it out and build it */
+        MI_MAKE_HARDWARE_PTE(&TempPte,
+                             PointerPte,
+                             PointerPte->u.Soft.Protection,
+                             PageFrameIndex);
+    }
+
+    /* Write the dirty bit for writeable pages */
+    if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+
+    /* And now write down the PTE, making the address valid */
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
     
     /* Release the working set */
     MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
-    DPRINT1("WARNING: USER MODE FAULT IN ARM3???\n");
-    return STATUS_ACCESS_VIOLATION;
+    return STATUS_PAGE_FAULT_DEMAND_ZERO;
 }
 
 /* EOF */
