@@ -33,7 +33,6 @@
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 
-// on AMD64 this would be MiAddressToPte(MM_KSEG0_BASE)
 #define MI_SYSTEM_PTE_BASE                      (PVOID)MiAddressToPte(NULL)
 
 #define MI_MIN_SECONDARY_COLORS                 8
@@ -392,7 +391,7 @@ extern BOOLEAN MmDynamicPfn;
 extern BOOLEAN MmMirroring;
 extern BOOLEAN MmMakeLowMemory;
 extern BOOLEAN MmEnforceWriteProtection;
-extern ULONG MmAllocationFragment;
+extern SIZE_T MmAllocationFragment;
 extern ULONG MmConsumedPoolPercentage;
 extern ULONG MmVerifyDriverBufferType;
 extern ULONG MmVerifyDriverLevel;
