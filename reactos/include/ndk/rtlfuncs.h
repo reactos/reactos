@@ -328,6 +328,129 @@ RtlRealPredecessor(
         _SplayParent->RightChild = _SplayChild;         \
         _SplayChild->Parent = _SplayParent;             \
     }
+    
+//
+// RTL AVL Tree Functions
+//
+NTSYSAPI
+VOID
+NTAPI
+RtlInitializeGenericTableAvl(
+    OUT PRTL_AVL_TABLE Table,
+    IN PRTL_AVL_COMPARE_ROUTINE CompareRoutine,
+    IN PRTL_AVL_ALLOCATE_ROUTINE AllocateRoutine,
+    IN PRTL_AVL_FREE_ROUTINE FreeRoutine,
+    IN PVOID TableContext OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlInsertElementGenericTableFullAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer,
+    IN CLONG BufferSize,
+    OUT PBOOLEAN NewElement OPTIONAL,
+    IN PVOID NodeOrParent,
+    IN TABLE_SEARCH_RESULT SearchResult
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDeleteElementGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupElementGenericTableFullAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *NodeOrParent,
+    OUT TABLE_SEARCH_RESULT *SearchResult
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN BOOLEAN Restart
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableWithoutSplayingAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN OUT PVOID *RestartKey
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlLookupFirstMatchingElementGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN PVOID Buffer,
+    OUT PVOID *RestartKey
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlEnumerateGenericTableLikeADirectory(
+    IN PRTL_AVL_TABLE Table,
+    IN PRTL_AVL_MATCH_FUNCTION MatchFunction OPTIONAL,
+    IN PVOID MatchData OPTIONAL,
+    IN ULONG NextFlag,
+    IN OUT PVOID *RestartKey,
+    IN OUT PULONG DeleteCount,
+    IN PVOID Buffer
+);
+
+NTSYSAPI
+PVOID
+NTAPI
+RtlGetElementGenericTableAvl(
+    IN PRTL_AVL_TABLE Table,
+    IN ULONG I
+);
+
+NTSYSAPI
+ULONG
+NTAPI
+RtlNumberGenericTableElementsAvl(
+    IN PRTL_AVL_TABLE Table
+);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlIsGenericTableEmptyAvl(
+    IN PRTL_AVL_TABLE Table
+);
+  
 #endif
 
 //
