@@ -1778,6 +1778,8 @@ NdisIPnPStartDevice(
   LARGE_INTEGER Timeout;
   UINT MaxMulticastAddresses;
   ULONG BytesWritten;
+  PLIST_ENTRY CurrentEntry;
+  PPROTOCOL_BINDING ProtocolBinding;
 
   /*
    * Prepare wrapper context used by HW and configuration routines.
@@ -2055,6 +2057,17 @@ NdisIPnPStartDevice(
 
   /* Put adapter in adapter list for this miniport */
   ExInterlockedInsertTailList(&Adapter->NdisMiniportBlock.DriverHandle->DeviceList, &Adapter->MiniportListEntry, &Adapter->NdisMiniportBlock.DriverHandle->Lock);
+
+  /* Refresh bindings for all protocols */
+  CurrentEntry = ProtocolListHead.Flink;
+  while (CurrentEntry != &ProtocolListHead)
+  {
+      ProtocolBinding = CONTAINING_RECORD(CurrentEntry, PROTOCOL_BINDING, ListEntry);
+
+      ndisBindMiniportsToProtocol(&NdisStatus, &ProtocolBinding->Chars);
+
+      CurrentEntry = CurrentEntry->Flink;
+  }
 
   return STATUS_SUCCESS;
 }

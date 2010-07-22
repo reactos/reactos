@@ -1002,7 +1002,10 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
         {
           BIND_HANDLER BindHandler = ProtocolCharacteristics->BindAdapterHandler;
           if(BindHandler)
+          {
             BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
+            NDIS_DbgPrint(MIN_TRACE, ("%wZ's BindAdapter handler returned 0x%x for %wZ\n", &ProtocolCharacteristics->Name, *Status, &DeviceName));
+          }
           else
             NDIS_DbgPrint(MIN_TRACE, ("No protocol bind handler specified\n"));
         }
