@@ -56,25 +56,8 @@
 #include <sys/cdefs.h>
 #endif
 
-static inline unsigned long __byte_swap_long ( unsigned long i )
-{
-	char dst[4];
-	char* src = (char*)&i;
-	dst[0] = src[3];
-	dst[1] = src[2];
-	dst[2] = src[1];
-	dst[3] = src[0];
-	return *(unsigned long*)&dst[0];
-}
-
-static inline unsigned short __byte_swap_word ( unsigned short i )
-{
-	char dst[2];
-	char* src = (char*)&i;
-	dst[0] = src[1];
-	dst[1] = src[0];
-	return *(unsigned short*)&dst[0];
-}
+#define __byte_swap_long RtlUlongByteSwap
+#define __byte_swap_word RtlUshortByteSwap
 
 /*
  * Macros for network/external number representation conversion.
