@@ -129,6 +129,7 @@
 #define PTE_WRITECOPY           0x200
 #define PTE_EXECUTE_READWRITE   0x0
 #define PTE_EXECUTE_WRITECOPY   0x200
+#define PTE_PROTOTYPE           0x400
 //
 // Cache flags
 //
@@ -381,6 +382,7 @@ extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
+extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
 extern BOOLEAN MmProtectFreedNonPagedPool;
@@ -483,6 +485,7 @@ extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
 extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+extern PMMPTE MmSharedUserDataPte;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
