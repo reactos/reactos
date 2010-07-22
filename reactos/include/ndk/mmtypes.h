@@ -607,13 +607,13 @@ typedef struct _MMADDRESS_NODE
 {
     union
     {
-        LONG Balance:2;
+        LONG_PTR Balance:2;
         struct _MMADDRESS_NODE *Parent;
     } u1;
     struct _MMADDRESS_NODE *LeftChild;
     struct _MMADDRESS_NODE *RightChild;
-    ULONG StartingVpn;
-    ULONG EndingVpn;
+    ULONG_PTR StartingVpn;
+    ULONG_PTR EndingVpn;
 } MMADDRESS_NODE, *PMMADDRESS_NODE;
 
 //
@@ -622,9 +622,13 @@ typedef struct _MMADDRESS_NODE
 typedef struct _MM_AVL_TABLE
 {
     MMADDRESS_NODE BalancedRoot;
-    ULONG DepthOfTree:5;
-    ULONG Unused:3;
-    ULONG NumberGenericTableElements:24;
+    ULONG_PTR DepthOfTree:5;
+    ULONG_PTR Unused:3;
+#ifdef _WIN64
+    ULONG_PTR NumberGenericTableElements:56;
+#else
+    ULONG_PTR NumberGenericTableElements:24;
+#endif
     PVOID NodeHint;
     PVOID NodeFreeHint;
 } MM_AVL_TABLE, *PMM_AVL_TABLE;
