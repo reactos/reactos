@@ -27,6 +27,29 @@ MiCreatePebOrTeb(PEPROCESS Process,
 
 VOID
 NTAPI
+MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
+{
+    NTSTATUS Status;
+    PMEMORY_AREA MemoryArea;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    PVOID AllocatedBase = (PVOID)MI_LOWEST_VAD_ADDRESS;
+    BoundaryAddressMultiple.QuadPart = 0;
+
+    Status = MmCreateMemoryArea(&Process->Vm,
+                                MEMORY_AREA_OWNED_BY_ARM3,
+                                &AllocatedBase,
+                                ((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS - 1) -
+                                (ULONG_PTR)MI_LOWEST_VAD_ADDRESS,
+                                PAGE_READWRITE,
+                                &MemoryArea,
+                                TRUE,
+                                0,
+                                BoundaryAddressMultiple);
+    ASSERT(NT_SUCCESS(Status));
+}
+
+VOID
+NTAPI
 MmDeleteKernelStack(IN PVOID StackBase,
                     IN BOOLEAN GuiStack)
 {
@@ -394,8 +417,8 @@ MmCreatePeb(IN PEPROCESS Process,
     //
     Peb = MiCreatePebOrTeb(Process,
                            (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
-    ASSERT(Peb == (PVOID)0x7FFDF000);
-    
+    if (!Peb) return STATUS_INSUFFICIENT_RESOURCES;
+
     //
     // Map NLS Tables
     //

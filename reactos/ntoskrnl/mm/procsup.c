@@ -13,8 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+VOID NTAPI MiRosTakeOverPebTebRanges(IN PEPROCESS Process);
 
+/* FUNCTIONS *****************************************************************/
+ 
 PVOID
 NTAPI
 MiCreatePebOrTeb(PEPROCESS Process,
@@ -111,6 +113,9 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
                                 FALSE,
                                 0,
                                 BoundaryAddressMultiple);
+    
+    /* Lock the VAD, ARM3-owned ranges away */                            
+    MiRosTakeOverPebTebRanges(Process);
     return Status;
 }
 
@@ -192,7 +197,10 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     {
         DPRINT1("Failed to create Shared User Data\n");
         goto exit;
-     }
+    }
+     
+    /* Lock the VAD, ARM3-owned ranges away */                            
+    MiRosTakeOverPebTebRanges(Process);
 
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;
@@ -319,6 +327,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 
          case MEMORY_AREA_SHARED_DATA:
          case MEMORY_AREA_NO_ACCESS:
+         case MEMORY_AREA_OWNED_BY_ARM3:
              MmFreeMemoryArea(&Process->Vm,
                               MemoryArea,
                               NULL,
