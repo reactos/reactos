@@ -2211,7 +2211,7 @@ MiWriteProtectSystemImage(IN PVOID ImageBase)
     }
     
     /* Finally, handle the last section */
-    CurrentPte = MiPteToAddress(CurrentAddress);
+    CurrentPte = MiAddressToPte(CurrentAddress);
     if ((StartPte < LastPte) && (CurrentPte >= StartPte))
     {
         /* Handle overlap */
