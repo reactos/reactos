@@ -40,6 +40,9 @@
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
 
+/* The range 0x10000->0x7FEFFFFF is reserved for the ROSMM MAREA Allocator */
+#define MI_LOWEST_VAD_ADDRESS                   (PVOID)0x7FF00000
+
 #endif /* !_M_AMD64 */
 
 /* Make the code cleaner with some definitions for size multiples */
@@ -824,6 +827,37 @@ BOOLEAN
 NTAPI
 MiIsPfnInUse(
     IN PMMPFN Pfn1
+);
+
+PMMVAD
+NTAPI
+MiLocateAddress(
+    IN PVOID VirtualAddress
+);
+
+PMMADDRESS_NODE
+NTAPI
+MiCheckForConflictingNode(
+    IN ULONG_PTR StartVpn,
+    IN ULONG_PTR EndVpn,
+    IN PMM_AVL_TABLE Table
+);
+
+NTSTATUS
+NTAPI
+MiFindEmptyAddressRangeDownTree(
+    IN SIZE_T Length,
+    IN ULONG_PTR BoundaryAddress,
+    IN ULONG_PTR Alignment,
+    IN PMM_AVL_TABLE Table,
+    OUT PULONG_PTR Base
+);
+
+VOID
+NTAPI
+MiInsertNode(
+    IN PMMADDRESS_NODE NewNode,
+    IN PMM_AVL_TABLE Table
 );
 
 /* EOF */
