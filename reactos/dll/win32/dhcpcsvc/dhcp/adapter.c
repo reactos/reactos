@@ -233,7 +233,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
     PDHCP_ADAPTER Adapter = NULL;
     HANDLE AdapterStateChangedEvent = (HANDLE)Context;
     struct interface_info *ifi = NULL;
-    int i;
+    int i, AdapterCount = 0;
 
     /* FIXME: Kill this thread when the service is stopped */
 
@@ -248,7 +248,11 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
        }
 
        if( Error != NO_ERROR )
-           break;
+       {
+           /* HACK: We are waiting until TCP/IP starts */
+           Sleep(2000);
+           continue;
+       }
 
        DH_DbgPrint(MID_TRACE,("Got Adapter List (%d entries)\n", Table->dwNumEntries));
 
@@ -347,6 +351,7 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                     ApiLock();
                     InsertTailList( &AdapterList, &Adapter->ListEntry );
                     DbgPrint("DHCPCSVC: Discovered new adapter [%s]\n", Adapter->DhclientInfo.name);
+                    AdapterCount++;
                     SetEvent(AdapterStateChangedEvent);
                     ApiUnlock();
                 } else { free( Adapter ); Adapter = 0; }
@@ -356,7 +361,17 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
                 DH_DbgPrint(MID_TRACE,("Adapter %d was rejected\n",
                                        Table->table[i].dwIndex));
         }
-    } while ((Error = NotifyAddrChange(NULL, NULL)) == NO_ERROR);
+        Error = NotifyAddrChange(NULL, NULL);
+#if 0
+        if (Error != NO_ERROR)
+            break;
+#else
+        if (AdapterCount)
+            break;
+        else
+            Sleep(3000);
+#endif
+    } while (TRUE);
 
     DbgPrint("DHCPCSVC: Adapter discovery thread is terminating! (Error: %d)\n", Error);
 
