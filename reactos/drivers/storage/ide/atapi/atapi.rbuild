@@ -4,6 +4,7 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="atapi">.</include>
 	<library>scsiport</library>
+	<library>libcntpr</library>
 	<file>atapi.c</file>
 	<file>atapi.rc</file>
 </module>
