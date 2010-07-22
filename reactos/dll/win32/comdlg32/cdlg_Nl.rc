@@ -26,6 +26,8 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
+#pragma code_page(65001)
+
 OPEN_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Bestand openen"
@@ -44,7 +46,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "&Openen", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Alleen &Lezen", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Alleen-&lezen", 1040, 208, 68, 55, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -66,7 +68,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "&Opslaan als", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuleren", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Help", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "Alleen &Lezen", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Alleen-&lezen", 1040, 208, 68, 55, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
@@ -99,14 +101,14 @@ CAPTION "Afdrukeigenschappen"
 FONT 8, "MS Shell Dlg"
 {
  GROUPBOX "Printer", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "Stan&daard Printer", 1056, 16, 20, 80, 12
+ RADIOBUTTON "Stan&daardprinter", 1056, 16, 20, 80, 12
  LTEXT "[geen]", 1088, 35, 35, 120, 9
  RADIOBUTTON "Specifieke &Printer", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Annuleren", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Setup", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "Afdrukstand", 1073, 6, 85, 100, 50, BS_GROUPBOX
+ GROUPBOX "Oriëntatie", 1073, 6, 85, 100, 50, BS_GROUPBOX
  RADIOBUTTON "S&taand", 1058, 50, 100, 40, 12
  RADIOBUTTON "&Liggend", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
@@ -139,7 +141,7 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Help" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Effecten",1072,6,72,84,34,WS_GROUP
     CHECKBOX	    "&Doorhalen", 1040, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX 	    "&Onderstrepen", 1041, 10,94,50,10, BS_AUTOCHECKBOX
+    CHECKBOX 	    "&Onderstrepen", 1041, 10,94,60,10, BS_AUTOCHECKBOX
     LTEXT           "&Kleur:", 1091 ,6,110,30,9
     COMBOBOX        cmb4,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
@@ -250,7 +252,7 @@ FONT 8, "MS Shell Dlg"
 PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Print32"
+CAPTION "Afdrukken"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
@@ -290,7 +292,7 @@ FONT 8, "MS Shell Dlg"
 PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
       DS_CONTEXTHELP | DS_3DLOOK
-CAPTION "Print Setup"
+CAPTION "Afdrukeigenschappen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
@@ -315,15 +317,15 @@ BEGIN
     LTEXT           "&Bron:",       stc3,  16,128,  36, 8
     COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
 
-    GROUPBOX        "Orientatie",    grp1, 180, 92, 100,56, WS_GROUP
+    GROUPBOX        "Oriëntatie",    grp1, 180, 92, 100,56, WS_GROUP
     ICON            "",               ico1, 195,112,  18,20, WS_GROUP
-    CONTROL         "P&ortret",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "S&taand",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
     CONTROL         "L&iggend",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
 PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Setup Page"
+CAPTION "Pagina-instellingen"
 FONT 8, "MS Shell Dlg"
 BEGIN
   CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
@@ -334,10 +336,10 @@ BEGIN
   COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
   LTEXT "La&de:", stc3, 16, 132, 36, 8
   COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
-  GROUPBOX "Orientatie", grp1, 8, 156, 64, 56, BS_GROUPBOX
-  AUTORADIOBUTTON "&Portret", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Oriëntatie", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Staand", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
   AUTORADIOBUTTON "&Liggend", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
-  GROUPBOX "Borders", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  GROUPBOX "Randen", grp4, 80, 156, 152, 56, BS_GROUPBOX
   LTEXT "L&inks:", stc15, 88, 172, 21, 8
   EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
   LTEXT "&Rechts:", stc16, 159, 172, 27, 8
@@ -366,10 +368,10 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_SYSTEMFOLDERS       "Systeem mappen"
+    IDS_SYSTEMFOLDERS       "Systeemmappen"
     IDS_LOCALHARDRIVES      "Lokale vaste schijven"
     IDS_FILENOTFOUND        "Bestand niet gevonden"
-    IDS_VERIFYFILE          "Controleer of de juiste bestandnaam is opgegeven"
+    IDS_VERIFYFILE          "Controleer of de juiste bestandsnaam is opgegeven"
     IDS_CREATEFILE          "Dit bestand bestaat nog niet\nWilt u het bestand aanmaken?"
     IDS_OVERWRITEFILE       "Bestand bestaat al.\nWilt u het vervangen?"
     IDS_INVALID_FILENAME_TITLE "De naam van het pad bevat ongeldige tekens"
@@ -389,7 +391,7 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-    PD32_PRINT_TITLE       "Print"
+    PD32_PRINT_TITLE       "Afdrukken"
 
     PD32_VALUE_UREADABLE                  "Onleesbare ingave"
     PD32_INVALID_PAGE_RANGE "Deze waarde ligt niet binnen het bereik\n\
@@ -402,13 +404,13 @@ buiten het papier.\nVoer s.v.p. nieuwe marges in."
 zijn."
     PD32_TOO_LARGE_COPIES                 "Zoveel exemplaren kan de printer \
 niet in een keer aan, het maximum is %d"
-    PD32_PRINT_ERROR                      "Er ontstond een printer fout."
-    PD32_NO_DEFAULT_PRINTER               "Er is geen default printer"
+    PD32_PRINT_ERROR                      "Er heeft zich een fout voorgedaan met de printer."
+    PD32_NO_DEFAULT_PRINTER               "Er is geen standaardprinter"
     PD32_CANT_FIND_PRINTER                "De printer werd niet gevonden"
     PD32_OUT_OF_MEMORY                    "Er was onvoldoende geheugen \
 beschikbaar"
-    PD32_GENERIC_ERROR                    "Er onstond een niet nader \
-gespecifieerde fout"
+    PD32_GENERIC_ERROR                    "Er ontstond een niet nader \
+gespecificeerde fout"
     PD32_DRIVER_UNKNOWN                   "De printer driver is onbekend"
     PD32_NO_DEVICES                       "Voordat u printer-gerelateerde taken \
 zoals pagina instellingen of het printen van een document kun uitvoeren, moet u een \
@@ -422,13 +424,13 @@ wachtrij"
     PD32_MILLIMETERS                      "mm"
 
     PD32_PRINTER_STATUS_READY             "Klaar"
-    PD32_PRINTER_STATUS_PAUSED            "Gepauseerd, "
+    PD32_PRINTER_STATUS_PAUSED            "Gepauzeerd, "
     PD32_PRINTER_STATUS_ERROR             "Fout, "
     PD32_PRINTER_STATUS_PENDING_DELETION  "Bezig met verwijderen, "
-    PD32_PRINTER_STATUS_PAPER_JAM         "Papier opstopping, "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papier-opstopping, "
     PD32_PRINTER_STATUS_PAPER_OUT         "Papier is op, "
     PD32_PRINTER_STATUS_MANUAL_FEED       "Voer s.v.p. met de hand papier in, "
-    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papier probleem, "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papier-probleem, "
     PD32_PRINTER_STATUS_OFFLINE           "Printer offline, "
     PD32_PRINTER_STATUS_IO_ACTIVE         "I/O Actief, "
     PD32_PRINTER_STATUS_BUSY              "Druk bezig, "
@@ -446,7 +448,7 @@ wachtrij"
     PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Onvoldoende geheugen beschikbaar, "
     PD32_PRINTER_STATUS_DOOR_OPEN         "De printer staat is open, "
     PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Print server onbekend; "
-    PD32_PRINTER_STATUS_POWER_SAVE        "Power safe modus; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "Power save modus; "
 }
 
 STRINGTABLE DISCARDABLE /* Font styles */

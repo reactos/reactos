@@ -993,13 +993,64 @@ UINT WINAPI MsiGetFeatureCostA(MSIHANDLE hInstall, LPCSTR szFeature,
     return rc;
 }
 
-UINT MSI_GetFeatureCost(MSIPACKAGE *package, MSIFEATURE *feature,
-                        MSICOSTTREE iCostTree, INSTALLSTATE iState,
-                        LPINT piCost)
+static INT feature_cost( MSIFEATURE *feature )
 {
-    FIXME("(%s %i %i %p): not implemented yet\n",
-        debugstr_w(feature->Feature), iCostTree, iState, piCost);
-    if (piCost) *piCost = 0;
+    INT cost = 0;
+    MSICOMPONENT *comp;
+
+    LIST_FOR_EACH_ENTRY( comp, &feature->Components, MSICOMPONENT, entry )
+    {
+        cost += comp->Cost;
+    }
+    return cost;
+}
+
+UINT MSI_GetFeatureCost( MSIPACKAGE *package, MSIFEATURE *feature, MSICOSTTREE tree,
+                         INSTALLSTATE state, LPINT cost )
+{
+    TRACE("%s, %u, %d, %p\n", debugstr_w(feature->Feature), tree, state, cost);
+
+    *cost = 0;
+    switch (tree)
+    {
+    case MSICOSTTREE_CHILDREN:
+    {
+        MSIFEATURE *child;
+
+        LIST_FOR_EACH_ENTRY( child, &feature->Children, MSIFEATURE, entry )
+        {
+            if (child->ActionRequest == state)
+                *cost += feature_cost( child );
+        }
+        break;
+    }
+    case MSICOSTTREE_PARENTS:
+    {
+        const WCHAR *feature_parent = feature->Feature_Parent;
+        for (;;)
+        {
+            MSIFEATURE *parent = get_loaded_feature( package, feature_parent );
+            if (!parent)
+                break;
+
+            if (parent->ActionRequest == state)
+                *cost += feature_cost( parent );
+
+            feature_parent = parent->Feature_Parent;
+        }
+        break;
+    }
+    case MSICOSTTREE_SELFONLY:
+        if (feature->ActionRequest == state)
+            *cost = feature_cost( feature );
+        break;
+
+    default:
+        WARN("unhandled cost tree %u\n", tree);
+        break;
+    }
+
+    *cost /= 512;
     return ERROR_SUCCESS;
 }
 

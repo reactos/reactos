@@ -79,7 +79,8 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
 {
     NTSTATUS Status;
 
-    DPRINT1("FsRtlPrivateLock() is stubplemented!\n");
+    static BOOLEAN Warn;
+    if (!Warn++) DPRINT1("FsRtlPrivateLock() is stubplemented!\n");
 
     /* Initialize the lock, if necessary */
     if (!FileLock->LockInformation)
@@ -177,7 +178,8 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
                       IN PVOID Context OPTIONAL,
                       IN BOOLEAN AlreadySynchronized)
 {
-    DPRINT1("FsRtlFastUnlockSingle() is stubplemented!\n");
+    static BOOLEAN Warn;
+    if (!Warn++) DPRINT1("FsRtlFastUnlockSingle() is stubplemented!\n");
 
     return STATUS_SUCCESS;
 }

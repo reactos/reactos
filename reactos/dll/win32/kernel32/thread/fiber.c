@@ -258,7 +258,7 @@ BaseFiberStartup(VOID)
     DPRINT("Starting Fiber\n");
     BaseThreadStartup((LPTHREAD_START_ROUTINE)Fiber->Context.Eax,
                       (LPVOID)Fiber->Context.Ebx);
-#elif defined(__x86_64__)
+#elif defined(_M_AMD64)
     PFIBER Fiber = GetFiberData();
 
     /* Call the Thread Startup Routine */

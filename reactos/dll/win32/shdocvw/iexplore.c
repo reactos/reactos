@@ -37,7 +37,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
-#define IDI_APPICON 101
+#define IDI_APPICON 1
 
 static const WCHAR szIEWinFrame[] = { 'I','E','F','r','a','m','e',0 };
 
@@ -90,6 +90,7 @@ void register_iewindow_class(void)
     WNDCLASSEXW wc;
 
     memset(&wc, 0, sizeof wc);
+    wc.cbSize = sizeof(wc);
     wc.style = 0;
     wc.lpfnWndProc = ie_window_proc;
     wc.cbClsExtra = 0;

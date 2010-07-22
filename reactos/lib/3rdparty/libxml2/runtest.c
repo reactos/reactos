@@ -3165,7 +3165,7 @@ rngTest(const char *filename,
     const char *instance;
     xmlRelaxNGParserCtxtPtr ctxt;
     xmlRelaxNGPtr schemas;
-    int res = 0, len, ret;
+    int res = 0, len, ret = 0;
     char pattern[500];
     char prefix[500];
     char result[500];

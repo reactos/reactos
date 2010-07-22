@@ -486,7 +486,7 @@ static HRESULT create_moniker(LPCWSTR url, IMoniker **mon)
             return hres;
         }
     }else {
-        size = sizeof(new_url);
+        size = sizeof(new_url)/sizeof(WCHAR);
         hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME);
         TRACE("got %s\n", debugstr_w(new_url));
         if(FAILED(hres)) {
@@ -760,7 +760,23 @@ HRESULT navigate_url(DocHost *This, LPCWSTR url, const VARIANT *Flags,
     This->ready_state = READYSTATE_LOADING;
 
     if(This->doc_navigate) {
-        hres = async_doc_navigate(This, url, headers, post_data, post_data_len, TRUE);
+        WCHAR new_url[INTERNET_MAX_URL_LENGTH];
+
+        if(PathIsURLW(url)) {
+            new_url[0] = 0;
+        }else {
+            DWORD size;
+
+            size = sizeof(new_url)/sizeof(WCHAR);
+            hres = UrlApplySchemeW(url, new_url, &size, URL_APPLY_GUESSSCHEME);
+            if(FAILED(hres)) {
+                WARN("UrlApplyScheme failed: %08x\n", hres);
+                new_url[0] = 0;
+            }
+        }
+
+        hres = async_doc_navigate(This, *new_url ? new_url : url, headers, post_data,
+                post_data_len, TRUE);
     }else {
         task_navigate_bsc_t *task;
 

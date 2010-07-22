@@ -1,6 +1,22 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
+
+	<if property="ARCH" value="i386">
+		<property name="BASEADDRESS_FREELDR" value="0x8000" />
+	</if>
+	<if property="ARCH" value="amd64">
+		<property name="BASEADDRESS_FREELDR" value="0x8000" />
+	</if>
+	<if property="ARCH" value="arm">
+		<if property="SARCH" value="omap3">
+			<property name="BASEADDRESS_FREELDR" value="0x80FFF000" />
+		</if>
+		<if property="SARCH" value="versatile">
+			<property name="BASEADDRESS_FREELDR" value="0x0001F000" />
+		</if>
+	</if>
+
 	<directory name="bootsect">
 		<xi:include href="bootsect/bootsect.rbuild" />
 	</directory>

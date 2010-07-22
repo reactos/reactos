@@ -135,9 +135,9 @@
 @ extern __argc __argc
 @ extern __argv __argv
 @ extern __badioinfo __badioinfo
-@ cdecl __crtCompareStringA(long long str long str long)
-@ cdecl __crtCompareStringW(long long wstr long wstr long)
-@ cdecl __crtGetLocaleInfoW(long long ptr long)
+@ cdecl __crtCompareStringA(long long str long str long) kernel32.CompareStringA
+@ cdecl __crtCompareStringW(long long wstr long wstr long) kernel32.CompareStringW
+@ cdecl __crtGetLocaleInfoW(long long ptr long) kernel32.GetLocaleInfo
 @ cdecl __crtGetStringTypeW(long long wstr long ptr)
 @ cdecl __crtLCMapStringA(long long str long ptr long long long)
 # stub __crtLCMapStringW
@@ -407,9 +407,9 @@
 # stub _ftime32_s
 @ cdecl _ftime64(ptr)
 # stub _ftime64_s
-#@ cdecl -ret64 _ftol() implemented in x86 asm!!
-#@ cdecl -ret64 _ftol2() _ftol
-#@ cdecl -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
+@ cdecl -arch=i386 -ret64 _ftol()
+@ cdecl -arch=i386 -ret64 _ftol2() _ftol
+@ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
 # stub _ftol2_sse_excpt
 @ cdecl _fullpath(ptr str long)
 # stub _fullpath_dbg
@@ -599,7 +599,7 @@
 @ cdecl _ltow(long ptr long)
 # stub _ltow_s
 @ cdecl _makepath(ptr str str str str)
-# stub _makepath_s
+@ cdecl _makepath_s(ptr long str str str str)
 # stub _malloc_dbg
 @ cdecl _matherr(ptr)
 @ cdecl _mbbtombc(long)
@@ -758,7 +758,7 @@
 @ cdecl _onexit(ptr)
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
-# stub _osplatform
+@ extern _osplatform _osplatform
 @ extern _osver _osver
 @ stub _outp #(long long)
 @ stub _outpd #(long long)
@@ -816,7 +816,7 @@
 # stub _set_output_format
 @ cdecl _set_sbh_threshold(long)
 @ cdecl _seterrormode(long)
-@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr)
+@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
 @ cdecl -arch=x86_64 -norelay _setjmpex(ptr ptr)
 @ cdecl _setmaxstdio(long)
@@ -1088,7 +1088,7 @@
 # stub _winput_s
 @ extern _winver
 @ cdecl _wmakepath(wstr wstr wstr wstr wstr)
-# stub _wmakepath_s
+@ cdecl _wmakepath_s(ptr long wstr wstr wstr wstr)
 @ cdecl _wmkdir(wstr)
 @ cdecl _wmktemp(wstr)
 # stub _wmktemp_s
@@ -1295,7 +1295,7 @@
 @ varargs scanf(str)
 @ varargs scanf_s(str)
 @ cdecl setbuf(ptr ptr)
-@ cdecl -arch=x86_64 -norelay -private setjmp(ptr) _setjmp
+@ cdecl -arch=x86_64 -norelay -private setjmp(ptr ptr) _setjmp
 @ cdecl setlocale(long str)
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)
@@ -1410,7 +1410,3 @@
 # Functions not exported in native dll:
 @ cdecl _get_invalid_parameter_handler()
 @ cdecl _set_invalid_parameter_handler(ptr)
-@ cdecl _create_locale(long str)
-@ cdecl _free_locale(ptr)
-@ cdecl _configthreadlocale(long)
-@ cdecl _wcstod_l(wstr ptr)

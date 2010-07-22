@@ -4135,9 +4135,12 @@ BOOL WINAPI HiliteMenuItem( HWND hWnd, HMENU hMenu, UINT wItemID,
 HMENU WINAPI
 GetMenu(HWND hWnd)
 {
-    HMENU retvalue = (HMENU)GetWindowLongPtrW( hWnd, GWLP_ID );
-    TRACE("for %p returning %p\n", hWnd, retvalue);
-    return retvalue;
+       PWND Wnd = ValidateHwnd(hWnd);
+
+       if (!Wnd)
+               return NULL;
+
+       return UlongToHandle(Wnd->IDMenu);
 }
 
 

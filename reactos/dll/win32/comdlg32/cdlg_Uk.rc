@@ -1,6 +1,8 @@
 /*
  * Copyright 2004 Ilya Korniyko
  *
+ * Copyright 2010 Igor Paliychuk
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -41,7 +43,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Диски:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Відкрити", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE  | WS_GROUP | WS_TABSTOP
 }
@@ -63,7 +65,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "&Диски:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Зберегти як", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Довідка", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
  CHECKBOX "&Лише для читання", 1040, 208, 68, 54, 24, BS_AUTOCHECKBOX | BS_MULTILINE | WS_GROUP | WS_TABSTOP
 }
@@ -81,7 +83,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "В&иділенний фрагмент", 1057, 16, 60, 60, 12
  RADIOBUTTON "&Сторінки", 1058, 16, 75, 60, 12
  DEFPUSHBUTTON "Друк", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Властивості", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  LTEXT "&з:", 1090, 60, 80, 30, 9
  LTEXT "&до:", 1091, 120, 80, 30, 9
@@ -103,7 +105,7 @@ FONT 8, "MS Shell Dlg"
  RADIOBUTTON "&Інший принтер", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "OK", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Настройка", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
  GROUPBOX "Орієнтація", 1073, 6, 85, 100, 50, BS_GROUPBOX
  RADIOBUTTON "&Книжна", 1058, 50, 100, 40, 12
@@ -133,7 +135,7 @@ FONT 8, "MS Shell Dlg"
     COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Відміна",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
+    PUSHBUTTON      "Скасувати",IDCANCEL,218,23,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Застосувати", 1026,218,40,40,14,WS_GROUP | WS_TABSTOP
     PUSHBUTTON      "&Довідка" , 1038,218,57,40,14,WS_GROUP | WS_TABSTOP
     GROUPBOX        "Атрибути",1072,6,72,84,34,WS_GROUP
@@ -176,7 +178,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "OK",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Довідка", 1038,100,166, 44, 14
  PUSHBUTTON "&Додати до набору",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Визначити колір >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
@@ -198,7 +200,7 @@ FONT 8, "MS Shell Dlg"
  CONTROL "В&низ", 1057, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 152, 38, 30, 12
 
  DEFPUSHBUTTON "З&найти далі", IDOK, 190,  5, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Відміна", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL	 , 190, 23, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Довідка", pshHelp	 , 190, 45, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -218,7 +220,7 @@ FONT 8, "MS Shell Dlg"
  DEFPUSHBUTTON "З&найти далі", IDOK, 174,  4, 50, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "&Замінити", psh1	 , 174, 21, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "Замінити &все", psh2 , 174, 38, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Відміна", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Скасувати", IDCANCEL	 , 174, 55, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "&Довідка", pshHelp	 , 174, 75, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
@@ -229,7 +231,7 @@ CAPTION "Друк"
 FONT 8, "MS Shell Dlg"
 {
     DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
-    PUSHBUTTON      "Відміна", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "Скасувати", IDCANCEL, 232,164, 48,14, WS_GROUP
     PUSHBUTTON      "&Довідка",  pshHelp,  50, 161, 48,14, WS_GROUP
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
@@ -269,7 +271,7 @@ CAPTION "Установки принтера"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
-    PUSHBUTTON      "Відміна",IDCANCEL,232,156,48,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,232,156,48,14
 /*    PUSHBUTTON      "Сітка...", psh5, 284,156,48,14 */
 
     GROUPBOX        "Принтер",        grp4,   8,  4, 272,84, WS_GROUP
@@ -297,6 +299,36 @@ BEGIN
     CONTROL         "Л&андшафт",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
 END
 
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметри сторінки"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Папір", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Розмір:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "Пода&ча:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Орієнтація", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "К&нижна", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "Аль&бомна", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Поля", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "З&ліва:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "С&права:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "З&верху:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "З&низу:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Скасувати", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "П&ринтер...", psh3, 184, 220, 48, 14
+END
+
 NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
 CAPTION "Відкрити"
@@ -317,7 +349,7 @@ FONT 8, "MS Shell Dlg"
     CONTROL	"Лише для &читання",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
 
     DEFPUSHBUTTON	"&Відкрити",		 IDOK,222,110,50,14
-    PUSHBUTTON		"Відміна",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"Скасувати",		 IDCANCEL,222,128,50,14
     PUSHBUTTON		"&Довідка",		 pshHelp,222,145,50,14
 }
 
@@ -376,9 +408,9 @@ STRINGTABLE DISCARDABLE
     PD32_OUT_OF_MEMORY                    "Мало пам'яті"
     PD32_GENERIC_ERROR                    "Виникла(и) помилка(и)"
     PD32_DRIVER_UNKNOWN                   "Невідомий драйвер принтера"
-    PD32_NO_DEVICES                       "Before you can perform printer-related tasks \
-such as page setup or printing a document, you need to install a printer. \
-Please install one and retry."
+    PD32_NO_DEVICES                       "Перед запуском таких дій як налаштування \
+сторінки чи друкування вам треба встановити принтер. \
+Встановіть принтер та спробуйте знов."
 
     PD32_DEFAULT_PRINTER                  "Принтер за обумовленням; "
     PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d документів у черзі"
@@ -414,22 +446,40 @@ Please install one and retry."
     PD32_PRINTER_STATUS_POWER_SAVE        "Живлення в безпечному режимі; "
 }
 
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Нормальний"
+    IDS_FONT_BOLD          "Жирний"
+    IDS_FONT_ITALIC        "Курсив"
+    IDS_FONT_BOLD_ITALIC   "Жирний курсив"
+}
+
 STRINGTABLE DISCARDABLE /* Color names */
 {
     IDS_COLOR_BLACK     "Чорний"
-    IDS_COLOR_MAROON    "Брунатний"
+    IDS_COLOR_MAROON    "Коричневий"
     IDS_COLOR_GREEN     "Зелений"
     IDS_COLOR_OLIVE     "Оливковий"
     IDS_COLOR_NAVY      "Синій"
-    IDS_COLOR_PURPLE    "Пурпурний"
-    IDS_COLOR_TEAL      "Зелено-синій"
+    IDS_COLOR_PURPLE    "Пурпуровий"
+    IDS_COLOR_TEAL      "Синьо-зелений"
     IDS_COLOR_GRAY      "Сірий"
-    IDS_COLOR_SILVER    "Срібний"
+    IDS_COLOR_SILVER    "Сріблястий"
     IDS_COLOR_RED       "Червоний"
     IDS_COLOR_LIME      "Салатовий"
     IDS_COLOR_YELLOW    "Жовтий"
-    IDS_COLOR_BLUE      "Голубий"
-    IDS_COLOR_FUCHSIA   "Фіолетовий"
-    IDS_COLOR_AQUA      "Аквамарин"
+    IDS_COLOR_BLUE      "Синій"
+    IDS_COLOR_FUCHSIA   "Малиновий"
+    IDS_COLOR_AQUA      "Блакитний"
     IDS_COLOR_WHITE     "Білий"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Биберіть шрифт розміром %d - %d пунктів."
+    IDS_SAVE_BUTTON "&Зберегти"
+    IDS_SAVE_IN     "Зберегти &в:"
+    IDS_SAVE        "Зберегти"
+    IDS_SAVE_AS     "Зберегти як"
+    IDS_OPEN_FILE   "Відкрити файл"
 }

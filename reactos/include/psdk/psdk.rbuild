@@ -5,6 +5,7 @@
 	<file>activaut.idl</file>
 	<file>activdbg.idl</file>
 	<file>activscp.idl</file>
+	<file>asptlb.idl</file>
 	<file>bdaiface.idl</file>
 	<file>bits1_5.idl</file>
 	<file>bits.idl</file>
@@ -27,11 +28,14 @@
 	<file>mimeinfo.idl</file>
 	<file>mlang.idl</file>
 	<file>msctf.idl</file>
+	<file>msdadc.idl</file>
 	<file>mshtml.idl</file>
+	<file>msinkaut.idl</file>
 	<file>mstask.idl</file>
 	<file>msxml.idl</file>
 	<file>msxml2.idl</file>
 	<file>netfw.idl</file>
+	<file>netcon.idl</file>
 	<file>oaidl.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
@@ -43,6 +47,7 @@
 	<file>optary.idl</file>
 	<file>perhist.idl</file>
 	<file>propidl.idl</file>
+	<file>propsys.idl</file>
 	<file>pstore.idl</file>
 	<file>richole.idl</file>
 	<file>sensevts.idl</file>
@@ -69,6 +74,7 @@
 	<file>xmldso.idl</file>
 	<file>xmldom.idl</file>
 	<file>xmllite.idl</file>
+	<file>wbemcli.idl</file>
 	<file>wia_lh.idl</file>
 	<file>wia_xp.idl</file>
 </module>

@@ -8,6 +8,8 @@
  */
 
 #include "usbehci.h"
+#include <hubbusif.h>
+#include <usbbusif.h>
 
 /*
    Get SymblicName from Parameters in Registry Key
@@ -121,3 +123,14 @@ GetPhysicalDeviceObjectName(PDEVICE_OBJECT DeviceObject)
     return ObjectName;
 }
 
+PUSB_DEVICE DeviceHandleToUsbDevice(PPDO_DEVICE_EXTENSION PdoDeviceExtension, PUSB_DEVICE_HANDLE DeviceHandle)
+{
+    LONG i;
+
+    for (i=0; i<127; i++)
+    {
+        if (PdoDeviceExtension->UsbDevices[i] == (PUSB_DEVICE)DeviceHandle)
+            return (PUSB_DEVICE)DeviceHandle;
+    }
+    return NULL;
+}

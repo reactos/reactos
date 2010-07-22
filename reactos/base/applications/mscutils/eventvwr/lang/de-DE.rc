@@ -102,3 +102,16 @@ BEGIN
 	IDC_EVENTLOG_SUCCESS           "Erfolgreich"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Unbekanntes Ereignis"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Typ"
+    IDS_COLUMNDATE      "Datum"
+    IDS_COLUMNTIME      "Zeit"
+    IDS_COLUMNSOURCE    "Quelle"
+    IDS_COLUMNCATEGORY  "Kategorie"
+    IDS_COLUMNEVENT     "Ereignis"
+    IDS_COLUMNUSER      "Benutzer"
+    IDS_COLUMNCOMPUTER  "Computer"
+    IDS_COLUMNEVENTDATA "Ereignisdaten"
+END

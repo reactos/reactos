@@ -30,6 +30,7 @@ extern HRESULT IcoDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void**
 extern HRESULT JpegDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv);
 extern HRESULT TiffDecoder_CreateInstance(IUnknown *pUnkOuter, REFIID iid, void** ppv);
 
+extern HRESULT FlipRotator_Create(IWICBitmapFlipRotator **fliprotator);
 extern HRESULT PaletteImpl_Create(IWICPalette **palette);
 extern HRESULT StreamImpl_Create(IWICStream **stream);
 

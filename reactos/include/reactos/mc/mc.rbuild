@@ -12,6 +12,10 @@
 	<module name="errcodes" type="messageheader">
 		<file>errcodes.mc</file>
 	</module>
+	
+	<module name="pciclass" type="messageheader">
+		<file>pciclass.mc</file>
+	</module>
 
 	<module name="neteventmsg" type="messageheader">
 		<file>netevent.mc</file>

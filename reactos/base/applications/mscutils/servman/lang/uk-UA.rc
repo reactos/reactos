@@ -3,7 +3,7 @@
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/mscutils/servman/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for devmgmt
- * TRANSLATOR:  Artem Reznikov
+ * TRANSLATORS:  Artem Reznikov, Igor Paliychuk
  */
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
@@ -155,6 +155,19 @@ BEGIN
   DEFPUSHBUTTON "Скасувати", IDCANCEL, 102, 129, 54, 13
 END
 
+IDD_DLG_DEPEND_STOP DIALOGEX 6,6,240,148
+CAPTION "Зупинка інших служб"
+FONT 8, "MS Shell Dlg",0,0
+STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "", IDC_STOP_DEPENDS, 40, 8, 170, 25
+  LISTBOX IDC_STOP_DEPENDS_LB, 15, 40, 210, 70, WS_CHILD | WS_VISIBLE | WS_EX_STATICEDGE | LBS_NOSEL
+  LTEXT "Ви хочете зупинити ці служби?",IDC_STATIC, 15, 110, 150, 10
+  DEFPUSHBUTTON "Так", IDOK, 60, 129, 54, 14
+  PUSHBUTTON "Ні", IDCANCEL, 120, 129, 54, 14
+END
+
 IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
 CAPTION "Настройки"
 FONT 8, "MS Shell Dlg",0,0
@@ -198,8 +211,8 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_NUM_SERVICES "Номер служби: %d"
-  IDS_STOP_DEPENDS "Коли %s зупинеться, інші служби також буде зупинено"
+  IDS_NUM_SERVICES "Hомер служби: %d"
+  IDS_STOP_DEPENDS "Коли %s зупинеться, наступні служби також буде зупинено"
   IDS_NO_DEPENDS "<No Dependencies>"
   IDS_LICENSE "Це вільне програмне забезпечення; Ви можете розповсюджувати її та змінювати, дотримуючись умови Відкритої ліцензійної угоди GNU, опублікованої Фондом вільного програмного забезпечення; або редакції 2 Угоди, або будь-якої редакції, випущеної пізніше.\r\n\r\nЦя програма розповсюджується в надії на те, що вона виявиться корисною, але БЕЗ БУДЬ-ЯКИХ ГАРАНТІЙ, включаючи УЯВНОЮ ГАРАНТІЄЮ ЯКОСТІ або ПРИДАТНОСТІ для певних цілей. Подробиці містяться у Відкритій ліцензійній угоді GNU.\r\n\r\nРазом з цією програмою повинен поширюватися примірник Відкритої ліцензійної угоди GNU. Якщо він відсутній, повідомте про це в Фонд вільного програмного забезпечення (Free Software Foundation, Inc.), 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END

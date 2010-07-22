@@ -1051,8 +1051,10 @@ GetEffectiveRightsFromAclW(IN PACL pacl,
                            IN PTRUSTEE_W pTrustee,
                            OUT PACCESS_MASK pAccessRights)
 {
-    FIXME("%s() not implemented!\n", __FUNCTION__);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    FIXME("%p %p %p - stub\n", pacl, pTrustee, pAccessRights);
+
+    *pAccessRights = STANDARD_RIGHTS_ALL | SPECIFIC_RIGHTS_ALL;
+    return ERROR_SUCCESS;
 }
 
 

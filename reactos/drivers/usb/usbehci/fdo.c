@@ -4,7 +4,7 @@
  * FILE:        drivers/usb/usbehci/fdo.c
  * PURPOSE:     USB EHCI device driver.
  * PROGRAMMERS:
- *              Michael Martin
+ *              Michael Martin (mjmartin@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
@@ -830,4 +830,284 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT Pdo)
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
     return STATUS_SUCCESS;
+}
+
+NTSTATUS NTAPI
+FdoDispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+    PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+    PIO_STACK_LOCATION Stack = NULL;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    ULONG_PTR Information = 0;
+    PUSB_DEVICE UsbDevice = NULL;
+    URB *Urb;
+
+    FdoDeviceExtension = (PFDO_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+
+    ASSERT(FdoDeviceExtension->Common.IsFdo == TRUE);
+
+    Stack =  IoGetCurrentIrpStackLocation(Irp);
+
+    ASSERT(Stack->Parameters.DeviceIoControl.IoControlCode == IOCTL_INTERNAL_USB_SUBMIT_URB);
+
+    Urb = (PURB) Stack->Parameters.Others.Argument1;
+    DPRINT("Header Length %d\n", Urb->UrbHeader.Length);
+    DPRINT("Header Function %d\n", Urb->UrbHeader.Function);
+
+    UsbDevice = Urb->UrbHeader.UsbdDeviceHandle;
+
+    switch (Urb->UrbHeader.Function)
+    {
+        case URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:
+        {
+            DPRINT1("URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER:\n");
+            break;
+        }
+        case URB_FUNCTION_GET_STATUS_FROM_DEVICE:
+        {
+            DPRINT1("URB_FUNCTION_GET_STATUS_FROM_DEVICE\n");
+            break;
+        }
+        case URB_FUNCTION_GET_DESCRIPTOR_FROM_DEVICE:
+        {
+            switch(Urb->UrbControlDescriptorRequest.DescriptorType)
+            {
+                case USB_DEVICE_DESCRIPTOR_TYPE:
+                {
+                    /* FIXNME: This probably not used for FDO and should be removed? */
+                    DPRINT1("USB DEVICE DESC\n");
+                    break;
+                }
+                case USB_CONFIGURATION_DESCRIPTOR_TYPE:
+                    DPRINT1("USB CONFIG DESC\n");
+                case USB_STRING_DESCRIPTOR_TYPE:
+                    DPRINT1("Usb String Descriptor\n");
+                {
+                    USB_DEFAULT_PIPE_SETUP_PACKET CtrlSetup;
+                    BOOLEAN ResultOk;
+
+                    CtrlSetup.bmRequestType._BM.Recipient = BMREQUEST_TO_DEVICE;
+                    CtrlSetup.bmRequestType._BM.Type = BMREQUEST_STANDARD;
+                    CtrlSetup.bmRequestType._BM.Dir = BMREQUEST_DEVICE_TO_HOST;
+                    CtrlSetup.bRequest = USB_REQUEST_GET_DESCRIPTOR;
+                    CtrlSetup.wValue.LowByte = Urb->UrbControlDescriptorRequest.Index;
+                    CtrlSetup.wValue.HiByte = Urb->UrbControlDescriptorRequest.DescriptorType;
+                    if (Urb->UrbControlDescriptorRequest.DescriptorType == USB_STRING_DESCRIPTOR_TYPE)
+                        CtrlSetup.wIndex.W = Urb->UrbControlDescriptorRequest.LanguageId;
+                    else
+                        CtrlSetup.wIndex.W = 0;
+                    CtrlSetup.wLength = Urb->UrbControlDescriptorRequest.TransferBufferLength;
+
+                    ResultOk = ExecuteControlRequest(FdoDeviceExtension, &CtrlSetup, UsbDevice->Address, UsbDevice->Port,
+                                Urb->UrbControlDescriptorRequest.TransferBuffer, Urb->UrbControlDescriptorRequest.TransferBufferLength);
+
+                    Urb->UrbHeader.Status = USBD_STATUS_SUCCESS;
+                    Status = STATUS_SUCCESS;
+
+                    break;
+                }
+                default:
+                {
+                    DPRINT1("Descriptor Type %x not supported!\n", Urb->UrbControlDescriptorRequest.DescriptorType);
+                }
+            }
+            break;
+        }
+        case URB_FUNCTION_SELECT_CONFIGURATION:
+        {
+            DPRINT1("Selecting Configuration\n");
+            DPRINT1("Urb->UrbSelectConfiguration.ConfigurationHandle %x\n",Urb->UrbSelectConfiguration.ConfigurationHandle);
+            break;
+        }
+        case URB_FUNCTION_CLASS_DEVICE:
+        {
+            switch (Urb->UrbControlVendorClassRequest.Request)
+            {
+                case USB_REQUEST_GET_DESCRIPTOR:
+                {
+                    DPRINT1("TransferFlags %x\n", Urb->UrbControlVendorClassRequest.TransferFlags);
+                    DPRINT1("Urb->UrbControlVendorClassRequest.Value %x\n", Urb->UrbControlVendorClassRequest.Value);
+
+                    switch (Urb->UrbControlVendorClassRequest.Value >> 8)
+                    {
+                        case USB_DEVICE_CLASS_AUDIO:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_AUDIO\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_COMMUNICATIONS:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_COMMUNICATIONS\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_HUMAN_INTERFACE:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_HUMAN_INTERFACE\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_MONITOR:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_MONITOR\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_PHYSICAL_INTERFACE:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_PHYSICAL_INTERFACE\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_POWER:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_POWER\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_PRINTER:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_PRINTER\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_STORAGE:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_STORAGE\n");
+                            break;
+                        }
+                        case USB_DEVICE_CLASS_RESERVED:
+                            DPRINT1("Reserved!!!\n");
+                        case USB_DEVICE_CLASS_HUB:
+                        {
+                            DPRINT1("USB_DEVICE_CLASS_HUB request\n");
+                            break;
+                        }
+                        default:
+                        {
+                            DPRINT1("Unknown UrbControlVendorClassRequest Value\n");
+                        }
+                    }
+                    break;
+                }
+                case USB_REQUEST_GET_STATUS:
+                {
+                    DPRINT1("DEVICE: USB_REQUEST_GET_STATUS for port %d\n", Urb->UrbControlVendorClassRequest.Index);
+                    break;
+                }
+                default:
+                {
+                    DPRINT1("Unhandled URB request for class device\n");
+                    //Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
+                }
+            }
+            break;
+        }
+        case URB_FUNCTION_CLASS_OTHER:
+        {
+            switch (Urb->UrbControlVendorClassRequest.Request)
+            {
+                case USB_REQUEST_GET_STATUS:
+                {
+                    DPRINT1("OTHER: USB_REQUEST_GET_STATUS for port %d\n", Urb->UrbControlVendorClassRequest.Index);
+                    break;
+                }
+                case USB_REQUEST_CLEAR_FEATURE:
+                {
+                    DPRINT1("USB_REQUEST_CLEAR_FEATURE Port %d, value %x\n", Urb->UrbControlVendorClassRequest.Index,
+                        Urb->UrbControlVendorClassRequest.Value);
+                    switch (Urb->UrbControlVendorClassRequest.Value)
+                    {
+                        case C_PORT_CONNECTION:
+                            DPRINT1("Clearing Connect\n");
+                            break;
+                        case C_PORT_RESET:
+                            DPRINT1("Clearing Reset\n");
+                            break;
+                        default:
+                            DPRINT1("Unknown Value for Clear Feature %x \n", Urb->UrbControlVendorClassRequest.Value);
+                            break;
+                    }
+                    break;
+                }
+                case USB_REQUEST_SET_FEATURE:
+                {
+                    DPRINT1("USB_REQUEST_SET_FEATURE Port %d, value %x\n", Urb->UrbControlVendorClassRequest.Index,
+                        Urb->UrbControlVendorClassRequest.Value);
+
+                    switch(Urb->UrbControlVendorClassRequest.Value)
+                    {
+                        case PORT_RESET:
+                        {
+                            DPRINT1("Port reset\n");
+                            break;
+                        }
+                        case PORT_ENABLE:
+                        {
+                            DPRINT1("Unhandled Set Feature\n");
+                            break;
+                        }
+                        default:
+                        {
+                            DPRINT1("Unknown Set Feature!\n");
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case USB_REQUEST_SET_ADDRESS:
+                {
+                    DPRINT1("USB_REQUEST_SET_ADDRESS\n");
+                    break;
+                }
+                case USB_REQUEST_GET_DESCRIPTOR:
+                {
+                    DPRINT1("USB_REQUEST_GET_DESCRIPTOR\n");
+                    break;
+                }
+                case USB_REQUEST_SET_DESCRIPTOR:
+                {
+                    DPRINT1("USB_REQUEST_SET_DESCRIPTOR\n");
+                    break;
+                }
+                case USB_REQUEST_GET_CONFIGURATION:
+                {
+                    DPRINT1("USB_REQUEST_GET_CONFIGURATION\n");
+                    break;
+                }
+                case USB_REQUEST_SET_CONFIGURATION:
+                {
+                    DPRINT1("USB_REQUEST_SET_CONFIGURATION\n");
+                    break;
+                }
+                case USB_REQUEST_GET_INTERFACE:
+                {
+                    DPRINT1("USB_REQUEST_GET_INTERFACE\n");
+                    break;
+                }
+                case USB_REQUEST_SET_INTERFACE:
+                {
+                    DPRINT1("USB_REQUEST_SET_INTERFACE\n");
+                    break;
+                }
+                case USB_REQUEST_SYNC_FRAME:
+                {
+                    DPRINT1("USB_REQUEST_SYNC_FRAME\n");
+                    break;
+                }
+                default:
+                {
+                    DPRINT1("Unknown Function Class Unknown request\n");
+                    break;
+                }
+            }
+            break;
+        }
+        default:
+        {
+            DPRINT1("Unhandled URB %x\n", Urb->UrbHeader.Function);
+            //Urb->UrbHeader.Status = USBD_STATUS_INVALID_URB_FUNCTION;
+        }
+    }
+
+    Irp->IoStatus.Information = Information;
+
+    if (Status != STATUS_PENDING)
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+    return Status;
 }

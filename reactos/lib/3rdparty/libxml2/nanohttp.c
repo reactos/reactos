@@ -478,8 +478,10 @@ xmlNanoHTTPSend(xmlNanoHTTPCtxtPtr ctxt, const char *xmt_ptr, int outlen)
                  * to retrying.
                  */
 #ifndef HAVE_POLL_H
+#ifndef _WINSOCKAPI_
                 if (ctxt->fd > FD_SETSIZE)
                     return -1;
+#endif
 
                 tv.tv_sec = timeout;
                 tv.tv_usec = 0;
@@ -600,8 +602,10 @@ xmlNanoHTTPRecv(xmlNanoHTTPCtxtPtr ctxt)
             )
             return (0);
 #else /* !HAVE_POLL_H */
+#ifndef _WINSOCKAPI_
         if (ctxt->fd > FD_SETSIZE)
             return 0;
+#endif
 
         tv.tv_sec = timeout;
         tv.tv_usec = 0;
@@ -938,8 +942,10 @@ xmlNanoHTTPConnectAttempt(struct sockaddr *addr)
 #pragma warning(push)
 #pragma warning(disable: 4018)
 #endif
+#ifndef _WINSOCKAPI_
     if (s > FD_SETSIZE)
         return -1;
+#endif
     FD_ZERO(&wfd);
     FD_SET(s, &wfd);
 

@@ -140,7 +140,7 @@ _dump_context(PCONTEXT pc)
 	    pc->Ebp, pc->Esi, pc->Esp);
    DbgPrint("EDI: %.8x   EFLAGS: %.8x\n", pc->Edi, pc->EFlags);
 #elif defined(_M_AMD64)
-   DbgPrint("CS:EIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
+   DbgPrint("CS:RIP %x:%I64x\n", pc->SegCs&0xffff, pc->Rip );
    DbgPrint("DS %x ES %x FS %x GS %x\n", pc->SegDs&0xffff, pc->SegEs&0xffff,
 	    pc->SegFs&0xffff, pc->SegGs&0xfff);
    DbgPrint("RAX: %I64x   RBX: %I64x   RCX: %I64x RDI: %I64x\n", pc->Rax, pc->Rbx, pc->Rcx, pc->Rdi);
@@ -333,7 +333,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
    /* Save exception code and address */
    ErrorParameters[0] = (ULONG)ExceptionRecord->ExceptionCode;
-   ErrorParameters[1] = (ULONG)ExceptionRecord->ExceptionAddress;
+   ErrorParameters[1] = (ULONG_PTR)ExceptionRecord->ExceptionAddress;
 
    if ((NTSTATUS)ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
    {

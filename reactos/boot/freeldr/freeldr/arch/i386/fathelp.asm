@@ -125,10 +125,12 @@ LoadFile5:
 LoadFile_Done:
         mov  dl,BYTE [BYTE bp+BootDrive]	; Load the boot drive into DL
 		mov  dh,[BootPartition]				; Load the boot partition into DH
-        push WORD 0x0000
-        push WORD 0x8000					; We will do a far return to 0000:8000h
-        retf								; Transfer control to ROSLDR
 
+		push 0						; push segment (0x0000)
+		mov bx, [0x8000 + 0xA8]		; load the RVA of the EntryPoint into eax
+		add bx, 0x8000				; RVA -> VA and skip 3 bytes (jump to fathelper code)
+		push bx						; push offset
+		retf						; Transfer control to FreeLoader
 
 ; Reads the entire FAT into memory at 7000:0000
 ReadFatIntoMemory:

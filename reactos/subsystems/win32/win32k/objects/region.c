@@ -607,42 +607,38 @@ REGION_CropAndOffsetRegion(
         else
         {
             xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
+			if(!xrect)
+				return FALSE;
             if (rgnDst->Buffer && rgnDst->Buffer != &rgnDst->rdh.rcBound)
                 ExFreePoolWithTag(rgnDst->Buffer, TAG_REGION); //free the old buffer. will be assigned to xrect below.
         }
 
-        if (xrect)
+        if (rgnDst != rgnSrc)
         {
-            ULONG i;
+            *rgnDst = *rgnSrc;
+        }
 
-            if (rgnDst != rgnSrc)
+        if (off->x || off->y)
+        {
+			ULONG i;
+            for (i = 0; i < rgnDst->rdh.nCount; i++)
             {
-                *rgnDst = *rgnSrc;
+                xrect[i].left = (rgnSrc->Buffer + i)->left + off->x;
+                xrect[i].right = (rgnSrc->Buffer + i)->right + off->x;
+                xrect[i].top = (rgnSrc->Buffer + i)->top + off->y;
+                xrect[i].bottom = (rgnSrc->Buffer + i)->bottom + off->y;
             }
-
-            if (off->x || off->y)
-            {
-                for (i = 0; i < rgnDst->rdh.nCount; i++)
-                {
-                    xrect[i].left = (rgnSrc->Buffer + i)->left + off->x;
-                    xrect[i].right = (rgnSrc->Buffer + i)->right + off->x;
-                    xrect[i].top = (rgnSrc->Buffer + i)->top + off->y;
-                    xrect[i].bottom = (rgnSrc->Buffer + i)->bottom + off->y;
-                }
-                rgnDst->rdh.rcBound.left   += off->x;
-                rgnDst->rdh.rcBound.right  += off->x;
-                rgnDst->rdh.rcBound.top    += off->y;
-                rgnDst->rdh.rcBound.bottom += off->y;
-            }
-            else
-            {
-                COPY_RECTS(xrect, rgnSrc->Buffer, rgnDst->rdh.nCount);
-            }
-
-            rgnDst->Buffer = xrect;
+            rgnDst->rdh.rcBound.left   += off->x;
+            rgnDst->rdh.rcBound.right  += off->x;
+            rgnDst->rdh.rcBound.top    += off->y;
+            rgnDst->rdh.rcBound.bottom += off->y;
         }
         else
-            return FALSE;
+        {
+            COPY_RECTS(xrect, rgnSrc->Buffer, rgnDst->rdh.nCount);
+        }
+
+        rgnDst->Buffer = xrect;
     }
     else if ((rect->left >= rect->right) ||
              (rect->top >= rect->bottom) ||
@@ -2035,13 +2031,13 @@ REGION_AllocRgnWithHandle(INT nReg)
 {
     HRGN hReg;
     PROSRGNDATA pReg;
-    
+
     pReg = (PROSRGNDATA)GDIOBJ_AllocObjWithHandle(GDI_OBJECT_TYPE_REGION);
     if(!pReg)
     {
         return NULL;
     }
-    
+
     hReg = pReg->BaseObject.hHmgr;
 
     if (nReg == 0 || nReg == 1)
@@ -2228,7 +2224,7 @@ REGION_Cleanup(PVOID ObjectBody)
 {
     PROSRGNDATA pRgn = (PROSRGNDATA)ObjectBody;
     if (pRgn->Buffer && pRgn->Buffer != &pRgn->rdh.rcBound)
-        ExFreePool(pRgn->Buffer);
+        ExFreePoolWithTag(pRgn->Buffer, TAG_REGION);
     return TRUE;
 }
 
@@ -2419,7 +2415,7 @@ IntGdiPaintRgn(
     if (!(tmpVisRgn = IntSysCreateRectRgn(0, 0, 0, 0))) return FALSE;
 
     // Transform region into device co-ords
-    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) || 
+    if (!REGION_LPTODP(dc, tmpVisRgn, hRgn) ||
          NtGdiOffsetRgn(tmpVisRgn, dc->ptlDCOrig.x, dc->ptlDCOrig.y) == ERROR)
     {
         REGION_FreeRgnByHandle(tmpVisRgn);
@@ -2552,13 +2548,13 @@ REGION_SetRectRgn(
     }
 }
 
-INT  
+INT
 FASTCALL
 IntGdiOffsetRgn(
     PROSRGNDATA rgn,
     INT XOffset,
     INT YOffset )
-{            
+{
     if (XOffset || YOffset)
     {
         int nbox = rgn->rdh.nCount;
@@ -3444,7 +3440,7 @@ NtGdiEqualRgn(
     if ( rgn1->rdh.nCount == 0 )
     {
        bRet = TRUE;
-       goto exit;  
+       goto exit;
     }
 
     if ( rgn1->rdh.rcBound.left   != rgn2->rdh.rcBound.left  ||
@@ -3691,8 +3687,7 @@ NtGdiGetRandomRgn(
         else if (pDC->dclevel.prgnMeta) hSrc = ((PROSRGNDATA)pDC->dclevel.prgnMeta)->BaseObject.hHmgr;
         break;
     case SYSRGN:
-        hSrc = pDC->rosdc.hVisRgn;
-//        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
+        if (pDC->prgnVis) hSrc = ((PROSRGNDATA)pDC->prgnVis)->BaseObject.hHmgr;
         break;
     default:
         hSrc = 0;

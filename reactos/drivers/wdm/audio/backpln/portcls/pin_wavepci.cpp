@@ -668,7 +668,7 @@ CPortPinWavePci::Close(
 
     if (m_Format)
     {
-        ExFreePool(m_Format);
+        FreeItem(m_Format, TAG_PORTCLASS);
         m_Format = NULL;
     }
 
@@ -824,7 +824,6 @@ CPortPinWavePci::Init(
     if (!NT_SUCCESS(Status))
     {
         DPRINT("GetAllocatorFraming failed with %x\n", Status);
-        return Status;
     }
 
     DPRINT("OptionFlags %x RequirementsFlag %x PoolType %x Frames %lu FrameSize %lu FileAlignment %lu\n",

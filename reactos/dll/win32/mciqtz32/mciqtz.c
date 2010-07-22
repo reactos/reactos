@@ -73,6 +73,7 @@ static WINE_MCIQTZ* MCIQTZ_mciGetOpenDev(UINT wDevID)
 static DWORD MCIQTZ_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
 {
     WINE_MCIQTZ* wma;
+    static const WCHAR mciAviWStr[] = {'M','C','I','A','V','I',0};
 
     TRACE("(%s, %p)\n", debugstr_w(str), modp);
 
@@ -84,7 +85,9 @@ static DWORD MCIQTZ_drvOpen(LPCWSTR str, LPMCI_OPEN_DRIVER_PARMSW modp)
     if (!wma)
         return 0;
 
+    modp->wType = MCI_DEVTYPE_DIGITAL_VIDEO;
     wma->wDevID = modp->wDeviceID;
+    modp->wCustomCommandTable = wma->command_table = mciLoadCommandResource(MCIQTZ_hInstance, mciAviWStr, 0);
     mciSetDriverData(wma->wDevID, (DWORD_PTR)wma);
 
     return modp->wDeviceID;
@@ -105,6 +108,7 @@ static DWORD MCIQTZ_drvClose(DWORD dwDevID)
         /* finish all outstanding things */
         MCIQTZ_mciClose(dwDevID, MCI_WAIT, NULL);
 
+        mciFreeCommandResource(wma->command_table);
         mciSetDriverData(dwDevID, 0);
         HeapFree(GetProcessHeap(), 0, wma);
         return 1;
@@ -141,6 +145,8 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
 {
     WINE_MCIQTZ* wma;
     HRESULT hr;
+    IBasicVideo *vidbasic;
+    IVideoWindow *vidwin;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpOpenParms);
 
@@ -186,7 +192,37 @@ static DWORD MCIQTZ_mciOpen(UINT wDevID, DWORD dwFlags,
         goto err;
     }
 
+    hr = IFilterGraph2_QueryInterface(wma->pgraph, &IID_IVideoWindow, (void**)&vidwin);
+    if (SUCCEEDED(hr))
+        hr = IFilterGraph2_QueryInterface(wma->pgraph, &IID_IBasicVideo, (void**)&vidbasic);
+    if (SUCCEEDED(hr)) {
+        DWORD style;
+        RECT rc = { 0, 0, 0, 0 };
+        IVideoWindow_put_AutoShow(vidwin, OAFALSE);
+        IVideoWindow_put_Visible(vidwin, OAFALSE);
+        style = 0;
+        if (dwFlags & MCI_DGV_OPEN_WS)
+            style |= lpOpenParms->dwStyle;
+        if (dwFlags & MCI_DGV_OPEN_PARENT) {
+            IVideoWindow_put_MessageDrain(vidwin, (OAHWND)lpOpenParms->hWndParent);
+            IVideoWindow_put_WindowState(vidwin, SW_HIDE);
+            IVideoWindow_put_WindowStyle(vidwin, WS_CHILD);
+            IVideoWindow_put_Owner(vidwin, (OAHWND)lpOpenParms->hWndParent);
+            wma->parent = (HWND)lpOpenParms->hWndParent;
+        }
+        else if (style)
+            IVideoWindow_put_WindowStyle(vidwin, style);
+        IBasicVideo_GetVideoSize(vidbasic, &rc.right, &rc.bottom);
+        IVideoWindow_SetWindowPosition(vidwin, rc.left, rc.top, rc.right, rc.bottom);
+        IBasicVideo_Release(vidbasic);
+    }
+    if (vidwin)
+        IVideoWindow_Release(vidwin);
+
     wma->opened = TRUE;
+
+    if (dwFlags & MCI_NOTIFY)
+        mciDriverNotify(HWND_32(LOWORD(lpOpenParms->dwCallback)), wDevID, MCI_NOTIFY_SUCCESSFUL);
 
     return 0;
 
@@ -253,7 +289,14 @@ static DWORD MCIQTZ_mciPlay(UINT wDevID, DWORD dwFlags, LPMCI_PLAY_PARMS lpParms
         return MCIERR_INTERNAL;
     }
 
-    wma->started = TRUE;
+    if (!wma->parent) {
+        IVideoWindow *vidwin;
+        IFilterGraph2_QueryInterface(wma->pgraph, &IID_IVideoWindow, (void**)&vidwin);
+        if (vidwin) {
+            IVideoWindow_put_Visible(vidwin, OATRUE);
+            IVideoWindow_Release(vidwin);
+        }
+    }
 
     return 0;
 }
@@ -327,7 +370,7 @@ static DWORD MCIQTZ_mciStop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpPa
     if (!wma)
         return MCIERR_INVALID_DEVICE_ID;
 
-    if (!wma->started)
+    if (!wma->opened)
         return 0;
 
     hr = IMediaControl_Stop(wma->pmctrl);
@@ -336,7 +379,37 @@ static DWORD MCIQTZ_mciStop(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpPa
         return MCIERR_INTERNAL;
     }
 
-    wma->started = FALSE;
+    if (!wma->parent) {
+        IVideoWindow *vidwin;
+        IFilterGraph2_QueryInterface(wma->pgraph, &IID_IVideoWindow, (void**)&vidwin);
+        if (vidwin) {
+            IVideoWindow_put_Visible(vidwin, OAFALSE);
+            IVideoWindow_Release(vidwin);
+        }
+    }
+
+    return 0;
+}
+
+/***************************************************************************
+ *                              MCIQTZ_mciPause                 [internal]
+ */
+static DWORD MCIQTZ_mciPause(UINT wDevID, DWORD dwFlags, LPMCI_GENERIC_PARMS lpParms)
+{
+    WINE_MCIQTZ* wma;
+    HRESULT hr;
+
+    TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
+
+    wma = MCIQTZ_mciGetOpenDev(wDevID);
+    if (!wma)
+        return MCIERR_INVALID_DEVICE_ID;
+
+    hr = IMediaControl_Pause(wma->pmctrl);
+    if (FAILED(hr)) {
+        TRACE("Cannot pause filtergraph (hr = %x)\n", hr);
+        return MCIERR_INTERNAL;
+    }
 
     return 0;
 }
@@ -501,6 +574,7 @@ static DWORD MCIQTZ_mciSet(UINT wDevID, DWORD dwFlags, LPMCI_DGV_SET_PARMS lpPar
 static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMSW lpParms)
 {
     WINE_MCIQTZ* wma;
+    HRESULT hr;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
@@ -517,14 +591,41 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
     }
 
     switch (lpParms->dwItem) {
-        case MCI_STATUS_LENGTH:
-            FIXME("MCI_STATUS_LENGTH not implemented yet\n");
-            return MCIERR_UNRECOGNIZED_COMMAND;
-        case MCI_STATUS_POSITION:
-        {
-            HRESULT hr;
-            REFTIME curpos;
+        case MCI_STATUS_LENGTH: {
+            IMediaSeeking *seek;
+            LONGLONG duration = -1;
+            GUID format;
+            switch (wma->time_format) {
+                case MCI_FORMAT_MILLISECONDS: format = TIME_FORMAT_MEDIA_TIME; break;
+                case MCI_FORMAT_FRAMES: format = TIME_FORMAT_FRAME; break;
+                default: ERR("Unhandled format %x\n", wma->time_format); break;
+            }
+            hr = IGraphBuilder_QueryInterface(wma->pgraph, &IID_IMediaSeeking, (void**)&seek);
+            if (FAILED(hr)) {
+                FIXME("Cannot get IMediaPostion interface (hr = %x)\n", hr);
+                return MCIERR_INTERNAL;
+            }
+            hr = IMediaSeeking_SetTimeFormat(seek, &format);
+            if (FAILED(hr)) {
+                IMediaSeeking_Release(seek);
+                FIXME("Cannot set time format (hr = %x)\n", hr);
+                lpParms->dwReturn = 0;
+                break;
+            }
+            hr = IMediaSeeking_GetDuration(seek, &duration);
+            IMediaSeeking_Release(seek);
+            if (FAILED(hr) || duration < 0) {
+                FIXME("Cannot read duration (hr = %x)\n", hr);
+                lpParms->dwReturn = 0;
+            } else if (wma->time_format != MCI_FORMAT_MILLISECONDS)
+                lpParms->dwReturn = duration;
+            else
+                lpParms->dwReturn = duration / 10000;
+            break;
+        }
+        case MCI_STATUS_POSITION: {
             IMediaPosition* pmpos;
+            REFTIME curpos;
 
             hr = IGraphBuilder_QueryInterface(wma->pgraph, &IID_IMediaPosition, (LPVOID*)&pmpos);
             if (FAILED(hr)) {
@@ -554,8 +655,8 @@ static DWORD MCIQTZ_mciStatus(UINT wDevID, DWORD dwFlags, LPMCI_DGV_STATUS_PARMS
             FIXME("MCI_STATUS_MEDIA_PRESENT not implemented yet\n");
             return MCIERR_UNRECOGNIZED_COMMAND;
         case MCI_STATUS_TIME_FORMAT:
-            FIXME("MCI_STATUS_TIME_FORMAT not implemented yet\n");
-            return MCIERR_UNRECOGNIZED_COMMAND;
+            lpParms->dwReturn = wma->time_format;
+            break;
         case MCI_STATUS_READY:
             FIXME("MCI_STATUS_READY not implemented yet\n");
             return MCIERR_UNRECOGNIZED_COMMAND;
@@ -580,9 +681,11 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
 {
     WINE_MCIQTZ* wma;
     IVideoWindow* pVideoWindow;
+    IBasicVideo *pBasicVideo;
     HRESULT hr;
     HWND hWnd;
     RECT rc;
+    DWORD ret = MCIERR_UNRECOGNIZED_COMMAND;
 
     TRACE("(%04x, %08X, %p)\n", wDevID, dwFlags, lpParms);
 
@@ -600,19 +703,31 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
         return MCIERR_INTERNAL;
     }
 
+    hr = IGraphBuilder_QueryInterface(wma->pgraph, &IID_IBasicVideo, (LPVOID*)&pBasicVideo);
+    if (FAILED(hr)) {
+        ERR("Cannot get IBasicVideo interface (hr = %x)\n", hr);
+        IUnknown_Release(pVideoWindow);
+        return MCIERR_INTERNAL;
+    }
+
     hr = IVideoWindow_get_Owner(pVideoWindow, (OAHWND*)&hWnd);
-    IVideoWindow_Release(pVideoWindow);
     if (FAILED(hr)) {
         TRACE("No video stream, returning no window error\n");
+        IUnknown_Release(pVideoWindow);
         return MCIERR_NO_WINDOW;
     }
 
     if (dwFlags & MCI_DGV_WHERE_SOURCE) {
         if (dwFlags & MCI_DGV_WHERE_MAX)
-            FIXME("MCI_DGV_WHERE_SOURCE_MAX not supported yet\n");
-        else
-            FIXME("MCI_DGV_WHERE_SOURCE not supported yet\n");
-        return MCIERR_UNRECOGNIZED_COMMAND;
+            FIXME("MCI_DGV_WHERE_SOURCE_MAX stub %s\n", wine_dbgstr_rect(&rc));
+        IBasicVideo_get_SourceLeft(pBasicVideo, &rc.left);
+        IBasicVideo_get_SourceTop(pBasicVideo, &rc.top);
+        IBasicVideo_get_SourceWidth(pBasicVideo, &rc.right);
+        IBasicVideo_get_SourceHeight(pBasicVideo, &rc.bottom);
+        /* Undo conversion done below */
+        rc.right += rc.left;
+        rc.bottom += rc.top;
+        TRACE("MCI_DGV_WHERE_SOURCE %s\n", wine_dbgstr_rect(&rc));
     }
     if (dwFlags & MCI_DGV_WHERE_DESTINATION) {
         if (dwFlags & MCI_DGV_WHERE_MAX) {
@@ -620,7 +735,7 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
             TRACE("MCI_DGV_WHERE_DESTINATION_MAX %s\n", wine_dbgstr_rect(&rc));
         } else {
             FIXME("MCI_DGV_WHERE_DESTINATION not supported yet\n");
-            return MCIERR_UNRECOGNIZED_COMMAND;
+            goto out;
         }
     }
     if (dwFlags & MCI_DGV_WHERE_FRAME) {
@@ -628,14 +743,14 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
             FIXME("MCI_DGV_WHERE_FRAME_MAX not supported yet\n");
         else
             FIXME("MCI_DGV_WHERE_FRAME not supported yet\n");
-        return MCIERR_UNRECOGNIZED_COMMAND;
+        goto out;
     }
     if (dwFlags & MCI_DGV_WHERE_VIDEO) {
         if (dwFlags & MCI_DGV_WHERE_MAX)
             FIXME("MCI_DGV_WHERE_VIDEO_MAX not supported yet\n");
         else
             FIXME("MCI_DGV_WHERE_VIDEO not supported yet\n");
-        return MCIERR_UNRECOGNIZED_COMMAND;
+        goto out;
     }
     if (dwFlags & MCI_DGV_WHERE_WINDOW) {
         if (dwFlags & MCI_DGV_WHERE_MAX) {
@@ -646,15 +761,88 @@ static DWORD MCIQTZ_mciWhere(UINT wDevID, DWORD dwFlags, LPMCI_DGV_RECT_PARMS lp
             TRACE("MCI_DGV_WHERE_WINDOW %s\n", wine_dbgstr_rect(&rc));
         }
     }
+    ret = 0;
 
+out:
     /* In MCI, RECT structure is used differently: rc.right = width & rc.bottom = height
      * So convert the normal RECT into a MCI RECT before returning */
+    IVideoWindow_Release(pVideoWindow);
+    IBasicVideo_Release(pBasicVideo);
     lpParms->rc.left = rc.left;
-    lpParms->rc.top = rc.right;
+    lpParms->rc.top = rc.top;
     lpParms->rc.right = rc.right - rc.left;
     lpParms->rc.bottom = rc.bottom - rc.top;
 
-    return 0;
+    return ret;
+}
+
+/******************************************************************************
+ *              MCIAVI_mciUpdate            [internal]
+ */
+static DWORD MCIQTZ_mciUpdate(UINT wDevID, DWORD dwFlags, LPMCI_DGV_UPDATE_PARMS lpParms)
+{
+    WINE_MCIQTZ *wma;
+    DWORD res = 0;
+
+    TRACE("%04x, %08x, %p\n", wDevID, dwFlags, lpParms);
+
+    if (!lpParms)
+        return MCIERR_NULL_PARAMETER_BLOCK;
+
+    wma = MCIQTZ_mciGetOpenDev(wDevID);
+    if (!wma)
+        return MCIERR_INVALID_DEVICE_ID;
+
+    if (dwFlags & MCI_DGV_UPDATE_HDC) {
+        IBasicVideo *vidbasic;
+        IVideoWindow *vidwin;
+        res = MCIERR_INTERNAL;
+        IFilterGraph2_QueryInterface(wma->pgraph, &IID_IVideoWindow, (void**)&vidwin);
+        IFilterGraph2_QueryInterface(wma->pgraph, &IID_IBasicVideo, (void**)&vidbasic);
+        if (vidbasic && vidwin) {
+            LONG state, size;
+            BYTE *data;
+            BITMAPINFO *info;
+            HRESULT hr;
+            RECT src, dest;
+
+            /* If in stopped state, nothing has been drawn to screen
+             * moving to pause, which is needed for the old dib renderer, will result
+             * in a single frame drawn, so hide the window here */
+            IVideoWindow_put_Visible(vidwin, OAFALSE);
+            /* FIXME: Should we check the original state and restore it? */
+            IMediaControl_Pause(wma->pmctrl);
+            IMediaControl_GetState(wma->pmctrl, -1, &state);
+            if (FAILED(hr = IBasicVideo_GetCurrentImage(vidbasic, &size, NULL))) {
+                WARN("Could not get image size (hr = %x)\n", hr);
+                goto out;
+            }
+            data = HeapAlloc(GetProcessHeap(), 0, size);
+            info = (BITMAPINFO*)data;
+            IBasicVideo_GetCurrentImage(vidbasic, &size, (LONG*)data);
+            data += info->bmiHeader.biSize;
+
+            IBasicVideo_GetSourcePosition(vidbasic, &src.left, &src.top, &src.right, &src.bottom);
+            IBasicVideo_GetDestinationPosition(vidbasic, &dest.left, &dest.top, &dest.right, &dest.bottom);
+            StretchDIBits(lpParms->hDC,
+                  dest.left, dest.top, dest.right + dest.left, dest.bottom + dest.top,
+                  src.left, src.top, src.right + src.left, src.bottom + src.top,
+                  data, info, DIB_RGB_COLORS, SRCCOPY);
+            HeapFree(GetProcessHeap(), 0, data);
+        }
+        res = 0;
+out:
+        if (vidbasic)
+            IBasicVideo_Release(vidbasic);
+        if (vidwin) {
+            if (wma->parent)
+                IVideoWindow_put_Visible(vidwin, OATRUE);
+            IVideoWindow_Release(vidwin);
+        }
+    }
+    else if (dwFlags)
+        FIXME("Unhandled flags %x\n", dwFlags);
+    return res;
 }
 
 /***************************************************************************
@@ -714,14 +902,16 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         case MCI_PLAY:          return MCIQTZ_mciPlay      (dwDevID, dwParam1, (LPMCI_PLAY_PARMS)          dwParam2);
         case MCI_SEEK:          return MCIQTZ_mciSeek      (dwDevID, dwParam1, (LPMCI_SEEK_PARMS)          dwParam2);
         case MCI_STOP:          return MCIQTZ_mciStop      (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
+        case MCI_PAUSE:         return MCIQTZ_mciPause     (dwDevID, dwParam1, (LPMCI_GENERIC_PARMS)       dwParam2);
         case MCI_GETDEVCAPS:    return MCIQTZ_mciGetDevCaps(dwDevID, dwParam1, (LPMCI_GETDEVCAPS_PARMS)    dwParam2);
         case MCI_SET:           return MCIQTZ_mciSet       (dwDevID, dwParam1, (LPMCI_DGV_SET_PARMS)       dwParam2);
         case MCI_STATUS:        return MCIQTZ_mciStatus    (dwDevID, dwParam1, (LPMCI_DGV_STATUS_PARMSW)   dwParam2);
         case MCI_WHERE:         return MCIQTZ_mciWhere     (dwDevID, dwParam1, (LPMCI_DGV_RECT_PARMS)      dwParam2);
         /* Digital Video specific */
         case MCI_SETAUDIO:      return MCIQTZ_mciSetAudio  (dwDevID, dwParam1, (LPMCI_DGV_SETAUDIO_PARMSW) dwParam2);
+        case MCI_UPDATE:
+            return MCIQTZ_mciUpdate(dwDevID, dwParam1, (LPMCI_DGV_UPDATE_PARMS)dwParam2);
         case MCI_RECORD:
-        case MCI_PAUSE:
         case MCI_RESUME:
         case MCI_INFO:
         case MCI_PUT:
@@ -731,7 +921,6 @@ LRESULT CALLBACK MCIQTZ_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
         case MCI_FREEZE:
         case MCI_REALIZE:
         case MCI_UNFREEZE:
-        case MCI_UPDATE:
         case MCI_STEP:
         case MCI_COPY:
         case MCI_CUT:

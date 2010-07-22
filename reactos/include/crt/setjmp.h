@@ -14,10 +14,6 @@
 extern "C" {
 #endif
 
-#ifndef _INC_SETJMPEX
-#define setjmp  _setjmp
-#endif
-
 #if (defined(_X86_) && !defined(__x86_64))
 
 #define _JBLEN 16
@@ -140,8 +136,26 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-#if 0
-  void * __cdecl __MINGW_NOTHROW mingw_getsp(void);
+static inline __attribute__((always_inline)) void * mingw_getsp(void)
+{
+    void *value;
+#if defined(__x86_64)
+#ifdef _MSC_VER
+    __asm {mov value, rsp}
+#else
+    __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value) );
+#endif
+#elif defined(_X86_)
+#ifdef _MSC_VER
+    __asm {mov value, esp}
+#else
+    __asm__ __volatile__("movql %%esp, %[value]" : [value] "=r" (value) );
+#endif
+#else
+    #error mingw_getsp unimplemented
+#endif
+    return value;
+}
 
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX
@@ -160,11 +174,8 @@ extern "C" {
   int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
 #endif
 
-#endif // 0
-
   __declspec(noreturn) __MINGW_NOTHROW void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
   __declspec(noreturn) __MINGW_NOTHROW void __cdecl longjmp(jmp_buf _Buf,int _Value);
-  int __cdecl setjmp(jmp_buf _Buf);
 
 #ifdef __cplusplus
 }

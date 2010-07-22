@@ -60,7 +60,7 @@ MmLockPageableDataSection(IN PVOID AddressWithinSection)
     //
     // We should just find the section and call MmLockPageableSectionByHandle
     //
-    UNIMPLEMENTED;
+    static BOOLEAN Warn; if (!Warn++) UNIMPLEMENTED;
     return AddressWithinSection;
 }
 

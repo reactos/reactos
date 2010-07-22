@@ -1,5 +1,5 @@
 /* Unicode collation element table */
-/* generated from www.unicode.org/reports/tr10/allkeys.txt */
+/* generated from http://www.unicode.org/reports/tr10/allkeys.txt */
 /* DO NOT EDIT!! */
 
 const unsigned int collation_table[12800] =

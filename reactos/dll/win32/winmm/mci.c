@@ -975,7 +975,7 @@ static	WORD		MCI_GetMessage(LPCWSTR lpCmd)
 /**************************************************************************
  * 				MCI_GetDWord			[internal]
  */
-static	BOOL		MCI_GetDWord(LPDWORD data, LPWSTR* ptr)
+static	BOOL		MCI_GetDWord(DWORD_PTR *data, LPWSTR* ptr)
 {
     DWORD	val;
     LPWSTR	ret;
@@ -1028,7 +1028,7 @@ static	DWORD	MCI_GetString(LPWSTR* str, LPWSTR* args)
 /**************************************************************************
  * 				MCI_ParseOptArgs		[internal]
  */
-static	DWORD	MCI_ParseOptArgs(LPDWORD data, int _offset, LPCWSTR lpCmd,
+static	DWORD	MCI_ParseOptArgs(DWORD_PTR *data, int _offset, LPCWSTR lpCmd,
 				 LPWSTR args, LPDWORD dwFlags)
 {
     int		len, offset;
@@ -1151,7 +1151,7 @@ static	DWORD	MCI_ParseOptArgs(LPDWORD data, int _offset, LPCWSTR lpCmd,
  * 				MCI_HandleReturnValues	[internal]
  */
 static	DWORD	MCI_HandleReturnValues(DWORD dwRet, LPWINE_MCIDRIVER wmd, DWORD retType, 
-                                       LPDWORD data, LPWSTR lpstrRet, UINT uRetLen)
+                                       DWORD_PTR *data, LPWSTR lpstrRet, UINT uRetLen)
 {
     static const WCHAR wszLd  [] = {'%','l','d',0};
     static const WCHAR wszLd4 [] = {'%','l','d',' ','%','l','d',' ','%','l','d',' ','%','l','d',0};
@@ -1229,7 +1229,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
     LPWINE_MCIDRIVER	wmd = 0;
     DWORD		dwFlags = 0, dwRet = 0;
     int			offset = 0;
-    DWORD		data[MCI_DATA_SIZE];
+    DWORD_PTR	data[MCI_DATA_SIZE];
     DWORD		retType;
     LPCWSTR		lpCmd = 0;
     LPWSTR		devAlias = NULL;

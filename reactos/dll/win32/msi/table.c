@@ -2742,63 +2742,72 @@ static UINT msi_table_load_transform( MSIDATABASE *db, IStorage *stg,
         rec = msi_get_transform_record( tv, st, stg, &rawdata[n], bytes_per_strref );
         if (rec)
         {
-            if ( mask & 1 )
+            WCHAR table[32];
+            DWORD sz = 32;
+            UINT number = MSI_NULL_INTEGER;
+            UINT row = 0;
+
+            if (!lstrcmpW( name, szColumns ))
             {
-                WCHAR table[32];
-                DWORD sz = 32;
-                UINT number = MSI_NULL_INTEGER;
+                MSI_RecordGetStringW( rec, 1, table, &sz );
+                number = MSI_RecordGetInteger( rec, 2 );
 
-                TRACE("inserting record\n");
-
-                if (!lstrcmpW(name, szColumns))
+                /*
+                 * Native msi seems writes nul into the Number (2nd) column of
+                 * the _Columns table, only when the columns are from a new table
+                 */
+                if ( number == MSI_NULL_INTEGER )
                 {
-                    MSI_RecordGetStringW( rec, 1, table, &sz );
-                    number = MSI_RecordGetInteger( rec, 2 );
-
-                    /*
-                     * Native msi seems writes nul into the Number (2nd) column of
-                     * the _Columns table, only when the columns are from a new table
-                     */
-                    if ( number == MSI_NULL_INTEGER )
+                    /* reset the column number on a new table */
+                    if (lstrcmpW( coltable, table ))
                     {
-                        /* reset the column number on a new table */
-                        if ( lstrcmpW(coltable, table) )
-                        {
-                            colcol = 0;
-                            lstrcpyW( coltable, table );
-                        }
-
-                        /* fix nul column numbers */
-                        MSI_RecordSetInteger( rec, 2, ++colcol );
+                        colcol = 0;
+                        lstrcpyW( coltable, table );
                     }
+
+                    /* fix nul column numbers */
+                    MSI_RecordSetInteger( rec, 2, ++colcol );
                 }
-
-                r = TABLE_insert_row( &tv->view, rec, -1, FALSE );
-                if (r != ERROR_SUCCESS)
-                    WARN("insert row failed\n");
-
-                if ( number != MSI_NULL_INTEGER && !lstrcmpW(name, szColumns) )
-                    msi_update_table_columns( db, table );
             }
-            else
-            {
-                UINT row = 0;
 
-                r = msi_table_find_row( tv, rec, &row );
-                if (r != ERROR_SUCCESS)
-                    WARN("no matching row to transform\n");
-                else if ( mask )
+            if (TRACE_ON(msidb)) dump_record( rec );
+
+            r = msi_table_find_row( tv, rec, &row );
+            if (r == ERROR_SUCCESS)
+            {
+                if (!mask)
                 {
-                    TRACE("modifying row [%d]:\n", row);
-                    TABLE_set_row( &tv->view, row, rec, mask );
+                    TRACE("deleting row [%d]:\n", row);
+                    r = TABLE_delete_row( &tv->view, row );
+                    if (r != ERROR_SUCCESS)
+                        WARN("failed to delete row %u\n", r);
+                }
+                else if (mask & 1)
+                {
+                    TRACE("modifying full row [%d]:\n", row);
+                    r = TABLE_set_row( &tv->view, row, rec, (1 << tv->num_cols) - 1 );
+                    if (r != ERROR_SUCCESS)
+                        WARN("failed to modify row %u\n", r);
                 }
                 else
                 {
-                    TRACE("deleting row [%d]:\n", row);
-                    TABLE_delete_row( &tv->view, row );
+                    TRACE("modifying masked row [%d]:\n", row);
+                    r = TABLE_set_row( &tv->view, row, rec, mask );
+                    if (r != ERROR_SUCCESS)
+                        WARN("failed to modify row %u\n", r);
                 }
             }
-            if( TRACE_ON(msidb) ) dump_record( rec );
+            else
+            {
+                TRACE("inserting row\n");
+                r = TABLE_insert_row( &tv->view, rec, -1, FALSE );
+                if (r != ERROR_SUCCESS)
+                    WARN("failed to insert row %u\n", r);
+            }
+
+            if (number != MSI_NULL_INTEGER && !lstrcmpW( name, szColumns ))
+                msi_update_table_columns( db, table );
+
             msiobj_release( &rec->hdr );
         }
 

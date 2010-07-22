@@ -5,7 +5,10 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
+#define WIN32_NO_STATUS
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <netcfgx.h>
 #include <setupapi.h>
 #include <stdio.h>

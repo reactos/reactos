@@ -192,9 +192,10 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
          RETURN( (DWORD_PTR)MsqSetMessageExtraInfo((LPARAM)Param));
 
-      case ONEPARAM_ROUTINE_CREATECURICONHANDLE:
+      case ONEPARAM_ROUTINE_CREATEEMPTYCUROBJECT:
          {
             PCURICON_OBJECT CurIcon;
+			DWORD_PTR Result ;
 
             if (!(CurIcon = IntCreateCurIconHandle()))
             {
@@ -202,7 +203,9 @@ NtUserCallOneParam(
                RETURN(0);
             }
 
-            RETURN((DWORD_PTR)CurIcon->Self);
+            Result = (DWORD_PTR)CurIcon->Self;
+			UserDereferenceObject(CurIcon);
+			RETURN(Result);
          }
 
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:

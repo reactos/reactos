@@ -852,7 +852,7 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
       *pOut++ = FMT_DATE_AMPM_UPPER;
       TRACE("AM/PM\n");
     }
-    else if (*pFormat == 'c' || *pFormat == 'C')
+    else if ((*pFormat == 'c' || *pFormat == 'C') && COULD_BE(FMT_TYPE_DATE))
     {
       /* Date formats: General date format
        * Other formats: Literal

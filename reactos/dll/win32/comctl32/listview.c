@@ -168,9 +168,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(listview);
 
-/* make sure you set this to 0 for production use! */
-#define DEBUG_RANGES 1
-
 typedef struct tagCOLUMN_INFO
 {
   RECT rcHeader;	/* tracks the header's rectangle */
@@ -2968,11 +2965,7 @@ static INT CALLBACK ranges_cmp(LPVOID range1, LPVOID range2, LPARAM flags)
     return cmp;
 }
 
-#if DEBUG_RANGES
-#define ranges_check(ranges, desc) ranges_assert(ranges, desc, __FUNCTION__, __LINE__)
-#else
-#define ranges_check(ranges, desc) do { } while(0)
-#endif
+#define ranges_check(ranges, desc) if (TRACE_ON(listview)) ranges_assert(ranges, desc, __FUNCTION__, __LINE__)
 
 static void ranges_assert(RANGES ranges, LPCSTR desc, const char *func, int line)
 {
@@ -6953,7 +6946,7 @@ static BOOL LISTVIEW_GetItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPRECT
  */
 static BOOL LISTVIEW_GetSubItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPRECT lprc)
 {
-    POINT Position;
+    POINT Position, Origin;
     LVITEMW lvItem;
     INT nColumn;
     
@@ -6961,7 +6954,7 @@ static BOOL LISTVIEW_GetSubItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPR
 
     nColumn = lprc->top;
 
-    TRACE("(nItem=%d, nSubItem=%d)\n", nItem, lprc->top);
+    TRACE("(nItem=%d, nSubItem=%d, type=%d)\n", nItem, lprc->top, lprc->left);
     /* On WinNT, a subitem of '0' calls LISTVIEW_GetItemRect */
     if (lprc->top == 0)
         return LISTVIEW_GetItemRect(infoPtr, nItem, lprc);
@@ -6986,7 +6979,8 @@ static BOOL LISTVIEW_GetSubItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPR
         }
     }
 
-    LISTVIEW_GetOrigin(infoPtr, &Position);
+    if (!LISTVIEW_GetItemPosition(infoPtr, nItem, &Position)) return FALSE;
+    LISTVIEW_GetOrigin(infoPtr, &Origin);
 
     if (nColumn < 0 || nColumn >= DPA_GetPtrCount(infoPtr->hdpaColumns)) return FALSE;
 
@@ -6994,7 +6988,6 @@ static BOOL LISTVIEW_GetSubItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPR
     lvItem.iItem = nItem;
     lvItem.iSubItem = nColumn;
     
-    if (lvItem.mask && !LISTVIEW_GetItemW(infoPtr, &lvItem)) return FALSE;
     switch(lprc->left)
     {
     case LVIR_ICON:
@@ -7011,7 +7004,9 @@ static BOOL LISTVIEW_GetSubItemRect(const LISTVIEW_INFO *infoPtr, INT nItem, LPR
 	return FALSE;
     }
 
-    OffsetRect(lprc, Position.x, Position.y);
+    OffsetRect(lprc, Origin.x, Position.y);
+    TRACE("return rect %s\n", wine_dbgstr_rect(lprc));
+
     return TRUE;
 }
 

@@ -22,3 +22,7 @@ Description = Librerias Visual Basic 5.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Basic 5.
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Basic 5.

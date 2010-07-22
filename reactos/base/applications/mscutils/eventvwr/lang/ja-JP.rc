@@ -102,3 +102,16 @@ BEGIN
 	IDC_EVENTLOG_SUCCESS           "成功"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "不明なイベント"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_COLUMNTYPE      "Type"
+    IDS_COLUMNDATE      "Date"
+    IDS_COLUMNTIME      "Time"
+    IDS_COLUMNSOURCE    "Source"
+    IDS_COLUMNCATEGORY  "Category"
+    IDS_COLUMNEVENT     "Event"
+    IDS_COLUMNUSER      "User"
+    IDS_COLUMNCOMPUTER  "Computer"
+    IDS_COLUMNEVENTDATA "Event Data"
+END

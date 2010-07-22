@@ -2,6 +2,7 @@
  * Copyright 2004 Marcelo Duarte
  * Copyright 2006 Américo José Melo
  * Copyright 2009 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -103,6 +104,37 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMODCAPTION  "Adicionar Controlo"
 }
 
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Colar Especial"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT         "Origem:", -1, 6, 9, 30, 8, WS_VISIBLE | WS_GROUP
+    CONTROL       "&Colar", IDC_PS_PASTE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE,
+                  6, 38, 55, 10
+    CONTROL       "Colar &Link", IDC_PS_PASTELINK, "Button", BS_AUTORADIOBUTTON | WS_VISIBLE,
+                  6, 63, 55, 10
+    LTEXT         "&Como:", -1, 65, 25, 16, 8, WS_VISIBLE | WS_GROUP
+    LISTBOX       IDC_PS_PASTELIST,     65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_PASTELINKLIST, 65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | NOT WS_VISIBLE
+    LISTBOX       IDC_PS_DISPLAYLIST,   65, 36, 153, 57, LBS_NOTIFY | LBS_USETABSTOPS | WS_VSCROLL | WS_BORDER | WS_VISIBLE
+    CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
+    CONTROL       "Cancelar", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
+    CONTROL       "&Ajuda", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
+    CONTROL       "&Mostrar como Ícone", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
+    CONTROL       "Mudar &Ícone...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
+    CONTROL       "<< texto resultante fica aqui >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
+    CONTROL       "Resultado", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
+    CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
+END
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
 IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Colar Especial"
@@ -120,14 +152,33 @@ BEGIN
     CONTROL       "OK", IDOK, "Button", BS_DEFPUSHBUTTON | WS_TABSTOP | WS_GROUP | WS_VISIBLE, 224, 6, 66, 14
     CONTROL       "Cancelar", IDCANCEL, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 23, 66, 14
     CONTROL       "&Ajuda", IDC_OLEUIHELP, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 42, 66, 14
-    CONTROL       "&Mostrar como Icone", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
+    CONTROL       "&Mostrar como Ícone", IDC_PS_DISPLAYASICON, "Button", BS_AUTOCHECKBOX | WS_TABSTOP | WS_VISIBLE, 224, 59, 66, 14
     CONTROL       "", IDC_PS_ICONDISPLAY, "Static", SS_ICON | WS_VISIBLE, 224, 75, 66, 44
-    CONTROL       "Mudar &Icone...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
+    CONTROL       "Mudar &Ícone...", IDC_PS_CHANGEICON, "Button", BS_PUSHBUTTON | WS_TABSTOP | WS_VISIBLE, 224, 123, 66, 14
     CONTROL       "", IDC_PS_RESULTIMAGE, "Static", SS_ICON | WS_VISIBLE, 8, 101, 42, 34
     CONTROL       "<< texto resultante fica aqui >>", IDC_PS_RESULTTEXT, "Static", SS_NOPREFIX | WS_VISIBLE, 54, 100, 159, 35
     CONTROL       "Resultado", -1, "Button", BS_GROUPBOX | WS_GROUP | WS_VISIBLE, 6, 90, 212, 48
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_PS_PASTE_DATA                     "Insere o conteúdo da área de transferência no seu documento como %s."
+    IDS_PS_PASTE_OBJECT                   "Insere o conteúdo da área de transferência no seu documento para que seja possível ativá-lo usando %s."
+    IDS_PS_PASTE_OBJECT_AS_ICON           "Insere o conteúdo da área de transferência no seu documento para que seja possível ativá-lo usando %s.  Será mostrado como um ícone."
+    IDS_PS_PASTE_LINK_DATA                "Insere o conteúdo da área de transferência no seu documento como %s.  Os dados estão ligados ao arquivo de origem para que alterações ao arquivo se reflitam no seu documento."
+    IDS_PS_PASTE_LINK_OBJECT              "Insere uma imagem da área de transferência no seu documento.  A imagem fica ligada ao arquivo de origem para que alterações ao arquivo se reflitam no seu documento."
+    IDS_PS_PASTE_LINK_OBJECT_AS_ICON      "Insere um atalho que aponta para a localização do conteúdo na área de transferência.  O atalho fica ligado ao arquivo de origem para que alterações ao arquivo se reflitam no seu documento."
+    IDS_PS_NON_OLE                        "Insere o conteúdo da área de transferência no seu documento."
+    IDS_PS_UNKNOWN_TYPE                   "Tipo Desconhecido"
+    IDS_PS_UNKNOWN_SRC                    "Origem Desconhecida"
+    IDS_PS_UNKNOWN_APP                    "o programa que o criou"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 
 STRINGTABLE DISCARDABLE
 {

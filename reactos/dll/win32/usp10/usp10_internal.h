@@ -19,6 +19,27 @@
  *
  */
 
+#define Script_Syriac  8
+#define Script_Hebrew  7
+#define Script_Arabic  6
+#define Script_Latin   1
+#define Script_Numeric 5
+#define Script_CR      22
+#define Script_LF      23
+
+#define GLYPH_BLOCK_SHIFT 8
+#define GLYPH_BLOCK_SIZE  (1UL << GLYPH_BLOCK_SHIFT)
+#define GLYPH_BLOCK_MASK  (GLYPH_BLOCK_SIZE - 1)
+#define GLYPH_MAX         65536
+
+typedef struct {
+    LOGFONTW lf;
+    TEXTMETRICW tm;
+    WORD *glyphs[GLYPH_MAX / GLYPH_BLOCK_SIZE];
+    ABC *widths[GLYPH_MAX / GLYPH_BLOCK_SIZE];
+    LPVOID *GSUB_Table;
+} ScriptCache;
+
 #define odd(x) ((x) & 1)
 
 BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
@@ -26,3 +47,4 @@ BOOL BIDI_DetermineLevels( LPCWSTR lpString, INT uCount, const SCRIPT_STATE *s,
 
 INT BIDI_ReorderV2lLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse);
 INT BIDI_ReorderL2vLevel(int level, int *pIndexs, const BYTE* plevel, int cch, BOOL fReverse);
+void SHAPE_ShapeArabicGlyphs(HDC hdc, ScriptCache *psc, SCRIPT_ANALYSIS *psa, WCHAR* pwcChars, INT cChars, WORD* pwOutGlyphs, INT* pcGlyphs, INT cMaxGlyphs);

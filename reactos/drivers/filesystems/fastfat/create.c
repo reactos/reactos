@@ -522,7 +522,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 			return(STATUS_OBJECT_NAME_INVALID);
 		}
 	}
-        if (FileObject->RelatedFileObject && PathNameU.Buffer[0] == L'\\')
+        if (FileObject->RelatedFileObject && PathNameU.Length > sizeof(WCHAR) && PathNameU.Buffer[0] == L'\\')
         {
             return(STATUS_OBJECT_NAME_INVALID);
         }

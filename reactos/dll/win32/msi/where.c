@@ -397,6 +397,9 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         return ERROR_OUTOFMEMORY;
 
     wv->row_count = 0;
+
+if (0) /* disable optimization, there's no guarantee that strings are in the string table */
+{
     if (wv->cond->type == EXPR_STRCMP)
     {
         MSIITERHANDLE handle = NULL;
@@ -441,6 +444,7 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         }
         /* else fallback to slow case */
     }
+}
 
     for( i=0; i<count; i++ )
     {

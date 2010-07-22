@@ -49,8 +49,12 @@
 /* UTF-8 */
 #include "spl_De.rc"
 #include "spl_Es.rc"
+#include "spl_Hu.rc"
+#include "spl_It.rc"
+#include "spl_Ja.rc"
 #include "spl_Lt.rc"
 #include "spl_Ro.rc"
 #include "spl_Ru.rc"
 #include "spl_Si.rc"
+#include "spl_Uk.rc"
 #include "spl_Zh.rc"

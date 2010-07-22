@@ -25,3 +25,6 @@ Description = Najpopularniejsza i jedna z najlepszych darmowych przeglądarek in
 
 [Section.0419]
 Description = Один из самых популярных и лучших бесплатных браузеров.
+
+[Section.0422]
+Description = Найпопулярніший та один з кращих безплатних веб-браузерів.

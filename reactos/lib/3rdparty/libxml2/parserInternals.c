@@ -1782,6 +1782,7 @@ xmlFreeParserCtxt(xmlParserCtxtPtr ctxt)
     if (ctxt->spaceTab != NULL) xmlFree(ctxt->spaceTab);
     if (ctxt->nameTab != NULL) xmlFree((xmlChar * *)ctxt->nameTab);
     if (ctxt->nodeTab != NULL) xmlFree(ctxt->nodeTab);
+    if (ctxt->nodeInfoTab != NULL) xmlFree(ctxt->nodeInfoTab);
     if (ctxt->inputTab != NULL) xmlFree(ctxt->inputTab);
     if (ctxt->version != NULL) xmlFree((char *) ctxt->version);
     if (ctxt->encoding != NULL) xmlFree((char *) ctxt->encoding);

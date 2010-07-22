@@ -433,6 +433,41 @@ dispinterface DWebBrowserEvents2
 
     [id(DISPID_PRIVACYIMPACTEDSTATECHANGE)]
     void PrivacyImpactedStateChange([in] VARIANT_BOOL bImpacted);
+
+    [id(DISPID_NEWWINDOW3)]
+    void NewWindow3(
+            [in, out] IDispatch **ppDisp,
+            [in, out] VARIANT_BOOL *Cancel,
+            [in] DWORD dwFlags,
+            [in] BSTR bstrUrlContext,
+            [in] BSTR bstrUrl);
+
+    [id(DISPID_SETPHISHINGFILTERSTATUS)]
+    void SetPhishingFilterStatus([in] long PhishingFilterStatus);
+
+    [id(DISPID_WINDOWSTATECHANGED)]
+    void WindowStateChanged(
+            [in] DWORD dwWindowStateFlags,
+            [in] DWORD dwValidFlagsMask);
+
+    [id(DISPID_NEWPROCESS)]
+    void NewProcess(
+            [in] long lCauseFlag,
+            [in] IDispatch *pWB2,
+            [in, out] VARIANT_BOOL *Cancel);
+
+    [id(DISPID_THIRDPARTYURLBLOCKED)]
+    void ThirdPartyUrlBlocked(
+            [in] VARIANT *URL,
+            [in] DWORD dwCount);
+
+    [id(DISPID_REDIRECTXDOMAINBLOCKED)]
+    void RedirectXDomainBlocked(
+            [in] IDispatch *pDisp,
+            [in] VARIANT *StartURL,
+            [in] VARIANT *RedirectURL,
+            [in] VARIANT *Frame,
+            [in] VARIANT *StatusCode);
 }
 
 [

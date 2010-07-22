@@ -48,7 +48,7 @@ typedef struct
     int         alias;
     UINT        dev_type;
     UINT        mode;
-    long        position;
+    LONG        position;
     SIZE        size; /* size of the original frame rect */
     int         zoom;
     LPWSTR      lpName;
@@ -158,7 +158,7 @@ static inline void MCIWND_notify_pos(MCIWndInfo *mwi)
 {
     if (mwi->dwStyle & MCIWNDF_NOTIFYPOS)
     {
-        long new_pos = SendMessageW(mwi->hWnd, MCIWNDM_GETPOSITIONW, 0, 0);
+        LONG new_pos = SendMessageW(mwi->hWnd, MCIWNDM_GETPOSITIONW, 0, 0);
         if (new_pos != mwi->position)
         {
             mwi->position = new_pos;

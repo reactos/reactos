@@ -782,7 +782,7 @@ static LRESULT CFn_WMMeasureItem(HWND hDlg, LPARAM lParam)
     /* use MAX of bitmap height and tm.tmHeight .*/
     hdc=GetDC(hDlg);
     if(!hdc) return 0;
-    hfontprev = SelectObject( hdc, GetStockObject( SYSTEM_FONT));
+    hfontprev = SelectObject( hdc, GetStockObject( DEFAULT_GUI_FONT ) );
     GetTextMetricsW(hdc, &tm);
     if( tm.tmHeight > lpmi->itemHeight) lpmi->itemHeight = tm.tmHeight;
     SelectObject(hdc, hfontprev);
@@ -904,6 +904,8 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
     long l;
     HDC hdc;
     LPLOGFONTW lpxx=lpcf->lpLogFont;
+
+    if (!lpcf) return FALSE;
 
     TRACE("WM_COMMAND wParam=%08X lParam=%08lX\n", (LONG)wParam, lParam);
     switch (LOWORD(wParam))
@@ -1071,6 +1073,8 @@ static LRESULT CFn_WMDestroy(HWND hwnd, LPCHOOSEFONTW lpcfw)
     LPLOGFONTA lpLogFonta;
     int len;
 
+    if (!lpcfw) return FALSE;
+
     lpcfa = GetPropW(hwnd, strWineFontData_a);
     lpLogFonta = lpcfa->lpLogFont;
     lpszStyle = lpcfa->lpszStyle;
@@ -1097,6 +1101,8 @@ static LRESULT CFn_WMDestroy(HWND hwnd, LPCHOOSEFONTW lpcfw)
 static LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSEFONTW *lpcf)
 {
     WINDOWINFO info;
+
+    if (!lpcf) return FALSE;
 
     info.cbSize=sizeof(info);
     if( GetWindowInfo( GetDlgItem( hDlg, stc5), &info ) )
@@ -1156,9 +1162,7 @@ static INT_PTR CALLBACK FormatCharDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, 
 
     if (uMsg!=WM_INITDIALOG) {
         lpcfw = GetPropW(hDlg, strWineFontData);
-        if (!lpcfw)
-            return FALSE;
-        if (CFn_HookCallChk32(lpcfw))
+        if (lpcfw && CFn_HookCallChk32(lpcfw))
             res=CallWindowProcA((WNDPROC)lpcfw->lpfnHook, hDlg, uMsg, wParam, lParam);
         if (res)
             return res;
@@ -1218,9 +1222,7 @@ static INT_PTR CALLBACK FormatCharDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, 
     if (uMsg!=WM_INITDIALOG)
     {
         lpcf= GetPropW(hDlg, strWineFontData);
-        if (!lpcf)
-            return FALSE;
-        if (CFn_HookCallChk32(lpcf))
+        if (lpcf && CFn_HookCallChk32(lpcf))
             res=CallWindowProcW((WNDPROC)lpcf->lpfnHook, hDlg, uMsg, wParam, lParam);
         if (res)
             return res;

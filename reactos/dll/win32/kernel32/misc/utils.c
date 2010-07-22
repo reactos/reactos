@@ -378,7 +378,7 @@ BasepInitializeContext(IN PCONTEXT Context,
     
     /* Give it some room for the Parameter */
     Context->Esp -= sizeof(PVOID);
-#elif defined(__x86_64__)
+#elif defined(_M_AMD64)
     DPRINT("BasepInitializeContext: %p\n", Context);
     
     /* Setup the Initial Win32 Thread Context */
@@ -393,7 +393,7 @@ BasepInitializeContext(IN PCONTEXT Context,
     Context->SegDs = KGDT64_R3_DATA | RPL_MASK;
     Context->SegCs = KGDT64_R3_CODE | RPL_MASK;
     Context->SegSs = KGDT64_R3_DATA | RPL_MASK;
-    Context->SegFs = KGDT64_R3_CMTEB;
+    Context->SegFs = KGDT64_R3_CMTEB | RPL_MASK;
 
     /* Set the EFLAGS */
     Context->EFlags = 0x3000; /* IOPL 3 */

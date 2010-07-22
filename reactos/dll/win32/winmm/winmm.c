@@ -929,7 +929,7 @@ static	LPWINE_MIDI	MIDI_OutAlloc(HMIDIOUT* lphMidiOut, DWORD_PTR* lpdwCallback,
 /**************************************************************************
  * 				midiOutOpen    		[WINMM.@]
  */
-MMRESULT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT_PTR uDeviceID,
+MMRESULT WINAPI midiOutOpen(LPHMIDIOUT lphMidiOut, UINT uDeviceID,
                        DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     HMIDIOUT		hMidiOut;
@@ -1220,7 +1220,7 @@ UINT WINAPI midiInGetDevCapsA(UINT_PTR uDeviceID, LPMIDIINCAPSA lpCaps, UINT uSi
 /**************************************************************************
  * 				midiInOpen		[WINMM.@]
  */
-MMRESULT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT_PTR uDeviceID,
+MMRESULT WINAPI midiInOpen(HMIDIIN* lphMidiIn, UINT uDeviceID,
 		       DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD dwFlags)
 {
     HANDLE		hMidiIn;
@@ -1466,7 +1466,7 @@ static	BOOL	MMSYSTEM_GetMidiStream(HMIDISTRM hMidiStrm, WINE_MIDIStream** lpMidi
 	return FALSE;
     }
 
-    *lpMidiStrm = (WINE_MIDIStream*)(ULONG_PTR)lpwm->mod.rgIds.dwStreamID;
+    *lpMidiStrm = (WINE_MIDIStream*)(ULONG_PTR)lpwm->mod.rgIds.dwStreamID; // FIXME: not 64 bit safe
 
     return *lpMidiStrm != NULL;
 }
@@ -1581,7 +1581,8 @@ static	BOOL	MMSYSTEM_MidiStream_MessageHandler(WINE_MIDIStream* lpMidiStrm, LPWI
 #endif
 	if (((LPMIDIEVENT)lpData)->dwStreamID != 0 &&
 	    ((LPMIDIEVENT)lpData)->dwStreamID != 0xFFFFFFFF &&
-	    ((LPMIDIEVENT)lpData)->dwStreamID != PtrToLong(lpMidiStrm)) {
+	    /* FIXME: not 64 bit safe */
+	    ((LPMIDIEVENT)lpData)->dwStreamID != (DWORD_PTR)lpMidiStrm) {
 	    FIXME("Dropping bad %s lpMidiHdr (streamID=%08x)\n",
 		  (lpMidiHdr->dwFlags & MHDR_ISSTRM) ? "stream" : "regular",
 		  ((LPMIDIEVENT)lpData)->dwStreamID);
@@ -1800,7 +1801,7 @@ MMRESULT WINAPI midiStreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID,
     lpMidiStrm->dwTimeDiv = 480; 	/* 480 is 120 quarter notes per minute *//* FIXME ??*/
     lpMidiStrm->dwPositionMS = 0;
 
-    mosm.dwStreamID = PtrToLong(lpMidiStrm);
+    mosm.dwStreamID = (DWORD_PTR)lpMidiStrm; // FIXME: not 64 bit safe
     /* FIXME: the correct value is not allocated yet for MAPPER */
     mosm.wDeviceID  = *lpuDeviceID;
     lpwm = MIDI_OutAlloc(&hMidiOut, &dwCallback, &dwInstance, &fdwOpen, 1, &mosm);

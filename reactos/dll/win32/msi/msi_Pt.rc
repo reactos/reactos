@@ -2,7 +2,8 @@
  * Portuguese resources for MSI
  *
  * Copyright 2005 Marcelo Duarte
- * Copyright 2006 AmÈrico JosÈ Melo
+ * Copyright 2006 Am√©rico Jos√© Melo
+ * Copyright 2010 Gustavo Henrique Milar√©
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,45 +22,47 @@
 
 #include "windef.h"
 
+#pragma code_page(65001)
+
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE DISCARDABLE
 {
-	4 "The specified installation package could not be opened.  Please check the file path and try again."
-	5 "caminho %s n„o encontrado"
+	4 "O pacote de instala√ß√£o especificado n√£o p√¥de ser aberto. Por favor, verifique o arquivo e tente novamente."
+	5 "caminho %s n√£o encontrado"
 	9 "insira disco %s"
 	10 "Windows Installer %s\n\n" \
-	"Usage:\n" \
+	"Modo de usar:\n" \
 	"msiexec command {required parameter} [optional parammeter]\n\n" \
-	"Install a product:\n" \
+	"Instalar um produto:\n" \
 	"\t/i {package|productcode} [property]\n" \
 	"\t/package {package|productcode} [property]\n" \
 	"\t/a package [property]\n" \
-	"Repair an installation:\n" \
+	"Reparar uma instala√ß√£o:\n" \
 	"\t/f[p|o|e|d|c|a|u|m|s|v] {package|productcode}\n" \
-	"Uninstall a product:\n" \
+	"Desinstalar um produto:\n" \
 	"\t/uninstall {package|productcode} [property]\n" \
 	"\t/x {package|productcode} [property]\n" \
-	"Advertise a product:\n" \
+	"Anunciar um produto:\n" \
 	"\t/j[u|m] package [/t transform] [/g languageid]\n" \
-	"Apply a patch:\n" \
+	"Aplicar um patch:\n" \
 	"\t/p patchpackage [property]\n" \
 	"\t/p patchpackage /a package [property]\n" \
-	"Log and UI Modifiers for above commands:\n" \
+	"Modificadores Log e UI para os comandos acima:\n" \
 	"\t/l[*][i|w|e|a|r|u|c|m|o|p|v|][+|!] logfile\n" \
 	"\t/q{|n|b|r|f|n+|b+|b-}\n" \
-	"Register MSI Service:\n" \
+	"Registrar Servi√ßo MSI:\n" \
 	"\t/y\n" \
-	"Unregister MSI Service:\n" \
+	"Desregistrar Servi√ßo MSI:\n" \
 	"\t/z\n" \
-	"Display this help:\n" \
+	"Mostrar esta ajuda:\n" \
 	"\t/help\n" \
 	"\t/?\n"
-	11 "entre qual pasta contÈm %s"
-	12 "instalar fonte para caracterÌstica faltando"
-	13 "drive de rede para  caracterÌstica faltando"
-	14 "caracterÌstica de:"
-	15 "escolha qual pasta contÈm %s"
+	11 "entre a pasta que cont√©m %s"
+	12 "faltando fonte de instala√ß√£o para caracter√≠stica"
+	13 "faltando drive de rede para caracter√≠stica"
+	14 "origem da caracter√≠stica:"
+	15 "escolha a pasta que cont√©m %s"
 }
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
@@ -67,7 +70,7 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
 STRINGTABLE DISCARDABLE
 {
 	4 "The specified installation package could not be opened.  Please check the file path and try again."
-	5 "localizaÁ„o %s n„o encontrada"
+	5 "localiza√ß√£o %s n√£o encontrada"
 	9 "insira o disco %s"
 	10 "Windows Installer %s\n\n" \
 	"Usage:\n" \
@@ -96,9 +99,9 @@ STRINGTABLE DISCARDABLE
 	"Display this help:\n" \
 	"\t/help\n" \
 	"\t/?\n"
-	11 "indique que pasta contÈm %s"
-	12 "instalar fonte para a opÁ„o em falta"
-	13 "controlador de rede para a opÁ„o em falta"
-	14 "opÁ„o de:"
-	15 "indique que pasta contÈm %s"
+	11 "indique que pasta cont√©m %s"
+	12 "instalar fonte para a op√ß√£o em falta"
+	13 "controlador de rede para a op√ß√£o em falta"
+	14 "op√ß√£o de:"
+	15 "indique que pasta cont√©m %s"
 }

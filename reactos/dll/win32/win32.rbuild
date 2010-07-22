@@ -604,6 +604,9 @@
 <directory name="winfax">
 	<xi:include href="winfax/winfax.rbuild" />
 </directory>
+<directory name="wing32">
+	<xi:include href="wing32/wing32.rbuild" />
+</directory>
 <directory name="winhttp">
 	<xi:include href="winhttp/winhttp.rbuild" />
 </directory>

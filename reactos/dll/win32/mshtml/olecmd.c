@@ -898,11 +898,9 @@ void show_context_menu(HTMLDocumentObj *This, DWORD dwID, POINT *ppt, IDispatch 
 {
     HMENU menu_res, menu;
     DWORD cmdid;
-    HRESULT hres;
 
-    hres = IDocHostUIHandler_ShowContextMenu(This->hostui, dwID, ppt,
-            (IUnknown*)CMDTARGET(&This->basedoc), elem);
-    if(hres == S_OK)
+    if(This->hostui && S_OK == IDocHostUIHandler_ShowContextMenu(This->hostui,
+            dwID, ppt, (IUnknown*)CMDTARGET(&This->basedoc), elem))
         return;
 
     menu_res = LoadMenuW(get_shdoclc(), MAKEINTRESOURCEW(IDR_BROWSE_CONTEXT_MENU));

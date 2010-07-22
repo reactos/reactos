@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////
 // Ukrainian resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_UKR)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 #pragma code_page(1251)
@@ -46,7 +46,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Великі значки",                  ID_VIEW_LARGE
         MENUITEM "&Дрібні значки",                  ID_VIEW_SMALL
-        MENUITEM "&Таблиця",                        ID_VIEW_DETAILS, CHECKED
+        MENUITEM "Д&етально",                       ID_VIEW_DETAILS, CHECKED
         MENUITEM "В&ибрати стовпці...",             ID_VIEW_SELECTCOLUMNS
         POPUP "&Хронологія ЦП"
         BEGIN
@@ -92,7 +92,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Великі значки",                  ID_VIEW_LARGE
         MENUITEM "&Дрібні значки",                  ID_VIEW_SMALL
-        MENUITEM "&Таблиця",                        ID_VIEW_DETAILS, CHECKED
+        MENUITEM "Д&етально",                       ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -178,9 +178,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "&Нове завдання...",IDC_NEWTASK,187,189,53,14
-    PUSHBUTTON      "П&ереключитися",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
-    PUSHBUTTON      "Зн&яти завдання",IDC_ENDTASK,75,189,53,14,WS_DISABLED
+    PUSHBUTTON      "&Нове завдання...",IDC_NEWTASK,181,189,60,14
+    PUSHBUTTON      "П&ереключитися",IDC_SWITCHTO,120,189,55,14,WS_DISABLED
+    PUSHBUTTON      "Зн&яти завдання",IDC_ENDTASK,58,189,56,14,WS_DISABLED
 END
 
 IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -190,9 +190,9 @@ BEGIN
     CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
-    PUSHBUTTON      "Зн&яти завдання",IDC_ENDPROCESS,171,189,69,14
+    PUSHBUTTON      "Зн&яти процес",IDC_ENDPROCESS,171,189,69,14
     CONTROL         "&Відображати процеси всіх користувачів",IDC_SHOWALLPROCESSES,
-                    "Кнопка",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,111,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,191,147,10
 END
 
 //IDD_PERFORMANCE_PAGE DIALOGEX 0, 0, 247, 210
@@ -200,13 +200,13 @@ IDD_PERFORMANCE_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Використання ЦП",IDC_CPU_USAGE_FRAME,5,5,60,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Використання пам'яті",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Викорис. ЦП",IDC_CPU_USAGE_FRAME,5,5,62,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Викорис. пам'яті",IDC_MEM_USAGE_FRAME,5,63,62,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Усього",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Виділення пам'яті (КБ)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Фізична пам'ять (КБ)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Пам'ять ядра (КБ)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
-    LTEXT           "Дескрипторів",IDS_TOTALS_HANDLE_COUNT,12,131,27,8
+    LTEXT           "Дескрипторів",IDS_TOTALS_HANDLE_COUNT,12,131,47,8
     LTEXT           "Потоків",IDS_TOTALS_THREAD_COUNT,12,140,27,8
     LTEXT           "Процесів",IDS_TOTALS_PROCESS_COUNT,12,149,34,8
     EDITTEXT        IDC_TOTALS_HANDLE_COUNT,65,131,45,8,ES_RIGHT |
@@ -216,8 +216,8 @@ BEGIN
     EDITTEXT        IDC_TOTALS_PROCESS_COUNT,65,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Усього",IDS_COMMIT_CHARGE_TOTAL,12,175,27,8
-    LTEXT           "Межа",IDS_COMMIT_CHARGE_LIMIT,12,184,15,8,NOT WS_BORDER
-    LTEXT           "Пік",IDS_COMMIT_CHARGE_PEAK,12,193,34,8
+    LTEXT           "Межа",IDS_COMMIT_CHARGE_LIMIT,12,184,18,8,NOT WS_BORDER
+    LTEXT           "Пік",IDS_COMMIT_CHARGE_PEAK,12,193,18,8
     EDITTEXT        IDC_COMMIT_CHARGE_TOTAL,65,174,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_COMMIT_CHARGE_LIMIT,65,184,45,8,ES_RIGHT |
@@ -225,29 +225,27 @@ BEGIN
     EDITTEXT        IDC_COMMIT_CHARGE_PEAK,65,193,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Усього",IDS_PHYSICAL_MEMORY_TOTAL,137,131,27,8
-    LTEXT           "Доступно",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,30,8
-    LTEXT           "Системний кеш",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
-    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
+    LTEXT           "Доступно",IDS_PHYSICAL_MEMORY_AVAILABLE,137,140,32,8
+    LTEXT           "Системний кеш",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,53,8
+    EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,188,131,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,188,140,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,188,149,45,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Усього",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
-    LTEXT           "Вивантажувана",IDS_KERNEL_MEMORY_PAGED,137,184,21,8
-    LTEXT           "Невивантажувана",IDS_KERNEL_MEMORY_NONPAGED,137,193,34,8
-    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,185,174,48,8,ES_RIGHT |
+    LTEXT           "Вивантажувана",IDS_KERNEL_MEMORY_PAGED,137,184,53,8
+    LTEXT           "Невивантажувана",IDS_KERNEL_MEMORY_NONPAGED,137,193,61,8
+    EDITTEXT        IDC_KERNEL_MEMORY_TOTAL,198,174,35,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,185,184,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_PAGED,198,184,35,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
+    EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,198,193,35,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Хронологія використання ЦП",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Хронологія використання пам'яті",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Відображення використання ЦП",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Відображення використання пам'яті",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Відображення використання ЦП",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Відображення використання пам'яті",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Хронологія використання ЦП",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Хронологія використання пам'яті",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -628,7 +626,7 @@ BEGIN
     IDS_MENU_WINDOWS              "В&ікна"
     IDS_MENU_LARGEICONS           "&Великі значки"
     IDS_MENU_SMALLICONS           "&Дрібні значки"
-    IDS_MENU_DETAILS              "&Таблиця"
+    IDS_MENU_DETAILS              "&Детально"
     IDS_MENU_ONEGRAPHALLCPUS      "&Один графік для всіх ЦП"
     IDS_MENU_ONEGRAPHPERCPU       "Окремий &графік для кожного ЦП"
     IDS_MENU_CPUHISTORY           "&Хронологія ЦП"

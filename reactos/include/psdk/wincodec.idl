@@ -98,6 +98,22 @@ typedef enum WICBitmapPaletteType {
     WICBITMAPPALETTETYPE_FORCE_DWORD = CODEC_FORCE_DWORD
 } WICBitmapPaletteType;
 
+typedef enum WICBitmapTransformOptions {
+    WICBitmapTransformRotate0 = 0x00000000,
+    WICBitmapTransformRotate90 = 0x00000001,
+    WICBitmapTransformRotate180 = 0x00000002,
+    WICBitmapTransformRotate270 = 0x00000003,
+    WICBitmapTransformFlipHorizontal = 0x00000008,
+    WICBitmapTransformFlipVertical = 0x00000010,
+    WICBITMAPTRANSFORMOPTIONS_FORCE_DWORD = CODEC_FORCE_DWORD
+} WICBitmapTransformOptions;
+
+typedef enum WICColorContextType {
+    WICColorContextUninitialized = 0x00000000,
+    WICColorContextProfile = 0x00000001,
+    WICColorContextExifColorSpace = 0x00000002
+} WICColorContextType;
+
 typedef enum WICComponentType {
     WICDecoder = 0x00000001,
     WICEncoder = 0x00000002,
@@ -178,13 +194,38 @@ cpp_quote("#define WINCODEC_ERR_UNSUPPORTEDOPERATION 0x88982f81")
 cpp_quote("#define WINCODEC_ERR_INSUFFICIENTBUFFER 0x88982f8c")
 
 interface IWICPalette;
-interface IWICBitmapClipper;
-interface IWICBitmapFlipRotator;
-interface IWICColorContext;
 interface IWICColorTransform;
 interface IWICFastMetadataEncoder;
 interface IWICMetadataQueryReader;
 interface IWICMetadataQueryWriter;
+
+[
+    object,
+    uuid(3c613a02-34b2-44ea-9a7c-45aea9c6fd6d)
+]
+interface IWICColorContext : IUnknown
+{
+    HRESULT InitializeFromFilename(
+        [in] LPCWSTR wzFilename);
+
+    HRESULT InitializeFromMemory(
+        [in, size_is(cbBufferSize)] const BYTE *pbBuffer,
+        [in] UINT cbBufferSize);
+
+    HRESULT InitializeFromExifColorSpace(
+        [in] UINT value);
+
+    HRESULT GetType(
+        [out] WICColorContextType *pType);
+
+    HRESULT GetProfileBytes(
+        [in] UINT cbBuffer,
+        [in, out, unique, size_is(cbBuffer)] BYTE *pbBuffer,
+        [out] UINT *pcbActual);
+
+    HRESULT GetExifColorSpace(
+        [out] UINT *pValue);
+}
 
 [
     object,
@@ -232,6 +273,17 @@ interface IWICBitmapLock : IUnknown
 
     HRESULT GetPixelFormat(
         [out] WICPixelFormatGUID *pPixelFormat);
+}
+
+[
+    object,
+    uuid(5009834f-2d6a-41ce-9e1b-17c5aff7a782)
+]
+interface IWICBitmapFlipRotator : IWICBitmapSource
+{
+    HRESULT Initialize(
+        [in] IWICBitmapSource *pISource,
+        [in] WICBitmapTransformOptions options);
 }
 
 [
@@ -643,6 +695,17 @@ interface IWICBitmapScaler : IWICBitmapSource
         [in] UINT uiWidth,
         [in] UINT uiHeight,
         [in] WICBitmapInterpolationMode mode);
+}
+
+[
+    object,
+    uuid(e4fbcf03-223d-4e81-9333-d635556dd1b5)
+]
+interface IWICBitmapClipper : IWICBitmapSource
+{
+    HRESULT Initialize(
+        [in] IWICBitmapSource *pISource,
+        [in] const WICRect *prc);
 }
 
 cpp_quote("DEFINE_GUID(CLSID_WICImagingFactory, 0xcacaf262,0x9370,0x4615,0xa1,0x3b,0x9f,0x55,0x39,0xda,0x4c,0x0a);")

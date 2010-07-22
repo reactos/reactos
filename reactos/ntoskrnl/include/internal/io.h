@@ -208,6 +208,16 @@
     (_DeviceTreeTraverseContext)->Action = (_Action);   \
     (_DeviceTreeTraverseContext)->Context = (_Context); }
 
+/*
+ * BOOLEAN
+ * IopIsValidPhysicalDeviceObject(
+ *   IN PDEVICE_OBJECT PhysicalDeviceObject);
+ */
+#define IopIsValidPhysicalDeviceObject(PhysicalDeviceObject)                                                            \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject) &&                                                          \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode) &&                      \
+        (((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->Flags & DNF_ENUMERATED))
+
 //
 // Device List Operations
 //

@@ -1088,3 +1088,4 @@ ReportEventW(IN HANDLE hEventLog,
 
     return TRUE;
 }
+

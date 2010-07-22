@@ -121,4 +121,6 @@
 
 #define FUSION_E_INVALID_NAME           EMAKEHR(0x1047)
 
+#define CLDB_E_FILE_OLDVER              EMAKEHR(0x1107)
+
 #endif	/* __WINE_CORERROR_H */

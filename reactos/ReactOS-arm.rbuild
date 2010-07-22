@@ -91,6 +91,9 @@
 				<xi:include href="lib/sdk/crt/crt.rbuild" />
 				<xi:include href="lib/sdk/crt/libcntpr.rbuild" />
 			</directory>
+			<directory name="ioevent">
+				<xi:include href="lib/sdk/ioevent/ioevent.rbuild" />
+			</directory>
 			<directory name="nt">
 				<xi:include href="lib/sdk/nt/nt.rbuild" />
 			</directory>

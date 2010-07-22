@@ -961,7 +961,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
              * itself.
              */
             if ((WinPos->hwnd == WinPos->hwndInsertAfter) ||
-                (WinPos->hwnd == InsAfterWnd->spwndNext->hSelf))
+                ((InsAfterWnd->spwndNext) && (WinPos->hwnd == InsAfterWnd->spwndNext->hSelf)))
             {
                WinPos->flags |= SWP_NOZORDER;
             }
@@ -1006,10 +1006,10 @@ co_WinPosSetWindowPos(
    if (!Window->Wnd) return FALSE;
 
    /* FIXME: Get current active window from active queue. */
-
    /*
     * Only allow CSRSS to mess with the desktop window
     */
+
    if ( Window->hSelf == IntGetDesktopWindow() &&
         Window->pti->pEThread->ThreadsProcess != PsGetCurrentProcess())
    {

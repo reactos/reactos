@@ -347,7 +347,7 @@ BOOL WINAPI RegisterShellHook(
  * ordinal. If you change the implementation here please update the code in
  * shlwapi as well.
  */
-int WINAPIV ShellMessageBoxW(
+int WINAPI ShellMessageBoxW(
 	HINSTANCE hInstance,
 	HWND hWnd,
 	LPCWSTR lpText,
@@ -405,7 +405,7 @@ int WINAPIV ShellMessageBoxW(
  * NOTES
  *     Exported by ordinal
  */
-int WINAPIV ShellMessageBoxA(
+int WINAPI ShellMessageBoxA(
 	HINSTANCE hInstance,
 	HWND hWnd,
 	LPCSTR lpText,

@@ -19,3 +19,6 @@ Description = Clon de Chip's Challenge originalmente creado para Atari Lynx. Inc
 
 [Section.0415]
 Description = Udany klon gry Chip's Challenge z Atari Lynx. Zawiera darmowy zestaw grafik CCLP2.
+
+[Section.0422]
+Description = Чудовий клон гри Chip's Challenge для Atari Lynx. Включено безплатний графічний пакет CCLP2, тому вам не потрібен оригінальний.

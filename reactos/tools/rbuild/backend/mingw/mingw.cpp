@@ -47,7 +47,7 @@ const struct ModuleHandlerInformations ModuleHandlerInformations[] = {
 	{ HostFalse, "", "", "$(LDFLAG_DLL)" }, // Win32OCX
 	{ HostFalse, "", "", "$(LDFLAG_CONSOLE)" }, // Win32CUI
 	{ HostFalse, "", "", "$(LDFLAG_WINDOWS)" }, // Win32GUI
-	{ HostFalse, "", "", "" }, // BootLoader
+	{ HostFalse, "", "", "$(LDFLAG_DRIVER)" }, // BootLoader
 	{ HostFalse, "", "-f bin", "" }, // BootSector
 	{ HostFalse, "", "", "" }, // Iso
 	{ HostFalse, "", "", "" }, // LiveIso

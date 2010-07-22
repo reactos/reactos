@@ -97,7 +97,7 @@ static attr_list_t *append_attr(attr_list_t *list, attr_t *attr);
 static attr_list_t *append_attr_list(attr_list_t *new_list, attr_list_t *old_list);
 static decl_spec_t *make_decl_spec(type_t *type, decl_spec_t *left, decl_spec_t *right, attr_t *attr, enum storage_class stgclass);
 static attr_t *make_attr(enum attr_type type);
-static attr_t *make_attrv(enum attr_type type, unsigned long val);
+static attr_t *make_attrv(enum attr_type type, unsigned int val);
 static attr_t *make_attrp(enum attr_type type, void *val);
 static expr_list_t *append_expr(expr_list_t *list, expr_t *expr);
 static array_dims_t *append_array(array_dims_t *list, expr_t *expr);
@@ -108,8 +108,6 @@ static ifref_t *make_ifref(type_t *iface);
 static var_list_t *append_var_list(var_list_t *list, var_list_t *vars);
 static declarator_list_t *append_declarator(declarator_list_t *list, declarator_t *p);
 static declarator_t *make_declarator(var_t *var);
-static func_list_t *append_func(func_list_t *list, func_t *func);
-static func_t *make_func(var_t *def);
 static type_t *make_safearray(type_t *type);
 static typelib_t *make_library(const char *name, const attr_list_t *attrs);
 static type_t *append_ptrchain_type(type_t *ptrchain, type_t *type);
@@ -165,8 +163,6 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 	var_list_t *var_list;
 	declarator_t *declarator;
 	declarator_list_t *declarator_list;
-	func_t *func;
-	func_list_t *func_list;
 	statement_t *statement;
 	statement_list_t *stmt_list;
 	ifref_t *ifref;
@@ -293,14 +289,14 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %type <ifref> coclass_int
 %type <ifref_list> coclass_ints
 %type <var> arg ne_union_field union_field s_field case enum declaration
-%type <var_list> m_args arg_list args
+%type <var> funcdef
+%type <var_list> m_args arg_list args dispint_meths
 %type <var_list> fields ne_union_fields cases enums enum_list dispint_props field
 %type <var> m_ident ident
 %type <declarator> declarator direct_declarator init_declarator struct_declarator
 %type <declarator> m_any_declarator any_declarator any_declarator_no_direct any_direct_declarator
 %type <declarator> m_abstract_declarator abstract_declarator abstract_declarator_no_direct abstract_direct_declarator
 %type <declarator_list> declarator_list struct_declarator_list
-%type <func> funcdef
 %type <type> coclass coclasshdr coclassdef
 %type <num> pointer_type version
 %type <str> libraryhdr callconv cppquote importlib import t_ident
@@ -308,7 +304,7 @@ static statement_list_t *append_statement(statement_list_t *list, statement_t *s
 %type <import> import_start
 %type <typelib> library_start librarydef
 %type <statement> statement typedef
-%type <stmt_list> gbl_statements imp_statements int_statements dispint_meths
+%type <stmt_list> gbl_statements imp_statements int_statements
 
 %left ','
 %right '?' ':'
@@ -720,12 +716,10 @@ s_field:  m_attributes decl_spec declarator	{ $$ = declare_var(check_field_attrs
 						}
 	;
 
-funcdef:
-	  m_attributes decl_spec declarator	{ var_t *v;
-						  v = declare_var(check_function_attrs($3->var->name, $1),
-						               $2, $3, FALSE);
-						  free($3);
-						  $$ = make_func(v);
+funcdef: declaration				{ $$ = $1;
+						  if (type_get_type($$->type) != TYPE_FUNCTION)
+						    error_loc("only methods may be declared inside the methods section of a dispinterface\n");
+						  check_function_attrs($$->name, $$->attrs);
 						}
 	;
 
@@ -826,7 +820,7 @@ dispint_props: tPROPERTIES ':'			{ $$ = NULL; }
 	;
 
 dispint_meths: tMETHODS ':'			{ $$ = NULL; }
-	| dispint_meths funcdef ';'		{ $$ = append_func( $1, $2 ); }
+	| dispint_meths funcdef ';'		{ $$ = append_var( $1, $2 ); }
 	;
 
 dispinterfacedef: dispinterfacehdr '{'
@@ -1254,7 +1248,7 @@ static attr_t *make_attr(enum attr_type type)
   return a;
 }
 
-static attr_t *make_attrv(enum attr_type type, unsigned long val)
+static attr_t *make_attrv(enum attr_type type, unsigned int val)
 {
   attr_t *a = xmalloc(sizeof(attr_t));
   a->type = type;
@@ -1491,8 +1485,7 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
       /* FIXME: should use a type_memsize that allows us to pass in a pointer size */
       if (0)
       {
-        unsigned int align = 0;
-        unsigned int size = type_memsize(v->type, &align);
+        unsigned int size = type_memsize(v->type);
 
         if (0xffffffffu / size < dim->cval)
           error_loc("%s: total array size is too large\n", v->name);
@@ -1514,8 +1507,9 @@ static var_t *declare_var(attr_list_t *attrs, decl_spec_t *decl_spec, const decl
     {
       if (is_array(*ptype))
       {
-        if (type_array_get_conformance(*ptype)->is_const)
-          error_loc("%s: cannot specify size_is for a fixed sized array\n", v->name);
+        if (!type_array_get_conformance(*ptype) ||
+            type_array_get_conformance(*ptype)->type != EXPR_VOID)
+          error_loc("%s: cannot specify size_is for an already sized array\n", v->name);
         else
           *ptype = type_new_array((*ptype)->name,
                                   type_array_get_element(*ptype), FALSE,
@@ -1690,25 +1684,6 @@ static declarator_t *make_declarator(var_t *var)
   d->array = NULL;
   d->bits = NULL;
   return d;
-}
-
-static func_list_t *append_func(func_list_t *list, func_t *func)
-{
-    if (!func) return list;
-    if (!list)
-    {
-        list = xmalloc( sizeof(*list) );
-        list_init( list );
-    }
-    list_add_tail( list, &func->entry );
-    return list;
-}
-
-static func_t *make_func(var_t *def)
-{
-  func_t *f = xmalloc(sizeof(func_t));
-  f->def = def;
-  return f;
 }
 
 static type_t *make_safearray(type_t *type)
@@ -2287,14 +2262,12 @@ static int is_allowed_conf_type(const type_t *type)
 
 static int is_ptr_guid_type(const type_t *type)
 {
-    unsigned int align = 0;
-
     /* first, make sure it is a pointer to something */
     if (!is_ptr(type)) return FALSE;
 
     /* second, make sure it is a pointer to something of size sizeof(GUID),
      * i.e. 16 bytes */
-    return (type_memsize(type_pointer_get_ref(type), &align) == 16);
+    return (type_memsize(type_pointer_get_ref(type)) == 16);
 }
 
 static void check_conformance_expr_list(const char *attr_name, const var_t *arg, const type_t *container_type, expr_list_t *expr_list)
@@ -2438,7 +2411,11 @@ static void check_field_common(const type_t *container_type,
         }
         case TGT_CTXT_HANDLE:
         case TGT_CTXT_HANDLE_POINTER:
-            /* FIXME */
+            if (type_get_type(container_type) != TYPE_FUNCTION)
+                error_loc_info(&arg->loc_info,
+                               "%s \'%s\' of %s \'%s\' cannot be a context handle\n",
+                               var_type, arg->name, container_type_name,
+                               container_name);
             break;
         case TGT_STRING:
         {
@@ -2522,10 +2499,11 @@ static void check_remoting_args(const var_t *func)
                 error_loc_info(&arg->loc_info, "out interface pointer \'%s\' of function \'%s\' is not a double pointer\n", arg->name, funcname);
                 break;
             case TGT_STRING:
-                if (!is_array(type))
-                {
-                    /* FIXME */
-                }
+                if (is_ptr(type) ||
+                    (is_array(type) &&
+                     (!type_array_has_conformance(type) ||
+                      type_array_get_conformance(type)->type == EXPR_VOID)))
+                    error_loc_info(&arg->loc_info, "out parameter \'%s\' of function \'%s\' cannot be an unsized string\n", arg->name, funcname);
                 break;
             case TGT_INVALID:
                 /* already error'd before we get here */

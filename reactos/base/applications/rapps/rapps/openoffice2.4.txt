@@ -28,3 +28,9 @@ URLSite = http://pl.openoffice.org/
 Description = Otwarty pakiet biurowy.
 URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/pl/2.4.2/OOo_2.4.2_Win32Intel_install_pl.exe
 Size = 113.9M
+
+[Section.0422]
+URLSite = http://ua.openoffice.org/
+Description = Відкритий офісний пакет.
+URLDownload = ftp://archive.services.openoffice.org/pub/openoffice-archive/localized/ru/2.4.3/OOo_2.4.3_Win32Intel_install_ru.exe
+Size = 114.8M

@@ -16,4 +16,62 @@
 
 /* FUNCTIONS ******************************************************************/
 
+VOID
+NTAPI
+PPBridge_SaveCurrentSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_SaveLimits(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_MassageHeaderForLimitsDetermination(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_RestoreCurrent(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_GetAdditionalResourceDescriptors(IN PPCI_CONFIGURATOR_CONTEXT Context,
+                                          IN PPCI_COMMON_HEADER PciData,
+                                          IN PIO_RESOURCE_DESCRIPTOR IoDescriptor)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_ResetDevice(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
+VOID
+NTAPI
+PPBridge_ChangeResourceSettings(IN PPCI_CONFIGURATOR_CONTEXT Context)
+{
+    UNIMPLEMENTED;
+    while (TRUE);
+}
+
 /* EOF */

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /*
@@ -63,7 +63,7 @@ typedef struct
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
-static void MD5Transform(unsigned int buf[4], const unsigned int in[16])
+static void MD5Transform( unsigned int buf[4], const unsigned int in[16] )
 {
     register unsigned int a, b, c, d;
 
@@ -150,7 +150,7 @@ static void MD5Transform(unsigned int buf[4], const unsigned int in[16])
  * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
  * initialization constants.
  */
-VOID WINAPI MD5Init(MD5_CTX *ctx)
+VOID WINAPI MD5Init( MD5_CTX *ctx )
 {
     ctx->buf[0] = 0x67452301;
     ctx->buf[1] = 0xefcdab89;
@@ -164,14 +164,14 @@ VOID WINAPI MD5Init(MD5_CTX *ctx)
  * Update context to reflect the concatenation of another buffer full
  * of bytes.
  */
-VOID WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
+VOID WINAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len )
 {
     register unsigned int t;
 
     /* Update bitcount */
     t = ctx->i[0];
 
-    if ((ctx->i[0] = t + ((unsigned int)len << 3)) < t)
+    if ((ctx->i[0] = t + (len << 3)) < t)
         ctx->i[1]++;        /* Carry from low to high */
 
     ctx->i[1] += len >> 29;
@@ -185,14 +185,14 @@ VOID WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
 
         if (len < t)
         {
-            memcpy(p, buf, len);
+            memcpy( p, buf, len );
             return;
         }
 
-        memcpy(p, buf, t);
-        byteReverse(ctx->in, 16);
+        memcpy( p, buf, t );
+        byteReverse( ctx->in, 16 );
 
-        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
 
         buf += t;
         len -= t;
@@ -201,21 +201,21 @@ VOID WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
     /* Process data in 64-byte chunks */
     while (len >= 64)
     {
-        memcpy(ctx->in, buf, 64);
-        byteReverse(ctx->in, 16);
+        memcpy( ctx->in, buf, 64 );
+        byteReverse( ctx->in, 16 );
 
-        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
 
         buf += 64;
         len -= 64;
     }
 
     /* Handle any remaining bytes of data. */
-    memcpy(ctx->in, buf, len);
+    memcpy( ctx->in, buf, len );
 }
 
 /*
- * Final wrapup - pad to 64-byte boundary with the bit pattern
+ * Final wrapup - pad to 64-byte boundary with the bit pattern 
  * 1 0* (64-bit count of bits processed, MSB-first)
  */
 VOID WINAPI MD5Final( MD5_CTX *ctx )
@@ -238,26 +238,26 @@ VOID WINAPI MD5Final( MD5_CTX *ctx )
     if (count < 8)
     {
         /* Two lots of padding:  Pad the first block to 64 bytes */
-        memset(p, 0, count);
-        byteReverse(ctx->in, 16);
-        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+        memset( p, 0, count );
+        byteReverse( ctx->in, 16 );
+        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
 
         /* Now fill the next block with 56 bytes */
-        memset(ctx->in, 0, 56);
+        memset( ctx->in, 0, 56 );
     }
     else
     {
         /* Pad block to 56 bytes */
-        memset(p, 0, count - 8);
+        memset( p, 0, count - 8 );
     }
 
-    byteReverse(ctx->in, 14);
+    byteReverse( ctx->in, 14 );
 
     /* Append length in bits and transform */
     ((unsigned int *)ctx->in)[14] = ctx->i[0];
     ((unsigned int *)ctx->in)[15] = ctx->i[1];
 
-    MD5Transform(ctx->buf, (unsigned int *)ctx->in);
-    byteReverse((unsigned char *)ctx->buf, 4);
-    memcpy(ctx->digest, ctx->buf, 16);
+    MD5Transform( ctx->buf, (unsigned int *)ctx->in );
+    byteReverse( (unsigned char *)ctx->buf, 4 );
+    memcpy( ctx->digest, ctx->buf, 16 );
 }

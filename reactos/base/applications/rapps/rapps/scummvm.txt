@@ -19,3 +19,6 @@ Description = Sam and Max, Day of the Tentacle en ReactOS.
 
 [Section.0415]
 Description = Program pozwalający uruchomić stare gry przygodowe (Sam and Max, Day of the Tentacle, Monkey Island) w ReactOS.
+
+[Section.0422]
+Description = Дозволить грати Sam and Max, Day of the Tentacle та інші класичні ігри в ReactOS.

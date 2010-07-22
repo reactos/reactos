@@ -359,6 +359,7 @@
 		<file>gcvt.c</file>
 		<file>getenv.c</file>
 		<file>makepath.c</file>
+		<file>makepath_s.c</file>
 		<file>mbtowc.c</file>
 		<file>mbstowcs.c</file>
 		<file>obsol.c</file>
@@ -371,6 +372,7 @@
 		<file>wputenv.c</file>
 		<file>wsenv.c</file>
 		<file>wmakpath.c</file>
+		<file>wmakpath_s.c</file>
 	</directory>
 	<directory name="string">
 		<if property="ARCH" value="i386">

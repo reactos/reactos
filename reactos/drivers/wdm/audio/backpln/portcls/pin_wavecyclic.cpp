@@ -959,7 +959,7 @@ CPortPinWaveCyclic::Close(
     if (m_Format)
     {
         // free format
-        ExFreePool(m_Format);
+        FreeItem(m_Format, TAG_PORTCLASS);
         m_Format = NULL;
     }
 
@@ -1221,6 +1221,10 @@ CPortPinWaveCyclic::Init(
     m_Capture = Capture;
     // delay of 10 milisec
     m_Delay = Int32x32To64(10, -10000);
+
+    // sanity checks
+    PC_ASSERT(m_CommonBufferSize);
+    PC_ASSERT(m_CommonBuffer);
 
     Status = m_Stream->SetNotificationFreq(10, &m_FrameSize);
     PC_ASSERT(NT_SUCCESS(Status));

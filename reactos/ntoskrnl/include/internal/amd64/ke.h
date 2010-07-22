@@ -314,7 +314,11 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 KTRAP_FRAME TrapFrame);
 #endif
 
-#endif
+#endif /* __ASM__ */
+
+// HACK
+extern NTKERNELAPI volatile KSYSTEM_TIME KeTickCount;
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 
 /* EOF */

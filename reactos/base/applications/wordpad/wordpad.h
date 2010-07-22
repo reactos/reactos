@@ -247,7 +247,6 @@ LRESULT preview_command(HWND, WPARAM);
 void init_preview(HWND, LPWSTR);
 void close_preview(HWND);
 BOOL preview_isactive(void);
-LRESULT print_preview(HWND);
 void get_default_printer_opts(void);
 void registry_set_pagemargins(HKEY);
 void registry_read_pagemargins(HKEY);

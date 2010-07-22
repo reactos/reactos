@@ -1646,8 +1646,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
    Message->Msg.lParam = lParamPacked;
    Message->CompletionEvent = NULL;
    Message->Result = 0;
-   Message->SenderQueue = Win32Thread->MessageQueue;
-   IntReferenceMessageQueue(Message->SenderQueue);
+   Message->SenderQueue = NULL; //Win32Thread->MessageQueue;
+
    IntReferenceMessageQueue(Window->pti->MessageQueue);
    Message->CompletionCallback = CompletionCallback;
    Message->CompletionCallbackContext = CompletionCallbackContext;
@@ -1655,9 +1655,7 @@ co_IntSendMessageWithCallBack( HWND hWnd,
    Message->HasPackedLParam = (lParamBufferSize > 0);
 
    InsertTailList(&Window->pti->MessageQueue->SentMessagesListHead, &Message->ListEntry);
-   InsertTailList(&Win32Thread->MessageQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
    IntDereferenceMessageQueue(Window->pti->MessageQueue);
-   IntDereferenceMessageQueue(Message->SenderQueue);
 
    RETURN(TRUE);
 

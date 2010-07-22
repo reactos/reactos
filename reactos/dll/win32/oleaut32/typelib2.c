@@ -118,10 +118,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(typelib2);
 /*================== Implementation Structures ===================================*/
 
 /* Used for storing cyclic list. Tail address is kept */
+enum tagCyclicListElementType {
+    CyclicListFunc,
+    CyclicListVar
+};
 typedef struct tagCyclicList {
     struct tagCyclicList *next;
     int indice;
     int name;
+    enum tagCyclicListElementType type;
 
     union {
         int val;
@@ -774,8 +779,8 @@ static int ctl2_alloc_importfile(
     encoded_string[0] |= 1;
 
     for (offset = 0; offset < This->typelib_segdir[MSFT_SEG_IMPORTFILES].length;
-	 offset += ((((This->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xd] << 8) & 0xff)
-	     | (This->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xc] & 0xff)) >> 2) + 0xc) {
+	 offset += ((((((This->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xd] << 8) & 0xff00)
+	     | (This->typelib_segment_data[MSFT_SEG_IMPORTFILES][offset + 0xc] & 0xff)) >> 2) + 5) & 0xfffc) + 0xc) {
 	if (!memcmp(encoded_string, This->typelib_segment_data[MSFT_SEG_IMPORTFILES] + offset + 0xc, length)) return offset;
     }
 
@@ -814,11 +819,41 @@ static int ctl2_alloc_custdata(
 
     switch (V_VT(pVarVal)) {
     case VT_UI4:
+    case VT_I4:
+    case VT_R4:
+    case VT_INT:
+    case VT_UINT:
+    case VT_HRESULT:
 	offset = ctl2_alloc_segment(This, MSFT_SEG_CUSTDATA, 8, 0);
 	if (offset == -1) return offset;
 
-	*((unsigned short *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = VT_UI4;
-	*((unsigned int *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = V_UI4(pVarVal);
+	*((unsigned short *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = V_VT(pVarVal);
+	*((DWORD *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = V_UI4(pVarVal);
+	break;
+
+    case VT_BSTR: {
+	    /* Construct the data */
+	    UINT cp = CP_ACP;
+	    int stringlen = SysStringLen(V_BSTR(pVarVal));
+	    int len = 0;
+	    if (stringlen > 0) {
+		GetLocaleInfoA(This->typelib_header.lcid, LOCALE_IDEFAULTANSICODEPAGE | LOCALE_RETURN_NUMBER,
+			(LPSTR)&cp, sizeof(cp));
+		len = WideCharToMultiByte(cp, 0, V_BSTR(pVarVal), SysStringLen(V_BSTR(pVarVal)), NULL, 0, NULL, NULL);
+		if (!len)
+		    return -1;
+	    }
+
+	    offset = ctl2_alloc_segment(This, MSFT_SEG_CUSTDATA, (6 + len + 3) & ~0x3, 0);
+	    if (offset == -1) return offset;
+
+	    *((unsigned short *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = V_VT(pVarVal);
+	    *((DWORD *)&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = (DWORD)len;
+	    if (stringlen > 0) {
+		WideCharToMultiByte(cp, 0, V_BSTR(pVarVal), SysStringLen(V_BSTR(pVarVal)),
+			&This->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+6], len, NULL, NULL);
+	    }
+	}
 	break;
 
     default:
@@ -860,7 +895,7 @@ static HRESULT ctl2_set_custdata(
     if (guidoffset == -1) return E_OUTOFMEMORY;
     dataoffset = ctl2_alloc_custdata(This, pVarVal);
     if (dataoffset == -1) return E_OUTOFMEMORY;
-    if (dataoffset == -2) return E_INVALIDARG;
+    if (dataoffset == -2) return DISP_E_BADVARTYPE;
 
     custoffset = ctl2_alloc_segment(This, MSFT_SEG_CUSTDATAGUID, 12, 0);
     if (custoffset == -1) return E_OUTOFMEMORY;
@@ -1286,6 +1321,69 @@ static HRESULT ctl2_add_default_value(
     }
 }
 
+/****************************************************************************
+ *      funcrecord_reallochdr
+ *
+ *  Ensure FuncRecord data block contains header of required size
+ *
+ *  PARAMS
+ *
+ *   typedata [IO] - reference to pointer to data block
+ *   need     [I]  - required size of block in bytes
+ *
+ * RETURNS
+ *
+ *  Number of additionally allocated bytes
+ */
+static INT funcrecord_reallochdr(INT **typedata, int need)
+{
+    int tail = (*typedata)[5]*((*typedata)[4]&0x1000?16:12);
+    int hdr = (*typedata)[0] - tail;
+    int i;
+
+    if (hdr >= need)
+        return 0;
+
+    *typedata = HeapReAlloc(GetProcessHeap(), 0, *typedata, need + tail);
+    if (!*typedata)
+        return -1;
+
+    if (tail)
+        memmove((char*)*typedata + need, (const char*)*typedata + hdr, tail);
+    (*typedata)[0] = need + tail;
+
+    /* fill in default values */
+    for(i = (hdr+3)/4; (i+1)*4 <= need; i++)
+    {
+        switch(i)
+        {
+            case 2:
+                (*typedata)[i] = 0;
+                break;
+            case 7:
+                (*typedata)[i] = -1;
+                break;
+            case 8:
+                (*typedata)[i] = -1;
+                break;
+            case 9:
+                (*typedata)[i] = -1;
+                break;
+            case 10:
+                (*typedata)[i] = -1;
+                break;
+            case 11:
+                (*typedata)[i] = 0;
+                break;
+            case 12:
+                (*typedata)[i] = -1;
+                break;
+        }
+    }
+
+    return need - hdr;
+}
+
 /*================== ICreateTypeInfo2 Implementation ===================================*/
 
 /******************************************************************************
@@ -1583,7 +1681,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
         }
 
         guid.guid = tlibattr->guid;
-        guid.hreftype = This->typelib->typelib_guids*12+2;
+        guid.hreftype = This->typelib->typelib_segdir[MSFT_SEG_IMPORTFILES].length+2;
         guid.next_hash = -1;
 
         guid_offset = ctl2_alloc_guid(This->typelib, &guid);
@@ -1668,7 +1766,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
 
     CyclicList *iter, *insert;
     int *typedata;
-    int i, num_defaults = 0;
+    int i, num_defaults = 0, num_retval = 0;
     int decoded_size;
     HRESULT hres;
 
@@ -1708,9 +1806,12 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
         return TYPE_E_INCONSISTENTPROPFUNCS;
 
     /* get number of arguments with default values specified */
-    for (i = 0; i < pFuncDesc->cParams; i++)
+    for (i = 0; i < pFuncDesc->cParams; i++) {
         if(pFuncDesc->lprgelemdescParam[i].u.paramdesc.wParamFlags & PARAMFLAG_FHASDEFAULT)
             num_defaults++;
+        if(pFuncDesc->lprgelemdescParam[i].u.paramdesc.wParamFlags & PARAMFLAG_FRETVAL)
+            num_retval++;
+    }
 
     if (!This->typedata) {
         This->typedata = HeapAlloc(GetProcessHeap(), 0, sizeof(CyclicList));
@@ -1742,6 +1843,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     typedata[3] = ((sizeof(FUNCDESC) + decoded_size) << 16) | (unsigned short)(pFuncDesc->oVft?pFuncDesc->oVft+1:0);
     typedata[4] = (pFuncDesc->callconv << 8) | (pFuncDesc->invkind << 3) | pFuncDesc->funckind;
     if(num_defaults) typedata[4] |= 0x1000;
+    if (num_retval) typedata[4] |= 0x4000;
     typedata[5] = pFuncDesc->cParams;
 
     /* NOTE: High word of typedata[3] is total size of FUNCDESC + size of all ELEMDESCs for params + TYPEDESCs for pointer params and return types. */
@@ -1780,6 +1882,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     /* update the index data */
     insert->indice = pFuncDesc->memid;
     insert->name = -1;
+    insert->type = CyclicListFunc;
 
     /* insert type data to list */
     if(index == This->typeinfo->cElement) {
@@ -2032,6 +2135,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddVarDesc(
     /* update the index data */
     insert->indice = 0x40000000 + index;
     insert->name = -1;
+    insert->type = CyclicListVar;
 
     /* figure out type widths and whatnot */
     ctl2_encode_typedesc(This->typelib, &pVarDesc->elemdescVar.tdesc,
@@ -2099,23 +2203,34 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncAndParamNames(
     if(!rgszNames)
         return E_INVALIDARG;
 
-    if(index >= This->typeinfo->cElement || !cNames)
+    if(index >= (This->typeinfo->cElement&0xFFFF) || !cNames)
         return TYPE_E_ELEMENTNOTFOUND;
 
-    len = ctl2_encode_name(This->typelib, rgszNames[0], &namedata);
-    for(iter2=This->typedata->next->next; iter2!=This->typedata->next; iter2=iter2->next) {
-        if(i == index)
-            iter = iter2;
-        else if(iter2->name!=-1 && !memcmp(namedata,
-                    This->typelib->typelib_segment_data[MSFT_SEG_NAME]+iter2->name+8, len))
-            return TYPE_E_AMBIGUOUSNAME;
-
-        i++;
-    }
+    for(iter=This->typedata->next->next, i=0; /* empty */; iter=iter->next)
+        if (iter->type == CyclicListFunc)
+            if (i++ >= index)
+                break;
 
     /* cNames == cParams for put or putref accessor, cParams+1 otherwise */
     if(cNames != iter->u.data[5] + ((iter->u.data[4]>>3)&(INVOKE_PROPERTYPUT|INVOKE_PROPERTYPUTREF) ? 0 : 1))
         return TYPE_E_ELEMENTNOTFOUND;
+
+    len = ctl2_encode_name(This->typelib, rgszNames[0], &namedata);
+    for(iter2=This->typedata->next->next; iter2!=This->typedata->next; iter2=iter2->next) {
+        if(iter2->name!=-1 && !memcmp(namedata,
+                    This->typelib->typelib_segment_data[MSFT_SEG_NAME]+iter2->name+8, len)) {
+            /* getters/setters can have a same name */
+            if (iter2->type == CyclicListFunc) {
+                INT inv1 = iter2->u.data[4] >> 3;
+                INT inv2 = iter->u.data[4] >> 3;
+                if (((inv1&(INVOKE_PROPERTYPUT|INVOKE_PROPERTYPUTREF)) && (inv2&INVOKE_PROPERTYGET)) ||
+                    ((inv2&(INVOKE_PROPERTYPUT|INVOKE_PROPERTYPUTREF)) && (inv1&INVOKE_PROPERTYGET)))
+                    continue;
+            }
+
+            return TYPE_E_AMBIGUOUSNAME;
+        }
+    }
 
     offset = ctl2_alloc_name(This->typelib, rgszNames[0]);
     if(offset == -1)
@@ -2124,16 +2239,14 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncAndParamNames(
     iter->name = offset;
 
     namedata = This->typelib->typelib_segment_data[MSFT_SEG_NAME] + offset;
-    *((INT *)namedata) = This->typelib->typelib_typeinfo_offsets[This->typeinfo->typekind >> 16];
+    if (*((INT*)namedata) == -1)
+	    *((INT *)namedata) = This->typelib->typelib_typeinfo_offsets[This->typeinfo->typekind >> 16];
 
-    if(iter->u.data[4]&0x1000)
-        len = iter->u.data[5];
-    else
-        len = 0;
+    len = iter->u.data[0]/4 - iter->u.data[5]*3;
 
     for (i = 1; i < cNames; i++) {
 	offset = ctl2_alloc_name(This->typelib, rgszNames[i]);
-	iter->u.data[(i*3) + 4 + len] = offset;
+	iter->u.data[len + ((i-1)*3) + 1] = offset;
     }
 
     return S_OK;
@@ -2173,9 +2286,10 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetVarName(
 	namedata[9] |= 0x20;
     }
 
-    iter = This->typedata->next->next;
-    for(i=0; i<index; i++)
-        iter = iter->next;
+    for(iter = This->typedata->next->next, i = 0; /* empty */; iter = iter->next)
+        if (iter->type == CyclicListVar)
+            if (i++ >= index)
+                break;
 
     iter->name = offset;
     return S_OK;
@@ -2271,39 +2385,25 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncHelpContext(
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
     CyclicList *func;
-    int *typedata;
-    int size;
 
     TRACE("(%p,%d,%d)\n", iface, index, dwHelpContext);
 
     if(This->typeinfo->cElement<index)
         return TYPE_E_ELEMENTNOTFOUND;
 
-    if(This->typeinfo->cElement == index)
+    if(This->typeinfo->cElement == index && This->typedata->type == CyclicListFunc)
         func = This->typedata;
     else
         for(func=This->typedata->next->next; func!=This->typedata; func=func->next)
-            if(index-- == 0)
-                break;
+            if (func->type == CyclicListFunc)
+                if(index-- == 0)
+                    break;
 
-    typedata = func->u.data;
+    This->typedata->next->u.val += funcrecord_reallochdr(&func->u.data, 7*sizeof(int));
+    if(!func->u.data)
+        return E_OUTOFMEMORY;
 
-    /* Compute func size without arguments */
-    size = typedata[0] - typedata[5]*(typedata[4]&0x1000?16:12);
-
-    /* Allocate memory for HelpContext if needed */
-    if(size < 7*sizeof(int)) {
-        typedata = HeapReAlloc(GetProcessHeap(), 0, typedata, typedata[0]+sizeof(int));
-        if(!typedata)
-            return E_OUTOFMEMORY;
-
-        memmove(&typedata[7], &typedata[6], typedata[0]-sizeof(int)*6);
-        typedata[0] += sizeof(int);
-        This->typedata->next->u.val += sizeof(int);
-        func->u.data = typedata;
-    }
-
-    typedata[6] = dwHelpContext;
+    func->u.data[6] = dwHelpContext;
     return S_OK;
 }
 
@@ -2357,7 +2457,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnLayOut(
 	ICreateTypeInfo2* iface)
 {
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
-    CyclicList *iter, *iter2, **typedata;
+    CyclicList *iter, *iter2, *last = NULL, **typedata;
     HREFTYPE hreftype;
     HRESULT hres;
     unsigned user_vft = 0;
@@ -2471,10 +2571,14 @@ static HRESULT WINAPI ICreateTypeInfo2_fnLayOut(
         return E_OUTOFMEMORY;
 
     /* Assign IDs and VTBL entries */
-    i = 0;
-    if(This->typedata->u.data[3]&1)
-        user_vft = This->typedata->u.data[3]&0xffff;
+    for(iter=This->typedata->next->next; iter!=This->typedata->next; iter=iter->next)
+        if (iter->type == CyclicListFunc)
+            last = iter;
 
+    if(last && last->u.data[3]&1)
+        user_vft = last->u.data[3]&0xffff;
+
+    i = 0;
     for(iter=This->typedata->next->next; iter!=This->typedata->next; iter=iter->next) {
         /* Assign MEMBERID if MEMBERID_NIL was specified */
         if(iter->indice == MEMBERID_NIL) {
@@ -2497,6 +2601,9 @@ static HRESULT WINAPI ICreateTypeInfo2_fnLayOut(
                 }
             }
         }
+
+        if (iter->type != CyclicListFunc)
+            continue;
 
         typedata[i] = iter;
 
@@ -2679,8 +2786,14 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetCustData(
         REFGUID guid,            /* [I] The GUID used as a key to retrieve the custom data. */
         VARIANT* pVarVal)        /* [I] The custom data. */
 {
-    FIXME("(%p,%s,%p), stub!\n", iface, debugstr_guid(guid), pVarVal);
-    return E_OUTOFMEMORY;
+    ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
+
+    TRACE("(%p,%s,%p)!\n", iface, debugstr_guid(guid), pVarVal);
+
+    if (!pVarVal)
+	    return E_INVALIDARG;
+
+    return ctl2_set_custdata(This->typelib, guid, pVarVal, &This->typeinfo->oCustData);
 }
 
 /******************************************************************************
@@ -2699,8 +2812,25 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetFuncCustData(
         REFGUID guid,            /* [I] The GUID used as a key to retrieve the custom data. */
         VARIANT* pVarVal)        /* [I] The custom data. */
 {
-    FIXME("(%p,%d,%s,%p), stub!\n", iface, index, debugstr_guid(guid), pVarVal);
-    return E_OUTOFMEMORY;
+    ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
+    CyclicList *iter;
+
+    TRACE("(%p,%d,%s,%p)\n", iface, index, debugstr_guid(guid), pVarVal);
+
+    if(index >= (This->typeinfo->cElement&0xFFFF))
+        return TYPE_E_ELEMENTNOTFOUND;
+
+    for(iter=This->typedata->next->next; /* empty */; iter=iter->next)
+        if (iter->type == CyclicListFunc)
+            if (index-- == 0)
+                break;
+
+    This->typedata->next->u.val += funcrecord_reallochdr(&iter->u.data, 13*sizeof(int));
+    if(!iter->u.data)
+        return E_OUTOFMEMORY;
+
+    iter->u.data[4] |= 0x80;
+    return ctl2_set_custdata(This->typelib, guid, pVarVal, &iter->u.data[12]);
 }
 
 /******************************************************************************
@@ -3127,8 +3257,88 @@ static HRESULT WINAPI ITypeInfo2_fnGetDocumentation(
         DWORD* pdwHelpContext,
         BSTR* pBstrHelpFile)
 {
-    FIXME("(%p,%d,%p,%p,%p,%p), stub!\n", iface, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
-    return E_OUTOFMEMORY;
+    ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
+    HRESULT status = TYPE_E_ELEMENTNOTFOUND;
+    INT nameoffset, docstringoffset, helpcontext;
+
+    TRACE("(%p,%d,%p,%p,%p,%p)\n", iface, memid, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+
+    if (memid == -1)
+    {
+        nameoffset = This->typeinfo->NameOffset;
+        docstringoffset = This->typeinfo->docstringoffs;
+        helpcontext = This->typeinfo->helpcontext;
+        status = S_OK;
+    } else {
+        CyclicList *iter;
+        if (This->typedata) {
+            for(iter=This->typedata->next->next; iter!=This->typedata->next; iter=iter->next) {
+                if (iter->indice == memid) {
+                    if (iter->type == CyclicListFunc) {
+                        const int *typedata = iter->u.data;
+                        int   size = typedata[0] - typedata[5]*(typedata[4]&0x1000?16:12);
+
+                        nameoffset = iter->name;
+                        /* FIXME implement this once SetFuncDocString is implemented */
+                        docstringoffset = -1;
+                        helpcontext = (size < 7*sizeof(int)) ? 0 : typedata[6];
+
+                        status = S_OK;
+                    } else {
+                        FIXME("Not implemented for variable members\n");
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    if (!status) {
+        WCHAR *string;
+        if (pBstrName) {
+            if (nameoffset == -1)
+                *pBstrName = NULL;
+            else {
+                MSFT_NameIntro *name = (MSFT_NameIntro*)&This->typelib->
+                        typelib_segment_data[MSFT_SEG_NAME][nameoffset];
+                ctl2_decode_name((char*)&name->namelen, &string);
+                *pBstrName = SysAllocString(string);
+                if(!*pBstrName)
+                    return E_OUTOFMEMORY;
+            }
+        }
+
+        if (pBstrDocString) {
+            if (docstringoffset == -1)
+                *pBstrDocString = NULL;
+            else {
+                MSFT_NameIntro *name = (MSFT_NameIntro*)&This->typelib->
+                        typelib_segment_data[MSFT_SEG_NAME][docstringoffset];
+                ctl2_decode_name((char*)&name->namelen, &string);
+                *pBstrDocString = SysAllocString(string);
+                if(!*pBstrDocString) {
+                    if (pBstrName) SysFreeString(*pBstrName);
+                    return E_OUTOFMEMORY;
+                }
+            }
+        }
+
+        if (pdwHelpContext) {
+            *pdwHelpContext = helpcontext;
+        }
+
+        if (pBstrHelpFile) {
+            status = ITypeLib_GetDocumentation((ITypeLib*)&This->typelib->lpVtblTypeLib2,
+                    -1, NULL, NULL, NULL, pBstrHelpFile);
+            if (status) {
+                if (pBstrName) SysFreeString(*pBstrName);
+                if (pBstrDocString) SysFreeString(*pBstrDocString);
+            }
+        }
+    }
+
+    return status;
 }
 
 /******************************************************************************
@@ -4513,7 +4723,7 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
         if(!iter)
             return TYPE_E_ELEMENTNOTFOUND;
 
-        return ITypeInfo_GetDocumentation((ITypeInfo*)iter->lpVtblTypeInfo2,
+        return ITypeInfo_GetDocumentation((ITypeInfo*)&iter->lpVtblTypeInfo2,
                 -1, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
     }
 

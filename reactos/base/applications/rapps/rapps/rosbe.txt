@@ -19,3 +19,6 @@ Description = Te permite compilar el código de ReactOS. Para más instrucciones
 
 [Section.0415]
 Description = Pozwala zbudować obraz płyty ReactOS ze źródeł. Więcej informacji na Wiki ReactOS.
+
+[Section.0422]
+Description = Дозволяє зібрати ReactOS з вихідних кодів. За детальною інформацією дивіться в ReactOS Вікі.

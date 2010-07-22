@@ -236,7 +236,7 @@ ProcessIdToHandle(IN DWORD dwProcessId)
 
     /* Open a handle to the process */
     ClientId.UniqueThread = NULL;
-    ClientId.UniqueProcess = (HANDLE)(ULONG_PTR)dwProcessId;
+    ClientId.UniqueProcess = UlongToHandle(dwProcessId);
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
     Status = NtOpenProcess(&Handle,
                            PROCESS_ALL_ACCESS,

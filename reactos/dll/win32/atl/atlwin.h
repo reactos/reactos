@@ -43,7 +43,7 @@ typedef struct _ATL_WNDCLASSINFOW_TAG
     WCHAR m_szAutoName[14];
 } _ATL_WNDCLASSINFOW;
 
-ATOM WINAPI AtlModuleRegisterWndClassInfoA(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOA *wci, WNDPROC *pProc);
+ATOM WINAPI AtlModuleRegisterWndClassInfoA(_ATL_MODULEA *pm, _ATL_WNDCLASSINFOA *wci, WNDPROC *pProc);
 ATOM WINAPI AtlModuleRegisterWndClassInfoW(_ATL_MODULEW *pm, _ATL_WNDCLASSINFOW *wci, WNDPROC *pProc);
 
 HDC WINAPI AtlCreateTargetDC(HDC hdc, DVTARGETDEVICE *ptd);

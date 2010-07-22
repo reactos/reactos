@@ -19,3 +19,6 @@ Description = Clon de Breakout usando las librerias SDL.
 
 [Section.0415]
 Description = Klon Breakouta/Arkanoida napisany przy użyciu biblioteki SDL.
+
+[Section.0422]
+Description = Клон Breakouta/Arkanoida, що використовує бібліотеки SDL.

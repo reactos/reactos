@@ -188,8 +188,8 @@
 	<property name="BASEADDRESS_RPCRT4"		value="0x76000000" />
 	<property name="BASEADDRESS_SHLWAPI"		value="0x76100000" />
 	<property name="BASEADDRESS_INETCOMM"		value="0x76140000" />
-	<property name="BASEADDRESS_COMCTL32"		value="0x76160000" />
-	<property name="BASEADDRESS_COMDLG32"		value="0x76220000" />
+	<property name="BASEADDRESS_COMCTL32"		value="0x76170000" />
+	<property name="BASEADDRESS_COMDLG32"		value="0x76230000" />
 	<property name="BASEADDRESS_WINSTA"		value="0x762f0000" />
 	<property name="BASEADDRESS_IMM32"		value="0x76320000" />
 	<property name="BASEADDRESS_D3D8THK"		value="0x76340000" />
@@ -203,15 +203,15 @@
 	<property name="BASEADDRESS_WAVEMAP"		value="0x76610000" />
 	<property name="BASEADDRESS_MPR"		value="0x76620000" />
 	<property name="BASEADDRESS_MSHTML"		value="0x76650000" />
-	<property name="BASEADDRESS_ODBC32"		value="0x76660000" />
-	<property name="BASEADDRESS_SETUPAPI"		value="0x76660000" />
-	<property name="BASEADDRESS_CRYPTDLL"		value="0x76740000" />
-	<property name="BASEADDRESS_SHFOLDER"		value="0x76760000" />
-	<property name="BASEADDRESS_NTDSAPI"		value="0x76780000" />
-	<property name="BASEADDRESS_NTMARTA"		value="0x768a0000" />
-	<property name="BASEADDRESS_RASDLG"		value="0x768d0000" />
-	<property name="BASEADDRESS_GDIPLUS"		value="0x76a00000" />
-	<property name="BASEADDRESS_ATL"		value="0x76a80000" />
+	<property name="BASEADDRESS_ODBC32"		value="0x76710000" />
+	<property name="BASEADDRESS_SETUPAPI"		value="0x76730000" />
+	<property name="BASEADDRESS_CRYPTDLL"		value="0x768f0000" />
+	<property name="BASEADDRESS_SHFOLDER"		value="0x76900000" />
+	<property name="BASEADDRESS_NTDSAPI"		value="0x76910000" />
+	<property name="BASEADDRESS_NTMARTA"		value="0x76920000" />
+	<property name="BASEADDRESS_RASDLG"		value="0x76930000" />
+	<property name="BASEADDRESS_GDIPLUS"		value="0x76a70000" />
+	<property name="BASEADDRESS_ATL"		value="0x76ac0000" />
 	<property name="BASEADDRESS_SFC"		value="0x76b50000" />
 	<property name="BASEADDRESS_CREDUI"		value="0x76bf0000" />
 	<property name="BASEADDRESS_SFC_OS"		value="0x76c10000" />
@@ -242,7 +242,7 @@
 	<property name="BASEADDRESS_WSHIRDA"		value="0x777f0000" />
 	<property name="BASEADDRESS_VERSION"		value="0x77a40000" />
 	<property name="BASEADDRESS_OLE32"		value="0x77a50000" />
-	<property name="BASEADDRESS_OLEPRO32"		value="0x77b10000" />
+	<property name="BASEADDRESS_OLEPRO32"		value="0x77b20000" />
 	<property name="BASEADDRESS_ACTIVEDS"		value="0x77cb0000" />
 	<property name="BASEADDRESS_ADVAPI32"		value="0x77dc0000" />
 	<property name="BASEADDRESS_USER32"		value="0x77e50000" />

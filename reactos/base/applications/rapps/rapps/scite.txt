@@ -16,3 +16,6 @@ Description = SciTE ist ein SCIntilla basierter Text Editor. Ursprünglich wurde
 
 [Section.040a]
 Description = Editor de texto basado en SCIntilla. Originalmente creado para demostrar Scintilla, a crecido para ser un gran editor con capacidad para crear y ejecutar programas.
+
+[Section.0422]
+Description = Текстовий редактор на основі SCIntilla. Був зібраний як презентація Scintilla, але виріс до редактора загального користування з засобами збирання та запуску програм.

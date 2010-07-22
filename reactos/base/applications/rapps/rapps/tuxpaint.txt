@@ -19,3 +19,6 @@ Description = Editor gráfico de imágenes pensado para niños de código abiert
 
 [Section.0415]
 Description = Otwarty program graficzny przeznaczony głównie dla dzieci.
+
+[Section.0422]
+Description = Відкритий графічний редактор для малих дітей.

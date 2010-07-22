@@ -201,7 +201,7 @@ typedef union YYSTYPE
 {
 
 /* Line 1676 of yacc.c  */
-#line 156 "parser.y"
+#line 154 "parser.y"
 
 	attr_t *attr;
 	attr_list_t *attr_list;
@@ -214,8 +214,6 @@ typedef union YYSTYPE
 	var_list_t *var_list;
 	declarator_t *declarator;
 	declarator_list_t *declarator_list;
-	func_t *func;
-	func_list_t *func_list;
 	statement_t *statement;
 	statement_list_t *stmt_list;
 	ifref_t *ifref;
@@ -233,7 +231,7 @@ typedef union YYSTYPE
 
 
 /* Line 1676 of yacc.c  */
-#line 237 "parser.tab.h"
+#line 235 "parser.tab.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

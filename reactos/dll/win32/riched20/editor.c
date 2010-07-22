@@ -289,7 +289,7 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
   TRACE("%08x %p\n", dwFormat, stream);
   
   do {
-    long nWideChars = 0;
+    LONG nWideChars = 0;
 
     if (!stream->dwSize)
     {
@@ -1495,7 +1495,6 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
         {
           /* Delete any incomplete table row at the end of the rich text. */
           int nOfs, nChars;
-          ME_DisplayItem *pCell;
           ME_DisplayItem *para;
 
           parser.rtfMinor = rtfRow;
@@ -1515,7 +1514,6 @@ static LRESULT ME_StreamIn(ME_TextEditor *editor, DWORD format, EDITSTREAM *stre
             assert(para->member.para.nFlags & MEPF_ROWEND);
             para = para->member.para.next_para;
           }
-          pCell = para->member.para.pCell;
 
           editor->pCursors[1].pPara = para;
           editor->pCursors[1].pRun = ME_FindItemFwd(para, diRun);
@@ -3504,16 +3502,18 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     CHARFORMAT2W fmt;
     HDC hDC;
     BOOL bRepaint = LOWORD(lParam);
-    ME_Cursor start;
 
     if (!wParam)
-      wParam = (WPARAM)GetStockObject(SYSTEM_FONT); 
+      wParam = (WPARAM)GetStockObject(SYSTEM_FONT);
     GetObjectW((HGDIOBJ)wParam, sizeof(LOGFONTW), &lf);
     hDC = ITextHost_TxGetDC(editor->texthost);
-    ME_CharFormatFromLogFont(hDC, &lf, &fmt); 
+    ME_CharFormatFromLogFont(hDC, &lf, &fmt);
     ITextHost_TxReleaseDC(editor->texthost, hDC);
-    ME_SetCursorToStart(editor, &start);
-    ME_SetCharFormat(editor, &start, NULL, &fmt);
+    if (editor->mode & TM_RICHTEXT) {
+      ME_Cursor start;
+      ME_SetCursorToStart(editor, &start);
+      ME_SetCharFormat(editor, &start, NULL, &fmt);
+    }
     ME_SetDefaultCharFormat(editor, &fmt);
 
     ME_CommitUndo(editor);
@@ -4258,34 +4258,28 @@ LRESULT ME_HandleMessage(ME_TextEditor *editor, UINT msg, WPARAM wParam,
     ME_Style *style = ME_GetInsertStyle(editor, 0);
     hIMC = ITextHost_TxImmGetContext(editor->texthost);
     ME_DeleteSelection(editor);
-    ME_CommitUndo(editor);
     ME_SaveTempStyle(editor);
-    if (lParam & GCS_RESULTSTR)
+    if (lParam & (GCS_RESULTSTR|GCS_COMPSTR))
     {
         LPWSTR lpCompStr = NULL;
         DWORD dwBufLen;
+        DWORD dwIndex = lParam & GCS_RESULTSTR;
+        if (!dwIndex)
+          dwIndex = GCS_COMPSTR;
 
-        dwBufLen = ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, NULL, 0);
+        dwBufLen = ImmGetCompositionStringW(hIMC, dwIndex, NULL, 0);
         lpCompStr = HeapAlloc(GetProcessHeap(),0,dwBufLen + sizeof(WCHAR));
-        ImmGetCompositionStringW(hIMC, GCS_RESULTSTR, lpCompStr, dwBufLen);
+        ImmGetCompositionStringW(hIMC, dwIndex, lpCompStr, dwBufLen);
         lpCompStr[dwBufLen/sizeof(WCHAR)] = 0;
         ME_InsertTextFromCursor(editor,0,lpCompStr,dwBufLen/sizeof(WCHAR),style);
-    }
-    else if (lParam & GCS_COMPSTR)
-    {
-        LPWSTR lpCompStr = NULL;
-        DWORD dwBufLen;
+        HeapFree(GetProcessHeap(), 0, lpCompStr);
 
-        dwBufLen = ImmGetCompositionStringW(hIMC, GCS_COMPSTR, NULL, 0);
-        lpCompStr = HeapAlloc(GetProcessHeap(),0,dwBufLen + sizeof(WCHAR));
-        ImmGetCompositionStringW(hIMC, GCS_COMPSTR, lpCompStr, dwBufLen);
-        lpCompStr[dwBufLen/sizeof(WCHAR)] = 0;
-
-        ME_InsertTextFromCursor(editor,0,lpCompStr,dwBufLen/sizeof(WCHAR),style);
-        ME_SetSelection(editor,editor->imeStartIndex,
-                        editor->imeStartIndex + dwBufLen/sizeof(WCHAR));
+        if (dwIndex == GCS_COMPSTR)
+          ME_SetSelection(editor,editor->imeStartIndex,
+                          editor->imeStartIndex + dwBufLen/sizeof(WCHAR));
     }
     ME_ReleaseStyle(style);
+    ME_CommitUndo(editor);
     ME_UpdateRepaint(editor);
     return 0;
   }

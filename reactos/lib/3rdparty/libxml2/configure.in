@@ -1,11 +1,12 @@
 dnl Process this file with autoconf to produce a configure script.
 AC_INIT(entities.c)
 AM_CONFIG_HEADER(config.h)
+AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_HOST
 
 LIBXML_MAJOR_VERSION=2
 LIBXML_MINOR_VERSION=7
-LIBXML_MICRO_VERSION=6
+LIBXML_MICRO_VERSION=7
 LIBXML_MICRO_VERSION_SUFFIX=
 LIBXML_VERSION=$LIBXML_MAJOR_VERSION.$LIBXML_MINOR_VERSION.$LIBXML_MICRO_VERSION$LIBXML_MICRO_VERSION_SUFFIX
 LIBXML_VERSION_INFO=`expr $LIBXML_MAJOR_VERSION + $LIBXML_MINOR_VERSION`:$LIBXML_MICRO_VERSION:$LIBXML_MINOR_VERSION
@@ -72,10 +73,14 @@ dnl if the system support linker version scripts for symbol versioning
 dnl then add it
 dnl
 VERSION_SCRIPT_FLAGS=
-$(/usr/bin/ld --help 2>&1 | grep -- --version-script >/dev/null) && \
-    VERSION_SCRIPT_FLAGS=-Wl,--version-script=
-test "`uname`" == "SunOS" && \
-    VERSION_SCRIPT_FLAGS="-Wl,-M -Wl,"
+# lt_cv_prog_gnu_ld is from libtool 2.+
+if test "$lt_cv_prog_gnu_ld" = yes; then
+  VERSION_SCRIPT_FLAGS=-Wl,--version-script=
+else
+  case $host in
+  *-*-sunos*) VERSION_SCRIPT_FLAGS="-Wl,-M -Wl,";;
+  esac
+fi
 AC_SUBST(VERSION_SCRIPT_FLAGS)
 AM_CONDITIONAL([USE_VERSION_SCRIPT], [test -n "$VERSION_SCRIPT_FLAGS"])
 
@@ -742,7 +747,7 @@ if test "$with_python" != "no" ; then
 		    PYTHON_SITE_PACKAGES=`$PYTHON -c "from distutils import sysconfig; print sysconfig.get_python_lib()"`
 	    fi
 	fi
-	PYTHON_LIBS=`python$PYTHON_VERSION-config --libs`
+	PYTHON_LIBS=`python$PYTHON_VERSION-config --ldflags`
     fi
     if test "$with_python" != ""
     then
@@ -777,6 +782,10 @@ if test "$with_modules" != "no" ; then
     MODULE_PLATFORM_LIBS=
     AC_DEFINE([HAVE_DLOPEN], [], [Have dlopen based dso])
   ])
+  ;;
+  *-*-mingw*)
+  MODULE_EXTENSION=".dll"
+  WITH_MODULES=1
   ;;
   *)
   AC_CHECK_FUNC(shl_load, libxml_have_shl_load=yes, [

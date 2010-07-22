@@ -5,7 +5,7 @@
 #define PROPSHEETHEIGHT 228
 #define PROPSHEETPADDING(x)  (x+x+x+x+x+x)
 #define SYSTEM_COLUMN   (18*PROPSHEETPADDING)
-#define LABELLINE(x)  (x+x+x+2+x+x+x+x+x+x)
+#define LABELLINE(x)  (x+x+x+x+x+x+x+x+x+2)
 
 
 #define ICONSIZE        16

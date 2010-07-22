@@ -549,7 +549,7 @@ static HRESULT WINAPI Registrar_AddReplacement(IRegistrar *iface, LPCOLESTR Key,
     new_rep = HeapAlloc(GetProcessHeap(), 0, sizeof(rep_list));
 
     new_rep->key_len  = lstrlenW(Key);
-    new_rep->key = HeapAlloc(GetProcessHeap(), 0, new_rep->key_len*sizeof(OLECHAR)+1);
+    new_rep->key = HeapAlloc(GetProcessHeap(), 0, (new_rep->key_len + 1) * sizeof(OLECHAR));
     memcpy(new_rep->key, Key, (new_rep->key_len+1)*sizeof(OLECHAR));
 
     len = lstrlenW(item)+1;

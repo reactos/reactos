@@ -3027,7 +3027,7 @@ PnpBusTypeGuidGet(IN USHORT Index,
     
     /* Release lock and return status */
     ExReleaseFastMutex(&PnpBusTypeGuidList->Lock);
-    return Index;
+    return Status;
 }
 
 NTSTATUS
@@ -3507,6 +3507,10 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
        return STATUS_INVALID_PARAMETER;
    }
 
+   if (!IopIsValidPhysicalDeviceObject(DeviceObject))
+       return STATUS_INVALID_DEVICE_REQUEST;
+   DeviceNode = IopGetDeviceNode(DeviceObject);
+
    /*
     * Calculate the length of the base key name. This is the full
     * name for driver key or the name excluding "Device Parameters"
@@ -3527,7 +3531,6 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    }
    else
    {
-      DeviceNode = IopGetDeviceNode(DeviceObject);
       KeyNameLength += sizeof(EnumKeyName) - sizeof(UNICODE_NULL) +
                        DeviceNode->InstancePath.Length;
    }

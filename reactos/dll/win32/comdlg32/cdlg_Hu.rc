@@ -19,6 +19,9 @@
 #include "cdlg.h"
 #include "filedlgbrowser.h"
 
+/* UTF-8 */
+#pragma code_page(65001)
+
 /*
  * WARNING: DO NOT CHANGE THE SIZE OF THE STANDARD DIALOG TEMPLATES.
  */
@@ -27,91 +30,146 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 OPEN_FILE DIALOG 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Megnyit�s"
+CAPTION "Megnyitás"
 FONT 8, "MS Shell Dlg"
 {
-        LTEXT "File &neve:", 1090, 6, 6, 76, 9
+        LTEXT "Fájl&név:", 1090, 6, 6, 76, 9
         EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
         LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
-        LTEXT "&K�nyvt�rak:", -1, 110, 6, 92, 9
+        LTEXT "&Könyvtár:", -1, 110, 6, 92, 9
         CONTROL "", 1088, "STATIC", SS_NOPREFIX | WS_GROUP, 110, 18, 92, 9
         LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
-        LTEXT "File &t�pusok:", 1089, 6, 104, 90, 9
+        LTEXT "Fájl&típus:", 1089, 6, 104, 90, 9
         CONTROL "", 1136, "COMBOBOX", CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 6, 114, 90, 36
-        LTEXT "&Meghajt�k:", 1091, 110, 104, 92, 9
+        LTEXT "&Meghajtó:", 1091, 110, 104, 92, 9
         CONTROL "", 1137, "COMBOBOX", CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP, 110, 114, 92, 68
-        CONTROL "Megnyit�s", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP, 208, 6, 56, 14
-        CONTROL "M�gsem", IDCANCEL, "BUTTON", WS_GROUP | WS_TABSTOP, 208, 24, 56, 14
-        CONTROL "&Seg�ts�g", 1038, "BUTTON", WS_GROUP | WS_TABSTOP, 208, 46, 56, 14
-        CONTROL "&Csak olvashat�", 1040, "BUTTON", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 208, 68, 63, 12
+        CONTROL "Megnyitás", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP, 208, 6, 56, 14
+        CONTROL "Mégse", IDCANCEL, "BUTTON", WS_GROUP | WS_TABSTOP, 208, 24, 56, 14
+        CONTROL "&Súgó", 1038, "BUTTON", WS_GROUP | WS_TABSTOP, 208, 46, 56, 14
+        CONTROL "&Csak olvasható", 1040, "BUTTON", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 208, 68, 63, 12
 }
 
 SAVE_FILE DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 275, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Ment�s �j n�ven..."
+CAPTION "Mentés másként..."
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "File &neve:", 1090, 6, 6, 76, 9
+ LTEXT "Fájl&név:", 1090, 6, 6, 76, 9
  EDITTEXT 1152, 6, 16, 90, 12, ES_AUTOHSCROLL | ES_OEMCONVERT | WS_BORDER | WS_TABSTOP
  LISTBOX 1120, 6, 32, 90, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "&K�nyvt�rak:", -1, 110, 6, 92, 9
+ LTEXT "&Könyvtár:", -1, 110, 6, 92, 9
  LTEXT "", 1088, 110, 18, 92, 9, SS_NOPREFIX | WS_GROUP
  LISTBOX 1121, 110, 32, 92, 68, LBS_STANDARD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_DISABLENOSCROLL | WS_TABSTOP
- LTEXT "File &t�pusok:", 1089, 6, 104, 90, 9
+ LTEXT "Fájl&típus:", 1089, 6, 104, 90, 9
  COMBOBOX 1136, 6, 114, 90, 36, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- LTEXT "&Meghajt�k:", 1091, 110, 104, 92, 9
+ LTEXT "&Meghajtó:", 1091, 110, 104, 92, 9
  COMBOBOX 1137, 110, 114, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- DEFPUSHBUTTON "Ment�s �j n�ven", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "M�gsem", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Seg�ts�g", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
- CHECKBOX "&Csak olvashat�", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ DEFPUSHBUTTON "Mentés másként", IDOK, 208, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Mégse", IDCANCEL, 208, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Súgó", 1038, 208, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Csak olvasható", 1040, 208, 68, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
 
 
 PRINT DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Nyomtat�s"
+CAPTION "Nyomtatás"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Nyomtat�:", 1088, 6, 6, 40, 9
+ LTEXT "Nyomtató:", 1088, 6, 6, 40, 9
  LTEXT "", 1089, 60, 6, 150, 9
- GROUPBOX "Nyomtatand� ter�let", 1072, 6, 30, 160, 65, BS_GROUPBOX
+ GROUPBOX "Nyomtatandó terület", 1072, 6, 30, 160, 65, BS_GROUPBOX
  RADIOBUTTON "&Mind", 1056, 16, 45, 60, 12
- RADIOBUTTON "&Kiv�lasztott", 1057, 16, 60, 60, 12
+ RADIOBUTTON "&Kiválasztott", 1057, 16, 60, 60, 12
  RADIOBUTTON "&Lapok", 1058, 16, 75, 60, 12
- DEFPUSHBUTTON "Nyomtat�s", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "M�gsem", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Be�ll�t�s", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- LTEXT "-&t�l:", 1090, 60, 80, 30, 9
- LTEXT "-&ig:", 1091, 120, 80, 30, 9
- LTEXT "Mi&n�s�g:", 1092, 6, 100, 76, 9
+ DEFPUSHBUTTON "Nyomtatás", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Mégse", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Beállítás", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ LTEXT "Et&tõl:", 1090, 60, 80, 30, 9
+ LTEXT "Ed&dig:", 1091, 120, 80, 30, 9
+ LTEXT "Mi&nőség:", 1092, 6, 100, 76, 9
  COMBOBOX 1136, 80, 100, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
- CHECKBOX "&File-ba nyomtat", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- CHECKBOX "S�r�", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Fájlba nyomtat", 1040, 20, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "Sűrű", 1041, 160, 100, 50, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
 }
+
+PAGESETUPDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 32, 32, 240, 240
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Oldalbeállítás"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  CONTROL "", rct1, "Static", SS_WHITERECT, 80, 8, 80, 80
+  CONTROL "", rct2, "Static", SS_GRAYRECT, 160, 12, 4, 80
+  CONTROL "", rct3, "Static", SS_GRAYRECT,  84, 88, 80, 4
+  GROUPBOX "Papír", grp2, 8, 96, 224, 56, BS_GROUPBOX
+  LTEXT "&Méret:", stc2, 16, 112, 36, 8
+  COMBOBOX cmb2, 64, 110, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  LTEXT "&Forrás:", stc3, 16, 132, 36, 8
+  COMBOBOX cmb3, 64, 130, 160, 160, CBS_SIMPLE|CBS_DROPDOWN|CBS_SORT|WS_GROUP|WS_TABSTOP|WS_VSCROLL
+  GROUPBOX "Tájolás", grp1, 8, 156, 64, 56, BS_GROUPBOX
+  AUTORADIOBUTTON "&Álló", rad1, 16, 170, 52, 12, BS_AUTORADIOBUTTON
+  AUTORADIOBUTTON "&Fekvõ", rad2, 16, 190, 52, 12, BS_AUTORADIOBUTTON
+  GROUPBOX "Margók", grp4, 80, 156, 152, 56, BS_GROUPBOX
+  LTEXT "&Bal:", stc15, 88, 172, 21, 8
+  EDITTEXT edt4, 111, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Jobb:", stc16, 159, 172, 27, 8
+  EDITTEXT edt6, 187, 170, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "F&elül:", stc17, 88, 192, 21, 8
+  EDITTEXT edt5, 111, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  LTEXT "&Alul:", stc18, 159, 192, 23, 8
+  EDITTEXT edt7, 187, 190, 39, 12, WS_TABSTOP|WS_GROUP|WS_BORDER
+  DEFPUSHBUTTON "OK", IDOK, 71, 220, 50, 14, BS_PUSHBUTTON
+  PUSHBUTTON "Mégse", IDCANCEL, 126, 220, 50, 14
+  PUSHBUTTON "Ny&omtató...", psh3, 184, 220, 48, 14
+END
+
+NEWFILEOPENORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 280, 164
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_VISIBLE | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_CLIPCHILDREN
+CAPTION "Megnyitás"
+FONT 8, "MS Shell Dlg"
+{
+    LTEXT	"H&ely:",IDC_LOOKINSTATIC,4,6,43,8, SS_NOTIFY
+    COMBOBOX	IDC_LOOKIN,49,3,132,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+
+    LTEXT	"" , IDC_TOOLBARSTATIC, 181, 2, 102, 17, NOT WS_GROUP | NOT WS_VISIBLE
+    LISTBOX	IDC_SHELLSTATIC,4,20,272,85, LBS_SORT | LBS_NOINTEGRALHEIGHT | LBS_MULTICOLUMN | WS_HSCROLL | NOT WS_VISIBLE
+
+    LTEXT	"Fájl&név:",IDC_FILENAMESTATIC,5,112,46,8, SS_NOTIFY
+    EDITTEXT	IDC_FILENAME,54,110,155,12,ES_AUTOHSCROLL
+
+    LTEXT	"Fájl&típus:",IDC_FILETYPESTATIC,5,128,42,8, SS_NOTIFY
+    COMBOBOX	IDC_FILETYPE,54,126,155,53,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+
+    CONTROL	"Me&gnyitás csak olvashatóként",IDC_OPENREADONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,54,145,100,10
+
+    DEFPUSHBUTTON	"&Megnyitás",		 IDOK,222,110,50,14
+    PUSHBUTTON		"Mégse",		 IDCANCEL,222,128,50,14
+    PUSHBUTTON		"&Súgó",		 pshHelp,222,145,50,14
+}
+
 
 
 PRINT_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 264, 134
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Nyomtat� be�ll�t�sa"
+CAPTION "Nyomtató beállítása"
 FONT 8, "MS Shell Dlg"
 {
- GROUPBOX "Nyomtat�", 1072, 6, 10, 180, 65, BS_GROUPBOX
- RADIOBUTTON "&Alap�rtelmezett nyomtat�", 1056, 16, 20, 80, 12
+ GROUPBOX "Nyomtató", 1072, 6, 10, 180, 65, BS_GROUPBOX
+ RADIOBUTTON "&Alapértelmezett nyomtató", 1056, 16, 20, 80, 12
  LTEXT "[nincs]", 1088, 35, 35, 120, 9
- RADIOBUTTON "&Adott nyomtat�", 1057, 16, 50, 80, 12
+ RADIOBUTTON "&Adott nyomtató", 1057, 16, 50, 80, 12
  COMBOBOX 1136, 35, 65, 149, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  DEFPUSHBUTTON "Ok", IDOK, 206, 6, 56, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "M�gsem", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "&Be�ll�t�s", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
- GROUPBOX "Oldalfekv�s", 1073, 6, 85, 100, 50, BS_GROUPBOX
- RADIOBUTTON "�&ll�", 1058, 50, 100, 40, 12
- RADIOBUTTON "&Fekv�", 1059, 50, 115, 40, 12
+ PUSHBUTTON "Mégse", IDCANCEL, 206, 24, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "&Beállítás", 1024, 206, 46, 56, 14, WS_GROUP | WS_TABSTOP
+ GROUPBOX "Tájolás", 1073, 6, 85, 100, 50, BS_GROUPBOX
+ RADIOBUTTON "Á&lló", 1058, 50, 100, 40, 12
+ RADIOBUTTON "&Fekvő", 1059, 50, 115, 40, 12
  ICON "LANDSCAP", 1097, 10, 95, 32, 32
  ICON "PORTRAIT", 1098, 10, 95, 32, 32
- GROUPBOX "Pap�r", 1074, 120, 85, 180, 50, BS_GROUPBOX
- LTEXT "&M�rete", 1089, 130, 95, 30, 9
- LTEXT "Fo&rr�sa", 1090, 130, 110, 30, 9
+ GROUPBOX "Papír", 1074, 120, 85, 180, 50, BS_GROUPBOX
+ LTEXT "&Méret", 1089, 130, 95, 30, 9
+ LTEXT "Fo&rrás", 1090, 130, 110, 30, 9
  COMBOBOX 1137, 155, 95, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
  COMBOBOX 1138, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
@@ -119,31 +177,31 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Font"
+CAPTION "Betûtípus"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "&Font:",1088 ,6,3,40,9
+    LTEXT           "&Betûtípus:",1088 ,6,3,40,9
     COMBOBOX        1136 ,6,13,94,54,  CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "Font &st�lus:",1089 ,108,3,44,9
+    LTEXT           "Betû&stílus:",1089 ,108,3,44,9
     COMBOBOX        1137,108,13,64,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE
-    LTEXT           "&M�ret:",1090,179,3,30,9
+    LTEXT           "&Méret:",1090,179,3,30,9
     COMBOBOX        1138,179,13,32,54, CBS_OWNERDRAWFIXED | CBS_HASSTRINGS | CBS_DISABLENOSCROLL |
                     WS_VSCROLL | WS_TABSTOP | CBS_SIMPLE | CBS_SORT
     DEFPUSHBUTTON   "OK",IDOK,218,6,40,14,WS_GROUP
-    PUSHBUTTON      "M�gsem",IDCANCEL,218,23,40,14,WS_GROUP
+    PUSHBUTTON      "Mégse",IDCANCEL,218,23,40,14,WS_GROUP
     PUSHBUTTON      "&Alkalmaz", 1026,218,40,40,14,WS_GROUP
-    PUSHBUTTON      "&Seg�ts�g" , 1038,218,57,40,14,WS_GROUP
+    PUSHBUTTON      "&Súgó" , 1038,218,57,40,14,WS_GROUP
     GROUPBOX        "Effektusok",1072,6,72,84,34,WS_GROUP
-    CHECKBOX        "�&th�zott", 1040, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
-    CHECKBOX        "&Al�h�zott", 1041, 10,94,50,10, BS_AUTOCHECKBOX
-    LTEXT           "&Sz�n:", 1091 ,6,110,30,9
+    CHECKBOX        "Á&thúzott", 1040, 10,82,50,10, BS_AUTOCHECKBOX | WS_TABSTOP
+    CHECKBOX        "&Aláhúzott", 1041, 10,94,50,10, BS_AUTOCHECKBOX
+    LTEXT           "&Szín:", 1091 ,6,110,30,9
     COMBOBOX        1139,6,120,84,100,CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_HASSTRINGS |
                     CBS_AUTOHSCROLL |  WS_BORDER | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Minta",grp2,98,72,120,36,WS_GROUP
-    CTEXT           "AaBbYyZz������",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
-    LTEXT           "Scr&ipt (translate):",stc7 ,98,114,80,9
+    CTEXT           "AaBbYyZzÁáŐőÉé",stc5,103,80,109,24,SS_NOPREFIX | NOT WS_VISIBLE
+    LTEXT           "Szkr&ipt:",stc7 ,98,114,80,9
     COMBOBOX        cmb5,98,124,120,90,CBS_DROPDOWNLIST | CBS_HASSTRINGS |
 		    CBS_AUTOHSCROLL |   WS_VSCROLL | WS_TABSTOP
 }
@@ -151,17 +209,17 @@ FONT 8, "MS Shell Dlg"
 
 CHOOSE_COLOR DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 300, 185
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Sz�n"
+CAPTION "Szín"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "&Alap sz�nek:",   1088, 4,    4,  140, 10
- LTEXT "&Egyedi sz�nek:",  1089, 4,   106, 140, 10
- LTEXT "Sz�n |  &T�m�r",  1090, 150, 151,  48, 10
- LTEXT   "&V�r�s:", 726 /*1094*/,249,126,24,10
+ LTEXT "&Alap színek:",   1088, 4,    4,  140, 10
+ LTEXT "&Egyedi színek:",  1089, 4,   106, 140, 10
+ LTEXT "Szín |  &Tömör",  1090, 150, 151,  48, 10
+ LTEXT   "&Vörös:", 726 /*1094*/,249,126,24,10
  EDITTEXT 706, 275,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&Z�ld:",727/*1095*/,249,140,24,10
+ LTEXT   "&Zöld:",727/*1095*/,249,140,24,10
  EDITTEXT 707, 275,138,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
- LTEXT   "&K�k:",728 /*1096*/,249,154,24,10
+ LTEXT   "&Kék:",728 /*1096*/,249,154,24,10
  EDITTEXT 708, 275,152,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
  LTEXT  "&Hue:" ,723 /*1091*/,202,126,22,10
  EDITTEXT 703, 226,124,21,12, WS_BORDER | WS_GROUP | WS_TABSTOP
@@ -175,44 +233,250 @@ FONT 8, "MS Shell Dlg"
  CONTROL "" ,702,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 278,4,8,116
  CONTROL "" ,709,"STATIC",SS_SIMPLE|WS_TABSTOP|WS_GROUP, 152,124,40,26
  DEFPUSHBUTTON "Ok",  IDOK,  4, 166, 44, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "M�gsem", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Seg�ts�g", 1038,100,166, 44, 14
- PUSHBUTTON "&Egyedi sz�nekhez ad�s",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON "E&gyedi sz�n defini�l�s >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Mégse", IDCANCEL, 52, 166, 44, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Súgó", 1038,100,166, 44, 14
+ PUSHBUTTON "&Egyedi színekhez adás",    712/*1024*/, 152, 166, 142, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "E&gyedi szín definiálás >>", 719/*1025*/,   4, 150, 142, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON  "&t",713,300,200,4,14   /* just a dummy:  'i' is  like  &i  in "sol&id"  */
 }
 
 FINDDLGORD DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 236, 62
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Keres�s"
+CAPTION "Keresés"
 FONT 8, "MS Shell Dlg"
 BEGIN
         LTEXT "&Mit keressen:", -1, 4, 8, 48, 8
         EDITTEXT edt1, 51, 7, 124, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
-        CHECKBOX "Teljes &szavak keres�se", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-        CHECKBOX "Kis/&nagybet� k�l�nb.", chx2, 4, 42, 92, 12, BS_AUTOCHECKBOX | WS_TABSTOP
-        GROUPBOX "Ir�ny", grp1, 97, 26, 78, 28
+        CHECKBOX "Teljes &szavak keresése", chx1, 4, 26, 100, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+        CHECKBOX "Kis/&nagybetű különb.", chx2, 4, 42, 92, 12, BS_AUTOCHECKBOX | WS_TABSTOP
+        GROUPBOX "Irány", grp1, 97, 26, 78, 28
         CONTROL "&Vissza", rad1, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_TABSTOP, 102, 38, 32, 12
-        CONTROL "&El�re", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
-        DEFPUSHBUTTON "&K�vetkez�", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP
-        PUSHBUTTON "M�gsem", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
-        PUSHBUTTON "&Seg�ts�g", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
+        CONTROL "&Előre", rad2, "BUTTON", BS_AUTORADIOBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 138, 38, 30, 12
+        DEFPUSHBUTTON "&Következő", IDOK, 182,  5, 50, 14, WS_GROUP | WS_TABSTOP
+        PUSHBUTTON "Mégse", IDCANCEL, 182, 23, 50, 14, WS_GROUP | WS_TABSTOP
+        PUSHBUTTON "&Súgó", pshHelp, 182, 45, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 REPLACEDLGORD DIALOG 36, 24, 230, 94
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Cser�l�s"
+CAPTION "Csere"
 FONT 8, "MS Shell Dlg"
 BEGIN
         LTEXT "&Mit keressen:", -1, 4, 9, 48, 8
         EDITTEXT 1152, 57, 7, 111, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
-        LTEXT "Mire &cser�ljem:", -1, 4, 26, 53, 8
+        LTEXT "Mire &cserélje:", -1, 4, 26, 53, 8
         EDITTEXT 1153, 57, 24, 111, 12, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
-        CONTROL "Teljes &szavak keres�se", 1040, "BUTTON", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 5, 46, 104, 12
-        CONTROL "Kis/&nagybet� k�l�nb.", 1041, "BUTTON", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 62, 99, 12
-        CONTROL "&K�vetkez�", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP, 174, 4, 53, 14
-        CONTROL "C&ser�l", 1024, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 21, 53, 14
-        CONTROL "M&indent cser�l", 1025, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 38, 53, 14
-        CONTROL "M�gsem", IDCANCEL, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 55, 53, 14
-        CONTROL "&Seg�ts�g", 1038, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 75, 53, 14
+        CONTROL "Teljes &szavak keresése", 1040, "BUTTON", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP, 5, 46, 104, 12
+        CONTROL "Kis/&nagybetű különb.", 1041, "BUTTON", BS_AUTOCHECKBOX | WS_TABSTOP, 5, 62, 99, 12
+        CONTROL "&Következő", IDOK, "BUTTON", BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP, 174, 4, 53, 14
+        CONTROL "C&serél", 1024, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 21, 53, 14
+        CONTROL "M&indent cserél", 1025, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 38, 53, 14
+        CONTROL "Mégse", IDCANCEL, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 55, 53, 14
+        CONTROL "&Súgó", 1038, "BUTTON", WS_GROUP | WS_TABSTOP, 174, 75, 53, 14
 END
+
+PRINT32 DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 186
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Nyomtatás"
+FONT 8, "MS Shell Dlg"
+{
+    DEFPUSHBUTTON   "OK",     IDOK,     180,164, 48,14, WS_GROUP | BS_DEFPUSHBUTTON
+    PUSHBUTTON      "Mégse", IDCANCEL, 232,164, 48,14, WS_GROUP
+    PUSHBUTTON      "&Súgó",  pshHelp,  50, 161, 48,14, WS_GROUP
+
+    GROUPBOX        "Nyomtató",        grp4,   8,  4, 272,84, WS_GROUP
+    CONTROL         "Nyomtatás fáj&lba", chx1, "Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,212,70,64,12
+    PUSHBUTTON      "&Tulajdonságok",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Név:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb4,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Állapot:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. állapot",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Típus:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. típus",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Hely:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. hely", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Megjegyzés:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. megjegyzés",   stc13, 52, 72, 152,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Másolatok",         grp2, 160, 92, 120,64, WS_GROUP
+    LTEXT           "Másola&tok száma:",stc5,168,108,68,8
+    ICON            "",               ico3, 162,124,  76,24, WS_GROUP | SS_CENTERIMAGE
+    CONTROL         "Le&válogatás",       chx2,"Button",BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,240,130,36,12
+    EDITTEXT                          edt3, 240,106,  32,12, WS_GROUP | ES_NUMBER
+
+    GROUPBOX        "Nyomtatási terület",    grp1,   8,92,  144,64, WS_GROUP
+    CONTROL         "&Összes",           rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,16,106,64,12
+    CONTROL         "Oldala&k",         rad3,"Button",BS_AUTORADIOBUTTON,16,122,36,12
+    CONTROL         "&Kijelölés",     rad2,"Button",BS_AUTORADIOBUTTON,16,138,64,12
+    EDITTEXT                          edt1,  74,122,  26,12, WS_GROUP | ES_NUMBER
+    EDITTEXT                          edt2, 118,122,  26,12, WS_GROUP | ES_NUMBER
+    RTEXT           "Et&tõl:",         stc2,  52,124,  20,8
+    RTEXT           "Ed&dig:",           stc3, 100,124,  16,8
+}
+
+PRINT32_SETUP DIALOG LOADONCALL MOVEABLE DISCARDABLE  32, 32, 288, 178
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU |
+      DS_CONTEXTHELP | DS_3DLOOK
+CAPTION "Nyomtatás beállítás"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,180,156,48,14,WS_GROUP
+    PUSHBUTTON      "Mégse",IDCANCEL,232,156,48,14
+/*    PUSHBUTTON      "Hálózat...", psh5, 284,156,48,14 */
+
+    GROUPBOX        "Nyomtató",        grp4,   8,  4, 272,84, WS_GROUP
+    PUSHBUTTON      "&Tulajdonságok",    psh2, 212, 17,  60,14, WS_GROUP
+    LTEXT           "&Név:",         stc6,  16, 20,  36,8
+    COMBOBOX                          cmb1,  52, 18, 152,152,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "Állapot:",        stc8,  16, 36,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. állapot",    stc12, 52, 36, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Típus:",          stc7,  16, 48,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. típus",     stc11, 52, 48, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Hely:",         stc10, 16, 60,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. hely", stc14, 52, 60, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+    LTEXT           "Megjegyzés:",       stc9,  16, 72,  36,10, SS_NOPREFIX
+    LTEXT           "Látsz. megjegyzés",   stc13, 52, 72, 224,10, SS_NOPREFIX | SS_LEFTNOWORDWRAP
+
+    GROUPBOX        "Papír",          grp2,   8, 92, 164,56, WS_GROUP
+    LTEXT           "Mé&ret:",         stc2,  16,108,  36, 8
+    COMBOBOX                          cmb2,  52,106, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+    LTEXT           "&Forrás:",       stc3,  16,128,  36, 8
+    COMBOBOX                          cmb3,  52,126, 112,112,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_GROUP | WS_TABSTOP
+
+    GROUPBOX        "Tájolás",    grp1, 180, 92, 100,56, WS_GROUP
+    ICON            "",               ico1, 195,112,  18,20, WS_GROUP
+    CONTROL         "&Álló",      rad1,"Button",BS_AUTORADIOBUTTON | WS_GROUP |WS_TABSTOP,224,106,52,12
+    CONTROL         "Fe&kvõ",     rad2,"Button",BS_AUTORADIOBUTTON,224,126,52,12
+END
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_ABOUTBOX            "M&appaválasztó teszt névjegye"
+    IDS_DOCUMENTFOLDERS     "Dokumentum mappák"
+    IDS_PERSONAL            "Dokumentumok"
+    IDS_FAVORITES           "Kedvencek"
+    IDS_PATH                "Rendszer elérési útvonal"
+    IDS_DESKTOP             "Asztal"
+    IDS_FONTS               "Betûtípusok"
+    IDS_MYCOMPUTER          "Számítógép"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_SYSTEMFOLDERS       "Rendszermappák"
+    IDS_LOCALHARDRIVES      "Helyi merevlemezek"
+    IDS_FILENOTFOUND        "Fájl nem található"
+    IDS_VERIFYFILE          "Kérem ellenõrizze, hogy helyes fájnevet adott-e meg"
+    IDS_CREATEFILE          "A fájl nem létezik.\nLétrehozza a fájlt?"
+    IDS_OVERWRITEFILE       "A fájl már létezik.\nCseréli a fájlt?"
+    IDS_INVALID_FILENAME_TITLE "Érvénytelen karakter(ek) van(nak) az útvonalban"
+    IDS_INVALID_FILENAME    "A fájlnév nem tartalmazhatja ezeket a karaktereket:\n                          / : < > |"
+    IDS_PATHNOTEXISTING     "Útvonal nem létezik"
+    IDS_FILENOTEXISTING     "Fájl nem létezik"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_UPFOLDER         "Feljebb egy szintet"
+    IDS_NEWFOLDER        "Új mappa léterehozása"
+    IDS_LISTVIEW         "Lista"
+    IDS_REPORTVIEW       "Részletek"
+    IDS_TODESKTOP        "Navigálás az asztalra"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    PD32_PRINT_TITLE       "Nyomtatás"
+
+    PD32_VALUE_UREADABLE                  "Olvashatatlan bejegyzés"
+    PD32_INVALID_PAGE_RANGE "Ez az érték nincs az oldal határain belûl.\n\
+Kérem adjon meg egy értéket %d és %d között."
+    PD32_FROM_NOT_ABOVE_TO                "Az 'Ettõl' mezõ nem haladhatja meg az \
+'Eddig' mezõt."
+    PD32_MARGINS_OVERLAP                  "A margók átfedik egymást vagy kívül esnek a \
+papír határain.\nKérem adja meg újra a margókat."
+    PD32_NR_OF_COPIES_EMPTY               "A 'Másolatok száma' mezõ nem lehet üres."
+    PD32_TOO_LARGE_COPIES                 "Ezt a nagyszámú másolatok számát nem támogatja az \
+Ön nyomtatója.\nKérem adjon meg egy értéket 1 és %d között."
+    PD32_PRINT_ERROR                      "Nyomtatási hiba történt."
+    PD32_NO_DEFAULT_PRINTER               "Nincs alapértelmezett nyomtató megadva."
+    PD32_CANT_FIND_PRINTER                "Nem találom a nyomtatót."
+    PD32_OUT_OF_MEMORY                    "Elfogyott a memória."
+    PD32_GENERIC_ERROR                    "Hiba történt."
+    PD32_DRIVER_UNKNOWN                   "Ismeretlen nyomtató eszközmeghajtó."
+    PD32_NO_DEVICES                       "mielõtt nyomtatási feladatokat hajtana végre \
+mint például oldalbeállítás vagy dokumentum nyomtatása, Önnek telepítenie kell egy nyomtatót. \
+Please install one and retry."
+
+    PD32_DEFAULT_PRINTER                  "Alapértelmezett nyomtató; "
+    PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d dokumentum van a sorban"
+    PD32_MARGINS_IN_INCHES                "Margók [hüvejk]"
+    PD32_MARGINS_IN_MILLIMETERS           "Margók [mm]"
+    PD32_MILLIMETERS                      "mm"
+
+    PD32_PRINTER_STATUS_READY             "kész"
+    PD32_PRINTER_STATUS_PAUSED            "Szünet; "
+    PD32_PRINTER_STATUS_ERROR             "Hiba; "
+    PD32_PRINTER_STATUS_PENDING_DELETION  "Törlés folyamatban; "
+    PD32_PRINTER_STATUS_PAPER_JAM         "Papír beragadás; "
+    PD32_PRINTER_STATUS_PAPER_OUT         "Elfogyott a papír; "
+    PD32_PRINTER_STATUS_MANUAL_FEED       "Kézi papírbehelyezés; "
+    PD32_PRINTER_STATUS_PAPER_PROBLEM     "Papír probléma; "
+    PD32_PRINTER_STATUS_OFFLINE           "A nyomtató nem elérhetõ; "
+    PD32_PRINTER_STATUS_IO_ACTIVE         "I/O aktív; "
+    PD32_PRINTER_STATUS_BUSY              "Foglalt; "
+    PD32_PRINTER_STATUS_PRINTING          "Nyomtatás; "
+    PD32_PRINTER_STATUS_OUTPUT_BIN_FULL   "Kimeneti tálca megtelt; "
+    PD32_PRINTER_STATUS_NOT_AVAILABLE     "Nem elérhetõ; "
+    PD32_PRINTER_STATUS_WAITING           "Várakozik; "
+    PD32_PRINTER_STATUS_PROCESSING        "Feldolgozás; "
+    PD32_PRINTER_STATUS_INITIALIZING      "Inicializálás; "
+    PD32_PRINTER_STATUS_WARMING_UP        "Bemelegítés; "
+    PD32_PRINTER_STATUS_TONER_LOW         "Alacsony toner szint; "
+    PD32_PRINTER_STATUS_NO_TONER          "Nincs toner; "
+    PD32_PRINTER_STATUS_PAGE_PUNT         "Oldal becsavarozás; "
+    PD32_PRINTER_STATUS_USER_INTERVENTION "Felhasználó által megszakítva; "
+    PD32_PRINTER_STATUS_OUT_OF_MEMORY     "Elfogyott a memória; "
+    PD32_PRINTER_STATUS_DOOR_OPEN         "A nyomtató fedele nyitva; "
+    PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nyomtató kiszolgáló ismeretlen; "
+    PD32_PRINTER_STATUS_POWER_SAVE        "energiatakarékos mód; "
+}
+
+STRINGTABLE DISCARDABLE /* Font styles */
+{
+    IDS_FONT_REGULAR       "Szokásos"
+    IDS_FONT_BOLD          "Félkövér"
+    IDS_FONT_ITALIC        "Dõlt"
+    IDS_FONT_BOLD_ITALIC   "Félkövér dõlt"
+}
+
+STRINGTABLE DISCARDABLE /* Color names */
+{
+    IDS_COLOR_BLACK     "Fekete"
+    IDS_COLOR_MAROON    "Gesztenyebarna"
+    IDS_COLOR_GREEN     "Zöld"
+    IDS_COLOR_OLIVE     "Olajzöld"
+    IDS_COLOR_NAVY      "Tengerkék"
+    IDS_COLOR_PURPLE    "Lila"
+    IDS_COLOR_TEAL      "Kékeszöld"
+    IDS_COLOR_GRAY      "Szürke"
+    IDS_COLOR_SILVER    "Ezüst"
+    IDS_COLOR_RED       "Piros"
+    IDS_COLOR_LIME      "Borostnyán"
+    IDS_COLOR_YELLOW    "Sárga"
+    IDS_COLOR_BLUE      "Kék"
+    IDS_COLOR_FUCHSIA   "Vöröses lila"
+    IDS_COLOR_AQUA      "Kékeszöld"
+    IDS_COLOR_WHITE     "Fehér"
+}
+
+STRINGTABLE DISCARDABLE
+{
+    IDS_FONT_SIZE   "Válasszon betûméretet %d és %d pont között."
+    IDS_SAVE_BUTTON "&Mentés"
+    IDS_SAVE_IN     "Mentés &ide:"
+    IDS_SAVE        "Mentés"
+    IDS_SAVE_AS     "Mentés másként"
+    IDS_OPEN_FILE   "Fájl megnyitása"
+}

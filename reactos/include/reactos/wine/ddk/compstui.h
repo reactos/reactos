@@ -1,2 +1,2 @@
 
-#include_next <compstui.h>
+#include <psdk/compstui.h>

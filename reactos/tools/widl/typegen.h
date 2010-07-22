@@ -80,7 +80,7 @@ void write_expr_eval_routine_list(FILE *file, const char *iface);
 void write_user_quad_list(FILE *file);
 void write_endpoints( FILE *f, const char *prefix, const str_list_t *list );
 void write_exceptions( FILE *file );
-unsigned int type_memsize(const type_t *t, unsigned int *align);
+unsigned int type_memsize(const type_t *t);
 int decl_indirect(const type_t *t);
 void write_parameters_init(FILE *file, int indent, const var_t *func, const char *local_var_prefix);
 void print(FILE *file, int indent, const char *format, va_list ap);

@@ -25,7 +25,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_HTMLDISABLED    "В настоящее время отображение HTML выключенно."
+    IDS_HTMLDISABLED    "В настоящее время отображение HTML выключено."
     IDS_HTMLDOCUMENT    "Документ HTML"
     IDS_DOWNLOADING     "Загрузка..."
     IDS_INSTALLING      "Установка..."
@@ -36,7 +36,7 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMEN
 CAPTION "Установка Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine не может найти пакет Gecko, который необходим для корректной работы приложений"\
+    LTEXT "Wine не может найти пакет Gecko, который необходим для корректной работы приложений "\
           "с поддержкой HTML. " \
           "Wine может автоматически загрузить и установить его для вас.\n\n" \
           "Примечание: рекомендуется использовать пакет, предоставляемый вашим дистрибутивом. "\

@@ -184,8 +184,8 @@ IntAttachMonitor(IN PDEVOBJ *pGdiDevice,
 
    Monitor->GdiDevice = pGdiDevice;
    Monitor->rcMonitor.left  = 0;
-   Monitor->rcMonitor.top   = 0;   
-   Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes; 
+   Monitor->rcMonitor.top   = 0;
+   Monitor->rcMonitor.right  = Monitor->rcMonitor.left + pGdiDevice->gdiinfo.ulHorzRes;
    Monitor->rcMonitor.bottom = Monitor->rcMonitor.top + pGdiDevice->gdiinfo.ulVertRes;
    Monitor->rcWork = Monitor->rcMonitor;
    Monitor->cWndStack = 0;
@@ -492,7 +492,6 @@ NtUserEnumDisplayMonitors(
    if (hDC != NULL)
    {
       PDC dc;
-      HRGN dcVisRgn;
       INT regionType;
 
       /* get visible region bounding rect */
@@ -503,10 +502,9 @@ NtUserEnumDisplayMonitors(
          /* FIXME: setlasterror? */
          return -1;
       }
-      dcVisRgn = dc->rosdc.hVisRgn;
+      regionType = REGION_GetRgnBox(dc->prgnVis, &dcRect);
       DC_UnlockDc(dc);
 
-      regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);
       if (regionType == 0)
       {
          DPRINT("NtGdiGetRgnBox() failed!\n");

@@ -774,7 +774,7 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     struct msi_text_info *info;
-    LPCWSTR text, ptr, prop;
+    LPCWSTR text, ptr, prop, control_name;
     LPWSTR font_name;
 
     TRACE("%p %p\n", dialog, rec);
@@ -787,6 +787,7 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
     if( !info )
         return ERROR_SUCCESS;
 
+    control_name = MSI_RecordGetString( rec, 2 );
     control->attributes = MSI_RecordGetInteger( rec, 8 );
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
@@ -805,7 +806,7 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
     SetPropW( control->hwnd, szButtonData, info );
 
     ControlEvent_SubscribeToEvent( dialog->package, dialog,
-                                   szSelectionPath, control->name, szSelectionPath );
+                                   szSelectionPath, control_name, szSelectionPath );
 
     return ERROR_SUCCESS;
 }
@@ -1009,6 +1010,8 @@ MSIScrollText_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     switch( msg )
     {
+    case WM_GETDLGCODE:
+        return DLGC_WANTARROWS;
     case WM_NCDESTROY:
         msi_free( info );
         RemovePropW( hWnd, szButtonData );
@@ -2390,7 +2393,7 @@ done:
 static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
-    LPCWSTR prop;
+    LPCWSTR prop, control_name;
     MSIPACKAGE *package = dialog->package;
     DWORD style;
     struct msi_selection_tree_info *info;
@@ -2410,6 +2413,7 @@ static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
     }
 
     control->handler = msi_dialog_seltree_handler;
+    control_name = MSI_RecordGetString( rec, 2 );
     control->attributes = MSI_RecordGetInteger( rec, 8 );
     prop = MSI_RecordGetString( rec, 9 );
     control->property = msi_dialog_dup_property( dialog, prop, FALSE );
@@ -2422,7 +2426,7 @@ static UINT msi_dialog_selection_tree( msi_dialog *dialog, MSIRECORD *rec )
     SetPropW( control->hwnd, szButtonData, info );
 
     ControlEvent_SubscribeToEvent( dialog->package, dialog,
-                                   szSelectionPath, control->name, szProperty );
+                                   szSelectionPath, control_name, szProperty );
 
     /* initialize it */
     msi_seltree_create_imagelist( control->hwnd );

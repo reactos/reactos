@@ -1418,3 +1418,167 @@ int CDECL _setmbcp(int cp)
   TRACE("(%d) -> %d\n", cp, locale->locinfo->lc_codepage);
   return 0;
 }
+
+
+/*********************************************************************
+ *		__lc_collate_cp (MSVCRT.@)
+ *
+ * @unimplemented
+ */
+void __lc_collate_cp(int cp)
+{
+FIXME("__lc_collate_cp - stub\n");
+return;
+}
+
+
+/*********************************************************************
+ *		__lc_handle (MSVCRT.@)
+ *
+ * @unimplemented
+ */
+void __lc_handle(void)
+{
+FIXME("__lc_handle - stub\n");
+return;
+}
+
+
+/*********************************************************************
+ *		__lc_codepage (MSVCRT.@)
+ *
+ * @unimplemented
+ */
+void __lc_codepage(void)
+{
+FIXME("__lc_codepage - stub\n");
+return;
+}
+
+
+/*********************************************************************
+ *    _Gettnames (MSVCRT.@)
+ */
+void *_Gettnames(void)
+{
+  FIXME("(void), stub!\n");
+  return NULL;
+}
+
+/*********************************************************************
+ *    __lconv_init (MSVCRT.@)
+ */
+void __lconv_init(void)
+{
+  char Char = (char) UCHAR_MAX;
+
+  TRACE("__lconv_init()\n");
+
+  _lconv.int_frac_digits = Char;
+  _lconv.frac_digits = Char;
+  _lconv.p_sep_by_space = _lconv.n_sep_by_space = Char;
+  _lconv.p_cs_precedes = _lconv.n_cs_precedes = Char;
+  _lconv.p_sign_posn = _lconv.n_sign_posn = Char;
+}
+
+
+/*********************************************************************
+ *    _Strftime (MSVCRT.@)
+ */
+const char* _Strftime(char *out, unsigned int len, const char *fmt,
+                                     const void *tm, void *foo)
+{
+  /* FIXME: */
+  FIXME("(%p %d %s %p %p) stub\n", out, len, fmt, tm, foo);
+  return "";
+}
+
+
+/*********************************************************************
+ *    _Getdays (MSVCRT.@)
+ */
+const char* _Getdays(void)
+{
+  static const char *MSVCRT_days = ":Sun:Sunday:Mon:Monday:Tue:Tuesday:Wed:"
+                            "Wednesday:Thu:Thursday:Fri:Friday:Sat:Saturday";
+  /* FIXME: Use locale */
+  FIXME("(void) semi-stub\n");
+  return MSVCRT_days;
+}
+
+/*********************************************************************
+ *    _Getmonths (MSVCRT.@)
+ */
+const char* _Getmonths(void)
+{
+  static const char *MSVCRT_months = ":Jan:January:Feb:February:Mar:March:Apr:"
+                "April:May:May:Jun:June:Jul:July:Aug:August:Sep:September:Oct:"
+                "October:Nov:November:Dec:December";
+  /* FIXME: Use locale */
+  FIXME("(void) semi-stub\n");
+  return MSVCRT_months;
+}
+
+/*********************************************************************
+ *    __crtLCMapStringA (MSVCRT.@)
+ */
+int __crtLCMapStringA(
+  LCID lcid, DWORD mapflags, const char* src, int srclen, char* dst,
+  int dstlen, unsigned int codepage, int xflag
+) {
+  TRACE("(lcid %lx, flags %lx, %s(%d), %p(%d), %x, %d), partial stub!\n",
+        lcid,mapflags,src,srclen,dst,dstlen,codepage,xflag);
+  /* FIXME: A bit incorrect. But msvcrt itself just converts its
+   * arguments to wide strings and then calls LCMapStringW
+   */
+  return LCMapStringA(lcid,mapflags,src,srclen,dst,dstlen);
+}
+
+/*********************************************************************
+ *    __crtLCMapStringW (MSVCRT.@)
+ */
+int __crtLCMapStringW(
+  LCID lcid, DWORD mapflags, LPCWSTR src, int srclen, LPWSTR dst,
+  int dstlen, unsigned int codepage, int xflag
+) {
+  TRACE("(lcid %lx, flags %lx, %s(%d), %p(%d), %x, %d), partial stub!\n",
+        lcid,mapflags,src,srclen,dst,dstlen,codepage,xflag);
+
+  return LCMapStringW(lcid,mapflags,src,srclen,dst,dstlen);
+}
+
+int CDECL _getmbcp(void)
+{
+    return MSVCRT___lc_codepage;
+}
+
+/*********************************************************************
+ *		___unguarded_readlc_active_add_func (MSVCRT.@)
+ */
+unsigned int * CDECL ___unguarded_readlc_active_add_func(void)
+{
+  return &__unguarded_readlc_active;
+}
+
+/*********************************************************************
+ *		___setlc_active_func (MSVCRT.@)
+ */
+unsigned int CDECL ___setlc_active_func(void)
+{
+  return __setlc_active;
+}
+
+/*********************************************************************
+ *              __crtGetStringTypeW(MSVCRT.@)
+ *
+ * This function was accepting different number of arguments in older
+ * versions of msvcrt.
+ */
+BOOL CDECL __crtGetStringTypeW(DWORD unk, DWORD type,
+        wchar_t *buffer, int len, WORD *out)
+{
+    FIXME("(unk %x, type %x, wstr %p(%d), %p) partial stub\n",
+            unk, type, buffer, len, out);
+
+    return GetStringTypeW(type, buffer, len, out);
+}

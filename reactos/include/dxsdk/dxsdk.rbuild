@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="dxsdk" type="idlheader">
+	<file>amvideo.idl</file>
 	<file>amstream.idl</file>
 	<file>austream.idl</file>
 	<file>bdatif.idl</file>

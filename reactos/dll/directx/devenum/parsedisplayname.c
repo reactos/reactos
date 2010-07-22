@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES ON THIS FILE:
  * - Implements IParseDisplayName interface which creates a moniker
@@ -39,12 +39,12 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_QueryInterface(
     if (IsEqualGUID(riid, &IID_IUnknown) ||
         IsEqualGUID(riid, &IID_IParseDisplayName))
     {
-	*ppvObj = (LPVOID)iface;
+        *ppvObj = iface;
 	IParseDisplayName_AddRef(iface);
 	return S_OK;
     }
 
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+    FIXME("- no interface IID: %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
 }
 
@@ -90,10 +90,13 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
 {
     LPOLESTR pszBetween = NULL;
     LPOLESTR pszClass = NULL;
-    IEnumMoniker * pEm = NULL;
     MediaCatMoniker * pMoniker = NULL;
     CLSID clsidDevice;
     HRESULT res = S_OK;
+    WCHAR wszRegKeyName[MAX_PATH];
+    HKEY hbasekey;
+    int classlen;
+    static const WCHAR wszRegSeparator[] =   {'\\', 0 };
 
     TRACE("(%p, %s, %p, %p)\n", pbc, debugstr_w(pszDisplayName), pchEaten, ppmkOut);
 
@@ -107,12 +110,13 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
     /* size = pszBetween - pszDisplayName - 1 (for '\\' after CLSID)
      * + 1 (for NULL character)
      */
-    pszClass = CoTaskMemAlloc((int)(pszBetween - pszDisplayName) * sizeof(WCHAR));
+    classlen = (int)(pszBetween - pszDisplayName - 1);
+    pszClass = CoTaskMemAlloc((classlen + 1) * sizeof(WCHAR));
     if (!pszClass)
         return E_OUTOFMEMORY;
 
-    strncpyW(pszClass, pszDisplayName, (int)(pszBetween - pszDisplayName) - 1);
-    pszClass[(int)(pszBetween - pszDisplayName) - 1] = 0;
+    memcpy(pszClass, pszDisplayName, classlen * sizeof(WCHAR));
+    pszClass[classlen] = 0;
 
     TRACE("Device CLSID: %s\n", debugstr_w(pszClass));
 
@@ -120,9 +124,7 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
 
     if (SUCCEEDED(res))
     {
-        res = DEVENUM_ICreateDevEnum_CreateClassEnumerator((ICreateDevEnum *)(char*)&DEVENUM_CreateDevEnum, &clsidDevice, &pEm, 0);
-        if (res == S_FALSE) /* S_FALSE means no category */
-            res = MK_E_NOOBJECT;
+        res = DEVENUM_GetCategoryKey(&clsidDevice, &hbasekey, wszRegKeyName, MAX_PATH);
     }
 
     if (SUCCEEDED(res))
@@ -130,9 +132,10 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
         pMoniker = DEVENUM_IMediaCatMoniker_Construct();
         if (pMoniker)
         {
-            if (RegCreateKeyW(((EnumMonikerImpl *)pEm)->hkey,
-                               pszBetween,
-                               &pMoniker->hkey) == ERROR_SUCCESS)
+            strcatW(wszRegKeyName, wszRegSeparator);
+            strcatW(wszRegKeyName, pszBetween);
+
+            if (RegCreateKeyW(hbasekey, wszRegKeyName, &pMoniker->hkey) == ERROR_SUCCESS)
                 *ppmkOut = (LPMONIKER)pMoniker;
             else
             {
@@ -142,20 +145,16 @@ static HRESULT WINAPI DEVENUM_IParseDisplayName_ParseDisplayName(
         }
     }
 
-    if (pEm)
-        IEnumMoniker_Release(pEm);
+    CoTaskMemFree(pszClass);
 
-    if (pszClass)
-        CoTaskMemFree(pszClass);
-
-    TRACE("-- returning: %lx\n", res);
+    TRACE("-- returning: %x\n", res);
     return res;
 }
 
 /**********************************************************************
  * IParseDisplayName_Vtbl
  */
-static IParseDisplayNameVtbl IParseDisplayName_Vtbl =
+static const IParseDisplayNameVtbl IParseDisplayName_Vtbl =
 {
     DEVENUM_IParseDisplayName_QueryInterface,
     DEVENUM_IParseDisplayName_AddRef,

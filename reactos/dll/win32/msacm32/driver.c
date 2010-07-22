@@ -77,8 +77,8 @@ MMRESULT WINAPI acmDriverAddA(PHACMDRIVERID phadid, HINSTANCE hinstModule,
 
     /* A->W translation of name */
     if ((fdwAdd & ACM_DRIVERADDF_TYPEMASK) == ACM_DRIVERADDF_NAME) {
-        unsigned long len;
-        
+        INT len;
+
         if (lParam == 0) return MMSYSERR_INVALPARAM;
         len = MultiByteToWideChar(CP_ACP, 0, (LPSTR)lParam, -1, NULL, 0);
         driverW = HeapAlloc(MSACM_hHeap, 0, len * sizeof(WCHAR));
@@ -214,6 +214,7 @@ MMRESULT WINAPI acmDriverClose(HACMDRIVER had, DWORD fdwClose)
     else if (pad->pLocalDrvrInst)
         MSACM_CloseLocalDriver(pad->pLocalDrvrInst);
 
+    pad->obj.dwType = 0;
     HeapFree(MSACM_hHeap, 0, pad);
 
     return MMSYSERR_NOERROR;
@@ -305,6 +306,8 @@ MMRESULT WINAPI acmDriverDetailsW(HACMDRIVERID hadid, PACMDRIVERDETAILSW padd, D
         paddw.cbStruct = min(padd->cbStruct, sizeof(*padd));
         memcpy(padd, &paddw, paddw.cbStruct);
     }
+    else if (mmr == MMSYSERR_NODRIVER)
+        return MMSYSERR_NOTSUPPORTED;
 
     return mmr;
 }
@@ -555,6 +558,8 @@ MMRESULT WINAPI acmDriverOpen(PHACMDRIVER phad, HACMDRIVERID hadid, DWORD fdwOpe
         if (!pad->hDrvr)
         {
             ret = adod.dwError;
+            if (ret == MMSYSERR_NOERROR)
+                ret = MMSYSERR_NODRIVER;
             goto gotError;
         }
     }
@@ -578,6 +583,8 @@ MMRESULT WINAPI acmDriverOpen(PHACMDRIVER phad, HACMDRIVERID hadid, DWORD fdwOpe
         if (!pad->pLocalDrvrInst)
         {
             ret = adod.dwError;
+            if (ret == MMSYSERR_NOERROR)
+                ret = MMSYSERR_NODRIVER;
             goto gotError;
         }
     }

@@ -2049,6 +2049,16 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
             stride = sizeof(ARGB) * (dst_area.right - dst_area.left);
 
+            if (imageAttributes &&
+                (imageAttributes->wrap != WrapModeClamp ||
+                 imageAttributes->outside_color != 0x00000000 ||
+                 imageAttributes->clamp))
+            {
+                static int fixme;
+                if (!fixme++)
+                    FIXME("Image wrap mode not implemented\n");
+            }
+
             for (x=dst_area.left; x<dst_area.right; x++)
             {
                 for (y=dst_area.top; y<dst_area.bottom; y++)
@@ -2069,7 +2079,6 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
 
                     if (src_x < src_area.left || src_x >= src_area.right ||
                         src_y < src_area.top || src_y >= src_area.bottom)
-                        /* FIXME: Use wrapmode */
                         *src_color = 0;
                     else
                         GdipBitmapGetPixel(bitmap, src_x, src_y, src_color);
@@ -2083,9 +2092,36 @@ GpStatus WINGDIPAPI GdipDrawImagePointsRect(GpGraphics *graphics, GpImage *image
                 if (imageAttributes->colorkeys[ColorAdjustTypeBitmap].enabled ||
                     imageAttributes->colorkeys[ColorAdjustTypeDefault].enabled)
                 {
-                    static int fixme;
-                    if (!fixme++)
-                        FIXME("Color keying not implemented\n");
+                    const struct color_key *key;
+                    BYTE min_blue, min_green, min_red;
+                    BYTE max_blue, max_green, max_red;
+
+                    if (imageAttributes->colorkeys[ColorAdjustTypeBitmap].enabled)
+                        key = &imageAttributes->colorkeys[ColorAdjustTypeBitmap];
+                    else
+                        key = &imageAttributes->colorkeys[ColorAdjustTypeDefault];
+
+                    min_blue = key->low&0xff;
+                    min_green = (key->low>>8)&0xff;
+                    min_red = (key->low>>16)&0xff;
+
+                    max_blue = key->high&0xff;
+                    max_green = (key->high>>8)&0xff;
+                    max_red = (key->high>>16)&0xff;
+
+                    for (x=dst_area.left; x<dst_area.right; x++)
+                        for (y=dst_area.top; y<dst_area.bottom; y++)
+                        {
+                            ARGB *src_color;
+                            BYTE blue, green, red;
+                            src_color = (ARGB*)(data + stride * (y - dst_area.top) + sizeof(ARGB) * (x - dst_area.left));
+                            blue = *src_color&0xff;
+                            green = (*src_color>>8)&0xff;
+                            red = (*src_color>>16)&0xff;
+                            if (blue >= min_blue && green >= min_green && red >= min_red &&
+                                blue <= max_blue && green <= max_green && red <= max_red)
+                                *src_color = 0x00000000;
+                        }
                 }
 
                 if (imageAttributes->colorremaptables[ColorAdjustTypeBitmap].enabled ||
@@ -3493,7 +3529,7 @@ static GpStatus gdip_format_string(GpGraphics *graphics,
     gdip_format_string_callback callback, void *user_data)
 {
     WCHAR* stringdup;
-    INT sum = 0, height = 0, fit, fitcpy, i, j, lret, nwidth,
+    int sum = 0, height = 0, fit, fitcpy, i, j, lret, nwidth,
         nheight, lineend, lineno = 0;
     RectF bounds;
     StringAlignment halign;
@@ -3508,8 +3544,8 @@ static GpStatus gdip_format_string(GpGraphics *graphics,
     nwidth = roundr(rect->Width);
     nheight = roundr(rect->Height);
 
-    if (nwidth == 0) nwidth = INT_MAX;
-    if (nheight == 0) nheight = INT_MAX;
+    if (rect->Width >= INT_MAX || rect->Width < 0.5) nwidth = INT_MAX;
+    if (rect->Height >= INT_MAX || rect->Width < 0.5) nheight = INT_MAX;
 
     for(i = 0, j = 0; i < length; i++){
         /* FIXME: This makes the indexes passed to callback inaccurate. */
@@ -3617,7 +3653,7 @@ struct measure_ranges_args {
     GpRegion **regions;
 };
 
-GpStatus measure_ranges_callback(GpGraphics *graphics,
+static GpStatus measure_ranges_callback(GpGraphics *graphics,
     GDIPCONST WCHAR *string, INT index, INT length, GDIPCONST GpFont *font,
     GDIPCONST RectF *rect, GDIPCONST GpStringFormat *format,
     INT lineno, const RectF *bounds, void *user_data)
@@ -4176,6 +4212,20 @@ GpStatus WINGDIPAPI GdipSetRenderingOrigin(GpGraphics *graphics, INT x, INT y)
 
     if (!(calls++))
         FIXME("not implemented\n");
+
+    return NotImplemented;
+}
+
+GpStatus WINGDIPAPI GdipGetRenderingOrigin(GpGraphics *graphics, INT *x, INT *y)
+{
+    static int calls;
+
+    TRACE("(%p,%p,%p)\n", graphics, x, y);
+
+    if (!(calls++))
+        FIXME("not implemented\n");
+
+    *x = *y = 0;
 
     return NotImplemented;
 }

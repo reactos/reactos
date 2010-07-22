@@ -73,6 +73,7 @@ IntSetCaretBlinkTime(UINT uMSeconds)
    }
 
    WinStaObject->CaretBlinkRate = uMSeconds;
+   gpsi->dtCaretBlink = uMSeconds;
 
    return TRUE;
 }

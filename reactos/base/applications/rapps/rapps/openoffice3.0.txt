@@ -28,3 +28,9 @@ Description = Otwarty pakiet biurowy.
 URLSite = http://pl.openoffice.org/
 Size = 130.0MB
 URLDownload = http://ftp3.gwdg.de/pub/openoffice/localized/pl/3.2.1/OOo_3.2.1_Win_x86_install_pl.exe
+
+[Section.0422]
+Description = Відкритий офісний пакет.
+URLSite = http://ua.openoffice.org/
+Size = 128.0MB
+URLDownload = http://ftp3.gwdg.de/pub/openoffice/localized/ru/3.2.1/OOo_3.2.1_Win_x86_install_ru.exe

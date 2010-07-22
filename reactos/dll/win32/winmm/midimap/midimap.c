@@ -260,7 +260,7 @@ static BOOL	MIDIMAP_LoadSettings(MIDIMAPDATA* mom)
     return ret;
 }
 
-static	DWORD	modOpen(LPDWORD lpdwUser, LPMIDIOPENDESC lpDesc, DWORD dwFlags)
+static	DWORD	modOpen(DWORD_PTR *lpdwUser, LPMIDIOPENDESC lpDesc, DWORD dwFlags)
 {
     MIDIMAPDATA*	mom = HeapAlloc(GetProcessHeap(), 0, sizeof(MIDIMAPDATA));
 
@@ -306,7 +306,7 @@ static	DWORD	modClose(MIDIMAPDATA* mom)
     return ret;
 }
 
-static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
+static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
 {
     WORD	chn;
     DWORD	ret = MMSYSERR_NOERROR;
@@ -330,7 +330,7 @@ static	DWORD	modLongData(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
     return ret;
 }
 
-static	DWORD	modData(MIDIMAPDATA* mom, DWORD dwParam)
+static	DWORD	modData(MIDIMAPDATA* mom, DWORD_PTR dwParam)
 {
     BYTE	lb = LOBYTE(LOWORD(dwParam));
     WORD	chn = lb & 0x0F;
@@ -393,7 +393,7 @@ static	DWORD	modData(MIDIMAPDATA* mom, DWORD dwParam)
     return ret;
 }
 
-static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
+static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
 {
     if (MIDIMAP_IsBadData(mom)) return MMSYSERR_ERROR;
     if (lpMidiHdr->dwFlags & (MHDR_ISSTRM|MHDR_PREPARED))
@@ -403,7 +403,7 @@ static	DWORD	modPrepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
     return MMSYSERR_NOERROR;
 }
 
-static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
+static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD_PTR dwParam2)
 {
     if (MIDIMAP_IsBadData(mom)) return MMSYSERR_ERROR;
     if ((lpMidiHdr->dwFlags & MHDR_ISSTRM) || !(lpMidiHdr->dwFlags & MHDR_PREPARED))
@@ -413,7 +413,7 @@ static	DWORD	modUnprepare(MIDIMAPDATA* mom, LPMIDIHDR lpMidiHdr, DWORD dwParam2)
     return MMSYSERR_NOERROR;
 }
 
-static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSW lpMidiCaps, DWORD size)
+static	DWORD	modGetDevCaps(UINT wDevID, MIDIMAPDATA* mom, LPMIDIOUTCAPSW lpMidiCaps, DWORD_PTR size)
 {
     static const WCHAR name[] = {'W','i','n','e',' ','m','i','d','i',' ','m','a','p','p','e','r',0};
     lpMidiCaps->wMid = 0x00FF;
@@ -492,7 +492,7 @@ DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD_PTR dwUser,
 /**************************************************************************
  * 				MIDIMAP_drvOpen			[internal]
  */
-static	DWORD	MIDIMAP_drvOpen(LPSTR str)
+static	LRESULT	MIDIMAP_drvOpen(LPSTR str)
 {
     MIDIOUTCAPSW	moc;
     unsigned		dev, i;
@@ -527,7 +527,7 @@ static	DWORD	MIDIMAP_drvOpen(LPSTR str)
 /**************************************************************************
  * 				MIDIMAP_drvClose		[internal]
  */
-static	DWORD	MIDIMAP_drvClose(DWORD dwDevID)
+static	LRESULT	MIDIMAP_drvClose(DWORD_PTR dwDevID)
 {
     if (midiOutPorts)
     {
@@ -542,7 +542,7 @@ static	DWORD	MIDIMAP_drvClose(DWORD dwDevID)
  * 				DriverProc (MIDIMAP.@)
  */
 LRESULT CALLBACK	MIDIMAP_DriverProc(DWORD_PTR dwDevID, HDRVR hDriv, UINT wMsg,
-				   LPARAM  dwParam1, LPARAM  dwParam2)
+				   LPARAM dwParam1, LPARAM dwParam2)
 {
 /* EPP     TRACE("(%08lX, %04X, %08lX, %08lX, %08lX)\n",  */
 /* EPP 	  dwDevID, hDriv, wMsg, dwParam1, dwParam2); */

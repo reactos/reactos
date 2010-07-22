@@ -22,6 +22,7 @@
 #include "wine/debug.h"
 #include "shdocvw.h"
 #include "exdispid.h"
+#include "mshtml.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
@@ -300,7 +301,7 @@ static HRESULT WINAPI WebBrowser_Stop(IWebBrowser2 *iface)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
     FIXME("(%p)\n", This);
-    return E_NOTIMPL;
+    return S_OK;
 }
 
 static HRESULT WINAPI WebBrowser_get_Application(IWebBrowser2 *iface, IDispatch **ppDisp)
@@ -334,13 +335,28 @@ static HRESULT WINAPI WebBrowser_get_Container(IWebBrowser2 *iface, IDispatch **
 static HRESULT WINAPI WebBrowser_get_Document(IWebBrowser2 *iface, IDispatch **ppDisp)
 {
     WebBrowser *This = WEBBROWSER_THIS(iface);
+    IDispatch *disp = NULL;
 
     TRACE("(%p)->(%p)\n", This, ppDisp);
 
-    *ppDisp = NULL;
-    if(This->doc_host.document)
-        IUnknown_QueryInterface(This->doc_host.document, &IID_IDispatch, (void**)ppDisp);
+    if(This->doc_host.document) {
+        HRESULT hres;
 
+        hres = IUnknown_QueryInterface(This->doc_host.document, &IID_IDispatch, (void**)&disp);
+        if(SUCCEEDED(hres)) {
+            IDispatch *html_doc;
+
+            /* Some broken apps cast returned IDispatch to IHTMLDocument2
+             * without QueryInterface call */
+            hres = IDispatch_QueryInterface(disp, &IID_IHTMLDocument2, (void**)&html_doc);
+            if(SUCCEEDED(hres)) {
+                IDispatch_Release(disp);
+                disp = html_doc;
+            }
+        }
+    }
+
+    *ppDisp = disp;
     return S_OK;
 }
 

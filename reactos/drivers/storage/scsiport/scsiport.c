@@ -45,6 +45,8 @@
 
 ULONG InternalDebugLevel = 0x00;
 
+#undef ScsiPortMoveMemory
+
 /* TYPES *********************************************************************/
 
 /* GLOBALS *******************************************************************/
@@ -216,7 +218,9 @@ SpiHandleAttachRelease(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 static NTSTATUS
 SpiAllocateCommonBuffer(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension, ULONG NonCachedSize);
 
-
+NTHALAPI ULONG NTAPI HalGetBusData(BUS_DATA_TYPE, ULONG, ULONG, PVOID, ULONG);
+NTHALAPI ULONG NTAPI HalGetInterruptVector(INTERFACE_TYPE, ULONG, ULONG, ULONG, PKIRQL, PKAFFINITY);
+NTHALAPI NTSTATUS NTAPI HalAssignSlotResources(PUNICODE_STRING, PUNICODE_STRING, PDRIVER_OBJECT, PDEVICE_OBJECT, INTERFACE_TYPE, ULONG, ULONG, PCM_RESOURCE_LIST *);
 
 /* FUNCTIONS *****************************************************************/
 

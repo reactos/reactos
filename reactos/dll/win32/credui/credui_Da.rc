@@ -2,6 +2,7 @@
  * Danish language resource file for Credentials UI
  *
  * Copyright 2008 Jens Albretsen
+ *           2010 Thomas Larsen
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +20,8 @@
  */
 
 #include "credui_resources.h"
+
+#pragma code_page(65001)
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
@@ -46,7 +49,7 @@ STRINGTABLE DISCARDABLE
     IDS_TITLEFORMAT     "Tilslut til %s"
     IDS_MESSAGEFORMAT   "Tilslutter til %s"
     IDS_INCORRECTPASSWORDTITLE  "Tilslutning fejlede"
-    IDS_INCORRECTPASSWORD       "Vær sikker på at dit brugernavn\nog kodeord er korrekt."
-    IDS_CAPSLOCKONTITLE "Caps Lock er på"
-    IDS_CAPSLOCKON      "Caps Lock kan være skyld i at taster dit kodeord forkert.\n\nTryk på Caps Lock tasten for at slå det fra\nfør du indtaster dit kodeord."
+    IDS_INCORRECTPASSWORD       "VÃ¦r sikker pÃ¥ at dit brugernavn\nog kodeord er korrekt."
+    IDS_CAPSLOCKONTITLE "Caps Lock er pÃ¥"
+    IDS_CAPSLOCKON      "Du har sat Caps Lock til, dette kan vÃ¦re Ã¥rsagen til at du indtaster kodeordet forkert.\n\nTryk pÃ¥ Caps Lock tasten for at slÃ¥ det fra fÃ¸r du indtaster dit kodeord."
 }

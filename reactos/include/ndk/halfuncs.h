@@ -213,6 +213,16 @@ HalSystemVectorDispatchEntry(
 );
 
 //
+// Bus Functions
+//
+NTHALAPI
+NTSTATUS
+NTAPI
+HalAdjustResourceList(
+    IN OUT PIO_RESOURCE_REQUIREMENTS_LIST *pResourceList
+);
+    
+//
 // Environment Functions
 //
 #ifdef _ARC_

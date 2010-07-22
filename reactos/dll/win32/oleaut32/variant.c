@@ -5420,7 +5420,6 @@ end:
 HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
     BOOL         lOk        = TRUE;
-    BOOL         rOk        = TRUE;
     HRESULT      rc         = E_FAIL;
     int          resT = 0;
     VARIANT      lv,rv;
@@ -5491,7 +5490,6 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
 
 
-    rOk = TRUE;
     switch (V_VT(right) & VT_TYPEMASK) {
     case VT_BOOL :
     case VT_I1   :

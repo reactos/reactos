@@ -606,4 +606,41 @@ SystemFunction036(PVOID pbBuffer, ULONG dwLen)
     return TRUE;
 }
 
+/*
+   These functions have nearly identical prototypes to CryptProtectMemory and CryptUnprotectMemory,
+   in crypt32.dll.
+ */
+
+/******************************************************************************
+ * SystemFunction040   (ADVAPI32.@)
+ *
+ * PARAMS:
+ *   memory : pointer to memory to encrypt
+ *   length : length of region to encrypt, in bytes. must be multiple of RTL_ENCRYPT_MEMORY_SIZE
+ *   flags  : RTL_ENCRYPT_OPTION_SAME_PROCESS | RTL_ENCRYPT_OPTION_CROSS_PROCESS, | RTL_ENCRYPT_OPTION_SAME_LOGON
+ *            control whether other processes are able to decrypt the memory. The same value must be given
+ *            when decrypting the memory.
+ */
+NTSTATUS WINAPI SystemFunction040(PVOID memory, ULONG length, ULONG flags)  /* RtlEncryptMemory */
+{
+	//FIXME("(%p, %lx, %lx): stub [RtlEncryptMemory]\n", memory, length, flags);
+	return STATUS_SUCCESS;
+}
+
+/******************************************************************************
+ * SystemFunction041  (ADVAPI32.@)
+ *
+ * PARAMS:
+ *   memory : pointer to memory to decrypt
+ *   length : length of region to decrypt, in bytes. must be multiple of RTL_ENCRYPT_MEMORY_SIZE
+ *   flags  : RTL_ENCRYPT_OPTION_SAME_PROCESS | RTL_ENCRYPT_OPTION_CROSS_PROCESS, | RTL_ENCRYPT_OPTION_SAME_LOGON
+ *            control whether other processes are able to decrypt the memory. The same value must be given
+ *            when encrypting the memory.
+ */
+NTSTATUS WINAPI SystemFunction041(PVOID memory, ULONG length, ULONG flags)  /* RtlDecryptMemory */
+{
+	//FIXME("(%p, %lx, %lx): stub [RtlDecryptMemory]\n", memory, length, flags);
+	return STATUS_SUCCESS;
+}
+
 /* EOF */

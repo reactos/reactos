@@ -26,7 +26,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-    IDS_HTMLDISABLED    "HTML rendering is currently disabled."
+    IDS_HTMLDISABLED    "В даний момент відображення HTML вимкнено."
     IDS_HTMLDOCUMENT    "Документ HTML"
     IDS_DOWNLOADING     "Завантаження..."
     IDS_INSTALLING      "Встановлення..."
@@ -34,11 +34,11 @@ STRINGTABLE DISCARDABLE
 
 ID_DWL_DIALOG DIALOG LOADONCALL MOVEABLE DISCARDABLE  0, 0, 260, 95
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Wine Gecko Installer"
+CAPTION "Встановлювач Wine Gecko"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT "Wine не може знайти пакунок Gecko, який потрібний  для додатків embedding HTML " \
-          "для коректної роботи. Wine може автоматично завантажити та встановити його для Вас.\n\n" \
+    LTEXT "Wine не може знайти пакунок Gecko, який потрібний для коректної роботи додатків " \
+          "з підтримкою HTML. Wine може автоматично завантажити та встановити його для Вас.\n\n" \
           "Зауважте: Рекомендується використати пакет з вашого дистрибутиву. Детальніше читайте http://wiki.winehq.org/Gecko.",
           ID_DWL_STATUS, 10, 10, 240, 50, SS_LEFT
     CONTROL "Прогрес", ID_DWL_PROGRESS, PROGRESS_CLASSA, WS_BORDER|PBS_SMOOTH, 10, 40, 240, 12

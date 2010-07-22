@@ -100,7 +100,7 @@ void *get_attrp(const attr_list_t *list, enum attr_type t)
     return NULL;
 }
 
-unsigned long get_attrv(const attr_list_t *list, enum attr_type t)
+unsigned int get_attrv(const attr_list_t *list, enum attr_type t)
 {
     const attr_t *attr;
     if (list) LIST_FOR_EACH_ENTRY( attr, list, const attr_t, entry )
@@ -334,7 +334,7 @@ void write_type_right(FILE *h, type_t *t, int is_field)
     }
     break;
   case TYPE_BITFIELD:
-    fprintf(h, " : %lu", type_bitfield_get_bits(t)->cval);
+    fprintf(h, " : %u", type_bitfield_get_bits(t)->cval);
     break;
   case TYPE_VOID:
   case TYPE_BASIC:

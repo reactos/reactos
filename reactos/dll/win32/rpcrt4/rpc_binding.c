@@ -785,8 +785,11 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
 {
   RPC_STATUS status;
   TRACE("(%p) = %p\n", Binding, *Binding);
-  status = RPCRT4_ReleaseBinding(*Binding);
-  if (status == RPC_S_OK) *Binding = 0;
+  if (*Binding)
+    status = RPCRT4_ReleaseBinding(*Binding);
+  else
+    status = RPC_S_INVALID_BINDING;
+  if (status == RPC_S_OK) *Binding = NULL;
   return status;
 }
   

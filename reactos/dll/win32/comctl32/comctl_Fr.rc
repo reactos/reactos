@@ -81,7 +81,7 @@ STRINGTABLE DISCARDABLE
 
 STRINGTABLE DISCARDABLE
 {
-    IDM_TODAY    "Aujourd'hui:"
+    IDM_TODAY    "Aujourd'hui :"
     IDM_GOTODAY  "Aller à aujourd'hui"
 }
 

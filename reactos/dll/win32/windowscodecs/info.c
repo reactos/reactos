@@ -817,7 +817,8 @@ static HRESULT WINAPI ComponentEnum_Next(IEnumUnknown *iface, ULONG celt,
         This->cursor = list_next(&This->objects, This->cursor);
     }
     LeaveCriticalSection(&This->lock);
-    *pceltFetched = num_fetched;
+    if (pceltFetched)
+        *pceltFetched = num_fetched;
     return hr;
 }
 

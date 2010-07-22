@@ -1,7 +1,7 @@
 ﻿; UTF-8
 
 [Section]
-Name = Visual Studio 6 Runtime
+Name = Microsoft Visual C++ 6 Redistributable Package
 Version = 6.0
 Licence = Unknown
 Description = Visual Studio 6 Runtime.
@@ -22,3 +22,7 @@ Description = Librerias Visual Studio 2006.
 [Section.0415]
 Licence = Nieznana
 Description = Biblioteki uruchomieniowe Visual Studio 6.
+
+[Section.0422]
+Licence = Невідома
+Description = Бібліотеки Visual Studio 6.

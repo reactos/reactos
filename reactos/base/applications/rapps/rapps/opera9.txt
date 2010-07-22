@@ -22,3 +22,6 @@ Description = Popularna przeglądarka internetowa z wieloma zaawansowanymi funkc
 
 [Section.0419]
 Description = Популярный браузер со многими дополнительными возможностями, включающий клиентов почты и BitTorrent.
+
+[Section.0422]
+Description = Популярний браузер з багатьма додатковими можливостями, який включає в себе поштовий та BitTorrent клієнти.

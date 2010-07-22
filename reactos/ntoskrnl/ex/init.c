@@ -827,7 +827,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
     PCHAR CommandLine, PerfMem;
     ULONG PerfMemUsed;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     ANSI_STRING CsdString;
     SIZE_T Remaining = 0;
     PCHAR RcEnd = NULL;
@@ -1044,7 +1044,7 @@ ExpInitializeExecutive(IN ULONG Cpu,
         if (NT_SUCCESS(Status))
         {
             /* Setup the string */
-            RtlInitAnsiString(&CsdString, MsgEntry->Text);
+            RtlInitAnsiString(&CsdString, (PCHAR)MsgEntry->Text);
 
             /* Remove trailing newline */
             while ((CsdString.Length > 0) &&
@@ -1240,7 +1240,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     LARGE_INTEGER SystemBootTime, UniversalBootTime, OldTime, Timeout;
     BOOLEAN SosEnabled, NoGuiBoot, ResetBias = FALSE, AlternateShell = FALSE;
     PLDR_DATA_TABLE_ENTRY NtosEntry;
-    PRTL_MESSAGE_RESOURCE_ENTRY MsgEntry;
+    PMESSAGE_RESOURCE_ENTRY MsgEntry;
     PCHAR CommandLine, Y2KHackRequired, SafeBoot, Environment;
     PCHAR StringBuffer, EndBuffer, BeginBuffer, MpString = "";
     PINIT_BUFFER InitBuffer;
@@ -1371,7 +1371,7 @@ Phase1InitializationDiscard(IN PVOID Context)
         /* Create the banner message */
         Status = RtlStringCbPrintfA(EndBuffer,
                                     Size,
-                                    MsgEntry->Text,
+                                    (PCHAR)MsgEntry->Text,
                                     StringBuffer,
                                     NtBuildNumber & 0xFFFF,
                                     BeginBuffer);
@@ -1486,7 +1486,7 @@ Phase1InitializationDiscard(IN PVOID Context)
     Status = RtlStringCbPrintfA(StringBuffer,
                                 256,
                                 NT_SUCCESS(MsgStatus) ?
-                                MsgEntry->Text :
+                                (PCHAR)MsgEntry->Text :
                                 "%u System Processor [%u MB Memory] %Z\n",
                                 KeNumberProcessors,
                                 Size,
@@ -1650,7 +1650,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
         }
     }
@@ -1670,7 +1670,7 @@ Phase1InitializationDiscard(IN PVOID Context)
             if (NT_SUCCESS(Status))
             {
                 /* Display it */
-                InbvDisplayString(MsgEntry->Text);
+                InbvDisplayString((PCHAR)MsgEntry->Text);
             }
 
             /* Setup boot logging */

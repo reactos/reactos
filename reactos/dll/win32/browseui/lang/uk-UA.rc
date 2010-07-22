@@ -1,6 +1,8 @@
 /*
  * Copyright 2009 Andrew Hill
  *
+ * Copyright 2010 Igor Paliychuk
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -29,12 +31,12 @@ BEGIN
     BEGIN
         MENUITEM "&Стандартні Кнопки",				IDM_TOOLBARS_STANDARDBUTTONS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Рядок Адреси",					IDM_TOOLBARS_ADDRESSBAR,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Посилання",							IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Посилання",						IDM_TOOLBARS_LINKSBAR,MFT_STRING,MFS_ENABLED
         MENUITEM SEPARATOR
-        MENUITEM "Lock the Tool&bars",				IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
+        MENUITEM "Блокування панелей інструментів",	IDM_TOOLBARS_LOCKTOOLBARS,MFT_STRING,MFS_ENABLED
         MENUITEM "&Налаштувати...",					IDM_TOOLBARS_CUSTOMIZE,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Text Labels",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
-        MENUITEM "&Go Button",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Текстові мітки",					IDM_TOOLBARS_TEXTLABELS,MFT_STRING,MFS_ENABLED
+        MENUITEM "&Кнопка Йти",						IDM_TOOLBARS_GOBUTTON,MFT_STRING,MFS_ENABLED
     END
 END
 
@@ -43,57 +45,57 @@ BEGIN
     POPUP "&Файл",									FCIDM_MENU_FILE
     BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Закрити",							IDM_FILE_CLOSE
+        MENUITEM "&Закрити",						IDM_FILE_CLOSE
     END
-    POPUP "&Редагувати",									FCIDM_MENU_EDIT
+    POPUP "&Редагувати",							FCIDM_MENU_EDIT
     BEGIN
         MENUITEM "",								-1, MFT_SEPARATOR
     END
-    POPUP "&Вигляд",									FCIDM_MENU_VIEW
+    POPUP "&Вигляд",								FCIDM_MENU_VIEW
     BEGIN
-        POPUP "&Toolbars",							IDM_VIEW_TOOLBARS
+        POPUP "&Панелі інструментів",				IDM_VIEW_TOOLBARS
         BEGIN
             MENUITEM "",							-1, MFT_SEPARATOR
         END
-        MENUITEM "Рядок &Стану",						IDM_VIEW_STATUSBAR
-        POPUP "&Explorer Bar",						IDM_VIEW_EXPLORERBAR
+        MENUITEM "Рядок &Стану",					IDM_VIEW_STATUSBAR
+        POPUP "&Панель Провідника",					IDM_VIEW_EXPLORERBAR
         BEGIN
-            MENUITEM "&Пошук\tCtrl+E",             IDM_EXPLORERBAR_SEARCH
-            MENUITEM "&Обране\tCtrl+I",          IDM_EXPLORERBAR_FAVORITES
+            MENUITEM "&Пошук\tCtrl+E",           	IDM_EXPLORERBAR_SEARCH
+            MENUITEM "&Обране\tCtrl+I",         	IDM_EXPLORERBAR_FAVORITES
             MENUITEM "&Медіа",                      IDM_EXPLORERBAR_MEDIA
             MENUITEM "&Історія\tCtrl+H",            IDM_EXPLORERBAR_HISTORY
-            MENUITEM "П&апки",                    IDM_EXPLORERBAR_FOLDERS
+            MENUITEM "П&апки",                  	IDM_EXPLORERBAR_FOLDERS
             MENUITEM "",                            IDM_EXPLORERBAR_SEPARATOR
         END
         MENUITEM "",								FCIDM_MENU_VIEW_SEP_OPTIONS, MFT_SEPARATOR
-        POPUP "Й&ти До",								FCIDM_MENU_EXPLORE
+        POPUP "Й&ти До",							FCIDM_MENU_EXPLORE
         BEGIN
-            MENUITEM "&Назад\tAlt+Ліва Стрілка",       IDM_GOTO_BACK
-            MENUITEM "&Вперед\tAlt+Права Стрілка",   IDM_GOTO_FORWARD
-            MENUITEM "Вве&рх на один рівень",               IDM_GOTO_UPONELEVEL
+            MENUITEM "&Назад\tAlt+Ліва Стрілка",    IDM_GOTO_BACK
+            MENUITEM "&Вперед\tAlt+Права Стрілка",  IDM_GOTO_FORWARD
+            MENUITEM "Вве&рх на один рівень",       IDM_GOTO_UPONELEVEL
             MENUITEM "",							-1, MFT_SEPARATOR
-            MENUITEM "&Домашня Сторінка\tAlt+Home",        IDM_GOTO_HOMEPAGE
+            MENUITEM "&Домашня Сторінка\tAlt+Home", IDM_GOTO_HOMEPAGE
         END
         MENUITEM "&Оновити",						IDM_VIEW_REFRESH
     END
-    POPUP "F&avorites",								FCIDM_MENU_FAVORITES
+    POPUP "О&бране",								FCIDM_MENU_FAVORITES
     BEGIN
         MENUITEM "&Додати до Обраного...",			IDM_FAVORITES_ADDTOFAVORITES
         MENUITEM "&Організувати Обране...",			IDM_FAVORITES_ORGANIZEFAVORITES
         MENUITEM "",								-1, MFT_SEPARATOR
         MENUITEM "(Empty)",							IDM_FAVORITES_EMPTY
     END
-    POPUP "&Tools",									FCIDM_MENU_TOOLS
+    POPUP "&Інструменти",							FCIDM_MENU_TOOLS
     BEGIN
-        MENUITEM "Під'єднати &Мережевий Диск...",			IDM_TOOLS_MAPNETWORKDRIVE
+        MENUITEM "Під'єднати &Мережевий Диск...",	IDM_TOOLS_MAPNETWORKDRIVE
         MENUITEM "&Від'єднати Мержевий Диск...",	IDM_TOOLS_DISCONNECTNETWORKDRIVE
-        MENUITEM "&Синхронізувати...",					IDM_TOOLS_SYNCHRONIZE
+        MENUITEM "&Синхронізувати...",				IDM_TOOLS_SYNCHRONIZE
         MENUITEM "",								-1, MFT_SEPARATOR
-        MENUITEM "&Опції Папки...",				IDM_TOOLS_FOLDEROPTIONS
+        MENUITEM "&Опції Папки...",					IDM_TOOLS_FOLDEROPTIONS
     END
-    POPUP "&Допомога",									FCIDM_MENU_HELP
+    POPUP "&Допомога",								FCIDM_MENU_HELP
     BEGIN
-        MENUITEM "Ця копія ReactOS &законна?",	IDM_HELP_ISTHISCOPYLEGAL
+        MENUITEM "Ця копія ReactOS &законна?",		IDM_HELP_ISTHISCOPYLEGAL
         MENUITEM "&Про ReactOS",					IDM_HELP_ABOUT
     END
 END
@@ -108,9 +110,9 @@ IDD_CUSTOMIZETOOLBAREX DIALOGEX 0, 0, 357, 33
 STYLE DS_SETFONT | DS_3DLOOK | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg", 0, 0, 0x1
 BEGIN
-    LTEXT           "Te&xt options:",-1,4,2,48,15
+    LTEXT           "Опції &тексту:",-1,4,2,48,15
     COMBOBOX        IDC_TEXTOPTIONS,52,0,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Ico&n options:",-1,4,20,48,15
+    LTEXT           "Опції &значків:",-1,4,20,48,15
     COMBOBOX        IDC_ICONOPTIONS,52,18,123,57,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -181,66 +183,66 @@ END
 
 STRINGTABLE 
 BEGIN
-    9250                      "Displays program information, version number, and copyright."
-    9252                      "Displays information for debugging."
+    9250                      "Відображає дані про програму, номер версії, та copyright."
+    9252                      "Відображає дані для налагодження."
 END
 
 STRINGTABLE 
 BEGIN
     9281                      "Йде до попередньої сторінки."
     9282                      "Йде до наступної сторінки."
-    9283                      "Enables you to change settings."
-    9285                      "Goes to your home page."
+    9283                      "Дозволяє вам змінити налаштування."
+    9285                      "Йде до вашої домашньої сторінки."
 END
 
 STRINGTABLE 
 BEGIN
     9362                      "Відкриває папку Обране."
-    9363                      "Adds the current page to your Favorites list."
+    9363                      "Додає поточну сторінку до списку Обраного."
 END
 
 STRINGTABLE 
 BEGIN
-    9505                      "Shows or hides toolbars."
-    9506                      "Shows or hides the status bar."
-    9508                      "Displays the Standard Buttons toolbar."
-    9509                      "Displays the Address bar."
-    9510                      "Displays the Quick Links bar."
-    9516                      "Locks the sizes and positions of the toolbars."
+    9505                      "Показує чи приховує панелі інструментів."
+    9506                      "Показує чи приховує рядок стану."
+    9508                      "Показує панель стандартних кнопок."
+    9509                      "Показує рядок адреси."
+    9510                      "Показує панель швидких посилань."
+    9516                      "Блокує розміри та розташування панелей інструментів."
 END
 
 STRINGTABLE 
 BEGIN
-    9533                      "Customizes the toolbar."
+    9533                      "Персоналізує панель інструментів."
 END
 
 STRINGTABLE 
 BEGIN
-    9552                      "Shows or hides an Explorer bar."
-    9553                      "Shows the Search bar."
-    9554                      "Shows the Favorites bar."
-    9555                      "Shows the History bar."
-    9557                      "Shows the Folders bar."
-    9559                      "Shows the Media Bar."
+    9552                      "Показує чи приховує панель Провідника."
+    9553                      "Показує панель Пошуку."
+    9554                      "Показує панель Обраного."
+    9555                      "Показує панель Історії."
+    9557                      "Показує панель Тек."
+    9559                      "Показує панель Медіа."
 END
 
 STRINGTABLE 
 BEGIN
     IDS_SMALLICONS            "Малі значки"
     IDS_LARGEICONS            "Великі значки"
-    IDS_SHOWTEXTLABELS        "Show text labels"
+    IDS_SHOWTEXTLABELS        "Показати текстові мітки"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_NOTEXTLABELS          "No text labels"
-    IDS_SELECTIVETEXTONRIGHT  "Selective text on right"
+    IDS_NOTEXTLABELS          "Без текстових міток"
+    IDS_SELECTIVETEXTONRIGHT  "Частина тексту праворуч"
 END
 
 STRINGTABLE 
 BEGIN
-    IDS_GOBUTTONLABEL         "|Go||"
-    IDS_GOBUTTONTIPTEMPLATE   "Go to ""%s"""
+    IDS_GOBUTTONLABEL         "|Йти||"
+    IDS_GOBUTTONTIPTEMPLATE   "Йти до ""%s"""
 END
 
 STRINGTABLE 

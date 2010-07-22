@@ -2,6 +2,7 @@
  * Notepad (Ukrainian resources)
  *
  * Copyright 2005, 2006 Artem Reznikov
+ * Copyright 2010 Igor Paliychuk
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -49,7 +50,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Пара&метри сторінки...", CMD_PAGE_SETUP
         MENUITEM "Д&рук\tCtrl+P",          CMD_PRINT
-        MENUITEM "Настройка &принтера...", CMD_PRINTER_SETUP
+        MENUITEM "Налаштування &принтера...", CMD_PRINTER_SETUP
         MENUITEM SEPARATOR
         MENUITEM "В&ихід",                 CMD_EXIT
     END
@@ -127,7 +128,7 @@ BEGIN
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Кодування:",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Розриви рядків:",0x156,5,20,41,12
+LTEXT           "Кінець рядка:",0x156,5,20,47,12
 END
 
 /* Dialog 'Go To' */

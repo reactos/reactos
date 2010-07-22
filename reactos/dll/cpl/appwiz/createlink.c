@@ -324,6 +324,7 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
     PROPSHEETPAGE psp;
     UINT nPages = 0;
     UINT nLength;
+    DWORD attrs;
 
     PCREATE_LINK_CONTEXT pContext = (PCREATE_LINK_CONTEXT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CREATE_LINK_CONTEXT));
     if (!pContext)
@@ -337,10 +338,13 @@ ShowCreateShortcutWizard(HWND hwndCPl, LPWSTR szPath)
         /* no directory given */
         return FALSE;
     }
-    ///
-    /// FIXME
-    /// check if path is valid
-    ///
+
+    attrs = GetFileAttributesW(szPath);
+    if (attrs == INVALID_FILE_ATTRIBUTES || (attrs & FILE_ATTRIBUTE_DIRECTORY))
+    {
+        /* invalid path */
+        return FALSE;
+    }
 
     wcscpy(pContext->szLinkName, szPath);
     if (pContext->szLinkName[nLength-1] != L'\\')
@@ -389,7 +393,7 @@ NewLinkHere(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     WCHAR szFile[MAX_PATH];
 
-    if (MultiByteToWideChar(CP_ACP, 0, (char*)lParam1, strlen((char*)lParam1)+1, szFile, MAX_PATH))
+    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR) lParam1, -1, szFile, MAX_PATH))
     {
         return ShowCreateShortcutWizard(hwndCPl, szFile);
     }
@@ -401,7 +405,7 @@ LONG
 CALLBACK
 NewLinkHereW(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
-    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR)lParam1);
+    return ShowCreateShortcutWizard(hwndCPl, (LPWSTR) lParam1);
 }
 
 LONG
@@ -410,7 +414,7 @@ NewLinkHereA(HWND hwndCPl, UINT uMsg, LPARAM lParam1, LPARAM lParam2)
 {
     WCHAR szFile[MAX_PATH];
 
-    if (MultiByteToWideChar(CP_ACP, 0, (char*)lParam1, strlen((char*)lParam1)+1, szFile, MAX_PATH))
+    if (MultiByteToWideChar(CP_ACP, 0, (LPSTR) lParam1, -1, szFile, MAX_PATH))
     {
         return ShowCreateShortcutWizard(hwndCPl, szFile);
     }

@@ -69,4 +69,8 @@ NdisIPnPCancelStopDevice(
 NDIS_STATUS
 proSendPacketToMiniport(PLOGICAL_ADAPTER Adapter, PNDIS_PACKET Packet);
 
+VOID
+NTAPI
+ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics);
+
 /* EOF */

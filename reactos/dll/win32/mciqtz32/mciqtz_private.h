@@ -31,8 +31,9 @@ typedef struct {
     BOOL           uninit;
     IGraphBuilder* pgraph;
     IMediaControl* pmctrl;
-    BOOL           started;
     DWORD          time_format;
+    UINT           command_table;
+    HWND parent;
 } WINE_MCIQTZ;
 
 #endif  /* __WINE_PRIVATE_MCIQTZ_H */

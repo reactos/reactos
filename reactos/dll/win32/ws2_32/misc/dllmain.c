@@ -607,7 +607,7 @@ WSAAccept(IN     SOCKET s,
           OUT    LPSOCKADDR addr,
           IN OUT LPINT addrlen,
           IN     LPCONDITIONPROC lpfnCondition,
-          IN     DWORD dwCallbackData)
+          IN     DWORD_PTR dwCallbackData)
 {
     PCATALOG_ENTRY Provider;
     SOCKET Socket;

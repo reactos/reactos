@@ -69,9 +69,9 @@ WCHAR compose( const WCHAR *str )
 static inline int is_valid_sbcs_mapping( const struct sbcs_table *table, int flags,
                                          WCHAR wch, unsigned char ch )
 {
-    if (flags & WC_NO_BEST_FIT_CHARS) return (table->cp2uni[ch] == wch);
-    if (ch != (unsigned char)table->info.def_char) return 1;
-    return (wch == table->info.def_unicode_char);
+    if ((flags & WC_NO_BEST_FIT_CHARS) || ch == (unsigned char)table->info.def_char)
+        return (table->cp2uni[ch] == wch);
+    return 1;
 }
 
 /* query necessary dst length for src string */
@@ -262,8 +262,7 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
 static inline int is_valid_dbcs_mapping( const struct dbcs_table *table, int flags,
                                          WCHAR wch, unsigned short ch )
 {
-    if (ch == table->info.def_char && wch != table->info.def_unicode_char) return 0;
-    if (flags & WC_NO_BEST_FIT_CHARS)
+    if ((flags & WC_NO_BEST_FIT_CHARS) || ch == table->info.def_char)
     {
         /* check if char maps back to the same Unicode value */
         if (ch & 0xff00)

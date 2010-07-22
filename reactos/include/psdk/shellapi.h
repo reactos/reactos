@@ -8,6 +8,11 @@ extern "C" {
 #pragma warning(push)
 #pragma warning(disable:4201)
 #endif
+
+#if !defined(_WIN64)
+#include <pshpack1.h>
+#endif
+
 #define WINSHELLAPI DECLSPEC_IMPORT
 #define ABE_LEFT	0
 #define ABE_TOP	1
@@ -160,7 +165,7 @@ typedef struct _SHCREATEPROCESSINFOW
 
 typedef WORD FILEOP_FLAGS;
 typedef WORD PRINTEROP_FLAGS;
-#include <pshpack1.h>
+
 typedef struct _AppBarData {
 	DWORD	cbSize;
 	HWND	hWnd;
@@ -330,7 +335,6 @@ typedef struct _SHNAMEMAPPINGW {
 	int	cchOldPath;
 	int	cchNewPath;
 } SHNAMEMAPPINGW, *LPSHNAMEMAPPINGW;
-#include <poppack.h>
 
 #define SHERB_NOCONFIRMATION 0x1
 #define SHERB_NOPROGRESSUI   0x2
@@ -367,6 +371,8 @@ BOOL WINAPI Shell_NotifyIconA(DWORD,PNOTIFYICONDATAA);
 BOOL WINAPI Shell_NotifyIconW(DWORD,PNOTIFYICONDATAW);
 int WINAPI ShellAboutA(HWND,LPCSTR,LPCSTR,HICON);
 int WINAPI ShellAboutW(HWND,LPCWSTR,LPCWSTR,HICON);
+int WINAPI ShellMessageBoxA(HINSTANCE,HWND,LPCSTR,LPCSTR,UINT,...);
+int WINAPI ShellMessageBoxW(HINSTANCE,HWND,LPCWSTR,LPCWSTR,UINT,...);
 HINSTANCE WINAPI ShellExecuteA(HWND,LPCSTR,LPCSTR,LPCSTR,LPCSTR,INT);
 HINSTANCE WINAPI ShellExecuteW(HWND,LPCWSTR,LPCWSTR,LPCWSTR,LPCWSTR,INT);
 BOOL WINAPI ShellExecuteExA(LPSHELLEXECUTEINFOA);
@@ -403,6 +409,7 @@ typedef LPSHNAMEMAPPINGW LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutW
 #define ShellExecute ShellExecuteW
 #define ShellExecuteEx ShellExecuteExW
+#define ShellMessageBox ShellMessageBoxW
 #define SHFileOperation SHFileOperationW
 #define SHGetFileInfo SHGetFileInfoW
 #define SHGetNewLinkInfo SHGetNewLinkInfoW
@@ -429,6 +436,7 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define ShellAbout ShellAboutA
 #define ShellExecute ShellExecuteA
 #define ShellExecuteEx ShellExecuteExA
+#define ShellMessageBox ShellMessageBoxA
 #define SHFileOperation SHFileOperationA
 #define SHGetFileInfo SHGetFileInfoA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
@@ -436,6 +444,11 @@ typedef LPSHNAMEMAPPINGA LPSHNAMEMAPPING;
 #define SHEmptyRecycleBin SHEmptyRecycleBinA
 #define SHGetNewLinkInfo SHGetNewLinkInfoA
 #endif
+
+#if !defined(_WIN64)
+#include <poppack.h>
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif

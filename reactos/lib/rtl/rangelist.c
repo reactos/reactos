@@ -65,7 +65,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
     return STATUS_INVALID_PARAMETER;
 
   /* Create new range entry */
-  RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 0);
+  RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
   if (RangeEntry == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -157,7 +157,7 @@ RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
     {
       Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
 
-      NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 0);
+      NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 'elRR');
       if (NewEntry == NULL)
 	return STATUS_INSUFFICIENT_RESOURCES;
 

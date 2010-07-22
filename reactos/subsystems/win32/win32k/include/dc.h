@@ -7,6 +7,7 @@ typedef struct _DC *PDC;
 #include "bitmaps.h"
 #include "pdevobj.h"
 #include "palette.h"
+#include "region.h"
 
 /* Constants ******************************************************************/
 
@@ -26,7 +27,6 @@ typedef struct _DC *PDC;
 typedef struct _ROS_DC_INFO
 {
   HRGN     hClipRgn;     /* Clip region (may be 0) */
-  HRGN     hVisRgn;      /* Visible region (must never be 0) */
   HRGN     hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
 
   CLIPOBJ     *CombinedClip; /* Use XCLIPOBJ in DC. */
@@ -101,9 +101,9 @@ typedef struct _DC
   RECTL       erclWindow;
   RECTL       erclBounds;
   RECTL       erclBoundsApp;
-  PVOID       prgnAPI; /* PROSRGNDATA */
-  PVOID       prgnVis;
-  PVOID       prgnRao;
+  PROSRGNDATA prgnAPI; /* PROSRGNDATA */
+  PROSRGNDATA prgnVis; /* Visible region (must never be 0) */
+  PROSRGNDATA prgnRao;
   POINTL      ptlFillOrigin;
   EBRUSHOBJ   eboFill;
   EBRUSHOBJ   eboLine;
