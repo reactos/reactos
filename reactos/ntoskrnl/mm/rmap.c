@@ -149,7 +149,7 @@ MmWritePagePhysicalAddress(PFN_NUMBER Page)
       Status = MmWritePageSectionView(AddressSpace, MemoryArea,
                                       Address, PageOp);
    }
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
+   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
@@ -274,7 +274,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
       Status = MmPageOutSectionView(AddressSpace, MemoryArea,
                                     Address, PageOp);
    }
-   else if ((Type == MEMORY_AREA_VIRTUAL_MEMORY) || (Type == MEMORY_AREA_PEB_OR_TEB))
+   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
    {
       PageOp = MmGetPageOp(MemoryArea, Address < MmSystemRangeStart ? Process->UniqueProcessId : NULL,
                            Address, NULL, 0, MM_PAGEOP_PAGEOUT, TRUE);
