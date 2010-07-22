@@ -18,11 +18,6 @@
 
 extern MM_SYSTEMSIZE MmSystemSize;
 
-PVOID
-NTAPI
-MiCreatePebOrTeb(PEPROCESS Process,
-                 PVOID BaseAddress);
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID
@@ -46,6 +41,116 @@ MiRosTakeOverPebTebRanges(IN PEPROCESS Process)
                                 0,
                                 BoundaryAddressMultiple);
     ASSERT(NT_SUCCESS(Status));
+}
+
+NTSTATUS
+NTAPI
+MiCreatePebOrTeb(IN PEPROCESS Process,
+                 IN ULONG Size,
+                 OUT PULONG_PTR Base)
+{
+    PETHREAD Thread = PsGetCurrentThread();
+    PMMVAD_LONG Vad;
+    NTSTATUS Status;
+    ULONG RandomCoeff;
+    ULONG_PTR StartAddress, EndAddress;
+    LARGE_INTEGER CurrentTime;
+    
+    /* Allocate a VAD */
+    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
+    if (!Vad) return STATUS_NO_MEMORY;
+    
+    /* Setup the primary flags with the size, and make it commited, private, RW */
+    Vad->u.LongFlags = 0;
+    Vad->u.VadFlags.CommitCharge = BYTES_TO_PAGES(Size);
+    Vad->u.VadFlags.MemCommit = TRUE;
+    Vad->u.VadFlags.PrivateMemory = TRUE;
+    Vad->u.VadFlags.Protection = MM_READWRITE;
+    Vad->u.VadFlags.NoChange = TRUE;
+    
+    /* Setup the secondary flags to make it a secured, writable, long VAD */
+    Vad->u2.LongFlags2 = 0;
+    Vad->u2.VadFlags2.OneSecured = TRUE;
+    Vad->u2.VadFlags2.LongVad = TRUE;
+    Vad->u2.VadFlags2.ReadOnly = FALSE;
+    
+    /* Lock the process address space */
+    KeAcquireGuardedMutex(&Process->AddressCreationLock);
+
+    /* Check if this is a PEB creation */
+    if (Size == sizeof(PEB))
+    {
+        /* Start at the highest valid address */
+        StartAddress = (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1;
+
+        /* Select the random coefficient */
+        KeQueryTickCount(&CurrentTime);
+        CurrentTime.LowPart &= ((64 * _1KB) >> PAGE_SHIFT) - 1;
+        if (CurrentTime.LowPart <= 1) CurrentTime.LowPart = 2;
+        RandomCoeff = CurrentTime.LowPart << PAGE_SHIFT;
+
+        /* Select the highest valid address minus the random coefficient */
+        StartAddress -= RandomCoeff;
+        EndAddress = StartAddress + ROUND_TO_PAGES(Size) - 1;
+
+        /* See if this VA range can be obtained */
+        if (!MiCheckForConflictingNode(StartAddress >> PAGE_SHIFT,
+                                       EndAddress >> PAGE_SHIFT,
+                                       &Process->VadRoot))
+        {
+            /* No conflict, use this address */
+            *Base = StartAddress;
+            goto AfterFound;
+        }
+    }
+    
+    /* For TEBs, or if a PEB location couldn't be found, scan the VAD root */
+    Status = MiFindEmptyAddressRangeDownTree(ROUND_TO_PAGES(Size),
+                                             (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1,
+                                             PAGE_SIZE,
+                                             &Process->VadRoot,
+                                             Base);
+    ASSERT(NT_SUCCESS(Status));
+    
+AfterFound:
+    /* Validate that it came from the VAD ranges */
+    ASSERT(*Base >= (ULONG_PTR)MI_LOWEST_VAD_ADDRESS);
+    
+    /* Build the rest of the VAD now */
+    Vad->StartingVpn = (*Base) >> PAGE_SHIFT;
+    Vad->EndingVpn =  ((*Base) + Size - 1) >> PAGE_SHIFT;
+    Vad->u3.Secured.StartVpn = *Base;
+    Vad->u3.Secured.EndVpn = (Vad->EndingVpn << PAGE_SHIFT) | (PAGE_SIZE - 1);
+    
+    /* FIXME: Should setup VAD bitmap */
+    Status = STATUS_SUCCESS;
+
+    /* Pretend as if we own the working set */
+    MiLockProcessWorkingSet(Process, Thread);
+    
+    /* Insert the VAD */
+    ASSERT(Vad->EndingVpn >= Vad->StartingVpn);
+    Process->VadRoot.NodeHint = Vad;
+    MiInsertNode((PVOID)Vad, &Process->VadRoot);
+    
+    /* Release the working set */
+    MiUnlockProcessWorkingSet(Process, Thread);
+
+    /* Release the address space lock */
+    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+
+    /* Return the status */
+    DPRINT("Allocated PEB/TEB at: 0x%p for %16s\n", *Base, Process->ImageFileName);
+    return Status;
+}
+
+VOID
+NTAPI
+MmDeleteTeb(IN PEPROCESS Process,
+            IN PTEB Teb)
+{
+    /* Oops J */
+    DPRINT("Leaking 4KB at thread exit, this will be fixed later\n");
 }
 
 VOID
@@ -415,9 +520,8 @@ MmCreatePeb(IN PEPROCESS Process,
     //
     // Allocate the PEB
     //
-    Peb = MiCreatePebOrTeb(Process,
-                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
-    if (!Peb) return STATUS_INSUFFICIENT_RESOURCES;
+    Status = MiCreatePebOrTeb(Process, sizeof(PEB), (PULONG_PTR)&Peb);
+    ASSERT(NT_SUCCESS(Status));
 
     //
     // Map NLS Tables
@@ -651,9 +755,8 @@ MmCreateTeb(IN PEPROCESS Process,
     //
     // Allocate the TEB
     //
-    Teb = MiCreatePebOrTeb(Process,
-                           (PVOID)((ULONG_PTR)MM_HIGHEST_VAD_ADDRESS + 1));
-    if (!Teb) return STATUS_INSUFFICIENT_RESOURCES;
+    Status = MiCreatePebOrTeb(Process, sizeof(TEB), (PULONG_PTR)&Teb);
+    ASSERT(NT_SUCCESS(Status));
     
     //
     // Use SEH in case we can't load the TEB
