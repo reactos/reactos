@@ -156,7 +156,7 @@ MmCreateKernelStack(IN BOOLEAN GuiStack,
     MI_MAKE_SOFTWARE_PTE(&InvalidPte, MM_NOACCESS);
 
     /* Setup the template stack PTE */
-    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte + 1, MM_READWRITE, 0);
+    MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte + 1, MM_READWRITE, 0);
     
     //
     // Acquire the PFN DB lock
@@ -270,7 +270,7 @@ MmGrowKernelStackEx(IN PVOID StackPointer,
         MiInitializePfn(PageFrameIndex, LimitPte, 1);
         
         /* Setup the template stack PTE */
-        MI_MAKE_HARDWARE_PTE(&TempPte, LimitPte, MM_READWRITE, PageFrameIndex);
+        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, LimitPte, MM_READWRITE, PageFrameIndex);
         
         /* Write the valid PTE */
         MI_WRITE_VALID_PTE(LimitPte--, TempPte);

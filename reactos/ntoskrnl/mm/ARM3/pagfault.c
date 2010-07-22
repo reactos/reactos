@@ -34,8 +34,7 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     //
     // Check if this is a fault while trying to access the page table itself
     //
-    if ((Address >= (PVOID)MiAddressToPte(MmSystemRangeStart)) &&
-        (Address < (PVOID)PTE_TOP))
+    if (MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address))
     {
         //
         // Send a hint to the page fault handler that this is only a valid fault
@@ -84,6 +83,52 @@ MiCheckPdeForPagedPool(IN PVOID Address)
     return Status;
 }
 
+VOID
+NTAPI
+MiZeroPfn(IN PFN_NUMBER PageFrameNumber)
+{
+    PMMPTE ZeroPte;
+    MMPTE TempPte;
+    PMMPFN Pfn1;
+    PVOID ZeroAddress;
+    
+    /* Get the PFN for this page */
+    Pfn1 = MiGetPfnEntry(PageFrameNumber);
+    ASSERT(Pfn1);
+        
+    /* Grab a system PTE we can use to zero the page */
+    ZeroPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(ZeroPte);
+    
+    /* Initialize the PTE for it */
+    TempPte = ValidKernelPte;
+    TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+
+    /* Setup caching */
+    if (Pfn1->u3.e1.CacheAttribute == MiWriteCombined)
+    {
+        /* Write combining, no caching */
+        MI_PAGE_DISABLE_CACHE(&TempPte);
+        MI_PAGE_WRITE_COMBINED(&TempPte);
+    }
+    else if (Pfn1->u3.e1.CacheAttribute == MiNonCached)
+    {
+        /* Write through, no caching */
+        MI_PAGE_DISABLE_CACHE(&TempPte);
+        MI_PAGE_WRITE_THROUGH(&TempPte);
+    }
+
+    /* Make the system PTE valid with our PFN */
+    MI_WRITE_VALID_PTE(ZeroPte, TempPte);
+
+    /* Get the address it maps to, and zero it out */
+    ZeroAddress = MiPteToAddress(ZeroPte);
+    KeZeroPages(ZeroAddress, PAGE_SIZE);
+
+    /* Now get rid of it */
+    MiReleaseSystemPtes(ZeroPte, 1, SystemPteSpace);
+}
+
 NTSTATUS
 NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
@@ -93,13 +138,24 @@ MiResolveDemandZeroFault(IN PVOID Address,
 {
     PFN_NUMBER PageFrameNumber;
     MMPTE TempPte;
+    BOOLEAN NeedZero = FALSE;
     DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
             Address,
             Process);
     
-    /* Must currently only be called by paging path, for system addresses only */
+    /* Must currently only be called by paging path */
     ASSERT(OldIrql == MM_NOIRQL);
-    ASSERT(Process == NULL);
+    if (Process)
+    {
+        /* Sanity check */
+        ASSERT(MI_IS_PAGE_TABLE_ADDRESS(PointerPte));
+
+        /* No forking yet */
+        ASSERT(Process->ForkInProgress == NULL);
+        
+        /* We'll need a zero page */
+        NeedZero = TRUE;
+    }
         
     //
     // Lock the PFN database
@@ -124,11 +180,31 @@ MiResolveDemandZeroFault(IN PVOID Address,
     //
     InterlockedIncrement(&KeGetCurrentPrcb()->MmDemandZeroCount);
     
-    /* Shouldn't see faults for user PTEs yet */
-    ASSERT(PointerPte > MiHighestUserPte);
+    /* Zero the page if need be */
+    if (NeedZero) MiZeroPfn(PageFrameNumber);
     
     /* Build the PTE */
-    MI_MAKE_HARDWARE_PTE(&TempPte, PointerPte, PointerPte->u.Soft.Protection, PageFrameNumber);
+    if (PointerPte <= MiHighestUserPte)
+    {
+        /* For user mode */
+        MI_MAKE_HARDWARE_PTE_USER(&TempPte,
+                                  PointerPte,
+                                  PointerPte->u.Soft.Protection,
+                                  PageFrameNumber);
+    }
+    else
+    {
+        /* For kernel mode */
+        MI_MAKE_HARDWARE_PTE(&TempPte,
+                             PointerPte,
+                             PointerPte->u.Soft.Protection,
+                             PageFrameNumber);
+    }
+    
+    /* Set it dirty if it's a writable page */
+    if (TempPte.u.Hard.Write) TempPte.u.Hard.Dirty = TRUE;
+    
+    /* Write it */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     //

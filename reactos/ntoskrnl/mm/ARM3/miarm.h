@@ -193,6 +193,12 @@ MmProtectToPteMask[32] =
 #define MI_IS_SESSION_PTE(Pte) \
     ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
 
+#define MI_IS_PAGE_TABLE_ADDRESS(Address) \
+    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)PTE_TOP))
+
+#define MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address) \
+    (((Address) >= (PVOID)MiAddressToPte(MmSystemRangeStart)) && ((Address) <= (PVOID)PTE_TOP))
+
 //
 // Corresponds to MMPTE_SOFTWARE.Protection
 //
@@ -470,14 +476,44 @@ extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
 
 //
+// Figures out the hardware bits for a PTE
+//
+ULONG
+FORCEINLINE
+MiDetermineUserGlobalPteMask(IN PMMPTE PointerPte)
+{
+    MMPTE TempPte;
+    
+    /* Start fresh */
+    TempPte.u.Long = 0;
+    
+    /* Make it valid and accessed */
+    TempPte.u.Hard.Valid = TRUE;
+    TempPte.u.Hard.Accessed = TRUE;
+    
+    /* Is this for user-mode? */
+    if ((PointerPte <= MiHighestUserPte) ||
+        ((PointerPte >= MiAddressToPde(NULL)) && (PointerPte <= MiHighestUserPde)))
+    {
+        /* Set the owner bit */
+        TempPte.u.Hard.Owner = TRUE;
+    }
+    
+    /* FIXME: We should also set the global bit */
+    
+    /* Return the protection */
+    return TempPte.u.Long;
+}
+
+//
 // Creates a valid kernel PTE with the given protection
 //
 FORCEINLINE
 VOID
-MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
-                     IN PMMPTE MappingPte,
-                     IN ULONG ProtectionMask,
-                     IN PFN_NUMBER PageFrameNumber)
+MI_MAKE_HARDWARE_PTE_KERNEL(IN PMMPTE NewPte,
+                            IN PMMPTE MappingPte,
+                            IN ULONG ProtectionMask,
+                            IN PFN_NUMBER PageFrameNumber)
 {
     /* Only valid for kernel, non-session PTEs */
     ASSERT(MappingPte > MiHighestUserPte);
@@ -488,6 +524,44 @@ MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
     *NewPte = ValidKernelPte;
     
     /* Set the protection and page */
+    NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
+    NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+}
+
+//
+// Creates a valid PTE with the given protection
+//
+FORCEINLINE
+VOID
+MI_MAKE_HARDWARE_PTE(IN PMMPTE NewPte,
+                     IN PMMPTE MappingPte,
+                     IN ULONG ProtectionMask,
+                     IN PFN_NUMBER PageFrameNumber)
+{
+    /* Set the protection and page */
+    NewPte->u.Long = MiDetermineUserGlobalPteMask(MappingPte);
+    NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
+    NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
+}
+
+//
+// Creates a valid user PTE with the given protection
+//
+FORCEINLINE
+VOID
+MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
+                          IN PMMPTE MappingPte,
+                          IN ULONG ProtectionMask,
+                          IN PFN_NUMBER PageFrameNumber)
+{
+    /* Only valid for kernel, non-session PTEs */
+    ASSERT(MappingPte <= MiHighestUserPte);
+    
+    /* Start fresh */
+    *NewPte = ValidKernelPte;
+    
+    /* Set the protection and page */
+    NewPte->u.Hard.Owner = TRUE;
     NewPte->u.Hard.PageFrameNumber = PageFrameNumber;
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
