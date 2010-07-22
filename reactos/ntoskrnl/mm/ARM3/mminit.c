@@ -328,6 +328,26 @@ PFN_NUMBER MmSystemCacheWsMaximum = 350;
 /* FIXME: Move to cache/working set code later */
 BOOLEAN MmLargeSystemCache;
 
+/*
+ * This value determines in how many fragments/chunks the subsection prototype
+ * PTEs should be allocated when mapping a section object. It is configurable in
+ * the registry through the MapAllocationFragment parameter.
+ *
+ * The default is 64KB on systems with more than 1GB of RAM, 32KB on systems with
+ * more than 256MB of RAM, and 16KB on systems with less than 256MB of RAM.
+ *
+ * The maximum it can be set to is 2MB, and the minimum is 4KB.
+ */
+SIZE_T MmAllocationFragment;
+
+/*
+ * These two values track how much virtual memory can be committed, and when
+ * expansion should happen.
+ */
+ // FIXME: They should be moved elsewhere since it's not an "init" setting?
+SIZE_T MmTotalCommitLimit;
+SIZE_T MmTotalCommitLimitMaximum;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 //
@@ -1799,6 +1819,44 @@ MmArmInitSystem(IN ULONG Phase,
         
         DPRINT("System PTE count has been tuned to %d (%d bytes)\n",
                MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
+               
+        /* Initialize the working set lock */
+        ExInitializePushLock((PULONG_PTR)&MmSystemCacheWs.WorkingSetMutex);
+        
+        /* Set commit limit */
+        MmTotalCommitLimit = 2 * _1GB;
+        MmTotalCommitLimitMaximum = MmTotalCommitLimit;
+        
+        /* Has the allocation fragment been setup? */
+        if (!MmAllocationFragment)
+        {
+            /* Use the default value */
+            MmAllocationFragment = MI_ALLOCATION_FRAGMENT;
+            if (PageCount < ((256 * _1MB) / PAGE_SIZE))
+            {
+                /* On memory systems with less than 256MB, divide by 4 */
+                MmAllocationFragment = MI_ALLOCATION_FRAGMENT / 4;
+            }
+            else if (PageCount < (_1GB / PAGE_SIZE))
+            {
+                /* On systems with less than 1GB, divide by 2 */
+                MmAllocationFragment = MI_ALLOCATION_FRAGMENT / 2;
+            }
+        }
+        else
+        {
+            /* Convert from 1KB fragments to pages */
+            MmAllocationFragment *= _1KB;
+            MmAllocationFragment = ROUND_TO_PAGES(MmAllocationFragment);
+            
+            /* Don't let it past the maximum */
+            MmAllocationFragment = min(MmAllocationFragment,
+                                       MI_MAX_ALLOCATION_FRAGMENT);
+            
+            /* Don't let it too small either */
+            MmAllocationFragment = max(MmAllocationFragment,
+                                       MI_MIN_ALLOCATION_FRAGMENT);
+        }
         
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
@@ -1889,12 +1947,12 @@ MmArmInitSystem(IN ULONG Phase,
         /* FIXME: Call out into Driver Verifier for initialization  */
 
         /* Check how many pages the system has */
-        if (MmNumberOfPhysicalPages <= (13 * _1MB))
+        if (MmNumberOfPhysicalPages <= ((13 * _1MB) / PAGE_SIZE))
         {
             /* Set small system */
             MmSystemSize = MmSmallSystem;
         }
-        else if (MmNumberOfPhysicalPages <= (19 * _1MB))
+        else if (MmNumberOfPhysicalPages <= ((19 * _1MB) / PAGE_SIZE))
         {
             /* Set small system and add 100 pages for the cache */
             MmSystemSize = MmSmallSystem;
@@ -1985,6 +2043,14 @@ MmArmInitSystem(IN ULONG Phase,
             DPRINT1("System cache working set too big\n");
             return FALSE;
         }
+        
+        /* Initialize the system cache */
+        //MiInitializeSystemCache(MmSystemCacheWsMinimum, MmAvailablePages);
+        
+        /* Update the commit limit */
+        MmTotalCommitLimit = MmAvailablePages;
+        if (MmTotalCommitLimit > 1024) MmTotalCommitLimit -= 1024;
+        MmTotalCommitLimitMaximum = MmTotalCommitLimit;
         
         /* Size up paged pool and build the shadow system page directory */
         MiBuildPagedPool();

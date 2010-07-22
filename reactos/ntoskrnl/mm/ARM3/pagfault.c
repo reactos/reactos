@@ -297,7 +297,9 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     PMMPDE PointerPde;
     MMPTE TempPte;
     PETHREAD CurrentThread;
+    PEPROCESS CurrentProcess;
     NTSTATUS Status;
+    PMMSUPPORT WorkingSet;
     DPRINT("ARM3 FAULT AT: %p\n", Address);
     
     //
@@ -392,7 +394,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Check for a fault on the page table or hyperspace itself
         //
-        if ((Address >= (PVOID)PTE_BASE) && (Address <= MmHyperSpaceEnd))
+        if (MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address))
         {
             //
             // This might happen...not sure yet
@@ -415,17 +417,13 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             return STATUS_ACCESS_VIOLATION;
         }
         
-        //
-        // Now we must raise to APC_LEVEL and mark the thread as owner
-        // We don't actually implement a working set pushlock, so this is only
-        // for internal consistency (and blocking APCs)
-        //
-        KeRaiseIrql(APC_LEVEL, &LockIrql);
+        /* In this path, we are using the system working set */
         CurrentThread = PsGetCurrentThread();
-        KeEnterGuardedRegion();
-        ASSERT((CurrentThread->OwnsSystemWorkingSetExclusive == 0) &&
-               (CurrentThread->OwnsSystemWorkingSetShared == 0));
-        CurrentThread->OwnsSystemWorkingSetExclusive = 1; 
+        WorkingSet = &MmSystemCacheWs;
+        
+        /* Acquire it */
+        KeRaiseIrql(APC_LEVEL, &LockIrql);
+        MiLockWorkingSet(CurrentThread, WorkingSet);
         
         //
         // Re-read PTE now that the IRQL has been raised
@@ -444,6 +442,10 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 DPRINT1("Should NEVER happen on ARM3!!!\n");
                 return STATUS_ACCESS_VIOLATION;
             }
+            
+            /* Release the working set */
+            MiUnlockWorkingSet(CurrentThread, WorkingSet);
+            KeLowerIrql(LockIrql);
             
             //
             // Otherwise, the PDE was probably invalid, and all is good now
@@ -472,13 +474,10 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                                  NULL,
                                  TrapInformation,
                                  NULL);
-        
-        //
-        // Re-enable APCs
-        //
+
+        /* Release the working set */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
-        CurrentThread->OwnsSystemWorkingSetExclusive = 0;
-        KeLeaveGuardedRegion();
+        MiUnlockWorkingSet(CurrentThread, WorkingSet);
         KeLowerIrql(LockIrql);
         
         //
@@ -488,9 +487,17 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         return Status;
     }
     
-    //
-    // DIE DIE DIE
-    //
+    /* This is a user fault */
+    CurrentThread = PsGetCurrentThread();
+    CurrentProcess = PsGetCurrentProcess();
+    
+    /* Lock the working set */
+    MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
+    
+    /* Do something */
+    
+    /* Release the working set */
+    MiUnlockProcessWorkingSet(CurrentProcess, CurrentThread);
     DPRINT1("WARNING: USER MODE FAULT IN ARM3???\n");
     return STATUS_ACCESS_VIOLATION;
 }

@@ -8,34 +8,38 @@
 
 #ifndef _M_AMD64
 
-#define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_TUNING         ((19*1024*1024) >> PAGE_SHIFT)
-#define MI_MIN_PAGES_FOR_SYSPTE_BOOST          ((32*1024*1024) >> PAGE_SHIFT)
-#define MI_MAX_INIT_NONPAGED_POOL_SIZE         (128 * 1024 * 1024)
-#define MI_MAX_NONPAGED_POOL_SIZE              (128 * 1024 * 1024)
-#define MI_MAX_FREE_PAGE_LISTS                 4
+#define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING   ((255 * _1MB) >> PAGE_SHIFT)
+#define MI_MIN_PAGES_FOR_SYSPTE_TUNING          ((19 * _1MB) >> PAGE_SHIFT)
+#define MI_MIN_PAGES_FOR_SYSPTE_BOOST           ((32 * _1MB) >> PAGE_SHIFT)
+#define MI_MAX_INIT_NONPAGED_POOL_SIZE          (128 * _1MB)
+#define MI_MAX_NONPAGED_POOL_SIZE               (128 * _1MB)
+#define MI_MAX_FREE_PAGE_LISTS                  4
 
-#define MI_MIN_INIT_PAGED_POOLSIZE             (32 * 1024 * 1024)
+#define MI_MIN_INIT_PAGED_POOLSIZE              (32 * _1MB)
 
-#define MI_SESSION_VIEW_SIZE                   (20 * 1024 * 1024)
-#define MI_SESSION_POOL_SIZE                   (16 * 1024 * 1024)
-#define MI_SESSION_IMAGE_SIZE                  (8 * 1024 * 1024)
-#define MI_SESSION_WORKING_SET_SIZE            (4 * 1024 * 1024)
-#define MI_SESSION_SIZE                        (MI_SESSION_VIEW_SIZE + \
-                                                MI_SESSION_POOL_SIZE + \
-                                                MI_SESSION_IMAGE_SIZE + \
-                                                MI_SESSION_WORKING_SET_SIZE)
+#define MI_SESSION_VIEW_SIZE                    (20 * _1MB)
+#define MI_SESSION_POOL_SIZE                    (16 * _1MB)
+#define MI_SESSION_IMAGE_SIZE                   (8 * _1MB)
+#define MI_SESSION_WORKING_SET_SIZE             (4 * _1MB)
+#define MI_SESSION_SIZE                         (MI_SESSION_VIEW_SIZE + \
+                                                 MI_SESSION_POOL_SIZE + \
+                                                 MI_SESSION_IMAGE_SIZE + \
+                                                 MI_SESSION_WORKING_SET_SIZE)
 
-#define MI_SYSTEM_VIEW_SIZE                    (16 * 1024 * 1024)
+#define MI_SYSTEM_VIEW_SIZE                     (16 * _1MB)
 
-#define MI_SYSTEM_CACHE_WS_START               (PVOID)0xC0C00000
-#define MI_PAGED_POOL_START                    (PVOID)0xE1000000
-#define MI_NONPAGED_POOL_END                   (PVOID)0xFFBE0000
-#define MI_DEBUG_MAPPING                       (PVOID)0xFFBFF000
+#define MI_SYSTEM_CACHE_WS_START                (PVOID)0xC0C00000
+#define MI_PAGED_POOL_START                     (PVOID)0xE1000000
+#define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
+#define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 
 #define MI_MIN_SECONDARY_COLORS                 8
 #define MI_SECONDARY_COLORS                     64
 #define MI_MAX_SECONDARY_COLORS                 1024
+
+#define MI_MIN_ALLOCATION_FRAGMENT              (4 * _1KB)
+#define MI_ALLOCATION_FRAGMENT                  (64 * _1KB)
+#define MI_MAX_ALLOCATION_FRAGMENT              (2  * _1MB)
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
@@ -46,8 +50,9 @@
 #endif /* !_M_AMD64 */
 
 /* Make the code cleaner with some definitions for size multiples */
-#define _1KB (1024)
+#define _1KB (1024u)
 #define _1MB (1024 * _1KB)
+#define _1GB (1024 * _1MB)
 
 /* Area mapped by a PDE */
 #define PDE_MAPPED_VA  (PTE_COUNT * PAGE_SIZE)
@@ -199,6 +204,9 @@ MmProtectToPteMask[32] =
 #define MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address) \
     (((Address) >= (PVOID)MiAddressToPte(MmSystemRangeStart)) && ((Address) <= (PVOID)PTE_TOP))
 
+#define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
+    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
+    
 //
 // Corresponds to MMPTE_SOFTWARE.Protection
 //
@@ -606,6 +614,165 @@ MI_WRITE_INVALID_PTE(IN PMMPTE PointerPte,
     /* Write the invalid PTE */
     ASSERT(InvalidPte.u.Hard.Valid == 0);
     *PointerPte = InvalidPte;
+}
+
+//
+// Checks if the thread already owns a working set
+//
+FORCEINLINE
+BOOLEAN
+MM_ANY_WS_LOCK_HELD(IN PETHREAD Thread)
+{
+    /* If any of these are held, return TRUE */
+    return ((Thread->OwnsProcessWorkingSetExclusive) ||
+            (Thread->OwnsProcessWorkingSetShared) ||
+            (Thread->OwnsSystemWorkingSetExclusive) ||
+            (Thread->OwnsSystemWorkingSetShared) ||
+            (Thread->OwnsSessionWorkingSetExclusive) ||
+            (Thread->OwnsSessionWorkingSetShared));
+}
+
+//
+// Checks if the process owns the working set lock
+//
+FORCEINLINE
+BOOLEAN
+MI_WS_OWNER(IN PEPROCESS Process)
+{
+    /* Check if this process is the owner, and that the thread owns the WS */
+    return ((KeGetCurrentThread()->ApcState.Process == &Process->Pcb) &&
+            ((PsGetCurrentThread()->OwnsProcessWorkingSetExclusive) ||
+             (PsGetCurrentThread()->OwnsProcessWorkingSetShared)));
+}
+
+//
+// Locks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiLockProcessWorkingSet(IN PEPROCESS Process,
+                        IN PETHREAD Thread)
+{
+    /* Shouldn't already be owning the process working set */
+    ASSERT(Thread->OwnsProcessWorkingSetShared == FALSE);
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+
+    /* Block APCs, make sure that still nothing is already held */
+    KeEnterGuardedRegion();
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+
+    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+
+    /* FIXME: This also can't be checked because Vm is used by MAREAs) */
+    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+
+    /* Okay, now we can own it exclusively */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == FALSE);
+    Thread->OwnsProcessWorkingSetExclusive = TRUE;
+}
+
+//
+// Unlocks the working set for the given process
+//
+FORCEINLINE
+VOID
+MiUnlockProcessWorkingSet(IN PEPROCESS Process,
+                          IN PETHREAD Thread)
+{
+    /* Make sure this process really is owner, and it was a safe acquisition */
+    ASSERT(MI_WS_OWNER(Process));
+    /* This can't be checked because Vm is used by MAREAs) */
+    //ASSERT(Process->Vm.Flags.AcquiredUnsafe == 0);
+    
+    /* The thread doesn't own it anymore */
+    ASSERT(Thread->OwnsProcessWorkingSetExclusive == TRUE);
+    Thread->OwnsProcessWorkingSetExclusive = FALSE;
+         
+    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
+
+    /* Unblock APCs */
+    KeLeaveGuardedRegion();
+}
+
+//
+// Locks the working set
+//
+FORCEINLINE
+VOID
+MiLockWorkingSet(IN PETHREAD Thread,
+                 IN PMMSUPPORT WorkingSet)
+{
+    /* Block APCs */
+    KeEnterGuardedRegion();
+    
+    /* Working set should be in global memory */
+    ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
+    
+    /* Thread shouldn't already be owning something */
+    ASSERT(!MM_ANY_WS_LOCK_HELD(Thread));
+    
+    /* FIXME: Actually lock it (we can't because Vm is used by MAREAs) */
+    
+    /* Which working set is this? */
+    if (WorkingSet == &MmSystemCacheWs)
+    {
+        /* Own the system working set */
+        ASSERT((Thread->OwnsSystemWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsSystemWorkingSetShared == FALSE));
+        Thread->OwnsSystemWorkingSetExclusive = TRUE;
+    }
+    else if (WorkingSet->Flags.SessionSpace)
+    {
+        /* We don't implement this yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    else
+    {
+        /* Own the process working set */
+        ASSERT((Thread->OwnsProcessWorkingSetExclusive == FALSE) &&
+               (Thread->OwnsProcessWorkingSetShared == FALSE));
+        Thread->OwnsProcessWorkingSetExclusive = TRUE;
+    }
+}
+
+//
+// Unlocks the working set
+//
+FORCEINLINE
+VOID
+MiUnlockWorkingSet(IN PETHREAD Thread,
+                   IN PMMSUPPORT WorkingSet)
+{
+    /* Working set should be in global memory */
+    ASSERT(MI_IS_SESSION_ADDRESS((PVOID)WorkingSet) == FALSE);
+    
+    /* Which working set is this? */
+    if (WorkingSet == &MmSystemCacheWs)
+    {
+        /* Release the system working set */
+        ASSERT((Thread->OwnsSystemWorkingSetExclusive == TRUE) ||
+               (Thread->OwnsSystemWorkingSetShared == TRUE));
+        Thread->OwnsSystemWorkingSetExclusive = FALSE;
+    }
+    else if (WorkingSet->Flags.SessionSpace)
+    {
+        /* We don't implement this yet */
+        UNIMPLEMENTED;
+        while (TRUE);
+    }
+    else
+    {
+        /* Release the process working set */
+        ASSERT((Thread->OwnsProcessWorkingSetExclusive) ||
+               (Thread->OwnsProcessWorkingSetShared));
+        Thread->OwnsProcessWorkingSetExclusive = FALSE;
+    }
+    
+    /* FIXME: Actually release it (we can't because Vm is used by MAREAs) */
+
+    /* Unblock APCs */
+    KeLeaveGuardedRegion();
 }
 
 NTSTATUS

@@ -2230,7 +2230,7 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
                     IN PMMPTE LastPte)
 {
     PVOID ImageBase;
-    PETHREAD CurrentThread;
+    PETHREAD CurrentThread = PsGetCurrentThread();
     PFN_NUMBER PageCount = 0, PageFrameIndex;
     PMMPFN Pfn1;
     PAGED_CODE();
@@ -2242,12 +2242,8 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
     /* If this is a large page, it's stuck in physical memory */
     if (MI_IS_PHYSICAL_ADDRESS(ImageBase)) return;
 
-    /* We should lock the system working set -- we don't have one yet, so just be consistent */
-    CurrentThread = PsGetCurrentThread();
-    KeEnterGuardedRegion();
-    ASSERT((CurrentThread->OwnsSystemWorkingSetExclusive == 0) &&
-           (CurrentThread->OwnsSystemWorkingSetShared == 0));
-    CurrentThread->OwnsSystemWorkingSetExclusive = 1;
+    /* Lock the working set */
+    MiLockWorkingSet(CurrentThread, &MmSystemCacheWs);
     
     /* Loop the PTEs */
     while (PointerPte <= LastPte)
@@ -2267,10 +2263,8 @@ MiSetPagingOfDriver(IN PMMPTE PointerPte,
         PointerPte++;
     }
     
-    /* Release the working set "lock" */
-    ASSERT(KeAreAllApcsDisabled() == TRUE);
-    CurrentThread->OwnsSystemWorkingSetExclusive = 0;
-    KeLeaveGuardedRegion();
+    /* Release the working set */
+    MiUnlockWorkingSet(CurrentThread, &MmSystemCacheWs);
     
     /* Do we have any driver pages? */
     if (PageCount)

@@ -37,23 +37,14 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                          OUT PPFN_NUMBER ValidPages)
 {                     
     PFN_NUMBER ActualPages = 0;
-    PETHREAD CurrentThread;
+    PETHREAD CurrentThread = PsGetCurrentThread();
     PMMPFN Pfn1, Pfn2;
     PFN_NUMBER PageFrameIndex, PageTableIndex;
-    KIRQL OldIrql, LockIrql;
+    KIRQL OldIrql;
     ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
     
-    /*
-     * Now we must raise to APC_LEVEL and mark the thread as owner
-     * We don't actually implement a working set pushlock, so this is only
-     * for internal consistency (and blocking APCs)
-     */
-    KeRaiseIrql(APC_LEVEL, &LockIrql);
-    CurrentThread = PsGetCurrentThread();
-    KeEnterGuardedRegion();
-    ASSERT((CurrentThread->OwnsSystemWorkingSetExclusive == 0) &&
-           (CurrentThread->OwnsSystemWorkingSetShared == 0));
-    CurrentThread->OwnsSystemWorkingSetExclusive = 1;
+    /* Lock the system working set */
+    MiLockWorkingSet(CurrentThread, &MmSystemCacheWs);
                 
     /* Loop all pages */
     while (PageCount)
@@ -124,11 +115,8 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
         PageCount--;
     }
     
-    /* Re-enable APCs */
-    ASSERT(KeAreAllApcsDisabled() == TRUE);
-    CurrentThread->OwnsSystemWorkingSetExclusive = 0;
-    KeLeaveGuardedRegion();
-    KeLowerIrql(LockIrql);
+    /* Release the working set */
+    MiUnlockWorkingSet(CurrentThread, &MmSystemCacheWs);
     
     /* Flush the entire TLB */
     KeFlushEntireTb(TRUE, TRUE);
