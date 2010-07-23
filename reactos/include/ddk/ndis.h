@@ -595,45 +595,54 @@ typedef MDL NDIS_BUFFER, *PNDIS_BUFFER;
 #define NDIS_ATTRIBUTE_NOT_CO_NDIS              0x00000100
 #define NDIS_ATTRIBUTE_USES_SAFE_BUFFER_APIS    0x00000200
 
-
 /* Lock */
 
+#if NDIS_SUPPORT_60_COMPATIBLE_API
+
 typedef union _NDIS_RW_LOCK_REFCOUNT {
-  UINT  RefCount;
-  UCHAR  cacheLine[16];
+  UINT RefCount;
+  UCHAR cacheLine[16];
 } NDIS_RW_LOCK_REFCOUNT;
 
 typedef struct _NDIS_RW_LOCK {
-  __GNU_EXTENSION union {
-    __GNU_EXTENSION struct {
-      KSPIN_LOCK  SpinLock;
-      PVOID  Context;
+  __MINGW_EXTENSION union {
+    __MINGW_EXTENSION struct {
+      KSPIN_LOCK SpinLock;
+      PVOID Context;
     };
-    UCHAR  Reserved[16];
+    UCHAR Reserved[16];
   };
-
-  NDIS_RW_LOCK_REFCOUNT  RefCount[MAXIMUM_PROCESSORS];
+  __MINGW_EXTENSION union {
+    NDIS_RW_LOCK_REFCOUNT RefCount[MAXIMUM_PROCESSORS]; 
+    ULONG RefCountEx[sizeof(NDIS_RW_LOCK_REFCOUNT)/sizeof(ULONG) * MAXIMUM_PROCESSORS];
+    __MINGW_EXTENSION struct {
+      KSPIN_LOCK RefCountLock;
+      volatile ULONG SharedRefCount;
+      volatile BOOLEAN WriterWaiting;
+    };
+  };
 } NDIS_RW_LOCK, *PNDIS_RW_LOCK;
 
 typedef struct _LOCK_STATE {
-  USHORT  LockState;
-  KIRQL  OldIrql;
+  USHORT LockState;
+  KIRQL OldIrql;
 } LOCK_STATE, *PLOCK_STATE;
 
-
+#endif /* NDIS_SUPPORT_60_COMPATIBLE_API */
 
 /* Timer */
 
 typedef VOID
-(NTAPI *PNDIS_TIMER_FUNCTION)(
-	IN PVOID  SystemSpecific1,
-	IN PVOID  FunctionContext,
-	IN PVOID  SystemSpecific2,
-	IN PVOID  SystemSpecific3);
+(NTAPI NDIS_TIMER_FUNCTION)(
+  IN PVOID SystemSpecific1,
+  IN PVOID FunctionContext,
+  IN PVOID SystemSpecific2,
+  IN PVOID SystemSpecific3);
+typedef NDIS_TIMER_FUNCTION *PNDIS_TIMER_FUNCTION;
 
 typedef struct _NDIS_TIMER {
-  KTIMER  Timer;
-  KDPC  Dpc;
+  KTIMER Timer;
+  KDPC Dpc;
 } NDIS_TIMER, *PNDIS_TIMER;
 
 /* Hardware */
@@ -1941,2139 +1950,7 @@ typedef struct _NDIS_PROTOCOL_CHARACTERISTICS {
 } NDIS_PROTOCOL_CHARACTERISTICS, *PNDIS_PROTOCOL_CHARACTERISTICS;
 #endif
 
-
-
-/* Buffer management routines */
-
-NDISAPI
-VOID
-NTAPI
-NdisAllocateBuffer(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_BUFFER  *Buffer,
-  IN NDIS_HANDLE  PoolHandle,
-  IN PVOID  VirtualAddress,
-  IN UINT  Length);
-
-
-NDISAPI
-VOID
-NTAPI
-NdisAllocateBufferPool(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_HANDLE  PoolHandle,
-  IN UINT  NumberOfDescriptors);
-
-NDISAPI
-VOID
-NTAPI
-NdisAllocatePacket(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_PACKET  *Packet,
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisAllocatePacketPool(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_HANDLE  PoolHandle,
-  IN UINT  NumberOfDescriptors,
-  IN UINT  ProtocolReservedLength);
-
 #define PROTOCOL_RESERVED_SIZE_IN_PACKET (4 * sizeof(PVOID))
-
-NDISAPI
-VOID
-NTAPI
-NdisCopyBuffer(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_BUFFER  *Buffer,
-  IN NDIS_HANDLE  PoolHandle,
-  IN PVOID  MemoryDescriptor,
-  IN UINT  Offset,
-  IN UINT  Length);
-
-NDISAPI
-VOID
-NTAPI
-NdisCopyFromPacketToPacket(
-  IN PNDIS_PACKET  Destination,
-  IN UINT  DestinationOffset,
-  IN UINT  BytesToCopy,
-  IN PNDIS_PACKET  Source,
-  IN UINT  SourceOffset,
-  OUT PUINT  BytesCopied);
-
-/*
- * VOID
- * NdisCopyLookaheadData(
- *   IN PVOID Destination,
- *   IN PVOID Source,
- *   IN ULONG Length,
- *   IN ULONG ReceiveFlags);
- */
-
-#if defined(_M_IX86) || defined(_M_AMD64)
-#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
-  RtlCopyMemory(Destination, Source, Length)
-#else
-#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
-  { \
-    if ((MacOptions) & NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA) \
-    { \
-      RtlCopyMemory(_Destination, _Source, _Length); \
-    } \
-    else \
-    { \
-      PUCHAR _Src = (PUCHAR)(Source); \
-      PUCHAR _Dest = (PUCHAR)(Destination); \
-      PUCHAR _End = _Dest + (Length); \
-      while (_Dest < _End) \
-        *_Dest++ = *_Src++; \
-    } \
-  }
-#endif
-
-NDISAPI
-VOID
-NTAPI
-NdisDprAllocatePacket(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_PACKET  *Packet,
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisDprAllocatePacketNonInterlocked(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_PACKET  *Packet,
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisDprFreePacket(
-  IN PNDIS_PACKET  Packet);
-
-NDISAPI
-VOID
-NTAPI
-NdisDprFreePacketNonInterlocked(
-  IN PNDIS_PACKET  Packet);
-
-NDISAPI
-VOID
-NTAPI
-NdisFreeBufferPool(
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisFreePacket(
-  IN PNDIS_PACKET  Packet);
-
-NDISAPI
-VOID
-NTAPI
-NdisFreePacketPool(
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisReturnPackets(
-  IN PNDIS_PACKET  *PacketsToReturn,
-  IN UINT  NumberOfPackets);
-
-NDISAPI
-VOID
-NTAPI
-NdisUnchainBufferAtBack(
-  IN OUT PNDIS_PACKET  Packet,
-  OUT PNDIS_BUFFER  *Buffer);
-
-NDISAPI
-VOID
-NTAPI
-NdisUnchainBufferAtFront(
-  IN OUT PNDIS_PACKET  Packet,
-  OUT PNDIS_BUFFER  *Buffer);
-
-NDISAPI
-VOID
-NTAPI
-NdisAdjustBufferLength(
-  IN PNDIS_BUFFER  Buffer,
-  IN UINT  Length);
-
-NDISAPI
-ULONG
-NTAPI
-NdisBufferLength(
-  IN PNDIS_BUFFER  Buffer);
-
-NDISAPI
-PVOID
-NTAPI
-NdisBufferVirtualAddress(
-  IN PNDIS_BUFFER  Buffer);
-
-NDISAPI
-ULONG
-NTAPI
-NDIS_BUFFER_TO_SPAN_PAGES(
-  IN PNDIS_BUFFER  Buffer);
-
-NDISAPI
-VOID
-NTAPI
-NdisFreeBuffer(
-  IN PNDIS_BUFFER  Buffer);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetBufferPhysicalArraySize(
-  IN PNDIS_BUFFER  Buffer,
-  OUT PUINT  ArraySize);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetFirstBufferFromPacket(
-  IN PNDIS_PACKET  _Packet,
-  OUT PNDIS_BUFFER  *_FirstBuffer,
-  OUT PVOID  *_FirstBufferVA,
-  OUT PUINT  _FirstBufferLength,
-  OUT PUINT  _TotalBufferLength);
-
-/*
- * VOID
- * NdisGetFirstBufferFromPacketSafe(
- * IN PNDIS_PACKET  _Packet,
- * OUT PNDIS_BUFFER  * _FirstBuffer,
- * OUT PVOID  * _FirstBufferVA,
- * OUT PUINT  _FirstBufferLength,
- * OUT PUINT  _TotalBufferLength),
- * IN MM_PAGE_PRIORITY _Priority)
- */
-#define NdisGetFirstBufferFromPacketSafe(_Packet,         \
-                                     _FirstBuffer,        \
-                                     _FirstBufferVA,      \
-                                     _FirstBufferLength,  \
-                                     _TotalBufferLength,  \
-                                     _Priority)           \
-{                                                         \
-  PNDIS_BUFFER _Buffer;                                   \
-                                                          \
-  _Buffer         = (_Packet)->Private.Head;              \
-  *(_FirstBuffer) = _Buffer;                              \
-  if (_Buffer != NULL)                                    \
-    {                                                     \
-            *(_FirstBufferVA)     = MmGetSystemAddressForMdlSafe(_Buffer, _Priority);  \
-            *(_FirstBufferLength) = MmGetMdlByteCount(_Buffer);         \
-            _Buffer = _Buffer->Next;                                    \
-                  *(_TotalBufferLength) = *(_FirstBufferLength);              \
-                  while (_Buffer != NULL) {                                   \
-                    *(_TotalBufferLength) += MmGetMdlByteCount(_Buffer);      \
-                    _Buffer = _Buffer->Next;                                  \
-                  }                                                           \
-    }                             \
-  else                            \
-    {                             \
-      *(_FirstBufferVA) = 0;      \
-      *(_FirstBufferLength) = 0;  \
-      *(_TotalBufferLength) = 0;  \
-    } \
-}
-
-NDISAPI
-VOID
-NTAPI
-NdisQueryBuffer(
-  IN PNDIS_BUFFER  Buffer,
-  OUT PVOID  *VirtualAddress OPTIONAL,
-  OUT PUINT  Length);
-
-NDISAPI
-VOID
-NTAPI
-NdisQueryBufferOffset(
-  IN PNDIS_BUFFER  Buffer,
-  OUT PUINT  Offset,
-  OUT PUINT  Length);
-
-/*
- * PVOID
- * NDIS_BUFFER_LINKAGE(
- *   IN PNDIS_BUFFER  Buffer);
- */
-#define NDIS_BUFFER_LINKAGE(Buffer)(Buffer)->Next;
-
-
-/*
- * VOID
- * NdisChainBufferAtBack(
- *   IN OUT PNDIS_PACKET  Packet,
- *   IN OUT PNDIS_BUFFER  Buffer)
- */
-#define NdisChainBufferAtBack(Packet,           \
-                              Buffer)           \
-{                                               \
-	PNDIS_BUFFER NdisBuffer = (Buffer);           \
-                                                \
-	while (NdisBuffer->Next != NULL)              \
-   NdisBuffer = NdisBuffer->Next;               \
-	                                              \
-	NdisBuffer->Next = NULL;                      \
-	                                              \
-	if ((Packet)->Private.Head != NULL)           \
-    (Packet)->Private.Tail->Next = (Buffer);    \
-	else                                          \
-    (Packet)->Private.Head = (Buffer);          \
-	                                              \
-	(Packet)->Private.Tail = NdisBuffer;          \
-	(Packet)->Private.ValidCounts = FALSE;        \
-}
-
-
-/*
- * VOID
- * NdisChainBufferAtFront(
- *   IN OUT PNDIS_PACKET  Packet,
- *   IN OUT PNDIS_BUFFER  Buffer)
- */
-#define NdisChainBufferAtFront(Packet,        \
-                               Buffer)        \
-{                                             \
-	PNDIS_BUFFER _NdisBuffer = (Buffer);        \
-                                              \
-  while (_NdisBuffer->Next != NULL)           \
-    _NdisBuffer = _NdisBuffer->Next;          \
-                                              \
-  if ((Packet)->Private.Head == NULL)         \
-    (Packet)->Private.Tail = _NdisBuffer;     \
-                                              \
-	_NdisBuffer->Next = (Packet)->Private.Head; \
-	(Packet)->Private.Head = (Buffer);          \
-	(Packet)->Private.ValidCounts = FALSE;      \
-}
-
-
-/*
- * VOID
- * NdisGetNextBuffer(
- *   IN PNDIS_BUFFER  CurrentBuffer,
- *   OUT PNDIS_BUFFER  * NextBuffer)
- */
-#define NdisGetNextBuffer(CurrentBuffer,  \
-                          NextBuffer)     \
-{                                         \
-  *(NextBuffer) = (CurrentBuffer)->Next;  \
-}
-
-#if NDIS_LEGACY_DRIVER
-
-#define NDIS_PACKET_FIRST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Head)
-#define NDIS_PACKET_LAST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Tail)
-#define NDIS_PACKET_VALID_COUNTS(_Packet) ((_Packet)->Private.ValidCounts)
-
-/*
- * UINT
- * NdisGetPacketFlags(
- *   IN PNDIS_PACKET  Packet);
- */
-#define NdisGetPacketFlags(Packet)(Packet)->Private.Flags;
-
-/*
- * ULONG
- * NDIS_GET_PACKET_PROTOCOL_TYPE(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_PROTOCOL_TYPE(_Packet) \
-  ((_Packet)->Private.Flags & NDIS_PROTOCOL_ID_MASK)
-
-/*
- * PNDIS_PACKET_OOB_DATA
- * NDIS_OOB_DATA_FROM_PACKET(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_OOB_DATA_FROM_PACKET(_Packet)    \
-  (PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-  (_Packet)->Private.NdisPacketOobOffset)
-
-/*
- * ULONG
- * NDIS_GET_PACKET_HEADER_SIZE(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_HEADER_SIZE(_Packet)   \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize
-
-/*
- * NDIS_STATUS
- * NDIS_GET_PACKET_STATUS(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_STATUS(_Packet)        \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-  (_Packet)->Private.NdisPacketOobOffset))->Status
-
-/*
- * ULONGLONG
- * NDIS_GET_PACKET_TIME_TO_SEND(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_TIME_TO_SEND(_Packet)   \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend
-
-/*
- * ULONGLONG
- * NDIS_GET_PACKET_TIME_SENT(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_TIME_SENT(_Packet)      \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeSent
-
-/*
- * ULONGLONG
- * NDIS_GET_PACKET_TIME_RECEIVED(
- *   IN PNDIS_PACKET Packet);
- */
-#define NDIS_GET_PACKET_TIME_RECEIVED(_Packet)  \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived
-
-/*
- * VOID
- * NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(
- *   IN PNDIS_PACKET Packet,
- *   IN PPVOID pMediaSpecificInfo,
- *   IN PUINT pSizeMediaSpecificInfo);
- */
-#define NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                                  \
-                                            _pMediaSpecificInfo,                      \
-                                            _pSizeMediaSpecificInfo)                  \
-{                                                                                     \
-  if (!((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS) ||            \
-      !((_Packet)->Private.NdisPacketFlags & fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO))   \
-    {                                                                                 \
-      *(_pMediaSpecificInfo) = NULL;                                                  \
-      *(_pSizeMediaSpecificInfo) = 0;                                                 \
-    }                                                                                 \
-  else                                                                                \
-    {                                                                                 \
-      *(_pMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +           \
-        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation;           \
-      *(_pSizeMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +       \
-        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo;              \
-    }                                                                                 \
-}
-
-/*
- * VOID
- * NDIS_SET_PACKET_HEADER_SIZE(
- *   IN PNDIS_PACKET Packet,
- *   IN UINT HdrSize);
- */
-#define NDIS_SET_PACKET_HEADER_SIZE(_Packet, _HdrSize)              \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                      \
-  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize = (_HdrSize)
-
-/*
- * VOID
- * NDIS_SET_PACKET_STATUS(
- *   IN PNDIS_PACKET Packet,
- *   IN NDIS_STATUS Status);
- */
-#define NDIS_SET_PACKET_STATUS(_Packet, _Status)  \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +    \
-  (_Packet)->Private.NdisPacketOobOffset))->Status = (_Status)
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_TO_SEND(
- *   IN PNDIS_PACKET Packet,
- *   IN ULONGLONG TimeToSend);
- */
-#define NDIS_SET_PACKET_TIME_TO_SEND(_Packet, _TimeToSend)  \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +              \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend = (_TimeToSend)
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_SENT(
- *   IN PNDIS_PACKET Packet,
- *   IN ULONGLONG TimeSent);
- */
-#define NDIS_SET_PACKET_TIME_SENT(_Packet, _TimeSent) \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +        \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeSent = (_TimeSent)
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_RECEIVED(
- *   IN PNDIS_PACKET Packet,
- *   IN ULONGLONG TimeReceived);
- */
-#define NDIS_SET_PACKET_TIME_RECEIVED(_Packet, _TimeReceived) \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived = (_TimeReceived)
-
-/*
- * VOID
- * NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(
- *   IN PNDIS_PACKET Packet,
- *   IN PVOID MediaSpecificInfo,
- *   IN UINT SizeMediaSpecificInfo);
- */
-#define NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                      \
-                                            _MediaSpecificInfo,           \
-                                            _SizeMediaSpecificInfo)       \
-{                                                                         \
-  if ((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS)     \
-    {                                                                     \
-      (_Packet)->Private.NdisPacketFlags |= fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO; \
-      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
-        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation = \
-          (_MediaSpecificInfo);                                           \
-      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
-        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo = \
-          (_SizeMediaSpecificInfo);                                       \
-    }                                                                     \
-}
-
-/*
- * VOID
- * NdisSetPacketFlags(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags);
- */
-#define NdisSetPacketFlags(Packet, Flags) (Packet)->Private.Flags |= (Flags)
-
-/*
- * VOID
- * NdisClearPacketFlags(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags);
- */
-#define NdisClearPacketFlags(Packet, Flags) (Packet)->Private.Flags &= ~(Flags)
-
-#endif /* NDIS_LEGACY_DRIVER */
-
-/*
- * VOID
- * NdisQueryPacket(
- *   IN PNDIS_PACKET  Packet,
- *   OUT PUINT  PhysicalBufferCount  OPTIONAL,
- *   OUT PUINT  BufferCount  OPTIONAL,
- *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
- *   OUT PUINT  TotalPacketLength  OPTIONAL);
- */
-static __inline
-VOID
-NdisQueryPacket(
-    IN PNDIS_PACKET  Packet,
-    OUT PUINT  PhysicalBufferCount  OPTIONAL,
-    OUT PUINT  BufferCount  OPTIONAL,
-    OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
-    OUT PUINT  TotalPacketLength  OPTIONAL)
-{
-    if (FirstBuffer)
-        *FirstBuffer = Packet->Private.Head;
-    if (TotalPacketLength || BufferCount || PhysicalBufferCount)
-    {
-        if (!Packet->Private.ValidCounts)
-        {
-            UINT Offset;
-            UINT PacketLength;
-            PNDIS_BUFFER NdisBuffer;
-            UINT PhysicalBufferCount = 0;
-            UINT TotalPacketLength = 0;
-            UINT Count = 0;
-
-            for (NdisBuffer = Packet->Private.Head;
-                 NdisBuffer != (PNDIS_BUFFER)NULL;
-                 NdisBuffer = NdisBuffer->Next)
-            {
-                PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
-                NdisQueryBufferOffset(NdisBuffer, &Offset, &PacketLength);
-                TotalPacketLength += PacketLength;
-                Count++;
-            }
-            Packet->Private.PhysicalCount = PhysicalBufferCount;
-            Packet->Private.TotalLength = TotalPacketLength;
-            Packet->Private.Count = Count;
-            Packet->Private.ValidCounts = TRUE;
-        }
-
-        if (PhysicalBufferCount)
-            *PhysicalBufferCount = Packet->Private.PhysicalCount;
-
-        if (BufferCount)
-            *BufferCount = Packet->Private.Count;
-
-        if (TotalPacketLength)
-            *TotalPacketLength = Packet->Private.TotalLength;
-    }
-}
-
-/*
- * VOID
- * NdisQueryPacketLength(
- *   IN PNDIS_PACKET  Packet,
- *   OUT PUINT  PhysicalBufferCount  OPTIONAL,
- *   OUT PUINT  BufferCount  OPTIONAL,
- *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
- *   OUT PUINT  TotalPacketLength  OPTIONAL);
- */
-static __inline
-VOID
-NdisQueryPacketLength(
-    IN PNDIS_PACKET  Packet,
-    OUT PUINT  TotalPacketLength  OPTIONAL)
-{
-  if (!(Packet)->Private.ValidCounts)                                     \
-    NdisQueryPacket(Packet, NULL, NULL, NULL, TotalPacketLength);         \
-  else                                                                    \
-    *(TotalPacketLength) = (Packet)->Private.TotalLength;                 \
-}
-
-
-/*
- * VOID
- * NdisRecalculatePacketCounts(
- *   IN OUT  PNDIS_PACKET  Packet);
- */
-#define NdisRecalculatePacketCounts(Packet)       \
-{                                                 \
-  PNDIS_BUFFER _Buffer = (Packet)->Private.Head;  \
-  if (_Buffer != NULL)                            \
-  {                                               \
-      while (_Buffer->Next != NULL)               \
-      {                                           \
-          _Buffer = _Buffer->Next;                \
-      }                                           \
-      (Packet)->Private.Tail = _Buffer;           \
-  }                                               \
-  (Packet)->Private.ValidCounts = FALSE;          \
-}
-
-
-/*
- * VOID
- * NdisReinitializePacket(
- *   IN OUT  PNDIS_PACKET  Packet);
- */
-#define NdisReinitializePacket(Packet)    \
-{                                               \
-	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;  \
-	(Packet)->Private.ValidCounts = FALSE;        \
-}
-
-/*
- * VOID
- * NdisSetSendFlags(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags);
- */
-#define NdisSetSendFlags(_Packet,_Flags)(_Packet)->Private.Flags = (_Flags)
-
-
-
-/* Memory management routines */
-
-NDISAPI
-VOID
-NTAPI
-NdisCreateLookaheadBufferFromSharedMemory(
-  IN PVOID  pSharedMemory,
-  IN UINT  LookaheadLength,
-  OUT PVOID  *pLookaheadBuffer);
-
-NDISAPI
-VOID
-NTAPI
-NdisDestroyLookaheadBufferFromSharedMemory(
-  IN PVOID  pLookaheadBuffer);
-
-#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_PPC)
-
-/*
- * VOID
- * NdisMoveMappedMemory(
- *   OUT PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveMappedMemory(Destination, Source, Length) \
-  RtlCopyMemory(Destination, Source, Length)
-
-/*
- * VOID
- * NdisZeroMappedMemory(
- *   IN PVOID  Destination,
- *   IN ULONG  Length);
- */
-#define NdisZeroMappedMemory(Destination, Length) \
-  RtlZeroMemory(Destination, Length)
-
-#else
-
-#define NdisMoveMappedMemory(Destination, Source, Length) \
-{ \
-  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length; \
-  while (_Dest < _End) \
-    *_Dest++ = _Src++; \
-}
-
-#define NdisZeroMappedMemory(Destination, Length) \
-{ \
-  PUCHAR _Dest = Destination, _End = _Dest + Length; \
-  while (_Dest < _End) \
-    *_Dest++ = 0; \
-}
-
-#endif /* _M_IX86 or _M_AMD64 */
-
-/*
- * VOID
- * NdisMoveFromMappedMemory(
- *   OUT PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveFromMappedMemory(Destination, Source, Length) \
-  NdisMoveMappedMemory(Destination, Source, Length)
-
-/*
- * VOID
- * NdisMoveToMappedMemory(
- *   OUT PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveToMappedMemory(Destination, Source, Length) \
-  NdisMoveMappedMemory(Destination, Source, Length)
-
-/*
- * VOID
- * NdisMUpdateSharedMemory(
- *   IN NDIS_HANDLE  MiniportAdapterHandle,
- *   IN ULONG  Length,
- *   IN PVOID  VirtualAddress,
- *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
- */
-#define NdisMUpdateSharedMemory(_H, _L, _V, _P) \
-  NdisUpdateSharedMemory(_H, _L, _V, _P)
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisAllocateMemory(
-  OUT  PVOID  *VirtualAddress,
-  IN UINT  Length,
-  IN UINT  MemoryFlags,
-  IN NDIS_PHYSICAL_ADDRESS  HighestAcceptableAddress);
-
-NDISAPI
-VOID
-NTAPI
-NdisFreeMemory(
-  IN PVOID  VirtualAddress,
-  IN UINT  Length,
-  IN UINT  MemoryFlags);
-
-NDISAPI
-VOID
-NTAPI
-NdisImmediateReadSharedMemory(
-  IN NDIS_HANDLE WrapperConfigurationContext,
-  IN ULONG       SharedMemoryAddress,
-  OUT PUCHAR      Buffer,
-  IN ULONG       Length);
-
-NDISAPI
-VOID
-NTAPI
-NdisImmediateWriteSharedMemory(
-  IN NDIS_HANDLE WrapperConfigurationContext,
-  IN ULONG       SharedMemoryAddress,
-  IN PUCHAR      Buffer,
-  IN ULONG       Length);
-
-NDISAPI
-VOID
-NTAPI
-NdisMAllocateSharedMemory(
-  IN	NDIS_HANDLE  MiniportAdapterHandle,
-  IN	ULONG  Length,
-  IN	BOOLEAN  Cached,
-  OUT	 PVOID  *VirtualAddress,
-  OUT	 PNDIS_PHYSICAL_ADDRESS  PhysicalAddress);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMAllocateSharedMemoryAsync(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN ULONG  Length,
-  IN BOOLEAN  Cached,
-  IN PVOID  Context);
-
-#if defined(NDIS50)
-
-#define NdisUpdateSharedMemory(NdisAdapterHandle, \
-                               Length,            \
-                               VirtualAddress,    \
-                               PhysicalAddress)
-
-#else
-
-NDISAPI
-VOID
-NTAPI
-NdisUpdateSharedMemory(
-  IN NDIS_HANDLE             NdisAdapterHandle,
-  IN ULONG                   Length,
-  IN PVOID                   VirtualAddress,
-  IN NDIS_PHYSICAL_ADDRESS   PhysicalAddress);
-
-#endif /* defined(NDIS50) */
-
-/*
- * ULONG
- * NdisGetPhysicalAddressHigh(
- *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
- */
-#define NdisGetPhysicalAddressHigh(PhysicalAddress) \
-  ((PhysicalAddress).HighPart)
-
-/*
- * VOID
- * NdisSetPhysicalAddressHigh(
- *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress,
- *   IN ULONG  Value);
- */
-#define NdisSetPhysicalAddressHigh(PhysicalAddress, Value) \
-  ((PhysicalAddress).HighPart) = (Value)
-
-/*
- * ULONG
- * NdisGetPhysicalAddressLow(
- *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
- */
-#define NdisGetPhysicalAddressLow(PhysicalAddress) \
-  ((PhysicalAddress).LowPart)
-
-
-/*
- * VOID
- * NdisSetPhysicalAddressLow(
- *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress,
- *   IN ULONG  Value);
- */
-#define NdisSetPhysicalAddressLow(PhysicalAddress, Value) \
-  ((PhysicalAddress).LowPart) = (Value)
-
-/*
- * VOID
- * NDIS_PHYSICAL_ADDRESS_CONST(
- *   IN ULONG  Low,
- *   IN LONG  High);
- */
-#define NDIS_PHYSICAL_ADDRESS_CONST(Low, High)  \
-    { {(ULONG)(Low), (LONG)(High)} }
-
-/*
- * ULONG
- * NdisEqualMemory(
- *  IN CONST VOID  *Source1,
- *  IN CONST VOID  *Source2,
- *  IN ULONG  Length);
- */
-#define NdisEqualMemory(Source1, Source2, Length) \
-  RtlEqualMemory(Source1, Source2, Length)
-
-/*
- * VOID
- * NdisFillMemory(
- *   IN PVOID  Destination,
- *   IN ULONG  Length,
- *   IN UCHAR  Fill);
- */
-#define NdisFillMemory(Destination, Length, Fill) \
-  RtlFillMemory(Destination, Length, Fill)
-
-/*
- * VOID
- * NdisMoveMemory(
- *   OUT  PVOID  Destination,
- *   IN PVOID  Source,
- *   IN ULONG  Length);
- */
-#define NdisMoveMemory(Destination, Source, Length) \
-  RtlCopyMemory(Destination, Source, Length)
-
-
-/*
- * VOID
- * NdisRetrieveUlong(
- *   IN PULONG  DestinationAddress,
- *   IN PULONG  SourceAddress);
- */
-#define NdisRetrieveUlong(DestinationAddress, SourceAddress) \
-  RtlRetrieveUlong(DestinationAddress, SourceAddress)
-
-
-/*
- * VOID
- * NdisStoreUlong(
- *   IN PULONG  DestinationAddress,
- *   IN ULONG  Value);
- */
-#define NdisStoreUlong(DestinationAddress, Value) \
-  RtlStoreUlong(DestinationAddress, Value)
-
-
-/*
- * VOID
- * NdisZeroMemory(
- *   IN PVOID  Destination,
- *   IN ULONG  Length)
- */
-#define NdisZeroMemory(Destination, Length) \
-  RtlZeroMemory(Destination, Length)
-
-typedef VOID
-(NTAPI *NDIS_BLOCK_INITIALIZER) (
-    IN  PUCHAR  Block,
-    IN  SIZE_T  NumberOfBytes
-    );
-
-/* Configuration routines */
-
-NDISAPI
-VOID
-NTAPI
-NdisOpenConfiguration(
-  OUT  PNDIS_STATUS  Status,
-  OUT  PNDIS_HANDLE  ConfigurationHandle,
-  IN NDIS_HANDLE  WrapperConfigurationContext);
-
-NDISAPI
-VOID
-NTAPI
-NdisReadNetworkAddress(
-  OUT PNDIS_STATUS  Status,
-  OUT PVOID  *NetworkAddress,
-  OUT PUINT  NetworkAddressLength,
-  IN NDIS_HANDLE  ConfigurationHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisReadEisaSlotInformation(
-  OUT PNDIS_STATUS  Status,
-  IN NDIS_HANDLE  WrapperConfigurationContext,
-  OUT PUINT  SlotNumber,
-  OUT PNDIS_EISA_FUNCTION_INFORMATION  EisaData);
-
-NDISAPI
-VOID
-NTAPI
-NdisReadEisaSlotInformationEx(
-  OUT PNDIS_STATUS  Status,
-  IN NDIS_HANDLE  WrapperConfigurationContext,
-  OUT PUINT  SlotNumber,
-  OUT PNDIS_EISA_FUNCTION_INFORMATION  *EisaData,
-  OUT PUINT  NumberOfFunctions);
-
-NDISAPI
-ULONG
-NTAPI
-NdisReadPciSlotInformation(
-  IN NDIS_HANDLE  NdisAdapterHandle,
-  IN ULONG  SlotNumber,
-  IN ULONG  Offset,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-NDISAPI
-ULONG
-NTAPI
-NdisWritePciSlotInformation(
-  IN NDIS_HANDLE  NdisAdapterHandle,
-  IN ULONG  SlotNumber,
-  IN ULONG  Offset,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-
-
-/* String management routines */
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisAnsiStringToUnicodeString(
-  IN OUT PNDIS_STRING  DestinationString,
-  IN PNDIS_ANSI_STRING  SourceString);
-
-/*
- * BOOLEAN
- * NdisEqualString(
- *   IN PNDIS_STRING  String1,
- *   IN PNDIS_STRING  String2,
- *   IN BOOLEAN  CaseInsensitive);
- */
-#define NdisEqualString(_String1, _String2, _CaseInsensitive) \
-  RtlEqualUnicodeString(_String1, _String2, _CaseInsensitive)
-
-NDISAPI
-VOID
-NTAPI
-NdisInitAnsiString(
-  IN OUT PNDIS_ANSI_STRING  DestinationString,
-  IN PCSTR  SourceString);
-
-NDISAPI
-VOID
-NTAPI
-NdisInitUnicodeString(
-  IN OUT PNDIS_STRING  DestinationString,
-  IN PCWSTR  SourceString);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisUnicodeStringToAnsiString(
-  IN OUT PNDIS_ANSI_STRING  DestinationString,
-  IN PNDIS_STRING  SourceString);
-
-#define NdisFreeString(_s)  NdisFreeMemory((_s).Buffer, (_s).MaximumLength, 0)
-#define NdisPrintString(_s) DbgPrint("%ls", (_s).Buffer)
-
-
-/* Spin lock reoutines */
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisAllocateSpinLock(
-  IN PNDIS_SPIN_LOCK SpinLock);
-*/
-#define NdisAllocateSpinLock(_SpinLock) KeInitializeSpinLock(&(_SpinLock)->SpinLock)
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisFreeSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisFreeSpinLock(_SpinLock)
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisAcquireSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisAcquireSpinLock(_SpinLock) KeAcquireSpinLock(&(_SpinLock)->SpinLock, &(_SpinLock)->OldIrql)
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisReleaseSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisReleaseSpinLock(_SpinLock) KeReleaseSpinLock(&(_SpinLock)->SpinLock,(_SpinLock)->OldIrql)
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisDprAcquireSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisDprAcquireSpinLock(_SpinLock) KeAcquireSpinLockAtDpcLevel(&(_SpinLock)->SpinLock)
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisDprReleaseSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisDprReleaseSpinLock(_SpinLock) KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
-
-/* I/O routines */
-
-/*
- * VOID
- * NdisRawReadPortBufferUchar(
- *   IN ULONG  Port,
- *   OUT PUCHAR  Buffer,
- *   IN ULONG  Length);
- */
-#define NdisRawReadPortBufferUchar(Port, Buffer, Length)    \
-  READ_PORT_BUFFER_UCHAR((PUCHAR)(Port), (PUCHAR)(Buffer), (Length))
-
-/*
- * VOID
- * NdisRawReadPortBufferUlong(
- *   IN ULONG  Port,
- *   OUT PULONG  Buffer,
- *   IN ULONG  Length);
- */
-#define NdisRawReadPortBufferUlong(Port, Buffer, Length)  \
-  READ_PORT_BUFFER_ULONG((PULONG)(Port), (PULONG)(Buffer), (Length))
-
-/*
- * VOID
- * NdisRawReadPortBufferUshort(
- *   IN ULONG  Port,
- *   OUT PUSHORT  Buffer,
- *   IN ULONG  Length);
- */
-#define NdisRawReadPortBufferUshort(Port, Buffer, Length) \
-  READ_PORT_BUFFER_USHORT((PUSHORT)(Port), (PUSHORT)(Buffer), (Length))
-
-
-/*
- * VOID
- * NdisRawReadPortUchar(
- *   IN ULONG  Port,
- *   OUT PUCHAR  Data);
- */
-#define NdisRawReadPortUchar(Port, Data) \
-  *(Data) = READ_PORT_UCHAR((PUCHAR)(Port))
-
-/*
- * VOID
- * NdisRawReadPortUlong(
- *   IN ULONG  Port,
- *   OUT PULONG  Data);
- */
-#define NdisRawReadPortUlong(Port, Data) \
-  *(Data) = READ_PORT_ULONG((PULONG)(Port))
-
-/*
- * VOID
- * NdisRawReadPortUshort(
- *   IN ULONG   Port,
- *   OUT PUSHORT Data);
- */
-#define NdisRawReadPortUshort(Port, Data) \
-  *(Data) = READ_PORT_USHORT((PUSHORT)(Port))
-
-
-/*
- * VOID
- * NdisRawWritePortBufferUchar(
- *   IN ULONG  Port,
- *   IN PUCHAR  Buffer,
- *   IN ULONG  Length);
- */
-#define NdisRawWritePortBufferUchar(Port, Buffer, Length) \
-  WRITE_PORT_BUFFER_UCHAR((PUCHAR)(Port), (PUCHAR)(Buffer), (Length))
-
-/*
- * VOID
- * NdisRawWritePortBufferUlong(
- *   IN ULONG  Port,
- *   IN PULONG  Buffer,
- *   IN ULONG  Length);
- */
-#define NdisRawWritePortBufferUlong(Port, Buffer, Length) \
-  WRITE_PORT_BUFFER_ULONG((PULONG)(Port), (PULONG)(Buffer), (Length))
-
-/*
- * VOID
- * NdisRawWritePortBufferUshort(
- *   IN ULONG   Port,
- *   IN PUSHORT Buffer,
- *   IN ULONG   Length);
- */
-#define NdisRawWritePortBufferUshort(Port, Buffer, Length) \
-  WRITE_PORT_BUFFER_USHORT((PUSHORT)(Port), (PUSHORT)(Buffer), (Length))
-
-
-/*
- * VOID
- * NdisRawWritePortUchar(
- *   IN ULONG  Port,
- *   IN UCHAR  Data);
- */
-#define NdisRawWritePortUchar(Port, Data) \
-  WRITE_PORT_UCHAR((PUCHAR)(Port), (UCHAR)(Data))
-
-/*
- * VOID
- * NdisRawWritePortUlong(
- *   IN ULONG  Port,
- *   IN ULONG  Data);
- */
-#define NdisRawWritePortUlong(Port, Data)   \
-  WRITE_PORT_ULONG((PULONG)(Port), (ULONG)(Data))
-
-/*
- * VOID
- * NdisRawWritePortUshort(
- *   IN ULONG  Port,
- *   IN USHORT  Data);
- */
-#define NdisRawWritePortUshort(Port, Data) \
-  WRITE_PORT_USHORT((PUSHORT)(Port), (USHORT)(Data))
-
-
-/*
- * VOID
- * NdisReadRegisterUchar(
- *   IN PUCHAR  Register,
- *   OUT PUCHAR  Data);
- */
-#define NdisReadRegisterUchar(Register, Data) \
-  *(Data) = *(Register)
-
-/*
- * VOID
- * NdisReadRegisterUlong(
- *   IN PULONG  Register,
- *   OUT PULONG  Data);
- */
-#define NdisReadRegisterUlong(Register, Data)   \
-  *(Data) = *(Register)
-
-/*
- * VOID
- * NdisReadRegisterUshort(
- *   IN PUSHORT  Register,
- *   OUT PUSHORT  Data);
- */
-#define NdisReadRegisterUshort(Register, Data)  \
-    *(Data) = *(Register)
-
-/*
- * VOID
- * NdisReadRegisterUchar(
- *   IN PUCHAR  Register,
- *   IN UCHAR  Data);
- */
-#define NdisWriteRegisterUchar(Register, Data) \
-  WRITE_REGISTER_UCHAR((Register), (Data))
-
-/*
- * VOID
- * NdisReadRegisterUlong(
- *   IN PULONG  Register,
- *   IN ULONG  Data);
- */
-#define NdisWriteRegisterUlong(Register, Data) \
-  WRITE_REGISTER_ULONG((Register), (Data))
-
-/*
- * VOID
- * NdisReadRegisterUshort(
- *   IN PUSHORT  Register,
- *   IN USHORT  Data);
- */
-#define NdisWriteRegisterUshort(Register, Data) \
-  WRITE_REGISTER_USHORT((Register), (Data))
-
-
-/* Linked lists */
-
-/*
- * VOID
- * NdisInitializeListHead(
- *   IN PLIST_ENTRY  ListHead);
- */
-#define NdisInitializeListHead(_ListHead) \
-  InitializeListHead(_ListHead)
-
-/*
- * PLIST_ENTRY
- * NdisInterlockedInsertHeadList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  ListEntry,
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisInterlockedInsertHeadList(_ListHead, _ListEntry, _SpinLock) \
-  ExInterlockedInsertHeadList(_ListHead, _ListEntry, &(_SpinLock)->SpinLock)
-
-/*
- * PLIST_ENTRY
- * NdisInterlockedInsertTailList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PLIST_ENTRY  ListEntry,
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisInterlockedInsertTailList(_ListHead, _ListEntry, _SpinLock) \
-  ExInterlockedInsertTailList(_ListHead, _ListEntry, &(_SpinLock)->SpinLock)
-
-/*
- * PLIST_ENTRY
- * NdisInterlockedRemoveHeadList(
- *   IN PLIST_ENTRY  ListHead,
- *   IN PNDIS_SPIN_LOCK  SpinLock);
-*/
-#define NdisInterlockedRemoveHeadList(_ListHead, _SpinLock) \
-  ExInterlockedRemoveHeadList(_ListHead, &(_SpinLock)->SpinLock)
-
-/*
- * VOID
- * NdisInitializeSListHead(
- *   IN PSLIST_HEADER  SListHead);
- */
-#define NdisInitializeSListHead(SListHead) ExInitializeSListHead(SListHead)
-
-/*
- * USHORT NdisQueryDepthSList(
- *   IN PSLIST_HEADER  SListHead);
- */
-#define NdisQueryDepthSList(SListHead) ExQueryDepthSList(SListHead)
-
-#define NdisInterlockedPushEntryList(ListHead, ListEntry, Lock) \
-  ExInterlockedPushEntryList(ListHead, ListEntry, &(Lock)->SpinLock)
-
-#define NdisInterlockedPopEntryList(ListHead, Lock) \
-  ExInterlockedPopEntryList(ListHead, &(Lock)->SpinLock)
-
-/* Interlocked routines */
-
-/*
- * LONG
- * NdisInterlockedDecrement(
- *   IN PLONG  Addend);
- */
-#define NdisInterlockedDecrement(Addend) InterlockedDecrement(Addend)
-
-/*
- * LONG
- * NdisInterlockedIncrement(
- *   IN PLONG  Addend);
- */
-#define NdisInterlockedIncrement(Addend) InterlockedIncrement(Addend)
-
-/*
- * VOID
- * NdisInterlockedAddUlong(
- *   IN PULONG  Addend,
- *   IN ULONG  Increment,
- *   IN PNDIS_SPIN_LOCK  SpinLock);
- */
-#define NdisInterlockedAddUlong(_Addend, _Increment, _SpinLock) \
-  ExInterlockedAddUlong(_Addend, _Increment, &(_SpinLock)->SpinLock)
-
-
-
-/* Miscellaneous routines */
-
-NDISAPI
-VOID
-NTAPI
-NdisCloseConfiguration(
-  IN NDIS_HANDLE  ConfigurationHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisReadConfiguration(
-  OUT  PNDIS_STATUS  Status,
-  OUT  PNDIS_CONFIGURATION_PARAMETER  *ParameterValue,
-  IN NDIS_HANDLE  ConfigurationHandle,
-  IN PNDIS_STRING  Keyword,
-  IN NDIS_PARAMETER_TYPE  ParameterType);
-
-NDISAPI
-VOID
-NTAPI
-NdisWriteConfiguration(
-  OUT  PNDIS_STATUS  Status,
-  IN NDIS_HANDLE  WrapperConfigurationContext,
-  IN PNDIS_STRING  Keyword,
-  IN PNDIS_CONFIGURATION_PARAMETER  ParameterValue);
-
-NDISAPI
-VOID
-__cdecl
-NdisWriteErrorLogEntry(
-	IN NDIS_HANDLE  NdisAdapterHandle,
-	IN NDIS_ERROR_CODE  ErrorCode,
-	IN ULONG  NumberOfErrorValues,
-	IN ...);
-
-/*
- * VOID
- * NdisStallExecution(
- *   IN UINT  MicrosecondsToStall)
- */
-#define NdisStallExecution KeStallExecutionProcessor
-
-/*
-NDISAPI
-VOID
-NTAPI
-NdisGetCurrentSystemTime(
-  IN PLARGE_INTEGER  pSystemTime);
-*/
-#define NdisGetCurrentSystemTime KeQuerySystemTime
-
-NDISAPI
-CCHAR
-NTAPI
-NdisSystemProcessorCount(VOID);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetCurrentProcessorCpuUsage(
-  OUT PULONG  pCpuUsage);
-
-
-
-/* NDIS helper macros */
-
-/*
- * VOID
- * NDIS_INIT_FUNCTION(FunctionName)
- */
-#define NDIS_INIT_FUNCTION(FunctionName)    \
-  alloc_text(init, FunctionName)
-
-/*
- * VOID
- * NDIS_PAGABLE_FUNCTION(FunctionName)
- */
-#define NDIS_PAGEABLE_FUNCTION(FunctionName) \
-  alloc_text(page, FunctionName)
-
-#define NDIS_PAGABLE_FUNCTION NDIS_PAGEABLE_FUNCTION
-
-
-/* NDIS 4.0 extensions */
-
-NDISAPI
-VOID
-NTAPI
-NdisMFreeSharedMemory(
-	IN NDIS_HANDLE  MiniportAdapterHandle,
-	IN ULONG  Length,
-	IN BOOLEAN  Cached,
-	IN PVOID  VirtualAddress,
-	IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
-
-NDISAPI
-VOID
-NTAPI
-NdisMWanIndicateReceive(
-	OUT PNDIS_STATUS  Status,
-	IN NDIS_HANDLE  MiniportAdapterHandle,
-	IN NDIS_HANDLE  NdisLinkContext,
-	IN PUCHAR  PacketBuffer,
-	IN UINT  PacketSize);
-
-NDISAPI
-VOID
-NTAPI
-NdisMWanIndicateReceiveComplete(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisMWanSendComplete(
-	IN NDIS_HANDLE  MiniportAdapterHandle,
-	IN PNDIS_WAN_PACKET  Packet,
-	IN NDIS_STATUS  Status);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisPciAssignResources(
-	IN NDIS_HANDLE  NdisMacHandle,
-	IN NDIS_HANDLE  NdisWrapperHandle,
-	IN NDIS_HANDLE  WrapperConfigurationContext,
-	IN ULONG  SlotNumber,
-	OUT PNDIS_RESOURCE_LIST  *AssignedResources);
-
-
-/* NDIS 5.0 extensions */
-
-NDISAPI
-VOID
-NTAPI
-NdisAcquireReadWriteLock(
-  IN PNDIS_RW_LOCK  Lock,
-  IN BOOLEAN  fWrite,
-  IN PLOCK_STATE  LockState);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisAllocateMemoryWithTag(
-  OUT PVOID  *VirtualAddress,
-  IN UINT  Length,
-  IN ULONG  Tag);
-
-NDISAPI
-VOID
-NTAPI
-NdisAllocatePacketPoolEx(
-  OUT PNDIS_STATUS  Status,
-  OUT PNDIS_HANDLE  PoolHandle,
-  IN UINT  NumberOfDescriptors,
-  IN UINT  NumberOfOverflowDescriptors,
-  IN UINT  ProtocolReservedLength);
-
-NDISAPI
-VOID
-NTAPI
-NdisSetPacketPoolProtocolId(
-  IN NDIS_HANDLE PacketPoolHandle,
-  IN UINT ProtocolId);
-
-NDISAPI
-VOID
-NTAPI
-NdisCompletePnPEvent(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisBindingHandle,
-  IN PNET_PNP_EVENT  NetPnPEvent);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetCurrentProcessorCounts(
-  OUT PULONG  pIdleCount,
-  OUT PULONG  pKernelAndUser,
-  OUT PULONG  pIndex);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetDriverHandle(
-  IN PNDIS_HANDLE  NdisBindingHandle,
-  OUT PNDIS_HANDLE  NdisDriverHandle);
-
-NDISAPI
-PNDIS_PACKET
-NTAPI
-NdisGetReceivedPacket(
-  IN PNDIS_HANDLE  NdisBindingHandle,
-  IN PNDIS_HANDLE  MacContext);
-
-NDISAPI
-VOID
-NTAPI
-NdisGetSystemUpTime(
-  OUT PULONG  pSystemUpTime);
-
-NDISAPI
-VOID
-NTAPI
-NdisInitializeReadWriteLock(
-  IN PNDIS_RW_LOCK  Lock);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMDeregisterDevice(
-  IN NDIS_HANDLE  NdisDeviceHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisMGetDeviceProperty(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN OUT PDEVICE_OBJECT  *PhysicalDeviceObject  OPTIONAL,
-  IN OUT PDEVICE_OBJECT  *FunctionalDeviceObject  OPTIONAL,
-  IN OUT PDEVICE_OBJECT  *NextDeviceObject  OPTIONAL,
-  IN OUT PCM_RESOURCE_LIST  *AllocatedResources  OPTIONAL,
-  IN OUT PCM_RESOURCE_LIST  *AllocatedResourcesTranslated  OPTIONAL);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMInitializeScatterGatherDma(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN BOOLEAN  Dma64BitAddresses,
-  IN ULONG  MaximumPhysicalMapping);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMPromoteMiniport(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMQueryAdapterInstanceName(
-  OUT PNDIS_STRING  AdapterInstanceName,
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMRegisterDevice(
-  IN NDIS_HANDLE  NdisWrapperHandle,
-  IN PNDIS_STRING  DeviceName,
-  IN PNDIS_STRING  SymbolicName,
-  IN PDRIVER_DISPATCH  MajorFunctions[],
-  OUT PDEVICE_OBJECT  *pDeviceObject,
-  OUT NDIS_HANDLE  *NdisDeviceHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisMRegisterUnloadHandler(
-  IN NDIS_HANDLE  NdisWrapperHandle,
-  IN PDRIVER_UNLOAD  UnloadHandler);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMRemoveMiniport(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMSetMiniportSecondary(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN NDIS_HANDLE  PrimaryMiniportAdapterHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisOpenConfigurationKeyByIndex(
-  OUT PNDIS_STATUS  Status,
-  IN NDIS_HANDLE  ConfigurationHandle,
-  IN ULONG  Index,
-  OUT PNDIS_STRING  KeyName,
-  OUT PNDIS_HANDLE  KeyHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisOpenConfigurationKeyByName(
-  OUT PNDIS_STATUS  Status,
-  IN NDIS_HANDLE  ConfigurationHandle,
-  IN PNDIS_STRING  SubKeyName,
-  OUT PNDIS_HANDLE  SubKeyHandle);
-
-NDISAPI
-UINT
-NTAPI
-NdisPacketPoolUsage(
-  IN NDIS_HANDLE  PoolHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisQueryAdapterInstanceName(
-  OUT PNDIS_STRING  AdapterInstanceName,
-  IN NDIS_HANDLE  NdisBindingHandle);
-
-NDISAPI
-ULONG
-NTAPI
-NdisReadPcmciaAttributeMemory(
-  IN NDIS_HANDLE  NdisAdapterHandle,
-  IN ULONG  Offset,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-NDISAPI
-VOID
-NTAPI
-NdisReleaseReadWriteLock(
-  IN PNDIS_RW_LOCK  Lock,
-  IN PLOCK_STATE  LockState);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisWriteEventLogEntry(
-  IN PVOID  LogHandle,
-  IN NDIS_STATUS  EventCode,
-  IN ULONG  UniqueEventValue,
-  IN USHORT  NumStrings,
-  IN PVOID  StringsList  OPTIONAL,
-  IN ULONG  DataSize,
-  IN PVOID  Data  OPTIONAL);
-
-NDISAPI
-ULONG
-NTAPI
-NdisWritePcmciaAttributeMemory(
-  IN NDIS_HANDLE  NdisAdapterHandle,
-  IN ULONG  Offset,
-  IN PVOID  Buffer,
-  IN ULONG  Length);
-
-
-/* Connectionless services */
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClAddParty(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN NDIS_HANDLE  ProtocolPartyContext,
-  IN OUT PCO_CALL_PARAMETERS  CallParameters,
-  OUT PNDIS_HANDLE  NdisPartyHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClCloseAddressFamily(
-  IN NDIS_HANDLE  NdisAfHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClCloseCall(
-  IN NDIS_HANDLE NdisVcHandle,
-  IN NDIS_HANDLE NdisPartyHandle  OPTIONAL,
-  IN PVOID  Buffer  OPTIONAL,
-  IN UINT  Size);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClDeregisterSap(
-  IN NDIS_HANDLE  NdisSapHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClDropParty(
-  IN NDIS_HANDLE  NdisPartyHandle,
-  IN PVOID  Buffer  OPTIONAL,
-  IN UINT  Size);
-
-NDISAPI
-VOID
-NTAPI
-NdisClIncomingCallComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClMakeCall(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN OUT PCO_CALL_PARAMETERS  CallParameters,
-  IN NDIS_HANDLE  ProtocolPartyContext  OPTIONAL,
-  OUT PNDIS_HANDLE  NdisPartyHandle  OPTIONAL);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClModifyCallQoS(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClOpenAddressFamily(
-  IN NDIS_HANDLE  NdisBindingHandle,
-  IN PCO_ADDRESS_FAMILY  AddressFamily,
-  IN NDIS_HANDLE  ProtocolAfContext,
-  IN PNDIS_CLIENT_CHARACTERISTICS  ClCharacteristics,
-  IN UINT  SizeOfClCharacteristics,
-  OUT PNDIS_HANDLE  NdisAfHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisClRegisterSap(
-  IN NDIS_HANDLE  NdisAfHandle,
-  IN NDIS_HANDLE  ProtocolSapContext,
-  IN PCO_SAP  Sap,
-  OUT PNDIS_HANDLE  NdisSapHandle);
-
-
-/* Call Manager services */
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCmActivateVc(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN OUT PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmAddPartyComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisPartyHandle,
-  IN NDIS_HANDLE  CallMgrPartyContext  OPTIONAL,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmCloseAddressFamilyComplete(
-  IN NDIS_STATUS Status,
-  IN NDIS_HANDLE NdisAfHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmCloseCallComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCmDeactivateVc(
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDeregisterSapComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisSapHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDispatchCallConnected(
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCmDispatchIncomingCall(
-  IN NDIS_HANDLE  NdisSapHandle,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDispatchIncomingCallQoSChange(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDispatchIncomingCloseCall(
-  IN NDIS_STATUS  CloseStatus,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PVOID  Buffer  OPTIONAL,
-  IN UINT  Size);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDispatchIncomingDropParty(
-  IN NDIS_STATUS  DropStatus,
-  IN NDIS_HANDLE  NdisPartyHandle,
-  IN PVOID  Buffer  OPTIONAL,
-  IN UINT  Size);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmDropPartyComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisPartyHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmMakeCallComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
-  IN NDIS_HANDLE  CallMgrPartyContext  OPTIONAL,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmModifyCallQoSComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmOpenAddressFamilyComplete(
-  IN NDIS_STATUS Status,
-  IN NDIS_HANDLE NdisAfHandle,
-  IN NDIS_HANDLE CallMgrAfContext);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCmRegisterAddressFamily(
-  IN NDIS_HANDLE  NdisBindingHandle,
-  IN PCO_ADDRESS_FAMILY  AddressFamily,
-  IN PNDIS_CALL_MANAGER_CHARACTERISTICS  CmCharacteristics,
-  IN UINT  SizeOfCmCharacteristics);
-
-NDISAPI
-VOID
-NTAPI
-NdisCmRegisterSapComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisSapHandle,
-  IN NDIS_HANDLE  CallMgrSapContext);
-
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmActivateVc(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmCreateVc(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN NDIS_HANDLE  NdisAfHandle,
-  IN NDIS_HANDLE  MiniportVcContext,
-  OUT  PNDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmDeactivateVc(
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmDeleteVc(
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmRegisterAddressFamily(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN PCO_ADDRESS_FAMILY  AddressFamily,
-  IN PNDIS_CALL_MANAGER_CHARACTERISTICS  CmCharacteristics,
-  IN UINT  SizeOfCmCharacteristics);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisMCmRequest(
-  IN NDIS_HANDLE  NdisAfHandle,
-  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
-  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
-  IN OUT  PNDIS_REQUEST  NdisRequest);
-
-
-/* Connection-oriented services */
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCoCreateVc(
-  IN NDIS_HANDLE  NdisBindingHandle,
-  IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
-  IN NDIS_HANDLE  ProtocolVcContext,
-  IN OUT PNDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCoDeleteVc(
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisCoRequest(
-  IN NDIS_HANDLE  NdisBindingHandle,
-  IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
-  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
-  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
-  IN OUT  PNDIS_REQUEST  NdisRequest);
-
-NDISAPI
-VOID
-NTAPI
-NdisCoRequestComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisAfHandle,
-  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
-  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
-  IN PNDIS_REQUEST  NdisRequest);
-
-NDISAPI
-VOID
-NTAPI
-NdisCoSendPackets(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PPNDIS_PACKET  PacketArray,
-  IN UINT  NumberOfPackets);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoActivateVcComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PCO_CALL_PARAMETERS  CallParameters);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoDeactivateVcComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoIndicateReceivePacket(
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PPNDIS_PACKET  PacketArray,
-  IN UINT  NumberOfPackets);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoIndicateStatus(
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
-  IN NDIS_STATUS  GeneralStatus,
-  IN PVOID  StatusBuffer  OPTIONAL,
-  IN ULONG  StatusBufferSize);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoReceiveComplete(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoRequestComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  MiniportAdapterHandle,
-  IN PNDIS_REQUEST  Request);
-
-NDISAPI
-VOID
-NTAPI
-NdisMCoSendComplete(
-  IN NDIS_STATUS  Status,
-  IN NDIS_HANDLE  NdisVcHandle,
-  IN PNDIS_PACKET  Packet);
-
-
-/* NDIS 5.0 extensions for intermediate drivers */
-
-NDISAPI
-VOID
-NTAPI
-NdisIMAssociateMiniport(
-  IN NDIS_HANDLE  DriverHandle,
-  IN NDIS_HANDLE  ProtocolHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisIMCancelInitializeDeviceInstance(
-  IN NDIS_HANDLE  DriverHandle,
-  IN PNDIS_STRING  DeviceInstance);
-
-NDISAPI
-VOID
-NTAPI
-NdisIMCopySendCompletePerPacketInfo(
-  IN PNDIS_PACKET  DstPacket,
-  IN PNDIS_PACKET  SrcPacket);
-
-NDISAPI
-VOID
-NTAPI
-NdisIMCopySendPerPacketInfo(
-  IN PNDIS_PACKET  DstPacket,
-  IN PNDIS_PACKET  SrcPacket);
-
-NDISAPI
-VOID
-NTAPI
-NdisIMDeregisterLayeredMiniport(
-  IN NDIS_HANDLE  DriverHandle);
-
-NDISAPI
-NDIS_HANDLE
-NTAPI
-NdisIMGetBindingContext(
-  IN NDIS_HANDLE  NdisBindingHandle);
-
-NDISAPI
-NDIS_HANDLE
-NTAPI
-NdisIMGetDeviceContext(
-  IN NDIS_HANDLE  MiniportAdapterHandle);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisIMInitializeDeviceInstanceEx(
-  IN NDIS_HANDLE  DriverHandle,
-  IN PNDIS_STRING  DriverInstance,
-  IN NDIS_HANDLE  DeviceContext  OPTIONAL);
-
-NDISAPI
-PSINGLE_LIST_ENTRY
-NTAPI
-NdisInterlockedPopEntrySList(
-  IN PSLIST_HEADER  ListHead,
-  IN PKSPIN_LOCK  Lock);
-
-NDISAPI
-PSINGLE_LIST_ENTRY
-NTAPI
-NdisInterlockedPushEntrySList(
-  IN PSLIST_HEADER  ListHead,
-  IN PSINGLE_LIST_ENTRY  ListEntry,
-  IN PKSPIN_LOCK  Lock);
-
-NDISAPI
-VOID
-NTAPI
-NdisQueryBufferSafe(
-  IN PNDIS_BUFFER  Buffer,
-  OUT PVOID  *VirtualAddress  OPTIONAL,
-  OUT PUINT  Length,
-  IN UINT  Priority);
 
 /* Prototypes for NDIS_MINIPORT_CHARACTERISTICS */
 
@@ -4356,32 +2233,6 @@ typedef struct _NDIS_MINIPORT_CHARACTERISTICS {
 } NDIS_MINIPORT_CHARACTERISTICS, *PNDIS_MINIPORT_CHARACTERISTICS;
 #endif
 
-
-typedef NDIS_STATUS
-(NTAPI *SEND_HANDLER)(
-  IN NDIS_HANDLE  MacBindingHandle,
-  IN PNDIS_PACKET  Packet);
-
-typedef NDIS_STATUS
-(NTAPI *TRANSFER_DATA_HANDLER)(
-  IN NDIS_HANDLE  MacBindingHandle,
-  IN NDIS_HANDLE  MacReceiveContext,
-  IN UINT  ByteOffset,
-  IN UINT  BytesToTransfer,
-  OUT PNDIS_PACKET  Packet,
-  OUT PUINT  BytesTransferred);
-
-typedef NDIS_STATUS
-(NTAPI *RESET_HANDLER)(
-  IN NDIS_HANDLE  MacBindingHandle);
-
-typedef NDIS_STATUS
-(NTAPI *REQUEST_HANDLER)(
-  IN NDIS_HANDLE   MacBindingHandle,
-  IN PNDIS_REQUEST   NdisRequest);
-
-
-
 /* Structures available only to full MAC drivers */
 
 typedef BOOLEAN
@@ -4395,19 +2246,17 @@ typedef VOID
   IN PVOID  SystemSpecific2,
   IN PVOID  SystemSpecific3);
 
-
-
-typedef struct _NDIS_MINIPORT_BLOCK NDIS_MINIPORT_BLOCK, *PNDIS_MINIPORT_BLOCK;
+typedef struct _NDIS_WRAPPER_HANDLE NDIS_WRAPPER_HANDLE, *PNDIS_WRAPPER_HANDLE;
 typedef struct _NDIS_PROTOCOL_BLOCK NDIS_PROTOCOL_BLOCK, *PNDIS_PROTOCOL_BLOCK;
-typedef struct _NDIS_OPEN_BLOCK		NDIS_OPEN_BLOCK,     *PNDIS_OPEN_BLOCK;
+typedef struct _NDIS_OPEN_BLOCK NDIS_OPEN_BLOCK, *PNDIS_OPEN_BLOCK;
 typedef struct _NDIS_M_DRIVER_BLOCK NDIS_M_DRIVER_BLOCK, *PNDIS_M_DRIVER_BLOCK;
-typedef	struct _NDIS_AF_LIST        NDIS_AF_LIST,        *PNDIS_AF_LIST;
-
-//
-// FIXME: Should be   typedef struct _X_FILTER ETH_FILTER, *PETH_FILTER;
-//
-typedef PVOID ETH_FILTER, *PETH_FILTER;
-
+typedef struct _NDIS_MINIPORT_BLOCK NDIS_MINIPORT_BLOCK,*PNDIS_MINIPORT_BLOCK;
+typedef struct _NDIS_OFFLOAD NDIS_OFFLOAD, *PNDIS_OFFLOAD;
+typedef struct _NDIS_AF_LIST NDIS_AF_LIST, *PNDIS_AF_LIST;
+typedef struct _X_FILTER ETH_FILTER, *PETH_FILTER;
+#if NDIS_SUPPORT_NDIS6
+typedef USHORT NET_FRAME_TYPE, *PNET_FRAME_TYPE;
+#endif
 
 typedef struct _NDIS_MINIPORT_INTERRUPT {
   PKINTERRUPT  InterruptObject;
@@ -4844,20 +2693,44 @@ struct _NDIS_MINIPORT_BLOCK {
 #endif /* _NDIS_ */
 };
 
+#if NDIS_LEGACY_DRIVER
 
-/* Handler prototypes for NDIS_OPEN_BLOCK */
+typedef NDIS_STATUS
+(NTAPI *WAN_SEND_HANDLER)(
+  IN NDIS_HANDLE MacBindingHandle,
+  IN NDIS_HANDLE LinkHandle,
+  IN PVOID Packet);
 
-typedef NDIS_STATUS (NTAPI *WAN_SEND_HANDLER)(
-  IN NDIS_HANDLE  MacBindingHandle,
-  IN NDIS_HANDLE  LinkHandle,
-  IN PVOID  Packet);
+typedef VOID
+(NTAPI *SEND_PACKETS_HANDLER)(
+  IN NDIS_HANDLE MiniportAdapterContext,
+  IN PPNDIS_PACKET PacketArray,
+  IN UINT NumberOfPackets);
 
-/* NDIS 4.0 extension */
+typedef NDIS_STATUS
+(NTAPI *SEND_HANDLER)(
+  IN NDIS_HANDLE NdisBindingHandle,
+  IN PNDIS_PACKET Packet);
 
-typedef VOID (NTAPI *SEND_PACKETS_HANDLER)(
-  IN NDIS_HANDLE  MiniportAdapterContext,
-  IN PPNDIS_PACKET  PacketArray,
-  IN UINT  NumberOfPackets);
+typedef NDIS_STATUS
+(NTAPI *TRANSFER_DATA_HANDLER)(
+  IN NDIS_HANDLE NdisBindingHandle,
+  IN NDIS_HANDLE MacReceiveContext,
+  IN UINT ByteOffset,
+  IN UINT BytesToTransfer,
+  OUT PNDIS_PACKET Packet,
+  OUT PUINT BytesTransferred);
+
+typedef NDIS_STATUS
+(NTAPI *RESET_HANDLER)(
+  IN NDIS_HANDLE NdisBindingHandle);
+
+typedef NDIS_STATUS
+(NTAPI *REQUEST_HANDLER)(
+  IN NDIS_HANDLE NdisBindingHandle,
+  IN PNDIS_REQUEST NdisRequest);
+
+#endif /* NDIS_LEGACY_DRIVER */
 
 #if defined(NDIS_WRAPPER)
 #define NDIS_COMMON_OPEN_BLOCK_WRAPPER_S \
@@ -4930,6 +2803,2359 @@ struct _NDIS_OPEN_BLOCK
   NDIS_COMMON_OPEN_BLOCK_S
 #endif
 };
+
+NDISAPI
+VOID
+NTAPI
+NdisInitializeTimer(
+  PNDIS_TIMER Timer,
+  PNDIS_TIMER_FUNCTION TimerFunction,
+  PVOID FunctionContext);
+
+NDISAPI
+VOID
+NTAPI
+NdisCancelTimer(
+  PNDIS_TIMER Timer,
+  PBOOLEAN TimerCancelled);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetTimer(
+  PNDIS_TIMER Timer,
+  UINT MillisecondsToDelay);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetPeriodicTimer(
+  PNDIS_TIMER NdisTimer,
+  UINT MillisecondsPeriod);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetTimerEx(
+  PNDIS_TIMER NdisTimer,
+  UINT MillisecondsToDelay,
+  PVOID FunctionContext);
+
+NDISAPI
+PVOID
+NTAPI
+NdisGetRoutineAddress(
+  PNDIS_STRING NdisRoutineName);
+
+NDISAPI
+UINT
+NTAPI
+NdisGetVersion(VOID);
+
+#if NDIS_LEGACY_DRIVER
+
+NDISAPI
+VOID
+NTAPI
+NdisAllocateBuffer(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_BUFFER *Buffer,
+  IN NDIS_HANDLE PoolHandle OPTIONAL,
+  IN PVOID VirtualAddress,
+  IN UINT Length);
+
+NDISAPI
+VOID
+NTAPI
+NdisAllocateBufferPool(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_HANDLE PoolHandle,
+  IN UINT NumberOfDescriptors);
+
+NDISAPI
+VOID
+NTAPI
+NdisFreeBufferPool(
+  IN NDIS_HANDLE PoolHandle);
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisFreeBuffer(
+  IN PNDIS_BUFFER Buffer);
+*/
+#define NdisFreeBuffer IoFreeMdl
+
+NDISAPI
+VOID
+NTAPI
+NdisAllocatePacketPool(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_HANDLE PoolHandle,
+  IN UINT NumberOfDescriptors,
+  IN UINT ProtocolReservedLength);
+
+NDISAPI
+VOID
+NTAPI
+NdisAllocatePacketPoolEx(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_HANDLE PoolHandle,
+  IN UINT NumberOfDescriptors,
+  IN UINT NumberOfOverflowDescriptors,
+  IN UINT ProtocolReservedLength);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetPacketPoolProtocolId(
+  IN NDIS_HANDLE PacketPoolHandle,
+  IN UINT ProtocolId);
+
+NDISAPI
+UINT
+NTAPI
+NdisPacketPoolUsage(
+  IN NDIS_HANDLE PoolHandle);
+
+NDISAPI
+UINT
+NTAPI
+NdisPacketSize(
+  IN UINT ProtocolReservedSize);
+
+NDISAPI
+NDIS_HANDLE
+NTAPI
+NdisGetPoolFromPacket(
+  IN PNDIS_PACKET Packet);
+
+NDISAPI
+NTAPI
+PNDIS_PACKET_STACK
+NdisIMGetCurrentPacketStack(
+  IN PNDIS_PACKET Packet,
+  OUT BOOLEAN * StacksRemaining);
+
+NDISAPI
+VOID
+NTAPI
+NdisFreePacketPool(
+  IN NDIS_HANDLE PoolHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisFreePacket(
+  IN PNDIS_PACKET Packet);
+
+NDISAPI
+VOID
+NTAPI
+NdisDprFreePacket(
+  IN PNDIS_PACKET Packet);
+
+NDISAPI
+VOID
+NTAPI
+NdisDprFreePacketNonInterlocked(
+  IN PNDIS_PACKET Packet);
+
+NDISAPI
+VOID
+NTAPI
+NdisAllocatePacket(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_PACKET *Packet,
+  IN NDIS_HANDLE PoolHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisDprAllocatePacket(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_PACKET *Packet,
+  IN NDIS_HANDLE PoolHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisDprAllocatePacketNonInterlocked(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_PACKET *Packet,
+  IN NDIS_HANDLE PoolHandle);
+
+/*
+ * VOID
+ * NdisReinitializePacket(
+ *   IN OUT  PNDIS_PACKET  Packet);
+ */
+#define NdisReinitializePacket(Packet) {        \
+  (Packet)->Private.Head = (PNDIS_BUFFER)NULL;  \
+  (Packet)->Private.ValidCounts = FALSE;        \
+}
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisQueryBuffer(
+  IN PNDIS_BUFFER Buffer,
+  OUT PVOID *VirtualAddress OPTIONAL,
+  OUT PUINT Length);
+*/
+#define NdisQueryBuffer(_Buffer, _VirtualAddress, _Length) {         \
+  if (ARGUMENT_PRESENT(_VirtualAddress)) {                           \
+    *(PVOID *)(_VirtualAddress) = MmGetSystemAddressForMdl(_Buffer); \
+  }                                                                  \
+  *(_Length) = MmGetMdlByteCount(_Buffer);                           \
+}
+
+NDISAPI
+VOID
+NTAPI
+NdisGetFirstBufferFromPacket(
+  IN PNDIS_PACKET _Packet,
+  OUT PNDIS_BUFFER *_FirstBuffer,
+  OUT PVOID *_FirstBufferVA,
+  OUT PUINT _FirstBufferLength,
+  OUT PUINT _TotalBufferLength);
+
+/*
+ * VOID
+ * NdisGetFirstBufferFromPacketSafe(
+ * IN PNDIS_PACKET _Packet,
+ * OUT PNDIS_BUFFER * _FirstBuffer,
+ * OUT PVOID * _FirstBufferVA,
+ * OUT PUINT _FirstBufferLength,
+ * OUT PUINT _TotalBufferLength),
+ * IN MM_PAGE_PRIORITY _Priority)
+ */
+#define NdisGetFirstBufferFromPacketSafe(_Packet,                             \
+                                     _FirstBuffer,                            \
+                                     _FirstBufferVA,                          \
+                                     _FirstBufferLength,                      \
+                                     _TotalBufferLength,                      \
+                                     _Priority)                               \
+{                                                                             \
+  PNDIS_BUFFER _Buffer;                                                       \
+                                                                              \
+  _Buffer         = (_Packet)->Private.Head;                                  \
+  *(_FirstBuffer) = _Buffer;                                                  \
+  if (_Buffer != NULL) {                                                      \
+    *(_FirstBufferVA)     = MmGetSystemAddressForMdlSafe(_Buffer, _Priority); \
+    *(_FirstBufferLength) = MmGetMdlByteCount(_Buffer);                       \
+    _Buffer = _Buffer->Next;                                                  \
+    *(_TotalBufferLength) = *(_FirstBufferLength);                            \
+    while (_Buffer != NULL) {                                                 \
+      *(_TotalBufferLength) += MmGetMdlByteCount(_Buffer);                    \
+      _Buffer = _Buffer->Next;                                                \
+    }                                                                         \
+  }                                                                           \
+  else {                                                                      \
+    *(_FirstBufferVA) = 0;                                                    \
+    *(_FirstBufferLength) = 0;                                                \
+    *(_TotalBufferLength) = 0;                                                \
+  }                                                                           \
+}
+
+/*
+ * VOID
+ * NdisRecalculatePacketCounts(
+ *   IN OUT PNDIS_PACKET Packet);
+ */
+#define NdisRecalculatePacketCounts(Packet) {     \
+  PNDIS_BUFFER _Buffer = (Packet)->Private.Head;  \
+  if (_Buffer != NULL) {                          \
+    while (_Buffer->Next != NULL) {               \
+      _Buffer = _Buffer->Next;                    \
+    }                                             \
+    (Packet)->Private.Tail = _Buffer;             \
+  }                                               \
+  (Packet)->Private.ValidCounts = FALSE;          \
+}
+
+/*
+ * VOID
+ * NdisChainBufferAtFront(
+ *   IN OUT PNDIS_PACKET Packet,
+ *   IN OUT PNDIS_BUFFER Buffer)
+ */
+#define NdisChainBufferAtFront(Packet,        \
+                               Buffer)        \
+{                                             \
+  PNDIS_BUFFER _NdisBuffer = (Buffer);        \
+                                              \
+  while (_NdisBuffer->Next != NULL)           \
+    _NdisBuffer = _NdisBuffer->Next;          \
+                                              \
+  if ((Packet)->Private.Head == NULL)         \
+    (Packet)->Private.Tail = _NdisBuffer;     \
+                                              \
+  _NdisBuffer->Next = (Packet)->Private.Head; \
+  (Packet)->Private.Head = (Buffer);          \
+  (Packet)->Private.ValidCounts = FALSE;      \
+}
+
+/*
+ * VOID
+ * NdisChainBufferAtBack(
+ *   IN OUT PNDIS_PACKET Packet,
+ *   IN OUT PNDIS_BUFFER Buffer)
+ */
+#define NdisChainBufferAtBack(Packet,           \
+                              Buffer)           \
+{                                               \
+  PNDIS_BUFFER NdisBuffer = (Buffer);           \
+                                                \
+  while (NdisBuffer->Next != NULL)              \
+    NdisBuffer = NdisBuffer->Next;              \
+                                                \
+  NdisBuffer->Next = NULL;                      \
+                                                \
+  if ((Packet)->Private.Head != NULL)           \
+    (Packet)->Private.Tail->Next = (Buffer);    \
+  else                                          \
+    (Packet)->Private.Head = (Buffer);          \
+                                                \
+  (Packet)->Private.Tail = NdisBuffer;          \
+  (Packet)->Private.ValidCounts = FALSE;        \
+}
+
+NDISAPI
+VOID
+NTAPI
+NdisUnchainBufferAtFront(
+  IN OUT PNDIS_PACKET Packet,
+  OUT PNDIS_BUFFER *Buffer);
+
+NDISAPI
+VOID
+NTAPI
+NdisUnchainBufferAtBack(
+  IN OUT PNDIS_PACKET Packet,
+  OUT PNDIS_BUFFER *Buffer);
+
+NDISAPI
+VOID
+NTAPI
+NdisCopyFromPacketToPacket(
+  IN PNDIS_PACKET Destination,
+  IN UINT DestinationOffset,
+  IN UINT BytesToCopy,
+  IN PNDIS_PACKET Source,
+  IN UINT SourceOffset,
+  OUT PUINT BytesCopied);
+
+NDISAPI
+VOID
+NTAPI
+NdisCopyFromPacketToPacketSafe(
+  IN PNDIS_PACKET Destination,
+  IN UINT DestinationOffset,
+  IN UINT BytesToCopy,
+  IN PNDIS_PACKET Source,
+  IN UINT SourceOffset,
+  OUT PUINT BytesCopied,
+  IN MM_PAGE_PRIORITY Priority);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisAllocateMemory(
+  OUT PVOID *VirtualAddress,
+  IN UINT Length,
+  IN UINT MemoryFlags,
+  IN NDIS_PHYSICAL_ADDRESS HighestAcceptableAddress);
+
+#define NdisInitializeWorkItem(_WI_, _R_, _C_) { \
+  (_WI_)->Context = _C_;                         \
+  (_WI_)->Routine = _R_;                         \
+}
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisScheduleWorkItem(
+  IN PNDIS_WORK_ITEM WorkItem);
+
+NDISAPI
+VOID
+NTAPI
+NdisSetPacketStatus(
+  IN PNDIS_PACKET Packet,
+  IN NDIS_STATUS Status,
+  IN NDIS_HANDLE Handle,
+  IN ULONG Code);
+
+#endif /* NDIS_LEGACY_DRIVER */
+
+NDISAPI
+VOID
+NTAPI
+NdisOpenFile(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_HANDLE FileHandle,
+  OUT PUINT FileLength,
+  IN PNDIS_STRING FileName,
+  IN NDIS_PHYSICAL_ADDRESS HighestAcceptableAddress);
+
+NDISAPI
+VOID
+NTAPI
+NdisCloseFile(
+  IN NDIS_HANDLE FileHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMapFile(
+  OUT PNDIS_STATUS Status,
+  OUT PVOID *MappedBuffer,
+  IN NDIS_HANDLE FileHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisUnmapFile(
+  IN NDIS_HANDLE FileHandle);
+
+NDISAPI
+ULONG
+NTAPI
+NdisGetSharedDataAlignment(VOID);
+
+#define NdisFlushBuffer(Buffer,WriteToDevice) \
+  KeFlushIoBuffers((Buffer),!(WriteToDevice), TRUE)
+
+NDISAPI
+VOID
+NTAPI
+NdisCopyBuffer(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_BUFFER *Buffer,
+  IN NDIS_HANDLE PoolHandle,
+  IN PVOID MemoryDescriptor,
+  IN UINT Offset,
+  IN UINT Length);
+
+/*
+ * VOID
+ * NdisCopyLookaheadData(
+ *   IN PVOID Destination,
+ *   IN PVOID Source,
+ *   IN ULONG Length,
+ *   IN ULONG ReceiveFlags);
+ */
+
+#if defined(_M_IX86) || defined(_M_AMD64)
+#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
+  RtlCopyMemory(Destination, Source, Length)
+#else
+#define NdisCopyLookaheadData(Destination, Source, Length, MacOptions) \
+  { \
+    if ((MacOptions) & NDIS_MAC_OPTION_COPY_LOOKAHEAD_DATA) \
+    { \
+      RtlCopyMemory(_Destination, _Source, _Length); \
+    } \
+    else \
+    { \
+      PUCHAR _Src = (PUCHAR)(Source); \
+      PUCHAR _Dest = (PUCHAR)(Destination); \
+      PUCHAR _End = _Dest + (Length); \
+      while (_Dest < _End) \
+        *_Dest++ = *_Src++; \
+    } \
+  }
+#endif
+
+NDISAPI
+VOID
+NTAPI
+NdisReturnPackets(
+  IN PNDIS_PACKET  *PacketsToReturn,
+  IN UINT  NumberOfPackets);
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisAdjustBufferLength(
+  IN PNDIS_BUFFER Buffer,
+  IN UINT Length);
+*/
+#define NdisAdjustBufferLength(Buffer, Length) \
+  (((Buffer)->ByteCount) = (Length))
+
+#if NDIS_SUPPORT_NDIS6
+#define NdisAdjustMdlLength(_Mdl, _Length) \
+  (((_Mdl)->ByteCount) = (_Length))
+#endif
+
+NDISAPI
+ULONG
+NTAPI
+NdisBufferLength(
+  IN PNDIS_BUFFER  Buffer);
+
+NDISAPI
+PVOID
+NTAPI
+NdisBufferVirtualAddress(
+  IN PNDIS_BUFFER  Buffer);
+
+NDISAPI
+ULONG
+NTAPI
+NDIS_BUFFER_TO_SPAN_PAGES(
+  IN PNDIS_BUFFER Buffer);
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisGetBufferPhysicalArraySize(
+  IN PNDIS_BUFFER Buffer,
+  OUT PUINT ArraySize);
+*/
+#define NdisGetBufferPhysicalArraySize(Buffer, ArraySize) \
+  (*(ArraySize) = NDIS_BUFFER_TO_SPAN_PAGES(Buffer))
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisQueryBufferOffset(
+  IN PNDIS_BUFFER Buffer,
+  OUT PUINT Offset,
+  OUT PUINT Length);
+*/
+#define NdisQueryBufferOffset(_Buffer, _Offset, _Length) { \
+  *(_Offset) = MmGetMdlByteOffset(_Buffer);                \
+  *(_Length) = MmGetMdlByteCount(_Buffer);                 \
+}
+
+/*
+ * PVOID
+ * NDIS_BUFFER_LINKAGE(
+ *   IN PNDIS_BUFFER Buffer);
+ */
+#define NDIS_BUFFER_LINKAGE(Buffer)(Buffer)->Next;
+
+/*
+ * VOID
+ * NdisGetNextBuffer(
+ *   IN PNDIS_BUFFER CurrentBuffer,
+ *   OUT PNDIS_BUFFER * NextBuffer)
+ */
+#define NdisGetNextBuffer(CurrentBuffer,  \
+                          NextBuffer)     \
+{                                         \
+  *(NextBuffer) = (CurrentBuffer)->Next;  \
+}
+
+#if NDIS_LEGACY_DRIVER
+
+#define NDIS_PACKET_FIRST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Head)
+#define NDIS_PACKET_LAST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Tail)
+#define NDIS_PACKET_VALID_COUNTS(_Packet) ((_Packet)->Private.ValidCounts)
+
+/*
+ * UINT
+ * NdisGetPacketFlags(
+ *   IN PNDIS_PACKET  Packet);
+ */
+#define NdisGetPacketFlags(Packet)(Packet)->Private.Flags;
+
+/*
+ * ULONG
+ * NDIS_GET_PACKET_PROTOCOL_TYPE(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_PROTOCOL_TYPE(_Packet) \
+  ((_Packet)->Private.Flags & NDIS_PROTOCOL_ID_MASK)
+
+/*
+ * PNDIS_PACKET_OOB_DATA
+ * NDIS_OOB_DATA_FROM_PACKET(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_OOB_DATA_FROM_PACKET(_Packet)    \
+  (PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset)
+
+/*
+ * ULONG
+ * NDIS_GET_PACKET_HEADER_SIZE(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_HEADER_SIZE(_Packet)   \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize
+
+/*
+ * NDIS_STATUS
+ * NDIS_GET_PACKET_STATUS(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_STATUS(_Packet)        \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset))->Status
+
+/*
+ * ULONGLONG
+ * NDIS_GET_PACKET_TIME_TO_SEND(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_TIME_TO_SEND(_Packet)   \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend
+
+/*
+ * ULONGLONG
+ * NDIS_GET_PACKET_TIME_SENT(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_TIME_SENT(_Packet)      \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeSent
+
+/*
+ * ULONGLONG
+ * NDIS_GET_PACKET_TIME_RECEIVED(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_TIME_RECEIVED(_Packet)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived
+
+/*
+ * VOID
+ * NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(
+ *   IN PNDIS_PACKET Packet,
+ *   IN PPVOID pMediaSpecificInfo,
+ *   IN PUINT pSizeMediaSpecificInfo);
+ */
+#define NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                                  \
+                                            _pMediaSpecificInfo,                      \
+                                            _pSizeMediaSpecificInfo)                  \
+{                                                                                     \
+  if (!((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS) ||            \
+      !((_Packet)->Private.NdisPacketFlags & fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO))   \
+    {                                                                                 \
+      *(_pMediaSpecificInfo) = NULL;                                                  \
+      *(_pSizeMediaSpecificInfo) = 0;                                                 \
+    }                                                                                 \
+  else                                                                                \
+    {                                                                                 \
+      *(_pMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +           \
+        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation;           \
+      *(_pSizeMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +       \
+        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo;              \
+    }                                                                                 \
+}
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_HEADER_SIZE(
+ *   IN PNDIS_PACKET Packet,
+ *   IN UINT HdrSize);
+ */
+#define NDIS_SET_PACKET_HEADER_SIZE(_Packet, _HdrSize)              \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                      \
+  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize = (_HdrSize)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_STATUS(
+ *   IN PNDIS_PACKET Packet,
+ *   IN NDIS_STATUS Status);
+ */
+#define NDIS_SET_PACKET_STATUS(_Packet, _Status)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +    \
+  (_Packet)->Private.NdisPacketOobOffset))->Status = (_Status)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_TO_SEND(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeToSend);
+ */
+#define NDIS_SET_PACKET_TIME_TO_SEND(_Packet, _TimeToSend)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +              \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend = (_TimeToSend)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_SENT(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeSent);
+ */
+#define NDIS_SET_PACKET_TIME_SENT(_Packet, _TimeSent) \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +        \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeSent = (_TimeSent)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_RECEIVED(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeReceived);
+ */
+#define NDIS_SET_PACKET_TIME_RECEIVED(_Packet, _TimeReceived) \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived = (_TimeReceived)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(
+ *   IN PNDIS_PACKET Packet,
+ *   IN PVOID MediaSpecificInfo,
+ *   IN UINT SizeMediaSpecificInfo);
+ */
+#define NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                      \
+                                            _MediaSpecificInfo,           \
+                                            _SizeMediaSpecificInfo)       \
+{                                                                         \
+  if ((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS)     \
+    {                                                                     \
+      (_Packet)->Private.NdisPacketFlags |= fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO; \
+      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
+        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation = \
+          (_MediaSpecificInfo);                                           \
+      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
+        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo = \
+          (_SizeMediaSpecificInfo);                                       \
+    }                                                                     \
+}
+
+/*
+ * VOID
+ * NdisSetPacketFlags(
+ *   IN PNDIS_PACKET  Packet,
+ *   IN UINT  Flags);
+ */
+#define NdisSetPacketFlags(Packet, Flags) (Packet)->Private.Flags |= (Flags)
+
+/*
+ * VOID
+ * NdisClearPacketFlags(
+ *   IN PNDIS_PACKET  Packet,
+ *   IN UINT  Flags);
+ */
+#define NdisClearPacketFlags(Packet, Flags) (Packet)->Private.Flags &= ~(Flags)
+
+/*
+ * VOID
+ * NdisQueryPacket(
+ *   IN PNDIS_PACKET Packet,
+ *   OUT PUINT PhysicalBufferCount OPTIONAL,
+ *   OUT PUINT BufferCount OPTIONAL,
+ *   OUT PNDIS_BUFFER *FirstBuffer OPTIONAL,
+ *   OUT PUINT TotalPacketLength OPTIONAL);
+ */
+static __inline
+VOID
+NdisQueryPacket(
+  IN PNDIS_PACKET Packet,
+  OUT PUINT PhysicalBufferCount OPTIONAL,
+  OUT PUINT BufferCount OPTIONAL,
+  OUT PNDIS_BUFFER *FirstBuffer OPTIONAL,
+  OUT PUINT TotalPacketLength OPTIONAL)
+{
+  if (FirstBuffer)
+    *FirstBuffer = Packet->Private.Head;
+  if (TotalPacketLength || BufferCount || PhysicalBufferCount) {
+    if (!Packet->Private.ValidCounts) {
+      UINT Offset;
+      UINT PacketLength;
+      PNDIS_BUFFER NdisBuffer;
+      UINT PhysicalBufferCount = 0;
+      UINT TotalPacketLength = 0;
+      UINT Count = 0;
+
+      for (NdisBuffer = Packet->Private.Head;
+           NdisBuffer != (PNDIS_BUFFER)NULL;
+           NdisBuffer = NdisBuffer->Next) {
+        PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(NdisBuffer);
+        NdisQueryBufferOffset(NdisBuffer, &Offset, &PacketLength);
+        TotalPacketLength += PacketLength;
+        Count++;
+      }
+      Packet->Private.PhysicalCount = PhysicalBufferCount;
+      Packet->Private.TotalLength = TotalPacketLength;
+      Packet->Private.Count = Count;
+      Packet->Private.ValidCounts = TRUE;
+    }
+
+    if (PhysicalBufferCount)
+      *PhysicalBufferCount = Packet->Private.PhysicalCount;
+
+    if (BufferCount)
+      *BufferCount = Packet->Private.Count;
+
+    if (TotalPacketLength)
+      *TotalPacketLength = Packet->Private.TotalLength;
+  }
+}
+
+/*
+ * VOID
+ * NdisQueryPacketLength(
+ *   IN PNDIS_PACKET Packet,
+ *   OUT PUINT PhysicalBufferCount OPTIONAL,
+ *   OUT PUINT BufferCount OPTIONAL,
+ *   OUT PNDIS_BUFFER *FirstBuffer OPTIONAL,
+ *   OUT PUINT TotalPacketLength OPTIONAL);
+ */
+#define NdisQueryPacketLength(_Packet,                              \
+                              _TotalPacketLength)                   \
+{                                                                   \
+  if (!(_Packet)->Private.ValidCounts) {                            \
+    NdisQueryPacket(_Packet, NULL, NULL, NULL, _TotalPacketLength); \
+  }                                                                 \
+  else *(_TotalPacketLength) = (_Packet)->Private.TotalLength;      \
+}
+
+#endif /* NDIS_LEGACY_DRIVER */
+
+/*
+ * VOID
+ * NdisSetSendFlags(
+ *   IN PNDIS_PACKET  Packet,
+ *   IN UINT  Flags);
+ */
+#define NdisSetSendFlags(_Packet,_Flags)(_Packet)->Private.Flags = (_Flags)
+
+/* Memory management routines */
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisCreateLookaheadBufferFromSharedMemory(
+  IN PVOID pSharedMemory,
+  IN UINT LookaheadLength,
+  OUT PVOID *pLookaheadBuffer);
+*/
+#define NdisCreateLookaheadBufferFromSharedMemory(_S, _L, _B) ((*(_B)) = (_S))
+
+NDISAPI
+VOID
+NTAPI
+NdisDestroyLookaheadBufferFromSharedMemory(
+  IN PVOID pLookaheadBuffer);
+
+#if defined(_M_IX86) || defined(_M_AMD64) || defined(_M_ARM) || defined(_M_PPC)
+
+/*
+ * VOID
+ * NdisMoveMappedMemory(
+ *   OUT PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveMappedMemory(Destination, Source, Length) \
+  RtlCopyMemory(Destination, Source, Length)
+
+/*
+ * VOID
+ * NdisZeroMappedMemory(
+ *   IN PVOID  Destination,
+ *   IN ULONG  Length);
+ */
+#define NdisZeroMappedMemory(Destination, Length) \
+  RtlZeroMemory(Destination, Length)
+
+#else
+
+#define NdisMoveMappedMemory(Destination, Source, Length) \
+{ \
+  PUCHAR _Dest = Destination, _Src = Source, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = _Src++; \
+}
+
+#define NdisZeroMappedMemory(Destination, Length) \
+{ \
+  PUCHAR _Dest = Destination, _End = _Dest + Length; \
+  while (_Dest < _End) \
+    *_Dest++ = 0; \
+}
+
+#endif /* _M_IX86 or _M_AMD64 */
+
+/*
+ * VOID
+ * NdisMoveFromMappedMemory(
+ *   OUT PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveFromMappedMemory(Destination, Source, Length) \
+  NdisMoveMappedMemory(Destination, Source, Length)
+
+/*
+ * VOID
+ * NdisMoveToMappedMemory(
+ *   OUT PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveToMappedMemory(Destination, Source, Length) \
+  NdisMoveMappedMemory(Destination, Source, Length)
+
+/*
+ * VOID
+ * NdisMUpdateSharedMemory(
+ *   IN NDIS_HANDLE  MiniportAdapterHandle,
+ *   IN ULONG  Length,
+ *   IN PVOID  VirtualAddress,
+ *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
+ */
+#define NdisMUpdateSharedMemory(_H, _L, _V, _P) \
+  NdisUpdateSharedMemory(_H, _L, _V, _P)
+
+NDISAPI
+VOID
+NTAPI
+NdisFreeMemory(
+  IN PVOID VirtualAddress,
+  IN UINT Length,
+  IN UINT MemoryFlags);
+
+NDISAPI
+VOID
+NTAPI
+NdisFreeMemoryWithTag(
+  IN PVOID VirtualAddress,
+  IN ULONG Tag);
+
+NDISAPI
+VOID
+NTAPI
+NdisImmediateReadSharedMemory(
+  IN NDIS_HANDLE WrapperConfigurationContext,
+  IN ULONG       SharedMemoryAddress,
+  OUT PUCHAR      Buffer,
+  IN ULONG       Length);
+
+NDISAPI
+VOID
+NTAPI
+NdisImmediateWriteSharedMemory(
+  IN NDIS_HANDLE WrapperConfigurationContext,
+  IN ULONG       SharedMemoryAddress,
+  IN PUCHAR      Buffer,
+  IN ULONG       Length);
+
+NDISAPI
+VOID
+NTAPI
+NdisMAllocateSharedMemory(
+  IN	NDIS_HANDLE  MiniportAdapterHandle,
+  IN	ULONG  Length,
+  IN	BOOLEAN  Cached,
+  OUT	 PVOID  *VirtualAddress,
+  OUT	 PNDIS_PHYSICAL_ADDRESS  PhysicalAddress);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMAllocateSharedMemoryAsync(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN ULONG  Length,
+  IN BOOLEAN  Cached,
+  IN PVOID  Context);
+
+#if defined(NDIS50)
+
+#define NdisUpdateSharedMemory(NdisAdapterHandle, \
+                               Length,            \
+                               VirtualAddress,    \
+                               PhysicalAddress)
+
+#else
+
+NDISAPI
+VOID
+NTAPI
+NdisUpdateSharedMemory(
+  IN NDIS_HANDLE             NdisAdapterHandle,
+  IN ULONG                   Length,
+  IN PVOID                   VirtualAddress,
+  IN NDIS_PHYSICAL_ADDRESS   PhysicalAddress);
+
+#endif /* defined(NDIS50) */
+
+/*
+ * ULONG
+ * NdisGetPhysicalAddressHigh(
+ *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
+ */
+#define NdisGetPhysicalAddressHigh(PhysicalAddress) \
+  ((PhysicalAddress).HighPart)
+
+/*
+ * VOID
+ * NdisSetPhysicalAddressHigh(
+ *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress,
+ *   IN ULONG  Value);
+ */
+#define NdisSetPhysicalAddressHigh(PhysicalAddress, Value) \
+  ((PhysicalAddress).HighPart) = (Value)
+
+/*
+ * ULONG
+ * NdisGetPhysicalAddressLow(
+ *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
+ */
+#define NdisGetPhysicalAddressLow(PhysicalAddress) \
+  ((PhysicalAddress).LowPart)
+
+
+/*
+ * VOID
+ * NdisSetPhysicalAddressLow(
+ *   IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress,
+ *   IN ULONG  Value);
+ */
+#define NdisSetPhysicalAddressLow(PhysicalAddress, Value) \
+  ((PhysicalAddress).LowPart) = (Value)
+
+/*
+ * VOID
+ * NDIS_PHYSICAL_ADDRESS_CONST(
+ *   IN ULONG  Low,
+ *   IN LONG  High);
+ */
+#define NDIS_PHYSICAL_ADDRESS_CONST(Low, High)  \
+    { {(ULONG)(Low), (LONG)(High)} }
+
+/*
+ * ULONG
+ * NdisEqualMemory(
+ *  IN CONST VOID  *Source1,
+ *  IN CONST VOID  *Source2,
+ *  IN ULONG  Length);
+ */
+#define NdisEqualMemory(Source1, Source2, Length) \
+  RtlEqualMemory(Source1, Source2, Length)
+
+/*
+ * VOID
+ * NdisFillMemory(
+ *   IN PVOID  Destination,
+ *   IN ULONG  Length,
+ *   IN UCHAR  Fill);
+ */
+#define NdisFillMemory(Destination, Length, Fill) \
+  RtlFillMemory(Destination, Length, Fill)
+
+/*
+ * VOID
+ * NdisMoveMemory(
+ *   OUT  PVOID  Destination,
+ *   IN PVOID  Source,
+ *   IN ULONG  Length);
+ */
+#define NdisMoveMemory(Destination, Source, Length) \
+  RtlCopyMemory(Destination, Source, Length)
+
+
+/*
+ * VOID
+ * NdisRetrieveUlong(
+ *   IN PULONG  DestinationAddress,
+ *   IN PULONG  SourceAddress);
+ */
+#define NdisRetrieveUlong(DestinationAddress, SourceAddress) \
+  RtlRetrieveUlong(DestinationAddress, SourceAddress)
+
+
+/*
+ * VOID
+ * NdisStoreUlong(
+ *   IN PULONG  DestinationAddress,
+ *   IN ULONG  Value);
+ */
+#define NdisStoreUlong(DestinationAddress, Value) \
+  RtlStoreUlong(DestinationAddress, Value)
+
+
+/*
+ * VOID
+ * NdisZeroMemory(
+ *   IN PVOID  Destination,
+ *   IN ULONG  Length)
+ */
+#define NdisZeroMemory(Destination, Length) \
+  RtlZeroMemory(Destination, Length)
+
+typedef VOID
+(NTAPI *NDIS_BLOCK_INITIALIZER) (
+    IN  PUCHAR  Block,
+    IN  SIZE_T  NumberOfBytes
+    );
+
+/* Configuration routines */
+
+#if NDIS_LEGACY_DRIVER
+NDISAPI
+VOID
+NTAPI
+NdisOpenConfiguration(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_HANDLE ConfigurationHandle,
+  IN NDIS_HANDLE WrapperConfigurationContext);
+#endif
+
+NDISAPI
+VOID
+NTAPI
+NdisReadNetworkAddress(
+  OUT PNDIS_STATUS Status,
+  OUT PVOID *NetworkAddress,
+  OUT PUINT NetworkAddressLength,
+  IN NDIS_HANDLE ConfigurationHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisReadEisaSlotInformation(
+  OUT PNDIS_STATUS  Status,
+  IN NDIS_HANDLE  WrapperConfigurationContext,
+  OUT PUINT  SlotNumber,
+  OUT PNDIS_EISA_FUNCTION_INFORMATION  EisaData);
+
+NDISAPI
+VOID
+NTAPI
+NdisReadEisaSlotInformationEx(
+  OUT PNDIS_STATUS  Status,
+  IN NDIS_HANDLE  WrapperConfigurationContext,
+  OUT PUINT  SlotNumber,
+  OUT PNDIS_EISA_FUNCTION_INFORMATION  *EisaData,
+  OUT PUINT  NumberOfFunctions);
+
+#if NDIS_LEGACY_MINIPORT
+
+NDISAPI
+ULONG
+NTAPI
+NdisReadPciSlotInformation(
+  IN NDIS_HANDLE NdisAdapterHandle,
+  IN ULONG SlotNumber,
+  IN ULONG Offset,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NDISAPI
+ULONG
+NTAPI
+NdisWritePciSlotInformation(
+  IN NDIS_HANDLE NdisAdapterHandle,
+  IN ULONG SlotNumber,
+  IN ULONG Offset,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+NDISAPI
+ULONG
+NTAPI
+NdisReadPcmciaAttributeMemory(
+  IN NDIS_HANDLE NdisAdapterHandle,
+  IN ULONG Offset,
+  OUT PVOID Buffer,
+  IN ULONG Length);
+
+NDISAPI
+ULONG
+NTAPI
+NdisWritePcmciaAttributeMemory(
+  IN NDIS_HANDLE NdisAdapterHandle,
+  IN ULONG Offset,
+  IN PVOID Buffer,
+  IN ULONG Length);
+
+#endif /* NDIS_LEGACY_MINIPORT */
+
+/* String management routines */
+
+/*
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisAnsiStringToUnicodeString(
+  IN OUT PNDIS_STRING DestinationString,
+  IN PNDIS_ANSI_STRING SourceString);
+*/
+#define NdisAnsiStringToUnicodeString(_us, _as) RtlAnsiStringToUnicodeString(_us, _as, FALSE)
+
+/*
+ * BOOLEAN
+ * NdisEqualString(
+ *   IN PNDIS_STRING String1,
+ *   IN PNDIS_STRING String2,
+ *   IN BOOLEAN CaseInsensitive);
+ */
+#define NdisEqualString RtlEqualString
+
+#define NdisEqualUnicodeString RtlEqualUnicodeString
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisInitAnsiString(
+  IN OUT PNDIS_ANSI_STRING DestinationString,
+  IN PCSTR SourceString);
+*/
+#define NdisInitAnsiString RtlInitString
+
+NDISAPI
+VOID
+NTAPI
+NdisInitUnicodeString(
+  IN OUT PNDIS_STRING  DestinationString,
+  IN PCWSTR  SourceString);
+
+/*
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisUnicodeStringToAnsiString(
+  IN OUT PNDIS_ANSI_STRING DestinationString,
+  IN PNDIS_STRING SourceString);
+*/
+#define NdisUnicodeStringToAnsiString(_as, _us) RtlUnicodeStringToAnsiString(_as, _us, FALSE)
+
+#define NdisFreeString(_s) NdisFreeMemory((_s).Buffer, (_s).MaximumLength, 0)
+#define NdisPrintString(_s) DbgPrint("%ls", (_s).Buffer)
+
+/* Spin lock reoutines */
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisAllocateSpinLock(
+  IN PNDIS_SPIN_LOCK SpinLock);
+*/
+#define NdisAllocateSpinLock(_SpinLock) KeInitializeSpinLock(&(_SpinLock)->SpinLock)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisFreeSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisFreeSpinLock(_SpinLock)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisAcquireSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisAcquireSpinLock(_SpinLock) KeAcquireSpinLock(&(_SpinLock)->SpinLock, &(_SpinLock)->OldIrql)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisReleaseSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisReleaseSpinLock(_SpinLock) KeReleaseSpinLock(&(_SpinLock)->SpinLock,(_SpinLock)->OldIrql)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisDprAcquireSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisDprAcquireSpinLock(_SpinLock) KeAcquireSpinLockAtDpcLevel(&(_SpinLock)->SpinLock)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisDprReleaseSpinLock(
+  IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisDprReleaseSpinLock(_SpinLock) KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
+
+/* I/O routines */
+
+/*
+ * VOID
+ * NdisRawReadPortBufferUchar(
+ *   IN ULONG Port,
+ *   OUT PUCHAR Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawReadPortBufferUchar(Port, Buffer, Length) \
+  READ_PORT_BUFFER_UCHAR((PUCHAR)(Port), (PUCHAR)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawReadPortBufferUlong(
+ *   IN ULONG Port,
+ *   OUT PULONG Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawReadPortBufferUlong(Port, Buffer, Length) \
+  READ_PORT_BUFFER_ULONG((PULONG)(Port), (PULONG)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawReadPortBufferUshort(
+ *   IN ULONG Port,
+ *   OUT PUSHORT Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawReadPortBufferUshort(Port, Buffer, Length) \
+  READ_PORT_BUFFER_USHORT((PUSHORT)(Port), (PUSHORT)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawReadPortUchar(
+ *   IN ULONG Port,
+ *   OUT PUCHAR Data);
+ */
+#define NdisRawReadPortUchar(Port, Data) \
+  *(Data) = READ_PORT_UCHAR((PUCHAR)(Port))
+
+/*
+ * VOID
+ * NdisRawReadPortUlong(
+ *   IN ULONG Port,
+ *   OUT PULONG Data);
+ */
+#define NdisRawReadPortUlong(Port, Data) \
+  *(Data) = READ_PORT_ULONG((PULONG)(Port))
+
+/*
+ * VOID
+ * NdisRawReadPortUshort(
+ *   IN ULONG Port,
+ *   OUT PUSHORT Data);
+ */
+#define NdisRawReadPortUshort(Port, Data) \
+  *(Data) = READ_PORT_USHORT((PUSHORT)(Port))
+
+/*
+ * VOID
+ * NdisRawWritePortBufferUchar(
+ *   IN ULONG Port,
+ *   IN PUCHAR Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawWritePortBufferUchar(Port, Buffer, Length) \
+  WRITE_PORT_BUFFER_UCHAR((PUCHAR)(Port), (PUCHAR)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawWritePortBufferUlong(
+ *   IN ULONG Port,
+ *   IN PULONG Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawWritePortBufferUlong(Port, Buffer, Length) \
+  WRITE_PORT_BUFFER_ULONG((PULONG)(Port), (PULONG)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawWritePortBufferUshort(
+ *   IN ULONG Port,
+ *   IN PUSHORT Buffer,
+ *   IN ULONG Length);
+ */
+#define NdisRawWritePortBufferUshort(Port, Buffer, Length) \
+  WRITE_PORT_BUFFER_USHORT((PUSHORT)(Port), (PUSHORT)(Buffer), (Length))
+
+/*
+ * VOID
+ * NdisRawWritePortUchar(
+ *   IN ULONG Port,
+ *   IN UCHAR Data);
+ */
+#define NdisRawWritePortUchar(Port, Data) \
+  WRITE_PORT_UCHAR((PUCHAR)(Port), (UCHAR)(Data))
+
+/*
+ * VOID
+ * NdisRawWritePortUlong(
+ *   IN ULONG Port,
+ *   IN ULONG Data);
+ */
+#define NdisRawWritePortUlong(Port, Data) \
+  WRITE_PORT_ULONG((PULONG)(Port), (ULONG)(Data))
+
+/*
+ * VOID
+ * NdisRawWritePortUshort(
+ *   IN ULONG Port,
+ *   IN USHORT Data);
+ */
+#define NdisRawWritePortUshort(Port, Data) \
+  WRITE_PORT_USHORT((PUSHORT)(Port), (USHORT)(Data))
+
+
+/*
+ * VOID
+ * NdisReadRegisterUchar(
+ *   IN PUCHAR Register,
+ *   OUT PUCHAR Data);
+ */
+#define NdisReadRegisterUchar(Register, Data) \
+  *(Data) = *(Register)
+
+/*
+ * VOID
+ * NdisReadRegisterUlong(
+ *   IN PULONG  Register,
+ *   OUT PULONG  Data);
+ */
+#define NdisReadRegisterUlong(Register, Data)   \
+  *(Data) = *(Register)
+
+/*
+ * VOID
+ * NdisReadRegisterUshort(
+ *   IN PUSHORT Register,
+ *   OUT PUSHORT Data);
+ */
+#define NdisReadRegisterUshort(Register, Data) \
+    *(Data) = *(Register)
+
+/*
+ * VOID
+ * NdisReadRegisterUchar(
+ *   IN PUCHAR Register,
+ *   IN UCHAR Data);
+ */
+#define NdisWriteRegisterUchar(Register, Data) \
+  WRITE_REGISTER_UCHAR((Register), (Data))
+
+/*
+ * VOID
+ * NdisReadRegisterUlong(
+ *   IN PULONG Register,
+ *   IN ULONG Data);
+ */
+#define NdisWriteRegisterUlong(Register, Data) \
+  WRITE_REGISTER_ULONG((Register), (Data))
+
+/*
+ * VOID
+ * NdisReadRegisterUshort(
+ *   IN PUSHORT Register,
+ *   IN USHORT Data);
+ */
+#define NdisWriteRegisterUshort(Register, Data) \
+  WRITE_REGISTER_USHORT((Register), (Data))
+
+
+/* Linked lists */
+
+/*
+ * VOID
+ * NdisInitializeListHead(
+ *   IN PLIST_ENTRY ListHead);
+ */
+#define NdisInitializeListHead InitializeListHead
+
+/*
+ * PLIST_ENTRY
+ * NdisInterlockedInsertHeadList(
+ *   IN PLIST_ENTRY  ListHead,
+ *   IN PLIST_ENTRY  ListEntry,
+ *   IN PNDIS_SPIN_LOCK  SpinLock);
+ */
+#define NdisInterlockedInsertHeadList(_ListHead, _ListEntry, _SpinLock) \
+  ExInterlockedInsertHeadList(_ListHead, _ListEntry, &(_SpinLock)->SpinLock)
+
+/*
+ * PLIST_ENTRY
+ * NdisInterlockedInsertTailList(
+ *   IN PLIST_ENTRY  ListHead,
+ *   IN PLIST_ENTRY  ListEntry,
+ *   IN PNDIS_SPIN_LOCK  SpinLock);
+ */
+#define NdisInterlockedInsertTailList(_ListHead, _ListEntry, _SpinLock) \
+  ExInterlockedInsertTailList(_ListHead, _ListEntry, &(_SpinLock)->SpinLock)
+
+/*
+ * PLIST_ENTRY
+ * NdisInterlockedRemoveHeadList(
+ *   IN PLIST_ENTRY  ListHead,
+ *   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisInterlockedRemoveHeadList(_ListHead, _SpinLock) \
+  ExInterlockedRemoveHeadList(_ListHead, &(_SpinLock)->SpinLock)
+
+/*
+ * VOID
+ * NdisInitializeSListHead(
+ *   IN PSLIST_HEADER SListHead);
+ */
+#define NdisInitializeSListHead(SListHead) ExInitializeSListHead(SListHead)
+
+/*
+ * USHORT NdisQueryDepthSList(
+ *   IN PSLIST_HEADER SListHead);
+ */
+#define NdisQueryDepthSList(SListHead) ExQueryDepthSList(SListHead)
+
+#define NdisInterlockedPushEntryList(ListHead, ListEntry, Lock) \
+  ExInterlockedPushEntryList(ListHead, ListEntry, &(Lock)->SpinLock)
+
+#define NdisInterlockedPopEntryList(ListHead, Lock) \
+  ExInterlockedPopEntryList(ListHead, &(Lock)->SpinLock)
+
+/* Non-paged lookaside lists */
+
+#define NdisInitializeNPagedLookasideList(_L, _AR, _FR, _Fl, _S, _T, _D) \
+  ExInitializeNPagedLookasideList(_L, _AR, _FR, _Fl, _S, _T, _D)
+#define NdisDeleteNPagedLookasideList(_L) ExDeleteNPagedLookasideList(_L)
+#define NdisAllocateFromNPagedLookasideList(_L) ExAllocateFromNPagedLookasideList(_L)
+#define NdisFreeToNPagedLookasideList(_L, _E) ExFreeToNPagedLookasideList(_L, _E)
+
+/* Interlocked routines */
+
+/*
+ * LONG
+ * NdisInterlockedDecrement(
+ *   IN PLONG  Addend);
+ */
+#define NdisInterlockedDecrement(Addend) InterlockedDecrement(Addend)
+
+/*
+ * LONG
+ * NdisInterlockedIncrement(
+ *   IN PLONG  Addend);
+ */
+#define NdisInterlockedIncrement(Addend) InterlockedIncrement(Addend)
+
+/*
+ * VOID
+ * NdisInterlockedAddUlong(
+ *   IN PULONG  Addend,
+ *   IN ULONG  Increment,
+ *   IN PNDIS_SPIN_LOCK  SpinLock);
+ */
+#define NdisInterlockedAddUlong(_Addend, _Increment, _SpinLock) \
+  ExInterlockedAddUlong(_Addend, _Increment, &(_SpinLock)->SpinLock)
+
+/* Miscellaneous routines */
+
+NDISAPI
+VOID
+NTAPI
+NdisCloseConfiguration(
+  IN NDIS_HANDLE ConfigurationHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisReadConfiguration(
+  OUT PNDIS_STATUS Status,
+  OUT PNDIS_CONFIGURATION_PARAMETER *ParameterValue,
+  IN NDIS_HANDLE ConfigurationHandle,
+  IN PNDIS_STRING Keyword,
+  IN NDIS_PARAMETER_TYPE ParameterType);
+
+NDISAPI
+VOID
+NTAPI
+NdisWriteConfiguration(
+  OUT PNDIS_STATUS Status,
+  IN NDIS_HANDLE WrapperConfigurationContext,
+  IN PNDIS_STRING Keyword,
+  IN PNDIS_CONFIGURATION_PARAMETER ParameterValue);
+
+NDISAPI
+VOID
+__cdecl
+NdisWriteErrorLogEntry(
+  IN NDIS_HANDLE NdisAdapterHandle,
+  IN NDIS_ERROR_CODE ErrorCode,
+  IN ULONG NumberOfErrorValues,
+  IN ...);
+
+NDISAPI
+VOID
+NTAPI
+NdisInitializeString(
+  OUT PNDIS_STRING Destination,
+  IN PUCHAR Source);
+
+/*
+ * VOID
+ * NdisStallExecution(
+ *   IN UINT MicrosecondsToStall)
+ */
+#define NdisStallExecution KeStallExecutionProcessor
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisGetCurrentSystemTime(
+  IN PLARGE_INTEGER  pSystemTime);
+*/
+#define NdisGetCurrentSystemTime KeQuerySystemTime
+
+#if NDIS_SUPPORT_60_COMPATIBLE_API
+NDISAPI
+CCHAR
+NTAPI
+NdisSystemProcessorCount(VOID);
+#endif
+
+NDISAPI
+VOID
+NTAPI
+NdisGetCurrentProcessorCpuUsage(
+  OUT PULONG pCpuUsage);
+
+/* NDIS helper macros */
+
+/*
+ * VOID
+ * NDIS_INIT_FUNCTION(FunctionName)
+ */
+#define NDIS_INIT_FUNCTION(FunctionName)    \
+  alloc_text(init, FunctionName)
+
+/*
+ * VOID
+ * NDIS_PAGABLE_FUNCTION(FunctionName)
+ */
+#define NDIS_PAGEABLE_FUNCTION(FunctionName) \
+  alloc_text(page, FunctionName)
+
+#define NDIS_PAGABLE_FUNCTION NDIS_PAGEABLE_FUNCTION
+
+
+/* NDIS 4.0 extensions */
+
+NDISAPI
+VOID
+NTAPI
+NdisMFreeSharedMemory(
+	IN NDIS_HANDLE  MiniportAdapterHandle,
+	IN ULONG  Length,
+	IN BOOLEAN  Cached,
+	IN PVOID  VirtualAddress,
+	IN NDIS_PHYSICAL_ADDRESS  PhysicalAddress);
+
+NDISAPI
+VOID
+NTAPI
+NdisMWanIndicateReceive(
+	OUT PNDIS_STATUS  Status,
+	IN NDIS_HANDLE  MiniportAdapterHandle,
+	IN NDIS_HANDLE  NdisLinkContext,
+	IN PUCHAR  PacketBuffer,
+	IN UINT  PacketSize);
+
+NDISAPI
+VOID
+NTAPI
+NdisMWanIndicateReceiveComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMWanSendComplete(
+	IN NDIS_HANDLE  MiniportAdapterHandle,
+	IN PNDIS_WAN_PACKET  Packet,
+	IN NDIS_STATUS  Status);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisPciAssignResources(
+	IN NDIS_HANDLE  NdisMacHandle,
+	IN NDIS_HANDLE  NdisWrapperHandle,
+	IN NDIS_HANDLE  WrapperConfigurationContext,
+	IN ULONG  SlotNumber,
+	OUT PNDIS_RESOURCE_LIST  *AssignedResources);
+
+
+/* NDIS 5.0 extensions */
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisAllocateMemoryWithTag(
+  OUT PVOID *VirtualAddress,
+  IN UINT Length,
+  IN ULONG Tag);
+
+NDISAPI
+VOID
+NTAPI
+NdisCompletePnPEvent(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisBindingHandle,
+  IN PNET_PNP_EVENT  NetPnPEvent);
+
+NDISAPI
+VOID
+NTAPI
+NdisGetCurrentProcessorCounts(
+  OUT PULONG pIdleCount,
+  OUT PULONG pKernelAndUser,
+  OUT PULONG pIndex);
+
+NDISAPI
+VOID
+NTAPI
+NdisGetDriverHandle(
+  IN PNDIS_HANDLE  NdisBindingHandle,
+  OUT PNDIS_HANDLE  NdisDriverHandle);
+
+NDISAPI
+PNDIS_PACKET
+NTAPI
+NdisGetReceivedPacket(
+  IN PNDIS_HANDLE  NdisBindingHandle,
+  IN PNDIS_HANDLE  MacContext);
+
+#if NDIS_LEGACY_DRIVER
+NDISAPI
+VOID
+NTAPI
+NdisGetSystemUpTime(
+  OUT PULONG pSystemUpTime);
+#endif
+
+#if NDIS_SUPPORT_60_COMPATIBLE_API
+
+NDISAPI
+VOID
+NTAPI
+NdisAcquireReadWriteLock(
+  IN OUT PNDIS_RW_LOCK Lock,
+  IN BOOLEAN fWrite,
+  OUT PLOCK_STATE LockState);
+
+NDISAPI
+VOID
+NTAPI
+NdisInitializeReadWriteLock(
+  OUT PNDIS_RW_LOCK Lock);
+
+NDISAPI
+VOID
+NTAPI
+NdisReleaseReadWriteLock(
+  IN OUT PNDIS_RW_LOCK Lock,
+  IN PLOCK_STATE LockState);
+
+#if NDIS_SUPPORT_NDIS6
+
+NDISAPI
+VOID
+NTAPI
+NdisDprAcquireReadWriteLock(
+  IN PNDIS_RW_LOCK Lock,
+  IN BOOLEAN fWrite,
+  IN PLOCK_STATE LockState);
+
+NDISAPI
+VOID
+NTAPI
+NdisDprReleaseReadWriteLock(
+  IN PNDIS_RW_LOCK Lock,
+  IN PLOCK_STATE LockState);
+
+#endif /* NDIS_SUPPORT_NDIS6 */
+
+#endif /* NDIS_SUPPORT_60_COMPATIBLE_API */
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMDeregisterDevice(
+  IN NDIS_HANDLE  NdisDeviceHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMGetDeviceProperty(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN OUT PDEVICE_OBJECT  *PhysicalDeviceObject  OPTIONAL,
+  IN OUT PDEVICE_OBJECT  *FunctionalDeviceObject  OPTIONAL,
+  IN OUT PDEVICE_OBJECT  *NextDeviceObject  OPTIONAL,
+  IN OUT PCM_RESOURCE_LIST  *AllocatedResources  OPTIONAL,
+  IN OUT PCM_RESOURCE_LIST  *AllocatedResourcesTranslated  OPTIONAL);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMInitializeScatterGatherDma(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN BOOLEAN  Dma64BitAddresses,
+  IN ULONG  MaximumPhysicalMapping);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMPromoteMiniport(
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMQueryAdapterInstanceName(
+  OUT PNDIS_STRING  AdapterInstanceName,
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMRegisterDevice(
+  IN NDIS_HANDLE  NdisWrapperHandle,
+  IN PNDIS_STRING  DeviceName,
+  IN PNDIS_STRING  SymbolicName,
+  IN PDRIVER_DISPATCH  MajorFunctions[],
+  OUT PDEVICE_OBJECT  *pDeviceObject,
+  OUT NDIS_HANDLE  *NdisDeviceHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMRegisterUnloadHandler(
+  IN NDIS_HANDLE  NdisWrapperHandle,
+  IN PDRIVER_UNLOAD  UnloadHandler);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMRemoveMiniport(
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMSetMiniportSecondary(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_HANDLE  PrimaryMiniportAdapterHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisOpenConfigurationKeyByIndex(
+  OUT PNDIS_STATUS Status,
+  IN NDIS_HANDLE ConfigurationHandle,
+  IN ULONG Index,
+  OUT PNDIS_STRING KeyName,
+  OUT PNDIS_HANDLE KeyHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisOpenConfigurationKeyByName(
+  OUT PNDIS_STATUS Status,
+  IN NDIS_HANDLE ConfigurationHandle,
+  IN PNDIS_STRING SubKeyName,
+  OUT PNDIS_HANDLE SubKeyHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisQueryAdapterInstanceName(
+  OUT PNDIS_STRING  AdapterInstanceName,
+  IN NDIS_HANDLE  NdisBindingHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisWriteEventLogEntry(
+  IN PVOID  LogHandle,
+  IN NDIS_STATUS  EventCode,
+  IN ULONG  UniqueEventValue,
+  IN USHORT  NumStrings,
+  IN PVOID  StringsList  OPTIONAL,
+  IN ULONG  DataSize,
+  IN PVOID  Data  OPTIONAL);
+
+/* Connectionless services */
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClAddParty(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN NDIS_HANDLE  ProtocolPartyContext,
+  IN OUT PCO_CALL_PARAMETERS  CallParameters,
+  OUT PNDIS_HANDLE  NdisPartyHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClCloseAddressFamily(
+  IN NDIS_HANDLE  NdisAfHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClCloseCall(
+  IN NDIS_HANDLE NdisVcHandle,
+  IN NDIS_HANDLE NdisPartyHandle  OPTIONAL,
+  IN PVOID  Buffer  OPTIONAL,
+  IN UINT  Size);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClDeregisterSap(
+  IN NDIS_HANDLE  NdisSapHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClDropParty(
+  IN NDIS_HANDLE  NdisPartyHandle,
+  IN PVOID  Buffer  OPTIONAL,
+  IN UINT  Size);
+
+NDISAPI
+VOID
+NTAPI
+NdisClIncomingCallComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClMakeCall(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN OUT PCO_CALL_PARAMETERS  CallParameters,
+  IN NDIS_HANDLE  ProtocolPartyContext  OPTIONAL,
+  OUT PNDIS_HANDLE  NdisPartyHandle  OPTIONAL);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClModifyCallQoS(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClOpenAddressFamily(
+  IN NDIS_HANDLE  NdisBindingHandle,
+  IN PCO_ADDRESS_FAMILY  AddressFamily,
+  IN NDIS_HANDLE  ProtocolAfContext,
+  IN PNDIS_CLIENT_CHARACTERISTICS  ClCharacteristics,
+  IN UINT  SizeOfClCharacteristics,
+  OUT PNDIS_HANDLE  NdisAfHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisClRegisterSap(
+  IN NDIS_HANDLE  NdisAfHandle,
+  IN NDIS_HANDLE  ProtocolSapContext,
+  IN PCO_SAP  Sap,
+  OUT PNDIS_HANDLE  NdisSapHandle);
+
+
+/* Call Manager services */
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCmActivateVc(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN OUT PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmAddPartyComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisPartyHandle,
+  IN NDIS_HANDLE  CallMgrPartyContext  OPTIONAL,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmCloseAddressFamilyComplete(
+  IN NDIS_STATUS Status,
+  IN NDIS_HANDLE NdisAfHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmCloseCallComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCmDeactivateVc(
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDeregisterSapComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisSapHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDispatchCallConnected(
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCmDispatchIncomingCall(
+  IN NDIS_HANDLE  NdisSapHandle,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDispatchIncomingCallQoSChange(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDispatchIncomingCloseCall(
+  IN NDIS_STATUS  CloseStatus,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PVOID  Buffer  OPTIONAL,
+  IN UINT  Size);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDispatchIncomingDropParty(
+  IN NDIS_STATUS  DropStatus,
+  IN NDIS_HANDLE  NdisPartyHandle,
+  IN PVOID  Buffer  OPTIONAL,
+  IN UINT  Size);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmDropPartyComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisPartyHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmMakeCallComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
+  IN NDIS_HANDLE  CallMgrPartyContext  OPTIONAL,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmModifyCallQoSComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmOpenAddressFamilyComplete(
+  IN NDIS_STATUS Status,
+  IN NDIS_HANDLE NdisAfHandle,
+  IN NDIS_HANDLE CallMgrAfContext);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCmRegisterAddressFamily(
+  IN NDIS_HANDLE  NdisBindingHandle,
+  IN PCO_ADDRESS_FAMILY  AddressFamily,
+  IN PNDIS_CALL_MANAGER_CHARACTERISTICS  CmCharacteristics,
+  IN UINT  SizeOfCmCharacteristics);
+
+NDISAPI
+VOID
+NTAPI
+NdisCmRegisterSapComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisSapHandle,
+  IN NDIS_HANDLE  CallMgrSapContext);
+
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmActivateVc(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmCreateVc(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_HANDLE  NdisAfHandle,
+  IN NDIS_HANDLE  MiniportVcContext,
+  OUT  PNDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmDeactivateVc(
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmDeleteVc(
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmRegisterAddressFamily(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN PCO_ADDRESS_FAMILY  AddressFamily,
+  IN PNDIS_CALL_MANAGER_CHARACTERISTICS  CmCharacteristics,
+  IN UINT  SizeOfCmCharacteristics);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisMCmRequest(
+  IN NDIS_HANDLE  NdisAfHandle,
+  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
+  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
+  IN OUT  PNDIS_REQUEST  NdisRequest);
+
+
+/* Connection-oriented services */
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCoCreateVc(
+  IN NDIS_HANDLE  NdisBindingHandle,
+  IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
+  IN NDIS_HANDLE  ProtocolVcContext,
+  IN OUT PNDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCoDeleteVc(
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisCoRequest(
+  IN NDIS_HANDLE  NdisBindingHandle,
+  IN NDIS_HANDLE  NdisAfHandle  OPTIONAL,
+  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
+  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
+  IN OUT  PNDIS_REQUEST  NdisRequest);
+
+NDISAPI
+VOID
+NTAPI
+NdisCoRequestComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisAfHandle,
+  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
+  IN NDIS_HANDLE  NdisPartyHandle  OPTIONAL,
+  IN PNDIS_REQUEST  NdisRequest);
+
+NDISAPI
+VOID
+NTAPI
+NdisCoSendPackets(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PPNDIS_PACKET  PacketArray,
+  IN UINT  NumberOfPackets);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoActivateVcComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PCO_CALL_PARAMETERS  CallParameters);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoDeactivateVcComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoIndicateReceivePacket(
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PPNDIS_PACKET  PacketArray,
+  IN UINT  NumberOfPackets);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoIndicateStatus(
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN NDIS_HANDLE  NdisVcHandle  OPTIONAL,
+  IN NDIS_STATUS  GeneralStatus,
+  IN PVOID  StatusBuffer  OPTIONAL,
+  IN ULONG  StatusBufferSize);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoReceiveComplete(
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoRequestComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  MiniportAdapterHandle,
+  IN PNDIS_REQUEST  Request);
+
+NDISAPI
+VOID
+NTAPI
+NdisMCoSendComplete(
+  IN NDIS_STATUS  Status,
+  IN NDIS_HANDLE  NdisVcHandle,
+  IN PNDIS_PACKET  Packet);
+
+
+/* NDIS 5.0 extensions for intermediate drivers */
+
+NDISAPI
+VOID
+NTAPI
+NdisIMAssociateMiniport(
+  IN NDIS_HANDLE  DriverHandle,
+  IN NDIS_HANDLE  ProtocolHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisIMCancelInitializeDeviceInstance(
+  IN NDIS_HANDLE  DriverHandle,
+  IN PNDIS_STRING  DeviceInstance);
+
+NDISAPI
+VOID
+NTAPI
+NdisIMCopySendCompletePerPacketInfo(
+  IN PNDIS_PACKET  DstPacket,
+  IN PNDIS_PACKET  SrcPacket);
+
+NDISAPI
+VOID
+NTAPI
+NdisIMCopySendPerPacketInfo(
+  IN PNDIS_PACKET  DstPacket,
+  IN PNDIS_PACKET  SrcPacket);
+
+NDISAPI
+VOID
+NTAPI
+NdisIMDeregisterLayeredMiniport(
+  IN NDIS_HANDLE  DriverHandle);
+
+NDISAPI
+NDIS_HANDLE
+NTAPI
+NdisIMGetBindingContext(
+  IN NDIS_HANDLE  NdisBindingHandle);
+
+NDISAPI
+NDIS_HANDLE
+NTAPI
+NdisIMGetDeviceContext(
+  IN NDIS_HANDLE  MiniportAdapterHandle);
+
+NDISAPI
+NDIS_STATUS
+NTAPI
+NdisIMInitializeDeviceInstanceEx(
+  IN NDIS_HANDLE  DriverHandle,
+  IN PNDIS_STRING  DriverInstance,
+  IN NDIS_HANDLE  DeviceContext  OPTIONAL);
+
+/*
+NDISAPI
+PSINGLE_LIST_ENTRY
+NTAPI
+NdisInterlockedPopEntrySList(
+  IN PSLIST_HEADER ListHead,
+  IN PKSPIN_LOCK Lock);
+*/
+#define NdisInterlockedPopEntrySList(SListHead, Lock) \
+  ExInterlockedPopEntrySList(SListHead, &(Lock)->SpinLock)
+
+/*
+NDISAPI
+PSINGLE_LIST_ENTRY
+NTAPI
+NdisInterlockedPushEntrySList(
+  IN PSLIST_HEADER ListHead,
+  IN PSINGLE_LIST_ENTRY ListEntry,
+  IN PKSPIN_LOCK Lock);
+*/
+#define NdisInterlockedPushEntrySList(SListHead, SListEntry, Lock) \
+  ExInterlockedPushEntrySList(SListHead, SListEntry, &(Lock)->SpinLock)
+
+#define NdisInterlockedFlushSList(SListHead) ExInterlockedFlushSList(SListHead)
+
+/*
+NDISAPI
+VOID
+NTAPI
+NdisQueryBufferSafe(
+  IN PNDIS_BUFFER Buffer,
+  OUT PVOID *VirtualAddress OPTIONAL,
+  OUT PUINT Length,
+  IN UINT Priority);
+*/
+#define NdisQueryBufferSafe(_Buffer, _VirtualAddress, _Length, _Priority) {         \
+  if (ARGUMENT_PRESENT(_VirtualAddress)) {                                          \
+    *(PVOID *)(_VirtualAddress) = MmGetSystemAddressForMdlSafe(_Buffer, _Priority); \
+  }                                                                                 \
+  *(_Length) = MmGetMdlByteCount(_Buffer);                                          \
+}
 
 /* Routines for NDIS miniport drivers */
 
@@ -5467,44 +5693,38 @@ NdisMUnmapIoSpace(
   IN PVOID  VirtualAddress,
   IN UINT  Length);
 
-
-
 /* Event functions */
 
 NDISAPI
 VOID
 NTAPI
 NdisInitializeEvent(
-  IN PNDIS_EVENT  Event);
+  OUT PNDIS_EVENT Event);
 
 NDISAPI
 VOID
 NTAPI
 NdisSetEvent(
-  IN PNDIS_EVENT  Event);
+  IN PNDIS_EVENT Event);
 
 NDISAPI
 VOID
 NTAPI
 NdisResetEvent(
-  IN PNDIS_EVENT  Event);
+  IN PNDIS_EVENT Event);
 
 NDISAPI
 BOOLEAN
 NTAPI
 NdisWaitEvent(
-  IN PNDIS_EVENT  Event,
-  IN UINT  Timeout);
-
-
+  IN PNDIS_EVENT Event,
+  IN UINT Timeout);
 
 /* NDIS intermediate miniport structures */
 
 typedef VOID (NTAPI *W_MINIPORT_CALLBACK)(
   IN NDIS_HANDLE  MiniportAdapterContext,
   IN PVOID  CallbackContext);
-
-
 
 /* Routines for intermediate miniport drivers */
 
@@ -5552,12 +5772,15 @@ NdisSetupDmaTransfer(
   IN ULONG  Length,
   IN BOOLEAN  WriteToDevice);
 
+/*
 NDISAPI
 NTSTATUS
 NTAPI
 NdisUpcaseUnicodeString(
-  OUT PUNICODE_STRING  DestinationString,
-  IN PUNICODE_STRING  SourceString);
+  OUT PUNICODE_STRING DestinationString,
+  IN PUNICODE_STRING SourceString);
+*/
+#define NdisUpcaseUnicodeString(_d, _s) RtlUpcaseUnicodeString(_d, _s, FALSE)
 
 
 /* Routines for NDIS protocol drivers */
@@ -5666,12 +5889,6 @@ NdisRegisterProtocol(
   OUT PNDIS_HANDLE  NdisProtocolHandle,
   IN PNDIS_PROTOCOL_CHARACTERISTICS  ProtocolCharacteristics,
   IN UINT  CharacteristicsLength);
-
-NDISAPI
-NDIS_STATUS
-NTAPI
-NdisScheduleWorkItem(
-  IN  PNDIS_WORK_ITEM WorkItem);
 
 /* Obsoleted in Windows XP */
 
