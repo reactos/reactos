@@ -324,11 +324,10 @@ typedef struct _X_FILTER TR_FILTER, *PTR_FILTER;
 typedef struct _X_FILTER NULL_FILTER, *PNULL_FILTER;
 
 typedef struct _REFERENCE {
-	KSPIN_LOCK  SpinLock;
-	USHORT  ReferenceCount;
-	BOOLEAN  Closing;
-} REFERENCE, * PREFERENCE;
-
+  KSPIN_LOCK SpinLock;
+  USHORT ReferenceCount;
+  BOOLEAN Closing;
+} REFERENCE, *PREFERENCE;
 
 /* NDIS base types */
 
@@ -347,8 +346,6 @@ typedef ANSI_STRING NDIS_ANSI_STRING, *PNDIS_ANSI_STRING;
 typedef UNICODE_STRING NDIS_STRING, *PNDIS_STRING;
 
 typedef MDL NDIS_BUFFER, *PNDIS_BUFFER;
-typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
-
 
 /* NDIS_STATUS constants */
 #define NDIS_STATUS_SUCCESS                     ((NDIS_STATUS)STATUS_SUCCESS)
@@ -357,6 +354,7 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_NOT_COPIED                  ((NDIS_STATUS)0x00010002L)
 #define NDIS_STATUS_NOT_ACCEPTED                ((NDIS_STATUS)0x00010003L)
 #define NDIS_STATUS_CALL_ACTIVE                 ((NDIS_STATUS)0x00010007L)
+#define NDIS_STATUS_INDICATION_REQUIRED         ((NDIS_STATUS)STATUS_NDIS_INDICATION_REQUIRED)
 #define NDIS_STATUS_ONLINE                      ((NDIS_STATUS)0x40010003L)
 #define NDIS_STATUS_RESET_START                 ((NDIS_STATUS)0x40010004L)
 #define NDIS_STATUS_RESET_END                   ((NDIS_STATUS)0x40010005L)
@@ -365,8 +363,8 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_WAN_LINE_UP                 ((NDIS_STATUS)0x40010008L)
 #define NDIS_STATUS_WAN_LINE_DOWN               ((NDIS_STATUS)0x40010009L)
 #define NDIS_STATUS_WAN_FRAGMENT                ((NDIS_STATUS)0x4001000AL)
-#define	NDIS_STATUS_MEDIA_CONNECT               ((NDIS_STATUS)0x4001000BL)
-#define	NDIS_STATUS_MEDIA_DISCONNECT            ((NDIS_STATUS)0x4001000CL)
+#define NDIS_STATUS_MEDIA_CONNECT               ((NDIS_STATUS)0x4001000BL)
+#define NDIS_STATUS_MEDIA_DISCONNECT            ((NDIS_STATUS)0x4001000CL)
 #define NDIS_STATUS_HARDWARE_LINE_UP            ((NDIS_STATUS)0x4001000DL)
 #define NDIS_STATUS_HARDWARE_LINE_DOWN          ((NDIS_STATUS)0x4001000EL)
 #define NDIS_STATUS_INTERFACE_UP                ((NDIS_STATUS)0x4001000FL)
@@ -378,24 +376,109 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_WAN_GET_STATS               ((NDIS_STATUS)0x40010014L)
 #define NDIS_STATUS_WAN_CO_FRAGMENT             ((NDIS_STATUS)0x40010015L)
 #define NDIS_STATUS_WAN_CO_LINKPARAMS           ((NDIS_STATUS)0x40010016L)
+#if NDIS_SUPPORT_NDIS6
+#define NDIS_STATUS_LINK_STATE                  ((NDIS_STATUS)0x40010017L)
+#define NDIS_STATUS_NETWORK_CHANGE              ((NDIS_STATUS)0x40010018L)
+#define NDIS_STATUS_MEDIA_SPECIFIC_INDICATION_EX ((NDIS_STATUS)0x40010019L)
+#define NDIS_STATUS_PORT_STATE                  ((NDIS_STATUS)0x40010022L)
+#define NDIS_STATUS_OPER_STATUS                 ((NDIS_STATUS)0x40010023L)
+#define NDIS_STATUS_PACKET_FILTER               ((NDIS_STATUS)0x40010024L)
+#endif /* NDIS_SUPPORT_NDIS6 */
+#define NDIS_STATUS_WAN_CO_MTULINKPARAMS        ((NDIS_STATUS)0x40010025L)
+
+#if NDIS_SUPPORT_NDIS6
+
+#define NDIS_STATUS_IP_OPER_STATUS              ((NDIS_STATUS)0x40010026L)
+
+#define NDIS_STATUS_OFFLOAD_PAUSE               ((NDIS_STATUS)0x40020001L)
+#define NDIS_STATUS_UPLOAD_ALL                  ((NDIS_STATUS)0x40020002L)
+#define NDIS_STATUS_OFFLOAD_RESUME              ((NDIS_STATUS)0x40020003L)
+#define NDIS_STATUS_OFFLOAD_PARTIAL_SUCCESS     ((NDIS_STATUS)0x40020004L)
+#define NDIS_STATUS_OFFLOAD_STATE_INVALID       ((NDIS_STATUS)0x40020005L)
+#define NDIS_STATUS_TASK_OFFLOAD_CURRENT_CONFIG ((NDIS_STATUS)0x40020006L)
+#define NDIS_STATUS_TASK_OFFLOAD_HARDWARE_CAPABILITIES ((NDIS_STATUS)0x40020007L)
+#define NDIS_STATUS_OFFLOAD_ENCASPULATION_CHANGE ((NDIS_STATUS)0x40020008L)
+#define NDIS_STATUS_TCP_CONNECTION_OFFLOAD_HARDWARE_CAPABILITIES ((NDIS_STATUS)0x4002000BL)
+
+#if (NDIS_SUPPORT_NDIS61)
+#define NDIS_STATUS_HD_SPLIT_CURRENT_CONFIG     ((NDIS_STATUS)0x4002000CL)
+#endif
+
+#if (NDIS_SUPPORT_NDIS620)
+#define NDIS_STATUS_RECEIVE_QUEUE_STATE         ((NDIS_STATUS)0x4002000DL)
+#endif
+
+#define NDIS_STATUS_OFFLOAD_IM_RESERVED1        ((NDIS_STATUS)0x40020100L)
+#define NDIS_STATUS_OFFLOAD_IM_RESERVED2        ((NDIS_STATUS)0x40020101L)
+#define NDIS_STATUS_OFFLOAD_IM_RESERVED3        ((NDIS_STATUS)0x40020102L)
+
+#define NDIS_STATUS_DOT11_SCAN_CONFIRM          ((NDIS_STATUS)0x40030000L)
+#define NDIS_STATUS_DOT11_MPDU_MAX_LENGTH_CHANGED ((NDIS_STATUS)0x40030001L)
+#define NDIS_STATUS_DOT11_ASSOCIATION_START     ((NDIS_STATUS)0x40030002L)
+#define NDIS_STATUS_DOT11_ASSOCIATION_COMPLETION ((NDIS_STATUS)0x40030003L)
+#define NDIS_STATUS_DOT11_CONNECTION_START      ((NDIS_STATUS)0x40030004L)
+#define NDIS_STATUS_DOT11_CONNECTION_COMPLETION ((NDIS_STATUS)0x40030005L)
+#define NDIS_STATUS_DOT11_ROAMING_START         ((NDIS_STATUS)0x40030006L)
+#define NDIS_STATUS_DOT11_ROAMING_COMPLETION    ((NDIS_STATUS)0x40030007L)
+#define NDIS_STATUS_DOT11_DISASSOCIATION        ((NDIS_STATUS)0x40030008L)
+#define NDIS_STATUS_DOT11_TKIPMIC_FAILURE       ((NDIS_STATUS)0x40030009L)
+#define NDIS_STATUS_DOT11_PMKID_CANDIDATE_LIST  ((NDIS_STATUS)0x4003000AL)
+#define NDIS_STATUS_DOT11_PHY_STATE_CHANGED     ((NDIS_STATUS)0x4003000BL)
+#define NDIS_STATUS_DOT11_LINK_QUALITY          ((NDIS_STATUS)0x4003000CL)
+#define NDIS_STATUS_DOT11_INCOMING_ASSOC_STARTED ((NDIS_STATUS)0x4003000DL)
+#define NDIS_STATUS_DOT11_INCOMING_ASSOC_REQUEST_RECEIVED ((NDIS_STATUS)0x4003000EL)
+#define NDIS_STATUS_DOT11_INCOMING_ASSOC_COMPLETION ((NDIS_STATUS)0x4003000FL)
+#define NDIS_STATUS_DOT11_STOP_AP               ((NDIS_STATUS)0x40030010L)
+#define NDIS_STATUS_DOT11_PHY_FREQUENCY_ADOPTED ((NDIS_STATUS)0x40030011L)
+#define NDIS_STATUS_DOT11_CAN_SUSTAIN_AP        ((NDIS_STATUS)0x40030012L)
+
+#define NDIS_STATUS_WWAN_DEVICE_CAPS            ((NDIS_STATUS)0x40041000)
+#define NDIS_STATUS_WWAN_READY_INFO             ((NDIS_STATUS)0x40041001)
+#define NDIS_STATUS_WWAN_RADIO_STATE            ((NDIS_STATUS)0x40041002)
+#define NDIS_STATUS_WWAN_PIN_INFO               ((NDIS_STATUS)0x40041003)
+#define NDIS_STATUS_WWAN_PIN_LIST               ((NDIS_STATUS)0x40041004)
+#define NDIS_STATUS_WWAN_HOME_PROVIDER          ((NDIS_STATUS)0x40041005)
+#define NDIS_STATUS_WWAN_PREFERRED_PROVIDERS    ((NDIS_STATUS)0x40041006)
+#define NDIS_STATUS_WWAN_VISIBLE_PROVIDERS      ((NDIS_STATUS)0x40041007)
+#define NDIS_STATUS_WWAN_REGISTER_STATE         ((NDIS_STATUS)0x40041008)
+#define NDIS_STATUS_WWAN_PACKET_SERVICE         ((NDIS_STATUS)0x40041009)
+#define NDIS_STATUS_WWAN_SIGNAL_STATE           ((NDIS_STATUS)0x4004100a)
+#define NDIS_STATUS_WWAN_CONTEXT_STATE          ((NDIS_STATUS)0x4004100b)
+#define NDIS_STATUS_WWAN_PROVISIONED_CONTEXTS   ((NDIS_STATUS)0x4004100c)
+#define NDIS_STATUS_WWAN_SERVICE_ACTIVATION     ((NDIS_STATUS)0x4004100d)
+#define NDIS_STATUS_WWAN_SMS_CONFIGURATION      ((NDIS_STATUS)0x4004100e)
+#define NDIS_STATUS_WWAN_SMS_RECEIVE            ((NDIS_STATUS)0x4004100f)
+#define NDIS_STATUS_WWAN_SMS_SEND               ((NDIS_STATUS)0x40041010)
+#define NDIS_STATUS_WWAN_SMS_DELETE             ((NDIS_STATUS)0x40041011)
+#define NDIS_STATUS_WWAN_SMS_STATUS             ((NDIS_STATUS)0x40041012)
+#define NDIS_STATUS_WWAN_DNS_ADDRESS            ((NDIS_STATUS)0x40041013)
+
+#define NDIS_STATUS_WWAN_VENDOR_SPECIFIC        ((NDIS_STATUS)0x40043000)
+
+#endif /* NDIS_SUPPORT_NDIS6 */
+
+#if (NDIS_SUPPORT_NDIS620)
+#define NDIS_STATUS_PM_WOL_PATTERN_REJECTED     ((NDIS_STATUS)0x40030051L)
+#define NDIS_STATUS_PM_OFFLOAD_REJECTED         ((NDIS_STATUS)0x40030052L)
+#define NDIS_STATUS_PM_CAPABILITIES_CHANGE      ((NDIS_STATUS)0x40030053L)
+#endif
 
 #define NDIS_STATUS_NOT_RESETTABLE              ((NDIS_STATUS)0x80010001L)
-#define NDIS_STATUS_SOFT_ERRORS	                ((NDIS_STATUS)0x80010003L)
+#define NDIS_STATUS_SOFT_ERRORS                 ((NDIS_STATUS)0x80010003L)
 #define NDIS_STATUS_HARD_ERRORS                 ((NDIS_STATUS)0x80010004L)
-#define NDIS_STATUS_BUFFER_OVERFLOW	            ((NDIS_STATUS)STATUS_BUFFER_OVERFLOW)
-
-#define NDIS_STATUS_FAILURE	                    ((NDIS_STATUS)STATUS_UNSUCCESSFUL)
+#define NDIS_STATUS_BUFFER_OVERFLOW             ((NDIS_STATUS)STATUS_BUFFER_OVERFLOW)
+#define NDIS_STATUS_FAILURE                     ((NDIS_STATUS)STATUS_UNSUCCESSFUL)
 #define NDIS_STATUS_RESOURCES                   ((NDIS_STATUS)STATUS_INSUFFICIENT_RESOURCES)
-#define NDIS_STATUS_CLOSING	                    ((NDIS_STATUS)0xC0010002L)
-#define NDIS_STATUS_BAD_VERSION	                ((NDIS_STATUS)0xC0010004L)
+#define NDIS_STATUS_CLOSING                     ((NDIS_STATUS)0xC0010002L)
+#define NDIS_STATUS_BAD_VERSION                 ((NDIS_STATUS)0xC0010004L)
 #define NDIS_STATUS_BAD_CHARACTERISTICS         ((NDIS_STATUS)0xC0010005L)
 #define NDIS_STATUS_ADAPTER_NOT_FOUND           ((NDIS_STATUS)0xC0010006L)
-#define NDIS_STATUS_OPEN_FAILED	                ((NDIS_STATUS)0xC0010007L)
+#define NDIS_STATUS_OPEN_FAILED                 ((NDIS_STATUS)0xC0010007L)
 #define NDIS_STATUS_DEVICE_FAILED               ((NDIS_STATUS)0xC0010008L)
 #define NDIS_STATUS_MULTICAST_FULL              ((NDIS_STATUS)0xC0010009L)
 #define NDIS_STATUS_MULTICAST_EXISTS            ((NDIS_STATUS)0xC001000AL)
-#define NDIS_STATUS_MULTICAST_NOT_FOUND	        ((NDIS_STATUS)0xC001000BL)
-#define NDIS_STATUS_REQUEST_ABORTED	            ((NDIS_STATUS)0xC001000CL)
+#define NDIS_STATUS_MULTICAST_NOT_FOUND         ((NDIS_STATUS)0xC001000BL)
+#define NDIS_STATUS_REQUEST_ABORTED             ((NDIS_STATUS)0xC001000CL)
 #define NDIS_STATUS_RESET_IN_PROGRESS           ((NDIS_STATUS)0xC001000DL)
 #define NDIS_STATUS_CLOSING_INDICATING          ((NDIS_STATUS)0xC001000EL)
 #define NDIS_STATUS_NOT_SUPPORTED               ((NDIS_STATUS)STATUS_NOT_SUPPORTED)
@@ -407,8 +490,8 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_INVALID_LENGTH              ((NDIS_STATUS)0xC0010014L)
 #define NDIS_STATUS_INVALID_DATA                ((NDIS_STATUS)0xC0010015L)
 #define NDIS_STATUS_BUFFER_TOO_SHORT            ((NDIS_STATUS)0xC0010016L)
-#define NDIS_STATUS_INVALID_OID	                ((NDIS_STATUS)0xC0010017L)
-#define NDIS_STATUS_ADAPTER_REMOVED	            ((NDIS_STATUS)0xC0010018L)
+#define NDIS_STATUS_INVALID_OID                 ((NDIS_STATUS)0xC0010017L)
+#define NDIS_STATUS_ADAPTER_REMOVED             ((NDIS_STATUS)0xC0010018L)
 #define NDIS_STATUS_UNSUPPORTED_MEDIA           ((NDIS_STATUS)0xC0010019L)
 #define NDIS_STATUS_GROUP_ADDRESS_IN_USE        ((NDIS_STATUS)0xC001001AL)
 #define NDIS_STATUS_FILE_NOT_FOUND              ((NDIS_STATUS)0xC001001BL)
@@ -417,7 +500,7 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_RESOURCE_CONFLICT           ((NDIS_STATUS)0xC001001EL)
 #define NDIS_STATUS_NO_CABLE                    ((NDIS_STATUS)0xC001001FL)
 
-#define NDIS_STATUS_INVALID_SAP	                ((NDIS_STATUS)0xC0010020L)
+#define NDIS_STATUS_INVALID_SAP                 ((NDIS_STATUS)0xC0010020L)
 #define NDIS_STATUS_SAP_IN_USE                  ((NDIS_STATUS)0xC0010021L)
 #define NDIS_STATUS_INVALID_ADDRESS             ((NDIS_STATUS)0xC0010022L)
 #define NDIS_STATUS_VC_NOT_ACTIVATED            ((NDIS_STATUS)0xC0010023L)
@@ -432,25 +515,69 @@ typedef ULONG NDIS_ERROR_CODE, *PNDIS_ERROR_CODE;
 #define NDIS_STATUS_INVALID_DEVICE_REQUEST      ((NDIS_STATUS)STATUS_INVALID_DEVICE_REQUEST)
 #define NDIS_STATUS_NETWORK_UNREACHABLE         ((NDIS_STATUS)STATUS_NETWORK_UNREACHABLE)
 
+#if NDIS_SUPPORT_NDIS6
+
+#define NDIS_STATUS_SEND_ABORTED                ((NDIS_STATUS)STATUS_NDIS_REQUEST_ABORTED)
+#define NDIS_STATUS_PAUSED                      ((NDIS_STATUS)STATUS_NDIS_PAUSED)
+#define NDIS_STATUS_INTERFACE_NOT_FOUND         ((NDIS_STATUS)STATUS_NDIS_INTERFACE_NOT_FOUND)
+#define NDIS_STATUS_INVALID_PARAMETER           ((NDIS_STATUS)STATUS_INVALID_PARAMETER)
+#define NDIS_STATUS_UNSUPPORTED_REVISION        ((NDIS_STATUS)STATUS_NDIS_UNSUPPORTED_REVISION)
+#define NDIS_STATUS_INVALID_PORT                ((NDIS_STATUS)STATUS_NDIS_INVALID_PORT)
+#define NDIS_STATUS_INVALID_PORT_STATE          ((NDIS_STATUS)STATUS_NDIS_INVALID_PORT_STATE)
+#define NDIS_STATUS_INVALID_STATE               ((NDIS_STATUS)STATUS_INVALID_DEVICE_STATE)
+#define NDIS_STATUS_MEDIA_DISCONNECTED          ((NDIS_STATUS)STATUS_NDIS_MEDIA_DISCONNECTED)
+#define NDIS_STATUS_LOW_POWER_STATE             ((NDIS_STATUS)STATUS_NDIS_LOW_POWER_STATE)
+#define NDIS_STATUS_DOT11_AUTO_CONFIG_ENABLED   ((NDIS_STATUS)STATUS_NDIS_DOT11_AUTO_CONFIG_ENABLED)
+#define NDIS_STATUS_DOT11_MEDIA_IN_USE          ((NDIS_STATUS)STATUS_NDIS_DOT11_MEDIA_IN_USE)
+#define NDIS_STATUS_DOT11_POWER_STATE_INVALID   ((NDIS_STATUS)STATUS_NDIS_DOT11_POWER_STATE_INVALID)
+#define NDIS_STATUS_UPLOAD_IN_PROGRESS          ((NDIS_STATUS)0xC0231001L)
+#define NDIS_STATUS_REQUEST_UPLOAD              ((NDIS_STATUS)0xC0231002L)
+#define NDIS_STATUS_UPLOAD_REQUESTED            ((NDIS_STATUS)0xC0231003L)
+#define NDIS_STATUS_OFFLOAD_TCP_ENTRIES         ((NDIS_STATUS)0xC0231004L)
+#define NDIS_STATUS_OFFLOAD_PATH_ENTRIES        ((NDIS_STATUS)0xC0231005L)
+#define NDIS_STATUS_OFFLOAD_NEIGHBOR_ENTRIES    ((NDIS_STATUS)0xC0231006L)
+#define NDIS_STATUS_OFFLOAD_IP_ADDRESS_ENTRIES  ((NDIS_STATUS)0xC0231007L)
+#define NDIS_STATUS_OFFLOAD_HW_ADDRESS_ENTRIES  ((NDIS_STATUS)0xC0231008L)
+#define NDIS_STATUS_OFFLOAD_VLAN_ENTRIES        ((NDIS_STATUS)0xC0231009L)
+#define NDIS_STATUS_OFFLOAD_TCP_XMIT_BUFFER     ((NDIS_STATUS)0xC023100AL)
+#define NDIS_STATUS_OFFLOAD_TCP_RCV_BUFFER      ((NDIS_STATUS)0xC023100BL)
+#define NDIS_STATUS_OFFLOAD_TCP_RCV_WINDOW      ((NDIS_STATUS)0xC023100CL)
+#define NDIS_STATUS_OFFLOAD_VLAN_MISMATCH       ((NDIS_STATUS)0xC023100DL)
+#define NDIS_STATUS_OFFLOAD_DATA_NOT_ACCEPTED   ((NDIS_STATUS)0xC023100EL)
+#define NDIS_STATUS_OFFLOAD_POLICY              ((NDIS_STATUS)0xC023100FL)
+#define NDIS_STATUS_OFFLOAD_DATA_PARTIALLY_ACCEPTED ((NDIS_STATUS)0xC0231010L)
+#define NDIS_STATUS_OFFLOAD_REQUEST_RESET       ((NDIS_STATUS)0xC0231011L)
+
+#if NDIS_SUPPORT_NDIS620
+#define NDIS_STATUS_PM_WOL_PATTERN_LIST_FULL    ((NDIS_STATUS)STATUS_NDIS_PM_WOL_PATTERN_LIST_FULL)
+#define NDIS_STATUS_PM_PROTOCOL_OFFLOAD_LIST_FULL ((NDIS_STATUS)STATUS_NDIS_PM_PROTOCOL_OFFLOAD_LIST_FULL)
+#endif
+
+#endif /* NDIS_SUPPORT_NDIS6 */
+
+#if (NDIS_SUPPORT_NDIS620)
+#define NDIS_STATUS_OFFLOAD_CONNECTION_REJECTED ((NDIS_STATUS)STATUS_NDIS_OFFLOAD_CONNECTION_REJECTED)
+#endif
 
 /* NDIS error codes for error logging */
 
-#define NDIS_ERROR_CODE_RESOURCE_CONFLICT			            EVENT_NDIS_RESOURCE_CONFLICT
-#define NDIS_ERROR_CODE_OUT_OF_RESOURCES			            EVENT_NDIS_OUT_OF_RESOURCE
-#define NDIS_ERROR_CODE_HARDWARE_FAILURE			            EVENT_NDIS_HARDWARE_FAILURE
-#define NDIS_ERROR_CODE_ADAPTER_NOT_FOUND			            EVENT_NDIS_ADAPTER_NOT_FOUND
-#define NDIS_ERROR_CODE_INTERRUPT_CONNECT			            EVENT_NDIS_INTERRUPT_CONNECT
-#define NDIS_ERROR_CODE_DRIVER_FAILURE				            EVENT_NDIS_DRIVER_FAILURE
-#define NDIS_ERROR_CODE_BAD_VERSION					              EVENT_NDIS_BAD_VERSION
-#define NDIS_ERROR_CODE_TIMEOUT						                EVENT_NDIS_TIMEOUT
-#define NDIS_ERROR_CODE_NETWORK_ADDRESS				            EVENT_NDIS_NETWORK_ADDRESS
-#define NDIS_ERROR_CODE_UNSUPPORTED_CONFIGURATION	        EVENT_NDIS_UNSUPPORTED_CONFIGURATION
-#define NDIS_ERROR_CODE_INVALID_VALUE_FROM_ADAPTER	      EVENT_NDIS_INVALID_VALUE_FROM_ADAPTER
-#define NDIS_ERROR_CODE_MISSING_CONFIGURATION_PARAMETER	  EVENT_NDIS_MISSING_CONFIGURATION_PARAMETER
-#define NDIS_ERROR_CODE_BAD_IO_BASE_ADDRESS			          EVENT_NDIS_BAD_IO_BASE_ADDRESS
-#define NDIS_ERROR_CODE_RECEIVE_SPACE_SMALL			          EVENT_NDIS_RECEIVE_SPACE_SMALL
-#define NDIS_ERROR_CODE_ADAPTER_DISABLED			            EVENT_NDIS_ADAPTER_DISABLED
+#define NDIS_ERROR_CODE ULONG
 
+#define NDIS_ERROR_CODE_RESOURCE_CONFLICT               EVENT_NDIS_RESOURCE_CONFLICT
+#define NDIS_ERROR_CODE_OUT_OF_RESOURCES                EVENT_NDIS_OUT_OF_RESOURCE
+#define NDIS_ERROR_CODE_HARDWARE_FAILURE                EVENT_NDIS_HARDWARE_FAILURE
+#define NDIS_ERROR_CODE_ADAPTER_NOT_FOUND               EVENT_NDIS_ADAPTER_NOT_FOUND
+#define NDIS_ERROR_CODE_INTERRUPT_CONNECT               EVENT_NDIS_INTERRUPT_CONNECT
+#define NDIS_ERROR_CODE_DRIVER_FAILURE                  EVENT_NDIS_DRIVER_FAILURE
+#define NDIS_ERROR_CODE_BAD_VERSION                     EVENT_NDIS_BAD_VERSION
+#define NDIS_ERROR_CODE_TIMEOUT                         EVENT_NDIS_TIMEOUT
+#define NDIS_ERROR_CODE_NETWORK_ADDRESS                 EVENT_NDIS_NETWORK_ADDRESS
+#define NDIS_ERROR_CODE_UNSUPPORTED_CONFIGURATION       EVENT_NDIS_UNSUPPORTED_CONFIGURATION
+#define NDIS_ERROR_CODE_INVALID_VALUE_FROM_ADAPTER      EVENT_NDIS_INVALID_VALUE_FROM_ADAPTER
+#define NDIS_ERROR_CODE_MISSING_CONFIGURATION_PARAMETER EVENT_NDIS_MISSING_CONFIGURATION_PARAMETER
+#define NDIS_ERROR_CODE_BAD_IO_BASE_ADDRESS             EVENT_NDIS_BAD_IO_BASE_ADDRESS
+#define NDIS_ERROR_CODE_RECEIVE_SPACE_SMALL             EVENT_NDIS_RECEIVE_SPACE_SMALL
+#define NDIS_ERROR_CODE_ADAPTER_DISABLED                EVENT_NDIS_ADAPTER_DISABLED
 
 /* Memory allocation flags. Used by Ndis[Allocate|Free]Memory */
 #define NDIS_MEMORY_CONTIGUOUS            0x00000001
@@ -633,26 +760,31 @@ typedef struct _NDIS_PACKET_PRIVATE {
   USHORT NdisPacketOobOffset;
 } NDIS_PACKET_PRIVATE, *PNDIS_PACKET_PRIVATE;
 
-#endif /* NDIS_LEGACY_DRIVER */
-
 typedef struct _NDIS_PACKET {
   NDIS_PACKET_PRIVATE Private;
-  _ANONYMOUS_UNION union {
-    _ANONYMOUS_STRUCT struct {
+  __MINGW_EXTENSION union {
+    __MINGW_EXTENSION struct {
       UCHAR MiniportReserved[2 * sizeof(PVOID)];
       UCHAR WrapperReserved[2 * sizeof(PVOID)];
-    } DUMMYSTRUCTNAME;
-    _ANONYMOUS_STRUCT struct {
+    };
+    __MINGW_EXTENSION struct {
       UCHAR MiniportReservedEx[3 * sizeof(PVOID)];
       UCHAR WrapperReservedEx[sizeof(PVOID)];
-    } DUMMYSTRUCTNAME;
-    _ANONYMOUS_STRUCT struct {
+    };
+    __MINGW_EXTENSION struct {
       UCHAR MacReserved[4 * sizeof(PVOID)];
-    } DUMMYSTRUCTNAME;
-  } DUMMYUNIONNAME;
+    };
+  };
   ULONG_PTR Reserved[2];
   UCHAR ProtocolReserved[1];
 } NDIS_PACKET, *PNDIS_PACKET, **PPNDIS_PACKET;
+
+typedef struct _NDIS_PACKET_STACK {
+  ULONG_PTR IMReserved[2];
+  ULONG_PTR NdisReserved[4];
+} NDIS_PACKET_STACK, *PNDIS_PACKET_STACK;
+
+#endif /* NDIS_LEGACY_DRIVER */
 
 typedef enum _NDIS_CLASS_ID {
   NdisClass802_3Priority,
@@ -691,11 +823,6 @@ typedef struct _NDIS_PM_PACKET_PATTERN {
   ULONG  PatternFlags;
 } NDIS_PM_PACKET_PATTERN,  *PNDIS_PM_PACKET_PATTERN;
 
-typedef struct _NDIS_PACKET_STACK {
-  ULONG_PTR IMReserved[2];
-  ULONG_PTR NdisReserved[4];
-} NDIS_PACKET_STACK, *PNDIS_PACKET_STACK;
-
 /* Request types used by NdisRequest */
 typedef enum _NDIS_REQUEST_TYPE {
   NdisRequestQueryInformation,
@@ -709,59 +836,62 @@ typedef enum _NDIS_REQUEST_TYPE {
   NdisRequestGeneric1,
   NdisRequestGeneric2,
   NdisRequestGeneric3,
-  NdisRequestGeneric4
+  NdisRequestGeneric4,
+#if NDIS_SUPPORT_NDIS6
+  NdisRequestMethod,
+#endif
 } NDIS_REQUEST_TYPE, *PNDIS_REQUEST_TYPE;
 
+#if NDIS_LEGACY_DRIVER
 typedef struct _NDIS_REQUEST {
-  UCHAR  MacReserved[4 * sizeof(PVOID)];
-  NDIS_REQUEST_TYPE  RequestType;
+  UCHAR MacReserved[4 * sizeof(PVOID)];
+  NDIS_REQUEST_TYPE RequestType;
   union _DATA {
     struct QUERY_INFORMATION {
-      NDIS_OID  Oid;
-      PVOID  InformationBuffer;
-      UINT  InformationBufferLength;
-      UINT  BytesWritten;
-      UINT  BytesNeeded;
+      NDIS_OID Oid;
+      PVOID InformationBuffer;
+      UINT InformationBufferLength;
+      UINT BytesWritten;
+      UINT BytesNeeded;
     } QUERY_INFORMATION;
     struct SET_INFORMATION {
-      NDIS_OID  Oid;
-      PVOID  InformationBuffer;
-      UINT  InformationBufferLength;
-      UINT  BytesRead;
-      UINT  BytesNeeded;
+      NDIS_OID Oid;
+      PVOID InformationBuffer;
+      UINT InformationBufferLength;
+      UINT BytesRead;
+      UINT BytesNeeded;
     } SET_INFORMATION;
  } DATA;
-#if (defined(NDIS50) || defined(NDIS51))
-  UCHAR  NdisReserved[9 * sizeof(PVOID)];
-  __GNU_EXTENSION union {
-    UCHAR  CallMgrReserved[2 * sizeof(PVOID)];
-    UCHAR  ProtocolReserved[2 * sizeof(PVOID)];
+#if (defined(NDIS50) || defined(NDIS51) || defined(NDIS50_MINIPORT) || defined(NDIS51_MINIPORT))
+  UCHAR NdisReserved[9 * sizeof(PVOID)];
+  __MINGW_EXTENSION union {
+    UCHAR CallMgrReserved[2 * sizeof(PVOID)];
+    UCHAR ProtocolReserved[2 * sizeof(PVOID)];
   };
-  UCHAR  MiniportReserved[2 * sizeof(PVOID)];
+  UCHAR MiniportReserved[2 * sizeof(PVOID)];
 #endif
 } NDIS_REQUEST, *PNDIS_REQUEST;
-
-
+#endif /* NDIS_LEGACY_DRIVER */
 
 /* Wide Area Networks definitions */
 
+#if NDIS_LEGACY_DRIVER
 typedef struct _NDIS_WAN_PACKET {
-  LIST_ENTRY  WanPacketQueue;
-  PUCHAR  CurrentBuffer;
-  ULONG  CurrentLength;
-  PUCHAR  StartBuffer;
-  PUCHAR  EndBuffer;
-  PVOID  ProtocolReserved1;
-  PVOID  ProtocolReserved2;
-  PVOID  ProtocolReserved3;
-  PVOID  ProtocolReserved4;
-  PVOID  MacReserved1;
-  PVOID  MacReserved2;
-  PVOID  MacReserved3;
-  PVOID  MacReserved4;
+  LIST_ENTRY WanPacketQueue;
+  PUCHAR CurrentBuffer;
+  ULONG CurrentLength;
+  PUCHAR StartBuffer;
+  PUCHAR EndBuffer;
+  PVOID ProtocolReserved1;
+  PVOID ProtocolReserved2;
+  PVOID ProtocolReserved3;
+  PVOID ProtocolReserved4;
+  PVOID MacReserved1;
+  PVOID MacReserved2;
+  PVOID MacReserved3;
+  PVOID MacReserved4;
 } NDIS_WAN_PACKET, *PNDIS_WAN_PACKET;
-
-
+#endif
 
 /* DMA channel information */
 
@@ -855,8 +985,8 @@ typedef struct _NDIS_CONFIGURATION_PARAMETER {
 typedef PHYSICAL_ADDRESS NDIS_PHYSICAL_ADDRESS, *PNDIS_PHYSICAL_ADDRESS;
 
 typedef struct _NDIS_PHYSICAL_ADDRESS_UNIT {
-  NDIS_PHYSICAL_ADDRESS  PhysicalAddress;
-  UINT  Length;
+  NDIS_PHYSICAL_ADDRESS PhysicalAddress;
+  UINT Length;
 } NDIS_PHYSICAL_ADDRESS_UNIT, *PNDIS_PHYSICAL_ADDRESS_UNIT;
 
 typedef struct _NDIS_WAN_LINE_DOWN {
@@ -961,15 +1091,16 @@ typedef ULONG NDIS_AF, *PNDIS_AF;
 #define CO_ADDRESS_FAMILY_IRDA            ((NDIS_AF)0x4)
 #define CO_ADDRESS_FAMILY_1394            ((NDIS_AF)0x5)
 #define CO_ADDRESS_FAMILY_PPP             ((NDIS_AF)0x6)
+#define CO_ADDRESS_FAMILY_INFINIBAND      ((NDIS_AF)0x7)
 #define CO_ADDRESS_FAMILY_TAPI            ((NDIS_AF)0x800)
 #define CO_ADDRESS_FAMILY_TAPI_PROXY      ((NDIS_AF)0x801)
 
 #define CO_ADDRESS_FAMILY_PROXY           0x80000000
 
-typedef struct {
-  NDIS_AF  AddressFamily;
-  ULONG  MajorVersion;
-  ULONG  MinorVersion;
+typedef struct _CO_ADDRESS_FAMILY {
+  NDIS_AF AddressFamily;
+  ULONG MajorVersion;
+  ULONG MinorVersion;
 } CO_ADDRESS_FAMILY, *PCO_ADDRESS_FAMILY;
 
 typedef struct _CO_SPECIFIC_PARAMETERS {
@@ -1016,9 +1147,9 @@ typedef struct _CO_CALL_PARAMETERS {
 } CO_CALL_PARAMETERS, *PCO_CALL_PARAMETERS;
 
 typedef struct _CO_SAP {
-  ULONG  SapType;
-  ULONG  SapLength;
-  UCHAR  Sap[1];
+  ULONG SapType;
+  ULONG SapLength;
+  UCHAR Sap[1];
 } CO_SAP, *PCO_SAP;
 
 typedef struct _NDIS_IPSEC_PACKET_INFO {
@@ -1063,42 +1194,38 @@ typedef struct _NDIS_MAC_LINE_UP {
 } NDIS_MAC_LINE_UP, *PNDIS_MAC_LINE_UP;
 
 typedef struct _NDIS_PACKET_8021Q_INFO {
-	_ANONYMOUS_UNION union {
-		struct {
-			UINT32  UserPriority : 3;
-			UINT32  CanonicalFormatId : 1;
-			UINT32  VlanId : 12;
-			UINT32  Reserved : 16;
-		} TagHeader;
-		PVOID  Value;
-	} DUMMYUNIONNAME;
+  __MINGW_EXTENSION union {
+    struct {
+      UINT32 UserPriority:3;
+      UINT32 CanonicalFormatId:1;
+      UINT32 VlanId:12;
+      UINT32 Reserved:16;
+    } TagHeader;
+    PVOID Value;
+  };
 } NDIS_PACKET_8021Q_INFO, *PNDIS_PACKET_8021Q_INFO;
 
 typedef enum _NDIS_PER_PACKET_INFO {
-	TcpIpChecksumPacketInfo,
-	IpSecPacketInfo,
-	TcpLargeSendPacketInfo,
-	ClassificationHandlePacketInfo,
-	NdisReserved,
-	ScatterGatherListPacketInfo,
-	Ieee8021QInfo,
-	OriginalPacketInfo,
-	PacketCancelId,
-	MaxPerPacketInfo
+  TcpIpChecksumPacketInfo,
+  IpSecPacketInfo,
+  TcpLargeSendPacketInfo,
+  ClassificationHandlePacketInfo,
+  NdisReserved,
+  ScatterGatherListPacketInfo,
+  Ieee8021QInfo,
+  OriginalPacketInfo,
+  PacketCancelId,
+  OriginalNetBufferList,
+  CachedNetBufferList,
+  ShortPacketPaddingInfo,
+  MaxPerPacketInfo
 } NDIS_PER_PACKET_INFO, *PNDIS_PER_PACKET_INFO;
 
-typedef struct _NDIS_PACKET_EXTENSION {
-  PVOID  NdisPacketInfo[MaxPerPacketInfo];
-} NDIS_PACKET_EXTENSION, *PNDIS_PACKET_EXTENSION;
+#if NDIS_LEGACY_DRIVER
 
-#if NDIS_SUPPORT_NDIS6
-typedef struct _NDIS_GENERIC_OBJECT {
-  NDIS_OBJECT_HEADER Header;
-  PVOID Caller;
-  PVOID CallersCaller;
-  PDRIVER_OBJECT DriverObject;
-} NDIS_GENERIC_OBJECT, *PNDIS_GENERIC_OBJECT;
-#endif
+typedef struct _NDIS_PACKET_EXTENSION {
+  PVOID NdisPacketInfo[MaxPerPacketInfo];
+} NDIS_PACKET_EXTENSION, *PNDIS_PACKET_EXTENSION;
 
 /*
  * PNDIS_PACKET
@@ -1152,6 +1279,20 @@ typedef struct _NDIS_GENERIC_OBJECT {
  */
 #define NDIS_SET_PACKET_CANCEL_ID(Packet, CancelId) \
   NDIS_PER_PACKET_INFO_FROM_PACKET(Packet, PacketCancelId) = (CancelId)
+
+#define NdisSetPacketCancelId(_Packet, _CancelId) NDIS_SET_PACKET_CANCEL_ID(_Packet, _CancelId)
+#define NdisGetPacketCancelId(_Packet) NDIS_GET_PACKET_CANCEL_ID(_Packet)
+
+#endif /* NDIS_LEGACY_DRIVER */
+
+#if NDIS_SUPPORT_NDIS6
+typedef struct _NDIS_GENERIC_OBJECT {
+  NDIS_OBJECT_HEADER Header;
+  PVOID Caller;
+  PVOID CallersCaller;
+  PDRIVER_OBJECT DriverObject;
+} NDIS_GENERIC_OBJECT, *PNDIS_GENERIC_OBJECT;
+#endif
 
 typedef enum _NDIS_TASK {
   TcpIpChecksumNdisTask,
@@ -1268,26 +1409,25 @@ typedef struct _NDIS_TASK_TCP_LARGE_SEND {
 } NDIS_TASK_TCP_LARGE_SEND, *PNDIS_TASK_TCP_LARGE_SEND;
 
 typedef struct _NDIS_TCP_IP_CHECKSUM_PACKET_INFO {
-  _ANONYMOUS_UNION union {
+  __MINGW_EXTENSION union {
     struct {
-      ULONG  NdisPacketChecksumV4 : 1;
-      ULONG  NdisPacketChecksumV6 : 1;
-      ULONG  NdisPacketTcpChecksum : 1;
-      ULONG  NdisPacketUdpChecksum : 1;
-      ULONG  NdisPacketIpChecksum : 1;
+      ULONG NdisPacketChecksumV4:1;
+      ULONG NdisPacketChecksumV6:1;
+      ULONG NdisPacketTcpChecksum:1;
+      ULONG NdisPacketUdpChecksum:1;
+      ULONG NdisPacketIpChecksum:1;
       } Transmit;
-
     struct {
-      ULONG  NdisPacketTcpChecksumFailed : 1;
-      ULONG  NdisPacketUdpChecksumFailed : 1;
-      ULONG  NdisPacketIpChecksumFailed : 1;
-      ULONG  NdisPacketTcpChecksumSucceeded : 1;
-      ULONG  NdisPacketUdpChecksumSucceeded : 1;
-      ULONG  NdisPacketIpChecksumSucceeded : 1;
-      ULONG  NdisPacketLoopback : 1;
+      ULONG NdisPacketTcpChecksumFailed:1;
+      ULONG NdisPacketUdpChecksumFailed:1;
+      ULONG NdisPacketIpChecksumFailed:1;
+      ULONG NdisPacketTcpChecksumSucceeded:1;
+      ULONG NdisPacketUdpChecksumSucceeded:1;
+      ULONG NdisPacketIpChecksumSucceeded:1;
+      ULONG NdisPacketLoopback:1;
     } Receive;
-    ULONG  Value;
-  } DUMMYUNIONNAME;
+    ULONG Value;
+  };
 } NDIS_TCP_IP_CHECKSUM_PACKET_INFO, *PNDIS_TCP_IP_CHECKSUM_PACKET_INFO;
 
 typedef struct _NDIS_WAN_CO_FRAGMENT {
@@ -2135,6 +2275,11 @@ NdisQueryBufferOffset(
   *(NextBuffer) = (CurrentBuffer)->Next;  \
 }
 
+#if NDIS_LEGACY_DRIVER
+
+#define NDIS_PACKET_FIRST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Head)
+#define NDIS_PACKET_LAST_NDIS_BUFFER(_Packet) ((_Packet)->Private.Tail)
+#define NDIS_PACKET_VALID_COUNTS(_Packet) ((_Packet)->Private.ValidCounts)
 
 /*
  * UINT
@@ -2143,56 +2288,27 @@ NdisQueryBufferOffset(
  */
 #define NdisGetPacketFlags(Packet)(Packet)->Private.Flags;
 
-
-/*
- * VOID
- * NdisClearPacketFlags(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags);
- */
-#define NdisClearPacketFlags(Packet, Flags) \
-  (Packet)->Private.Flags &= ~(Flags)
-
-
-/*
- * VOID
- * NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(
- *   IN PNDIS_PACKET    Packet,
- *   IN PPVOID          pMediaSpecificInfo,
- *   IN PUINT           pSizeMediaSpecificInfo);
- */
-#define NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                                  \
-                                            _pMediaSpecificInfo,                      \
-                                            _pSizeMediaSpecificInfo)                  \
-{                                                                                     \
-  if (!((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS) ||            \
-      !((_Packet)->Private.NdisPacketFlags & fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO))   \
-	  {                                                                                 \
-	    *(_pMediaSpecificInfo) = NULL;                                                  \
-	    *(_pSizeMediaSpecificInfo) = 0;                                                 \
-	  }                                                                                 \
-  else                                                                                \
-	  {                                                                                 \
-	    *(_pMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +           \
-        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation;           \
-	    *(_pSizeMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +       \
-	      (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo;              \
-	  }                                                                                 \
-}
-
-
 /*
  * ULONG
  * NDIS_GET_PACKET_PROTOCOL_TYPE(
- *   IN PNDIS_PACKET  Packet);
+ *   IN PNDIS_PACKET Packet);
  */
 #define NDIS_GET_PACKET_PROTOCOL_TYPE(_Packet) \
   ((_Packet)->Private.Flags & NDIS_PROTOCOL_ID_MASK)
 
 /*
+ * PNDIS_PACKET_OOB_DATA
+ * NDIS_OOB_DATA_FROM_PACKET(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_OOB_DATA_FROM_PACKET(_Packet)    \
+  (PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset)
+
+/*
  * ULONG
  * NDIS_GET_PACKET_HEADER_SIZE(
- *   IN PNDIS_PACKET  Packet);
+ *   IN PNDIS_PACKET Packet);
  */
 #define NDIS_GET_PACKET_HEADER_SIZE(_Packet)   \
   ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
@@ -2201,52 +2317,155 @@ NdisQueryBufferOffset(
 /*
  * NDIS_STATUS
  * NDIS_GET_PACKET_STATUS(
- *   IN PNDIS_PACKET  Packet);
+ *   IN PNDIS_PACKET Packet);
  */
-#define NDIS_GET_PACKET_STATUS(_Packet) \
-	((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-	(_Packet)->Private.NdisPacketOobOffset))->Status
-
-
-/*
- * ULONGLONG
- * NDIS_GET_PACKET_TIME_RECEIVED(
- *   IN PNDIS_PACKET  Packet);
- */
-#define NDIS_GET_PACKET_TIME_RECEIVED(_Packet)  \
-	((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-	(_Packet)->Private.NdisPacketOobOffset))->TimeReceived
-
-
-/*
- * ULONGLONG
- * NDIS_GET_PACKET_TIME_SENT(
- *   IN PNDIS_PACKET  Packet);
- */
-#define NDIS_GET_PACKET_TIME_SENT(_Packet)      \
-	((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-	(_Packet)->Private.NdisPacketOobOffset))->TimeSent
-
+#define NDIS_GET_PACKET_STATUS(_Packet)        \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
+  (_Packet)->Private.NdisPacketOobOffset))->Status
 
 /*
  * ULONGLONG
  * NDIS_GET_PACKET_TIME_TO_SEND(
- *   IN PNDIS_PACKET  Packet);
+ *   IN PNDIS_PACKET Packet);
  */
 #define NDIS_GET_PACKET_TIME_TO_SEND(_Packet)   \
-	((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
-	(_Packet)->Private.NdisPacketOobOffset))->TimeToSend
-
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend
 
 /*
- * PNDIS_PACKET_OOB_DATA
- * NDIS_OOB_DATA_FROM_PACKET(
- *   IN PNDIS_PACKET  Packet);
+ * ULONGLONG
+ * NDIS_GET_PACKET_TIME_SENT(
+ *   IN PNDIS_PACKET Packet);
  */
-#define NDIS_OOB_DATA_FROM_PACKET(_Packet)    \
-  (PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) + \
-  (_Packet)->Private.NdisPacketOobOffset)
+#define NDIS_GET_PACKET_TIME_SENT(_Packet)      \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeSent
 
+/*
+ * ULONGLONG
+ * NDIS_GET_PACKET_TIME_RECEIVED(
+ *   IN PNDIS_PACKET Packet);
+ */
+#define NDIS_GET_PACKET_TIME_RECEIVED(_Packet)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +  \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived
+
+/*
+ * VOID
+ * NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(
+ *   IN PNDIS_PACKET Packet,
+ *   IN PPVOID pMediaSpecificInfo,
+ *   IN PUINT pSizeMediaSpecificInfo);
+ */
+#define NDIS_GET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                                  \
+                                            _pMediaSpecificInfo,                      \
+                                            _pSizeMediaSpecificInfo)                  \
+{                                                                                     \
+  if (!((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS) ||            \
+      !((_Packet)->Private.NdisPacketFlags & fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO))   \
+    {                                                                                 \
+      *(_pMediaSpecificInfo) = NULL;                                                  \
+      *(_pSizeMediaSpecificInfo) = 0;                                                 \
+    }                                                                                 \
+  else                                                                                \
+    {                                                                                 \
+      *(_pMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +           \
+        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation;           \
+      *(_pSizeMediaSpecificInfo) = ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +       \
+        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo;              \
+    }                                                                                 \
+}
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_HEADER_SIZE(
+ *   IN PNDIS_PACKET Packet,
+ *   IN UINT HdrSize);
+ */
+#define NDIS_SET_PACKET_HEADER_SIZE(_Packet, _HdrSize)              \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                      \
+  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize = (_HdrSize)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_STATUS(
+ *   IN PNDIS_PACKET Packet,
+ *   IN NDIS_STATUS Status);
+ */
+#define NDIS_SET_PACKET_STATUS(_Packet, _Status)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +    \
+  (_Packet)->Private.NdisPacketOobOffset))->Status = (_Status)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_TO_SEND(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeToSend);
+ */
+#define NDIS_SET_PACKET_TIME_TO_SEND(_Packet, _TimeToSend)  \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +              \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend = (_TimeToSend)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_SENT(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeSent);
+ */
+#define NDIS_SET_PACKET_TIME_SENT(_Packet, _TimeSent) \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +        \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeSent = (_TimeSent)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_TIME_RECEIVED(
+ *   IN PNDIS_PACKET Packet,
+ *   IN ULONGLONG TimeReceived);
+ */
+#define NDIS_SET_PACKET_TIME_RECEIVED(_Packet, _TimeReceived) \
+  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                \
+  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived = (_TimeReceived)
+
+/*
+ * VOID
+ * NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(
+ *   IN PNDIS_PACKET Packet,
+ *   IN PVOID MediaSpecificInfo,
+ *   IN UINT SizeMediaSpecificInfo);
+ */
+#define NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                      \
+                                            _MediaSpecificInfo,           \
+                                            _SizeMediaSpecificInfo)       \
+{                                                                         \
+  if ((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS)     \
+    {                                                                     \
+      (_Packet)->Private.NdisPacketFlags |= fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO; \
+      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
+        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation = \
+          (_MediaSpecificInfo);                                           \
+      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
+        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo = \
+          (_SizeMediaSpecificInfo);                                       \
+    }                                                                     \
+}
+
+/*
+ * VOID
+ * NdisSetPacketFlags(
+ *   IN PNDIS_PACKET  Packet,
+ *   IN UINT  Flags);
+ */
+#define NdisSetPacketFlags(Packet, Flags) (Packet)->Private.Flags |= (Flags)
+
+/*
+ * VOID
+ * NdisClearPacketFlags(
+ *   IN PNDIS_PACKET  Packet,
+ *   IN UINT  Flags);
+ */
+#define NdisClearPacketFlags(Packet, Flags) (Packet)->Private.Flags &= ~(Flags)
+
+#endif /* NDIS_LEGACY_DRIVER */
 
 /*
  * VOID
@@ -2357,96 +2576,6 @@ NdisQueryPacketLength(
 	(Packet)->Private.Head = (PNDIS_BUFFER)NULL;  \
 	(Packet)->Private.ValidCounts = FALSE;        \
 }
-
-
-/*
- * VOID
- * NdisSetPacketFlags(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  Flags);
- */
-#define NdisSetPacketFlags(Packet, Flags) \
-  (Packet)->Private.Flags |= (Flags);
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_HEADER_SIZE(
- *   IN PNDIS_PACKET  Packet,
- *   IN UINT  HdrSize);
- */
-#define NDIS_SET_PACKET_HEADER_SIZE(_Packet, _HdrSize)              \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                      \
-  (_Packet)->Private.NdisPacketOobOffset))->HeaderSize = (_HdrSize)
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(
- *   IN PNDIS_PACKET  Packet,
- *   IN PVOID  MediaSpecificInfo,
- *   IN UINT  SizeMediaSpecificInfo);
- */
-#define NDIS_SET_PACKET_MEDIA_SPECIFIC_INFO(_Packet,                      \
-                                            _MediaSpecificInfo,           \
-                                            _SizeMediaSpecificInfo)       \
-{                                                                         \
-  if ((_Packet)->Private.NdisPacketFlags & fPACKET_ALLOCATED_BY_NDIS)     \
-	  {                                                                     \
-      (_Packet)->Private.NdisPacketFlags |= fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO; \
-      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
-        (_Packet)->Private.NdisPacketOobOffset))->MediaSpecificInformation = \
-          (_MediaSpecificInfo);                                           \
-      ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                        \
-        (_Packet)->Private.NdisPacketOobOffset))->SizeMediaSpecificInfo = \
-          (_SizeMediaSpecificInfo);                                       \
-	  }                                                                     \
-}
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_STATUS(
- *   IN PNDIS_PACKET    Packet,
- *   IN NDIS_STATUS     Status);
- */
-#define NDIS_SET_PACKET_STATUS(_Packet, _Status)  \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +    \
-  (_Packet)->Private.NdisPacketOobOffset))->Status = (_Status)
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_RECEIVED(
- *   IN PNDIS_PACKET  Packet,
- *   IN ULONGLONG  TimeReceived);
- */
-#define NDIS_SET_PACKET_TIME_RECEIVED(_Packet, _TimeReceived) \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +                \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeReceived = (_TimeReceived)
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_SENT(
- *   IN PNDIS_PACKET  Packet,
- *   IN ULONGLONG  TimeSent);
- */
-#define NDIS_SET_PACKET_TIME_SENT(_Packet, _TimeSent) \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +        \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeSent = (_TimeSent)
-
-
-/*
- * VOID
- * NDIS_SET_PACKET_TIME_TO_SEND(
- *   IN PNDIS_PACKET  Packet,
- *   IN ULONGLONG  TimeToSend);
- */
-#define NDIS_SET_PACKET_TIME_TO_SEND(_Packet, _TimeToSend)  \
-  ((PNDIS_PACKET_OOB_DATA)((PUCHAR)(_Packet) +              \
-  (_Packet)->Private.NdisPacketOobOffset))->TimeToSend = (_TimeToSend)
-
 
 /*
  * VOID
@@ -2834,41 +2963,59 @@ NdisUnicodeStringToAnsiString(
 
 /* Spin lock reoutines */
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisAllocateSpinLock(
-  IN PNDIS_SPIN_LOCK  SpinLock);
+  IN PNDIS_SPIN_LOCK SpinLock);
+*/
+#define NdisAllocateSpinLock(_SpinLock) KeInitializeSpinLock(&(_SpinLock)->SpinLock)
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisFreeSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisFreeSpinLock(_SpinLock)
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisAcquireSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisAcquireSpinLock(_SpinLock) KeAcquireSpinLock(&(_SpinLock)->SpinLock, &(_SpinLock)->OldIrql)
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisReleaseSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisReleaseSpinLock(_SpinLock) KeReleaseSpinLock(&(_SpinLock)->SpinLock,(_SpinLock)->OldIrql)
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisDprAcquireSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisDprAcquireSpinLock(_SpinLock) KeAcquireSpinLockAtDpcLevel(&(_SpinLock)->SpinLock)
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisDprReleaseSpinLock(
   IN PNDIS_SPIN_LOCK  SpinLock);
+*/
+#define NdisDprReleaseSpinLock(_SpinLock) KeReleaseSpinLockFromDpcLevel(&(_SpinLock)->SpinLock)
 
 /* I/O routines */
 
@@ -3097,7 +3244,11 @@ NdisDprReleaseSpinLock(
  */
 #define NdisQueryDepthSList(SListHead) ExQueryDepthSList(SListHead)
 
+#define NdisInterlockedPushEntryList(ListHead, ListEntry, Lock) \
+  ExInterlockedPushEntryList(ListHead, ListEntry, &(Lock)->SpinLock)
 
+#define NdisInterlockedPopEntryList(ListHead, Lock) \
+  ExInterlockedPopEntryList(ListHead, &(Lock)->SpinLock)
 
 /* Interlocked routines */
 
@@ -3170,11 +3321,14 @@ NdisWriteErrorLogEntry(
  */
 #define NdisStallExecution KeStallExecutionProcessor
 
+/*
 NDISAPI
 VOID
 NTAPI
 NdisGetCurrentSystemTime(
   IN PLARGE_INTEGER  pSystemTime);
+*/
+#define NdisGetCurrentSystemTime KeQuerySystemTime
 
 NDISAPI
 CCHAR
