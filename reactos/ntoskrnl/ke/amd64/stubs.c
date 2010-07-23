@@ -12,6 +12,32 @@
 #define NDEBUG
 #include <debug.h>
 
+VOID
+FASTCALL
+KeZeroPages(IN PVOID Address,
+            IN ULONG Size)
+{
+    /* Not using XMMI in this routine */
+    RtlZeroMemory(Address, Size);
+}
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+KiServiceExit(IN PKTRAP_FRAME TrapFrame,
+              IN NTSTATUS Status)
+{
+    UNIMPLEMENTED;
+}
+
+VOID
+FASTCALL
+DECLSPEC_NORETURN
+KiServiceExit2(IN PKTRAP_FRAME TrapFrame)
+{
+    UNIMPLEMENTED;
+}
+
 BOOLEAN
 NTAPI
 KeConnectInterrupt(IN PKINTERRUPT Interrupt)

@@ -29,6 +29,7 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 /* Template PTE and PDE for a kernel page */
 MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
 MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
+MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
 
 /* Sizes */
 ///SIZE_T MmSessionSize = MI_SESSION_SIZE;
