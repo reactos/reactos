@@ -71,6 +71,7 @@ IDB_IMAGES BITMAP DISCARDABLE images.bmp
 #include "Lt.rc"
 #include "Nl.rc"
 #include "Pt.rc"
+#include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"
 #include "Uk.rc"

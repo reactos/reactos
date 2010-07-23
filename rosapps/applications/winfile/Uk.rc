@@ -31,27 +31,27 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 /* Menu */
 
-IDM_WINEFILE MENU FIXED IMPURE
+IDM_WINEFILE MENU
 {
     POPUP "&Файл"  {
-        MENUITEM "&Відкрити\tEnter",                ID_ACTIVATE
-        MENUITEM "&Перемістити...\tF7",                ID_FILE_MOVE
-        MENUITEM "&Копіювати...\tF8",                ID_FILE_COPY
-        MENUITEM "В &буфер обміну...\tF9",        118
-        MENUITEM "Вида&лити\tDel",                ID_FILE_DELETE
-        MENUITEM "Пере&йменувати...",                  109
+        MENUITEM "&Відкрити\tEnter",             ID_ACTIVATE
+        MENUITEM "&Перемістити...\tF7",          ID_FILE_MOVE
+        MENUITEM "&Копіювати...\tF8",            ID_FILE_COPY
+        MENUITEM "В &буфер обміну...\tF9",       118
+        MENUITEM "Вида&лити\tDel",               ID_FILE_DELETE
+        MENUITEM "Пере&йменувати...",            109
         MENUITEM "Властивос&ті...\tAlt+Enter",   ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "Запак&увати...",                119
+        MENUITEM "Запак&увати...",               119
         MENUITEM "Р&озпакувати...",              120
         MENUITEM SEPARATOR
-        MENUITEM "&Запустити...",                     ID_RUN
-        MENUITEM "&Друк...",                   102
+        MENUITEM "&Запустити...",                ID_RUN
+        MENUITEM "&Друк...",                     102
         MENUITEM "Асоціювати...",                103
         MENUITEM SEPARATOR
-        MENUITEM "Створити директорі&ю...",        111
-        MENUITEM "По&шук...",                  104
-        MENUITEM "Виділити &файли...",            116
+        MENUITEM "Створити директорі&ю...",      111
+        MENUITEM "По&шук...",                    104
+        MENUITEM "Виділити &файли...",           116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
         MENUITEM "Ви&хід\tAlt+X",                ID_FILE_EXIT
@@ -61,96 +61,96 @@ IDM_WINEFILE MENU FIXED IMPURE
     }
 
     POPUP "&Диск"  {
-        MENUITEM "&Копіювати диск...",               201
-        MENUITEM "&Мітка тому...",              202
+        MENUITEM "&Копіювати диск...",           201
+        MENUITEM "&Мітка тому...",               202
         MENUITEM SEPARATOR
-        MENUITEM "&Форматувати диск...",             ID_FORMAT_DISK
+        MENUITEM "&Форматувати диск...",         ID_FORMAT_DISK
 #ifdef _WIN95
         MENUITEM "&Створити системний диск...", -1 /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "Підключити &мережний диск",      ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "&Відключити мережний диск",   ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "&Підключити мережний диск",    ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "&Відключити мережний диск",    ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
-        MENUITEM "Зробити спільним як...",                 254
-        MENUITEM "&Закрити спільний доступ...",            255
+        MENUITEM "Зробити спільним як...",       254
+        MENUITEM "&Закрити спільний доступ...",  255
         MENUITEM SEPARATOR
-        MENUITEM "Ви&брати диск...",            251
+        MENUITEM "Ви&брати диск...",             251
     }
 
     POPUP "Ди&ректорії"  {
-        MENUITEM "&Наступний рівень\t+",              301
-        MENUITEM "Розгорнути &дерево\t*",             302
-        MENUITEM "Розгорнути &все\tStrg+*",         303
-        MENUITEM "Згорнути д&ерево\t-",           304
+        MENUITEM "&Наступний рівень\t+",         301
+        MENUITEM "Розгорнути &дерево\t*",        302
+        MENUITEM "Розгорнути &все\tStrg+*",      303
+        MENUITEM "Згорнути д&ерево\t-",          304
         MENUITEM SEPARATOR
-        MENUITEM "&Mark Children",              505
+        MENUITEM "Відмітити &гілки",             505
     }
 
     POPUP "&Вигляд"  {
-        MENUITEM "Дере&во і директорія",         413
-        MENUITEM "Лише д&ерево",                  411
+        MENUITEM "&Дерево і директорія",         413
+        MENUITEM "Лише д&ерево",                 411
         MENUITEM "Лише д&иректорія",             412
         MENUITEM SEPARATOR
-        MENUITEM "Роз&бити",                      ID_VIEW_SPLIT
+        MENUITEM "Роз&бити",                     ID_VIEW_SPLIT
         MENUITEM SEPARATOR
-        MENUITEM "&Ім'я",                       ID_VIEW_NAME
+        MENUITEM "&Ім'я",                        ID_VIEW_NAME
         MENUITEM "Всі дані про фай&л",           ID_VIEW_ALL_ATTRIBUTES, CHECKED
-        MENUITEM "&Часткові дані...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "&Часткові дані...",            ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Сортувати за ім'ям",               ID_VIEW_SORT_NAME
-        MENUITEM "Сортувати за &типом",               ID_VIEW_SORT_TYPE
-        MENUITEM "Сортувати за ро&зміром",               ID_VIEW_SORT_SIZE
-        MENUITEM "Сортувати за  &датою",               ID_VIEW_SORT_DATE
+        MENUITEM "&Сортувати за ім'ям",          ID_VIEW_SORT_NAME
+        MENUITEM "Сортувати за &типом",          ID_VIEW_SORT_TYPE
+        MENUITEM "Сортувати за ро&зміром",       ID_VIEW_SORT_SIZE
+        MENUITEM "Сортувати за  д&атою",         ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "Сортувати за &...",              ID_VIEW_FILTER
+        MENUITEM "Сортувати за &...",            ID_VIEW_FILTER
     }
 
     POPUP "&Налаштування"  {
-        MENUITEM "&Підтвердження...",            501
-        MENUITEM "&Шрифт...",                    ID_SELECT_FONT
-        MENUITEM "Customize Tool&bar...",       512
+        MENUITEM "&Підтвердження...",                       501
+        MENUITEM "&Шрифт...",                               ID_SELECT_FONT
+        MENUITEM "Налаштувати &панель інструментів...",     512
         MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Панель &дисків",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Рядок стану",                 ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Панель &інструментів",                    ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Панель &дисків",                          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "&Рядок стану",                            ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "В&есь екран\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "В&есь екран\tCtrl+Shift+S",               ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "&Minimize on run",            504
-        MENUITEM "&Зберегти налаштування перед виходом",      ID_VIEW_SAVESETTINGS
+        MENUITEM "&Мінімізувати при запуску",               504
+        MENUITEM "&Зберегти налаштування перед виходом",    ID_VIEW_SAVESETTINGS
     }
 
 
     POPUP "&Безпека"  {
-        MENUITEM "&Доступ...",                  605
-        MENUITEM "&Logging...",                 606
+        MENUITEM "&Доступ...",                    605
+        MENUITEM "&Протоколи...",                 606
         MENUITEM "&Власник...",                   607
     }
 
     POPUP "Ві&кно"  {
-        MENUITEM "Нове &Вікно",                 ID_WINDOW_NEW
-        MENUITEM "Вікна каскадом\tCtrl+F5",          ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
+        MENUITEM "Нове &Вікно",                     ID_WINDOW_NEW
+        MENUITEM "Вікна каскадом\tCtrl+F5",         ID_WINDOW_CASCADE
+        MENUITEM "Вікна &зверху вниз",              ID_WINDOW_TILE_HORZ
+        MENUITEM "Вікна зліва &направо\tCtrl+F4",   ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
-        MENUITEM "Впорядкувати автоматично",       ID_WINDOW_AUTOSORT
+        MENUITEM "Впорядкувати автоматично",        ID_WINDOW_AUTOSORT
 #endif
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
-        MENUITEM "&Оновити\tF5",                ID_REFRESH
+        MENUITEM "Розмістити &Символи",             ID_WINDOW_ARRANGE
+        MENUITEM "&Оновити\tF5",                    ID_REFRESH
     }
 
     POPUP "Довідк&а"  {
         MENUITEM "&Розділи довідки\tF1",            ID_HELP
-        MENUITEM "По&шук...\tF1",         ID_HELP
-        MENUITEM "&Користування довідкою\tF1",             ID_HELP_USING
+        MENUITEM "По&шук...\tF1",                   ID_HELP
+        MENUITEM "&Користування довідкою\tF1",      ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "&Про Winefile...",          ID_ABOUT
+        MENUITEM "&Про Winefile...",                ID_ABOUT
     }
 }
 
-IDD_SELECT_DESTINATION DIALOG FIXED IMPURE 15, 13, 210, 63
+IDD_SELECT_DESTINATION DIALOG 15, 13, 210, 63
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Виберіть шлях призначення"
 FONT 8, "MS Shell Dlg"
@@ -163,7 +163,7 @@ FONT 8, "MS Shell Dlg"
     PUSHBUTTON      "&Огляд", 254, 158, 43, 47, 14
 }
 
-IDD_DIALOG_VIEW_TYPE DIALOG DISCARDABLE 15, 13, 161, 97
+IDD_DIALOG_VIEW_TYPE DIALOG 15, 13, 161, 97
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "За типом файлів"
 FONT 8, "MS Sans Serif"
@@ -185,7 +185,7 @@ BEGIN
     PUSHBUTTON      "Скасувати",IDCANCEL,104,24,50,14
 END
 
-IDD_DIALOG_PROPERTIES DIALOG DISCARDABLE  0, 0, 248, 215
+IDD_DIALOG_PROPERTIES DIALOG  0, 0, 248, 215
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Властивості для %s"
 FONT 8, "MS Sans Serif"
@@ -239,9 +239,9 @@ STRINGTABLE
 {
     IDS_COL_NAME            "Ім'я"
     IDS_COL_SIZE            "Розмір"
-    IDS_COL_CDATE           "CDate"
-    IDS_COL_ADATE           "ADate"
-    IDS_COL_MDATE           "MDate"
+    IDS_COL_CDATE           "Дата створення"
+    IDS_COL_ADATE           "Дата останнього доступу"
+    IDS_COL_MDATE           "Дата останньої зміни"
     IDS_COL_IDX             "Index/Inode"
     IDS_COL_LINKS           "Посилання"
     IDS_COL_ATTR            "Атрибути"
