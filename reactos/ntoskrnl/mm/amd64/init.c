@@ -295,7 +295,7 @@ MiPreparePfnDatabse(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MxPfnAllocation = MxPfnSizeInBytes >> PAGE_SHIFT;
 
     /* Simply start at hardcoded address */
-    MmPfnDatabase[1] = MI_PFN_DATABASE;
+    MmPfnDatabase = MI_PFN_DATABASE;
 
     /* Loop the memory descriptors */
     for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -816,7 +816,7 @@ MmArmInitSystem_x(IN ULONG Phase,
         MiEvaluateMemoryDescriptors(LoaderBlock);
 
         /* Start PFN database at hardcoded address */
-        MmPfnDatabase[1] = MI_PFN_DATABASE;
+        MmPfnDatabase = MI_PFN_DATABASE;
 
         /* Prepare PFN database mappings */
         MiPreparePfnDatabse(LoaderBlock);
@@ -851,7 +851,7 @@ MmArmInitSystem_x(IN ULONG Phase,
         MiBuildPhysicalMemoryBlock(LoaderBlock);
 
         /* Size up paged pool and build the shadow system page directory */
-        MiBuildPagedPool();
+        //MiBuildPagedPool();
 
         // This is the old stuff:
         MmPagedPoolBase = (PVOID)((PCHAR)MmPagedPoolEnd + 1);

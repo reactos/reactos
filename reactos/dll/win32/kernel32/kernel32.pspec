@@ -211,7 +211,6 @@
 @ stdcall CreateWaitableTimerExA(ptr str long long)
 @ stdcall CreateWaitableTimerExW(ptr wstr long long)
 @ stdcall CreateWaitableTimerW(ptr long wstr)
-@ stdcall CreateWaitableTimerW(ptr long str)
 @ stdcall DeactivateActCtx(long ptr)
 @ stdcall DebugActiveProcess(long)
 @ stdcall DebugActiveProcessStop(long)

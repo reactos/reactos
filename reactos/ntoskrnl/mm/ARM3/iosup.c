@@ -54,6 +54,7 @@ MmMapIoSpace(IN PHYSICAL_ADDRESS PhysicalAddress,
     PMMPTE PointerPte;
     PVOID BaseAddress;
     MMPTE TempPte;
+    PMMPFN Pfn1 = NULL;
     MI_PFN_CACHE_ATTRIBUTE CacheAttribute;
     BOOLEAN IsIoMapping;
 

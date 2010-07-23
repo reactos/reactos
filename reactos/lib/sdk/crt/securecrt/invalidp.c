@@ -1,3 +1,4 @@
+#if 0
 #include <precomp.h>
 #include <errno.h>
 
@@ -67,3 +68,4 @@ _invalid_parameter_handler CDECL _set_invalid_parameter_handler(
     invalid_parameter_handler = handler;
     return old;
 }
+#endif

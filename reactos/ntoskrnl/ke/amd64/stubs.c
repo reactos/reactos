@@ -96,26 +96,6 @@ NtCallbackReturn
     return STATUS_UNSUCCESSFUL;
 }
 
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtContinue(
-    IN PCONTEXT ThreadContext, IN BOOLEAN RaiseAlert)
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-NtRaiseException
-(IN PEXCEPTION_RECORD ExceptionRecord, IN PCONTEXT ThreadContext, IN BOOLEAN HandleException )
-{
-    UNIMPLEMENTED;
-    return STATUS_UNSUCCESSFUL;
-}
-
 NTSTATUS
 NTAPI
 NtSetLdtEntries

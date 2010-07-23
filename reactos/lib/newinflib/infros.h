@@ -50,7 +50,7 @@ extern BOOLEAN InfGetBinaryField(PINFCONTEXT Context,
                                  PULONG RequiredSize);
 extern BOOLEAN InfGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
-                              PINT IntegerValue);
+                              PLONG IntegerValue);
 extern BOOLEAN InfGetMultiSzField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
                                   PWSTR ReturnBuffer,

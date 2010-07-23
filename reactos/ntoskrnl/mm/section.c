@@ -48,7 +48,6 @@
 #define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
-#include "ARM3/miarm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmCreatePhysicalMemorySection)
@@ -72,7 +71,7 @@ MM_SECTION_PAGEOUT_CONTEXT;
 
 POBJECT_TYPE MmSectionObjectType = NULL;
 
-BOOLEAN MmAllocationFragment;
+SIZE_T MmAllocationFragment;
 
 ULONG_PTR MmSubsectionBase;
 

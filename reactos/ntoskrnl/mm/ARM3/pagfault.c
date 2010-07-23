@@ -322,6 +322,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 {
     KIRQL OldIrql = KeGetCurrentIrql(), LockIrql;
     PMMPTE PointerPte;
+    PMMPDE PointerPde;
     MMPTE TempPte;
     PETHREAD CurrentThread;
     PEPROCESS CurrentProcess;
@@ -336,6 +337,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     // Get the PTE and PDE
     //
     PointerPte = MiAddressToPte(Address);
+    PointerPde = MiAddressToPde(Address);
     
     //
     // Check for dispatch-level snafu
@@ -364,7 +366,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         // Is the PDE valid?
         //
-        if (!MiIsPdeForAddressValid(Address))
+        if (!PointerPde->u.Hard.Valid == 0)
         {
             //
             // Debug spew (eww!)
@@ -379,7 +381,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             //
             // Now we SHOULD be good
             //
-            if (!MiIsPdeForAddressValid(Address))
+            if (PointerPde->u.Hard.Valid == 0)
             {
                 //
                 // FIXFIX: Do the S-LIST hack
@@ -428,8 +430,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             //
             // This might happen...not sure yet
             //
-            //DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
-            DPRINT1("FAULT ON PAGE TABLES\n");
+            DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
             
             //
             // Map in the page table

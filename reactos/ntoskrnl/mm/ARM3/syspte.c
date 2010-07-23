@@ -64,8 +64,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
     // Now move to the first free system PTE cluster
     //
     PreviousPte = PointerPte;    
-    PointerPte = MmSystemPtesStart[SystemPtePoolType] + 
-                 PointerPte->u.List.NextEntry;
+    PointerPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
     
     //
     // Loop each cluster
@@ -153,8 +152,7 @@ MiReserveAlignedSystemPtes(IN ULONG NumberOfPtes,
         // Go to the next cluster
         //
         PreviousPte = PointerPte;
-        PointerPte = MmSystemPtesStart[SystemPtePoolType] + 
-                     PointerPte->u.List.NextEntry;
+        PointerPte = MmSystemPteBase + PointerPte->u.List.NextEntry;
         ASSERT(PointerPte > PreviousPte);
     }   
     
@@ -216,7 +214,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
     // Zero PTEs
     //
     RtlZeroMemory(StartingPte, NumberOfPtes * sizeof(MMPTE));
-    CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPtesStart[SystemPtePoolType]);
+    CurrentSize = (ULONG_PTR)(StartingPte - MmSystemPteBase);
     
     //
     // Acquire the system PTE lock
@@ -237,8 +235,7 @@ MiReleaseSystemPtes(IN PMMPTE StartingPte,
         //
         // Get the first real cluster of PTEs and check if it's ours
         //
-        PointerPte = MmSystemPtesStart[SystemPtePoolType] + 
-                     CurrentPte->u.List.NextEntry;
+        PointerPte = MmSystemPteBase + CurrentPte->u.List.NextEntry;
         if (CurrentSize < CurrentPte->u.List.NextEntry)
         {
             //
@@ -398,7 +395,7 @@ MiInitializeSystemPtes(IN PMMPTE StartingPte,
     StartingPte->u.List.NextEntry = ((ULONG)0xFFFFF);
     MmFirstFreeSystemPte[PoolType].u.Long = 0;
     MmFirstFreeSystemPte[PoolType].u.List.NextEntry = StartingPte -
-                                                      MmSystemPtesStart[PoolType];
+                                                      MmSystemPteBase;
     
     //
     // The second entry stores the size of this PTE space

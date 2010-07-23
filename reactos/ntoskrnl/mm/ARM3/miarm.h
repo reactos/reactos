@@ -69,17 +69,15 @@
 #define PDE_COUNT 1024
 #define PTE_COUNT 1024
 #elif defined(_M_AMD64)
-#define PD_COUNT  (512 * 512)
-#define PDE_COUNT 512
-#define PTE_COUNT 512
+#define PD_COUNT  PPE_PER_PAGE
+#define PDE_COUNT PDE_PER_PAGE
+#define PTE_COUNT PTE_PER_PAGE
 #elif defined(_M_ARM)
 #define PD_COUNT  1
 #define PDE_COUNT 4096
 #define PTE_COUNT 256
 #else
-#define PD_COUNT  PPE_PER_PAGE
-#define PDE_COUNT PDE_PER_PAGE
-#define PTE_COUNT PTE_PER_PAGE
+#error unknown architecture
 #endif
 
 #ifdef _M_IX86
@@ -284,7 +282,6 @@ typedef struct _POOL_DESCRIPTOR
     LIST_ENTRY ListHeads[POOL_LISTS_PER_PAGE];
 } POOL_DESCRIPTOR, *PPOOL_DESCRIPTOR;
 
-#ifndef _WIN64
 typedef struct _POOL_HEADER
 {
     union
@@ -322,32 +319,6 @@ typedef struct _POOL_HEADER
         };
     };
 } POOL_HEADER, *PPOOL_HEADER;
-#else
-typedef struct _POOL_HEADER
-{
-    union
-    {
-        struct
-        {
-            ULONG PreviousSize : 8;
-            ULONG PoolIndex : 8;
-            ULONG BlockSize : 8;
-            ULONG PoolType : 8;
-        };
-        ULONG      Ulong1;
-    };
-    ULONG PoolTag;
-    union
-    {
-        PEPROCESS* ProcessBilled;
-        struct
-        {
-             USHORT AllocatorBackTraceIndex;
-             USHORT PoolTagHash;
-        };
-    };
-} POOL_HEADER, *PPOOL_HEADER;
-#endif
 
 C_ASSERT(sizeof(POOL_HEADER) == POOL_BLOCK_SIZE);
 C_ASSERT(POOL_BLOCK_SIZE == sizeof(LIST_ENTRY));
@@ -421,7 +392,7 @@ extern BOOLEAN MmDynamicPfn;
 extern BOOLEAN MmMirroring;
 extern BOOLEAN MmMakeLowMemory;
 extern BOOLEAN MmEnforceWriteProtection;
-extern BOOLEAN MmAllocationFragment;
+extern SIZE_T MmAllocationFragment;
 extern ULONG MmConsumedPoolPercentage;
 extern ULONG MmVerifyDriverBufferType;
 extern ULONG MmVerifyDriverLevel;
