@@ -33,8 +33,6 @@ typedef struct _previewinfo
     int textlength;
     HDC hdc;
     HDC hdc2;
-    HDC hdcSized;
-    HDC hdcSized2;
     RECT window;
     RECT rcPage;
     SIZE bmSize;
@@ -705,84 +703,50 @@ static void update_preview_sizes(HWND hwndPreview, BOOL zoomLevelUpdated)
     update_preview_scrollbars(hwndPreview, &window);
 }
 
-static void draw_preview_page(HDC hdc, HDC* hdcSized, FORMATRANGE* lpFr, float ratio, int bmNewWidth, int bmNewHeight, int bmWidth, int bmHeight, BOOL draw_margins)
+static void draw_margin_lines(HDC hdc, int x, int y, float ratio)
 {
-    HBITMAP hBitmapScaled = CreateCompatibleBitmap(hdc, bmNewWidth, bmNewHeight);
-    HBITMAP oldbm;
     HPEN hPen, oldPen;
-    int TopMargin = (int)((float)twips_to_pixels(lpFr->rc.top, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
-    int BottomMargin = (int)((float)twips_to_pixels(lpFr->rc.bottom, GetDeviceCaps(hdc, LOGPIXELSX)) * ratio);
-    int LeftMargin = (int)((float)twips_to_pixels(lpFr->rc.left, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
-    int RightMargin = (int)((float)twips_to_pixels(lpFr->rc.right, GetDeviceCaps(hdc, LOGPIXELSY)) * ratio);
+    SIZE dpi;
+    RECT page_margin = preview.rcPage;
 
-    if(*hdcSized) {
-        oldbm = SelectObject(*hdcSized, hBitmapScaled);
-        DeleteObject(oldbm);
-    } else {
-        *hdcSized = CreateCompatibleDC(hdc);
-        SelectObject(*hdcSized, hBitmapScaled);
-    }
+    dpi.cx = GetDeviceCaps(hdc, LOGPIXELSX);
+    dpi.cy = GetDeviceCaps(hdc, LOGPIXELSY);
 
-    StretchBlt(*hdcSized, 0, 0, bmNewWidth, bmNewHeight, hdc, 0, 0, bmWidth, bmHeight, SRCCOPY);
+    page_margin.left = preview.rcPage.left + margins.left;
+    page_margin.top = preview.rcPage.top + margins.top;
+    page_margin.bottom = preview.rcPage.bottom - margins.bottom;
+    page_margin.right = preview.rcPage.right - margins.right;
 
-    if (!draw_margins) return;
+    page_margin.left = (int)((float)twips_to_pixels(page_margin.left, dpi.cx) * ratio);
+    page_margin.top = (int)((float)twips_to_pixels(page_margin.top, dpi.cy) * ratio);
+    page_margin.bottom = (int)((float)twips_to_pixels(page_margin.bottom, dpi.cy) * ratio);
+    page_margin.right = (int)((float)twips_to_pixels(page_margin.right, dpi.cx) * ratio);
 
-    /* Draw margin lines */
+    page_margin.left += x;
+    page_margin.top += y;
+    page_margin.bottom += y;
+    page_margin.right += x;
+
     hPen = CreatePen(PS_DOT, 1, RGB(0,0,0));
-    oldPen = SelectObject(*hdcSized, hPen);
+    oldPen = SelectObject(hdc, hPen);
 
-    MoveToEx(*hdcSized, 0, TopMargin, NULL);
-    LineTo(*hdcSized, bmNewWidth, TopMargin);
-    MoveToEx(*hdcSized, 0, BottomMargin, NULL);
-    LineTo(*hdcSized, bmNewWidth, BottomMargin);
+    MoveToEx(hdc, x, page_margin.top, NULL);
+    LineTo(hdc, x + preview.bmScaledSize.cx, page_margin.top);
+    MoveToEx(hdc, x, page_margin.bottom, NULL);
+    LineTo(hdc, x + preview.bmScaledSize.cx, page_margin.bottom);
 
-    MoveToEx(*hdcSized, LeftMargin, 0, NULL);
-    LineTo(*hdcSized, LeftMargin, bmNewHeight);
-    MoveToEx(*hdcSized, RightMargin, 0, NULL);
-    LineTo(*hdcSized, RightMargin, bmNewHeight);
+    MoveToEx(hdc, page_margin.left, y, NULL);
+    LineTo(hdc, page_margin.left, y + preview.bmScaledSize.cy);
+    MoveToEx(hdc, page_margin.right, y, NULL);
+    LineTo(hdc, page_margin.right, y + preview.bmScaledSize.cy);
 
-    SelectObject(*hdcSized, oldPen);
+    SelectObject(hdc, oldPen);
     DeleteObject(hPen);
 }
 
 static BOOL is_last_preview_page(int page)
 {
     return preview.pageEnds[page - 1] >= preview.textlength;
-}
-
-/* Update for zoom ratio changes with same page. */
-static void update_scaled_preview(HWND hMainWnd)
-{
-    FORMATRANGE fr;
-    HWND hwndPreview;
-
-    /* This may occur on WM_CREATE before update_preview is called
-     * because a WM_SIZE message is generated from updating the
-     * scrollbars. */
-    if (!preview.hdc) return;
-
-    hwndPreview = GetDlgItem(hMainWnd, IDC_PREVIEW);
-    fr.hdcTarget = make_dc();
-    fr.rc = fr.rcPage = preview.rcPage;
-    fr.rc.left += margins.left;
-    fr.rc.top += margins.top;
-    fr.rc.bottom -= margins.bottom;
-    fr.rc.right -= margins.right;
-
-    draw_preview_page(preview.hdc, &preview.hdcSized, &fr, preview.zoomratio,
-                      preview.bmScaledSize.cx, preview.bmScaledSize.cy,
-                      preview.bmSize.cx, preview.bmSize.cy, TRUE);
-
-    if(preview.pages_shown > 1)
-    {
-        draw_preview_page(preview.hdc2, &preview.hdcSized2, &fr, preview.zoomratio,
-                          preview.bmScaledSize.cx, preview.bmScaledSize.cy,
-                          preview.bmSize.cx, preview.bmSize.cy,
-                          !is_last_preview_page(preview.page));
-    }
-
-    InvalidateRect(hwndPreview, NULL, TRUE);
-    DeleteDC(fr.hdcTarget);
 }
 
 void init_preview(HWND hMainWnd, LPWSTR wszFileName)
@@ -823,18 +787,6 @@ void close_preview(HWND hMainWnd)
         DeleteDC(preview.hdc2);
         DeleteObject(oldbm);
         preview.hdc2 = NULL;
-    }
-    if(preview.hdcSized) {
-        HBITMAP oldbm = GetCurrentObject(preview.hdcSized, OBJ_BITMAP);
-        DeleteDC(preview.hdcSized);
-        DeleteObject(oldbm);
-        preview.hdcSized = NULL;
-    }
-    if(preview.hdcSized2) {
-        HBITMAP oldbm = GetCurrentObject(preview.hdcSized2, OBJ_BITMAP);
-        DeleteDC(preview.hdcSized2);
-        DeleteObject(oldbm);
-        preview.hdcSized2 = NULL;
     }
 
     preview_bar_show(hMainWnd, FALSE);
@@ -893,43 +845,69 @@ static void update_preview_buttons(HWND hMainWnd)
 
 static LRESULT print_preview(HWND hwndPreview)
 {
+    HPEN hPen, oldPen;
     HDC hdc;
+    HRGN back_rgn, excl_rgn;
     RECT window, background;
     PAINTSTRUCT ps;
-    POINT scrollpos;
+    int x, y;
 
     hdc = BeginPaint(hwndPreview, &ps);
     GetClientRect(hwndPreview, &window);
+    back_rgn = CreateRectRgnIndirect(&window);
 
-    FillRect(hdc, &window, GetStockObject(GRAY_BRUSH));
+    x = preview.spacing.cx - GetScrollPos(hwndPreview, SB_HORZ);
+    y = preview.spacing.cy - GetScrollPos(hwndPreview, SB_VERT);
 
-    scrollpos.x = GetScrollPos(hwndPreview, SB_HORZ);
-    scrollpos.y = GetScrollPos(hwndPreview, SB_VERT);
-
-    background.left = preview.spacing.cx - 2 - scrollpos.x;
-    background.right = background.left + preview.bmScaledSize.cx + 4;
-    background.top = preview.spacing.cy - 2 - scrollpos.y;
-    background.bottom = background.top + preview.bmScaledSize.cy + 4;
-
-    FillRect(hdc, &background, GetStockObject(BLACK_BRUSH));
-
+    /* draw page outlines */
+    hPen = CreatePen(PS_SOLID|PS_INSIDEFRAME, 2, RGB(0,0,0));
+    oldPen = SelectObject(hdc, hPen);
+    background.left = x - 2;
+    background.right = x + preview.bmScaledSize.cx + 2;
+    background.top = y - 2;
+    background.bottom = y + preview.bmScaledSize.cy + 2;
+    Rectangle(hdc, background.left, background.top,
+              background.right, background.bottom);
+    excl_rgn = CreateRectRgnIndirect(&background);
+    CombineRgn(back_rgn, back_rgn, excl_rgn, RGN_DIFF);
     if(preview.pages_shown > 1)
     {
         background.left += preview.bmScaledSize.cx + preview.spacing.cx;
         background.right += preview.bmScaledSize.cx + preview.spacing.cx;
-
-        FillRect(hdc, &background, GetStockObject(BLACK_BRUSH));
+        Rectangle(hdc, background.left, background.top,
+                  background.right, background.bottom);
+        SetRectRgn(excl_rgn, background.left, background.top,
+                   background.right, background.bottom);
+        CombineRgn(back_rgn, back_rgn, excl_rgn, RGN_DIFF);
     }
+    SelectObject(hdc, oldPen);
+    DeleteObject(hPen);
+    FillRgn(hdc, back_rgn, GetStockObject(GRAY_BRUSH));
+    DeleteObject(excl_rgn);
+    DeleteObject(back_rgn);
 
-    BitBlt(hdc, preview.spacing.cx - scrollpos.x, preview.spacing.cy - scrollpos.y,
-           preview.bmScaledSize.cx, preview.bmScaledSize.cy,
-           preview.hdcSized, 0, 0, SRCCOPY);
+    StretchBlt(hdc, x, y, preview.bmScaledSize.cx, preview.bmScaledSize.cy,
+               preview.hdc, 0, 0, preview.bmSize.cx, preview.bmSize.cy, SRCCOPY);
+
+    draw_margin_lines(hdc, x, y, preview.zoomratio);
 
     if(preview.pages_shown > 1)
     {
-        BitBlt(hdc, preview.spacing.cx * 2 + preview.bmScaledSize.cx - scrollpos.x,
-               preview.spacing.cy - scrollpos.y, preview.bmScaledSize.cx,
-               preview.bmScaledSize.cy, preview.hdcSized2, 0, 0, SRCCOPY);
+        if (!is_last_preview_page(preview.page)) {
+            x += preview.spacing.cx + preview.bmScaledSize.cx;
+            StretchBlt(hdc, x, y,
+                       preview.bmScaledSize.cx, preview.bmScaledSize.cy,
+                       preview.hdc2, 0, 0,
+                       preview.bmSize.cx, preview.bmSize.cy, SRCCOPY);
+
+            draw_margin_lines(hdc, x, y, preview.zoomratio);
+        } else {
+            background.left += 2;
+            background.right -= 2;
+            background.top += 2;
+            background.bottom -= 2;
+            FillRect(hdc, &background, GetStockObject(WHITE_BRUSH));
+        }
     }
 
     preview.window = window;
@@ -1011,7 +989,7 @@ static void update_preview(HWND hMainWnd)
     DeleteDC(fr.hdcTarget);
     ReleaseDC(hwndPreview, hdc);
 
-    update_scaled_preview(hMainWnd);
+    InvalidateRect(hwndPreview, NULL, FALSE);
     update_preview_buttons(hMainWnd);
     update_preview_statusbar(hMainWnd);
 }
@@ -1103,7 +1081,7 @@ LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_SIZE:
         {
             update_preview_sizes(hWnd, FALSE);
-            update_scaled_preview(hWnd);
+            InvalidateRect(hWnd, NULL, FALSE);
             break;
         }
 
@@ -1216,7 +1194,7 @@ LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     toggle_num_pages(hMainWnd);
                 } else {
                     update_preview_sizes(hWnd, TRUE);
-                    update_scaled_preview(hMainWnd);
+                    InvalidateRect(hWnd, NULL, FALSE);
                     update_preview_buttons(hMainWnd);
                 }
 
@@ -1285,7 +1263,7 @@ LRESULT preview_command(HWND hWnd, WPARAM wParam)
                 } else {
                     HWND hwndPreview = GetDlgItem(hWnd, IDC_PREVIEW);
                     update_preview_sizes(hwndPreview, TRUE);
-                    update_scaled_preview(hWnd);
+                    InvalidateRect(hwndPreview, NULL, FALSE);
                     update_preview_buttons(hWnd);
                 }
             }
@@ -1301,7 +1279,7 @@ LRESULT preview_command(HWND hWnd, WPARAM wParam)
                     toggle_num_pages(hWnd);
                 } else {
                     update_preview_sizes(hwndPreview, TRUE);
-                    update_scaled_preview(hWnd);
+                    InvalidateRect(hwndPreview, NULL, FALSE);
                     update_preview_buttons(hWnd);
                 }
             }

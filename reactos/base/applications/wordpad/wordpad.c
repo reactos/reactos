@@ -62,7 +62,6 @@ LRESULT CALLBACK preview_proc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 static HWND hMainWnd;
 static HWND hEditorWnd;
 static HWND hFindWnd;
-static HMENU hPopupMenu;
 static HMENU hColorPopupMenu;
 
 static UINT ID_FINDMSGSTRING;
@@ -88,6 +87,13 @@ typedef enum
     UNIT_INCH,
     UNIT_PT
 } UNIT;
+
+typedef struct
+{
+    int endPos;
+    BOOL wrapped;
+    WCHAR findBuffer[128];
+} FINDREPLACE_custom;
 
 /* Load string resources */
 static void DoLoadStrings(void)
@@ -1215,13 +1221,11 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
 
     if(pFr->Flags & FR_FINDNEXT || pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL)
     {
-        DWORD flags = FR_DOWN;
-        FINDTEXTW ft;
-        static CHARRANGE cr;
-        LRESULT end, ret;
-        GETTEXTLENGTHEX gt;
-        LRESULT length;
-        int startPos;
+        FINDREPLACE_custom *custom_data = (FINDREPLACE_custom*)pFr->lCustData;
+        DWORD flags;
+        FINDTEXTEXW ft;
+        CHARRANGE sel;
+        LRESULT ret = -1;
         HMENU hMenu = GetMenu(hMainWnd);
         MENUITEMINFOW mi;
 
@@ -1230,69 +1234,69 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
         mi.dwItemData = 1;
         SetMenuItemInfoW(hMenu, ID_FIND_NEXT, FALSE, &mi);
 
-        gt.flags = GTL_NUMCHARS;
-        gt.codepage = 1200;
-
-        length = SendMessageW(hEditorWnd, EM_GETTEXTLENGTHEX, (WPARAM)&gt, 0);
-
-        if(pFr->lCustData == -1)
+        /* Make sure find field is saved. */
+        if (pFr->lpstrFindWhat != custom_data->findBuffer)
         {
-            SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&startPos, (LPARAM)&end);
-            cr.cpMin = startPos;
-            pFr->lCustData = startPos;
-            cr.cpMax = length;
-            if(cr.cpMin == length)
-                cr.cpMin = 0;
-        } else
-        {
-            startPos = pFr->lCustData;
+            lstrcpynW(custom_data->findBuffer, pFr->lpstrFindWhat,
+                      sizeof(custom_data->findBuffer));
+            pFr->lpstrFindWhat = custom_data->findBuffer;
         }
 
-        if(cr.cpMax > length)
-        {
-            startPos = 0;
-            cr.cpMin = 0;
-            cr.cpMax = length;
+        SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&sel.cpMin, (LPARAM)&sel.cpMax);
+        if(custom_data->endPos == -1) {
+            custom_data->endPos = sel.cpMin;
+            custom_data->wrapped = FALSE;
         }
 
-        ft.chrg = cr;
+        flags = FR_DOWN | (pFr->Flags & (FR_MATCHCASE | FR_WHOLEWORD));
         ft.lpstrText = pFr->lpstrFindWhat;
 
-        if(pFr->Flags & FR_MATCHCASE)
-            flags |= FR_MATCHCASE;
-        if(pFr->Flags & FR_WHOLEWORD)
-            flags |= FR_WHOLEWORD;
-
-        ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, flags, (LPARAM)&ft);
-
-        if(ret == -1)
+        /* Only replace existing selectino if it is an exact match. */
+        if (sel.cpMin != sel.cpMax &&
+            (pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL))
         {
-            if(cr.cpMax == length && cr.cpMax != startPos)
-            {
-                ft.chrg.cpMin = cr.cpMin = 0;
-                ft.chrg.cpMax = cr.cpMax = startPos;
-
-                ret = SendMessageW(hEditorWnd, EM_FINDTEXTW, flags, (LPARAM)&ft);
+            ft.chrg = sel;
+            SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+            if (ft.chrgText.cpMin == sel.cpMin && ft.chrgText.cpMax == sel.cpMax) {
+                SendMessageW(hEditorWnd, EM_REPLACESEL, TRUE, (LPARAM)pFr->lpstrReplaceWith);
+                SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&sel.cpMin, (LPARAM)&sel.cpMax);
             }
         }
 
-        if(ret == -1)
-        {
-            pFr->lCustData = -1;
-            MessageBoxWithResStringW(hMainWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED), wszAppTitle,
-                        MB_OK | MB_ICONASTERISK);
-        } else
-        {
-            end = ret + lstrlenW(pFr->lpstrFindWhat);
-            cr.cpMin = end;
-            SendMessageW(hEditorWnd, EM_SETSEL, ret, end);
+        /* Search from the start of the selection, but exclude the first character
+         * from search if there is a selection. */
+        ft.chrg.cpMin = sel.cpMin;
+        if (sel.cpMin != sel.cpMax)
+            ft.chrg.cpMin++;
+
+        /* Search to the end, then wrap around and search from the start. */
+        if (!custom_data->wrapped) {
+            ft.chrg.cpMax = -1;
+            ret = SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+            if (ret == -1) {
+                custom_data->wrapped = TRUE;
+                ft.chrg.cpMin = 0;
+            }
+        }
+
+        if (ret == -1) {
+            ft.chrg.cpMax = custom_data->endPos + lstrlenW(pFr->lpstrFindWhat) - 1;
+            if (ft.chrg.cpMax > ft.chrg.cpMin)
+                ret = SendMessageW(hEditorWnd, EM_FINDTEXTEXW, flags, (LPARAM)&ft);
+        }
+
+        if (ret == -1) {
+            custom_data->endPos = -1;
+            EnableWindow(hMainWnd, FALSE);
+            MessageBoxWithResStringW(hFindWnd, MAKEINTRESOURCEW(STRING_SEARCH_FINISHED),
+                                     wszAppTitle, MB_OK | MB_ICONASTERISK | MB_TASKMODAL);
+            EnableWindow(hMainWnd, TRUE);
+        } else {
+            SendMessageW(hEditorWnd, EM_SETSEL, ft.chrgText.cpMin, ft.chrgText.cpMax);
             SendMessageW(hEditorWnd, EM_SCROLLCARET, 0, 0);
 
-            if(pFr->Flags & FR_REPLACE || pFr->Flags & FR_REPLACEALL)
-                SendMessageW(hEditorWnd, EM_REPLACESEL, TRUE, (LPARAM)pFr->lpstrReplaceWith);
-
-            if(pFr->Flags & FR_REPLACEALL)
-                handle_findmsg(pFr);
+            if (pFr->Flags & FR_REPLACEALL)
+                return handle_findmsg(pFr);
         }
     }
 
@@ -1301,8 +1305,11 @@ static LRESULT handle_findmsg(LPFINDREPLACEW pFr)
 
 static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
 {
-    static WCHAR findBuffer[MAX_STRING_LEN];
-    static WCHAR replaceBuffer[MAX_STRING_LEN];
+    static WCHAR selBuffer[128];
+    static WCHAR replaceBuffer[128];
+    static FINDREPLACE_custom custom_data;
+    static const WCHAR endl = '\r';
+    FINDTEXTW ft;
 
     /* Allow only one search/replace dialog to open */
     if(hFindWnd != NULL)
@@ -1315,10 +1322,28 @@ static void dialog_find(LPFINDREPLACEW fr, BOOL replace)
     fr->lStructSize = sizeof(FINDREPLACEW);
     fr->hwndOwner = hMainWnd;
     fr->Flags = FR_HIDEUPDOWN;
-    fr->lpstrFindWhat = findBuffer;
+    /* Find field is filled with the selected text if it is non-empty
+     * and stays within the same paragraph, otherwise the previous
+     * find field is used. */
+    SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&ft.chrg.cpMin,
+                 (LPARAM)&ft.chrg.cpMax);
+    ft.lpstrText = &endl;
+    if (ft.chrg.cpMin != ft.chrg.cpMax &&
+        SendMessageW(hEditorWnd, EM_FINDTEXTW, FR_DOWN, (LPARAM)&ft) == -1)
+    {
+        /* Use a temporary buffer for the selected text so that the saved
+         * find field is only overwritten when a find/replace is clicked. */
+        GETTEXTEX gt = {sizeof(selBuffer), GT_SELECTION, 1200, NULL, NULL};
+        SendMessageW(hEditorWnd, EM_GETTEXTEX, (WPARAM)&gt, (LPARAM)selBuffer);
+        fr->lpstrFindWhat = selBuffer;
+    } else {
+        fr->lpstrFindWhat = custom_data.findBuffer;
+    }
     fr->lpstrReplaceWith = replaceBuffer;
-    fr->lCustData = -1;
-    fr->wFindWhatLen = sizeof(findBuffer);
+    custom_data.endPos = -1;
+    custom_data.wrapped = FALSE;
+    fr->lCustData = (LPARAM)&custom_data;
+    fr->wFindWhatLen = sizeof(custom_data.findBuffer);
     fr->wReplaceWithLen = sizeof(replaceBuffer);
 
     if(replace)
@@ -1769,29 +1794,6 @@ static INT_PTR CALLBACK tabstops_proc(HWND hWnd, UINT message, WPARAM wParam, LP
     return FALSE;
 }
 
-static int context_menu(LPARAM lParam)
-{
-    int x = (int)(short)LOWORD(lParam);
-    int y = (int)(short)HIWORD(lParam);
-    HMENU hPop = GetSubMenu(hPopupMenu, 0);
-
-    if(x == -1)
-    {
-        int from = 0, to = 0;
-        POINTL pt;
-        SendMessageW(hEditorWnd, EM_GETSEL, (WPARAM)&from, (LPARAM)&to);
-        SendMessageW(hEditorWnd, EM_POSFROMCHAR, (WPARAM)&pt, to);
-        ClientToScreen(hEditorWnd, (POINT*)&pt);
-        x = pt.x;
-        y = pt.y;
-    }
-
-    TrackPopupMenu(hPop, TPM_LEFTALIGN | TPM_TOPALIGN | TPM_RIGHTBUTTON,
-                   x, y, 0, hMainWnd, 0);
-
-    return 0;
-}
-
 static LRESULT OnCreate( HWND hWnd )
 {
     HWND hToolBarWnd, hFormatBarWnd,  hReBarWnd, hFontListWnd, hSizeListWnd, hRulerWnd;
@@ -1929,6 +1931,7 @@ static LRESULT OnCreate( HWND hWnd )
     }
     assert(hEditorWnd);
 
+    setup_richedit_olecallback(hEditorWnd);
     SetFocus(hEditorWnd);
     SendMessageW(hEditorWnd, EM_SETEVENTMASK, 0, ENM_SELCHANGE);
 
@@ -2613,7 +2616,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         } else if(prompt_save_changes())
         {
             registry_set_options(hMainWnd);
-            registry_set_formatopts_all(barState);
+            registry_set_formatopts_all(barState, wordWrap);
             PostQuitMessage(0);
         }
         break;
@@ -2630,10 +2633,7 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         return OnSize( hWnd, wParam, lParam );
 
     case WM_CONTEXTMENU:
-        if((HWND)wParam == hEditorWnd)
-            return context_menu(lParam);
-        else
-            return DefWindowProcW(hWnd, msg, wParam, lParam);
+        return DefWindowProcW(hWnd, msg, wParam, lParam);
 
     case WM_DROPFILES:
         {
@@ -2675,7 +2675,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     hAccel = LoadAcceleratorsW(hInstance, wszAccelTable);
 
     wc.cbSize = sizeof(wc);
-    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.style = 0;
     wc.lpfnWndProc = WndProc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 4;
@@ -2689,7 +2689,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     wc.lpszClassName = wszMainWndClass;
     RegisterClassExW(&wc);
 
-    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.style = 0;
     wc.lpfnWndProc = preview_proc;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
@@ -2697,7 +2697,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     wc.hIcon = NULL;
     wc.hIconSm = NULL;
     wc.hCursor = LoadCursor(NULL, IDC_IBEAM);
-    wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
+    wc.hbrBackground = NULL;
     wc.lpszMenuName = NULL;
     wc.lpszClassName = wszPreviewWndClass;
     RegisterClassExW(&wc);
@@ -2714,7 +2714,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hOldInstance, LPSTR szCmdPar
     set_caption(NULL);
     set_bar_states();
     set_fileformat(SF_RTF);
-    hPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_POPUP));
     hColorPopupMenu = LoadMenuW(hInstance, MAKEINTRESOURCEW(IDM_COLOR_POPUP));
     get_default_printer_opts();
     target_device(hMainWnd, wordWrap[reg_formatindex(fileFormat)]);

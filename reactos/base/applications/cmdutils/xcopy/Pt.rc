@@ -3,6 +3,7 @@
  * Portuguese language support
  *
  * Copyright (C) 2008 Ricardo Filipe
+ * Copyright 2010 Gustavo Henrique Milaré
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,21 +22,81 @@
 
 #include "xcopy.h"
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+#pragma code_page(65001)
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 STRINGTABLE
 {
-    STRING_INVPARMS, "N�mero de par�metros inv�lido - Use xcopy /? para ajuda\n"
-    STRING_INVPARM,  "Par�metro inv�lido '%s' -  Use xcopy /? para ajuda\n"
-    STRING_PAUSE,    "Carregue <Enter> para iniciar c�pia\n"
-    STRING_SIMCOPY,  "%d ficheiro(s) seriam copiados\n"
-    STRING_COPY,     "%d ficheiro(s) copiados\n"
-    STRING_QISDIR,   "'%s' � um ficheiro ou direct�rio\n" \
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%s' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Pressione <Enter> para iniciar a cópia\n"
+    STRING_SIMCOPY,  "%d arquivo(s) seriam copiado(s)\n"
+    STRING_COPY,     "%d arquivo(s) copiado(s)\n"
+    STRING_QISDIR,   "'%s' é um arquivo ou diretório\n" \
                      "no alvo?\n" \
-                     "(F - Ficheiro, D - Direct�rio)\n"
+                     "(A - Arquivo, D - Directório)\n"
+    STRING_SRCPROMPT,"%s? (Sim|Não)\n"
+    STRING_OVERWRITE,"Reescrever %s? (Sim|Não|Tudo)\n"
+    STRING_COPYFAIL, "Falha ao copiar '%s' para '%s' com r/c %d\n"
+    STRING_OPENFAIL, "Falha ao abrir '%s'\n"
+    STRING_READFAIL, "Falha a ler '%s'\n"
+    STRING_YES_CHAR, "S"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "T"
+    STRING_FILE_CHAR,"A"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Copia arquivos ou diretórios para um destino\n\
+\n\
+Sintaxe:\n\
+XCOPY fonte [destino] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Onde:\n\
+\n\
+[/I]  Assume diretório se o destino não existe e está copiando 2 ou\n\
+\tmais arquivos\n\
+[/S]  Copiar diretórios e subdiretórios\n\
+[/E]  Copiar diretórios e subdiretórios, incluindo os vazios\n\
+[/Q]  Não mostrar nomes durante a cópia, ie modo silencioso.\n\
+[/F]  Mostrar por completo os nomes de fonte e destino durante a cópia\n\
+[/L]  Simular a operação, mostrando os nomes que seriam copiados\n\
+[/W]  Alerta antes de iniciar a operação de cópia\n\
+[/T]  Cria a estrutura de diretórios mas não copia arquivos\n\
+[/Y]  Omitir alertas ao sobrescrever arquivos\n\
+[/-Y] Alertar ao sobrescrever arquivos\n\
+[/P]  Alertar antes de cada arquivo ser copiado\n\
+[/N]  Copiar usando nomes pequenos\n\
+[/U]  Copiar apenas arquivos que já existem no destino\n\
+[/R]  Reescrever quaisquer arquivos de somente leitura\n\
+[/H]  Incluir arquivos ocultos e de sistema na cópia\n\
+[/C]  Continuar mesmo que ocorra um erro durante a cópia\n\
+[/A]  Copiar apenas arquivos com atributo de arquivo\n\
+[/M]  Copiar apenas arquivos com atributo de arquivo, removendo\n\
+\to atributo de arquivo\n\
+[/D | /D:m-d-y] Copiar novos arquivos ou os alterados após a data fornecida\n\
+\t\tSe nenhuma data for fornecida, apenas copiar se o destino\n\
+\t\tfor mais antigo que a fonte\n\n"
+
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Número de parâmetros inválido - Use xcopy /? para ajuda\n"
+    STRING_INVPARM,  "Parâmetro inválido '%s' -  Use xcopy /? para ajuda\n"
+    STRING_PAUSE,    "Carregue <Enter> para iniciar cópia\n"
+    STRING_SIMCOPY,  "%d ficheiro(s) seriam copiado(s)\n"
+    STRING_COPY,     "%d ficheiro(s) copiado(s)\n"
+    STRING_QISDIR,   "'%s' é um ficheiro ou directório\n" \
+                     "no alvo?\n" \
+                     "(F - Ficheiro, D - Directório)\n"
     STRING_SRCPROMPT,"%s? (Yes|No)\n"
     STRING_OVERWRITE,"Reescrever %s? (Yes|No|All)\n"
-    STRING_COPYFAIL, "C�pia de '%s' para '%s' falhou com r/c %d\n"
+    STRING_COPYFAIL, "Cópia de '%s' para '%s' falhou com r/c %d\n"
     STRING_OPENFAIL, "Falhou ao abrir '%s'\n"
     STRING_READFAIL, "Falhou a ler '%s'\n"
     STRING_YES_CHAR, "Y"
@@ -45,7 +106,7 @@ STRINGTABLE
     STRING_DIR_CHAR, "D"
 
     STRING_HELP,
-"XCOPY - Copia ficheiros ou direct�rios para um destino\n\
+"XCOPY - Copia ficheiros ou directórios para um destino\n\
 \n\
 Sintaxe:\n\
 XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
@@ -53,28 +114,28 @@ XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \n\
 Onde:\n\
 \n\
-[/I]  Assume direct�rio se o destino n�o existe e est� a copiar 2 ou\n\
+[/I]  Assume directório se o destino não existe e está a copiar 2 ou\n\
 \tmais ficheiros\n\
-[/S]  Copiar direct�rios e subdirect�rios\n\
-[/E]  Copiar direct�rios e subdirect�rios, incluindo os vazios\n\
-[/Q]  N�o mostrar nomes durante a c�pia, ie quiet.\n\
-[/F]  Mostrar por completo os nomes de fonte e destino durante a c�pia\n\
-[/L]  Simular a opera��o, mostrando os nomes que seriam copiados\n\
-[/W]  Alerta antes de iniciar a opera��o de c�pia\n\
-[/T]  Cria a estrutura de direct�rios mas n�o copia ficheiros\n\
+[/S]  Copiar directórios e subdirectórios\n\
+[/E]  Copiar directórios e subdirectórios, incluindo os vazios\n\
+[/Q]  Não mostrar nomes durante a cópia, ie quiet.\n\
+[/F]  Mostrar por completo os nomes de fonte e destino durante a cópia\n\
+[/L]  Simular a operação, mostrando os nomes que seriam copiados\n\
+[/W]  Alerta antes de iniciar a operação de cópia\n\
+[/T]  Cria a estrutura de directórios mas não copia ficheiros\n\
 [/Y]  Suprimir alertas quando reescreve ficheiros\n\
 [/-Y] Alertar quando reescreve ficheiros\n\
-[/P]  Alertar antes de cada ficheiros ser copiado\n\
+[/P]  Alertar antes de cada ficheiro ser copiado\n\
 [/N]  Copiar usando nomes pequenos\n\
-[/U]  Copiar apenas ficheiros que j� existem no destino\n\
+[/U]  Copiar apenas ficheiros que já existem no destino\n\
 [/R]  Reescrever quaisquer ficheiros apenas de leitura\n\
-[/H]  Incluir ficheiros ocultos e de sistema na c�pia\n\
-[/C]  Continuar mesmo que ocorra um erro durante a c�pia\n\
+[/H]  Incluir ficheiros ocultos e de sistema na cópia\n\
+[/C]  Continuar mesmo que ocorra um erro durante a cópia\n\
 [/A]  Copiar apenas ficheiros com atributo de arquivo\n\
 [/M]  Copiar apenas ficheiros com atributo de arquivo, removendo\n\
 \to atributo de arquivo\n\
-[/D | /D:m-d-y] Copiar novos ficheiros ou os alterados ap�s a data fornecida\n\
-\t\tSe nenhuma data for fornecida, apenas copiar se o destino for mais antigo\n\
-\t\tque a fonte\n\n"
+[/D | /D:m-d-y] Copiar novos ficheiros ou os alterados após a data fornecida\n\
+\t\tSe nenhuma data for fornecida, apenas copiar se o destino\n\
+\t\tfor mais antigo que a fonte\n\n"
 
 }

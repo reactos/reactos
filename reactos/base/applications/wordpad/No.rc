@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2009 by Alexander N. Sørnes <alex@thehandofagony.com>
+ * Copyright 2006-2010 by Alexander N. Sørnes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
-IDM_MAINMENU MENU DISCARDABLE
+IDM_MAINMENU MENU
 BEGIN
     POPUP "&Fil"
     BEGIN
@@ -95,7 +95,7 @@ BEGIN
     END
 END
 
-IDM_POPUP MENU DISCARDABLE
+IDM_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -108,7 +108,7 @@ BEGIN
     END
 END
 
-IDM_COLOR_POPUP MENU DISCARDABLE
+IDM_COLOR_POPUP MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -118,7 +118,7 @@ BEGIN
         MENUITEM "Oliven"     ID_COLOR_OLIVE
         MENUITEM "Marineblå"  ID_COLOR_NAVY
         MENUITEM "Purpur"     ID_COLOR_PURPLE
-        MENUITEM "Teal"       ID_COLOR_TEAL
+        MENUITEM "Blågrønn"   ID_COLOR_TEAL
         MENUITEM "Grå"        ID_COLOR_GRAY
         MENUITEM "Sølv"       ID_COLOR_SILVER
         MENUITEM "Rød"        ID_COLOR_RED
@@ -126,13 +126,13 @@ BEGIN
         MENUITEM "Gul"        ID_COLOR_YELLOW
         MENUITEM "Blå"        ID_COLOR_BLUE
         MENUITEM "Fuchsia"    ID_COLOR_FUCHSIA
-        MENUITEM "Aqua"       ID_COLOR_AQUA
+        MENUITEM "Turkis"     ID_COLOR_AQUA
         MENUITEM "Hvit"       ID_COLOR_WHITE
-        MENUITEM "Automatic"  ID_COLOR_AUTOMATIC
+        MENUITEM "Automatisk" ID_COLOR_AUTOMATIC
     END
 END
 
-IDD_DATETIME DIALOG DISCARDABLE 30, 20, 130, 80
+IDD_DATETIME DIALOG 30, 20, 130, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Dato og klokkeslett"
 FONT 10, "MS Sans Serif"
@@ -143,7 +143,7 @@ BEGIN
     PUSHBUTTON   "&Avbryt",IDCANCEL,87,26,40,12
 END
 
-IDD_NEWFILE DIALOG DISCARDABLE 30, 20, 140, 80
+IDD_NEWFILE DIALOG 30, 20, 140, 80
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "Ny"
 FONT 10, "MS Sans Serif"
@@ -154,7 +154,7 @@ BEGIN
     PUSHBUTTON   "&Avbryt",IDCANCEL,97,26,40,12
 END
 
-IDD_PARAFORMAT DIALOG DISCARDABLE 30, 20, 200, 110
+IDD_PARAFORMAT DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Formater avsnitt"
 FONT 8, "MS Shell Dlg"
@@ -172,7 +172,7 @@ BEGIN
     PUSHBUTTON "&Avbryt", IDCANCEL, 137, 33, 50, 15
 END
 
-IDD_TABSTOPS DIALOG DISCARDABLE 30, 20, 200, 110
+IDD_TABSTOPS DIALOG 30, 20, 200, 110
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 Caption "Tabulatorer"
 FONT 8, "MS SHell DLg"
@@ -186,13 +186,13 @@ BEGIN
     PUSHBUTTON "Fjern all&e", ID_TAB_EMPTY, 137, 51, 50, 15
 END
 
-IDD_FORMATOPTS DIALOG DISCARDABLE 0, 0, 280, 110
+IDD_FORMATOPTS DIALOG 0, 0, 280, 110
 STYLE DS_SYSMODAL
 Caption ""
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Linjebryting", -1, 10, 10, 130, 85
-    RADIOBUTTON "No line wrapping", IDC_PAGEFMT_WN, 18, 25, 117, 15
+    RADIOBUTTON "Ingen linjebryting", IDC_PAGEFMT_WN, 18, 25, 117, 15
     RADIOBUTTON "Bryt tekst etter v&indusbredden", IDC_PAGEFMT_WW, 18, 45, 117, 15
     RADIOBUTTON "Bryt tekst etter &margen", IDC_PAGEFMT_WM, 18, 65, 117, 15
     GROUPBOX "Verktøylinjer", -1, 150, 10, 120, 85
@@ -203,7 +203,7 @@ BEGIN
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_RICHTEXT_FILES_RTF,     "Rikt tekstformat (*.rtf)"
     STRING_TEXT_FILES_TXT,         "Tekstdokument (*.txt)"
@@ -211,45 +211,51 @@ BEGIN
     STRING_ALL_FILES,              "Alle filer (*.*)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_NEWFILE_RICHTEXT,     "Rikt tekstdokument"
     STRING_NEWFILE_TXT,          "Tekstdokument"
     STRING_NEWFILE_TXT_UNICODE,  "Tekstdokument (Unicode)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_ALIGN_LEFT,            "Venstrestilt"
     STRING_ALIGN_RIGHT,           "Høyrestilt"
     STRING_ALIGN_CENTER,          "Midtstilt"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_PRINTER_FILES_PRN,        "Skriverfiler (*.PRN)"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_VIEWPROPS_TITLE,          "Alternativer"
     STRING_VIEWPROPS_TEXT,           "Tekst"
     STRING_VIEWPROPS_RICHTEXT,       "Rik tekst"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_PREVIEW_PRINT,            "Skriv ut"
     STRING_PREVIEW_NEXTPAGE,         "Neste side"
     STRING_PREVIEW_PREVPAGE,         "Forrige side"
     STRING_PREVIEW_TWOPAGES,         "To sider"
     STRING_PREVIEW_ONEPAGE,          "Én side"
-    STRING_PREVIEW_ZOOMIN,           "Zoom in"
-    STRING_PREVIEW_ZOOMOUT,          "Zoom out"
+    STRING_PREVIEW_ZOOMIN,           "Forstørr"
+    STRING_PREVIEW_ZOOMOUT,          "Forminsk"
     STRING_PREVIEW_CLOSE,            "Lukk"
+    STRING_PREVIEW_PAGE,             "Side"
+    STRING_PREVIEW_PAGES,            "Sider"
+    STRING_UNITS_CM,                 "cm"
+    STRING_UNITS_IN,                 "in"
+    STRING_UNITS_INCH,               "tommer"
+    STRING_UNITS_PT,                 "pt"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 BEGIN
     STRING_DEFAULT_FILENAME,     "Dokument"
     STRING_PROMPT_SAVE_CHANGES,  "Lagre endringer i «%s»?"
@@ -259,7 +265,7 @@ BEGIN
                                  "vil føre til at all formatering går tapt. Er du " \
                                  "sikker på at du vil fortsette?"
     STRING_INVALID_NUMBER,       "Ugyldig tallformat"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage documents are not supported"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE storage-dokumenter støttes ikke"
     STRING_WRITE_FAILED,              "Klarte ikke lagre filen."
     STRING_WRITE_ACCESS_DENIED,       "Du har ikke tilgang til å lagre filen."
     STRING_OPEN_FAILED,               "Klarte ikke åpne filen."

@@ -237,8 +237,10 @@
 #define STRING_PRINTING_NOT_IMPLEMENTED 1711
 #define STRING_MAX_TAB_STOPS 1712
 
+/* wordpad.c */
 LPWSTR file_basename(LPWSTR);
 
+/* print.c */
 void dialog_printsetup(HWND);
 void dialog_print(HWND, LPWSTR);
 void target_device(HWND, DWORD);
@@ -255,6 +257,7 @@ void registry_read_previewpages(HKEY hKey);
 LRESULT CALLBACK ruler_proc(HWND, UINT, WPARAM, LPARAM);
 void redraw_ruler(HWND);
 
+/* registry.c */
 int reg_formatindex(WPARAM);
 void registry_read_filelist(HWND);
 void registry_read_options(void);
@@ -262,5 +265,8 @@ void registry_read_formatopts_all(DWORD[], DWORD[]);
 void registry_read_winrect(RECT*);
 void registry_read_maximized(DWORD*);
 void registry_set_filelist(LPCWSTR, HWND);
-void registry_set_formatopts_all(DWORD[]);
+void registry_set_formatopts_all(DWORD[], DWORD[]);
 void registry_set_options(HWND);
+
+/* olecallback.c */
+HRESULT setup_richedit_olecallback(HWND hEditorWnd);

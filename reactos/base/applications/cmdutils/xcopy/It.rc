@@ -31,10 +31,10 @@ STRINGTABLE
     STRING_INVPARMS, "Numero non valido di parametri - Digita xcopy /? per l'aiuto\n"
     STRING_INVPARM,  "Parametro '%s' non valido -  Digita xcopy /? per l'aiuto\n"
     STRING_PAUSE,    "Premi Invio per iniziare a copiare\n"
-    STRING_SIMCOPY,  "%d file(s) sarebbero copiati\n"
-    STRING_COPY,     "%d file(s) copiati\n"
+    STRING_SIMCOPY,  "%d file sarebbero copiati\n"
+    STRING_COPY,     "%d file copiato/i\n"
     STRING_QISDIR,   "'%s' è il nome di un file o una cartella\n" \
-                     "sull'obiettivo?\n" \
+                     "nell'obiettivo?\n" \
                      "(F - File, C - Cartella)\n"
     STRING_SRCPROMPT,"%s? (Sì|No)\n"
     STRING_OVERWRITE,"Sovrascrivere %s? (Sì|No|Tutti)\n"
@@ -56,27 +56,27 @@ XCOPY sorgente [destinazione] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U]\n\
 \n\
 Dove:\n\
 \n\
-[/I]  Assumi una cartella se la destinazione non esiste e sono copiati 2 o\n\
-\tpiù files\n\
+[/I]  Assume una cartella se la destinazione non esiste e sono copiati 2 o\n\
+\tpiù file\n\
 [/S]  Copia le cartelle e le sottocartelle\n\
 [/E]  Copia le cartelle e le sottocartelle, includendo quelle vuote\n\
-[/Q]  Non mostrare i nomi durante la copia, modalità silenziosa.\n\
+[/Q]  Non mostra i nomi durante la copia, modalità silenziosa.\n\
 [/F]  Mostra i nomi completi della sorgente e della destinazione durante la copia\n\
 [/L]  Simula l'operazione, mostrando i nome che sarebbero copiati\n\
-[/W]  Prompts before beginning the copy operation\n\
+[/W]  Richiede prima di iniziare l'operazione di copia\n\
 [/T]  Crea la struttura di cartelle vuote ma non copia i files\n\
 [/Y]  Disabilita le conferme quando sono sovrascritti files\n\
 [/-Y] Abilita le conferme quando sono sovrascritti files\n\
 [/P]  Chiede conferma per ogni file sorgente prima di copiare\n\
-[/N]  Copia usando gli short names\n\
+[/N]  Copia usando i nomi abbreviati\n\
 [/U]  Copia solo files che sono già presenti nella destinazione\n\
-[/R]  Sovrascrivi ogni file che abbia l'attributo Sola Lettura\n\
-[/H]  Includi files nascosti e di sistema nella copia\n\
+[/R]  Sovrascrive ogni file che abbia l'attributo Sola Lettura\n\
+[/H]  Include i file nascosti e di sistema nella copia\n\
 [/C]  Continua anche se accade un errore durante la copia\n\
-[/A]  Copia solo files che abbiano l'attributo Archivio\n\
-[/M]  Copia solo files che abbiano l'attributo Archivio, rimuovendo\n\
+[/A]  Copia solo i file che abbiano l'attributo Archivio\n\
+[/M]  Copia solo i file che abbiano l'attributo Archivio, rimuovendo\n\
 \tl'attributo\n\
-[/D | /D:m-g-a] Copia i nuovi files o quelli modificati dopo la data fornita.\n\
+[/D | /D:m-g-a] Copia i nuovi file o quelli modificati dopo la data fornita.\n\
 \t\tSe nessuna data è stata fornita, copia solo se la destinazione è più vecchia\n\
 \t\tdella sorgente\n\n"
 

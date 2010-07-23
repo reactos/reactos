@@ -31,10 +31,10 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    STRING_USAGE, "Синтаксис цієї команди наступний:\n\nREG [ ADD | DELETE | QUERY ]\nREG command /?\n"
-    STRING_ADD_USAGE, "REG ADD key_name [/v value_name | /ve] [/t type] [/s separator] [/d data] [/f]\n"
-    STRING_DELETE_USAGE, "REG DELETE key_name [/v value_name | /ve | /va] [/f]\n"
-    STRING_QUERY_USAGE, "REG QUERY key_name [/v value_name | /ve] [/s]\n"
+    STRING_USAGE, "Синтаксис цієї команди наступний:\n\nREG [ ADD | DELETE | QUERY ]\nREG <команда> /?\n"
+    STRING_ADD_USAGE, "REG ADD <ключ> [/v <параметр> | /ve] [/t <тип>] [/s <розділювач>] [/d дані] [/f]\n"
+    STRING_DELETE_USAGE, "REG DELETE <ключ> [/v <параметр> | /ve | /va] [/f]\n"
+    STRING_QUERY_USAGE, "REG QUERY <ключ> [/v <параметр> | /ve] [/s]\n"
     STRING_SUCCESS, "Операція успішно завершена\n"
     STRING_INVALID_KEY, "Помилка: неправильне ім'я ключа\n"
     STRING_INVALID_CMDLINE, "Помилка: неправильні параметри командного рядка\n"
