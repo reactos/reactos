@@ -350,6 +350,7 @@ SIZE_T MmTotalCommitLimitMaximum;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+#ifndef _M_AMD64
 //
 // In Bavaria, this is probably a hate crime
 //
@@ -372,6 +373,7 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
         Pde++;
     }
 }
+#endif
 
 PFN_NUMBER
 NTAPI

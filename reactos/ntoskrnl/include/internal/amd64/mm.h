@@ -102,6 +102,17 @@ _MiAddressToPte(PVOID Address)
 }
 #define MiAddressToPte(x) _MiAddressToPte((PVOID)(x))
 
+ULONG
+FORCEINLINE
+MiAddressToPti(PVOID Address)
+{
+    ULONG64 Pti = (ULONG64)Address >> PTI_SHIFT;
+    Pti &= PTI_MASK_AMD64;
+    return Pti;
+}
+
+#define MiAddressToPteOffset(x) MiAddressToPti(x)
+
 /* Convert a PTE into a corresponding address */
 PVOID
 FORCEINLINE
