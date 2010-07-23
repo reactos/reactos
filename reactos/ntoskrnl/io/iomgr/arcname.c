@@ -354,7 +354,9 @@ IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     /* Now calculate the checksum */
     for (i = 0; i < 2048 / sizeof(ULONG); i++) CheckSum += Buffer[i];
 
+#ifndef _M_AMD64
     if (KeRosLoaderBlock) goto freeldrhack;
+#endif
 
     /* Search if this device is the actual boot CD */
     for (NextEntry = ArcDiskInfo->DiskSignatureListHead.Flink;
@@ -375,7 +377,9 @@ IopAssignArcNamesToCdrom(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     }
     goto checkbootcd;
 
+#ifndef _M_AMD64
 freeldrhack:
+#endif
     /*
      * FIXME: In normal conditions, NTLDR/FreeLdr sends the *proper* CDROM
      * ARC Path name, and what happens here is a comparision of both checksums
