@@ -102,7 +102,8 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
         "SYSTEM\\CurrentControlSet\\Control\\Class\\"
         "{4D36E972-E325-11CE-BFC1-08002BE10318}";
     PCHAR TargetKeyNameStart =
-        "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\";
+        "SYSTEM\\CurrentControlSet\\Services\\";
+    PCHAR TargetKeyNameEnd = "\\Parameters\\Tcpip";
     PCHAR TargetKeyName = NULL;
     PCHAR *EnumKeysLinkage = GetSubkeyNames( EnumKeyName, "\\Linkage" );
     PCHAR *EnumKeysTop     = GetSubkeyNames( EnumKeyName, "" );
@@ -124,10 +125,10 @@ HKEY FindAdapterKey( PDHCP_ADAPTER Adapter ) {
             !strcmp( RootDevice, Adapter->DhclientInfo.name ) ) {
             TargetKeyName =
                 (CHAR*) malloc( strlen( TargetKeyNameStart ) +
-                        strlen( RootDevice ) + 1);
+                        strlen( RootDevice ) + strlen( TargetKeyNameEnd ) + 1);
             if( !TargetKeyName ) goto cleanup;
-            sprintf( TargetKeyName, "%s%s",
-                     TargetKeyNameStart, RootDevice );
+            sprintf( TargetKeyName, "%s%s%s",
+                     TargetKeyNameStart, RootDevice, TargetKeyNameEnd );
             Error = RegCreateKeyExA( HKEY_LOCAL_MACHINE, TargetKeyName, 0, NULL, 0, KEY_READ, NULL, &OutKey, NULL );
             break;
         } else {
@@ -145,10 +146,8 @@ cleanup:
 }
 
 BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
-    HKEY AdapterKey = NULL;
-    PCHAR IPAddress = NULL, Netmask = NULL, DefaultGateway = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
-    DWORD Error = ERROR_SUCCESS;
+    HKEY AdapterKey;
+    DWORD Error = ERROR_SUCCESS, DhcpEnabled;
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
     strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
@@ -156,53 +155,31 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
 
     AdapterKey = FindAdapterKey( Adapter );
     if( AdapterKey )
-        IPAddress = RegReadString( AdapterKey, NULL, "IPAddress" );
+    {
+        Error = RegQueryValueEx(AdapterKey, "DhcpEnabled", NULL, NULL, (LPBYTE)&DhcpEnabled, NULL);
 
-    if( IPAddress && strcmp( IPAddress, "0.0.0.0" ) ) {
+        if (Error != ERROR_SUCCESS)
+            DhcpEnabled = 1;
+
+        CloseHandle(AdapterKey);
+    }
+    else
+    {
+        /* DHCP enabled by default */
+        DhcpEnabled = 1;
+    }           
+
+    if( !DhcpEnabled ) {
         /* Non-automatic case */
-        DH_DbgPrint
-            (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (static %s)\n",
-                        Adapter->DhclientInfo.name,
-                        Adapter->BindStatus,
-                        IPAddress));
+        DbgPrint("DHCPCSVC: Adapter Name: [%s] (static)\n", Adapter->DhclientInfo.name);
 
         Adapter->DhclientState.state = S_STATIC;
-
-        Netmask = RegReadString( AdapterKey, NULL, "Subnetmask" );
-
-        Status = AddIPAddress( inet_addr( IPAddress ),
-                               inet_addr( Netmask ? Netmask : "255.255.255.0" ),
-                               Adapter->IfMib.dwIndex,
-                               &Adapter->NteContext,
-                               &Adapter->NteInstance );
-
-        DefaultGateway = RegReadString( AdapterKey, NULL, "DefaultGateway" );
-
-        if( DefaultGateway ) {
-            Adapter->RouterMib.dwForwardDest = 0;
-            Adapter->RouterMib.dwForwardMask = 0;
-            Adapter->RouterMib.dwForwardMetric1 = 1;
-            Adapter->RouterMib.dwForwardIfIndex = Adapter->IfMib.dwIndex;
-            Adapter->RouterMib.dwForwardNextHop = inet_addr(DefaultGateway);
-            Error = CreateIpForwardEntry( &Adapter->RouterMib );
-            if( Error )
-                warning("Failed to set default gateway %s: %ld\n",
-                        DefaultGateway, Error);
-        }
-
-        if( DefaultGateway ) free( DefaultGateway );
-        if( Netmask ) free( Netmask );
     } else {
         /* Automatic case */
-        DH_DbgPrint
-            (MID_TRACE,("Adapter Name: [%s] (Bind Status %x) (dynamic)\n",
-                        Adapter->DhclientInfo.name,
-                        Adapter->BindStatus));
+        DbgPrint("DHCPCSVC: Adapter Name: [%s] (dynamic)\n", Adapter->DhclientInfo.name);
 
 	Adapter->DhclientInfo.client->state = S_INIT;
     }
-
-    if( IPAddress ) free( IPAddress );
 
     return TRUE;
 }
@@ -350,7 +327,6 @@ DWORD WINAPI AdapterDiscoveryThread(LPVOID Context) {
 
                     ApiLock();
                     InsertTailList( &AdapterList, &Adapter->ListEntry );
-                    DbgPrint("DHCPCSVC: Discovered new adapter [%s]\n", Adapter->DhclientInfo.name);
                     AdapterCount++;
                     SetEvent(AdapterStateChangedEvent);
                     ApiUnlock();

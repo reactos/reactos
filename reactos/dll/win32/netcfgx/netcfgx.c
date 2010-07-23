@@ -336,7 +336,7 @@ InstallNetDevice(
 	HKEY hNetworkKey = NULL;
 	HKEY hLinkageKey = NULL;
 	HKEY hConnectionKey = NULL;
-	DWORD dwShowIcon, dwLength;
+	DWORD dwShowIcon, dwLength, dwValue;
 
 	/* Get Instance ID */
 	if (SetupDiGetDeviceInstanceIdW(DeviceInfoSet, DeviceInfoData, NULL, 0, &dwLength))
@@ -417,6 +417,13 @@ InstallNetDevice(
 		goto cleanup;
 	}
 	rc = RegSetValueExW(hKey, L"SubnetMask", 0, REG_SZ, (const BYTE*)L"0.0.0.0", (wcslen(L"0.0.0.0") + 1) * sizeof(WCHAR));
+	if (rc != ERROR_SUCCESS)
+	{
+		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
+		goto cleanup;
+	}
+        dwValue = 1;
+	rc = RegSetValueExW(hKey, L"DhcpEnabled", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);
