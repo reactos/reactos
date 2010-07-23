@@ -1009,8 +1009,6 @@ BOOLEAN BindAdapter(
     TI_DbgPrint(DEBUG_DATALINK,("Adapter Description: %wZ\n",
                 &IF->Description));
 
-    DbgPrint("Opening %wZ\n", RegistryPath);
-
     InitializeObjectAttributes(&ObjectAttributes,
                                RegistryPath,
                                OBJ_CASE_INSENSITIVE,
