@@ -28,6 +28,16 @@
 #define PRTL_BALANCED_LINKS         PMMADDRESS_NODE
 #define MI_ASSERT(x)                ASSERT(x)
 
+VOID
+FORCEINLINE
+RtlpCopyAvlNodeData(IN PRTL_BALANCED_LINKS Node1,
+                    IN PRTL_BALANCED_LINKS Node2)
+{
+    Node1->u1.Parent = Node2->u1.Parent;
+    Node1->LeftChild = Node2->LeftChild;
+    Node1->RightChild = Node2->RightChild;
+}
+
 RTL_GENERIC_COMPARE_RESULTS
 FORCEINLINE
 RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,

@@ -1107,4 +1107,11 @@ MiInsertNode(
     IN PMM_AVL_TABLE Table
 );
 
+VOID
+NTAPI
+MiRemoveNode(
+    IN PMMADDRESS_NODE Node,
+    IN PMM_AVL_TABLE Table
+);
+
 /* EOF */

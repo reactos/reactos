@@ -296,8 +296,30 @@ NTAPI
 RtlDeleteElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
                                 IN PVOID Buffer)
 {
-    UNIMPLEMENTED;
-	return FALSE;
+    PRTL_BALANCED_LINKS Node;
+    TABLE_SEARCH_RESULT SearchResult;
+
+    /* Find the node */
+    SearchResult = RtlpFindAvlTableNodeOrParent(Table, Buffer, &Node);
+    if (SearchResult != TableFoundNode) return FALSE;
+    
+    /* If this node was the key, update it */
+    if (Node == Table->RestartKey) Table->RestartKey = RtlRealPredecessorAvl(Node);
+    
+    /* Do the delete */
+    Table->DeleteCount++;
+    RtlpDeleteAvlTreeNode(Table, Node);
+    Table->NumberGenericTableElements--;
+    
+    /* Reset accounting */
+    Table->WhichOrderedElement = 0;
+    Table->OrderedPointer = NULL;
+
+    /* Free the node's data */
+    Table->FreeRoutine(Table, Node);
+
+    /* It's done */
+    return TRUE;
 }
 
 /* EOF */

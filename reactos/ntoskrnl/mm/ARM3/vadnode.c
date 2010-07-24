@@ -107,6 +107,18 @@ MiInsertNode(IN PMMADDRESS_NODE NewNode,
     RtlpInsertAvlTreeNode(Table, NewNode, NodeOrParent, Result);
 }
 
+VOID
+NTAPI
+MiRemoveNode(IN PMMADDRESS_NODE Node,
+             IN PMM_AVL_TABLE Table)
+{
+    /* Call the AVL code */
+    RtlpDeleteAvlTreeNode(Table, Node);
+    
+    /* Decrease element count */
+    Table->NumberGenericTableElements--;
+}
+
 PMMADDRESS_NODE
 NTAPI
 MiGetPreviousNode(IN PMMADDRESS_NODE Node)
