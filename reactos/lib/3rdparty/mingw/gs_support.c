@@ -4,7 +4,14 @@
  * No warranty is given; refer to the file DISCLAIMER.PD within this package.
  */
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#define WIN32_NO_STATUS
+#include <stdlib.h>	/* abort () */
 #include <windows.h>
+#undef  WIN32_NO_STATUS
+#include <ntstatus.h>	/* STATUS macros */
 #ifdef _WIN64
 #include <intrin.h>
 #endif
@@ -22,10 +29,9 @@ PVOID RtlVirtualUnwind (ULONG HandlerType, ULONG64, ULONG64, PRUNTIME_FUNCTION,
 			PCONTEXT, PVOID *, PULONG64, PVOID);
 #endif
 
-typedef LONG NTSTATUS;
+typedef LONG NTSTATUS;	/* same as in ntdef.h / winternl.h */
 
 #define UNW_FLAG_NHANDLER 0x00
-#define STATUS_STACK_BUFFER_OVERRUN ((NTSTATUS)0xC0000409L)
 
 typedef union
 {
@@ -101,7 +107,7 @@ __declspec(noreturn) void __cdecl __report_gsfailure (ULONGLONG);
 __declspec(noreturn) void __cdecl
 __report_gsfailure (ULONGLONG StackCookie)
 {
-  volatile UINT_PTR __UNUSED_PARAM(cookie[2]);
+  volatile UINT_PTR cookie[2] __MINGW_ATTRIB_UNUSED;
 #ifdef _WIN64
   ULONG64 controlPC, imgBase, establisherFrame;
   PRUNTIME_FUNCTION fctEntry;
