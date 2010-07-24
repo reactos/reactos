@@ -84,6 +84,22 @@
 				<file>ctxhelp.S</file>
 			</directory>
 		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file first="true">boot.S</file>
+				<file>context.c</file>
+				<file>cpu.c</file>
+				<file>ctxswitch.S</file>
+				<file>except.c</file>
+				<file>interrupt.c</file>
+				<file>irql.c</file>
+				<file>kiinit.c</file>
+				<file>spinlock.c</file>
+				<file>stubs.c</file>
+				<file>thrdini.c</file>
+				<file>trap.S</file>
+			</directory>
+		</if>
 		<file>apc.c</file>
 		<file>balmgr.c</file>
 		<file>bug.c</file>
@@ -93,7 +109,9 @@
 		<file>dpc.c</file>
 		<file>eventobj.c</file>
 		<file>except.c</file>
-		<file>freeldr.c</file>
+		<if property="ARCH" value="i386">
+			<file>freeldr.c</file>
+		</if>
 		<file>freeze.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
@@ -121,6 +139,11 @@
 	</directory>
 	<directory name="config">
 		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>cmhardwr.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
 			<directory name="i386">
 				<file>cmhardwr.c</file>
 			</directory>
@@ -176,6 +199,11 @@
 				<file>interlck_asm.S</file>
 				<file>fastinterlck_asm.S</file>
 				<file>ioport.S</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>fastinterlck.c</file>
 			</directory>
 		</if>
 		<file>atom.c</file>
@@ -299,6 +327,17 @@
 					</if>
 				</directory>
 			</if>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<if property="KDBG" value="1">
+						<group>
+							<file>i386-dis.c</file>
+							<file>kdb_help.S</file>
+							<file>kdb.c</file>
+						</group>
+					</if>
+				</directory>
+			</if>
 			<if property="KDBG" value="1">
 				<file>kdb.c</file>
 				<file>kdb_cli.c</file>
@@ -321,6 +360,12 @@
 				</if>
 				<file>kdbg.c</file>
 			</directory>
+			<if property="ARCH" value="amd64">
+				<directory name="amd64">
+					<file>kd.c</file>
+					<file>kdmemsup.c</file>
+				</directory>
+			</if>
 			<file>kdinit.c</file>
 			<file>kdio.c</file>
 			<file>kdmain.c</file>
@@ -376,6 +421,12 @@
 		<if property="ARCH" value="powerpc">
 			<directory name="powerpc">
 				<file>pfault.c</file>
+				<file>page.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
+				<file>init.c</file>
 				<file>page.c</file>
 			</directory>
 		</if>
@@ -459,6 +510,11 @@
 		</if>
 		<if property="ARCH" value="arm">
 			<directory name="arm">
+				<file>psctx.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="amd64">
+			<directory name="amd64">
 				<file>psctx.c</file>
 			</directory>
 		</if>
