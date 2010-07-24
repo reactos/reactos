@@ -832,6 +832,165 @@ MmCreateTeb(IN PEPROCESS Process,
     return Status;
 }
 
+NTSTATUS
+NTAPI
+MmInitializeProcessAddressSpace(IN PEPROCESS Process,
+                                IN PEPROCESS ProcessClone OPTIONAL,
+                                IN PVOID Section OPTIONAL,
+                                IN OUT PULONG Flags,
+                                IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    SIZE_T ViewSize = 0;
+    PVOID ImageBase = 0;
+    PROS_SECTION_OBJECT SectionObject = Section;
+    PMMPTE PointerPte;
+    KIRQL OldIrql;
+    PMMPDE PointerPde;
+    PFN_NUMBER PageFrameNumber;
+    UNICODE_STRING FileName;
+    PWCHAR Source;
+    PCHAR Destination;
+    USHORT Length = 0;
+    
+    /* We should have a PDE */
+    ASSERT(Process->Pcb.DirectoryTableBase[0] != 0);
+    ASSERT(Process->PdeUpdateNeeded == FALSE);
+
+    /* Attach to the process */
+    KeAttachProcess(&Process->Pcb);
+    
+    /* The address space should now been in phase 1 or 0 */
+    ASSERT(Process->AddressSpaceInitialized <= 1);
+    Process->AddressSpaceInitialized = 2;
+
+    /* Initialize the Addresss Space lock */
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
+
+    /* Initialize AVL tree */
+    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
+    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
+
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Setup the PFN for the PDE base of this process */
+    PointerPte = MiAddressToPte(PDE_BASE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPte);
+    //MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
+
+    /* Do the same for hyperspace */
+    PointerPde = MiAddressToPde(HYPER_SPACE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPde);
+    //MiInitializePfn(PageFrameNumber, PointerPde, TRUE);
+
+    /* Release PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Lock the VAD, ARM3-owned ranges away */
+    MiRosTakeOverPebTebRanges(Process);
+
+    /* Check if there's a Section Object */
+    if (SectionObject)
+    {
+        /* Determine the image file name and save it to EPROCESS */
+        FileName = SectionObject->FileObject->FileName;
+        Source = (PWCHAR)((PCHAR)FileName.Buffer + FileName.Length);
+        if (FileName.Buffer)
+        {
+            /* Loop the file name*/
+            while (Source > FileName.Buffer)
+            {
+                /* Make sure this isn't a backslash */
+                if (*--Source == OBJ_NAME_PATH_SEPARATOR)
+                {
+                    /* If so, stop it here */
+                    Source++;
+                    break;
+                }
+                else
+                {
+                    /* Otherwise, keep going */
+                    Length++;
+                }
+            }
+        }
+
+        /* Copy the to the process and truncate it to 15 characters if necessary */
+        Destination = Process->ImageFileName;
+        Length = min(Length, sizeof(Process->ImageFileName) - 1);
+        while (Length--) *Destination++ = (UCHAR)*Source++;
+        *Destination = ANSI_NULL;
+
+        /* Check if caller wants an audit name */
+        if (AuditName)
+        {
+            /* Setup the audit name */
+            Status = SeInitializeProcessAuditName(SectionObject->FileObject,
+                                                  FALSE,
+                                                  AuditName);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Fail */
+                KeDetachProcess();
+                return Status;
+            }
+        }
+
+        /* Map the section */
+        Status = MmMapViewOfSection(Section,
+                                    Process,
+                                    (PVOID*)&ImageBase,
+                                    0,
+                                    0,
+                                    NULL,
+                                    &ViewSize,
+                                    0,
+                                    MEM_COMMIT,
+                                    PAGE_READWRITE);
+
+        /* Save the pointer */
+        Process->SectionBaseAddress = ImageBase;
+    }
+    
+    /* Be nice and detach */
+    KeDetachProcess();
+
+    /* Return status to caller */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess(IN PEPROCESS Process,
+                             IN PULONG_PTR DirectoryTableBase)
+{
+    /* Share the directory base with the idle process */
+    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
+    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
+
+    /* Initialize the Addresss Space */
+    KeInitializeGuardedMutex(&Process->AddressCreationLock);
+    KeInitializeSpinLock(&Process->HyperSpaceLock);
+    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
+    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
+    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
+
+    /* Done */
+    Process->HasAddressSpace = TRUE;//??
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
+{
+    /* Lock the VAD, ARM3-owned ranges away */                            
+    MiRosTakeOverPebTebRanges(Process);
+    return STATUS_SUCCESS;
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS

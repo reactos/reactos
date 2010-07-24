@@ -122,7 +122,7 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
     ULONG i;
     
     DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
-    
+
     LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor;
     LdtBase = LdtDescriptor[1] |
     ((LdtDescriptor[2] & 0xff) << 16) |
@@ -153,26 +153,6 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 
     DPRINT("Finished Mmi386ReleaseMmInfo()\n");
     return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG DirectoryTableBase)
-{
-    /* Share the directory base with the idle process */
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-
-    /* Initialize the Addresss Space */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
-    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
-    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
-
-    /* The process now has an address space */
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
 }
 
 BOOLEAN
