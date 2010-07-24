@@ -297,7 +297,7 @@ FORCEINLINE
 RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
                       IN PRTL_BALANCED_LINKS Node)
 {
-    PRTL_BALANCED_LINKS DeleteNode, ParentNode;
+    PRTL_BALANCED_LINKS DeleteNode = NULL, ParentNode;
     PRTL_BALANCED_LINKS *Node1, *Node2;
     CHAR Balance;
     
@@ -320,15 +320,19 @@ RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
     
     /* Get the parent node */
     ParentNode = RtlParentAvl(DeleteNode);
+    DPRINT("Parent: %p\n", ParentNode);
     
     /* Pick which now to use based on whether or not we have a left child */
     Node1 = RtlLeftChildAvl(DeleteNode) ? &DeleteNode->LeftChild : &DeleteNode->RightChild;
+    DPRINT("Node 1: %p %p\n", Node1, *Node1);
             
     /* Pick which node to swap based on if we're already a left child or not */
     Node2 = RtlIsLeftChildAvl(DeleteNode) ? &ParentNode->LeftChild : &ParentNode->RightChild;
-        
+    DPRINT("Node 2: %p %p\n", Node2, *Node2);
+            
     /* Pick the correct balance depending on which side will get heavier */
     Balance = RtlIsLeftChildAvl(DeleteNode) ? RtlLeftHeavyAvlTree : RtlRightHeavyAvlTree;
+    DPRINT("Balance: %lx\n", Balance);
     
     /* Swap the children nodes, making one side heavier */
     *Node2 = *Node1;

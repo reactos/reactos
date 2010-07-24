@@ -1083,6 +1083,57 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return TRUE;
 }
 
+VOID
+NTAPI
+MmCleanProcessAddressSpace(IN PEPROCESS Process)
+{
+    PMMVAD Vad;
+    PMM_AVL_TABLE VadTree;
+    PETHREAD Thread = PsGetCurrentThread();
+    
+    /* Lock the process address space from changes */
+    MmLockAddressSpace(&Process->Vm);
+    
+    /* Enumerate the VADs */
+    VadTree = &Process->VadRoot;
+    DPRINT("Cleaning up VADs: %d\n", VadTree->NumberGenericTableElements);
+    while (VadTree->NumberGenericTableElements)
+    {
+        /* Grab the current VAD */
+        Vad = (PMMVAD)VadTree->BalancedRoot.RightChild;
+
+        /* Lock the working set */
+        MiLockProcessWorkingSet(Process, Thread);
+
+        /* Remove this VAD from the tree */
+        ASSERT(VadTree->NumberGenericTableElements >= 1);
+        DPRINT("Removing node for VAD: %lx %lx\n", Vad->StartingVpn, Vad->EndingVpn);
+        MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
+        DPRINT("Moving on: %d\n", VadTree->NumberGenericTableElements);
+
+        /* Check if this VAD was the hint */
+        if (VadTree->NodeHint == Vad)
+        {
+            /* Get a new hint, unless we're empty now, in which case nothing */
+            VadTree->NodeHint = VadTree->BalancedRoot.RightChild;
+            if (!VadTree->NumberGenericTableElements) VadTree->NodeHint = NULL;
+        }
+        
+        /* Only PEB/TEB VADs supported for now */
+        ASSERT(Vad->u.VadFlags.PrivateMemory == 1);
+        ASSERT(Vad->u.VadFlags.VadType == VadNone);
+        
+        /* Release the working set */
+        MiUnlockProcessWorkingSet(Process, Thread);
+        
+        /* Free the VAD memory */
+        ExFreePool(Vad);
+    }
+    
+    /* Release the address space */
+    MmUnlockAddressSpace(&Process->Vm);
+}
+
 /* SYSTEM CALLS ***************************************************************/
 
 NTSTATUS

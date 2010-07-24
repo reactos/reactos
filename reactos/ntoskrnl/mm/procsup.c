@@ -15,13 +15,6 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-NTAPI
-MmCleanProcessAddressSpace(IN PEPROCESS Process)
-{
-    /* FIXME: Add part of MmDeleteProcessAddressSpace here */
-}
-
 NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)

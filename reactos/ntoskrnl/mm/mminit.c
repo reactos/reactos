@@ -436,12 +436,6 @@ MmInitSystem(IN ULONG Phase,
         /* Initialize the balance set manager */
         MmInitBsmThread();
     }
-    else if (Phase == 2)
-    {
-        /* Enough fun for now */
-        extern BOOLEAN AllowPagedPool;
-        AllowPagedPool = FALSE;
-    }
 
     return TRUE;
 }

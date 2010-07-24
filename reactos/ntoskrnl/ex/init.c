@@ -1859,6 +1859,10 @@ Phase1InitializationDiscard(IN PVOID Context)
     /* Allow strings to be displayed */
     InbvEnableDisplayString(TRUE);
 
+    /* Enough fun for now */
+    extern BOOLEAN AllowPagedPool;
+    AllowPagedPool = FALSE;
+
     /* Wait 5 seconds for it to initialize */
     Timeout.QuadPart = Int32x32To64(5, -10000000);
     Status = ZwWaitForSingleObject(ProcessInfo->ProcessHandle, FALSE, &Timeout);
