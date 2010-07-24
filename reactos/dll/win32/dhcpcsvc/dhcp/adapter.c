@@ -147,7 +147,7 @@ cleanup:
 
 BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     HKEY AdapterKey;
-    DWORD Error = ERROR_SUCCESS, DhcpEnabled;
+    DWORD Error = ERROR_SUCCESS, DhcpEnabled, Length;
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
     strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
@@ -156,9 +156,9 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     AdapterKey = FindAdapterKey( Adapter );
     if( AdapterKey )
     {
-        Error = RegQueryValueEx(AdapterKey, "DhcpEnabled", NULL, NULL, (LPBYTE)&DhcpEnabled, NULL);
+        Error = RegQueryValueEx(AdapterKey, "EnableDHCP", NULL, NULL, (LPBYTE)&DhcpEnabled, &Length);
 
-        if (Error != ERROR_SUCCESS)
+        if (Error != ERROR_SUCCESS || Length != sizeof(DWORD))
             DhcpEnabled = 1;
 
         CloseHandle(AdapterKey);

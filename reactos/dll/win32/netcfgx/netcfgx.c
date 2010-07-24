@@ -423,7 +423,7 @@ InstallNetDevice(
 		goto cleanup;
 	}
         dwValue = 1;
-	rc = RegSetValueExW(hKey, L"DhcpEnabled", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
+	rc = RegSetValueExW(hKey, L"EnableDHCP", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
 	if (rc != ERROR_SUCCESS)
 	{
 		DPRINT("RegSetValueExW() failed with error 0x%lx\n", rc);

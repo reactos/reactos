@@ -955,6 +955,7 @@ BOOLEAN BindAdapter(
     UNICODE_STRING IPAddress = RTL_CONSTANT_STRING(L"IPAddress");
     UNICODE_STRING Netmask = RTL_CONSTANT_STRING(L"SubnetMask");
     UNICODE_STRING Gateway = RTL_CONSTANT_STRING(L"DefaultGateway");
+    UNICODE_STRING EnableDhcp = RTL_CONSTANT_STRING(L"EnableDHCP");
     UNICODE_STRING RegistryDataU;
     ANSI_STRING RegistryDataA;
 
@@ -1033,75 +1034,89 @@ BOOLEAN BindAdapter(
             return FALSE;
         }
 
-        RegistryDataU.MaximumLength = 16 + sizeof(WCHAR);
-        RegistryDataU.Buffer = (PWCHAR)KeyValueInfo->Data;
-
         Status = ZwQueryValueKey(ParameterHandle,
-                                 &IPAddress,
+                                 &EnableDhcp,
                                  KeyValuePartialInformation,
                                  KeyValueInfo,
-                                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(ULONG),
                                  &Unused);
-        if (NT_SUCCESS(Status))
+        if (NT_SUCCESS(Status) && KeyValueInfo->DataLength == sizeof(ULONG) && (*(PULONG)KeyValueInfo->Data) != 0)
         {
-            RegistryDataU.Length = KeyValueInfo->DataLength;
+            RegistryDataU.MaximumLength = 16 + sizeof(WCHAR);
+            RegistryDataU.Buffer = (PWCHAR)KeyValueInfo->Data;
 
-            RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                         &RegistryDataU,
-                                         TRUE);
+            Status = ZwQueryValueKey(ParameterHandle,
+                                     &IPAddress,
+                                     KeyValuePartialInformation,
+                                     KeyValueInfo,
+                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     &Unused);
+            if (NT_SUCCESS(Status))
+            {
+                RegistryDataU.Length = KeyValueInfo->DataLength;
 
-            AddrInitIPv4(&IF->Unicast, inet_addr(RegistryDataA.Buffer));
+                RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                             &RegistryDataU,
+                                             TRUE);
 
-            RtlFreeAnsiString(&RegistryDataA);
+                AddrInitIPv4(&IF->Unicast, inet_addr(RegistryDataA.Buffer));
 
+                RtlFreeAnsiString(&RegistryDataA);
+
+            }
+            else
+            {
+                IF->Unicast = DefaultMask;
+            }
+
+            Status = ZwQueryValueKey(ParameterHandle,
+                                     &Netmask,
+                                     KeyValuePartialInformation,
+                                     KeyValueInfo,
+                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     &Unused);
+            if (NT_SUCCESS(Status))
+            {
+                RegistryDataU.Length = KeyValueInfo->DataLength;
+
+                RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                             &RegistryDataU,
+                                             TRUE);
+
+                AddrInitIPv4(&IF->Netmask, inet_addr(RegistryDataA.Buffer));
+
+                RtlFreeAnsiString(&RegistryDataA);
+            }
+            else
+            {
+                IF->Netmask = DefaultMask;
+            }
+
+            Status = ZwQueryValueKey(ParameterHandle,
+                                     &Gateway,
+                                     KeyValuePartialInformation,
+                                     KeyValueInfo,
+                                     sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
+                                     &Unused);
+            if (NT_SUCCESS(Status))
+            {
+                RegistryDataU.Length = KeyValueInfo->DataLength;
+
+                RtlUnicodeStringToAnsiString(&RegistryDataA,
+                                             &RegistryDataU,
+                                             TRUE);
+
+                AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
+
+                RtlFreeAnsiString(&RegistryDataA);
+
+                if (!AddrIsUnspecified(&Router)) RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, IF, 1);
+            }
         }
         else
         {
             IF->Unicast = DefaultMask;
-        }
-
-        Status = ZwQueryValueKey(ParameterHandle,
-                                 &Netmask,
-                                 KeyValuePartialInformation,
-                                 KeyValueInfo,
-                                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
-                                 &Unused);
-        if (NT_SUCCESS(Status))
-        {
-            RegistryDataU.Length = KeyValueInfo->DataLength;
-
-            RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                         &RegistryDataU,
-                                         TRUE);
-
-            AddrInitIPv4(&IF->Netmask, inet_addr(RegistryDataA.Buffer));
-
-            RtlFreeAnsiString(&RegistryDataA);
-        }
-        else
-        {
             IF->Netmask = DefaultMask;
-        }
-
-        Status = ZwQueryValueKey(ParameterHandle,
-                                 &Gateway,
-                                 KeyValuePartialInformation,
-                                 KeyValueInfo,
-                                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 16 * sizeof(WCHAR),
-                                 &Unused);
-        if (NT_SUCCESS(Status))
-        {
-            RegistryDataU.Length = KeyValueInfo->DataLength;
-
-            RtlUnicodeStringToAnsiString(&RegistryDataA,
-                                         &RegistryDataU,
-                                         TRUE);
-
-            AddrInitIPv4(&Router, inet_addr(RegistryDataA.Buffer));
-
-            RtlFreeAnsiString(&RegistryDataA);
-
-            if (!AddrIsUnspecified(&Router)) RouterCreateRoute(&DefaultMask, &DefaultMask, &Router, IF, 1);
         }
 
         ZwClose(ParameterHandle);
