@@ -2855,8 +2855,8 @@ InitializeSListHead(
 
 #else
 
-VOID
 FORCEINLINE
+VOID
 InitializeSListHead(
   OUT PSLIST_HEADER SListHead)
 {
