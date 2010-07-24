@@ -149,8 +149,57 @@ NTAPI
 MmDeleteTeb(IN PEPROCESS Process,
             IN PTEB Teb)
 {
-    /* Oops J */
-    DPRINT("Leaking 4KB at thread exit, this will be fixed later\n");
+    ULONG_PTR TebEnd;
+    PETHREAD Thread = PsGetCurrentThread();
+    PMMVAD Vad;
+    PMM_AVL_TABLE VadTree = &Process->VadRoot;
+    DPRINT("Deleting TEB: %p in %16s\n", Teb, Process->ImageFileName);
+    
+    /* TEB is one page */
+    TebEnd = (ULONG_PTR)Teb + ROUND_TO_PAGES(sizeof(TEB)) - 1;
+    
+    /* Attach to the process */
+    KeAttachProcess(&Process->Pcb);
+    
+    /* Lock the process address space */
+    KeAcquireGuardedMutex(&Process->AddressCreationLock);
+    
+    /* Find the VAD, make sure it's a TEB VAD */
+    Vad = MiLocateAddress(Teb);
+    DPRINT("Removing node for VAD: %lx %lx\n", Vad->StartingVpn, Vad->EndingVpn);
+    ASSERT(Vad != NULL);    
+    if (Vad->StartingVpn != ((ULONG_PTR)Teb >> PAGE_SHIFT))
+    {
+        /* Bug in the AVL code? */
+        DPRINT1("Corrupted VAD!\n");
+    }
+    else
+    {
+        /* Sanity checks for a valid TEB VAD */
+        ASSERT((Vad->StartingVpn == ((ULONG_PTR)Teb >> PAGE_SHIFT) &&
+               (Vad->EndingVpn == (TebEnd >> PAGE_SHIFT))));
+        ASSERT(Vad->u.VadFlags.NoChange == TRUE);
+        ASSERT(Vad->u2.VadFlags2.MultipleSecured == FALSE);
+
+        /* Lock the working set */
+        MiLockProcessWorkingSet(Process, Thread);
+
+        /* Remove this VAD from the tree */
+        ASSERT(VadTree->NumberGenericTableElements >= 1);
+        MiRemoveNode((PMMADDRESS_NODE)Vad, VadTree);
+    
+        /* Release the working set */
+        MiUnlockProcessWorkingSet(Process, Thread);
+    
+        /* Remove the VAD */
+        ExFreePool(Vad);
+    }
+
+    /* Release the address space lock */
+    KeReleaseGuardedMutex(&Process->AddressCreationLock);
+    
+    /* Detach */
+    KeDetachProcess();
 }
 
 VOID

@@ -1121,4 +1121,16 @@ MiRemoveNode(
     IN PMM_AVL_TABLE Table
 );
 
+PMMADDRESS_NODE
+NTAPI
+MiGetPreviousNode(
+    IN PMMADDRESS_NODE Node
+);
+
+PMMADDRESS_NODE
+NTAPI
+MiGetNextNode(
+    IN PMMADDRESS_NODE Node
+);
+
 /* EOF */
