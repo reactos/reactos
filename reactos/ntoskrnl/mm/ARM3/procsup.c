@@ -878,12 +878,12 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     /* Setup the PFN for the PDE base of this process */
     PointerPte = MiAddressToPte(PDE_BASE);
     PageFrameNumber = PFN_FROM_PTE(PointerPte);
-    //MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
+    MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
     PointerPde = MiAddressToPde(HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
-    //MiInitializePfn(PageFrameNumber, PointerPde, TRUE);
+    MiInitializePfn(PageFrameNumber, PointerPde, TRUE);
 
     /* Release PFN lock */
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
@@ -989,6 +989,98 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
     /* Lock the VAD, ARM3-owned ranges away */                            
     MiRosTakeOverPebTebRanges(Process);
     return STATUS_SUCCESS;
+}
+
+/* FIXME: Evaluate ways to make this portable yet arch-specific */
+BOOLEAN
+NTAPI
+MmCreateProcessAddressSpace(IN ULONG MinWs,
+                            IN PEPROCESS Process,
+                            OUT PULONG_PTR DirectoryTableBase)
+{
+    KIRQL OldIrql;
+    PFN_NUMBER PdeIndex, HyperIndex;
+    PMMPTE PointerPte;
+    MMPTE TempPte, PdePte;
+    ULONG PdeOffset;
+    PMMPTE SystemTable;
+
+    /* No page colors yet */
+    Process->NextPageColor = 0;
+    
+    /* Setup the hyperspace lock */
+    KeInitializeSpinLock(&Process->HyperSpaceLock);
+
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Get a page for the PDE */
+    PdeIndex = MiRemoveAnyPage(0);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiZeroPhysicalPage(PdeIndex);
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+
+    /* Get a page for hyperspace */
+    HyperIndex = MiRemoveAnyPage(0);
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+    MiZeroPhysicalPage(HyperIndex);
+
+    /* Switch to phase 1 initialization */
+    ASSERT(Process->AddressSpaceInitialized == 0);
+    Process->AddressSpaceInitialized = 1;
+
+    /* Set the base directory pointers */
+    DirectoryTableBase[0] = PdeIndex << PAGE_SHIFT;
+    DirectoryTableBase[1] = HyperIndex << PAGE_SHIFT;
+
+    /* Make sure we don't already have a page directory setup */
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == 0);
+
+    /* Insert us into the Mm process list */
+    InsertTailList(&MmProcessList, &Process->MmProcessLinks);
+
+    /* Get a PTE to map the page directory */
+    PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(PointerPte != NULL);
+
+    /* Build it */
+    MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
+                                PointerPte,
+                                MM_READWRITE,
+                                PdeIndex);
+
+    /* Set it dirty and map it */
+    PdePte.u.Hard.Dirty = TRUE;
+    MI_WRITE_VALID_PTE(PointerPte, PdePte);
+
+    /* Now get the page directory (which we'll double map, so call it a page table */
+    SystemTable = MiPteToAddress(PointerPte);
+
+    /* Copy all the kernel mappings */
+    PdeOffset = MiGetPdeOffset(MmSystemRangeStart);
+
+    RtlCopyMemory(&SystemTable[PdeOffset],
+                  MiAddressToPde(MmSystemRangeStart),
+                  PAGE_SIZE - PdeOffset * sizeof(MMPTE));
+
+    /* Now write the PTE/PDE entry for hyperspace itself */
+    TempPte = ValidKernelPte;
+    TempPte.u.Hard.PageFrameNumber = HyperIndex;
+    PdeOffset = MiGetPdeOffset(HYPER_SPACE);
+    SystemTable[PdeOffset] = TempPte;
+
+    /* Sanity check */
+    PdeOffset++;
+    ASSERT(MiGetPdeOffset(MmHyperSpaceEnd) >= PdeOffset);
+
+    /* Now do the x86 trick of making the PDE a page table itself */
+    PdeOffset = MiGetPdeOffset(PTE_BASE);
+    TempPte.u.Hard.PageFrameNumber = PdeIndex;
+    SystemTable[PdeOffset] = TempPte;
+
+    /* Let go of the system PTE */
+    MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
+    return TRUE;
 }
 
 /* SYSTEM CALLS ***************************************************************/

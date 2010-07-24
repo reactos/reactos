@@ -61,8 +61,6 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
       }
    }
 
-   Mmi386ReleaseMmInfo(Process);
-
    MmUnlockAddressSpace(&Process->Vm);
 
    DPRINT("Finished MmReleaseMmInfo()\n");
