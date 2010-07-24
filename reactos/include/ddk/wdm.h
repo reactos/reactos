@@ -8154,8 +8154,8 @@ InitializeListHead(
   ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 IsListEmpty(
   IN CONST LIST_ENTRY * ListHead)
 {
@@ -12895,8 +12895,8 @@ IoMarkIrpPending(
   IoInitializeRemoveLockEx(Lock, AllocateTag, MaxLockedMinutes, \
     HighWatermark, sizeof(IO_REMOVE_LOCK))
 
-VOID
 FORCEINLINE
+VOID
 IoInitializeDpcRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIO_DPC_ROUTINE DpcRoutine)
@@ -12949,8 +12949,8 @@ IoGetRemainingStackSize(VOID)
 }
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
-VOID
 FORCEINLINE
+VOID
 IoInitializeThreadedDpcRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIO_DPC_ROUTINE DpcRoutine)
