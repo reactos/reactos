@@ -147,7 +147,7 @@ cleanup:
 
 BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
     HKEY AdapterKey;
-    DWORD Error = ERROR_SUCCESS, DhcpEnabled, Length;
+    DWORD Error = ERROR_SUCCESS, DhcpEnabled, Length = sizeof(DWORD);
 
     Adapter->DhclientState.config = &Adapter->DhclientConfig;
     strncpy(Adapter->DhclientInfo.name, (char*)Adapter->IfMib.bDescr,
