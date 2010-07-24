@@ -300,6 +300,81 @@ typedef ULONG NDIS_OID, *PNDIS_OID;
                                                METHOD_OUT_DIRECT,            \
                                                FILE_ANY_ACCESS)
 
+/* Hardware status codes (OID_GEN_HARDWARE_STATUS) */
+typedef enum _NDIS_HARDWARE_STATUS {
+  NdisHardwareStatusReady,
+  NdisHardwareStatusInitializing,
+  NdisHardwareStatusReset,
+  NdisHardwareStatusClosing,
+  NdisHardwareStatusNotReady
+} NDIS_HARDWARE_STATUS, *PNDIS_HARDWARE_STATUS;
+
+/* OID_GEN_GET_TIME_CAPS */
+typedef struct _GEN_GET_TIME_CAPS {
+  ULONG Flags;
+  ULONG ClockPrecision;
+} GEN_GET_TIME_CAPS, *PGEN_GET_TIME_CAPS;
+
+/* OID_GEN_GET_NETCARD_TIME */
+typedef struct _GEN_GET_NETCARD_TIME {
+  ULONGLONG ReadTime;
+} GEN_GET_NETCARD_TIME, *PGEN_GET_NETCARD_TIME;
+
+/* State of the LAN media (OID_GEN_MEDIA_CONNECT_STATUS) */
+typedef enum _NDIS_MEDIA_STATE {
+  NdisMediaStateConnected,
+  NdisMediaStateDisconnected
+} NDIS_MEDIA_STATE, *PNDIS_MEDIA_STATE;
+
+#ifndef __NDIS_H
+typedef int NDIS_STATUS, *PNDIS_STATUS;
+#endif
+
+/* OID_GEN_SUPPORTED_GUIDS */
+typedef struct _NDIS_GUID {
+  GUID Guid;
+  union {
+    NDIS_OID Oid;
+    NDIS_STATUS Status;
+  } u;
+  ULONG Size;
+  ULONG Flags;
+} NDIS_GUID, *PNDIS_GUID;
+
+typedef struct _NDIS_PM_PACKET_PATTERN {
+  ULONG Priority;
+  ULONG Reserved;
+  ULONG MaskSize;
+  ULONG PatternOffset;
+  ULONG PatternSize;
+  ULONG PatternFlags;
+} NDIS_PM_PACKET_PATTERN, *PNDIS_PM_PACKET_PATTERN;
+
+/* OID_GEN_NETWORK_LAYER_ADDRESSES */
+typedef struct _NETWORK_ADDRESS {
+  USHORT AddressLength;
+  USHORT AddressType;
+  UCHAR Address[1];
+} NETWORK_ADDRESS, *PNETWORK_ADDRESS;
+
+typedef struct _NETWORK_ADDRESS_LIST {
+  LONG AddressCount;
+  USHORT AddressType;
+  NETWORK_ADDRESS Address[1];
+} NETWORK_ADDRESS_LIST, *PNETWORK_ADDRESS_LIST;
+
+/* OID_GEN_TRANSPORT_HEADER_OFFSET */
+typedef struct _TRANSPORT_HEADER_OFFSET {
+  USHORT ProtocolType;
+  USHORT HeaderOffset;
+} TRANSPORT_HEADER_OFFSET, *PTRANSPORT_HEADER_OFFSET;
+
+/* OID_GEN_CO_LINK_SPEED / OID_GEN_CO_MINIMUM_LINK_SPEED */
+typedef struct _NDIS_CO_LINK_SPEED {
+  ULONG Outbound;
+  ULONG Inbound;
+} NDIS_CO_LINK_SPEED, *PNDIS_CO_LINK_SPEED;
+
 #ifdef __cplusplus
 }
 #endif
