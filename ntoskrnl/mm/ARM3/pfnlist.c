@@ -700,8 +700,8 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     /* Check if this PFN is part of a valid address space */
     if (PointerPte->u.Hard.Valid == 1)
     {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
+        /* Only valid from MmCreateProcessAddressSpace path */
+        ASSERT(PsGetCurrentProcess()->Vm.WorkingSetSize == 0);
     }
 
     /* Otherwise this is a fresh page -- set it up */

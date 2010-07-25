@@ -28,6 +28,30 @@ SIZE_T RtlpAllocDeallocQueryBufferSize = 128;
 
 /* FUNCTIONS *****************************************************************/
 
+PVOID
+NTAPI
+RtlPcToFileHeader(
+    IN  PVOID PcValue,
+    OUT PVOID *BaseOfImage)
+{
+    PLDR_DATA_TABLE_ENTRY LdrEntry;
+    BOOLEAN InSystem;
+
+    /* Get the base for this file */
+    if ((ULONG_PTR)PcValue > (ULONG_PTR)MmHighestUserAddress)
+    {
+        /* We are in kernel */
+        *BaseOfImage = KiPcToFileHeader(PcValue, &LdrEntry, FALSE, &InSystem);
+    }
+    else
+    {
+        /* We are in user land */
+        *BaseOfImage = KiRosPcToUserFileHeader(PcValue, &LdrEntry);
+    }
+
+    return *BaseOfImage;
+}
+
 VOID
 NTAPI
 RtlInitializeRangeListPackage(VOID)
@@ -415,6 +439,19 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     return i;
 }
 
+#endif
+
+#ifdef _AMD64_
+VOID
+NTAPI
+RtlpGetStackLimits(
+    OUT PULONG_PTR LowLimit,
+    OUT PULONG_PTR HighLimit)
+{
+    PKTHREAD CurrentThread = KeGetCurrentThread();
+    *HighLimit = (ULONG_PTR)CurrentThread->InitialStack;
+    *LowLimit = (ULONG_PTR)CurrentThread->StackLimit;
+}
 #endif
 
 /* RTL Atom Tables ************************************************************/

@@ -23,6 +23,10 @@
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
 #define MI_SYSTEM_CACHE_WS_START        (PVOID)0xFFFFF78000001000ULL // CHECKME
 
+#define MI_LOWEST_VAD_ADDRESS           (PVOID)0x000000007FF00000ULL
+
+#define MI_SYSTEM_PTE_BASE              (PVOID)MiAddressToPte(KSEG0_BASE)
+
 /* Memory sizes */
 #define MI_MIN_PAGES_FOR_NONPAGED_POOL_TUNING ((255*1024*1024) >> PAGE_SHIFT)
 #define MI_MIN_PAGES_FOR_SYSPTE_TUNING         ((19*1024*1024) >> PAGE_SHIFT)
@@ -45,6 +49,10 @@
 #define MI_MIN_SECONDARY_COLORS                 8
 #define MI_SECONDARY_COLORS                     64
 #define MI_MAX_SECONDARY_COLORS                 1024
+
+#define MI_MIN_ALLOCATION_FRAGMENT              (4 * _1KB)
+#define MI_ALLOCATION_FRAGMENT                  (64 * _1KB)
+#define MI_MAX_ALLOCATION_FRAGMENT              (2  * _1MB)
 
 #define MM_HIGHEST_VAD_ADDRESS \
     (PVOID)((ULONG_PTR)MM_HIGHEST_USER_ADDRESS - (16 * PAGE_SIZE))
@@ -93,6 +101,17 @@ _MiAddressToPte(PVOID Address)
     return (PMMPTE)(PTE_BASE + Offset);
 }
 #define MiAddressToPte(x) _MiAddressToPte((PVOID)(x))
+
+ULONG
+FORCEINLINE
+MiAddressToPti(PVOID Address)
+{
+    ULONG64 Pti = (ULONG64)Address >> PTI_SHIFT;
+    Pti &= PTI_MASK_AMD64;
+    return Pti;
+}
+
+#define MiAddressToPteOffset(x) MiAddressToPti(x)
 
 /* Convert a PTE into a corresponding address */
 PVOID

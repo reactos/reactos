@@ -25,7 +25,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-.func unwind_handler
+.func _unwind_handler
 _unwind_handler:
     ret
 .endfunc

@@ -9,6 +9,7 @@
 	<include base="libtiff">.</include>
 	<include base="ReactOS">include/reactos/libs/zlib</include>
 	<include base="ReactOS">include/reactos/libs/libtiff</include>
+	<library>getopt</library>
 	<library>user32</library>
 	<library>zlib</library>
 	<file>mkg3states.c</file>

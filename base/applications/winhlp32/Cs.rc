@@ -23,11 +23,13 @@
 
 #include "winhelp_res.h"
 
+LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+
 /* Czech strings in CP1250 */
 
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
  POPUP "&Soubor" {
   MENUITEM "&Otevøít", MNID_FILE_OPEN
@@ -73,7 +75,7 @@ MAIN_MENU MENU LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 }
 
 /* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
+STRINGTABLE
 {
 STID_WINE_HELP, 	"Nápovìda WINE"
 STID_WHERROR, 		"CHYBA"
@@ -88,5 +90,4 @@ STID_ALL_FILES, 	"Všechny soubory (*.*)"
 STID_HELP_FILES_HLP, 	"Soubory nápovìdy (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
 }

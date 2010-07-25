@@ -96,6 +96,9 @@ extern ULONG KeI386CpuStep;
 #define KeGetTrapFramePc(TrapFrame) \
     ((TrapFrame)->Rip)
 
+#define KiGetLinkedTrapFrame(x) \
+    (PKTRAP_FRAME)((x)->Rdx)
+
 #define KeGetContextReturnRegister(Context) \
     ((Context)->Rax)
 

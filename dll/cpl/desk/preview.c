@@ -263,8 +263,8 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     /* Inactive Window */
     MyDrawEdge(hdc, &pPreviewData->rcInactiveFrame, EDGE_RAISED, BF_RECT | BF_MIDDLE, theme);
     SetTextColor(hdc, theme->crColor[COLOR_INACTIVECAPTIONTEXT]);
-    DrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
-                    NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT);
+    MyDrawCaptionTemp(NULL, hdc, &pPreviewData->rcInactiveCaption,  pPreviewData->hCaptionFont,
+                      NULL, pPreviewData->lpInAct, DC_GRADIENT | DC_ICON | DC_TEXT, theme);
     MyDrawCaptionButtons(hdc, &pPreviewData->rcInactiveCaption, TRUE, pPreviewData->cyCaption - 2, theme);
 
     /* Active Window */
@@ -290,7 +290,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     rc.top += 2;
     SetTextColor(hdc, theme->crColor[COLOR_WINDOWTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hCaptionFont);   /* FIXME: client text is not caption text */
-    DrawText(hdc, pPreviewData->lpWinTxt, lstrlen(pPreviewData->lpWinTxt), &rc, DT_LEFT);
+    DrawText(hdc, pPreviewData->lpWinTxt, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 
     /* Draw the scroll bar */
@@ -307,9 +307,9 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     CopyRect(&rc, &pPreviewData->rcDialogClient);
     rc.left += 4;
     rc.top += 2;
-    SetTextColor(hdc, RGB(0,0,0));
+    SetTextColor(hdc, theme->crColor[COLOR_BTNTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
-    DrawText(hdc, pPreviewData->lpMessText, lstrlen(pPreviewData->lpMessText), &rc, DT_LEFT);
+    DrawText(hdc, pPreviewData->lpMessText, -1, &rc, DT_LEFT);
     SelectObject(hdc, hOldFont);
 
     /* Draw Button */
@@ -317,7 +317,7 @@ OnPaint(HWND hwnd, PPREVIEW_DATA pPreviewData)
     CopyRect(&rc, &pPreviewData->rcDialogButton);
     SetTextColor(hdc, theme->crColor[COLOR_BTNTEXT]);
     hOldFont = SelectObject(hdc, pPreviewData->hMessageFont);
-    DrawText(hdc, pPreviewData->lpButText, lstrlen(pPreviewData->lpButText), &rc, DT_VCENTER | DT_CENTER | DT_SINGLELINE);
+    DrawText(hdc, pPreviewData->lpButText, -1, &rc, DT_VCENTER | DT_CENTER | DT_SINGLELINE);
     SelectObject(hdc, hOldFont);
 
     EndPaint(hwnd, &ps);

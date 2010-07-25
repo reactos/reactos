@@ -116,6 +116,12 @@
 #define __MINGW_ATTRIB_NONNULL(arg)
 #endif /* GNUC >= 3.3 */
 
+#ifdef __GNUC__
+#define __MINGW_ATTRIB_UNUSED __attribute__ ((__unused__))
+#else
+#define __MINGW_ATTRIB_UNUSED
+#endif /* ATTRIBUTE_UNUSED */
+
 #if  __MINGW_GNUC_PREREQ (3, 1)
 #define __MINGW_ATTRIB_DEPRECATED __attribute__ ((__deprecated__))
 #elif __MINGW_MSC_PREREQ(12, 0)

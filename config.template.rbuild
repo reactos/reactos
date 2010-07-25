@@ -49,7 +49,7 @@
 		4 = -O2
 		5 = -O3
 -->
-<property name="OPTIMIZE" value="0" />
+<property name="OPTIMIZE" value="1" />
 
 
 <!--

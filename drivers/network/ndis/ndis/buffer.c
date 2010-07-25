@@ -1171,6 +1171,7 @@ NdisPacketSize(
 /*
  * @implemented
  */
+#undef NdisGetPacketCancelId
 PVOID
 EXPORT
 NdisGetPacketCancelId(
@@ -1182,6 +1183,7 @@ NdisGetPacketCancelId(
 /*
  * @implemented
  */
+#undef NdisSetPacketCancelId
 VOID
 EXPORT
 NdisSetPacketCancelId(

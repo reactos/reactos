@@ -405,9 +405,9 @@
 # stub _ftime32_s
 @ cdecl _ftime64(ptr)
 # stub _ftime64_s
-@ cdecl -ret64 _ftol()
-@ cdecl -ret64 _ftol2() _ftol
-@ cdecl -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
+@ cdecl -arch=i386 -ret64 _ftol()
+@ cdecl -arch=i386 -ret64 _ftol2() _ftol
+@ cdecl -arch=i386 -ret64 _ftol2_sse() _ftol #FIXME: SSE variant should be implemented
 # stub _ftol2_sse_excpt
 @ cdecl _fullpath(ptr str long)
 # stub _fullpath_dbg
@@ -814,7 +814,7 @@
 # stub _set_output_format
 @ cdecl _set_sbh_threshold(long)
 @ cdecl _seterrormode(long)
-@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr)
+@ cdecl -arch=i386,x86_64 -norelay _setjmp(ptr ptr)
 @ cdecl -arch=i386 -norelay _setjmp3(ptr long)
 @ cdecl -arch=x86_64 -norelay _setjmpex(ptr ptr)
 @ cdecl _setmaxstdio(long)
@@ -1293,7 +1293,7 @@
 @ varargs scanf(str)
 # @ varargs scanf_s(str)
 @ cdecl setbuf(ptr ptr)
-@ cdecl -arch=x86_64 -norelay -private setjmp(ptr)
+@ cdecl -arch=x86_64 -norelay -private setjmp(ptr ptr) _setjmp
 @ cdecl setlocale(long str)
 @ cdecl setvbuf(ptr str long long)
 @ cdecl signal(long long)

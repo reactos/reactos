@@ -10,7 +10,7 @@
 #include "desk.h"
 #include "theme.h"
 
-static BOOL g_TemplateLoaded = FALSE;
+static BOOL g_PresetLoaded = FALSE;
 static INT g_TemplateCount = 0;
 
 static INT g_ColorList[NUM_COLORS];
@@ -141,8 +141,8 @@ BOOL LoadThemeFromReg(THEME* theme, INT ThemeId)
 	DWORD dwType, dwLength;
 	BOOL Ret = FALSE;
 
-	if (!g_TemplateLoaded)
-		LoadThemeTemplates(strSelectedStyle);
+	if (!g_PresetLoaded)
+		LoadThemePresetEntries(strSelectedStyle);
 
 	if (ThemeId == -1)
 		return FALSE;
@@ -342,7 +342,7 @@ BOOL SaveTheme(THEME* theme, LPCTSTR strLegacyName)
 	return FALSE;
 }
 
-INT LoadThemeTemplates(LPTSTR pszSelectedStyle)
+INT LoadThemePresetEntries(LPTSTR pszSelectedStyle)
 {
 	HKEY hkNewSchemes, hkScheme, hkSizes, hkSize;
 	FILETIME ftLastWriteTime;
@@ -362,7 +362,7 @@ INT LoadThemeTemplates(LPTSTR pszSelectedStyle)
 		RegQueryValueEx(hkNewSchemes, g_SelectedStyle, NULL, &dwType, (LPBYTE)pszSelectedStyle, &dwLength);
 
 		/* Check if already loaded */
-		if (g_TemplateLoaded)
+		if (g_PresetLoaded)
 		{
 			RegCloseKey(hkNewSchemes);
 			return g_TemplateCount;
@@ -406,7 +406,7 @@ INT LoadThemeTemplates(LPTSTR pszSelectedStyle)
 			dwLength = MAX_TEMPLATENAMELENTGH;
 		}
 		RegCloseKey(hkNewSchemes);
-		g_TemplateLoaded = TRUE;
+		g_PresetLoaded = TRUE;
 		g_TemplateCount = iTemplateIndex;
 	}
 	return iTemplateIndex;

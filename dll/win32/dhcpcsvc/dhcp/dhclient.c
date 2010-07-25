@@ -574,8 +574,6 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                     strcat(Buffer, ".");
             }
             RegSetValueExA(hkey, "DhcpSubnetMask", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
-            RegSetValueExA(hkey, "IPAddress", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
-            RegSetValueExA(hkey, "SubnetMask", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
             dwEnableDHCP = 1;
             RegSetValueExA(hkey, "EnableDHCP", 0, REG_DWORD, (LPBYTE)&dwEnableDHCP, sizeof(DWORD));
         }
@@ -614,7 +612,6 @@ void setup_adapter( PDHCP_ADAPTER Adapter, struct client_lease *new_lease ) {
                     strcat(Buffer, ".");
             }
             RegSetValueExA(hkey, "DhcpDefaultGateway", 0, REG_SZ, (LPBYTE)Buffer, strlen(Buffer)+1);
-            RegSetValueExA(hkey, "DefaultGateway", 0, REG_SZ, (LPBYTE)"0.0.0.0", 8);
         }
     }
 
@@ -1103,6 +1100,7 @@ void
 state_panic(void *ipp)
 {
 	struct interface_info *ip = ipp;
+        PDHCP_ADAPTER Adapter = AdapterFindInfo(ip);
 	time_t cur_time;
 
 	time(&cur_time);
@@ -1113,7 +1111,19 @@ state_panic(void *ipp)
 	ip->client->state = S_INIT;
 	add_timeout(cur_time + ip->client->config->retry_interval, state_init,
 	    ip);
-        /* XXX Take any failure actions necessary */
+
+        if (!Adapter->NteContext)
+        {
+            /* Generate an automatic private address */
+            DbgPrint("DHCPCSVC: Failed to receive a response from a DHCP server. An automatic private address will be assigned.\n");
+
+            /* FIXME: The address generation code sucks */
+            AddIPAddress(htonl(0xA9FE0000 | (rand() % 0xFFFF)), //169.254.X.X
+                         htonl(0xFFFF0000), //255.255.0.0
+                         Adapter->IfMib.dwIndex,
+                         &Adapter->NteContext,
+                         &Adapter->NteInstance);
+        }
 }
 
 void

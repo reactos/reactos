@@ -791,102 +791,109 @@ GetUserNameA(LPSTR lpszName,
 BOOL
 WINAPI
 GetUserNameW(LPWSTR lpszName,
-             LPDWORD lpSize )
+             LPDWORD lpSize)
 {
-  HANDLE hToken = INVALID_HANDLE_VALUE;
-  DWORD tu_len = 0;
-  char* tu_buf = NULL;
-  TOKEN_USER* token_user = NULL;
-  DWORD an_len = 0;
-  SID_NAME_USE snu = SidTypeUser;
-  WCHAR* domain_name = NULL;
-  DWORD dn_len = 0;
+    HANDLE hToken = INVALID_HANDLE_VALUE;
+    DWORD tu_len = 0;
+    char* tu_buf = NULL;
+    TOKEN_USER* token_user = NULL;
+    DWORD an_len = 0;
+    SID_NAME_USE snu = SidTypeUser;
+    WCHAR* domain_name = NULL;
+    DWORD dn_len = 0;
 
-  if ( !OpenThreadToken ( GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken ) )
-  {
-    DWORD dwLastError = GetLastError();
-    if ( dwLastError != ERROR_NO_TOKEN
-      && dwLastError != ERROR_NO_IMPERSONATION_TOKEN )
+    if (!OpenThreadToken (GetCurrentThread(), TOKEN_QUERY, FALSE, &hToken))
     {
-      /* don't call SetLastError(),
-         as OpenThreadToken() ought to have set one */
-      return FALSE;
-    }
-    if ( !OpenProcessToken ( GetCurrentProcess(), TOKEN_QUERY, &hToken ) )
-    {
-      /* don't call SetLastError(),
-         as OpenProcessToken() ought to have set one */
-      return FALSE;
-    }
-  }
-  tu_buf = LocalAlloc ( LMEM_FIXED, 36 );
-  if ( !tu_buf )
-  {
-    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-    CloseHandle ( hToken );
-    return FALSE;
-  }
-  if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, 36, &tu_len ) || tu_len > 36 )
-  {
-    LocalFree ( tu_buf );
-    tu_buf = LocalAlloc ( LMEM_FIXED, tu_len );
-    if ( !tu_buf )
-    {
-      SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-      CloseHandle ( hToken );
-      return FALSE;
-    }
-    if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, tu_len, &tu_len ) )
-    {
-      /* don't call SetLastError(),
-         as GetTokenInformation() ought to have set one */
-      LocalFree ( tu_buf );
-      CloseHandle ( hToken );
-      return FALSE;
-    }
-  }
-  CloseHandle ( hToken );
-  token_user = (TOKEN_USER*)tu_buf;
+        DWORD dwLastError = GetLastError();
+        if (dwLastError != ERROR_NO_TOKEN
+            && dwLastError != ERROR_NO_IMPERSONATION_TOKEN)
+        {
+            /* don't call SetLastError(),
+               as OpenThreadToken() ought to have set one */
+            return FALSE;
+        }
 
-  an_len = *lpSize;
-  dn_len = 32;
-  domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
-  if ( !domain_name )
-  {
-    LocalFree ( tu_buf );
-    SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
-    return FALSE;
-  }
-  if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu )
-    || dn_len > 32 )
-  {
-    if ( dn_len > 32 )
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        {
+            /* don't call SetLastError(),
+               as OpenProcessToken() ought to have set one */
+            return FALSE;
+        }
+    }
+
+    tu_buf = LocalAlloc(LMEM_FIXED, 36);
+    if (!tu_buf)
     {
-      LocalFree ( domain_name );
-      domain_name = LocalAlloc ( LMEM_FIXED, dn_len * sizeof(WCHAR) );
-      if ( !domain_name )
-      {
-        LocalFree ( tu_buf );
-        SetLastError ( ERROR_NOT_ENOUGH_MEMORY );
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        CloseHandle(hToken);
         return FALSE;
-      }
     }
-    an_len = *lpSize;
-    if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu ) )
-    {
-      /* don't call SetLastError(),
-         as LookupAccountSid() ought to have set one */
-      LocalFree ( domain_name );
-      LocalFree ( tu_buf );
-      *lpSize = an_len;
-      return FALSE;
-    }
-  }
 
-  LocalFree ( domain_name );
-  LocalFree ( tu_buf );
-  *lpSize = an_len + 1;
-  return TRUE;
+    if (!GetTokenInformation(hToken, TokenUser, tu_buf, 36, &tu_len) || tu_len > 36)
+    {
+        LocalFree(tu_buf);
+        tu_buf = LocalAlloc(LMEM_FIXED, tu_len);
+        if (!tu_buf)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+
+        if (!GetTokenInformation(hToken, TokenUser, tu_buf, tu_len, &tu_len))
+        {
+            /* don't call SetLastError(),
+               as GetTokenInformation() ought to have set one */
+            LocalFree(tu_buf);
+            CloseHandle(hToken);
+            return FALSE;
+        }
+    }
+
+    CloseHandle(hToken);
+    token_user = (TOKEN_USER*)tu_buf;
+
+    an_len = *lpSize;
+    dn_len = 32;
+    domain_name = LocalAlloc(LMEM_FIXED, dn_len * sizeof(WCHAR));
+    if (!domain_name)
+    {
+        LocalFree(tu_buf);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if (!LookupAccountSidW(NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu)
+        || dn_len > 32)
+    {
+        if (dn_len > 32)
+        {
+            LocalFree(domain_name);
+            domain_name = LocalAlloc(LMEM_FIXED, dn_len * sizeof(WCHAR));
+            if (!domain_name)
+            {
+                LocalFree(tu_buf);
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                return FALSE;
+            }
+        }
+
+        an_len = *lpSize;
+        if (!LookupAccountSidW(NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu))
+        {
+            /* don't call SetLastError(),
+               as LookupAccountSid() ought to have set one */
+            LocalFree(domain_name);
+            LocalFree(tu_buf);
+            *lpSize = an_len;
+            return FALSE;
+        }
+    }
+
+    LocalFree(domain_name);
+    LocalFree(tu_buf);
+    *lpSize = an_len + 1;
+    return TRUE;
 }
 
 
@@ -905,129 +912,121 @@ LookupAccountSidA(LPCSTR lpSystemName,
                   LPDWORD cchReferencedDomainName,
                   PSID_NAME_USE peUse)
 {
-  UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
-  LPWSTR NameBuffer = NULL;
-  LPWSTR ReferencedDomainNameBuffer = NULL;
-  DWORD dwName, dwReferencedDomainName;
-  BOOL Ret;
+    UNICODE_STRING NameW, ReferencedDomainNameW, SystemNameW;
+    LPWSTR NameBuffer = NULL;
+    LPWSTR ReferencedDomainNameBuffer = NULL;
+    DWORD dwName, dwReferencedDomainName;
+    BOOL Ret;
 
-  /*
-   * save the buffer sizes the caller passed to us, as they may get modified and
-   * we require the original values when converting back to ansi
-   */
-  dwName = *cchName;
-  dwReferencedDomainName = *cchReferencedDomainName;
-
-  /*
-   * allocate buffers for the unicode strings to receive
-   */
-
-  if(dwName > 0)
-  {
-    NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
-    if(NameBuffer == NULL)
-    {
-      SetLastError(ERROR_OUTOFMEMORY);
-      return FALSE;
-    }
-  }
-  else
-    NameBuffer = NULL;
-
-  if(dwReferencedDomainName > 0)
-  {
-    ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
-    if(ReferencedDomainNameBuffer == NULL)
-    {
-      if(dwName > 0)
-      {
-        LocalFree(NameBuffer);
-      }
-      SetLastError(ERROR_OUTOFMEMORY);
-      return FALSE;
-    }
-  }
-  else
-    ReferencedDomainNameBuffer = NULL;
-
-  /*
-   * convert the system name to unicode - if present
-   */
-
-  if(lpSystemName != NULL)
-  {
-    ANSI_STRING SystemNameA;
-
-    RtlInitAnsiString(&SystemNameA, lpSystemName);
-    RtlAnsiStringToUnicodeString(&SystemNameW, &SystemNameA, TRUE);
-  }
-  else
-    SystemNameW.Buffer = NULL;
-
-  /*
-   * it's time to call the unicode version
-   */
-
-  Ret = LookupAccountSidW(SystemNameW.Buffer,
-                          lpSid,
-                          NameBuffer,
-                          cchName,
-                          ReferencedDomainNameBuffer,
-                          cchReferencedDomainName,
-                          peUse);
-  if(Ret)
-  {
     /*
-     * convert unicode strings back to ansi, don't forget that we can't convert
-     * more than 0xFFFF (USHORT) characters! Also don't forget to explicitly
-     * terminate the converted string, the Rtl functions don't do that!
+     * save the buffer sizes the caller passed to us, as they may get modified and
+     * we require the original values when converting back to ansi
      */
-    if(lpName != NULL)
+    dwName = *cchName;
+    dwReferencedDomainName = *cchReferencedDomainName;
+
+    /* allocate buffers for the unicode strings to receive */
+    if (dwName > 0)
     {
-      ANSI_STRING NameA;
+        NameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwName);
+        if (NameBuffer == NULL)
+        {
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+    }
+    else
+        NameBuffer = NULL;
 
-      NameA.Length = 0;
-      NameA.MaximumLength = ((dwName <= 0xFFFF) ? (USHORT)dwName : 0xFFFF);
-      NameA.Buffer = lpName;
+    if (dwReferencedDomainName > 0)
+    {
+        ReferencedDomainNameBuffer = (PWSTR)LocalAlloc(LMEM_FIXED, dwReferencedDomainName);
+        if (ReferencedDomainNameBuffer == NULL)
+        {
+            if (dwName > 0)
+            {
+                LocalFree(NameBuffer);
+            }
 
-      RtlInitUnicodeString(&NameW, NameBuffer);
-      RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
-      NameA.Buffer[NameA.Length] = '\0';
+            SetLastError(ERROR_OUTOFMEMORY);
+            return FALSE;
+        }
+    }
+    else
+        ReferencedDomainNameBuffer = NULL;
+
+
+    /* convert the system name to unicode - if present */
+    if (lpSystemName != NULL)
+    {
+        ANSI_STRING SystemNameA;
+
+        RtlInitAnsiString(&SystemNameA, lpSystemName);
+        RtlAnsiStringToUnicodeString(&SystemNameW, &SystemNameA, TRUE);
+    }
+    else
+        SystemNameW.Buffer = NULL;
+
+    /* it's time to call the unicode version */
+    Ret = LookupAccountSidW(SystemNameW.Buffer,
+                            lpSid,
+                            NameBuffer,
+                            cchName,
+                            ReferencedDomainNameBuffer,
+                            cchReferencedDomainName,
+                            peUse);
+    if (Ret)
+    {
+        /*
+         * convert unicode strings back to ansi, don't forget that we can't convert
+         * more than 0xFFFF (USHORT) characters! Also don't forget to explicitly
+         * terminate the converted string, the Rtl functions don't do that!
+         */
+        if (lpName != NULL)
+        {
+            ANSI_STRING NameA;
+
+            NameA.Length = 0;
+            NameA.MaximumLength = ((dwName <= 0xFFFF) ? (USHORT)dwName : 0xFFFF);
+            NameA.Buffer = lpName;
+
+            RtlInitUnicodeString(&NameW, NameBuffer);
+            RtlUnicodeStringToAnsiString(&NameA, &NameW, FALSE);
+            NameA.Buffer[NameA.Length] = '\0';
+        }
+
+        if (lpReferencedDomainName != NULL)
+        {
+            ANSI_STRING ReferencedDomainNameA;
+
+            ReferencedDomainNameA.Length = 0;
+            ReferencedDomainNameA.MaximumLength = ((dwReferencedDomainName <= 0xFFFF) ?
+                                                   (USHORT)dwReferencedDomainName : 0xFFFF);
+            ReferencedDomainNameA.Buffer = lpReferencedDomainName;
+
+            RtlInitUnicodeString(&ReferencedDomainNameW, ReferencedDomainNameBuffer);
+            RtlUnicodeStringToAnsiString(&ReferencedDomainNameA, &ReferencedDomainNameW, FALSE);
+            ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
+        }
     }
 
-    if(lpReferencedDomainName != NULL)
+    /* free previously allocated buffers */
+    if (SystemNameW.Buffer != NULL)
     {
-      ANSI_STRING ReferencedDomainNameA;
-
-      ReferencedDomainNameA.Length = 0;
-      ReferencedDomainNameA.MaximumLength = ((dwReferencedDomainName <= 0xFFFF) ?
-                                             (USHORT)dwReferencedDomainName : 0xFFFF);
-      ReferencedDomainNameA.Buffer = lpReferencedDomainName;
-
-      RtlInitUnicodeString(&ReferencedDomainNameW, ReferencedDomainNameBuffer);
-      RtlUnicodeStringToAnsiString(&ReferencedDomainNameA, &ReferencedDomainNameW, FALSE);
-      ReferencedDomainNameA.Buffer[ReferencedDomainNameA.Length] = '\0';
+        RtlFreeUnicodeString(&SystemNameW);
     }
-  }
 
-  /*
-   * free previously allocated buffers
-   */
+    if (NameBuffer != NULL)
+    {
+        LocalFree(NameBuffer);
+    }
 
-  if(SystemNameW.Buffer != NULL)
-  {
-    RtlFreeUnicodeString(&SystemNameW);
-  }
-  if(NameBuffer != NULL)
-  {
-    LocalFree(NameBuffer);
-  }
-  if(ReferencedDomainNameBuffer != NULL)
-  {
-    LocalFree(ReferencedDomainNameBuffer);
-  }
+    if (ReferencedDomainNameBuffer != NULL)
+    {
+        LocalFree(ReferencedDomainNameBuffer);
+    }
 
-  return Ret;
+    return Ret;
 }
 
 
@@ -1045,77 +1044,79 @@ LookupAccountSidW(LPCWSTR pSystemName,
                   LPDWORD pdwDomainName,
                   PSID_NAME_USE peUse)
 {
-	LSA_UNICODE_STRING SystemName;
-	LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
-	LSA_HANDLE PolicyHandle = NULL;
-	NTSTATUS Status;
-	PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
-	PLSA_TRANSLATED_NAME TranslatedName = NULL;
-	BOOL ret;
-	DWORD dwAccountName, dwDomainName;
+    LSA_UNICODE_STRING SystemName;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes = {0};
+    LSA_HANDLE PolicyHandle = NULL;
+    NTSTATUS Status;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain = NULL;
+    PLSA_TRANSLATED_NAME TranslatedName = NULL;
+    BOOL ret;
+    DWORD dwAccountName, dwDomainName;
 
-	RtlInitUnicodeString ( &SystemName, pSystemName );
-	Status = LsaOpenPolicy ( &SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle );
-	if ( !NT_SUCCESS(Status) )
-	{
-		SetLastError ( LsaNtStatusToWinError(Status) );
-		return FALSE;
-	}
-	Status = LsaLookupSids ( PolicyHandle, 1, &pSid, &ReferencedDomain, &TranslatedName );
+    RtlInitUnicodeString(&SystemName, pSystemName);
+    Status = LsaOpenPolicy(&SystemName, &ObjectAttributes, POLICY_LOOKUP_NAMES, &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        return FALSE;
+    }
 
-	LsaClose ( PolicyHandle );
+    Status = LsaLookupSids(PolicyHandle, 1, &pSid, &ReferencedDomain, &TranslatedName);
 
-	if ( !NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED )
-	{
-		SetLastError ( LsaNtStatusToWinError(Status) );
-		ret = FALSE;
-	}
-	else
-	{
-		ret = TRUE;
-		
-		dwAccountName = TranslatedName->Name.Length / sizeof(WCHAR);
-		if (ReferencedDomain && ReferencedDomain->Entries > 0)
-			dwDomainName = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
-		else
-			dwDomainName = 0;
-		
-		if (*pdwAccountName <= dwAccountName || *pdwDomainName <= dwDomainName)
-		{
-			/* One or two buffers are insufficient, add up a char for NULL termination */
-			*pdwAccountName = dwAccountName + 1;
-			*pdwDomainName = dwDomainName + 1;
-			ret = FALSE;
-		} else
-		{
-			/* Lengths are sufficient, copy the data */
-			if(dwAccountName)
-				RtlCopyMemory(pAccountName, TranslatedName->Name.Buffer, dwAccountName * sizeof(WCHAR));
-			pAccountName[dwAccountName] = L'\0';
-			
-			if(dwDomainName)
-				RtlCopyMemory(pDomainName, ReferencedDomain->Domains[0].Name.Buffer, dwDomainName * sizeof(WCHAR));
-			pDomainName[dwDomainName] = L'\0';
+    LsaClose(PolicyHandle);
 
-			*pdwAccountName = dwAccountName;
-			*pdwDomainName = dwDomainName;
+    if (!NT_SUCCESS(Status) || Status == STATUS_SOME_NOT_MAPPED)
+    {
+        SetLastError(LsaNtStatusToWinError(Status));
+        ret = FALSE;
+    }
+    else
+    {
+        ret = TRUE;
 
-			if (peUse)
-				*peUse = TranslatedName->Use;
-		}
-		
-		if ( !ret )
-			SetLastError(ERROR_INSUFFICIENT_BUFFER);
-	}
+        dwAccountName = TranslatedName->Name.Length / sizeof(WCHAR);
+        if (ReferencedDomain && ReferencedDomain->Entries > 0)
+            dwDomainName = ReferencedDomain->Domains[0].Name.Length / sizeof(WCHAR);
+        else
+            dwDomainName = 0;
 
-	if ( ReferencedDomain )
-		LsaFreeMemory ( ReferencedDomain );
-	if ( TranslatedName )
-		LsaFreeMemory ( TranslatedName );
+        if (*pdwAccountName <= dwAccountName || *pdwDomainName <= dwDomainName)
+        {
+            /* One or two buffers are insufficient, add up a char for NULL termination */
+            *pdwAccountName = dwAccountName + 1;
+            *pdwDomainName = dwDomainName + 1;
+            ret = FALSE;
+        }
+        else
+        {
+            /* Lengths are sufficient, copy the data */
+            if (dwAccountName)
+                RtlCopyMemory(pAccountName, TranslatedName->Name.Buffer, dwAccountName * sizeof(WCHAR));
+            pAccountName[dwAccountName] = L'\0';
 
-	return ret;
+            if (dwDomainName)
+                RtlCopyMemory(pDomainName, ReferencedDomain->Domains[0].Name.Buffer, dwDomainName * sizeof(WCHAR));
+            pDomainName[dwDomainName] = L'\0';
+
+            *pdwAccountName = dwAccountName;
+            *pdwDomainName = dwDomainName;
+
+            if (peUse)
+                *peUse = TranslatedName->Use;
+        }
+
+        if (!ret)
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
+
+    if (ReferencedDomain)
+        LsaFreeMemory(ReferencedDomain);
+
+    if (TranslatedName)
+        LsaFreeMemory(TranslatedName);
+
+    return ret;
 }
-
 
 
 /******************************************************************************
@@ -1301,8 +1302,8 @@ LookupPrivilegeValueA(LPCSTR lpSystemName,
         RtlCreateUnicodeStringFromAsciiz(&SystemName,
                                          (LPSTR)lpSystemName);
     }
-	else
-		SystemName.Buffer = NULL;
+    else
+        SystemName.Buffer = NULL;
 
     /* Check the privilege name is not NULL */
     if (lpName == NULL)

@@ -732,51 +732,55 @@ MmFreeMemoryArea(
    PMEMORY_AREA *ParentReplace;
    ULONG_PTR Address;
    PVOID EndAddress;
-   PEPROCESS CurrentProcess = PsGetCurrentProcess();
-   PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
-    
-   if (Process != NULL &&
-       Process != CurrentProcess)
+   
+   if (MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3)
    {
-      KeAttachProcess(&Process->Pcb);
-   }
+       PEPROCESS CurrentProcess = PsGetCurrentProcess();
+       PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
+        
+       if (Process != NULL &&
+           Process != CurrentProcess)
+       {
+          KeAttachProcess(&Process->Pcb);
+       }
 
-   EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE);
-   for (Address = (ULONG_PTR)MemoryArea->StartingAddress;
-        Address < (ULONG_PTR)EndAddress;
-        Address += PAGE_SIZE)
-   {
-      if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
-      {
-         MmRawDeleteVirtualMapping((PVOID)Address);
-      }
-      else
-      {
-         BOOLEAN Dirty = FALSE;
-         SWAPENTRY SwapEntry = 0;
-         PFN_NUMBER Page = 0;
+       EndAddress = MM_ROUND_UP(MemoryArea->EndingAddress, PAGE_SIZE);
+       for (Address = (ULONG_PTR)MemoryArea->StartingAddress;
+            Address < (ULONG_PTR)EndAddress;
+            Address += PAGE_SIZE)
+       {
+          if (MemoryArea->Type == MEMORY_AREA_IO_MAPPING)
+          {
+             MmRawDeleteVirtualMapping((PVOID)Address);
+          }
+          else
+          {
+             BOOLEAN Dirty = FALSE;
+             SWAPENTRY SwapEntry = 0;
+             PFN_NUMBER Page = 0;
 
-         if (MmIsPageSwapEntry(Process, (PVOID)Address))
-         {
-            MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
-         }
-         else
-         {
-            MmDeleteVirtualMapping(Process, (PVOID)Address, FALSE, &Dirty, &Page);
-         }
-         if (FreePage != NULL)
-         {
-            FreePage(FreePageContext, MemoryArea, (PVOID)Address,
-                     Page, SwapEntry, (BOOLEAN)Dirty);
-         }
-      }
-   }
+             if (MmIsPageSwapEntry(Process, (PVOID)Address))
+             {
+                MmDeletePageFileMapping(Process, (PVOID)Address, &SwapEntry);
+             }
+             else
+             {
+                MmDeleteVirtualMapping(Process, (PVOID)Address, FALSE, &Dirty, &Page);
+             }
+             if (FreePage != NULL)
+             {
+                FreePage(FreePageContext, MemoryArea, (PVOID)Address,
+                         Page, SwapEntry, (BOOLEAN)Dirty);
+             }
+          }
+       }
 
-   if (Process != NULL &&
-       Process != CurrentProcess)
-   {
-      KeDetachProcess();
-   }
+       if (Process != NULL &&
+           Process != CurrentProcess)
+       {
+          KeDetachProcess();
+       }
+    }
 
    /* Remove the tree item. */
    {

@@ -1,7 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="dll">
+<module name="mingw_common" type="staticlibrary" isstartuplib="true" crt="static">
+	<library>oldnames</library>
+	<library>ntdll</library>
 	<define name="_CRTBLD" />
 
 	<!-- This is to prevent from using data imports directly -->
@@ -20,7 +22,6 @@
 	<file>crt_handler.c</file>
 	<file>dllentry.c</file>
 	<file>gccmain.c</file>
-	<file>getopt.c</file>
 	<file>gs_support.c</file>
 	<file>merr.c</file>
 	<file>mingw_helpers.c</file>
@@ -47,7 +48,7 @@
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
 </module>
-<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" unicode="yes" crt="dll">
+<module name="mingw_wmain" type="staticlibrary" isstartuplib="true" unicode="yes" crt="static">
 	<define name="_CRTBLD" />
 	<define name="WPRFLAG" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
@@ -56,7 +57,7 @@
 	<file>crtexe.c</file>
 	<file>dllargv.c</file>
 </module>
-<module name="mingw_dllmain" type="staticlibrary" isstartuplib="true" crt="dll">
+<module name="mingw_dllmain" type="staticlibrary" isstartuplib="true" crt="static">
 	<define name="_CRTBLD" />
 	<include base="ReactOS">include/reactos/mingw-w64</include>
 	<file>crtdll.c</file>
@@ -65,5 +66,8 @@
 <module name="oldnames" type="staticlibrary">
 	<define name="_CRTBLD" />
 	<importlibrary definition="moldname-msvcrt.def" dllname="msvcrt.dll" />
+</module>
+<module name="getopt" type="staticlibrary" crt="dll">
+	<file>getopt.c</file>
 </module>
 </group>

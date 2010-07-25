@@ -731,30 +731,3 @@ void free(PVOID Block)
 {
     ExFreePool(Block);
 }
-
-void *memset(
-   void* dest,
-   int c,
-   size_t count)
-{
-    ULONG Index;
-    PUCHAR Block = (PUCHAR)dest;
-
-    for(Index = 0; Index < count; Index++)
-        Block[Index] = c;
-
-    return dest;
-}
-
-void * memcpy(
-   void* dest,
-   const void* src,
-   size_t count)
-{
-    ULONG Index;
-    PUCHAR Src = (PUCHAR)src, Dest = (PUCHAR)dest;
-
-    for(Index = 0; Index < count; Index++)
-        Dest[Index] = Src[Index];
-    return dest;
-}

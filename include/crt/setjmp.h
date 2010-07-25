@@ -32,7 +32,9 @@ extern "C" {
     unsigned long UnwindFunc;
     unsigned long UnwindData[6];
   } _JUMP_BUFFER;
+
 #elif defined(__ia64__)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
     __MINGW_EXTENSION __int64 LowPart;
     __MINGW_EXTENSION __int64 HighPart;
@@ -92,7 +94,9 @@ extern "C" {
     __MINGW_EXTENSION __int64 Preds;
 
   } _JUMP_BUFFER;
+
 #elif defined(__x86_64)
+
   typedef _CRT_ALIGN(16) struct _SETJMP_FLOAT128 {
     __MINGW_EXTENSION unsigned __int64 Part[2];
   } SETJMP_FLOAT128;
@@ -124,13 +128,34 @@ extern "C" {
     SETJMP_FLOAT128 Xmm14;
     SETJMP_FLOAT128 Xmm15;
   } _JUMP_BUFFER;
+
 #endif
+
 #ifndef _JMP_BUF_DEFINED
   typedef _JBTYPE jmp_buf[_JBLEN];
 #define _JMP_BUF_DEFINED
 #endif
 
-  void * __cdecl __MINGW_NOTHROW mingw_getsp(void);
+static inline __attribute__((always_inline)) void * mingw_getsp(void)
+{
+    void *value;
+#if defined(__x86_64)
+#ifdef _MSC_VER
+    __asm {mov value, rsp}
+#else
+    __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value) );
+#endif
+#elif defined(_X86_)
+#ifdef _MSC_VER
+    __asm {mov value, esp}
+#else
+    __asm__ __volatile__("movql %%esp, %[value]" : [value] "=r" (value) );
+#endif
+#else
+    #error mingw_getsp unimplemented
+#endif
+    return value;
+}
 
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX

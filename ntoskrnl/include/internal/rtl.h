@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _WIN64
+#define InitializeSListHead RtlInitializeSListHead
+#endif
+
 NTSTATUS
 NTAPI
 RtlQueryAtomListInAtomTable(

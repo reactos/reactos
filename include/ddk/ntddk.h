@@ -3780,8 +3780,8 @@ HalBugCheckSystem(
  */
 #define IoDeassignArcName IoDeleteSymbolicLink
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 IoInitializeDriverCreateContext(
   PIO_DRIVER_CREATE_CONTEXT DriverContext)

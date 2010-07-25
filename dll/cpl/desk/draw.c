@@ -7,13 +7,11 @@
  * PROGRAMMERS:     Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
-/* #define NTOS_MODE_USER */
-/* #define WIN32_NO_STATUS */
 #include "desk.h"
 #include "theme.h"
 #include "draw.h"
-/* #include <ndk/ntndk.h> */
-/* #include <win32k/ntuser.h> */
+
+#define MENU_BAR_ITEMS_SPACE (12)
 
 /******************************************************************************/
 
@@ -43,6 +41,20 @@ static const signed char RBOuterNormal[] = {
     COLOR_BTNSHADOW,    COLOR_3DDKSHADOW,  COLOR_BTNHIGHLIGHT, -1,
     COLOR_3DLIGHT,      COLOR_3DDKSHADOW,  COLOR_BTNHIGHLIGHT, -1,
     -1,                 COLOR_3DDKSHADOW,  COLOR_BTNHIGHLIGHT, -1
+};
+
+static const signed char LTRBOuterMono[] = {
+    -1,           COLOR_WINDOWFRAME, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME,
+    COLOR_WINDOW, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME,
+    COLOR_WINDOW, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME,
+    COLOR_WINDOW, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME, COLOR_WINDOWFRAME,
+};
+
+static const signed char LTRBInnerMono[] = {
+    -1, -1,           -1,           -1,
+    -1, COLOR_WINDOW, COLOR_WINDOW, COLOR_WINDOW,
+    -1, COLOR_WINDOW, COLOR_WINDOW, COLOR_WINDOW,
+    -1, COLOR_WINDOW, COLOR_WINDOW, COLOR_WINDOW,
 };
 
 static BOOL
@@ -144,6 +156,24 @@ MyIntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags, THEME *theme)
 	{
 		MoveToEx(hdc, InnerRect.right-2, InnerRect.top+RTpenplus, NULL);
 		LineTo(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus);
+	}
+
+	if (uFlags & BF_ADJUST)
+	{
+		int add = (LTRBInnerMono[uType & (BDR_INNER|BDR_OUTER)] != -1 ? 1 : 0)
+					  + (LTRBOuterMono[uType & (BDR_INNER|BDR_OUTER)] != -1 ? 1 : 0);
+
+		if(uFlags & BF_LEFT)
+			InnerRect.left += add;
+		if(uFlags & BF_RIGHT)
+			InnerRect.right -= add;
+		if(uFlags & BF_TOP)
+			InnerRect.top += add;
+		if(uFlags & BF_BOTTOM)
+			InnerRect.bottom -= add;
+
+		if(uFlags & BF_ADJUST)
+			*rc = InnerRect;
 	}
 
 	/* Cleanup */
@@ -409,8 +439,69 @@ MyDrawScrollbar(HDC hdc, LPRECT rc, HBRUSH hbrScrollbar, THEME *theme)
 BOOL
 MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon, LPCWSTR str, UINT uFlags, THEME *theme)
 {
-	/* FIXME */
-	return DrawCaptionTemp(hwnd, hdc, rect, hFont, hIcon, str, uFlags);
+	ULONG Height;
+	UINT VCenter, Padding;
+	LONG ButtonWidth;
+	HBRUSH hbr;
+	HGDIOBJ hFontOld;
+    RECT rc;
+
+	Height = theme->Size[SIZE_CAPTION_Y] - 1;
+	VCenter = (rect->bottom - rect->top) / 2;
+	Padding = VCenter - (Height / 2);
+
+	ButtonWidth = theme->Size[SIZE_SIZE_X] - 2;
+
+	if (uFlags & DC_GRADIENT)
+	{
+		GRADIENT_RECT gcap = {0, 1};
+		TRIVERTEX vert[2];
+		COLORREF Colors[2];
+
+		Colors[0] = theme->crColor[((uFlags & DC_ACTIVE) ?
+			COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION)];
+		Colors[1] = theme->crColor[((uFlags & DC_ACTIVE) ?
+			COLOR_GRADIENTACTIVECAPTION : COLOR_GRADIENTINACTIVECAPTION)];
+
+		vert[0].x = rect->left;
+		vert[0].y = rect->top;
+		vert[0].Red = (WORD)Colors[0]<<8;
+		vert[0].Green = (WORD)Colors[0] & 0xFF00;
+		vert[0].Blue = (WORD)(Colors[0]>>8) & 0xFF00;
+		vert[0].Alpha = 0;
+
+		vert[1].x = rect->right;
+		vert[1].y = rect->bottom;
+		vert[1].Red = (WORD)Colors[1]<<8;
+		vert[1].Green = (WORD)Colors[1] & 0xFF00;
+		vert[1].Blue = (WORD)(Colors[1]>>8) & 0xFF00;
+		vert[1].Alpha = 0;
+
+		GradientFill(hdc, vert, 2, &gcap, 1, GRADIENT_FILL_RECT_H);
+	}
+	else
+	{
+		if (uFlags & DC_ACTIVE)
+			hbr = CreateSolidBrush(theme->crColor[COLOR_ACTIVECAPTION]);
+		else
+			hbr = CreateSolidBrush(theme->crColor[COLOR_INACTIVECAPTION]);
+		FillRect(hdc, rect, hbr);
+		DeleteObject(hbr);
+	}
+
+	hFontOld = SelectObject(hdc, hFont);
+	SetBkMode(hdc, TRANSPARENT);
+	if (uFlags & DC_ACTIVE)
+		SetTextColor(hdc, theme->crColor[COLOR_CAPTIONTEXT]);
+	else
+		SetTextColor(hdc, theme->crColor[COLOR_INACTIVECAPTIONTEXT]);
+	rc.left = rect->left + 2;
+	rc.top = rect->top;
+	rc.right = rect->right;
+	rc.bottom = rect->bottom;
+	DrawTextW(hdc, str, -1, &rc, DT_SINGLELINE | DT_VCENTER);
+	SelectObject(hdc, hFontOld);
+	return TRUE;
 }
 
 /******************************************************************************/
@@ -418,6 +509,99 @@ MyDrawCaptionTemp(HWND hwnd, HDC hdc, const RECT *rect, HFONT hFont, HICON hIcon
 DWORD
 MyDrawMenuBarTemp(HWND Wnd, HDC DC, LPRECT Rect, HMENU Menu, HFONT Font, THEME *theme)
 {
-	/* FIXME */
-	return DrawMenuBarTemp(Wnd, DC, Rect, Menu, Font);
+	HBRUSH hbr;
+	HPEN hPen;
+	HGDIOBJ hPenOld, hFontOld;
+	BOOL flat_menu;
+	INT i, bkgnd, x;
+	RECT rect;
+	WCHAR Text[128];
+	UINT uFormat = DT_CENTER | DT_VCENTER | DT_SINGLELINE;
+
+	flat_menu = theme->bFlatMenus;
+
+	if (flat_menu)
+		hbr = CreateSolidBrush(theme->crColor[COLOR_MENUBAR]);
+	else
+		hbr = CreateSolidBrush(theme->crColor[COLOR_MENU]);
+	FillRect(DC, Rect, hbr);
+	DeleteObject(hbr);
+
+	hPen = CreatePen(PS_SOLID, 0, theme->crColor[COLOR_3DFACE]);
+	hPenOld = SelectObject(DC, hPen);
+	MoveToEx(DC, Rect->left, Rect->bottom - 1, NULL);
+	LineTo(DC, Rect->right, Rect->bottom - 1);
+	SelectObject(DC, hPenOld);
+	DeleteObject(hPen);
+
+    bkgnd = (flat_menu ? COLOR_MENUBAR : COLOR_MENU);
+	x = Rect->left;
+	hFontOld = SelectObject(DC, Font);
+	for(i = 0; i < 3; i++)
+	{
+		GetMenuStringW(Menu, i, Text, 128, MF_BYPOSITION);
+
+		rect.left = x;
+		rect.top = Rect->top;
+		DrawTextW(DC, Text, -1, &rect, DT_SINGLELINE | DT_CALCRECT);
+
+	    rect.bottom = Rect->bottom;
+		rect.right += MENU_BAR_ITEMS_SPACE;
+		x += rect.right - rect.left;
+
+		if (i == 2)
+		{
+			if (flat_menu)
+			{
+				SetTextColor(DC, theme->crColor[COLOR_HIGHLIGHTTEXT]);
+				SetBkColor(DC, theme->crColor[COLOR_HIGHLIGHT]);
+
+				InflateRect (&rect, -1, -1);
+				hbr = CreateSolidBrush(theme->crColor[COLOR_MENUHILIGHT]);
+				FillRect(DC, &rect, hbr);
+				DeleteObject(hbr);
+
+				InflateRect (&rect, 1, 1);
+				hbr = CreateSolidBrush(theme->crColor[COLOR_HIGHLIGHT]);
+				FrameRect(DC, &rect, hbr);
+				DeleteObject(hbr);
+			}
+			else
+			{
+				SetTextColor(DC, theme->crColor[COLOR_MENUTEXT]);
+				SetBkColor(DC, theme->crColor[COLOR_MENU]);
+				DrawEdge(DC, &rect, BDR_SUNKENOUTER, BF_RECT);
+			}
+		}
+		else
+		{
+			if (i == 1)
+				SetTextColor(DC, theme->crColor[COLOR_GRAYTEXT]);
+			else
+				SetTextColor(DC, theme->crColor[COLOR_MENUTEXT]);
+
+			SetBkColor(DC, theme->crColor[bkgnd]);
+			hbr = CreateSolidBrush(theme->crColor[bkgnd]);
+			FillRect(DC, &rect, hbr);
+			DeleteObject(hbr);
+		}
+
+		SetBkMode(DC, TRANSPARENT);
+
+		rect.left += MENU_BAR_ITEMS_SPACE / 2;
+		rect.right -= MENU_BAR_ITEMS_SPACE / 2;
+
+		if (i == 1)
+		{
+			++rect.left; ++rect.top; ++rect.right; ++rect.bottom;
+			SetTextColor(DC, RGB(0xff, 0xff, 0xff));
+			DrawTextW(DC, Text, -1, &rect, uFormat);
+			--rect.left; --rect.top; --rect.right; --rect.bottom;
+			SetTextColor(DC, RGB(0x80, 0x80, 0x80));
+		}
+		DrawTextW(DC, Text, -1, &rect, uFormat);
+	}
+	SelectObject(DC, hFontOld);
+
+	return TRUE;
 }

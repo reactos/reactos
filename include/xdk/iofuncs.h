@@ -562,8 +562,8 @@ $if (_NTDDK_)
  */
 #define IoDeassignArcName IoDeleteSymbolicLink
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 IoInitializeDriverCreateContext(
   PIO_DRIVER_CREATE_CONTEXT DriverContext)
@@ -2308,8 +2308,8 @@ IoIsFileObjectIgnoringSharing(
 $endif (_NTDDK_)
 $if (_NTIFS_)
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 IoInitializePriorityInfo(
   IN PIO_PRIORITY_INFO PriorityInfo)
@@ -2582,8 +2582,8 @@ IoMarkIrpPending(
   IoInitializeRemoveLockEx(Lock, AllocateTag, MaxLockedMinutes, \
     HighWatermark, sizeof(IO_REMOVE_LOCK))
 
-VOID
 FORCEINLINE
+VOID
 IoInitializeDpcRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIO_DPC_ROUTINE DpcRoutine)
@@ -2636,8 +2636,8 @@ IoGetRemainingStackSize(VOID)
 }
 
 #if (NTDDI_VERSION >= NTDDI_WS03)
-VOID
 FORCEINLINE
+VOID
 IoInitializeThreadedDpcRequest(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIO_DPC_ROUTINE DpcRoutine)
