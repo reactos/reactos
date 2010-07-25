@@ -95,7 +95,7 @@
 //
 // Allocates a new message
 //
-FORCEINLINE
+static __inline
 PLPCP_MESSAGE
 LpcpAllocateFromPortZone(VOID)
 {

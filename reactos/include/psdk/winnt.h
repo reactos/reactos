@@ -79,7 +79,7 @@ extern "C" {
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE static __inline__ __attribute__((always_inline))
+#define FORCEINLINE extern __inline__ __attribute__((always_inline))
 #endif
 #endif
 
@@ -5112,7 +5112,7 @@ static __inline__ PVOID GetCurrentFiber(void)
 #endif
 
 #if defined(_M_IX86)
-static __inline__ struct _TEB * NtCurrentTeb(void)
+extern __inline__ struct _TEB * NtCurrentTeb(void)
 {
     struct _TEB *ret;
 
@@ -5137,12 +5137,12 @@ FORCEINLINE struct _TEB * NtCurrentTeb(VOID)
     return (struct _TEB *)__readgsqword(FIELD_OFFSET(NT_TIB, Self));
 }
 #elif defined(_M_PPC)
-static __inline__ struct _TEB * NtCurrentTeb(void)
+extern __inline__ struct _TEB * NtCurrentTeb(void)
 {
     return __readfsdword_winnt(0x18);
 }
 #else
-static __inline__ struct _TEB * NtCurrentTeb(void)
+extern __inline__ struct _TEB * NtCurrentTeb(void)
 {
     return __readfsdword_winnt(0x18);
 }

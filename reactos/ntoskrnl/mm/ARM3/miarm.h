@@ -139,56 +139,9 @@
 #else
 #error Define these please!
 #endif
-static const
-ULONG
-MmProtectToPteMask[32] =
-{
-    //
-    // These are the base MM_ protection flags
-    //
-    0,
-    PTE_READONLY            | PTE_ENABLE_CACHE,
-    PTE_EXECUTE             | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
-    PTE_READWRITE           | PTE_ENABLE_CACHE,
-    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
-    //
-    // These OR in the MM_NOCACHE flag
-    //
-    0,
-    PTE_READONLY            | PTE_DISABLE_CACHE,
-    PTE_EXECUTE             | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
-    PTE_READWRITE           | PTE_DISABLE_CACHE,
-    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
-    //
-    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
-    //
-    0,
-    PTE_READONLY            | PTE_ENABLE_CACHE,
-    PTE_EXECUTE             | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
-    PTE_READWRITE           | PTE_ENABLE_CACHE,
-    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
-    //
-    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
-    //
-    0,
-    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
-    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
-    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
-};
- 
+
+extern const ULONG MmProtectToPteMask[32];
+
 //
 // Assertions for session images, addresses, and PTEs
 //

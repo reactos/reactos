@@ -240,7 +240,7 @@
 #elif (_MSC_VER)
 #define FORCEINLINE __inline
 #else
-#define FORCEINLINE static __inline__ __attribute__((always_inline))
+#define FORCEINLINE extern __inline__ __attribute__((always_inline))
 #endif
 #endif
 
