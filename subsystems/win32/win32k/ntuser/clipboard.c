@@ -247,7 +247,7 @@ renderBITMAPfromDIB(LPBYTE pDIB)
 {
     HDC hdc;
     HBITMAP hbitmap;
-    unsigned int offset;
+    unsigned int offset = 0; /* Stupid compiler */
     BITMAPV5INFO bmi;
     NTSTATUS Status ;
 

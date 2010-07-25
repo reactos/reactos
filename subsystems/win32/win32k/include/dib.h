@@ -5,7 +5,7 @@
 INT FASTCALL
 DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
 HBITMAP APIENTRY
-DIB_CreateDIBSection (PDC dc, PBITMAPINFO bmi, UINT usage, LPVOID *bits, HANDLE section, DWORD offset, DWORD ovr_pitch);
+DIB_CreateDIBSection (PDC dc, CONST BITMAPV5INFO *bmi, UINT usage, LPVOID *bits, HANDLE section, DWORD offset, DWORD ovr_pitch);
 INT APIENTRY
 DIB_GetBitmapInfo( const BITMAPINFOHEADER *header, PLONG width, PLONG height, PWORD planes, PWORD bpp, PLONG compr, PLONG size );
 INT APIENTRY
@@ -13,7 +13,7 @@ DIB_GetDIBImageBytes (INT  width, INT height, INT depth);
 INT FASTCALL
 DIB_GetDIBWidthBytes (INT width, INT depth);
 RGBQUAD * FASTCALL
-DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
+DIB_MapPaletteColors(PDC dc, CONST BITMAPV5INFO* lpbmi);
 
 HPALETTE FASTCALL
 BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType);

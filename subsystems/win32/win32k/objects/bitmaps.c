@@ -291,7 +291,7 @@ IntCreateCompatibleBitmap(
                     PSURFACE psurfBmp;
                     size.cx = abs(Width);
                     size.cy = abs(Height);
-            Bmp = GreCreateBitmap(abs(Width),
+					Bmp = GreCreateBitmap(abs(Width),
                                   abs(Height),
                                   1,
                                   dibs.dsBm.bmBitsPixel,
@@ -309,73 +309,61 @@ IntCreateCompatibleBitmap(
                 else
                 {
                     /* A DIB section is selected in the DC */
-                    BITMAPINFO *bi;
+                    BITMAPV5INFO bi;
                     PVOID Bits;
 
-                    /* Allocate memory for a BITMAPINFOHEADER structure and a
-                       color table. The maximum number of colors in a color table
-                       is 256 which corresponds to a bitmap with depth 8.
-                       Bitmaps with higher depths don't have color tables. */
-                    bi = ExAllocatePoolWithTag(PagedPool,
-                                               sizeof(BITMAPINFOHEADER) +
-                                                   256 * sizeof(RGBQUAD),
-                                               TAG_TEMP);
+                    RtlZeroMemory(&bi.bmiHeader, sizeof(bi.bmiHeader));
+                    bi.bmiHeader.bV5Size          = sizeof(bi.bmiHeader);
+                    bi.bmiHeader.bV5Width         = Width;
+                    bi.bmiHeader.bV5Height        = Height;
+                    bi.bmiHeader.bV5Planes        = dibs.dsBmih.biPlanes;
+                    bi.bmiHeader.bV5BitCount      = dibs.dsBmih.biBitCount;
+                    bi.bmiHeader.bV5Compression   = dibs.dsBmih.biCompression;
+                    bi.bmiHeader.bV5SizeImage     = 0;
+                    bi.bmiHeader.bV5XPelsPerMeter = dibs.dsBmih.biXPelsPerMeter;
+                    bi.bmiHeader.bV5YPelsPerMeter = dibs.dsBmih.biYPelsPerMeter;
+                    bi.bmiHeader.bV5ClrUsed       = dibs.dsBmih.biClrUsed;
+                    bi.bmiHeader.bV5ClrImportant  = dibs.dsBmih.biClrImportant;
 
-                    if (bi)
+                    if (bi.bmiHeader.bV5Compression == BI_BITFIELDS)
                     {
-                        bi->bmiHeader.biSize          = sizeof(bi->bmiHeader);
-                        bi->bmiHeader.biWidth         = Width;
-                        bi->bmiHeader.biHeight        = Height;
-                        bi->bmiHeader.biPlanes        = dibs.dsBmih.biPlanes;
-                        bi->bmiHeader.biBitCount      = dibs.dsBmih.biBitCount;
-                        bi->bmiHeader.biCompression   = dibs.dsBmih.biCompression;
-                        bi->bmiHeader.biSizeImage     = 0;
-                        bi->bmiHeader.biXPelsPerMeter = dibs.dsBmih.biXPelsPerMeter;
-                        bi->bmiHeader.biYPelsPerMeter = dibs.dsBmih.biYPelsPerMeter;
-                        bi->bmiHeader.biClrUsed       = dibs.dsBmih.biClrUsed;
-                        bi->bmiHeader.biClrImportant  = dibs.dsBmih.biClrImportant;
+                        /* Copy the color masks */
+                        bi.bmiHeader.bV5RedMask = dibs.dsBitfields[0];
+						bi.bmiHeader.bV5GreenMask = dibs.dsBitfields[1];
+						bi.bmiHeader.bV5BlueMask = dibs.dsBitfields[2];
+                    }
+                    else if (bi.bmiHeader.bV5BitCount <= 8)
+                    {
+                        /* Copy the color table */
+                        UINT Index;
+                        PPALETTE PalGDI;
 
-                        if (bi->bmiHeader.biCompression == BI_BITFIELDS)
+                        if (!psurf->ppal)
                         {
-                            /* Copy the color masks */
-                            RtlCopyMemory(bi->bmiColors, dibs.dsBitfields, 3 * sizeof(DWORD));
+                            SetLastWin32Error(ERROR_INVALID_HANDLE);
+                            return 0;
                         }
-                        else if (bi->bmiHeader.biBitCount <= 8)
+
+                        PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
+
+                        for (Index = 0;
+                                Index < 256 && Index < PalGDI->NumColors;
+                                Index++)
                         {
-                            /* Copy the color table */
-                            UINT Index;
-                            PPALETTE PalGDI;
-
-                            if (!psurf->ppal)
-                            {
-                                ExFreePoolWithTag(bi, TAG_TEMP);
-                                SetLastWin32Error(ERROR_INVALID_HANDLE);
-                                return 0;
-                            }
-
-                            PalGDI = PALETTE_LockPalette(psurf->ppal->BaseObject.hHmgr);
-
-                            for (Index = 0;
-                                    Index < 256 && Index < PalGDI->NumColors;
-                                    Index++)
-                            {
-                                bi->bmiColors[Index].rgbRed   = PalGDI->IndexedColors[Index].peRed;
-                                bi->bmiColors[Index].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
-                                bi->bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
-                                bi->bmiColors[Index].rgbReserved = 0;
-                            }
-                            PALETTE_UnlockPalette(PalGDI);
+                            bi.bmiColors[Index].rgbRed   = PalGDI->IndexedColors[Index].peRed;
+                            bi.bmiColors[Index].rgbGreen = PalGDI->IndexedColors[Index].peGreen;
+                            bi.bmiColors[Index].rgbBlue  = PalGDI->IndexedColors[Index].peBlue;
+                            bi.bmiColors[Index].rgbReserved = 0;
                         }
+                        PALETTE_UnlockPalette(PalGDI);
 
                         Bmp = DIB_CreateDIBSection(Dc,
-                                                   bi,
+                                                   &bi,
                                                    DIB_RGB_COLORS,
                                                    &Bits,
                                                    NULL,
                                                    0,
                                                    0);
-
-                        ExFreePoolWithTag(bi, TAG_TEMP);
                         return Bmp;
                     }
                 }

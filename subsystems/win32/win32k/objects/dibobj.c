@@ -218,7 +218,7 @@ IntSetDIBits(
     UINT  StartScan,
     UINT  ScanLines,
     CONST VOID  *Bits,
-    CONST BITMAPINFO  *bmi,
+    CONST BITMAPV5INFO  *bmi,
     UINT  ColorUse)
 {
     SURFACE     *bitmap;
@@ -251,16 +251,16 @@ IntSetDIBits(
     DestSurf = &bitmap->SurfObj;
 
     // Create source surface
-    SourceSize.cx = bmi->bmiHeader.biWidth;
+    SourceSize.cx = bmi->bmiHeader.bV5Width;
     SourceSize.cy = ScanLines;
 
     // Determine width of DIB
-    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
+    DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.bV5BitCount);
 
     SourceBitmap = EngCreateBitmap(SourceSize,
                                    DIBWidth,
-                                   BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
-                                   bmi->bmiHeader.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                   BitmapFormat(bmi->bmiHeader.bV5BitCount, bmi->bmiHeader.bV5Compression),
+                                   bmi->bmiHeader.bV5Height < 0 ? BMF_TOPDOWN : 0,
                                    (PVOID) Bits);
     if (0 == SourceBitmap)
     {
@@ -281,7 +281,7 @@ IntSetDIBits(
     ASSERT(bitmap->ppal);
 
     // Source palette obtained from the BITMAPINFO
-    DIB_Palette = BuildDIBPalette(bmi, (PINT)&DIB_Palette_Type);
+    DIB_Palette = BuildDIBPalette((BITMAPINFO*)bmi, (PINT)&DIB_Palette_Type);
     if (NULL == DIB_Palette)
     {
         EngUnlockSurface(SourceSurf);
@@ -302,7 +302,7 @@ IntSetDIBits(
 
     // Determine destination rectangle
     DestRect.left	= 0;
-    DestRect.top	= abs(bmi->bmiHeader.biHeight) - StartScan - ScanLines;
+    DestRect.top	= abs(bmi->bmiHeader.bV5Height) - StartScan - ScanLines;
     DestRect.right	= SourceSize.cx;
     DestRect.bottom	= DestRect.top + ScanLines;
 
@@ -380,7 +380,7 @@ NtGdiSetDIBits(
         return 0;
     }
 
-    Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, (PBITMAPINFO)&bmiLocal, ColorUse);
+    Ret = IntSetDIBits(Dc, hBitmap, StartScan, ScanLines, Bits, &bmiLocal, ColorUse);
 
     DC_UnlockDc(Dc);
 
@@ -1019,7 +1019,7 @@ NtGdiStretchDIBitsInternal(
          * a INT, so we need make the negtive value to positve and that make the
          * count correct for negtive bitmap, TODO : we need testcase for this api */
         IntSetDIBits(pDC, hBitmap, 0, abs(bmiLocal.bmiHeader.bV5Height), Bits,
-                     (PBITMAPINFO)&bmiLocal, Usage);
+                     &bmiLocal, Usage);
 
         DC_UnlockDc(pDC);
     }
@@ -1107,7 +1107,7 @@ IntCreateDIBitmap(
 
     if (NULL != handle && CBM_INIT == init)
     {
-        IntSetDIBits(Dc, handle, 0, height, bits, (BITMAPINFO*)data, coloruse);
+        IntSetDIBits(Dc, handle, 0, height, bits, data, coloruse);
     }
 
     return handle;
@@ -1231,8 +1231,26 @@ NtGdiCreateDIBSection(
     HBITMAP hbitmap = 0;
     DC *dc;
     BOOL bDesktopDC = FALSE;
+	BITMAPV5INFO bmiLocal;
+	NTSTATUS Status;
 
     if (!bmi) return hbitmap; // Make sure.
+
+	_SEH2_TRY
+    {
+        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal, bmi, Usage, 0);
+    }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        Status = _SEH2_GetExceptionCode();
+    }
+    _SEH2_END
+
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastNtError(Status);
+        return NULL;
+    }
 
     // If the reference hdc is null, take the desktop dc
     if (hDC == 0)
@@ -1244,7 +1262,7 @@ NtGdiCreateDIBSection(
     if ((dc = DC_LockDc(hDC)))
     {
         hbitmap = DIB_CreateDIBSection(dc,
-                                       (BITMAPINFO*)bmi,
+                                       &bmiLocal,
                                        Usage,
                                        Bits,
                                        hSection,
@@ -1267,7 +1285,7 @@ HBITMAP
 APIENTRY
 DIB_CreateDIBSection(
     PDC dc,
-    BITMAPINFO *bmi,
+    CONST BITMAPV5INFO *bmi,
     UINT usage,
     LPVOID *bits,
     HANDLE section,
@@ -1278,42 +1296,43 @@ DIB_CreateDIBSection(
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
     HPALETTE hpal ;
+	ULONG palMode = PAL_INDEXED;
 
     // Fill BITMAP32 structure with DIB data
-    BITMAPINFOHEADER *bi = &bmi->bmiHeader;
+    CONST BITMAPV5HEADER *bi = &bmi->bmiHeader;
     INT effHeight;
     ULONG totalSize;
     BITMAP bm;
     SIZEL Size;
-    RGBQUAD *lpRGB;
+    CONST RGBQUAD *lpRGB = NULL;
     HANDLE hSecure;
     DWORD dsBitfields[3] = {0};
     ULONG ColorCount;
 
     DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
-           bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
-           bi->biSizeImage, bi->biClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
+           bi->bV5Width, bi->bV5Height, bi->bV5Planes, bi->bV5BitCount,
+           bi->bV5SizeImage, bi->bV5ClrUsed, usage == DIB_PAL_COLORS? "PAL" : "RGB");
 
     /* CreateDIBSection should fail for compressed formats */
-    if (bi->biCompression == BI_RLE4 || bi->biCompression == BI_RLE8)
+    if (bi->bV5Compression == BI_RLE4 || bi->bV5Compression == BI_RLE8)
     {
         return (HBITMAP)NULL;
     }
 
-    effHeight = bi->biHeight >= 0 ? bi->biHeight : -bi->biHeight;
+    effHeight = bi->bV5Height >= 0 ? bi->bV5Height : -bi->bV5Height;
     bm.bmType = 0;
-    bm.bmWidth = bi->biWidth;
+    bm.bmWidth = bi->bV5Width;
     bm.bmHeight = effHeight;
-    bm.bmWidthBytes = ovr_pitch ? ovr_pitch : (ULONG) DIB_GetDIBWidthBytes(bm.bmWidth, bi->biBitCount);
+    bm.bmWidthBytes = ovr_pitch ? ovr_pitch : (ULONG) DIB_GetDIBWidthBytes(bm.bmWidth, bi->bV5BitCount);
 
-    bm.bmPlanes = bi->biPlanes;
-    bm.bmBitsPixel = bi->biBitCount;
+    bm.bmPlanes = bi->bV5Planes;
+    bm.bmBitsPixel = bi->bV5BitCount;
     bm.bmBits = NULL;
 
     // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
     // we're dealing with a compressed bitmap.  Otherwise, use width * height.
-    totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
-                ? bi->biSizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
+    totalSize = bi->bV5SizeImage && bi->bV5Compression != BI_RGB
+                ? bi->bV5SizeImage : (ULONG)(bm.bmWidthBytes * effHeight);
 
     if (section)
     {
@@ -1333,7 +1352,7 @@ DIB_CreateDIBSection(
         }
 
         mapOffset = offset - (offset % Sbi.AllocationGranularity);
-        mapSize = bi->biSizeImage + (offset - mapOffset);
+        mapSize = bi->bV5SizeImage + (offset - mapOffset);
 
         SectionOffset.LowPart  = mapOffset;
         SectionOffset.HighPart = 0;
@@ -1362,6 +1381,7 @@ DIB_CreateDIBSection(
     {
         offset = 0;
         bm.bmBits = EngAllocUserMem(totalSize, 0);
+		if(!bm.bmBits) goto cleanup;
     }
 
 //  hSecure = MmSecureVirtualMemory(bm.bmBits, totalSize, PAGE_READWRITE);
@@ -1370,52 +1390,54 @@ DIB_CreateDIBSection(
     if (usage == DIB_PAL_COLORS)
     {
         lpRGB = DIB_MapPaletteColors(dc, bmi);
-        ColorCount = bi->biClrUsed;
+        ColorCount = bi->bV5ClrUsed;
         if (ColorCount == 0)
         {
-            ColorCount = 1 << bi->biBitCount;
+            ColorCount = max(1 << bi->bV5BitCount, 256);
         }
     }
-    else
+    else if(bi->bV5BitCount <= 8)
     {
         lpRGB = bmi->bmiColors;
-        ColorCount = 1 << bi->biBitCount;
+        ColorCount = 1 << bi->bV5BitCount;
     }
+	else
+	{
+		lpRGB = NULL;
+		ColorCount = 0;
+	}
 
     /* Set dsBitfields values */
-    if (usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
+    if (usage == DIB_PAL_COLORS || bi->bV5BitCount <= 8)
     {
         dsBitfields[0] = dsBitfields[1] = dsBitfields[2] = 0;
+		palMode = PAL_INDEXED;
     }
-    else if (bi->biCompression == BI_RGB)
+    else if (bi->bV5Compression == BI_RGB)
     {
-        switch (bi->biBitCount)
+		dsBitfields[0] = dsBitfields[1] = dsBitfields[2] = 0;
+        switch (bi->bV5BitCount)
         {
             case 15:
-                dsBitfields[0] = 0x7c00;
-                dsBitfields[1] = 0x03e0;
-                dsBitfields[2] = 0x001f;
-                break;
+                palMode = PAL_RGB16_555;
+				break;
 
             case 16:
-                dsBitfields[0] = 0xF800;
-                dsBitfields[1] = 0x07e0;
-                dsBitfields[2] = 0x001f;
+                palMode = PAL_RGB16_565;
                 break;
 
             case 24:
             case 32:
-                dsBitfields[0] = 0xff0000;
-                dsBitfields[1] = 0x00ff00;
-                dsBitfields[2] = 0x0000ff;
+                palMode = PAL_RGB;
                 break;
         }
     }
     else
     {
-        dsBitfields[0] = ((DWORD*)bmi->bmiColors)[0];
-        dsBitfields[1] = ((DWORD*)bmi->bmiColors)[1];
-        dsBitfields[2] = ((DWORD*)bmi->bmiColors)[2];
+        dsBitfields[0] = bi->bV5RedMask;
+        dsBitfields[1] = bi->bV5GreenMask;
+        dsBitfields[2] = bi->bV5BlueMask;
+		palMode = PAL_BITFIELDS;
     }
 
     // Create Device Dependent Bitmap and add DIB pointer
@@ -1424,45 +1446,27 @@ DIB_CreateDIBSection(
     res = GreCreateBitmapEx(bm.bmWidth,
                             abs(bm.bmHeight),
                             bm.bmWidthBytes,
-                            BitmapFormat(bi->biBitCount * bi->biPlanes, bi->biCompression),
+                            BitmapFormat(bi->bV5BitCount * bi->bV5Planes, bi->bV5Compression),
                             BMF_DONTCACHE | BMF_USERMEM | BMF_NOZEROINIT |
-                              (bi->biHeight < 0 ? BMF_TOPDOWN : 0),
-                            bi->biSizeImage,
+                              (bi->bV5Height < 0 ? BMF_TOPDOWN : 0),
+                            bi->bV5SizeImage,
                             bm.bmBits);
     if (!res)
     {
-        if (lpRGB != bmi->bmiColors)
-        {
-            ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
-        }
         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        return NULL;
+        goto cleanup;
     }
     bmp = SURFACE_LockSurface(res);
     if (NULL == bmp)
     {
-        if (lpRGB != bmi->bmiColors)
-        {
-            ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
-        }
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        GreDeleteObject(res);
-        return NULL;
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
+        goto cleanup;
     }
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation
                   table between the DIB and the X physical device. Obviously,
                   this is left out of the ReactOS implementation. Instead,
                   we call NtGdiSetDIBColorTable. */
-    if (bi->biBitCount <= 8)
-    {
-        bi->biClrUsed = 1 << bi->biBitCount;
-    }
-    else
-    {
-        bi->biClrUsed = 0;
-    }
-
     bmp->hDIBSection = section;
     bmp->hSecure = hSecure;
     bmp->dwOffset = offset;
@@ -1470,26 +1474,20 @@ DIB_CreateDIBSection(
     bmp->dsBitfields[0] = dsBitfields[0];
     bmp->dsBitfields[1] = dsBitfields[1];
     bmp->dsBitfields[2] = dsBitfields[2];
-    bmp->biClrUsed = bi->biClrUsed;
-    bmp->biClrImportant = bi->biClrImportant;
+    bmp->biClrUsed = ColorCount;
+    bmp->biClrImportant = bi->bV5ClrImportant;
 
-    if (bi->biClrUsed != 0)
-    {
-        hpal = PALETTE_AllocPaletteIndexedRGB(ColorCount, lpRGB);
-    }
-    else
-    {
-        hpal = PALETTE_AllocPalette(PAL_BITFIELDS, 0, NULL,
+    hpal = PALETTE_AllocPalette(palMode, ColorCount, (ULONG*)lpRGB,
                                                 dsBitfields[0],
                                                 dsBitfields[1],
                                                 dsBitfields[2]);
-    }
 
     bmp->ppal = PALETTE_ShareLockPalette(hpal);
     /* Lazy delete hpal, it will be freed at surface release */
     GreDeleteObject(hpal);
 
     // Clean up in case of errors
+cleanup:
     if (!res || !bmp || !bm.bmBits)
     {
         DPRINT("got an error res=%08x, bmp=%p, bm.bmBits=%p\n", res, bmp, bm.bmBits);
@@ -1516,9 +1514,9 @@ DIB_CreateDIBSection(
         }
     }
 
-    if (lpRGB != bmi->bmiColors)
+    if (lpRGB != bmi->bmiColors && lpRGB)
     {
-        ExFreePoolWithTag(lpRGB, TAG_COLORMAP);
+        ExFreePoolWithTag((PVOID)lpRGB, TAG_COLORMAP);
     }
 
     if (bmp)
@@ -1586,7 +1584,7 @@ INT FASTCALL DIB_BitmapInfoSize(const BITMAPINFO * info, WORD coloruse)
 
 RGBQUAD *
 FASTCALL
-DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
+DIB_MapPaletteColors(PDC dc, CONST BITMAPV5INFO* lpbmi)
 {
     RGBQUAD *lpRGB;
     ULONG nNumColors,i;
@@ -1606,10 +1604,10 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
         return NULL;
     }
 
-    nNumColors = 1 << lpbmi->bmiHeader.biBitCount;
-    if (lpbmi->bmiHeader.biClrUsed)
+    nNumColors = 1 << lpbmi->bmiHeader.bV5BitCount;
+    if (lpbmi->bmiHeader.bV5ClrUsed)
     {
-        nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
+        nNumColors = min(nNumColors, lpbmi->bmiHeader.bV5ClrUsed);
     }
 
     lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
@@ -1767,6 +1765,8 @@ ProbeAndConvertToBitmapV5Info(
     dwSize = pbmiUnsafe->bmiHeader.biSize;
     /* At least dwSize bytes must be valids */
     ProbeForRead(pbmiUnsafe, max(dwSize, MaxSize), 1);
+	if(!MaxSize)
+		ProbeForRead(pbmiUnsafe, DIB_BitmapInfoSize(pbmiUnsafe, dwColorUse), 1);
 
     /* Check the size */
     // FIXME: are intermediate sizes allowed? As what are they interpreted?
