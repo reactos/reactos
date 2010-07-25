@@ -7,8 +7,8 @@ MACRO (MACRO_ADD_INTERFACES)
 
    ADD_CUSTOM_COMMAND(
      OUTPUT ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h
-     COMMAND widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.idl
-     DEPENDS widl
+     COMMAND native-widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.idl
+     DEPENDS native-widl
    )
 
    SET_SOURCE_FILES_PROPERTIES(

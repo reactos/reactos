@@ -15,9 +15,13 @@ include_directories(./include/reactos)
 include_directories(./include/reactos/wine)
 
 add_subdirectory(tools)
-add_subdirectory(include/psdk)
+
+export(TARGETS widl FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
+
+set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
+include(${IMPORT_EXECUTABLES})
 
 add_definitions(-DDBG=1)
 add_definitions(-D_SEH_ENABLE_TRACE)
@@ -35,12 +39,15 @@ add_definitions(-D_USE_32BIT_TIME_T)
 
 include_directories(./include)
 include_directories(./include/psdk)
+include_directories(${REACTOS_BINARY_DIR}/include/psdk)
 include_directories(./include/crt)
 include_directories(./include/crt/mingw32)
 include_directories(./include/ddk)
 include_directories(./include/ndk)
 include_directories(./include/reactos)
 include_directories(./include/reactos/libs)
+
+add_subdirectory(include/psdk)
 
 add_subdirectory(lib)
 
