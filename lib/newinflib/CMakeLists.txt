@@ -1,0 +1,20 @@
+include_directories(.)
+
+SET(GLOBAL_FILES infcore.c infget.c infput.c)
+
+if(CMAKE_CROSSCOMPILING)
+
+file(GLOB_RECURSE SOURCE "infros*.c")
+add_library(newinflib ${GLOBAL_FILES} ${SOURCE})
+
+else()
+
+file(GLOB_RECURSE SOURCE "infhost*.c")
+
+add_definitions(-DWINE_UNICODE_API= -D__NO_CTYPE_INLINES -DINFLIB_HOST -DUSE_HOST_WCSFUNCS)
+add_definitions(-Wpointer-arith -Wwrite-strings)
+add_library(newinflibhost ${GLOBAL_FILES} ${SOURCE})
+target_link_libraries(newinflibhost unicode)
+
+endif()
+

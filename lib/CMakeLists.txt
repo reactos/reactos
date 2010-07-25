@@ -1,6 +1,11 @@
 
-add_subdirectory(atl)
 add_subdirectory(cmlib)
+add_subdirectory(inflib)
+add_subdirectory(newinflib)
+
+if(CMAKE_CROSSCOMPILING)
+
+add_subdirectory(atl)
 add_subdirectory(dnslib)
 add_subdirectory(epsapi)
 add_subdirectory(lsalib)
@@ -9,3 +14,9 @@ add_subdirectory(recyclebin)
 add_subdirectory(sdk)
 add_subdirectory(smlib)
 add_subdirectory(tdilib)
+
+else()
+
+add_subdirectory(host/wcsfuncs)
+
+endif()

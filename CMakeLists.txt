@@ -3,11 +3,10 @@ project(REACTOS)
 
 add_definitions(-D__REACTOS__)
 
-#-fshort-wchar
-
 if(NOT CMAKE_CROSSCOMPILING)
 
 add_definitions(-DTARGET_i386)
+add_definitions(-fshort-wchar)
 
 include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
 include_directories(./include)
@@ -15,6 +14,7 @@ include_directories(./include/reactos)
 include_directories(./include/reactos/wine)
 
 add_subdirectory(tools)
+add_subdirectory(lib)
 
 export(TARGETS widl wmc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
