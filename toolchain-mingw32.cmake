@@ -6,7 +6,7 @@ SET(CMAKE_C_COMPILER mingw32-gcc)
 SET(CMAKE_CXX_COMPILER mingw32-g++)
 
 # here is the target environment located
-SET(CMAKE_FIND_ROOT_PATH /usr/local/RosBE )
+#SET(CMAKE_FIND_ROOT_PATH /usr/local/RosBE )
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
