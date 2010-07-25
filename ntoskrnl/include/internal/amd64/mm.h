@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define _MI_PAGING_LEVELS 4
+
 /* Helper macros */
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
@@ -106,12 +108,17 @@ ULONG
 FORCEINLINE
 MiAddressToPti(PVOID Address)
 {
-    ULONG64 Pti = (ULONG64)Address >> PTI_SHIFT;
-    Pti &= PTI_MASK_AMD64;
-    return Pti;
+    return ((((ULONG64)Address) >> PTI_SHIFT) & 0x1FF);
+}
+#define MiAddressToPteOffset(x) MiAddressToPti(x) // FIXME: bad name
+
+ULONG
+FORCEINLINE
+MiAddressToPxi(PVOID Address)
+{
+    return ((((ULONG64)Address) >> PXI_SHIFT) & 0x1FF);
 }
 
-#define MiAddressToPteOffset(x) MiAddressToPti(x)
 
 /* Convert a PTE into a corresponding address */
 PVOID
