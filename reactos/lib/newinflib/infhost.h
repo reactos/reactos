@@ -49,7 +49,7 @@ extern int InfHostGetBinaryField(PINFCONTEXT Context,
                                  ULONG *RequiredSize);
 extern int InfHostGetIntField(PINFCONTEXT Context,
                               ULONG FieldIndex,
-                              ULONG *IntegerValue);
+                              INT *IntegerValue);
 extern int InfHostGetMultiSzField(PINFCONTEXT Context,
                                   ULONG FieldIndex,
                                   WCHAR *ReturnBuffer,
