@@ -4,6 +4,8 @@
 
 #pragma once
 
+#define _MI_PAGING_LEVELS 4
+
 /* Helper macros */
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))

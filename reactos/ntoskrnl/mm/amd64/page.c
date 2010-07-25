@@ -519,16 +519,4 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     return 0;
 }
 
-BOOLEAN
-NTAPI
-_MmIsAddressValid(IN PVOID VirtualAddress)
-{
-    /* Check all four page table levels */
-    return (MiAddressToPxe(VirtualAddress)->u.Hard.Valid != 0 &&
-            MiAddressToPpe(VirtualAddress)->u.Hard.Valid != 0 &&
-            MiAddressToPde(VirtualAddress)->u.Hard.Valid != 0 &&
-            MiAddressToPte(VirtualAddress)->u.Hard.Valid != 0);
-}
-
-
 /* EOF */
