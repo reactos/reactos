@@ -138,7 +138,7 @@ InfHostGetBinaryField(PINFCONTEXT Context,
 int
 InfHostGetIntField(PINFCONTEXT Context,
                    ULONG FieldIndex,
-                   PINT IntegerValue)
+                   INT *IntegerValue)
 {
   INFSTATUS Status;
 
