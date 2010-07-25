@@ -66,46 +66,6 @@ InfpFindFirstLineW(
 }
 
 BOOL WINAPI
-InfpFindNextLine(
-	IN PINFCONTEXT ContextIn,
-	OUT PINFCONTEXT ContextOut)
-{
-	return InfFindNextLine(ContextIn, ContextOut);
-}
-
-BOOL WINAPI
-InfpGetBinaryField(
-	IN PINFCONTEXT Context,
-    IN ULONG FieldIndex,
-	IN OUT BYTE* ReturnBuffer,
-	IN ULONG ReturnBufferSize,
-	OUT PULONG RequiredSize)
-{
-	return InfGetBinaryField(Context, FieldIndex, ReturnBuffer, ReturnBufferSize, RequiredSize);
-}
-
-DWORD WINAPI
-InfpGetFieldCount(
-	IN PINFCONTEXT Context)
-{
-	return (DWORD)InfGetFieldCount(Context);
-}
-
-BOOL WINAPI
-InfpGetIntField(
-	IN PINFCONTEXT Context,
-	IN DWORD FieldIndex,
-	OUT PINT IntegerValue)
-{
-	LONG IntegerValueL;
-	BOOL ret;
-
-	ret = InfGetIntField(Context, FieldIndex, &IntegerValueL);
-	*IntegerValue = (INT)IntegerValueL;
-	return ret;
-}
-
-BOOL WINAPI
 InfpGetMultiSzFieldW(
 	IN PINFCONTEXT Context,
 	IN ULONG FieldIndex,

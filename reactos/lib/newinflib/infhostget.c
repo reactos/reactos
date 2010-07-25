@@ -138,11 +138,11 @@ InfHostGetBinaryField(PINFCONTEXT Context,
 int
 InfHostGetIntField(PINFCONTEXT Context,
                    ULONG FieldIndex,
-                   ULONG *IntegerValue)
+                   PINT IntegerValue)
 {
   INFSTATUS Status;
 
-  Status = InfpGetIntField(Context, FieldIndex, (PLONG)IntegerValue);
+  Status = InfpGetIntField(Context, FieldIndex, IntegerValue);
   if (INF_SUCCESS(Status))
     {
       return 0;

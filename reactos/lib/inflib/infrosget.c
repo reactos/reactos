@@ -84,7 +84,7 @@ InfGetBinaryField(PINFCONTEXT Context,
 BOOLEAN
 InfGetIntField(PINFCONTEXT Context,
                ULONG FieldIndex,
-               PLONG IntegerValue)
+               PINT IntegerValue)
 {
   return INF_SUCCESS(InfpGetIntField(Context, FieldIndex, IntegerValue));
 }

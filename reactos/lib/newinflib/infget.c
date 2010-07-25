@@ -416,7 +416,7 @@ InfpGetBinaryField(PINFCONTEXT Context,
 INFSTATUS
 InfpGetIntField(PINFCONTEXT Context,
                 ULONG FieldIndex,
-                PLONG IntegerValue)
+                PINT IntegerValue)
 {
   PINFCACHELINE CacheLine;
   PINFCACHEFIELD CacheField;

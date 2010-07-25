@@ -115,7 +115,7 @@ extern INFSTATUS InfpGetBinaryField(PINFCONTEXT Context,
                                     PULONG RequiredSize);
 extern INFSTATUS InfpGetIntField(PINFCONTEXT Context,
                                  ULONG FieldIndex,
-                                 PLONG IntegerValue);
+                                 INT* IntegerValue);
 extern INFSTATUS InfpGetMultiSzField(PINFCONTEXT Context,
                                      ULONG FieldIndex,
                                      PTSTR ReturnBuffer,
