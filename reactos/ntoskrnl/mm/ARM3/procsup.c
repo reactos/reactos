@@ -1040,6 +1040,7 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
     return STATUS_SUCCESS;
 }
 
+#ifdef _M_IX86
 /* FIXME: Evaluate ways to make this portable yet arch-specific */
 BOOLEAN
 NTAPI
@@ -1131,6 +1132,7 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
     return TRUE;
 }
+#endif
 
 VOID
 NTAPI

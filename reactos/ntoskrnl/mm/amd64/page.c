@@ -5,6 +5,7 @@
  * PURPOSE:         Low level memory managment manipulation
  *
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  ReactOS Portable Systems Group
  */
 
 /* INCLUDES ***************************************************************/
@@ -12,6 +13,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "../ARM3/miarm.h"
 
 #undef InterlockedExchangePte
 #define InterlockedExchangePte(pte1, pte2) \
@@ -25,6 +27,55 @@ extern MMPTE HyperTemplatePte;
 
 /* GLOBALS *****************************************************************/
 
+const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
 
 /* PRIVATE FUNCTIONS *******************************************************/
 
@@ -489,34 +540,95 @@ MmCreateVirtualMapping(PEPROCESS Process,
     return MmCreateVirtualMappingUnsafe(Process, Address, Protect, Pages, PageCount);
 }
 
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG_PTR DirectoryTableBase)
-{
-    /* Share the directory base with the idle process */
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-
-    /* Initialize the Addresss Space */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
-    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
-    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
-
-    /* The process now has an address space */
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
-}
-
 BOOLEAN
 NTAPI
 MmCreateProcessAddressSpace(IN ULONG MinWs,
                             IN PEPROCESS Process,
-                            IN PULONG_PTR DirectoryTableBase)
+                            OUT PULONG_PTR DirectoryTableBase)
 {
-    UNIMPLEMENTED;
-    return 0;
+    KIRQL OldIrql;
+    PFN_NUMBER TableBasePfn, HyperPfn;
+    PMMPTE PointerPte;
+    MMPTE TempPte, PdePte;
+    ULONG TableIndex;
+    PMMPTE SystemTable;
+
+    /* No page colors yet */
+    Process->NextPageColor = 0;
+    
+    /* Setup the hyperspace lock */
+    KeInitializeSpinLock(&Process->HyperSpaceLock);
+
+    /* Lock PFN database */
+    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
+    
+    /* Get a page for the table base and for hyperspace */
+    TableBasePfn = MiRemoveAnyPage(0);
+    HyperPfn = MiRemoveAnyPage(0);
+
+    /* Release PFN lock */
+    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
+
+    /* Zero both pages */
+    MiZeroPhysicalPage(TableBasePfn);
+    MiZeroPhysicalPage(HyperPfn);
+
+    /* Set the base directory pointers */
+    DirectoryTableBase[0] = TableBasePfn << PAGE_SHIFT;
+    DirectoryTableBase[1] = HyperPfn << PAGE_SHIFT;
+
+    /* Make sure we don't already have a page directory setup */
+    ASSERT(Process->Pcb.DirectoryTableBase[0] == 0);
+
+    /* Insert us into the Mm process list */
+    InsertTailList(&MmProcessList, &Process->MmProcessLinks);
+
+    /* Get a PTE to map the page directory */
+    PointerPte = MiReserveSystemPtes(1, SystemPteSpace);
+    ASSERT(PointerPte != NULL);
+
+    /* Build it */
+    MI_MAKE_HARDWARE_PTE_KERNEL(&PdePte,
+                                PointerPte,
+                                MM_READWRITE,
+                                TableBasePfn);
+
+    /* Set it dirty and map it */
+    PdePte.u.Hard.Dirty = TRUE;
+    MI_WRITE_VALID_PTE(PointerPte, PdePte);
+
+    /* Now get the page directory (which we'll double map, so call it a page table */
+    SystemTable = MiPteToAddress(PointerPte);
+
+    /* Copy all the kernel mappings */
+    TableIndex = MiAddressToPxi(MmSystemRangeStart);
+
+    RtlCopyMemory(&SystemTable[TableIndex],
+                  MiAddressToPxe(MmSystemRangeStart),
+                  PAGE_SIZE - TableIndex * sizeof(MMPTE));
+
+    /* Now write the PTE/PDE entry for hyperspace itself */
+    TempPte = ValidKernelPte;
+    TempPte.u.Hard.PageFrameNumber = HyperPfn;
+    TableIndex = MiAddressToPxi(HYPER_SPACE);
+    SystemTable[TableIndex] = TempPte;
+
+    /* Sanity check */
+    ASSERT(MiAddressToPxi(MmHyperSpaceEnd) > TableIndex);
+
+    /* Now do the x86 trick of making the PDE a page table itself */
+    TableIndex = MiAddressToPxi(PTE_BASE);
+    TempPte.u.Hard.PageFrameNumber = TableBasePfn;
+    SystemTable[TableIndex] = TempPte;
+
+    /* Let go of the system PTE */
+    MiReleaseSystemPtes(PointerPte, 1, SystemPteSpace);
+
+    /* Switch to phase 1 initialization */
+    ASSERT(Process->AddressSpaceInitialized == 0);
+    Process->AddressSpaceInitialized = 1;
+
+    return TRUE;
 }
 
 /* EOF */
