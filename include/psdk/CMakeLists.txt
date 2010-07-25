@@ -6,18 +6,18 @@ MACRO (MACRO_ADD_INTERFACES)
    GET_FILENAME_COMPONENT(FILE ${_in_FILE} NAME_WE)
 
    ADD_CUSTOM_COMMAND(
-     OUTPUT ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.h
-     COMMAND widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.idl
+     OUTPUT ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h
+     COMMAND widl -I${REACTOS_SOURCE_DIR}/include/dxsdk -I. -I${REACTOS_SOURCE_DIR}/include -I${REACTOS_SOURCE_DIR}/include/psdk -m32 --win32 -h -H ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.idl
      DEPENDS widl
    )
 
    SET_SOURCE_FILES_PROPERTIES(
-     ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.h
+     ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h
      PROPERTIES
      GENERATED TRUE
    )
 
-    ADD_CUSTOM_TARGET(build_${FILE}_idl ALL DEPENDS ${REACTOS_SOURCE_DIR}/include/psdk/${FILE}.h)
+    ADD_CUSTOM_TARGET(build_${FILE}_idl ALL DEPENDS ${REACTOS_BINARY_DIR}/include/psdk/${FILE}.h)
 
  ENDFOREACH(_in_FILE ${ARGN})
 

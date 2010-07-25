@@ -11,6 +11,7 @@ add_definitions(-DTARGET_i386)
 
 include_directories(${REACTOS_SOURCE_DIR}/tools/unicode)
 include_directories(./include)
+include_directories(./include/reactos)
 include_directories(./include/reactos/wine)
 
 add_subdirectory(tools)
