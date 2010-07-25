@@ -16,7 +16,7 @@ include_directories(./include/reactos/wine)
 
 add_subdirectory(tools)
 
-export(TARGETS widl FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl wmc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
@@ -51,6 +51,7 @@ add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpr
 include_directories(./include)
 include_directories(./include/psdk)
 include_directories(${REACTOS_BINARY_DIR}/include/psdk)
+include_directories(${REACTOS_BINARY_DIR}/include/reactos)
 include_directories(./include/crt)
 include_directories(./include/crt/mingw32)
 include_directories(./include/ddk)
@@ -59,6 +60,7 @@ include_directories(./include/reactos)
 include_directories(./include/reactos/libs)
 
 add_subdirectory(include/psdk)
+add_subdirectory(include/reactos/mc)
 
 add_subdirectory(lib)
 

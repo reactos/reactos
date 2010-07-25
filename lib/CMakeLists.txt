@@ -1,2 +1,11 @@
 
+add_subdirectory(atl)
+add_subdirectory(cmlib)
+add_subdirectory(dnslib)
+add_subdirectory(epsapi)
+add_subdirectory(lsalib)
+add_subdirectory(recyclebin)
+#add_subdirectory(rtl)
 add_subdirectory(sdk)
+add_subdirectory(smlib)
+add_subdirectory(tdilib)

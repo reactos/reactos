@@ -1,0 +1,30 @@
+
+MACRO (MACRO_ADD_RESOURCES)
+
+ FOREACH(_in_FILE ${ARGN})
+
+   GET_FILENAME_COMPONENT(FILE ${_in_FILE} NAME_WE)
+
+   ADD_CUSTOM_COMMAND(
+     OUTPUT ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
+     COMMAND native-wmc -i -H ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h -o ${REACTOS_BINARY_DIR}/include/reactos/mc/${FILE}.rc ${REACTOS_SOURCE_DIR}/include/reactos/mc/${FILE}.mc
+     DEPENDS native-wmc
+   )
+
+   SET_SOURCE_FILES_PROPERTIES(
+     ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h
+     PROPERTIES
+     GENERATED TRUE
+   )
+   
+   LIST(APPEND RESOURCES ${REACTOS_BINARY_DIR}/include/reactos/${FILE}.h)  
+
+ ENDFOREACH(_in_FILE ${ARGN})
+
+ENDMACRO (MACRO_ADD_RESOURCES)
+
+file(GLOB_RECURSE SOURCE "*.mc")
+
+MACRO_ADD_RESOURCES(${SOURCE})
+
+ADD_CUSTOM_TARGET(build_resources ALL DEPENDS ${RESOURCES})
