@@ -940,6 +940,7 @@ KiContinue(
     IN PKTRAP_FRAME TrapFrame
 );
 
+DECLSPEC_NORETURN
 VOID
 FASTCALL
 KiServiceExit(
@@ -947,6 +948,7 @@ KiServiceExit(
     IN NTSTATUS Status
 );
 
+DECLSPEC_NORETURN
 VOID
 FASTCALL
 KiServiceExit2(

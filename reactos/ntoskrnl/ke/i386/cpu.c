@@ -1173,7 +1173,12 @@ KiIsNpxPresent(VOID)
     Cr0 = __readcr0() & ~(CR0_MP | CR0_TS | CR0_EM | CR0_ET);
     
     /* Store on FPU stack */
+#ifdef _MSC_VER
+    __asm fninit;
+    __asm fnstsw Magic;
+#else
     asm volatile ("fninit;" "fnstsw %0" : "+m"(Magic));
+#endif
     
     /* Magic should now be cleared */
     if (Magic & 0xFF)
@@ -1210,7 +1215,7 @@ KiIsNpxErrataPresent(VOID)
     __writecr0(Cr0 & ~(CR0_MP | CR0_TS | CR0_EM));
     
     /* Initialize FPU state */
-    asm volatile ("fninit");
+    Ke386FnInit();
     
     /* Multiply the magic values and divide, we should get the result back */
     Value1 = 4195835.0;
@@ -1227,8 +1232,8 @@ KiIsNpxErrataPresent(VOID)
     return ErrataPresent;
 }
 
-NTAPI
 VOID
+NTAPI
 KiFlushNPXState(IN PFLOATING_SAVE_AREA SaveArea)
 {
     ULONG EFlags, Cr0;
