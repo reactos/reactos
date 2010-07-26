@@ -87,7 +87,7 @@ GpStatus WINGDIPAPI GdipCreateMatrix3(GDIPCONST GpRectF *rect,
 {
     TRACE("(%p, %p, %p)\n", rect, pt, matrix);
 
-    if(!matrix)
+    if(!matrix || !pt)
         return InvalidParameter;
 
     *matrix = GdipAlloc(sizeof(GpMatrix));

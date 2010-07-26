@@ -51,12 +51,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "msi_Ro.rc"
 #include "msi_Ru.rc"
 #include "msi_Si.rc"
-
+#include "msi_Sr.rc"
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /* @makedep: msiserver.tlb */
-1 TYPELIB LOADONCALL DISCARDABLE msiserver.tlb
+1 TYPELIB msiserver.tlb
 
 /* @makedep: instadvert.bmp */
 0x1001 BITMAP instadvert.bmp

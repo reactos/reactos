@@ -655,7 +655,7 @@ static HRESULT WINAPI ActiveIMMApp_Deactivate(IActiveIMMApp* This)
 static HRESULT WINAPI ActiveIMMApp_OnDefWindowProc(IActiveIMMApp* This,
         HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, LRESULT *plResult)
 {
-    //FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
+    FIXME("Stub (%p %x %lx %lx)\n",hWnd,Msg,wParam,lParam);
     return E_FAIL;
 }
 

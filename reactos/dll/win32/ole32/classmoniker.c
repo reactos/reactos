@@ -210,9 +210,7 @@ static HRESULT WINAPI ClassMoniker_Save(IMoniker* iface,
     hr = IStream_Write(pStm, &This->clsid, sizeof(This->clsid), NULL);
     if (FAILED(hr)) return hr;
 
-    hr = IStream_Write(pStm, &zero, sizeof(zero), NULL);
-
-    return hr;
+    return IStream_Write(pStm, &zero, sizeof(zero), NULL);
 }
 
 /******************************************************************************

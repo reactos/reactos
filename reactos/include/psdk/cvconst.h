@@ -40,13 +40,13 @@ enum SymTagEnum
    SymTagPointerType,
    SymTagArrayType,
    SymTagBaseType,
-   SymTagTypedef,
+   SymTagTypedef, 
    SymTagBaseClass,
    SymTagFriend,
-   SymTagFunctionArgType,
-   SymTagFuncDebugStart,
+   SymTagFunctionArgType, 
+   SymTagFuncDebugStart, 
    SymTagFuncDebugEnd,
-   SymTagUsingNamespace,
+   SymTagUsingNamespace, 
    SymTagVTableShape,
    SymTagVTable,
    SymTagCustom,
@@ -287,7 +287,7 @@ enum CV_HREG_e
     CV_M4_Psr           = 51,
     CV_M4_FltF0         = 60, /* this includes FltF1 to Flt31 */
     CV_M4_FltFsr        = 92,
-
+    
     /* Alpha AXP CPU */
     CV_ALPHA_NOREG      = CV_REG_NONE,
     CV_ALPHA_FltF0      = 10, /* this includes FltF1 to FltF31 */
@@ -311,7 +311,7 @@ enum CV_HREG_e
     CV_ALPHA_Psr        = 76,
     CV_ALPHA_FltFsr     = 77,
     CV_ALPHA_SoftFpcr   = 78,
-
+    
     /* Motorola & IBM PowerPC CPU */
     CV_PPC_GPR0         = 1, /* this includes GPR1 to GPR31 */
     CV_PPC_CR           = 33,
@@ -357,7 +357,7 @@ enum CV_HREG_e
     CV_ARM_LR           = 24,
     CV_ARM_PC           = 25,
     CV_ARM_CPSR         = 26,
-
+    
     /* Intel IA64 CPU */
     CV_IA64_NOREG       = CV_REG_NONE,
     CV_IA64_Br0         = 512, /* this includes Br1 to Br7 */
@@ -511,6 +511,8 @@ enum CV_HREG_e
     CV_AMD64_MM70       = CV_REG_MM70,
     CV_AMD64_MM71       = CV_REG_MM71,
 
+    CV_AMD64_XMM8       = 252,           /* this includes XMM9 to XMM15 */
+
     CV_AMD64_RAX        = 328,
     CV_AMD64_RBX        = 329,
     CV_AMD64_RCX        = 330,
@@ -536,7 +538,7 @@ typedef enum
    THUNK_ORDINAL_ADJUSTOR,
    THUNK_ORDINAL_VCALL,
    THUNK_ORDINAL_PCODE,
-   THUNK_ORDINAL_LOAD
+   THUNK_ORDINAL_LOAD 
 } THUNK_ORDINAL;
 
 typedef enum CV_call_e

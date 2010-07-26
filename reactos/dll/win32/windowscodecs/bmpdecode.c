@@ -395,32 +395,52 @@ fail:
     return hr;
 }
 
+static HRESULT ReadByte(IStream *stream, BYTE *buffer, ULONG buffer_size,
+    ULONG *cursor, ULONG *bytesread, BYTE *result)
+{
+    HRESULT hr=S_OK;
+
+    if (*bytesread == 0 || *cursor == *bytesread)
+    {
+        hr = IStream_Read(stream, buffer, buffer_size, bytesread);
+        *cursor = 0;
+    }
+
+    if (SUCCEEDED(hr))
+    {
+        if (*cursor < *bytesread)
+            *result = buffer[(*cursor)++];
+        else
+            hr = E_FAIL;
+    }
+
+    return hr;
+}
+
 static HRESULT BmpFrameDecode_ReadRLE8(BmpDecoder* This)
 {
     UINT bytesperrow;
     UINT width, height;
-    BYTE *rledata, *cursor, *rledataend;
-    UINT rlesize, datasize, palettesize;
+    BYTE rledata[4096];
+    UINT datasize, palettesize;
     DWORD palette[256];
     UINT x, y;
     DWORD *bgrdata;
     HRESULT hr;
     LARGE_INTEGER offbits;
-    ULONG bytesread;
+    ULONG cursor=0, bytesread=0;
 
     width = This->bih.bV5Width;
     height = abs(This->bih.bV5Height);
     bytesperrow = width * 4;
     datasize = bytesperrow * height;
-    rlesize = This->bih.bV5SizeImage;
     if (This->bih.bV5ClrUsed && This->bih.bV5ClrUsed < 256)
         palettesize = 4 * This->bih.bV5ClrUsed;
     else
         palettesize = 4 * 256;
 
-    rledata = HeapAlloc(GetProcessHeap(), 0, rlesize);
     This->imagedata = HeapAlloc(GetProcessHeap(), 0, datasize);
-    if (!This->imagedata || !rledata)
+    if (!This->imagedata)
     {
         hr = E_OUTOFMEMORY;
         goto fail;
@@ -439,22 +459,26 @@ static HRESULT BmpFrameDecode_ReadRLE8(BmpDecoder* This)
     hr = IStream_Seek(This->stream, offbits, STREAM_SEEK_SET, NULL);
     if (FAILED(hr)) goto fail;
 
-    hr = IStream_Read(This->stream, rledata, rlesize, &bytesread);
-    if (FAILED(hr) || bytesread != rlesize) goto fail;
-
     /* decode RLE */
     bgrdata = (DWORD*)This->imagedata;
     x = 0;
     y = 0;
-    rledataend = rledata + rlesize;
-    cursor = rledata;
-    while (cursor < rledataend && y < height)
+    cursor = 0;
+    bytesread = 0;
+    while (y < height)
     {
-        BYTE length = *cursor++;
-        if (length == 0)
+        BYTE length;
+        hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &length);
+
+        if (FAILED(hr))
+            goto fail;
+        else if (length == 0)
         {
             /* escape code */
-            BYTE escape = *cursor++;
+            BYTE escape;
+            hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &escape);
+            if (FAILED(hr))
+                goto fail;
             switch(escape)
             {
             case 0: /* end of line */
@@ -464,37 +488,53 @@ static HRESULT BmpFrameDecode_ReadRLE8(BmpDecoder* This)
             case 1: /* end of bitmap */
                 goto end;
             case 2: /* delta */
-                if (cursor < rledataend)
-                {
-                    x += *cursor++;
-                    y += *cursor++;
-                }
+            {
+                BYTE dx, dy;
+                hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &dx);
+                if (SUCCEEDED(hr))
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &dy);
+                if (FAILED(hr))
+                    goto fail;
+                x += dx;
+                y += dy;
                 break;
+            }
             default: /* absolute mode */
                 length = escape;
-                while (cursor < rledataend && length-- && x < width)
-                    bgrdata[y*width + x++] = palette[*cursor++];
-                if (escape & 1) cursor++; /* skip pad byte */
+                while (length-- && x < width)
+                {
+                    BYTE index;
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &index);
+                    if (FAILED(hr))
+                        goto fail;
+                    bgrdata[y*width + x++] = palette[index];
+                }
+                if (escape & 1)
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &length); /* skip pad byte */
+                if (FAILED(hr))
+                    goto fail;
             }
         }
         else
         {
-            DWORD color = palette[*cursor++];
+            BYTE index;
+            DWORD color;
+            hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &index);
+            if (FAILED(hr))
+                goto fail;
+            color = palette[index];
             while (length-- && x < width)
                 bgrdata[y*width + x++] = color;
         }
     }
 
 end:
-    HeapFree(GetProcessHeap(), 0, rledata);
-
     This->imagedatastart = This->imagedata + (height-1) * bytesperrow;
     This->stride = -bytesperrow;
 
     return S_OK;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, rledata);
     HeapFree(GetProcessHeap(), 0, This->imagedata);
     This->imagedata = NULL;
     if (SUCCEEDED(hr)) hr = E_FAIL;
@@ -505,28 +545,26 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
 {
     UINT bytesperrow;
     UINT width, height;
-    BYTE *rledata, *cursor, *rledataend;
-    UINT rlesize, datasize, palettesize;
+    BYTE rledata[4096];
+    UINT datasize, palettesize;
     DWORD palette[16];
     UINT x, y;
     DWORD *bgrdata;
     HRESULT hr;
     LARGE_INTEGER offbits;
-    ULONG bytesread;
+    ULONG cursor=0, bytesread=0;
 
     width = This->bih.bV5Width;
     height = abs(This->bih.bV5Height);
     bytesperrow = width * 4;
     datasize = bytesperrow * height;
-    rlesize = This->bih.bV5SizeImage;
     if (This->bih.bV5ClrUsed && This->bih.bV5ClrUsed < 16)
         palettesize = 4 * This->bih.bV5ClrUsed;
     else
         palettesize = 4 * 16;
 
-    rledata = HeapAlloc(GetProcessHeap(), 0, rlesize);
     This->imagedata = HeapAlloc(GetProcessHeap(), 0, datasize);
-    if (!This->imagedata || !rledata)
+    if (!This->imagedata)
     {
         hr = E_OUTOFMEMORY;
         goto fail;
@@ -545,22 +583,26 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
     hr = IStream_Seek(This->stream, offbits, STREAM_SEEK_SET, NULL);
     if (FAILED(hr)) goto fail;
 
-    hr = IStream_Read(This->stream, rledata, rlesize, &bytesread);
-    if (FAILED(hr) || bytesread != rlesize) goto fail;
-
     /* decode RLE */
     bgrdata = (DWORD*)This->imagedata;
     x = 0;
     y = 0;
-    rledataend = rledata + rlesize;
-    cursor = rledata;
-    while (cursor < rledataend && y < height)
+    cursor = 0;
+    bytesread = 0;
+    while (y < height)
     {
-        BYTE length = *cursor++;
-        if (length == 0)
+        BYTE length;
+        hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &length);
+
+        if (FAILED(hr))
+            goto fail;
+        else if (length == 0)
         {
             /* escape code */
-            BYTE escape = *cursor++;
+            BYTE escape;
+            hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &escape);
+            if (FAILED(hr))
+                goto fail;
             switch(escape)
             {
             case 0: /* end of line */
@@ -570,31 +612,51 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
             case 1: /* end of bitmap */
                 goto end;
             case 2: /* delta */
-                if (cursor < rledataend)
-                {
-                    x += *cursor++;
-                    y += *cursor++;
-                }
+            {
+                BYTE dx, dy;
+                hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &dx);
+                if (SUCCEEDED(hr))
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &dy);
+                if (FAILED(hr))
+                    goto fail;
+                x += dx;
+                y += dy;
                 break;
+            }
             default: /* absolute mode */
+            {
+                BYTE realsize=0;
                 length = escape;
-                while (cursor < rledataend && length-- && x < width)
+                while (length-- && x < width)
                 {
-                    BYTE colors = *cursor++;
+                    BYTE colors;
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &colors);
+                    realsize++;
+                    if (FAILED(hr))
+                        goto fail;
                     bgrdata[y*width + x++] = palette[colors>>4];
                     if (length-- && x < width)
                         bgrdata[y*width + x++] = palette[colors&0xf];
                     else
                         break;
                 }
-                if ((cursor - rledata) & 1) cursor++; /* skip pad byte */
+                if (realsize & 1)
+                    hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &length); /* skip pad byte */
+                if (FAILED(hr))
+                    goto fail;
+            }
             }
         }
         else
         {
-            BYTE colors = *cursor++;
-            DWORD color1 = palette[colors>>4];
-            DWORD color2 = palette[colors&0xf];
+            BYTE colors;
+            DWORD color1;
+            DWORD color2;
+            hr = ReadByte(This->stream, rledata, 4096, &cursor, &bytesread, &colors);
+            if (FAILED(hr))
+                goto fail;
+            color1 = palette[colors>>4];
+            color2 = palette[colors&0xf];
             while (length-- && x < width)
             {
                 bgrdata[y*width + x++] = color1;
@@ -607,15 +669,12 @@ static HRESULT BmpFrameDecode_ReadRLE4(BmpDecoder* This)
     }
 
 end:
-    HeapFree(GetProcessHeap(), 0, rledata);
-
     This->imagedatastart = This->imagedata + (height-1) * bytesperrow;
     This->stride = -bytesperrow;
 
     return S_OK;
 
 fail:
-    HeapFree(GetProcessHeap(), 0, rledata);
     HeapFree(GetProcessHeap(), 0, This->imagedata);
     This->imagedata = NULL;
     if (SUCCEEDED(hr)) hr = E_FAIL;

@@ -23,7 +23,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
         4 "Pachetul de instalare menționat nu a putut fi deschis. Verificați calea și încercați din nou."
         5 "calea %s nu a fost găsită"

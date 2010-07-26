@@ -733,8 +733,18 @@ HRESULT WINAPI HlinkSimpleNavigateToMoniker(IMoniker *pmkTarget,
     LPCWSTR szLocation, LPCWSTR szTargetFrameName, IUnknown *pUnk,
     IBindCtx *pbc, IBindStatusCallback *pbsc, DWORD grfHLNF, DWORD dwReserved)
 {
-    FIXME("stub\n");
-    return E_NOTIMPL;
+    LPWSTR target;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = IMoniker_GetDisplayName(pmkTarget, pbc, 0, &target);
+    if(hres == S_OK)
+        hres = HlinkSimpleNavigateToString( target, szLocation, szTargetFrameName,
+                                            pUnk, pbc, pbsc, grfHLNF, dwReserved );
+    CoTaskMemFree(target);
+
+    return hres;
 }
 
 /***********************************************************************

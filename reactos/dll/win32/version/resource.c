@@ -42,9 +42,25 @@
 #define VS_FILE_INFO 16
 
 #include "wine/unicode.h"
-#include "wine/winbase16.h"
 
 #include "wine/debug.h"
+
+typedef struct
+{
+    WORD offset;
+    WORD length;
+    WORD flags;
+    WORD id;
+    WORD handle;
+    WORD usage;
+} NE_NAMEINFO;
+
+typedef struct
+{
+    WORD  type_id;
+    WORD  count;
+    DWORD resloader;
+} NE_TYPEINFO;
 
 WINE_DEFAULT_DEBUG_CHANNEL(ver);
 

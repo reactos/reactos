@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_SLOVENIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Napaka med spreminjanjem v primitivni tip"
     IDS_INVALID_CALL_ARG    "Napačen klic postopka ali argument"

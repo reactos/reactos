@@ -963,18 +963,33 @@ GpStatus WINGDIPAPI GdipGetFontCollectionFamilyList(
         GpFontFamily* gpfamilies[], INT* numFound)
 {
     INT i;
+    GpStatus stat=Ok;
 
     TRACE("%p, %d, %p, %p\n", fontCollection, numSought, gpfamilies, numFound);
 
     if (!(fontCollection && gpfamilies && numFound))
         return InvalidParameter;
 
-    for (i = 0; i < numSought && i < fontCollection->count; i++)
+    memset(gpfamilies, 0, sizeof(*gpfamilies) * numSought);
+
+    for (i = 0; i < numSought && i < fontCollection->count && stat == Ok; i++)
     {
-        gpfamilies[i] = fontCollection->FontFamilies[i];
+        stat = GdipCloneFontFamily(fontCollection->FontFamilies[i], &gpfamilies[i]);
     }
-    *numFound = i;
-    return Ok;
+
+    if (stat == Ok)
+        *numFound = i;
+    else
+    {
+        int numToFree=i;
+        for (i=0; i<numToFree; i++)
+        {
+            GdipDeleteFontFamily(gpfamilies[i]);
+            gpfamilies[i] = NULL;
+        }
+    }
+
+    return stat;
 }
 
 void free_installed_fonts(void)

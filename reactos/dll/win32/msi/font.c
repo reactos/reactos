@@ -196,6 +196,12 @@ static UINT ITERATE_RegisterFonts(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
+    if (!file->Component->Enabled)
+    {
+        TRACE("component is disabled\n");
+        return ERROR_SUCCESS;
+    }
+
     if (file->Component->ActionRequest != INSTALLSTATE_LOCAL)
     {
         TRACE("Component not scheduled for installation\n");
@@ -271,6 +277,12 @@ static UINT ITERATE_UnregisterFonts( MSIRECORD *row, LPVOID param )
     if (!file)
     {
         ERR("Unable to load file\n");
+        return ERROR_SUCCESS;
+    }
+
+    if (!file->Component->Enabled)
+    {
+        TRACE("component is disabled\n");
         return ERROR_SUCCESS;
     }
 

@@ -60,7 +60,7 @@ HRESULT WINAPI AtlModuleInit(_ATL_MODULEW* pM, _ATL_OBJMAP_ENTRYW* p, HINSTANCE 
     INT i;
     UINT size;
 
-    //FIXME("SEMI-STUB (%p %p %p)\n",pM,p,h);
+    FIXME("SEMI-STUB (%p %p %p)\n",pM,p,h);
 
     size = pM->cbSize;
     switch (size)
@@ -259,7 +259,7 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
         TRACE("Trying entry %i (%s %i %p)\n",i,debugstr_guid(pEntries[i].piid),
               pEntries[i].dw, pEntries[i].pFunc);
 
-        if (pEntries[i].piid && IsEqualGUID(iid,pEntries[i].piid))
+        if (!pEntries[i].piid || IsEqualGUID(iid,pEntries[i].piid))
         {
             TRACE("MATCH\n");
             if (pEntries[i].pFunc == (_ATL_CREATORARGFUNC*)1)
@@ -267,14 +267,15 @@ HRESULT WINAPI AtlInternalQueryInterface(void* this, const _ATL_INTMAP_ENTRY* pE
                 TRACE("Offset\n");
                 *ppvObject = ((LPSTR)this+pEntries[i].dw);
                 IUnknown_AddRef((IUnknown*)*ppvObject);
-                rc = S_OK;
+                return S_OK;
             }
             else
             {
                 TRACE("Function\n");
                 rc = pEntries[i].pFunc(this, iid, ppvObject, pEntries[i].dw);
+                if(rc==S_OK || pEntries[i].piid)
+                    return rc;
             }
-            break;
         }
         i++;
     }

@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Nepavyko atverti nurodyto diegimo paketo. Patikrinkite failo kelią ir mėginkite dar kartą."
 	5 "kelias %s nerastas"

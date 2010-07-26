@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Указанный пакет не может быть открыт. Проверьте файл и повторите попытку."
 	5 "путь %s не найден"

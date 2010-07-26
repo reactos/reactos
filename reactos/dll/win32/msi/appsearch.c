@@ -958,7 +958,10 @@ static UINT ACTION_AppSearchDr(MSIPACKAGE *package, LPWSTR *appValue, MSISIGNATU
         rc = ACTION_AppSearchSigName(package, parentName, &parentSig, &parent);
         ACTION_FreeSignature(&parentSig);
         if (!parent)
+        {
+            msiobj_release(&row->hdr);
             return ERROR_SUCCESS;
+        }
     }
 
     sz = MAX_PATH;

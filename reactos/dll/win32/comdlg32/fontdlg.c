@@ -903,7 +903,6 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
     int i;
     long l;
     HDC hdc;
-    LPLOGFONTW lpxx=lpcf->lpLogFont;
 
     if (!lpcf) return FALSE;
 
@@ -965,6 +964,7 @@ static LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam, LPCHOOSEFO
         {
             WCHAR str[256];
             WINDOWINFO wininfo;
+            LPLOGFONTW lpxx=lpcf->lpLogFont;
 
             TRACE("WM_COMMAND/cmb2,3 =%08lX\n", lParam);
             i=SendDlgItemMessageW(hDlg,cmb1,CB_GETCURSEL,0,0);

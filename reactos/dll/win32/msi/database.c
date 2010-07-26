@@ -126,8 +126,10 @@ static UINT clone_open_stream( MSIDATABASE *db, LPCWSTR name, IStream **stm )
 UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 {
     HRESULT r;
+    WCHAR decoded[MAX_STREAM_NAME_LEN];
 
-    TRACE("%s\n", debugstr_w(stname));
+    decode_streamname( stname, decoded );
+    TRACE("%s -> %s\n", debugstr_w(stname), debugstr_w(decoded));
 
     if (clone_open_stream( db, stname, stm ) == ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -140,7 +142,6 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
         LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
         {
-            TRACE("looking for %s in transform storage\n", debugstr_w(stname) );
             r = IStorage_OpenStream( transform->stg, stname, NULL,
                                      STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
             if (SUCCEEDED(r))
@@ -226,7 +227,7 @@ void append_storage_to_db( MSIDATABASE *db, IStorage *stg )
     t = msi_alloc( sizeof *t );
     t->stg = stg;
     IStorage_AddRef( stg );
-    list_add_tail( &db->transforms, &t->entry );
+    list_add_head( &db->transforms, &t->entry );
 
     /* the transform may add or replace streams */
     free_streams( db );

@@ -422,8 +422,25 @@ static HRESULT WINAPI InternetExplorer_get_MenuBar(IWebBrowser2 *iface, VARIANT_
 static HRESULT WINAPI InternetExplorer_put_MenuBar(IWebBrowser2 *iface, VARIANT_BOOL Value)
 {
     InternetExplorer *This = WEBBROWSER_THIS(iface);
-    FIXME("(%p)->(%x)\n", This, Value);
-    return E_NOTIMPL;
+    HMENU menu = NULL;
+
+    TRACE("(%p)->(%x)\n", This, Value);
+
+    if((menu = GetMenu(This->frame_hwnd)))
+        DestroyMenu(menu);
+
+    menu = NULL;
+
+    if(Value)
+        menu = LoadMenuW(shdocvw_hinstance, MAKEINTRESOURCEW(IDR_BROWSE_MAIN_MENU));
+
+    if(!SetMenu(This->frame_hwnd, menu))
+    {
+        DestroyMenu(menu);
+        return HRESULT_FROM_WIN32(GetLastError());
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI InternetExplorer_get_FullScreen(IWebBrowser2 *iface, VARIANT_BOOL *pbFullScreen)

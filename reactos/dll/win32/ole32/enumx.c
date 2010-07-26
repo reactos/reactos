@@ -51,7 +51,7 @@ HRESULT WINAPI enumx_QueryInterface(
     REFIID riid,
     void** ppvObject)
 {
-    if ( (This==0) || (ppvObject==0) )
+    if ( ppvObject==0 )
         return E_INVALIDARG;
 
     *ppvObject = 0;

@@ -517,7 +517,7 @@ static HRESULT WINAPI StgStreamImpl_Commit(
     return STG_E_REVERTED;
   }
 
-  return S_OK;
+  return StorageBaseImpl_Flush(This->parentStorage);
 }
 
 /***

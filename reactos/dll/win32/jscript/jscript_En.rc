@@ -20,7 +20,7 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Error converting object to primitive type"
     IDS_INVALID_CALL_ARG    "Invalid procedure call or argument"

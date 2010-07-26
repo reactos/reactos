@@ -285,8 +285,6 @@ BindCtxImpl_GetBindOptions(IBindCtx* iface,BIND_OPTS *pbindopts)
 static HRESULT WINAPI
 BindCtxImpl_GetRunningObjectTable(IBindCtx* iface,IRunningObjectTable** pprot)
 {
-    HRESULT res;
-
     BindCtxImpl *This = (BindCtxImpl *)iface;
 
     TRACE("(%p,%p)\n",This,pprot);
@@ -294,9 +292,7 @@ BindCtxImpl_GetRunningObjectTable(IBindCtx* iface,IRunningObjectTable** pprot)
     if (pprot==NULL)
         return E_POINTER;
 
-    res=GetRunningObjectTable(0, pprot);
-
-    return res;
+    return GetRunningObjectTable(0, pprot);
 }
 
 /******************************************************************************
@@ -555,9 +551,8 @@ static HRESULT BindCtxImpl_Construct(BindCtxImpl* This)
  */
 HRESULT WINAPI CreateBindCtx(DWORD reserved, LPBC * ppbc)
 {
-    BindCtxImpl* newBindCtx = 0;
+    BindCtxImpl* newBindCtx;
     HRESULT hr;
-    IID riid=IID_IBindCtx;
 
     TRACE("(%d,%p)\n",reserved,ppbc);
 
@@ -582,9 +577,7 @@ HRESULT WINAPI CreateBindCtx(DWORD reserved, LPBC * ppbc)
         return hr;
     }
 
-    hr = BindCtxImpl_QueryInterface((IBindCtx*)newBindCtx,&riid,(void**)ppbc);
-
-    return hr;
+    return BindCtxImpl_QueryInterface((IBindCtx*)newBindCtx,&IID_IBindCtx,(void**)ppbc);
 }
 
 /******************************************************************************

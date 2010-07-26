@@ -66,7 +66,7 @@ static void schedule_install_files(MSIPACKAGE *package)
 
     LIST_FOR_EACH_ENTRY(file, &package->files, MSIFILE, entry)
     {
-        if (file->Component->ActionRequest != INSTALLSTATE_LOCAL)
+        if (file->Component->ActionRequest != INSTALLSTATE_LOCAL || !file->Component->Enabled)
         {
             TRACE("File %s is not scheduled for install\n", debugstr_w(file->File));
 
@@ -501,6 +501,12 @@ static UINT ITERATE_MoveFiles( MSIRECORD *rec, LPVOID param )
     if (!comp)
         return ERROR_SUCCESS;
 
+    if (!comp->Enabled)
+    {
+        TRACE("component is disabled\n");
+        return ERROR_SUCCESS;
+    }
+
     if (comp->ActionRequest != INSTALLSTATE_LOCAL && comp->ActionRequest != INSTALLSTATE_SOURCE)
     {
         TRACE("Component not scheduled for installation: %s\n", debugstr_w(component));
@@ -693,6 +699,12 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     if (!comp)
         return ERROR_SUCCESS;
 
+    if (!comp->Enabled)
+    {
+        TRACE("component is disabled\n");
+        return ERROR_SUCCESS;
+    }
+
     if (comp->ActionRequest != INSTALLSTATE_LOCAL)
     {
         TRACE("Component not scheduled for installation %s\n", debugstr_w(component));
@@ -774,6 +786,12 @@ static UINT ITERATE_RemoveDuplicateFiles( MSIRECORD *row, LPVOID param )
     comp = get_loaded_component( package, component );
     if (!comp)
         return ERROR_SUCCESS;
+
+    if (!comp->Enabled)
+    {
+        TRACE("component is disabled\n");
+        return ERROR_SUCCESS;
+    }
 
     if (comp->ActionRequest != INSTALLSTATE_ABSENT)
     {
@@ -888,6 +906,12 @@ static UINT ITERATE_RemoveFiles(MSIRECORD *row, LPVOID param)
         return ERROR_FUNCTION_FAILED;
     }
 
+    if (!comp->Enabled)
+    {
+        TRACE("component is disabled\n");
+        return ERROR_SUCCESS;
+    }
+
     if (!verify_comp_for_removal(comp, install_mode))
     {
         TRACE("Skipping removal due to missing conditions\n");
@@ -971,6 +995,12 @@ UINT ACTION_RemoveFiles( MSIPACKAGE *package )
         if ( file->Component->ActionRequest != INSTALLSTATE_ABSENT ||
              file->Component->Installed == INSTALLSTATE_SOURCE )
             continue;
+
+        if (!file->Component->Enabled)
+        {
+            TRACE("component is disabled\n");
+            continue;
+        }
 
         if (file->Version)
         {

@@ -187,9 +187,9 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   TRACE("About to marshal the interface\n");
 
   hres = CreateStreamOnHGlobal(0, TRUE, &stream);
-  if (hres) return hres;
+  if (hres != S_OK) return hres;
   hres = CoMarshalInterface(stream, riid, pUnk, MSHCTX_INPROC, NULL, MSHLFLAGS_TABLESTRONG);
-  if (hres)
+  if (hres != S_OK)
   {
     IStream_Release(stream);
     return hres;
@@ -281,7 +281,7 @@ StdGlobalInterfaceTable_GetInterfaceFromGlobal(
 
   LeaveCriticalSection(&git_section);
 
-  if (hres) {
+  if (hres != S_OK) {
     WARN("Failed to clone stream with error 0x%08x\n", hres);
     return hres;
   }
