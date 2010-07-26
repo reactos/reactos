@@ -3,7 +3,7 @@ add_subdirectory(adns)
 add_subdirectory(bzip2)
 add_subdirectory(cardlib)
 add_subdirectory(expat)
-#add_subdirectory(freetype) # Add files by hand, not with a glob!
+add_subdirectory(freetype)
 add_subdirectory(fullfat)
 add_subdirectory(icu4ros)
 add_subdirectory(libsamplerate)
