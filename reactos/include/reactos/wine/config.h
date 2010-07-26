@@ -11,6 +11,9 @@
 /* Specifies the compiler flag that forces a short wchar_t */
 #define CC_FLAG_SHORT_WCHAR "-fshort-wchar"
 
+/* Define to 1 if you have the <mpg123.h> header file. */
+#define HAVE_MPG123_H 1
+
 /* Define if you have ALSA 1.x including devel headers */
 /* #undef HAVE_ALSA */
 
