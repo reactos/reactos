@@ -121,6 +121,7 @@
 		<file>huge_val.c</file>
 		<file>hypot.c</file>
 		<file>ldiv.c</file>
+		<file>logf.c</file>
 		<file>modf.c</file>
 		<file>rand.c</file>
 		<file>s_modf.c</file>
