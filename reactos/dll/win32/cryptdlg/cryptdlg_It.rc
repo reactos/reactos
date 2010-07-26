@@ -26,7 +26,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_CERT_POLICY "Policy del certificato"
     IDS_POLICY_ID "Identificatore della policy: "

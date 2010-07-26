@@ -25,7 +25,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID "Autoritätsschlüsselkennung"
     IDS_KEY_ATTRIBUTES "Schlüsselattribute"
@@ -170,7 +170,7 @@ STRINGTABLE DISCARDABLE
     IDS_ANY_CERT_POLICY "Alle ausgegebenen Richtlinien"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALIZEDNAME_ROOT "Vertrauenswürdige Stammzertifizierungsstellen"
     IDS_LOCALIZEDNAME_MY "Persönlich"
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_DISALLOWED "Nicht Vertrauenswürdige Zertifikate"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_KEY_ID "Schlüsselkennung="
     IDS_CERT_ISSUER "Ausgeber des Zertifikats"

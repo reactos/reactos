@@ -24,7 +24,7 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "unbekanntes Objekt" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "Titelleiste"

@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "ismeretlen objektum" /* undocumented */
     ROLE_SYSTEM_TITLEBAR    "címsor"
