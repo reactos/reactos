@@ -5,6 +5,7 @@ add_subdirectory(newinflib)
 
 if(CMAKE_CROSSCOMPILING)
 
+add_subdirectory(3rdparty)
 add_subdirectory(atl)
 add_subdirectory(dnslib)
 add_subdirectory(epsapi)
@@ -18,5 +19,6 @@ add_subdirectory(tdilib)
 else()
 
 add_subdirectory(host/wcsfuncs)
+add_subdirectory(3rdparty/zlib)
 
 endif()

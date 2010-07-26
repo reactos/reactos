@@ -1,0 +1,13 @@
+
+add_subdirectory(adns)
+add_subdirectory(bzip2)
+add_subdirectory(cardlib)
+add_subdirectory(expat)
+#add_subdirectory(freetype) # Add files by hand, not with a glob!
+add_subdirectory(fullfat)
+#add_subdirectory(icu4ros) # Add files by hand, not with a glob??
+add_subdirectory(libsamplerate)
+add_subdirectory(libwine)
+add_subdirectory(libxml2)
+#add_subdirectory(mingw) # Multiple targets, watch out for isstartuplib="true" crt="..."
+add_subdirectory(zlib)
