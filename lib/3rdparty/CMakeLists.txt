@@ -5,7 +5,7 @@ add_subdirectory(cardlib)
 add_subdirectory(expat)
 #add_subdirectory(freetype) # Add files by hand, not with a glob!
 add_subdirectory(fullfat)
-#add_subdirectory(icu4ros) # Add files by hand, not with a glob??
+add_subdirectory(icu4ros)
 add_subdirectory(libsamplerate)
 add_subdirectory(libwine)
 add_subdirectory(libxml2)
