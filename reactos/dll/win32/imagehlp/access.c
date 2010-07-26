@@ -18,10 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "precomp.h"
-
-#define _WINNT_H
+#include <stdarg.h>
+#include <string.h>
+#include "windef.h"
+#include "winbase.h"
+#include "winnt.h"
+#include "winternl.h"
+#include "winerror.h"
 #include "wine/debug.h"
+#include "imagehlp.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
@@ -29,13 +34,32 @@ WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
  *           Data
  */
 
-BOOLEAN DllListInitialized;
-LIST_ENTRY ImageLoadListHead;
+static PLOADED_IMAGE IMAGEHLP_pFirstLoadedImage=NULL;
+static PLOADED_IMAGE IMAGEHLP_pLastLoadedImage=NULL;
+
+static LOADED_IMAGE IMAGEHLP_EmptyLoadedImage = {
+  NULL,       /* ModuleName */
+  0,          /* hFile */
+  NULL,       /* MappedAddress */
+  NULL,       /* FileHeader */
+  NULL,       /* LastRvaSection */
+  0,          /* NumberOfSections */
+  NULL,       /* Sections */
+  1,          /* Characteristics */
+  FALSE,      /* fSystemImage */
+  FALSE,      /* fDOSImage */
+  FALSE,      /* fReadOnly */
+  0,          /* Version */
+  { &IMAGEHLP_EmptyLoadedImage.Links, &IMAGEHLP_EmptyLoadedImage.Links }, /* Links */
+  148,        /* SizeOfImage; */
+};
+
+extern HANDLE IMAGEHLP_hHeap;
 
 /***********************************************************************
  *		GetImageConfigInformation (IMAGEHLP.@)
  */
-BOOL IMAGEAPI GetImageConfigInformation(
+BOOL WINAPI GetImageConfigInformation(
   PLOADED_IMAGE LoadedImage,
   PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigInformation)
 {
@@ -49,54 +73,15 @@ BOOL IMAGEAPI GetImageConfigInformation(
 /***********************************************************************
  *		GetImageUnusedHeaderBytes (IMAGEHLP.@)
  */
-DWORD IMAGEAPI GetImageUnusedHeaderBytes(
+DWORD WINAPI GetImageUnusedHeaderBytes(
   PLOADED_IMAGE LoadedImage,
   LPDWORD SizeUnusedHeaderBytes)
 {
-    SIZE_T FirstFreeByte;
-    PIMAGE_OPTIONAL_HEADER OptionalHeader = NULL;
-    PIMAGE_NT_HEADERS NtHeaders;
-    ULONG i;
-
-    /* Read the NT Headers */
-    NtHeaders = LoadedImage->FileHeader;
-
-    /* Find the first free byte, which is after all the headers and sections */
-    FirstFreeByte = (ULONG_PTR)NtHeaders -
-                    (ULONG_PTR)LoadedImage->MappedAddress +
-                    FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) +
-                    NtHeaders->FileHeader.SizeOfOptionalHeader +
-                    NtHeaders->FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER);
-
-    /* Get the Optional Header */
-    OptionalHeader = &LoadedImage->FileHeader->OptionalHeader;
-
-    /*
-     * There is the possibilty that one of the Data Directories is in the PE Header
-     * itself, so we'll need to find such a case and add it to our PE used space
-     */
-    for (i = 0; i < OptionalHeader->NumberOfRvaAndSizes; i++)
-    {
-        /* If the VA is less then the size of headers, then the data is inside the PE header */
-        if (OptionalHeader->DataDirectory[i].VirtualAddress <
-            OptionalHeader->SizeOfHeaders)
-        {
-            /* However, make sure it's not 0, which means it doesnt actually exist */
-            if (OptionalHeader->DataDirectory[i].VirtualAddress >=
-                FirstFreeByte)
-            {
-                /* Our first empty byte is after this Directory Data then */
-                FirstFreeByte = OptionalHeader->DataDirectory[i].VirtualAddress +
-                                OptionalHeader->DataDirectory[i].Size;
-            }
-        }
-    }
-
-    /* Return the unused Header Bytes */
-    *SizeUnusedHeaderBytes = OptionalHeader->SizeOfHeaders - (DWORD)FirstFreeByte;
-
-    /* And return the first free byte*/
-    return (DWORD)FirstFreeByte;
+  FIXME("(%p, %p): stub\n",
+    LoadedImage, SizeUnusedHeaderBytes
+  );
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
 }
 
 /***********************************************************************
@@ -104,250 +89,147 @@ DWORD IMAGEAPI GetImageUnusedHeaderBytes(
  */
 PLOADED_IMAGE IMAGEAPI ImageLoad(LPSTR DllName, LPSTR DllPath)
 {
-    PLIST_ENTRY Head, Next;
-    PLOADED_IMAGE LoadedImage;
-    CHAR Drive[_MAX_DRIVE], Dir[_MAX_DIR], Filename[_MAX_FNAME], Ext[_MAX_EXT];
-    BOOL CompleteName = TRUE;
-    CHAR FullName[MAX_PATH];
+  PLOADED_IMAGE pLoadedImage;
 
-    /* Initialize the List Head */
-    if (!DllListInitialized)
-    {
-        InitializeListHead(&ImageLoadListHead);
-        DllListInitialized = TRUE;
-    }
-
-    /* Move to the Next DLL */
-    Head = &ImageLoadListHead;
-    Next = Head->Flink;
-    TRACE("Trying to find library: %s in current ListHead \n", DllName);
-
-    /* Split the path */
-    _splitpath(DllName, Drive, Dir, Filename, Ext);
-
-    /* Check if we only got a name */
-    if (!strlen(Drive) && !strlen(Dir)) CompleteName = FALSE;
-
-    /* Check if we already Loaded it */
-    while (Next != Head)
-    {
-        /* Get the Loaded Image Structure */
-        LoadedImage = CONTAINING_RECORD(Next, LOADED_IMAGE, Links);
-        TRACE("Found: %s in current ListHead \n", LoadedImage->ModuleName);
-
-        /* Check if we didn't have a complete name */
-        if (!CompleteName)
-        {
-            /* Split this module's name */
-            _splitpath(LoadedImage->ModuleName, NULL, NULL, Filename, Ext);
-
-            /* Use only the name and extension */
-            strcpy(FullName, Filename);
-            strcat(FullName, Ext);
-        }
-        else
-        {
-            /* Use the full untouched name */
-            strcpy(FullName, LoadedImage->ModuleName);
-        }
-
-        /* Check if the Names Match */
-        if (!_stricmp(DllName, FullName))
-        {
-            TRACE("Found it, returning it\n");
-            return LoadedImage;
-        }
-
-        /* Move to next Entry */
-        Next = Next->Flink;
-    }
-
-    /* Allocate memory for the Structure, and write the Module Name under */
-    TRACE("Didn't find it...allocating it for you now\n");
-    LoadedImage = HeapAlloc(IMAGEHLP_hHeap,
-                            0,
-                            sizeof(*LoadedImage) + strlen(DllName) + 1);
-    if (LoadedImage)
-    {
-        /* Module Name will be after structure */
-        LoadedImage->ModuleName = (LPSTR)(LoadedImage + 1);
-
-        /* Copy the Module Name */
-        strcpy(LoadedImage->ModuleName, DllName);
-
-        /* Now Load it */
-        if (MapAndLoad(DllName, DllPath, LoadedImage, TRUE, TRUE))
-        {
-            /* Add it to our list and return it */
-            InsertTailList(&ImageLoadListHead, &LoadedImage->Links);
-            return LoadedImage;
-        }
-
-        /* If we're here...there's been a failure */
-        HeapFree(IMAGEHLP_hHeap, 0, LoadedImage);
-        LoadedImage = NULL;
-    }
-    return LoadedImage;
+  FIXME("(%s, %s): stub\n", DllName, DllPath);
+	  
+  pLoadedImage = HeapAlloc(IMAGEHLP_hHeap, 0, sizeof(LOADED_IMAGE));
+  if (pLoadedImage)
+    pLoadedImage->FileHeader = HeapAlloc(IMAGEHLP_hHeap, 0, sizeof(IMAGE_NT_HEADERS));
+  
+  return pLoadedImage;
 }
 
 /***********************************************************************
  *		ImageUnload (IMAGEHLP.@)
  */
-BOOL IMAGEAPI ImageUnload(PLOADED_IMAGE pLoadedImage)
+BOOL WINAPI ImageUnload(PLOADED_IMAGE pLoadedImage)
 {
-    /* If the image list isn't empty, remove this entry */
-    if (!IsListEmpty(&pLoadedImage->Links)) RemoveEntryList(&pLoadedImage->Links);
+  LIST_ENTRY *pCurrent, *pFind;
 
-    /* Unmap and unload it */
-    UnMapAndLoad(pLoadedImage);
+  TRACE("(%p)\n", pLoadedImage);
+  
+  if(!IMAGEHLP_pFirstLoadedImage || !pLoadedImage)
+    {
+      /* No image loaded or null pointer */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
-    /* Free the structure */
-    HeapFree(IMAGEHLP_hHeap, 0, pLoadedImage);
+  pFind=&pLoadedImage->Links;
+  pCurrent=&IMAGEHLP_pFirstLoadedImage->Links;
+  while((pCurrent != pFind) &&
+    (pCurrent != NULL))
+      pCurrent = pCurrent->Flink;
+  if(!pCurrent)
+    {
+      /* Not found */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
 
-    /* Return success */
-    return TRUE;
+  if(pCurrent->Blink)
+    pCurrent->Blink->Flink = pCurrent->Flink;
+  else
+    IMAGEHLP_pFirstLoadedImage = pCurrent->Flink?CONTAINING_RECORD(
+      pCurrent->Flink, LOADED_IMAGE, Links):NULL;
+
+  if(pCurrent->Flink)
+    pCurrent->Flink->Blink = pCurrent->Blink;
+  else
+    IMAGEHLP_pLastLoadedImage = pCurrent->Blink?CONTAINING_RECORD(
+      pCurrent->Blink, LOADED_IMAGE, Links):NULL;
+
+  return FALSE;
 }
 
 /***********************************************************************
  *		MapAndLoad (IMAGEHLP.@)
  */
-BOOL IMAGEAPI MapAndLoad(
-  LPSTR ImageName, LPSTR DllPath, PLOADED_IMAGE pLoadedImage,
-  BOOL DotDll, BOOL ReadOnly)
+BOOL IMAGEAPI MapAndLoad(LPSTR pszImageName, LPSTR pszDllPath, PLOADED_IMAGE pLoadedImage,
+                       BOOL bDotDll, BOOL bReadOnly)
 {
-    HANDLE hFile;
-    HANDLE hFileMapping;
-    ULONG Tried = 0;
-    UCHAR Buffer[MAX_PATH];
-    LPSTR FilePart;
-    LPSTR FileToOpen;
-    PIMAGE_NT_HEADERS NtHeader;
+    CHAR szFileName[MAX_PATH];
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    HANDLE hFileMapping = NULL;
+    PVOID mapping = NULL;
+    PIMAGE_NT_HEADERS pNtHeader = NULL;
 
-    /* So we can add the DLL Path later */
-    FileToOpen = ImageName;
+    TRACE("(%s, %s, %p, %d, %d)\n",
+          pszImageName, pszDllPath, pLoadedImage, bDotDll, bReadOnly);
 
-    /* Assume failure */
-    pLoadedImage->hFile = INVALID_HANDLE_VALUE;
-
-    /* Start open loop */
-    while (TRUE)
+    if (!SearchPathA(pszDllPath, pszImageName, bDotDll ? ".DLL" : ".EXE",
+                     sizeof(szFileName), szFileName, NULL))
     {
-        /* Get a handle to the file */
-        hFile = CreateFileA(FileToOpen,
-                            ReadOnly ? GENERIC_READ :
-                                       GENERIC_READ | GENERIC_WRITE,
-                            ReadOnly ? FILE_SHARE_READ :
-                                       FILE_SHARE_READ | FILE_SHARE_WRITE,
-                            NULL,
-                            OPEN_EXISTING,
-                            0,
-                            NULL);
-
-        if (hFile == INVALID_HANDLE_VALUE)
-        {
-            /* Check if we already tried this once */
-            if (!Tried)
-            {
-                /* We didn't do do a path search now */
-                Tried = SearchPath(DllPath,
-                                   ImageName,
-                                   DotDll ? ".dll" : ".exe",
-                                   MAX_PATH,
-                                   (PSTR)Buffer,
-                                   &FilePart);
-
-                /* Check if it was successful */
-                if (Tried && (Tried < MAX_PATH))
-                {
-                    /* Change the filename to use, and try again */
-                    FileToOpen = (PSTR)Buffer;
-                    continue;
-                }
-            }
-
-            /* Fail */
-            return FALSE;
-        }
-
-        /* Success, break out */
-        break;
+        SetLastError(ERROR_FILE_NOT_FOUND);
+        goto Error;
     }
 
-    /* Create the File Mapping */
-    hFileMapping = CreateFileMappingA(hFile,
-                                      NULL,
-                                      ReadOnly ? PAGE_READONLY :
-                                                 PAGE_READWRITE,
-                                      0,
-                                      0,
-                                      NULL);
+    hFile = CreateFileA(szFileName,
+                        GENERIC_READ | (bReadOnly ? 0 : GENERIC_WRITE),
+                        FILE_SHARE_READ,
+                        NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        WARN("CreateFile: Error = %d\n", GetLastError());
+        goto Error;
+    }
+
+    hFileMapping = CreateFileMappingA(hFile, NULL, 
+                                      (bReadOnly ? PAGE_READONLY : PAGE_READWRITE) | SEC_COMMIT,
+                                      0, 0, NULL);
     if (!hFileMapping)
     {
-        /* Fail */
-        SetLastError(GetLastError());
-        CloseHandle(hFile);
-        return FALSE;
+        WARN("CreateFileMapping: Error = %d\n", GetLastError());
+        goto Error;
     }
 
-    /* Get a pointer to the file */
-    pLoadedImage->MappedAddress = MapViewOfFile(hFileMapping,
-                                               ReadOnly ? FILE_MAP_READ :
-                                                          FILE_MAP_WRITE,
-                                               0,
-                                               0,
-                                               0);
-
-    /* Close the handle to the map, we don't need it anymore */
+    mapping = MapViewOfFile(hFileMapping, bReadOnly ? FILE_MAP_READ : FILE_MAP_WRITE, 0, 0, 0);
     CloseHandle(hFileMapping);
-
-    /* Write the image size */
-    pLoadedImage->SizeOfImage = GetFileSize(hFile, NULL);
-
-    /* Get the Nt Header */
-    NtHeader = ImageNtHeader(pLoadedImage->MappedAddress);
-
-    /* Allocate memory for the name and save it */
-    pLoadedImage->ModuleName = HeapAlloc(IMAGEHLP_hHeap,
-                                        0,
-                                        strlen(FileToOpen) + 16);
-    strcpy(pLoadedImage->ModuleName, FileToOpen);
-
-    /* Save the NT Header */
-    pLoadedImage->FileHeader = NtHeader;
-
-    /* Save the section data */
-    pLoadedImage->Sections = IMAGE_FIRST_SECTION(NtHeader);
-    pLoadedImage->NumberOfSections = NtHeader->FileHeader.NumberOfSections;
-
-    /* Setup other data */
-    pLoadedImage->SizeOfImage = NtHeader->OptionalHeader.SizeOfImage;
-    pLoadedImage->Characteristics = NtHeader->FileHeader.Characteristics;
-    pLoadedImage->LastRvaSection = pLoadedImage->Sections;
-    pLoadedImage->fSystemImage = FALSE; /* FIXME */
-    pLoadedImage->fDOSImage = FALSE; /* FIXME */
-    InitializeListHead(&pLoadedImage->Links);
-
-    /* Check if it was read-only */
-    if (ReadOnly)
+    if (!mapping)
     {
-        /* It was, so close our handle and write it as invalid */
-        CloseHandle(hFile);
-        pLoadedImage->hFile = INVALID_HANDLE_VALUE;
-    }
-    else
-    {
-        /* Write our file handle */
-        pLoadedImage->hFile = hFile;
+        WARN("MapViewOfFile: Error = %d\n", GetLastError());
+        goto Error;
     }
 
-    /* Return Success */
+    if (!(pNtHeader = RtlImageNtHeader(mapping)))
+    {
+        WARN("Not an NT header\n");
+        UnmapViewOfFile(mapping);
+        goto Error;
+    }
+
+    pLoadedImage->ModuleName       = HeapAlloc(GetProcessHeap(), 0,
+                                               strlen(szFileName) + 1);
+    if (pLoadedImage->ModuleName) strcpy(pLoadedImage->ModuleName, szFileName);
+    pLoadedImage->hFile            = hFile;
+    pLoadedImage->MappedAddress    = mapping;
+    pLoadedImage->FileHeader       = pNtHeader;
+    pLoadedImage->Sections         = (PIMAGE_SECTION_HEADER)
+        ((LPBYTE) &pNtHeader->OptionalHeader +
+         pNtHeader->FileHeader.SizeOfOptionalHeader);
+    pLoadedImage->NumberOfSections = pNtHeader->FileHeader.NumberOfSections;
+    pLoadedImage->SizeOfImage      = GetFileSize(hFile, NULL);
+    pLoadedImage->Characteristics  = pNtHeader->FileHeader.Characteristics;
+    pLoadedImage->LastRvaSection   = pLoadedImage->Sections;
+
+    pLoadedImage->fSystemImage     = FALSE; /* FIXME */
+    pLoadedImage->fDOSImage        = FALSE; /* FIXME */
+
+    pLoadedImage->Links.Flink      = &pLoadedImage->Links;
+    pLoadedImage->Links.Blink      = &pLoadedImage->Links;
+
     return TRUE;
+
+Error:
+    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+    return FALSE;
 }
 
 /***********************************************************************
  *		SetImageConfigInformation (IMAGEHLP.@)
  */
-BOOL IMAGEAPI SetImageConfigInformation(
+BOOL WINAPI SetImageConfigInformation(
   PLOADED_IMAGE LoadedImage,
   PIMAGE_LOAD_CONFIG_DIRECTORY ImageConfigInformation)
 {
@@ -361,276 +243,11 @@ BOOL IMAGEAPI SetImageConfigInformation(
 /***********************************************************************
  *		UnMapAndLoad (IMAGEHLP.@)
  */
-BOOL IMAGEAPI UnMapAndLoad(PLOADED_IMAGE Image)
+BOOL WINAPI UnMapAndLoad(PLOADED_IMAGE pLoadedImage)
 {
-    PIMAGE_NT_HEADERS NtHeader;
-    DWORD HeaderCheckSum, CheckSum;
-
-    /* Check if the image was read-only */
-    if (Image->hFile == INVALID_HANDLE_VALUE)
-    {
-        /* We'll only unmap the view */
-        UnmapViewOfFile(Image->MappedAddress);
-    }
-    else
-    {
-        /* Calculate the checksum */
-        CheckSumMappedFile(Image->MappedAddress,
-                           Image->SizeOfImage,
-                           &HeaderCheckSum,
-                           &CheckSum);
-
-        /* Get the NT Header */
-        NtHeader = Image->FileHeader;
-
-        /* Write the new checksum to it */
-        NtHeader->OptionalHeader.CheckSum = CheckSum;
-
-        /* Now flush and unmap the image */
-        FlushViewOfFile(Image->MappedAddress, Image->SizeOfImage);
-        UnmapViewOfFile(Image->MappedAddress);
-
-        /* Check if the size changed */
-        if (Image->SizeOfImage != GetFileSize(Image->hFile, NULL))
-        {
-            /* Update the file pointer */
-            SetFilePointer(Image->hFile, Image->SizeOfImage, NULL, FILE_BEGIN);
-            SetEndOfFile(Image->hFile);
-        }
-    }
-
-    /* Check if the image had a valid handle, and close it */
-    if (Image->hFile != INVALID_HANDLE_VALUE) CloseHandle(Image->hFile);
-
-    /* Return success */
-    return TRUE;
-}
-
-PVOID
-IMAGEAPI
-ImageDirectoryEntryToData32(PVOID Base,
-                            BOOLEAN MappedAsImage,
-                            USHORT DirectoryEntry,
-                            PULONG Size,
-                            PIMAGE_SECTION_HEADER *FoundHeader OPTIONAL,
-                            PIMAGE_FILE_HEADER FileHeader,
-                            PIMAGE_OPTIONAL_HEADER OptionalHeader)
-{
-    ULONG i;
-    PIMAGE_SECTION_HEADER CurrentSection;
-    ULONG DirectoryEntryVA;
-
-    /* Check if this entry is invalid */
-    if (DirectoryEntry >= OptionalHeader->NumberOfRvaAndSizes)
-    {
-        /* Nothing found */
-        *Size = 0;
-        return NULL;
-    }
-
-    /* Get the VA of the Directory Requested */
-    DirectoryEntryVA = OptionalHeader->DataDirectory[DirectoryEntry].VirtualAddress;
-    if (!DirectoryEntryVA)
-    {
-        /* It doesn't exist */
-        *Size = 0;
-        return NULL;
-    }
-
-    /* Get the size of the Directory Requested */
-    *Size = OptionalHeader->DataDirectory[DirectoryEntry].Size;
-
-    /* Check if it was mapped as an image or if the entry is within the headers */
-    if ((MappedAsImage) || (DirectoryEntryVA < OptionalHeader->SizeOfHeaders))
-    {
-        /* No header found */
-        if (FoundHeader) *FoundHeader = NULL;
-
-        /* And simply return the VA */
-        return (PVOID)((ULONG_PTR)Base + DirectoryEntryVA);
-    }
-
-    /* Read the first Section */
-    CurrentSection = (PIMAGE_SECTION_HEADER)((ULONG_PTR)OptionalHeader +
-                                             FileHeader->SizeOfOptionalHeader);
-
-    /* Loop through every section*/
-    for (i = 0; i < FileHeader->NumberOfSections; i++)
-    {
-        /* If the Directory VA is located inside this section's VA, then this section belongs to this Directory */
-        if ((DirectoryEntryVA >= CurrentSection->VirtualAddress) &&
-            (DirectoryEntryVA < (CurrentSection->VirtualAddress +
-                                 CurrentSection->SizeOfRawData)))
-        {
-            /* Return the section header */
-            if (FoundHeader) *FoundHeader = CurrentSection;
-            return ((PVOID)((ULONG_PTR)Base +
-                            (DirectoryEntryVA - CurrentSection->VirtualAddress) +
-                            CurrentSection->PointerToRawData));
-        }
-
-        /* Move to the next section */
-        CurrentSection++;
-    }
-
-    /* If we got here, then we didn't find anything */
-    return NULL;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-IMAGEAPI
-GetTimestampForLoadedLibrary(HMODULE Module)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @implemented
- */
-PVOID
-IMAGEAPI
-ImageDirectoryEntryToData(PVOID Base,
-                          BOOLEAN MappedAsImage,
-                          USHORT DirectoryEntry,
-                          PULONG Size)
-{
-    /* Let the extended function handle it */
-    return ImageDirectoryEntryToDataEx(Base,
-                                       MappedAsImage,
-                                       DirectoryEntry,
-                                       Size,
-                                       NULL);
-}
-
-/*
- * @implemented
- */
-PVOID
-IMAGEAPI
-ImageDirectoryEntryToDataEx(IN PVOID Base,
-                            IN BOOLEAN MappedAsImage,
-                            IN USHORT DirectoryEntry,
-                            OUT PULONG Size,
-                            OUT PIMAGE_SECTION_HEADER *FoundSection OPTIONAL)
-{
-    PIMAGE_NT_HEADERS NtHeader;
-    PIMAGE_FILE_HEADER FileHeader;
-    PIMAGE_OPTIONAL_HEADER OptionalHeader;
-
-    /* Get the optional header ourselves */
-    NtHeader = ImageNtHeader(Base);
-    FileHeader = &NtHeader->FileHeader;
-    OptionalHeader = &NtHeader->OptionalHeader;
-
-    /* FIXME: Read image type and call appropriate function (32, 64, ROM) */
-    return ImageDirectoryEntryToData32(Base,
-                                       MappedAsImage,
-                                       DirectoryEntry,
-                                       Size,
-                                       FoundSection,
-                                       FileHeader,
-                                       OptionalHeader);
-}
-
-/*
- * @implemented
- */
-PIMAGE_SECTION_HEADER
-IMAGEAPI
-ImageRvaToSection(IN PIMAGE_NT_HEADERS NtHeaders,
-                  IN PVOID Base,
-                  IN ULONG Rva)
-{
-    PIMAGE_SECTION_HEADER Section;
-    ULONG i;
-
-    /* Get the First Section */
-    Section = IMAGE_FIRST_SECTION(NtHeaders);
-
-    /* Look through each section */
-    for (i = 0; i < NtHeaders->FileHeader.NumberOfSections; i++)
-    {
-        /* Check if the RVA is in between */
-        if ((Rva >= Section->VirtualAddress) &&
-            (Rva < (Section->VirtualAddress + Section->SizeOfRawData)))
-        {
-            /* Return this section */
-            return Section;
-        }
-
-        /* Move to the next section */
-        Section++;
-    }
-
-    /* Not Found */
-    return NULL;
-}
-
-/*
- * @implemented
- */
-PIMAGE_NT_HEADERS
-IMAGEAPI
-ImageNtHeader(PVOID Base)
-{
-    /* Let RTL do it */
-    return RtlImageNtHeader(Base);
-}
-
-/*
- * @implemented
- */
-PVOID
-IMAGEAPI
-ImageRvaToVa(IN PIMAGE_NT_HEADERS NtHeaders,
-             IN PVOID Base,
-             IN ULONG Rva,
-             IN OUT PIMAGE_SECTION_HEADER *LastRvaSection OPTIONAL)
-{
-    PIMAGE_SECTION_HEADER Section;
-
-    /* Get the Section Associated */
-    Section = ImageRvaToSection(NtHeaders, Base, Rva);
-
-    /* Return it, if specified */
-    if (LastRvaSection) *LastRvaSection = Section;
-
-    /* Return the VA */
-    return (PVOID)((ULONG_PTR)Base + (Rva - Section->VirtualAddress) +
-                                            Section->PointerToRawData);
-}
-
-BOOL
-IMAGEAPI
-UnloadAllImages(VOID)
-{
-    PLIST_ENTRY Head, Entry;
-    PLOADED_IMAGE CurrentImage;
-
-    /* Make sure we're initialized */
-    if (!DllListInitialized) return TRUE;
-
-    /* Get the list pointers and loop */
-    Head = &ImageLoadListHead;
-    Entry = Head->Flink;
-    while (Entry != Head)
-    {
-        /* Get this image */
-        CurrentImage = CONTAINING_RECORD(Entry, LOADED_IMAGE, Links);
-
-        /* Move to the next entry */
-        Entry = Entry->Flink;
-
-        /* Unload it */
-        ImageUnload(CurrentImage);
-    }
-
-    /* We are not initialized anymore */
-    DllListInitialized = FALSE;
+    HeapFree(GetProcessHeap(), 0, pLoadedImage->ModuleName);
+    /* FIXME: MSDN states that a new checksum is computed and stored into the file */
+    if (pLoadedImage->MappedAddress) UnmapViewOfFile(pLoadedImage->MappedAddress);
+    if (pLoadedImage->hFile != INVALID_HANDLE_VALUE) CloseHandle(pLoadedImage->hFile);
     return TRUE;
 }

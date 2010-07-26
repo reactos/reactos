@@ -139,8 +139,8 @@ DWORD calc_crc32(int fd)
     unsigned char       buffer[8192];
     DWORD               crc = ~0;
 
-    _lseek(fd, 0, SEEK_SET);
-    while ((r = _read(fd, buffer, sizeof(buffer))) > 0)
+    lseek(fd, 0, SEEK_SET);
+    while ((r = read(fd, buffer, sizeof(buffer))) > 0)
     {
         for (i = 0; i < r; i++) crc = UPDC32(buffer[i], crc);
     }

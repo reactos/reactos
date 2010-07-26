@@ -8,6 +8,7 @@
 	<define name="__WINESRC__" />
 	<define name="_WINE" />
 	<define name="HAVE_REGEX_H" />
+	<define name="_IMAGEHLP_SOURCE_" />
 	<file>coff.c</file>
 	<file>cpu_i386.c</file>
 	<file>cpu_ppc.c</file>
@@ -18,7 +19,6 @@
 	<file>elf_module.c</file>
 	<file>image.c</file>
 	<file>macho_module.c</file>
-	<file>memory.c</file>
 	<file>minidump.c</file>
 	<file>module.c</file>
 	<file>msc.c</file>

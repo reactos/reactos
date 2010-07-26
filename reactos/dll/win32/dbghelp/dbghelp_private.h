@@ -120,6 +120,7 @@ extern unsigned dbghelp_options;
 #define SYMOPT_WINE_WITH_NATIVE_MODULES 0x40000000
 
 enum location_kind {loc_error,          /* reg is the error code */
+                    loc_unavailable,    /* location is not available */
                     loc_absolute,       /* offset is the location */
                     loc_register,       /* reg is the location */
                     loc_regrel,         /* [reg+offset] is the location */
@@ -346,12 +347,14 @@ struct module_format
 
 struct module
 {
+    struct process*             process;
     IMAGEHLP_MODULEW64          module;
     /* ANSI copy of module.ModuleName for efficiency */
     char                        module_name[MAX_PATH];
     struct module*              next;
     enum module_type		type : 16;
     unsigned short              is_virtual : 1;
+    DWORD64                     reloc_delta;
 
     /* specific information for debug types */
     struct module_format*       format_info[DFI_LAST];
@@ -474,7 +477,17 @@ struct cpu
                             enum cpu_addr, ADDRESS64* addr);
 
     /* stack manipulation */
-    BOOL        (*stack_walk)(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame);
+    BOOL        (*stack_walk)(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context);
+
+    /* module manipulation */
+    void*       (*find_runtime_function)(struct module*, DWORD64 addr);
+
+    /* dwarf dedicated information */
+    unsigned    (*map_dwarf_register)(unsigned regno);
+
+    /* context related maniputation */
+    void*       (*fetch_context_reg)(CONTEXT* context, unsigned regno, unsigned* size);
+    const char* (*fetch_regname)(unsigned regno);
 };
 
 extern struct cpu*      dbghelp_current_cpu;
@@ -570,6 +583,9 @@ extern struct module*
                                            DWORD64 base, DWORD64 size);
 extern BOOL         pe_load_debug_info(const struct process* pcs,
                                        struct module* module);
+extern const char*  pe_map_directory(struct module* module, int dirno, DWORD* size);
+extern void         pe_unmap_directoy(struct module* module, int dirno);
+
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* basedir, const char* source);
 extern const char*  source_get(const struct module* module, unsigned idx);
@@ -588,6 +604,8 @@ extern BOOL         stabs_parse(struct module* module, unsigned long load_offset
 extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offset,
                                  const struct elf_thunk_area* thunks,
                                  struct image_file_map* fmap);
+extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
+                                          CONTEXT* context, ULONG_PTR* cfa);
 
 /* stack.c */
 extern BOOL         sw_read_mem(struct cpu_stack_walk* csw, DWORD64 addr, void* ptr, DWORD sz);

@@ -803,9 +803,35 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
         break;
 
     case TI_GET_VALUE:
-        if (type->tag != SymTagData || ((const struct symt_data*)type)->kind != DataIsConstant)
-            return FALSE;
-        X(VARIANT) = ((const struct symt_data*)type)->u.value;
+        if (type->tag != SymTagData) return FALSE;
+        switch (((const struct symt_data*)type)->kind)
+        {
+        case DataIsConstant: X(VARIANT) = ((const struct symt_data*)type)->u.value; break;
+        case DataIsLocal:
+        case DataIsParam:
+            {
+                struct location loc = ((const struct symt_data*)type)->u.var;
+                unsigned                i;
+                struct module_format*   modfmt;
+
+                if (loc.kind < loc_user) return FALSE;
+                for (i = 0; i < DFI_LAST; i++)
+                {
+                    modfmt = module->format_info[i];
+                    if (modfmt && modfmt->loc_compute)
+                    {
+                        modfmt->loc_compute(module->process, modfmt,
+                                            (const struct symt_function*)((const struct symt_data*)type)->container, &loc);
+                        break;
+                    }
+                }
+                if (loc.kind != loc_absolute) return FALSE;
+                X(VARIANT).n1.n2.vt = VT_UI4; /* FIXME */
+                X(VARIANT).n1.n2.n3.uiVal = loc.offset;
+            }
+            break;
+        default: return FALSE;
+        }
         break;
 
     case TI_GET_CALLING_CONVENTION:
