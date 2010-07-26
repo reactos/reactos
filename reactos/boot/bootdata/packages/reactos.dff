@@ -106,9 +106,9 @@ base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1
 
 base\shell\cmd\cmd.exe                              1
-base\shell\explorer\explorer.exe                    4
-base\shell\explorer\explorer-cfg-template.xml       4
-base\shell\explorer\notifyhook\notifyhook.dll       1
+base\shell\explorer\explorer.exe                    4   optional
+base\shell\explorer\explorer-cfg-template.xml       4   optional
+base\shell\explorer\notifyhook\notifyhook.dll       1   optional
 base\shell\explorer-new\explorer_new.exe            4   optional
 
 base\system\autochk\autochk.exe                     1
@@ -687,7 +687,7 @@ boot\bootdata\bootcdregtest\regtest.cmd             7   optional
 subsystems\win32\csrss\csrss.exe                    1
 subsystems\win32\csrss\win32csr\win32csr.dll        1
 subsystems\win32\csrss\csrsrv\csrsrv.dll            1
-subsystems\ntvdm\ntvdm.exe                          1
+subsystems\ntvdm\ntvdm.exe                          1   optional
 subsystems\win32\win32k\win32k.sys                  1
 
 ; Optional/proprietary files
