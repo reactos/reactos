@@ -463,7 +463,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     //
     PointerPte = MiAddressToPte(Address);
     PointerPde = MiAddressToPde(Address);
-    
+#if (_MI_PAGING_LEVELS >= 3)
+    /* We need the PPE and PXE addresses */
+    ASSERT(FALSE);
+#endif
+
     //
     // Check for dispatch-level snafu
     //
@@ -488,6 +492,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
         //
         if (Mode == UserMode) return STATUS_ACCESS_VIOLATION;
         
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Need to check PXE and PDE validity */
+        ASSERT(FALSE);
+#endif
+
         //
         // Is the PDE valid?
         //
@@ -497,12 +506,12 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // Debug spew (eww!)
             //
             DPRINT("Invalid PDE\n");
-            
+#if (_MI_PAGING_LEVELS == 2) 
             //
             // Handle mapping in "Special" PDE directoreis
             //
             MiCheckPdeForPagedPool(Address);
-            
+#endif
             //
             // Now we SHOULD be good
             //
@@ -556,7 +565,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
             // This might happen...not sure yet
             //
             DPRINT1("FAULT ON PAGE TABLES: %p %lx %lx!\n", Address, *PointerPte, *PointerPde);
-            
+#if (_MI_PAGING_LEVELS == 2) 
             //
             // Map in the page table
             //
@@ -565,7 +574,7 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
                 DPRINT1("PAGE TABLES FAULTED IN!\n");
                 return STATUS_SUCCESS;
             }
-            
+#endif
             //
             // Otherwise the page table doesn't actually exist
             //
@@ -650,6 +659,11 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
     /* Lock the working set */
     MiLockProcessWorkingSet(CurrentProcess, CurrentThread);
     
+#if (_MI_PAGING_LEVELS >= 3)
+    /* Need to check/handle PPE and PXE validity too */
+    ASSERT(FALSE);
+#endif
+
     /* First things first, is the PDE valid? */
     ASSERT(PointerPde != MiAddressToPde(PTE_BASE));
     ASSERT(PointerPde->u.Hard.LargePage == 0);
@@ -679,6 +693,10 @@ MmArmAccessFault(IN BOOLEAN StoreInstruction,
 
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Need to check/handle PPE and PXE validity too */
+        ASSERT(FALSE);
+#endif
         ASSERT(PointerPde->u.Hard.Valid == 1);
     }
 

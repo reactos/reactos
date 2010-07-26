@@ -153,6 +153,7 @@ PMMPTE MiSessionLastPte;
 PVOID MiSystemViewStart;
 SIZE_T MmSystemViewSize;
 
+#if (_MI_PAGING_LEVELS == 2)
 //
 // A copy of the system page directory (the page directory associated with the
 // System process) is kept (double-mapped) by the manager in order to lazily
@@ -161,6 +162,7 @@ SIZE_T MmSystemViewSize;
 //
 PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 PMMPTE MmSystemPagePtes;
+#endif
 
 //
 // The system cache starts right after hyperspace. The first few pages are for
@@ -228,6 +230,9 @@ PVOID MmSystemRangeStart;
 /* And these store the respective highest PTE/PDE address */
 PMMPTE MiHighestUserPte;
 PMMPDE MiHighestUserPde;
+#if (_MI_PAGING_LEVELS >= 3)
+/* We need the highest PPE and PXE addresses */
+#endif
 
 /* These variables define the system cache address space */
 PVOID MmSystemCacheStart;
@@ -1476,7 +1481,7 @@ MiBuildPagedPool(VOID)
     PFN_NUMBER PageFrameIndex;
     KIRQL OldIrql;
     ULONG Size, BitMapSize;
-    
+#if (_MI_PAGING_LEVELS == 2)
     //
     // Get the page frame number for the system page directory
     //
@@ -1502,7 +1507,7 @@ MiBuildPagedPool(VOID)
     ASSERT(PD_COUNT == 1);
     TempPte.u.Hard.PageFrameNumber = MmSystemPageDirectory[0];
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
-
+#endif
     //
     // Let's get back to paged pool work: size it up.
     // By default, it should be twice as big as nonpaged pool.
@@ -1554,6 +1559,14 @@ MiBuildPagedPool(VOID)
     // So now get the PDE for paged pool and zero it out
     //
     PointerPde = MiAddressToPde(MmPagedPoolStart);
+    
+#if (_MI_PAGING_LEVELS >= 3)
+    /* On these systems, there's no double-mapping, so instead, the PPE and PXEs
+     * are setup to span the entire paged pool area, so there's no need for the
+     * system PD */
+     ASSERT(FALSE);
+#endif
+
     RtlZeroMemory(PointerPde,
                   (1 + MiAddressToPde(MmPagedPoolEnd) - PointerPde) * sizeof(MMPTE));
 
@@ -1573,7 +1586,14 @@ MiBuildPagedPool(VOID)
     PageFrameIndex = MiRemoveZeroPage(0);
     TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
     MI_WRITE_VALID_PTE(PointerPde, TempPte);
-
+#if (_MI_PAGING_LEVELS >= 3)
+    /* Use the PPE of MmPagedPoolStart that was setup above */
+//    Bla = PFN_FROM_PTE(PpeAddress(MmPagedPool...));
+    ASSERT(FALSE);
+#else
+    /* Do it this way */
+//    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]
+#endif
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,
                                    PointerPde,
@@ -1700,7 +1720,10 @@ MmArmInitSystem(IN ULONG Phase,
         /* Highest PTE and PDE based on the addresses above */
         MiHighestUserPte = MiAddressToPte(MmHighestUserAddress);
         MiHighestUserPde = MiAddressToPde(MmHighestUserAddress);
-        
+#if (_MI_PAGING_LEVELS >= 3)
+        /* We need the highest PPE and PXE addresses */
+        ASSERT(FALSE);
+#endif
         //
         // Get the size of the boot loader's image allocations and then round
         // that region up to a PDE size, so that any PDEs we might create for
