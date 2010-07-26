@@ -24,7 +24,7 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID "Autoriteits Sleutel Identificatie nummer"
     IDS_KEY_ATTRIBUTES "Sleutel Attributen"
@@ -169,7 +169,7 @@ STRINGTABLE DISCARDABLE
     IDS_ANY_CERT_POLICY "Alle uitgifte beleid"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALIZEDNAME_ROOT "Vertrouwde Basis Certificatie Autoriteiten"
     IDS_LOCALIZEDNAME_MY "Persoonlijk"
@@ -179,7 +179,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_DISALLOWED "Niet-vertrouwde certificaten"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_KEY_ID "SleutelID="
     IDS_CERT_ISSUER "Certificaat verstrekker"

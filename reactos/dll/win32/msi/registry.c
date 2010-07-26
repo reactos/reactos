@@ -1918,7 +1918,7 @@ static UINT msi_check_product_patches(LPCWSTR prodcode, LPCWSTR usersid,
         goto done;
 
     ptr = patches;
-    for (ptr = patches; *ptr && r == ERROR_NO_MORE_ITEMS; ptr += lstrlenW(ptr))
+    for (ptr = patches; *ptr && r == ERROR_NO_MORE_ITEMS; ptr += lstrlenW(ptr) + 1)
     {
         if (!unsquash_guid(ptr, patch))
         {

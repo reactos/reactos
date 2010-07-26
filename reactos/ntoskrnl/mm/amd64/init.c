@@ -30,6 +30,7 @@ HalInitializeBios(ULONG Unknown, PLOADER_PARAMETER_BLOCK LoaderBlock);
 MMPTE ValidKernelPde = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
 MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1, .u.Hard.Accessed = 1};
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
+MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | 0xFFFFF000};
 
 /* Sizes */
 ///SIZE_T MmSessionSize = MI_SESSION_SIZE;
@@ -376,7 +377,7 @@ MiInitializePageTable()
     MMPTE TmplPte, *Pte;
 
     /* HACK: don't use freeldr debug print anymore */
-    FrLdrDbgPrint = NoDbgPrint;
+    //FrLdrDbgPrint = NoDbgPrint;
 
     /* Get current directory base */
     MmSystemPageDirectory[0] = ((PMMPTE)PXE_SELFMAP)->u.Hard.PageFrameNumber;

@@ -16,8 +16,8 @@ InitializeListHead(
   ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 IsListEmpty(
   IN CONST LIST_ENTRY * ListHead)
 {
@@ -2855,8 +2855,8 @@ InitializeSListHead(
 
 #else
 
-VOID
 FORCEINLINE
+VOID
 InitializeSListHead(
   OUT PSLIST_HEADER SListHead)
 {

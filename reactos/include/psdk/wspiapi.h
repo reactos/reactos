@@ -236,7 +236,7 @@ WspiapiClone(
   return 0;
 }
 
-FORCEINLINE
+static __inline
 void
 WINAPI
 WspiapiLegacyFreeAddrInfo(
@@ -252,7 +252,7 @@ WspiapiLegacyFreeAddrInfo(
   }
 }
 
-FORCEINLINE
+static __inline
 int
 WINAPI
 WspiapiLegacyGetAddrInfo(
@@ -352,7 +352,7 @@ WspiapiLegacyGetAddrInfo(
   return (iError);
 }
 
-FORCEINLINE
+static __inline
 int
 WINAPI
 WspiapiLegacyGetNameInfo(

@@ -25,7 +25,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_AUTHORITY_KEY_ID                  "Įstaigos rakto identifikatorius"
     IDS_KEY_ATTRIBUTES                    "Rakto atributai"
@@ -170,7 +170,7 @@ STRINGTABLE DISCARDABLE
     IDS_ANY_CERT_POLICY                   "Visos išdavimo politikos"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_LOCALIZEDNAME_ROOT                "Patikimos vyriausiosios liudijimų įstaigos"
     IDS_LOCALIZEDNAME_MY                  "Asmeniniai"
@@ -180,7 +180,7 @@ STRINGTABLE DISCARDABLE
     IDS_LOCALIZEDNAME_DISALLOWED          "Nepatikimi liudijimai"
 }
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_KEY_ID                            "Rakto identifikatorius="
     IDS_CERT_ISSUER                       "Liudijimo išdavėjas"

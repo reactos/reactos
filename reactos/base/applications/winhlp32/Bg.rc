@@ -20,9 +20,11 @@
 
 #include "winhelp_res.h"
 
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
 /* Menu */
 
-MAIN_MENU MENU LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+MAIN_MENU MENU
 {
  POPUP "&Файл" {
   MENUITEM "&Отвори", MNID_FILE_OPEN
@@ -68,7 +70,7 @@ MAIN_MENU MENU LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 }
 
 /* Strings */
-STRINGTABLE DISCARDABLE LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+STRINGTABLE
 {
 STID_WINE_HELP, 	"WINE Помощ"
 STID_WHERROR, 		"ГРЕШКА"
@@ -83,5 +85,4 @@ STID_ALL_FILES, 	"Всички файлове (*.*)"
 STID_HELP_FILES_HLP, 	"Помощни файлове (*.hlp)"
 STID_FILE_NOT_FOUND_s	"Cannot find '%s'. Do you want to find this file yourself?"
 STID_NO_RICHEDIT	"Cannot find a richedit implementation... Aborting"
-STID_PSH_INDEX,		"Help topics: "
 }

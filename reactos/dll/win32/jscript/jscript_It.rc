@@ -24,7 +24,7 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Errore nel convertire un oggetto ad un tipo primitivo"
     IDS_INVALID_CALL_ARG    "Chiamata o argomento di procedura non valido"

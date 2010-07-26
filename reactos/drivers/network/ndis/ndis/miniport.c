@@ -2064,7 +2064,7 @@ NdisIPnPStartDevice(
   {
       ProtocolBinding = CONTAINING_RECORD(CurrentEntry, PROTOCOL_BINDING, ListEntry);
 
-      ndisBindMiniportsToProtocol(&NdisStatus, &ProtocolBinding->Chars);
+      ndisBindMiniportsToProtocol(&NdisStatus, ProtocolBinding);
 
       CurrentEntry = CurrentEntry->Flink;
   }

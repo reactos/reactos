@@ -304,7 +304,7 @@ static BOOL COMDLG32_FR_CheckPartial(
 ) {
 	if(!pfr)
         {
-		COMDLG32_SetCommDlgExtendedError(CDERR_GENERALCODES);
+		COMDLG32_SetCommDlgExtendedError(CDERR_INITIALIZATION);
                 return FALSE;
 	}
 
@@ -321,7 +321,7 @@ static BOOL COMDLG32_FR_CheckPartial(
         }
 
 	if((pfr->wFindWhatLen < 1 || !pfr->lpstrFindWhat)
-        ||(Replace && (pfr->wReplaceWithLen < 1 || !pfr->lpstrReplaceWith)))
+        ||(Replace && !pfr->lpstrReplaceWith))
         {
 		COMDLG32_SetCommDlgExtendedError(FRERR_BUFFERLENGTHZERO);
                 return FALSE;
@@ -344,15 +344,9 @@ static BOOL COMDLG32_FR_CheckPartial(
                 return FALSE;
         }
 
-        if((pfr->Flags & (FR_ENABLETEMPLATE | FR_ENABLETEMPLATEHANDLE)) && !pfr->hInstance)
+        if((pfr->Flags & FR_ENABLETEMPLATEHANDLE) && !pfr->hInstance)
         {
 		COMDLG32_SetCommDlgExtendedError(CDERR_NOHINSTANCE);
-                return FALSE;
-        }
-
-        if((pfr->Flags & FR_ENABLETEMPLATE) && !pfr->lpTemplateName)
-        {
-		COMDLG32_SetCommDlgExtendedError(CDERR_NOTEMPLATE);
                 return FALSE;
         }
 
@@ -536,7 +530,7 @@ HWND WINAPI ReplaceTextW(
 
         TRACE("LPFINDREPLACE=%p\n", pfr);
 
-	if(!COMDLG32_FR_CheckPartial((LPFINDREPLACEA)pfr, FALSE))
+	if(!COMDLG32_FR_CheckPartial((LPFINDREPLACEA)pfr, TRUE))
 		return 0;
 
         len1 = WideCharToMultiByte( CP_ACP, 0, pfr->lpstrFindWhat, pfr->wFindWhatLen,

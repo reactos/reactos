@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Het opgegeven installatie pakket kon niet worden geopend.  Verifieer het bestandspad en probeer opnieuw."
 	5 "Pad %s niet gevonden"

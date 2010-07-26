@@ -429,11 +429,11 @@ MmInitSystem(IN ULONG Phase,
         ASSERT(PointerPte->u.Hard.Valid == 1);
         PageFrameNumber = PFN_FROM_PTE(PointerPte);
         
-        //
-        // Now write a copy of it
-        //
-        MI_MAKE_OWNER_PAGE(&TempPte);
-        TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+        /* Build the PTE and write it */
+        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte,
+                                    PointerPte,
+                                    MM_READONLY,
+                                    PageFrameNumber);
         *MmSharedUserDataPte = TempPte;
         
         /* Setup the memory threshold events */
@@ -451,12 +451,6 @@ MmInitSystem(IN ULONG Phase,
         
         /* Initialize the balance set manager */
         MmInitBsmThread();
-    }
-    else if (Phase == 2)
-    {
-        /* Enough fun for now */
-        extern BOOLEAN AllowPagedPool;
-        AllowPagedPool = FALSE;
     }
 
     return TRUE;

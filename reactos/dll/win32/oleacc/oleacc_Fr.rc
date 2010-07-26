@@ -26,7 +26,7 @@
 
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     0 "objet inconnu" /* non documenté */
     ROLE_SYSTEM_TITLEBAR    "barre de titre"

@@ -292,4 +292,106 @@ RtlpInsertAvlTreeNode(IN PRTL_AVL_TABLE Table,
     }
 }
 
+VOID
+FORCEINLINE
+RtlpDeleteAvlTreeNode(IN PRTL_AVL_TABLE Table,
+                      IN PRTL_BALANCED_LINKS Node)
+{
+    PRTL_BALANCED_LINKS DeleteNode = NULL, ParentNode;
+    PRTL_BALANCED_LINKS *Node1, *Node2;
+    CHAR Balance;
+    
+    /* Take one of the children if possible */
+    if (!(RtlLeftChildAvl(Node)) || !(RtlRightChildAvl(Node))) DeleteNode = Node;
+    
+    /* Otherwise, check if one side is longer */
+    if (!(DeleteNode) && (RtlBalance(Node) >= RtlBalancedAvlTree))
+    {
+        /* Pick the successor which will be the longest side in this case */
+        DeleteNode = RtlRightChildAvl(Node);
+        while (RtlLeftChildAvl(DeleteNode)) DeleteNode = RtlLeftChildAvl(DeleteNode);
+    }
+    else if (!DeleteNode)
+    {
+        /* Pick the predecessor which will be the longest side in this case */
+        DeleteNode = RtlLeftChildAvl(Node);
+        while (RtlRightChildAvl(DeleteNode)) DeleteNode = RtlRightChildAvl(DeleteNode);        
+    }
+    
+    /* Get the parent node */
+    ParentNode = RtlParentAvl(DeleteNode);
+    DPRINT("Parent: %p\n", ParentNode);
+    
+    /* Pick which now to use based on whether or not we have a left child */
+    Node1 = RtlLeftChildAvl(DeleteNode) ? &DeleteNode->LeftChild : &DeleteNode->RightChild;
+    DPRINT("Node 1: %p %p\n", Node1, *Node1);
+            
+    /* Pick which node to swap based on if we're already a left child or not */
+    Node2 = RtlIsLeftChildAvl(DeleteNode) ? &ParentNode->LeftChild : &ParentNode->RightChild;
+    DPRINT("Node 2: %p %p\n", Node2, *Node2);
+            
+    /* Pick the correct balance depending on which side will get heavier */
+    Balance = RtlIsLeftChildAvl(DeleteNode) ? RtlLeftHeavyAvlTree : RtlRightHeavyAvlTree;
+    DPRINT("Balance: %lx\n", Balance);
+    
+    /* Swap the children nodes, making one side heavier */
+    *Node2 = *Node1;
+    
+    /* If the node has a child now, update its parent */
+    if (*Node1) RtlSetParent(*Node1, ParentNode);
+
+    /* Assume balanced root for loop optimization */
+    RtlSetBalance(&Table->BalancedRoot, RtlBalancedAvlTree);
+    
+    /* Loop up the tree by parents */
+    while (TRUE)
+    {
+        /* Check if the tree's balance increased */
+        if (RtlBalance(ParentNode) == Balance)
+        {
+            /* Now the tree is balanced */
+            RtlSetBalance(ParentNode, RtlBalancedAvlTree);
+        }
+        else if (RtlBalance(ParentNode) == RtlBalancedAvlTree)
+        {
+            /* The tree has now become less balanced, since it was balanced */
+            RtlSetBalance(ParentNode, -Balance);
+
+            /* Deal with the loop optimization to detect loss of a tree level */
+            if (RtlBalance(&Table->BalancedRoot) != RtlBalancedAvlTree) Table->DepthOfTree--;
+            break;
+        }
+        else
+        {
+            /* The tree has become unbalanced, so a rebalance is needed */
+            if (RtlpRebalanceAvlTreeNode(ParentNode)) break;
+
+            /* Get the new parent after the balance */
+            ParentNode = RtlParentAvl(ParentNode);
+        }
+
+        /* Choose which balance factor to use based on which side we're on */
+        Balance = RtlIsRightChild(ParentNode) ?
+                  RtlRightHeavyAvlTree : RtlLeftHeavyAvlTree;
+        
+        /* Iterate up the tree */
+        ParentNode = RtlParentAvl(ParentNode);
+    }
+
+    /* Check if this isn't the node we ended up deleting directly */
+    if (Node == DeleteNode) return;
+
+    /* Copy the deleted node itself */
+    RtlpCopyAvlNodeData(DeleteNode, Node);
+    
+    /* Pick the right node to unlink */
+    Node1 = RtlIsLeftChildAvl(Node) ?
+            &(RtlParentAvl(DeleteNode))->LeftChild : &(RtlParentAvl(DeleteNode))->RightChild;
+    *Node1 = DeleteNode;
+
+    /* Reparent as appropriate */
+    if (RtlLeftChildAvl(DeleteNode)) RtlSetParent(RtlLeftChildAvl(DeleteNode), DeleteNode);
+    if (RtlRightChildAvl(DeleteNode)) RtlSetParent(RtlRightChildAvl(DeleteNode), DeleteNode);
+}
+
 /* EOF */

@@ -25,6 +25,9 @@ MMPTE ValidKernelPte = {.u.Hard.Valid = 1, .u.Hard.Write = 1, .u.Hard.Dirty = 1,
 /* Template PDE for a demand-zero page */
 MMPDE DemandZeroPde  = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS)};
 
+/* Template PTE for prototype page */
+MMPTE PrototypePte = {.u.Long = (MM_READWRITE << MM_PTE_SOFTWARE_PROTECTION_BITS) | PTE_PROTOTYPE | 0xFFFFF000};
+                       
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID

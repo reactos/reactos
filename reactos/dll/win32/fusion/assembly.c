@@ -811,6 +811,20 @@ HRESULT assembly_get_version(ASSEMBLY *assembly, LPWSTR *version)
     return S_OK;
 }
 
+BYTE assembly_get_architecture(ASSEMBLY *assembly)
+{
+    if ((assembly->corhdr->MajorRuntimeVersion == 2) && (assembly->corhdr->MinorRuntimeVersion == 0))
+        return 0; /* .NET 1.x assembly */
+
+    if (assembly->nthdr->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+        return peAMD64; /* AMD64/IA64 assembly */
+
+    if ((assembly->corhdr->Flags & COMIMAGE_FLAGS_ILONLY) && !(assembly->corhdr->Flags & COMIMAGE_FLAGS_32BITREQUIRED))
+        return peMSIL; /* MSIL assembly */
+
+    return peI386; /* x86 assembly */
+}
+
 static BYTE *assembly_get_blob(ASSEMBLY *assembly, WORD index, ULONG *size)
 {
     return GetData(&assembly->blobs[index], size);

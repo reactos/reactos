@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_LITHUANIAN, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_TO_PRIMITIVE        "Klaida keičiant objektą į primityvų tipą"
     IDS_INVALID_CALL_ARG    "Netinkamas kreipinys į procedūrą ar argumentas"

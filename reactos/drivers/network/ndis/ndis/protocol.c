@@ -865,9 +865,39 @@ NdisOpenAdapter(
   *Status = NDIS_STATUS_SUCCESS;
 }
 
+PADAPTER_BINDING
+NTAPI
+LocateAdapterBindingByName(IN PPROTOCOL_BINDING ProtocolBinding, IN PNDIS_STRING AdapterName)
+{
+    PLIST_ENTRY CurrentEntry;
+    PADAPTER_BINDING AdapterBinding;
+    KIRQL OldIrql;
+
+    KeAcquireSpinLock(&ProtocolBinding->Lock, &OldIrql);
+
+    CurrentEntry = ProtocolBinding->AdapterListHead.Flink;
+
+    while (CurrentEntry != &ProtocolBinding->AdapterListHead)
+    {
+         AdapterBinding = CONTAINING_RECORD(CurrentEntry, ADAPTER_BINDING, ProtocolListEntry);
+
+         if (RtlCompareUnicodeString(AdapterName, &AdapterBinding->Adapter->NdisMiniportBlock.MiniportName, TRUE) == 0)
+         {
+             KeReleaseSpinLock(&ProtocolBinding->Lock, OldIrql);
+             return AdapterBinding;
+         }
+
+         CurrentEntry = CurrentEntry->Flink;
+    }
+
+    KeReleaseSpinLock(&ProtocolBinding->Lock, OldIrql);
+
+    return NULL;
+}
+
 VOID
 NTAPI
-ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics)
+ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PPROTOCOL_BINDING Protocol)
 {
   /*
    * bind the protocol to all of its miniports
@@ -883,6 +913,7 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
     WCHAR *DataPtr;
     HANDLE DriverKeyHandle = NULL;
     PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
+    PNDIS_PROTOCOL_CHARACTERISTICS ProtocolCharacteristics = &Protocol->Chars;
 
     RegistryPathStr = ExAllocatePoolWithTag(PagedPool, sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY), NDIS_TAG + __LINE__);
     if(!RegistryPathStr)
@@ -952,6 +983,9 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
       }
   }
 
+  /* Assume success for now */
+  *Status = NDIS_STATUS_SUCCESS;
+
   for (DataPtr = (WCHAR *)KeyInformation->Data;
        *DataPtr != 0;
        DataPtr += wcslen(DataPtr) + 1)
@@ -964,6 +998,20 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
       ULONG PathLength = 0;
 
       RtlInitUnicodeString(&DeviceName, DataPtr);	/* we know this is 0-term */
+
+      /* Make sure the adapter has started */
+      if (!MiniLocateDevice(&DeviceName))
+      {
+          /* It wasn't in the global miniport list, so skip the bind entry */
+          continue;
+      }
+
+      /* Make sure this device isn't already bound to this protocol */
+      if (LocateAdapterBindingByName(Protocol, &DeviceName))
+      {
+          /* It was already in this protocol's bound adapter list, so skip the bind entry */
+          continue;
+      }
 
       /*
        * RegistryPath should be:
@@ -1011,7 +1059,6 @@ ndisBindMiniportsToProtocol(OUT PNDIS_STATUS Status, IN PNDIS_PROTOCOL_CHARACTER
         }
     }
 
-   *Status = NDIS_STATUS_SUCCESS;
    ExFreePool(KeyInformation);
 }
 
@@ -1111,7 +1158,7 @@ NdisRegisterProtocol(
 
   *NdisProtocolHandle = Protocol;
 
-  ndisBindMiniportsToProtocol(Status, &Protocol->Chars);
+  ndisBindMiniportsToProtocol(Status, Protocol);
 
   /* Should we only send this if ndisBindMiniportsToProtocol succeeds? */
   PnPEvent = ProSetupPnPEvent(NetEventBindsComplete, NULL, 0);
@@ -1252,10 +1299,9 @@ VOID
 NTAPI
 NdisReEnumerateProtocolBindings(IN NDIS_HANDLE NdisProtocolHandle)
 {
-    PPROTOCOL_BINDING Protocol = NdisProtocolHandle;
     NDIS_STATUS NdisStatus;
 
-    ndisBindMiniportsToProtocol(&NdisStatus, &Protocol->Chars);
+    ndisBindMiniportsToProtocol(&NdisStatus, NdisProtocolHandle);
 }
 
 

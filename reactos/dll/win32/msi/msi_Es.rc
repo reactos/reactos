@@ -22,7 +22,7 @@
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "No se ha podido abrir el paquete de instalación especificado. Por favor, compruebe la ruta del archivo y vuelva a intentarlo."
 	5 "ruta %s no encontrada"

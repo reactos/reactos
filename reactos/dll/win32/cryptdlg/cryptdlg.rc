@@ -34,6 +34,7 @@
 #include "cryptdlg_Hu.rc"
 #include "cryptdlg_It.rc"
 #include "cryptdlg_Lt.rc"
+#include "cryptdlg_No.rc"
 #include "cryptdlg_Pt.rc"
 #include "cryptdlg_Ro.rc"
 #include "cryptdlg_Uk.rc"

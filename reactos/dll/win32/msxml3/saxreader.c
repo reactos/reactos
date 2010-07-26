@@ -139,7 +139,7 @@ static HRESULT namespacePush(saxlocator *locator, int ns)
         int *new_stack;
 
         new_stack = HeapReAlloc(GetProcessHeap(), 0,
-                locator->nsStack, locator->nsStackSize*2);
+                locator->nsStack, sizeof(int)*locator->nsStackSize*2);
         if(!new_stack) return E_OUTOFMEMORY;
         locator->nsStack = new_stack;
         locator->nsStackSize *= 2;
@@ -158,7 +158,6 @@ static int namespacePop(saxlocator *locator)
 static BSTR bstr_from_xmlCharN(const xmlChar *buf, int len)
 {
     DWORD dLen;
-    LPWSTR str;
     BSTR bstr;
 
     if (!buf)
@@ -166,13 +165,11 @@ static BSTR bstr_from_xmlCharN(const xmlChar *buf, int len)
 
     dLen = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, NULL, 0);
     if(len != -1) dLen++;
-    str = heap_alloc(dLen * sizeof (WCHAR));
-    if (!str)
+    bstr = SysAllocStringLen(NULL, dLen-1);
+    if (!bstr)
         return NULL;
-    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, str, dLen);
-    if(len != -1) str[dLen-1] = '\0';
-    bstr = SysAllocString(str);
-    heap_free(str);
+    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)buf, len, bstr, dLen);
+    if(len != -1) bstr[dLen-1] = '\0';
 
     return bstr;
 }
@@ -180,7 +177,6 @@ static BSTR bstr_from_xmlCharN(const xmlChar *buf, int len)
 static BSTR QName_from_xmlChar(const xmlChar *prefix, const xmlChar *name)
 {
     DWORD dLen, dLast;
-    LPWSTR str;
     BSTR bstr;
 
     if(!name) return NULL;
@@ -190,16 +186,13 @@ static BSTR QName_from_xmlChar(const xmlChar *prefix, const xmlChar *name)
 
     dLen = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)prefix, -1, NULL, 0)
         + MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)name, -1, NULL, 0);
-    str = heap_alloc(dLen * sizeof(WCHAR));
-    if(!str)
+    bstr = SysAllocStringLen(NULL, dLen-1);
+    if(!bstr)
         return NULL;
 
-    dLast = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)prefix, -1, str, dLen);
-    str[dLast-1] = ':';
-    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)name, -1, &str[dLast], dLen-dLast);
-    bstr = SysAllocString(str);
-
-    heap_free(str);
+    dLast = MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)prefix, -1, bstr, dLen);
+    bstr[dLast-1] = ':';
+    MultiByteToWideChar(CP_UTF8, 0, (LPCSTR)name, -1, &bstr[dLast], dLen-dLast);
 
     return bstr;
 }
@@ -1752,7 +1745,7 @@ static HRESULT SAXLocator_create(saxreader *reader, saxlocator **ppsaxlocator, B
     locator->ret = S_OK;
     locator->nsStackSize = 8;
     locator->nsStackLast = 0;
-    locator->nsStack = heap_alloc(locator->nsStackSize);
+    locator->nsStack = heap_alloc(sizeof(int)*locator->nsStackSize);
     if(!locator->nsStack)
     {
         ISAXXMLReader_Release((ISAXXMLReader*)&reader->lpSAXXMLReaderVtbl);

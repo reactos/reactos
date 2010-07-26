@@ -70,4 +70,5 @@
 #include "cdlg_Ro.rc"
 #include "cdlg_Ru.rc"
 #include "cdlg_Si.rc"
+#include "cdlg_Sr.rc"
 #include "cdlg_Zh.rc"

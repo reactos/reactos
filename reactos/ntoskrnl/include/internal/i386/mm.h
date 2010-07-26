@@ -7,6 +7,12 @@
 struct _EPROCESS;
 PULONG MmGetPageDirectory(VOID);
 
+#ifdef _PAE_
+#define _MI_PAGING_LEVELS 3
+#else
+#define _MI_PAGING_LEVELS 2
+#endif
+
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 

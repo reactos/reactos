@@ -163,7 +163,7 @@ static UINT ControlEvent_SpawnWaitDialog(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_DoAction(MSIPACKAGE* package, LPCWSTR argument, 
                                   msi_dialog* dialog)
 {
-    ACTION_PerformAction(package,argument,-1,TRUE);
+    ACTION_PerformAction(package, argument, -1);
     return ERROR_SUCCESS;
 }
 

@@ -131,7 +131,6 @@ typedef nsISupports nsIDOMMediaList;
 typedef nsISupports nsIDOMHTMLTableCaptionElement;
 typedef nsISupports nsIDOMHTMLTableSectionElement;
 typedef nsISupports nsIDOMClientRectList;
-typedef nsISupports nsIDOMClientRect;
 typedef nsISupports nsIDOMLocation;
 typedef nsISupports nsIDocument;
 typedef nsISupports nsIContent;
@@ -730,6 +729,22 @@ interface nsIDOMElement : nsIDOMNode
 interface nsIDOMElementCSSInlineStyle : nsISupports
 {
     nsresult GetStyle(nsIDOMCSSStyleDeclaration **aStyle);
+}
+
+[
+    object,
+    uuid(b2f824c4-d9d3-499b-8d3b-45c8245497c6),
+    local
+    /* NOT_FROZEN */
+]
+interface nsIDOMClientRect : nsISupports
+{
+    nsresult GetLeft(float *aLeft);
+    nsresult GetTop(float *aTop);
+    nsresult GetRight(float *aRight);
+    nsresult GetBottom(float *aBottom);
+    nsresult GetWidth(float *aWidth);
+    nsresult GetHeight(float *aHeight);
 }
 
 [

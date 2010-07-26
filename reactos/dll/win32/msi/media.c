@@ -653,6 +653,7 @@ static UINT msi_load_media_info(MSIPACKAGE *package, MSIFILE *file, MSIMEDIAINFO
     if (!mi->first_volume)
         mi->first_volume = strdupW(mi->volume_label);
 
+    msi_set_sourcedir_props(package, FALSE);
     source_dir = msi_dup_property(package->db, cszSourceDir);
     lstrcpyW(mi->sourcedir, source_dir);
     mi->type = get_drive_type(source_dir);

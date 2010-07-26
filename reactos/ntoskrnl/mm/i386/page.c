@@ -12,6 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "../ARM3/miarm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
@@ -57,6 +58,56 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
     return dummy;
 }
 #endif
+
+const
+ULONG
+MmProtectToPteMask[32] =
+{
+    //
+    // These are the base MM_ protection flags
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOCACHE flag
+    //
+    0,
+    PTE_READONLY            | PTE_DISABLE_CACHE,
+    PTE_EXECUTE             | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
+    PTE_READWRITE           | PTE_DISABLE_CACHE,
+    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
+    //
+    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
+    //
+    0,
+    PTE_READONLY            | PTE_ENABLE_CACHE,
+    PTE_EXECUTE             | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
+    PTE_READWRITE           | PTE_ENABLE_CACHE,
+    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
+    //
+    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
+    //
+    0,
+    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
+    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
+    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
+    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
+};
 
 /* FUNCTIONS ***************************************************************/
 
@@ -110,114 +161,6 @@ ProtectToPTE(ULONG flProtect)
         Attributes = Attributes | PA_WT;
     }
     return(Attributes);
-}
-
-NTSTATUS
-NTAPI
-Mmi386ReleaseMmInfo(PEPROCESS Process)
-{
-    PUSHORT LdtDescriptor;
-    ULONG LdtBase;
-    PULONG PageDir;
-    ULONG i;
-    
-    DPRINT("Mmi386ReleaseMmInfo(Process %x)\n",Process);
-    
-    LdtDescriptor = (PUSHORT) &Process->Pcb.LdtDescriptor;
-    LdtBase = LdtDescriptor[1] |
-    ((LdtDescriptor[2] & 0xff) << 16) |
-    ((LdtDescriptor[3] & ~0xff) << 16);
-    
-    DPRINT("LdtBase: %x\n", LdtBase);
-    
-    if (LdtBase)
-    {
-        ExFreePool((PVOID) LdtBase);
-    }
-    
-    PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-    for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
-    {
-        if (PageDir[i] != 0)
-        {
-            MiZeroPage(PTE_TO_PFN(PageDir[i]));
-            MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[i]));
-        }
-    }
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(PageDir[ADDR_TO_PDE_OFFSET(HYPERSPACE)]));
-    MmDeleteHyperspaceMapping(PageDir);
-    MmReleasePageMemoryConsumer(MC_NPPOOL, PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
-
-    Process->Pcb.DirectoryTableBase[0] = 0;
-    Process->Pcb.DirectoryTableBase[1] = 0;
-
-    DPRINT("Finished Mmi386ReleaseMmInfo()\n");
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
-MmInitializeHandBuiltProcess(IN PEPROCESS Process,
-                             IN PULONG_PTR DirectoryTableBase)
-{
-    /* Share the directory base with the idle process */
-    DirectoryTableBase[0] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[0];
-    DirectoryTableBase[1] = PsGetCurrentProcess()->Pcb.DirectoryTableBase[1];
-
-    /* Initialize the Addresss Space */
-    KeInitializeGuardedMutex(&Process->AddressCreationLock);
-    Process->Vm.WorkingSetExpansionLinks.Flink = NULL;
-    ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
-    Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
-
-    /* The process now has an address space */
-    Process->HasAddressSpace = TRUE;
-    return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-MmCreateProcessAddressSpace(IN ULONG MinWs,
-                            IN PEPROCESS Process,
-                            IN PULONG DirectoryTableBase)
-{
-    NTSTATUS Status;
-    ULONG i, j;
-    PFN_NUMBER Pfn[2];
-    PULONG_PTR PageDirectory;
-    
-    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
-    
-    for (i = 0; i < 2; i++)
-    {
-        Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
-        if (!NT_SUCCESS(Status))
-        {
-            for (j = 0; j < i; j++)
-            {
-                MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-            }
-            
-            return FALSE;
-        }
-    }
-    
-    PageDirectory = MmCreateHyperspaceMapping(Pfn[0]);
-    
-    memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
-           MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
-           (1024 - ADDR_TO_PDE_OFFSET(MmSystemRangeStart)) * sizeof(ULONG));
-    
-    DPRINT("Addr %x\n",ADDR_TO_PDE_OFFSET(PAGETABLE_MAP));
-    PageDirectory[ADDR_TO_PDE_OFFSET(PAGETABLE_MAP)] = PFN_TO_PTE(Pfn[0]) | PA_PRESENT | PA_READWRITE;
-    PageDirectory[ADDR_TO_PDE_OFFSET(HYPERSPACE)] = PFN_TO_PTE(Pfn[1]) | PA_PRESENT | PA_READWRITE;
-    
-    MmDeleteHyperspaceMapping(PageDirectory);
-    
-    DirectoryTableBase[0] = PFN_TO_PTE(Pfn[0]);
-    DirectoryTableBase[1] = 0;
-    DPRINT("Finished MmCopyMmInfo(): 0x%x\n", DirectoryTableBase[0]);
-    return TRUE;
 }
 
 static PULONG

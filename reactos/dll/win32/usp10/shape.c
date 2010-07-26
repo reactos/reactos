@@ -185,6 +185,42 @@ typedef struct{
     WORD Component[1];
 }GSUB_Ligature;
 
+typedef struct{
+    WORD SequenceIndex;
+    WORD LookupListIndex;
+
+}GSUB_SubstLookupRecord;
+
+typedef struct{
+    WORD SubstFormat; /* = 1 */
+    WORD Coverage;
+    WORD ChainSubRuleSetCount;
+    WORD ChainSubRuleSet[1];
+}GSUB_ChainContextSubstFormat1;
+
+typedef struct {
+    WORD SubstFormat; /* = 3 */
+    WORD BacktrackGlyphCount;
+    WORD Coverage[1];
+}GSUB_ChainContextSubstFormat3_1;
+
+typedef struct{
+    WORD InputGlyphCount;
+    WORD Coverage[1];
+}GSUB_ChainContextSubstFormat3_2;
+
+typedef struct{
+    WORD LookaheadGlyphCount;
+    WORD Coverage[1];
+}GSUB_ChainContextSubstFormat3_3;
+
+typedef struct{
+    WORD SubstCount;
+    GSUB_SubstLookupRecord SubstLookupRecord[1];
+}GSUB_ChainContextSubstFormat3_4;
+
+static INT GSUB_apply_lookup(const GSUB_LookupList* lookup, INT lookup_index, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count);
+
 /* the orders of joined_forms and contextual_features need to line up */
 static const char* contextual_features[] =
 {
@@ -429,6 +465,101 @@ static INT GSUB_apply_LigatureSubst(const GSUB_LookupTable *look, WORD *glyphs, 
     return GSUB_E_NOGLYPH;
 }
 
+static INT GSUB_apply_ChainContextSubst(const GSUB_LookupList* lookup, const GSUB_LookupTable *look, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count)
+{
+    int j;
+    BOOL done = FALSE;
+
+    TRACE("Chaining Contextual Substitution Subtable\n");
+    for (j = 0; j < GET_BE_WORD(look->SubTableCount) && !done; j++)
+    {
+        const GSUB_ChainContextSubstFormat1 *ccsf1;
+        int offset;
+        int dirLookahead = write_dir;
+        int dirBacktrack = -1 * write_dir;
+
+        offset = GET_BE_WORD(look->SubTable[j]);
+        ccsf1 = (const GSUB_ChainContextSubstFormat1*)((const BYTE*)look+offset);
+        if (GET_BE_WORD(ccsf1->SubstFormat) == 1)
+        {
+            FIXME("  TODO: subtype 1 (Simple context glyph substitution)\n");
+            return -1;
+        }
+        else if (GET_BE_WORD(ccsf1->SubstFormat) == 2)
+        {
+            FIXME("  TODO: subtype 2 (Class-based Chaining Context Glyph Substitution)\n");
+            return -1;
+        }
+        else if (GET_BE_WORD(ccsf1->SubstFormat) == 3)
+        {
+            int k;
+            int indexGlyphs;
+            const GSUB_ChainContextSubstFormat3_1 *ccsf3_1;
+            const GSUB_ChainContextSubstFormat3_2 *ccsf3_2;
+            const GSUB_ChainContextSubstFormat3_3 *ccsf3_3;
+            const GSUB_ChainContextSubstFormat3_4 *ccsf3_4;
+            int newIndex = glyph_index;
+
+            ccsf3_1 = (const GSUB_ChainContextSubstFormat3_1 *)ccsf1;
+
+            TRACE("  subtype 3 (Coverage-based Chaining Context Glyph Substitution)\n");
+
+            for (k = 0; k < GET_BE_WORD(ccsf3_1->BacktrackGlyphCount); k++)
+            {
+                offset = GET_BE_WORD(ccsf3_1->Coverage[k]);
+                if (GSUB_is_glyph_covered((const BYTE*)ccsf3_1+offset, glyphs[glyph_index + (dirBacktrack * (k+1))]) == -1)
+                    break;
+            }
+            if (k != GET_BE_WORD(ccsf3_1->BacktrackGlyphCount))
+                return -1;
+            TRACE("Matched Backtrack\n");
+
+            ccsf3_2 = (const GSUB_ChainContextSubstFormat3_2 *)(((LPBYTE)ccsf1)+sizeof(GSUB_ChainContextSubstFormat3_1) + (sizeof(WORD) * (GET_BE_WORD(ccsf3_1->BacktrackGlyphCount)-1)));
+
+            indexGlyphs = GET_BE_WORD(ccsf3_2->InputGlyphCount);
+            for (k = 0; k < indexGlyphs; k++)
+            {
+                offset = GET_BE_WORD(ccsf3_2->Coverage[k]);
+                if (GSUB_is_glyph_covered((const BYTE*)ccsf3_1+offset, glyphs[glyph_index + (write_dir * k)]) == -1)
+                    break;
+            }
+            if (k != indexGlyphs)
+                return -1;
+            TRACE("Matched IndexGlyphs\n");
+
+            ccsf3_3 = (const GSUB_ChainContextSubstFormat3_3 *)(((LPBYTE)ccsf3_2)+sizeof(GSUB_ChainContextSubstFormat3_2) + (sizeof(WORD) * (GET_BE_WORD(ccsf3_2->InputGlyphCount)-1)));
+
+            for (k = 0; k < GET_BE_WORD(ccsf3_3->LookaheadGlyphCount); k++)
+            {
+                offset = GET_BE_WORD(ccsf3_3->Coverage[k]);
+                if (GSUB_is_glyph_covered((const BYTE*)ccsf3_1+offset, glyphs[glyph_index + (dirLookahead * (indexGlyphs + k+1))]) == -1)
+                    break;
+            }
+            if (k != GET_BE_WORD(ccsf3_3->LookaheadGlyphCount))
+                return -1;
+            TRACE("Matched LookAhead\n");
+
+            ccsf3_4 = (const GSUB_ChainContextSubstFormat3_4 *)(((LPBYTE)ccsf3_3)+sizeof(GSUB_ChainContextSubstFormat3_3) + (sizeof(WORD) * (GET_BE_WORD(ccsf3_3->LookaheadGlyphCount)-1)));
+
+            for (k = 0; k < GET_BE_WORD(ccsf3_4->SubstCount); k++)
+            {
+                int lookupIndex = GET_BE_WORD(ccsf3_4->SubstLookupRecord[k].LookupListIndex);
+                int SequenceIndex = GET_BE_WORD(ccsf3_4->SubstLookupRecord[k].SequenceIndex) * write_dir;
+
+                TRACE("SUBST: %i -> %i %i\n",k, SequenceIndex, lookupIndex);
+                newIndex = GSUB_apply_lookup(lookup, lookupIndex, glyphs, glyph_index + SequenceIndex, write_dir, glyph_count);
+                if (newIndex == -1)
+                {
+                    ERR("Chain failed to generate a glyph\n");
+                    return -1;
+                }
+            }
+            return newIndex + 1;
+        }
+    }
+    return -1;
+}
+
 static INT GSUB_apply_lookup(const GSUB_LookupList* lookup, INT lookup_index, WORD *glyphs, INT glyph_index, INT write_dir, INT *glyph_count)
 {
     int offset;
@@ -443,6 +574,8 @@ static INT GSUB_apply_lookup(const GSUB_LookupList* lookup, INT lookup_index, WO
             return GSUB_apply_SingleSubst(look, glyphs, glyph_index, write_dir, glyph_count);
         case 4:
             return GSUB_apply_LigatureSubst(look, glyphs, glyph_index, write_dir, glyph_count);
+        case 6:
+            return GSUB_apply_ChainContextSubst(lookup, look, glyphs, glyph_index, write_dir, glyph_count);
         default:
             FIXME("We do not handle SubType %i\n",GET_BE_WORD(look->LookupType));
     }

@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
 	4 "Nie uda³o siê otworzyæ wybranego pakietu instalacyjnego. SprawdŸ czy œcie¿ka jest poprawna i spróbuj ponownie."
 	5 "œcie¿ka '%s' nie zosta³a odnaleziona"

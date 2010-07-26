@@ -5904,8 +5904,8 @@ IoEnumerateRegisteredFiltersList(
 
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 IoInitializePriorityInfo(
   IN PIO_PRIORITY_INFO PriorityInfo)
@@ -7942,8 +7942,8 @@ extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
         FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) :          \
         NULL)
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 FsRtlSetupAdvancedHeader(
   IN PVOID AdvHdr,

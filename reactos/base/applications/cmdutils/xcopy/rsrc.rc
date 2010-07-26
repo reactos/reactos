@@ -31,7 +31,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Ko.rc"
 #include "No.rc"
 #include "Pl.rc"
-#include "Pt.rc"
 
 /* UTF-8 */
 #include "De.rc"
@@ -40,6 +39,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "Ja.rc"
 #include "Lt.rc"
 #include "Nl.rc"
+#include "Pt.rc"
 #include "Ro.rc"
 #include "Ru.rc"
 #include "Si.rc"

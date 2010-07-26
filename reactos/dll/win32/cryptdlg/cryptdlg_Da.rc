@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_DANISH, SUBLANG_DEFAULT
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_CERT_POLICY           "Certifikat Politik"
     IDS_POLICY_ID             "Politik Identifikation:"

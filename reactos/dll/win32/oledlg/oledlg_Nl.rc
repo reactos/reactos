@@ -24,7 +24,7 @@ LANGUAGE LANG_DUTCH, SUBLANG_NEUTRAL
 
 #pragma code_page(65001)
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Object invoegen"
 FONT 8, "MS Shell Dlg"
@@ -51,7 +51,7 @@ BEGIN
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Voeg een nieuw %s object in uw document in"
   IDS_RESULTFILEOBJDESC	"Voeg de inhoud van het bestand als object in uw document in, zodat u het later kunt bewerken met het programma waarmee u het heeft gemaakt."
@@ -60,7 +60,7 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMODCAPTION  "Toevoegen"
 }
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Plakken (Speciaal)"
 FONT 8, "MS Shell Dlg"
@@ -86,7 +86,7 @@ BEGIN
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Voegt de inhoud van het klembord in uw document in als %s."
     IDS_PS_PASTE_OBJECT                   "Voegt de inhoud van het klembord in uw document in zodat u het kan activeren met %s."

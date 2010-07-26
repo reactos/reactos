@@ -1463,8 +1463,8 @@ extern NTKERNELAPI const UCHAR * const FsRtlLegalAnsiCharacterArray;
         FsRtlLookupPerStreamContextInternal((_sc), (_oid), (_iid)) :          \
         NULL)
 
-VOID
 FORCEINLINE
+VOID
 NTAPI
 FsRtlSetupAdvancedHeader(
   IN PVOID AdvHdr,

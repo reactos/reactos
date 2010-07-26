@@ -35,6 +35,7 @@
 	<file>dictionary.c</file>
 	<file>enumx.c</file>
 	<file>errorinfo.c</file>
+	<file>filelockbytes.c</file>
 	<file>filemoniker.c</file>
 	<file>ftmarshal.c</file>
 	<file>git.c</file>
@@ -53,7 +54,6 @@
 	<file>pointermoniker.c</file>
 	<file>regsvr.c</file>
 	<file>rpc.c</file>
-	<file>stg_bigblockfile.c</file>
 	<file>stg_prop.c</file>
 	<file>stg_stream.c</file>
 	<file>storage32.c</file>

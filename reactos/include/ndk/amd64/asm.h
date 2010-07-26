@@ -19,10 +19,10 @@ Author:
 #define _ASM_AMD64_H
 
 #ifndef HEX
- #ifdef MSC_VER
+ #ifdef _USE_ML
   #define HEX(x) x##h
  #else
-  #define HEX(x) 0x0##x
+  #define HEX(val) 0x0##val
  #endif
 #endif
 

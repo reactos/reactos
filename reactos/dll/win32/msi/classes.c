@@ -824,6 +824,12 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         if ( !comp )
             continue;
 
+        if (!comp->Enabled)
+        {
+            TRACE("component is disabled\n");
+            continue;
+        }
+
         feature = cls->Feature;
         if (!feature)
             continue;
@@ -975,6 +981,12 @@ UINT ACTION_UnregisterClassInfo( MSIPACKAGE *package )
         comp = cls->Component;
         if (!comp)
             continue;
+
+        if (!comp->Enabled)
+        {
+            TRACE("component is disabled\n");
+            continue;
+        }
 
         feature = cls->Feature;
         if (!feature)
@@ -1137,7 +1149,7 @@ UINT ACTION_UnregisterProgIdInfo( MSIPACKAGE *package )
 
         res = RegDeleteTreeW( HKEY_CLASSES_ROOT, progid->ProgID );
         if (res != ERROR_SUCCESS)
-            WARN("Failed to delete progid key %d\n", res);
+            TRACE("Failed to delete progid key %d\n", res);
 
         uirow = MSI_CreateRecord( 1 );
         MSI_RecordSetStringW( uirow, 1, progid->ProgID );
@@ -1250,6 +1262,12 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
         if (!ext->Component)
             continue;
 
+        if (!ext->Component->Enabled)
+        {
+            TRACE("component is disabled\n");
+            continue;
+        }
+
         feature = ext->Feature;
         if (!feature)
             continue;
@@ -1353,6 +1371,12 @@ UINT ACTION_UnregisterExtensionInfo( MSIPACKAGE *package )
 
         if (!ext->Component)
             continue;
+
+        if (!ext->Component->Enabled)
+        {
+            TRACE("component is disabled\n");
+            continue;
+        }
 
         feature = ext->Feature;
         if (!feature)

@@ -23,7 +23,7 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+UIINSERTOBJECT DIALOG  0, 0, 294, 151
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Вставить объект"
 FONT 8, "MS Shell Dlg"
@@ -50,7 +50,7 @@ BEGIN
     EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
   IDS_RESULTOBJDESC	"Добавление нового объекта %s в документ"
   IDS_RESULTFILEOBJDESC	"Добавление объекта из файла в документ. Работать с объектом можно будет в создавшей его программе."
@@ -59,7 +59,7 @@ STRINGTABLE DISCARDABLE
   IDS_NOTOLEMODCAPTION  "Добавить элемент управления"
 }
 
-IDD_PASTESPECIAL4 DIALOG DISCARDABLE 3, 15, 293, 140
+IDD_PASTESPECIAL4 DIALOG 3, 15, 293, 140
 STYLE DS_MODALFRAME | DS_SETFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Специальная вставка"
 FONT 8, "MS Shell Dlg"
@@ -85,7 +85,7 @@ BEGIN
     CONTROL       "", IDC_PS_SOURCETEXT, "Edit", ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE, 37, 9, 180, 8
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE
 {
     IDS_PS_PASTE_DATA                     "Вставка содержимого буфера обмена в документ как %s."
     IDS_PS_PASTE_OBJECT                   "Вставка содержимого буфера обмена в документ так, что его можно активировать, используя %s."

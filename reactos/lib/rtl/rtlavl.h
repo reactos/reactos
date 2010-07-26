@@ -24,6 +24,14 @@
 #define RtlInsertAsLeftChildAvl     RtlInsertAsLeftChild
 #define RtlIsLeftChildAvl           RtlIsLeftChild
 
+VOID
+FORCEINLINE
+RtlpCopyAvlNodeData(IN PRTL_BALANCED_LINKS Node1,
+                    IN PRTL_BALANCED_LINKS Node2)
+{
+    *Node1 = *Node2;
+}
+ 
 RTL_GENERIC_COMPARE_RESULTS
 FORCEINLINE
 RtlpAvlCompareRoutine(IN PRTL_AVL_TABLE Table,

@@ -18,9 +18,9 @@
 #undef IGNORE
 #undef ACCEPT
 #undef PREFER
-#define DHCP_DISCOVER_INTERVAL 15
-#define DHCP_REBOOT_TIMEOUT 300
-#define DHCP_PANIC_TIMEOUT DHCP_REBOOT_TIMEOUT * 3
+#define DHCP_DISCOVER_INTERVAL 5
+#define DHCP_REBOOT_TIMEOUT 10
+#define DHCP_PANIC_TIMEOUT 20
 #define DHCP_BACKOFF_MAX 300
 #define DHCP_DEFAULT_LEASE_TIME 43200 /* 12 hours */
 #define _PATH_DHCLIENT_PID "\\systemroot\\system32\\drivers\\etc\\dhclient.pid"

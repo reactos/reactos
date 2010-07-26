@@ -1,5 +1,5 @@
-#ifndef _WINIOCTL_H
-#define _WINIOCTL_H
+#ifndef _WINIOCTL_
+#define _WINIOCTL_
 
 #ifdef __cplusplus
 extern "C" {
@@ -574,4 +574,4 @@ typedef struct {
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif /* _WINIOCTL_ */

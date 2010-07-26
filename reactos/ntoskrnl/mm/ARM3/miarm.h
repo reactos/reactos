@@ -33,7 +33,6 @@
 #define MI_NONPAGED_POOL_END                    (PVOID)0xFFBE0000
 #define MI_DEBUG_MAPPING                        (PVOID)0xFFBFF000
 
-// on AMD64 this would be MiAddressToPte(MM_KSEG0_BASE)
 #define MI_SYSTEM_PTE_BASE                      (PVOID)MiAddressToPte(NULL)
 
 #define MI_MIN_SECONDARY_COLORS                 8
@@ -131,6 +130,7 @@
 #define PTE_WRITECOPY           0x200
 #define PTE_EXECUTE_READWRITE   0x0
 #define PTE_EXECUTE_WRITECOPY   0x200
+#define PTE_PROTOTYPE           0x400
 //
 // Cache flags
 //
@@ -141,56 +141,9 @@
 #else
 #error Define these please!
 #endif
-static const
-ULONG
-MmProtectToPteMask[32] =
-{
-    //
-    // These are the base MM_ protection flags
-    //
-    0,
-    PTE_READONLY            | PTE_ENABLE_CACHE,
-    PTE_EXECUTE             | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
-    PTE_READWRITE           | PTE_ENABLE_CACHE,
-    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
-    //
-    // These OR in the MM_NOCACHE flag
-    //
-    0,
-    PTE_READONLY            | PTE_DISABLE_CACHE,
-    PTE_EXECUTE             | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_DISABLE_CACHE,
-    PTE_READWRITE           | PTE_DISABLE_CACHE,
-    PTE_WRITECOPY           | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_DISABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_DISABLE_CACHE,
-    //
-    // These OR in the MM_DECOMMIT flag, which doesn't seem supported on x86/64/ARM
-    //
-    0,
-    PTE_READONLY            | PTE_ENABLE_CACHE,
-    PTE_EXECUTE             | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READ        | PTE_ENABLE_CACHE,
-    PTE_READWRITE           | PTE_ENABLE_CACHE,
-    PTE_WRITECOPY           | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_ENABLE_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_ENABLE_CACHE,
-    //
-    // These OR in the MM_NOACCESS flag, which seems to enable WriteCombining?
-    //
-    0,
-    PTE_READONLY            | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE             | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_READ        | PTE_WRITECOMBINED_CACHE,
-    PTE_READWRITE           | PTE_WRITECOMBINED_CACHE,
-    PTE_WRITECOPY           | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_READWRITE   | PTE_WRITECOMBINED_CACHE,
-    PTE_EXECUTE_WRITECOPY   | PTE_WRITECOMBINED_CACHE,
-};
- 
+
+extern const ULONG MmProtectToPteMask[32];
+
 //
 // Assertions for session images, addresses, and PTEs
 //
@@ -383,6 +336,7 @@ extern MMPTE HyperTemplatePte;
 extern MMPDE ValidKernelPde;
 extern MMPTE ValidKernelPte;
 extern MMPDE DemandZeroPde;
+extern MMPTE PrototypePte;
 extern BOOLEAN MmLargeSystemCache;
 extern BOOLEAN MmZeroPageFile;
 extern BOOLEAN MmProtectFreedNonPagedPool;
@@ -485,6 +439,8 @@ extern PVOID MiSessionImageEnd;
 extern PMMPTE MiHighestUserPte;
 extern PMMPDE MiHighestUserPde;
 extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
+extern PMMPTE MmSharedUserDataPte;
+extern LIST_ENTRY MmProcessList;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
@@ -1033,6 +989,12 @@ MiRemoveZeroPage(
 
 VOID
 NTAPI
+MiZeroPhysicalPage(
+    IN PFN_NUMBER PageFrameIndex
+);
+
+VOID
+NTAPI
 MiInsertPageInFreeList(
     IN PFN_NUMBER PageFrameIndex
 );
@@ -1105,6 +1067,25 @@ NTAPI
 MiInsertNode(
     IN PMMADDRESS_NODE NewNode,
     IN PMM_AVL_TABLE Table
+);
+
+VOID
+NTAPI
+MiRemoveNode(
+    IN PMMADDRESS_NODE Node,
+    IN PMM_AVL_TABLE Table
+);
+
+PMMADDRESS_NODE
+NTAPI
+MiGetPreviousNode(
+    IN PMMADDRESS_NODE Node
+);
+
+PMMADDRESS_NODE
+NTAPI
+MiGetNextNode(
+    IN PMMADDRESS_NODE Node
 );
 
 /* EOF */
