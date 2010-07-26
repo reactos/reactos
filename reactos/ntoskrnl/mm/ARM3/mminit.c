@@ -1593,11 +1593,12 @@ MiBuildPagedPool(VOID)
 #else
     /* Do it this way */
 //    Bla = MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]
-#endif
+
     /* Initialize the PFN entry for it */
     MiInitializePfnForOtherProcess(PageFrameIndex,
                                    PointerPde,
                                    MmSystemPageDirectory[(PointerPde - (PMMPTE)PDE_BASE) / PDE_COUNT]);
+#endif
 
     //
     // Release the PFN database lock
