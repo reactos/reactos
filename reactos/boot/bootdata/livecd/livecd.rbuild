@@ -3,8 +3,8 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <if property="ARCH" value="i386">
 	<module name="livecd" type="liveiso" output="ReactOS-LiveCD.iso">
-	<bootsector>isoboot</bootsector>
-</module>
+		<bootsector>isoboot</bootsector>
+	</module>
 </if>
 <ifnot property="ARCH" value="i386">
 	<module name="livecd" type="liveiso" output="ReactOS-LiveCD-$(ARCH).iso">
