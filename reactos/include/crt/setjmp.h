@@ -136,7 +136,7 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-FORCEINLINE void * mingw_getsp(void)
+static inline __attribute__((always_inline)) void * mingw_getsp(void)
 {
     void *value;
 #if defined(__x86_64)
