@@ -14,3 +14,5 @@ LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stdio/findgen.c)
 LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/string/strtold.c)
 
 add_library(crt ${SOURCE})
+
+add_dependencies(crt psdk)
