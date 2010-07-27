@@ -20,6 +20,9 @@ export(TARGETS widl wmc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPA
 
 else()
 
+# Activate support for asm source files
+enable_language(ASM)
+
 set(IMPORT_EXECUTABLES "${REACTOS_SOURCE_DIR}/build/ImportExecutables.cmake" CACHE FILEPATH "Host executables")
 include(${IMPORT_EXECUTABLES})
 
@@ -68,3 +71,4 @@ add_subdirectory(include/reactos/mc)
 add_subdirectory(lib)
 
 endif()
+

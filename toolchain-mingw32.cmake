@@ -1,3 +1,6 @@
+
+SET(ARCH i386)
+
 # Choose the right MinGW prefix
 if (CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 set(MINGW_PREFIX "")
@@ -12,6 +15,8 @@ SET(CMAKE_SYSTEM_PROCESSOR i686)
 # which compilers to use for C and C++
 SET(CMAKE_C_COMPILER ${MINGW_PREFIX}gcc)
 SET(CMAKE_CXX_COMPILER ${MINGW_PREFIX}g++)
+
+SET(CMAKE_ASM_COMPILER ${MINGW_PREFIX}gcc)
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 
