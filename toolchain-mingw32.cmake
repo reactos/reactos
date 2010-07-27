@@ -1,5 +1,5 @@
 # Choose the right MinGW prefix
-if (CMAKE_SYSTEM_NAME STREQUAL Windows)
+if (CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 set(MINGW_PREFIX "")
 else()
 set(MINGW_PREFIX "mingw32-")
@@ -7,7 +7,7 @@ endif()
 
 # the name of the target operating system
 SET(CMAKE_SYSTEM_NAME Windows)
-SET(CMAKE_SYSTEM_PROCESSIR i686)
+SET(CMAKE_SYSTEM_PROCESSOR i686)
 
 # which compilers to use for C and C++
 SET(CMAKE_C_COMPILER ${MINGW_PREFIX}gcc)
