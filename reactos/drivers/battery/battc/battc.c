@@ -186,6 +186,7 @@ BatteryClassIoctl(PVOID ClassData,
   LARGE_INTEGER Timeout;
   PBATTERY_STATUS BattStatus;
   BATTERY_NOTIFY BattNotify;
+  ULONG ReturnedLength;
 
   Irp->IoStatus.Information = 0;
 
@@ -322,7 +323,8 @@ BatteryClassIoctl(PVOID ClassData,
                                                         BattQueryInfo->AtRate,
                                                         Irp->AssociatedIrp.SystemBuffer,
                                                         IrpSp->Parameters.DeviceIoControl.OutputBufferLength,
-                                                        &Irp->IoStatus.Information);
+                                                        &ReturnedLength);
+      Irp->IoStatus.Information = ReturnedLength;
       if (!NT_SUCCESS(Status))
           DPRINT1("QueryInformation failed (0x%x)\n", Status);
       break;
