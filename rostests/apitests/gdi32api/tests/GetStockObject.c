@@ -12,7 +12,7 @@ Test_GetStockObject(PTESTINFO pti)
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	/* Test for the stock bit */
-	RTEST((UINT)GetStockObject(WHITE_BRUSH) && GDI_HANDLE_STOCK_MASK);
+	RTEST((UINT_PTR)GetStockObject(WHITE_BRUSH) && GDI_HANDLE_STOCK_MASK);
 
 	/* Test for correct types */
 	RTEST(GDI_HANDLE_GET_TYPE(GetStockObject(WHITE_BRUSH)) == GDI_OBJECT_TYPE_BRUSH); /* 0 */

@@ -78,7 +78,7 @@ Test_Bitmap(PTESTINFO pti)
 	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_BITMAP, sizeof(BITMAP), NULL) == sizeof(BITMAP));
 	RTEST(GetObjectA(hBitmap, sizeof(DIBSECTION), NULL) == sizeof(BITMAP));
 	RTEST(GetObjectA(hBitmap, 0, NULL) == sizeof(BITMAP));
-	RTEST(GetObjectA((HANDLE)((UINT)hBitmap & 0x0000ffff), 0, NULL) == sizeof(BITMAP));
+	RTEST(GetObjectA((HANDLE)((UINT_PTR)hBitmap & 0x0000ffff), 0, NULL) == sizeof(BITMAP));
 	RTEST(GetObjectA(hBitmap, 5, NULL) == sizeof(BITMAP));
 	RTEST(GetObjectA(hBitmap, -5, NULL) == sizeof(BITMAP));
 	RTEST(GetObjectA(hBitmap, 0, Buffer) == 0);
@@ -416,7 +416,7 @@ Test_MetaDC(PTESTINFO pti)
 
 	hMetaDC = CreateMetaFile(NULL);
 	if(!hMetaDC) return FALSE;
-	if(((UINT)hMetaDC & GDI_HANDLE_TYPE_MASK) != GDI_OBJECT_TYPE_METADC) return FALSE;
+	if(((UINT_PTR)hMetaDC & GDI_HANDLE_TYPE_MASK) != GDI_OBJECT_TYPE_METADC) return FALSE;
 
 	SetLastError(ERROR_SUCCESS);
 	RTEST(GetObjectA((HANDLE)GDI_OBJECT_TYPE_METADC, 0, NULL) == 0);
