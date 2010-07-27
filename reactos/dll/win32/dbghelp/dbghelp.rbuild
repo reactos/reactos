@@ -9,6 +9,12 @@
 	<define name="_WINE" />
 	<define name="HAVE_REGEX_H" />
 	<define name="_IMAGEHLP_SOURCE_" />
+	<if property="ARCH" value="amd64">
+		<define name="UNW_FLAG_NHANDLER">0</define>
+		<define name="UNW_FLAG_EHANDLER">1</define>
+		<define name="UNW_FLAG_UHANDLER">2</define>
+		<define name="UNW_FLAG_CHAININFO">3</define>
+	</if>
 	<file>coff.c</file>
 	<file>cpu_i386.c</file>
 	<file>cpu_ppc.c</file>
