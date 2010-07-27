@@ -1,13 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libxslt" type="win32dll" entrypoint="0" installbase="system32" installname="libxslt.dll" allowwarnings="true" crt="msvcrt">
-
-	<if property="ARCH" value="amd64">
-		<!-- Gross hack to work around broken autoexport -->
-		<define name="dllexport">aligned(1)</define>
-		<importlibrary definition="libxslt.spec" />
-	</if>
-
 	<define name="HAVE_CONFIG_H" />
 	<define name="WIN32" />
 	<define name="_WINDOWS" />

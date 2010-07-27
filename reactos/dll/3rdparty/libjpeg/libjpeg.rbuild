@@ -6,10 +6,6 @@
 	<define name="_MBCS" />
 	<define name="JPEG_DLL" />
 	<define name="main">mainptr</define>
-	<if property="ARCH" value="amd64">
-		<!-- Gross hack to work around broken autoexport -->
-		<define name="dllexport">aligned(1)</define>
-	</if>
 	<include base="libjpeg">.</include>
 	<include base="ReactOS">include/reactos/libs/libjpeg</include>
 	<include base="ReactOS">include/reactos/libs/zlib</include>

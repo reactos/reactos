@@ -33,13 +33,11 @@
 			<file>sysinfo.c</file>
 			<file>timer.c</file>
 			<file>usage.c</file>
-			<if property="ARCH" value="i386">
-				<directory name="i386">
-					<file>portio.c</file>
-					<file>systimer.S</file>
-				</directory>
-			</if>
-				</directory>
+			<directory name="i386">
+				<file>portio.c</file>
+				<file>systimer.S</file>
+			</directory>
+		</directory>
 		<directory name="up">
 			<file>halinit_up.c</file>
 			<file>pic.c</file>

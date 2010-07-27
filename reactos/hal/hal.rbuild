@@ -4,7 +4,6 @@
 
 	<if property="ARCH" value="i386">
 		<directory name="halx86">
-			<xi:include href="halx86/hal_mini.rbuild" />
 			<xi:include href="halx86/directory.rbuild" />
 		</directory>
 	</if>
