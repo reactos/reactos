@@ -2210,11 +2210,6 @@ typedef struct _CONTEXT {
 } CONTEXT;
 #elif defined(__x86_64__)
 
-#define UNW_FLAG_NHANDLER  0
-#define UNW_FLAG_EHANDLER  1
-#define UNW_FLAG_UHANDLER  2
-#define UNW_FLAG_CHAININFO 4
-
 #define CONTEXT_AMD64 0x100000
 
 #if !defined(RC_INVOKED)
