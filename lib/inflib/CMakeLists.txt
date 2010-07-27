@@ -6,6 +6,7 @@ if(CMAKE_CROSSCOMPILING)
 
 file(GLOB_RECURSE SOURCE "infros*.c")
 add_library(inflib ${GLOBAL_FILES} ${SOURCE})
+add_dependencies(inflib psdk)
 
 else()
 
