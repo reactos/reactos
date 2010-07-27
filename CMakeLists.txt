@@ -50,6 +50,8 @@ add_definitions(-Os -fno-strict-aliasing -ftracer -momit-leaf-frame-pointer -mpr
 
 include_directories(./include)
 include_directories(./include/psdk)
+include_directories(./include/dxsdk)
+include_directories(${REACTOS_BINARY_DIR}/include/dxsdk)
 include_directories(${REACTOS_BINARY_DIR}/include/psdk)
 include_directories(${REACTOS_BINARY_DIR}/include/reactos)
 include_directories(./include/crt)
@@ -60,6 +62,7 @@ include_directories(./include/reactos)
 include_directories(./include/reactos/libs)
 
 add_subdirectory(include/psdk)
+add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/mc)
 
 add_subdirectory(lib)
