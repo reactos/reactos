@@ -21,6 +21,7 @@
 #include <assert.h>
 #include <limits.h>
 #include <stdio.h>
+#include <string.h>
 
 #define WINE_UNICODE_INLINE  /* nothing */
 #include "wine/unicode.h"
