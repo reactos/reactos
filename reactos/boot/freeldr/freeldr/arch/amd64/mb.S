@@ -49,7 +49,8 @@ EXTERN(reactos_memory_map)
 	.byte	0
 	.endr
 
-.bss
+.text
+.align 4096
 PageDirectoryStart:
 pml4_startup:
 	.fill 4096, 1, 0

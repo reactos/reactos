@@ -17,7 +17,7 @@
 </if>
 
 <ifnot property="ARCH" value="powerpc">
-	<module name="freeldr" type="bootloader" baseaddress="$(BASEADDRESS_FREELDR)">
+	<module name="freeldr" type="bootloader" baseaddress="$(BASEADDRESS_FREELDR)" entrypoint="mainCRTStartup">
 		<linkerscript>freeldr_$(ARCH).lnk</linkerscript>
 		<bootstrap installbase="loader" />
 		<library>freeldr_startup</library>

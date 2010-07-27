@@ -17,13 +17,13 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.intel_syntax noprefix
-	.text
-	.code16
+.intel_syntax noprefix
 
 #define ASM
 #include <arch.h>
 
+.code64
+.text
 
 Int386_REGS:
 
@@ -59,6 +59,10 @@ Int386_regsin:
 	.quad 0
 Int386_regsout:
 	.quad 0
+
+
+.code16
+.section .text16, "x"
 
 /*
  * int Int386(int ivec, REGS* in, REGS* out);

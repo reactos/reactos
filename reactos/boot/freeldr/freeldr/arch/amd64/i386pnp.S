@@ -17,13 +17,11 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-	.text
-	.code16
-
 #define ASM
-
 #include <arch.h>
 
+.code64
+.text
 
 /*
  * U32 PnpBiosSupported(VOID);
@@ -144,7 +142,7 @@ EXTERN(PnpBiosGetDeviceNodeCount)
 	movzx ecx, ax
 	mov _pnp_result, ecx
 
-	call	x86_16_SwitchToLong
+	call [x86_16_SwitchToLong_ptr]
 	.code64
 
 	mov esi, [rbp + 0x08]
@@ -236,7 +234,7 @@ EXTERN(PnpBiosGetDeviceNode)
 	movzx ecx, ax
 	mov _pnp_result, ecx
 
-	call x86_16_SwitchToLong
+	call [x86_16_SwitchToLong_ptr]
 	.code64
 
 	/* update node number */
@@ -254,5 +252,8 @@ EXTERN(PnpBiosGetDeviceNode)
 	mov eax, _pnp_result
 
 	ret
+
+x86_16_SwitchToLong_ptr:
+    .quad x86_16_SwitchToLong
 
 /* EOF */

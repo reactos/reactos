@@ -1,11 +1,10 @@
 .intel_syntax noprefix
-.text
-.code16
 
 #define ASM
 #include <arch.h>
 
-//.org 0x8000
+.code16
+.section .text16, "x"
 
 .global RealEntryPoint
 RealEntryPoint:
@@ -284,6 +283,7 @@ x86_16_SwitchToLong:
 	jmp LMODE_CS:offset LongCat	//Load CS with 64 bit segment and flush the instruction cache
 
 .code64
+.text
 LongCat:
 	/* Set up 64 bit stack */
 	mov rsp, stack64
@@ -378,6 +378,7 @@ BeReal:
 
 /** Some data *****************************************************************/
 
+.text
 .code64
 
 stack16:
@@ -449,6 +450,6 @@ CheckPoint3:
 /* Need to include them here, because of linking issues between 64 / 16 bit */
 //#include "debug16.S"
 #include "int386.S"
-#include "boot.S"
+//#include "boot.S"
 #include "i386pnp.S"
 

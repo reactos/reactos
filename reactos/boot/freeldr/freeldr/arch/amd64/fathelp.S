@@ -4,9 +4,8 @@
 
 .intel_syntax noprefix
 
-.text
-
 .code16
+.section .text16, "x"
 
 #define BootSectorStackTop		0x7bf2
 #define DataAreaStartHigh		0x2
@@ -48,13 +47,14 @@
 // encode a jmp instruction to jump to 0000:8200
 //.org 0x8000
 
-.global _mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
-_mainCRTStartup:
+.global mainCRTStartup	// For Mingw32 builds where the linker looks for this symbol
+mainCRTStartup:
 .global start
 start:
-        .byte	0xe9
-		.byte	0xfd
-		.byte	0x01
+    jmp RealEntryPoint
+//        .byte	0xe9
+//		.byte	0xfd
+//		.byte	0x01
 
 // Now starts the extra boot code that we will store
 // in the first 512 bytes of freeldr.sys. This code
@@ -67,7 +67,7 @@ FatHelperEntryPoint:
 
 		push ax							// First save AX - the start cluster of freeldr.sys
 
-
+#if 0
 		// Display "Loading FreeLoader..." message
         mov  esi, offset msgLoading			// Loading message
         call [bp-PutCharsOffset]		// Display it
@@ -117,15 +117,17 @@ LoadFile5:
 		pop  es
 
         jmp  LoadFile						// Load the next cluster (if any)
-
+#endif
 LoadFile_Done:
         mov  dl, [bp+BootDrive]	// Load the boot drive into DL
 		mov  dh, BootPartition				// Load the boot partition into DH
-        push word ptr 0x0000
-        push word ptr 0x8000					// We will do a far return to 0000:8000h
 
-//        retf								// Transfer control to ROSLDR
-	.byte 0xcb // == retf
+		push 0						// push segment (0x0000)
+		mov bx, [0x8000 + 0xA8]		// load the RVA of the EntryPoint into eax
+		add bx, 0x8000				// RVA -> VA and skip 3 bytes (jump to fathelper code)
+		push bx						// push offset
+//      retf						// Transfer control to FreeLoader
+		.byte 0xcb // == retf
 
 
 // Reads the entire FAT into memory at 7000:0000
@@ -224,7 +226,8 @@ IsFat12_Done:
 		ret
 
 
-
+.text
+.code64
 msgLoading:
 		.ascii "Loading FreeLoader..."
 		.byte 0x0d,0x0a,0

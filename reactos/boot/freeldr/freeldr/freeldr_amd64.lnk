@@ -2,7 +2,13 @@ OUTPUT_FORMAT(pei-x86-64)
 ENTRY(_mainCRTStartup)
 SECTIONS
 {
-  .text  __image_base__ + __section_alignment__  : 
+  .text16 __image_base__ + __section_alignment__  : 
+  {
+    __text16_start__ = . ;
+    *(.text16)
+    __text16_end__ = . ;
+  }
+  .text BLOCK(__section_alignment__) :
   {
     __text_start__ = .;
     *(.init)
@@ -19,12 +25,6 @@ SECTIONS
      *(.gcc_exc)
      __text_end__ = .;
     *(.gcc_except_table)
-  }
-  init BLOCK(__section_alignment__) :
-  {
-    __init_start__ = . ;
-    *(init)
-    __init_end__ = . ;
   }
   .data BLOCK(__section_alignment__) : 
   {
@@ -43,14 +43,6 @@ SECTIONS
     *(.rdata)
     *(SORT(.rdata$*))
     *(.eh_frame)
-  }
-  .stab BLOCK(__section_alignment__) (NOLOAD) :
-  {
-    [ .stab ]
-  }
-  .stabstr BLOCK(__section_alignment__) (NOLOAD) :
-  {
-    [ .stabstr ]
   }
 
 }
