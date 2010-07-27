@@ -6,6 +6,7 @@ add_definitions(-D_NTOSKRNL_ -D_NTSYSTEM_ -DNASSERT)
 if(CMAKE_CROSSCOMPILING)
 
 add_library(cmlib ${SOURCE})
+add_dependencies(cmlib bugcodes)
 
 else()
 
