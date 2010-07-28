@@ -383,13 +383,12 @@ CsrpFormatMessages(
     {
         /* Print the string into the buffer */
         StringCbPrintfW(TextStringU->Buffer,
-        TextStringU->MaximumLength,
-        FormatString,
-        Parameters[0],
-        Parameters[1],
-        Parameters[2],
-        Parameters[3],
-        Parameters[4]);
+                        TextStringU->MaximumLength,
+                        FormatString,
+                        Parameters[0],
+                        Parameters[1],
+                        Parameters[2],
+                        Parameters[3]);
         Status = STATUS_SUCCESS;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
