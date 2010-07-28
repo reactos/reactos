@@ -11,10 +11,6 @@
 	<define name="BUILD_GL32" />
 	<define name="WIN32" />
 	<define name="USE_EXTERNAL_DXTN_LIB=1" />
-	<if property="ARCH" value="amd64">
-		<!-- Gross hack to work around broken autoexport -->
-		<define name="dllexport">aligned(1)</define>
-	</if>
 	<if property="ARCH" value="i386">
 		<define name="USE_X86_ASM" />
 		<define name="USE_MMX_ASM" />
