@@ -16,7 +16,7 @@ include_directories(./include/reactos/wine)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl wmc FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl wmc nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
@@ -69,6 +69,43 @@ add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/mc)
 
 add_subdirectory(lib)
+
+# nci generated intermediate files
+
+set(nci_output 
+  ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h
+  ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h
+  ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S
+  ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S
+  ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S
+  ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec
+)
+
+# stupid nci tool can't create folders itself, se we're gonna create them for it
+set(nci_folders
+  dll\\ntdll\\def
+  lib\\ntdllsys\\ntdll
+  lib\\win32ksys
+  ntoskrnl\\include\\internal
+  ntoskrnl\\ex
+  subsystems\\win32\\win32k\\include
+)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${nci_folders}
+  COMMAND mkdir ${MKDIR_ARG} ${nci_folders}
+  WORKING_DIRECTORY ${REACTOS_BINARY_DIR}
+)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${nci_output}
+  COMMAND native-nci -arch ${ARCH} ${REACTOS_SOURCE_DIR}/ntoskrnl/sysfuncs.lst ${REACTOS_SOURCE_DIR}/subsystems/win32/win32k/w32ksvc.db ${nci_output}
+  DEPENDS native-nci ${nci_folders}
+)
+
+SET_SOURCE_FILES_PROPERTIES(${nci_output} PROPERTIES GENERATED TRUE)
+
+ADD_CUSTOM_TARGET(nci_resources ALL DEPENDS ${nci_output})
 
 endif()
 
