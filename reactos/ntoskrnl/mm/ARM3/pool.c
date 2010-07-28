@@ -329,14 +329,16 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 /* Request a page */
                 PageFrameNumber = MiRemoveAnyPage(0);
                 TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
-                
+
+#if (_MI_PAGING_LEVELS >= 3)
+                /* On PAE/x64 systems, there's no double-buffering */
+                ASSERT(FALSE);
+#else
                 //
                 // Save it into our double-buffered system page directory
                 //
-#ifndef _M_AMD64
                 /* This seems to be making the assumption that one PDE is one page long */
                 C_ASSERT(PAGE_SIZE == (PD_COUNT * (sizeof(MMPTE) * PDE_COUNT)));
-#endif
                 MmSystemPagePtes[(ULONG_PTR)PointerPte & (PAGE_SIZE - 1) /
                                  sizeof(MMPTE)] = TempPte;
                             
@@ -347,7 +349,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                              
                 /* Write the actual PTE now */
                 MI_WRITE_VALID_PTE(PointerPte++, TempPte);
-                
+#endif                
                 //
                 // Move on to the next expansion address
                 //

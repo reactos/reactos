@@ -48,17 +48,17 @@ reactos/dll/win32/browseui        # Out of sync
 reactos/dll/win32/cabinet         # Autosync
 reactos/dll/win32/clusapi         # Autosync
 reactos/dll/win32/comcat          # Autosync
-reactos/dll/win32/comctl32        # Autosync ??
+reactos/dll/win32/comctl32        # Autosync
 reactos/dll/win32/comdlg32        # Autosync
 reactos/dll/win32/compstui        # Autosync
 reactos/dll/win32/credui          # Autosync
-reactos/dll/win32/crypt32         # Synced to Wine-1_1_43
+reactos/dll/win32/crypt32         # Autosync
 reactos/dll/win32/cryptdlg        # Autosync
 reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/cryptui         # Autosync
-reactos/dll/win32/dbghelp         # Synced to Wine-20080802
-reactos/dll/win32/dciman32        # Synced to Wine-1_1_43
+reactos/dll/win32/dbghelp         # Autosync
+reactos/dll/win32/dciman32        # Autosync
 reactos/dll/win32/dwmapi          # Autosync
 reactos/dll/win32/fusion          # Autosync
 reactos/dll/win32/gdiplus         # Autosync
@@ -70,7 +70,7 @@ reactos/dll/win32/iccvid          # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imaadp32.acm    # Autosync
 reactos/dll/win32/imm32           # Autosync
-reactos/dll/win32/imagehlp        # Patches for BindImage need review and submission to winehq.
+reactos/dll/win32/imagehlp        # Autosync
 reactos/dll/win32/inetcomm        # Autosync
 reactos/dll/win32/inetmib1        # Autosync
 reactos/dll/win32/initpki         # Autosync
@@ -90,7 +90,7 @@ reactos/dll/win32/mciseq          # Autosync
 reactos/dll/win32/mciwave         # Autosync
 reactos/dll/win32/mlang           # Autosync
 reactos/dll/win32/mpr             # Autosync
-reactos/dll/win32/msacm32         # Out of sync
+reactos/dll/win32/msacm32         # Autosync
 reactos/dll/win32/msadp32.acm     # Autosync
 reactos/dll/win32/mscat32         # Autosync
 reactos/dll/win32/mscms           # Autosync
@@ -113,7 +113,7 @@ reactos/dll/win32/mstask          # Autosync
 reactos/dll/win32/msvcrt20        # Autosync
 reactos/dll/win32/msvfw32         # Autosync
 reactos/dll/win32/msvidc32        # Autosync
-reactos/dll/win32/msxml3          # Synced to Wine-1_1_43
+reactos/dll/win32/msxml3          # Autosync
 reactos/dll/win32/nddeapi         # Autosync
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/ntdsapi         # Autosync
@@ -143,13 +143,13 @@ reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_55
 reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Autosync
 reactos/dll/win32/sccbase         # Autosync
-reactos/dll/win32/schannel        # Autosync ??
+reactos/dll/win32/schannel        # Autosync
 reactos/dll/win32/secur32         # Forked
 reactos/dll/win32/security        # Forked (different .spec)
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Forked at Wine-20071011
-reactos/dll/win32/shdocvw         # Synced to Wine-1_1_40
+reactos/dll/win32/shdocvw         # Autosync
 reactos/dll/win32/shfolder        # Autosync
 reactos/dll/win32/shlwapi         # Autosync
 reactos/dll/win32/slbcsp          # Autosync
@@ -166,11 +166,11 @@ reactos/dll/win32/url             # Autosync
 reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/usp10           # Autosync
 reactos/dll/win32/uxtheme         # Autosync
-reactos/dll/win32/version         # Autosync ??
+reactos/dll/win32/version         # Autosync
 reactos/dll/win32/windowscodecs   # Autosync
-reactos/dll/win32/winemp3.acm     # Autosync ??
-reactos/dll/win32/wininet         # Autosync ??
-reactos/dll/win32/winhttp         # Autosync ??
+reactos/dll/win32/winemp3.acm     # Autosync
+reactos/dll/win32/wininet         # Autosync
+reactos/dll/win32/winhttp         # Autosync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
 reactos/dll/win32/winmm/wavemap   # Forked at Wine-20050628

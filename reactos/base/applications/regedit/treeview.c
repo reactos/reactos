@@ -540,15 +540,16 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     TCHAR szNewKey[128];
     LPCTSTR pszKeyPath;
     int iIndex = 1;
-    HKEY hRootKey;
-    HKEY hKey = NULL;
-    HKEY hNewKey = NULL;
+    LONG nResult;
+    HKEY hRootKey = NULL, hKey = NULL, hNewKey = NULL;
     BOOL bSuccess = FALSE;
     DWORD dwDisposition;
     HTREEITEM hNewItem;
 
-    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
-    if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
+    pszKeyPath = GetItemPath(hwndTV, hItem, &hRootKey);
+    if (pszKeyPath[0] == TEXT('\0'))
+        hKey = hRootKey;
+    else if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
         goto done;
 
     if (LoadString(hInst, IDS_NEW_KEY, szNewKeyFormat, sizeof(szNewKeyFormat) / sizeof(szNewKeyFormat[0])) <= 0)
@@ -557,12 +558,19 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     /* Need to create a new key with a unique name */
     do
     {
-        _sntprintf(szNewKey, sizeof(szNewKey) / sizeof(szNewKey[0]), szNewKeyFormat, iIndex++);
-        RegCreateKeyEx(hKey, szNewKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hNewKey, &dwDisposition);
-        if (hNewKey && (dwDisposition == REG_OPENED_EXISTING_KEY))
+        wsprintf(szNewKey, szNewKeyFormat, iIndex++);
+        nResult = RegCreateKeyEx(hKey, szNewKey, 0, NULL, 0, KEY_WRITE, NULL, &hNewKey, &dwDisposition);
+        if (hNewKey && dwDisposition == REG_OPENED_EXISTING_KEY)
         {
             RegCloseKey(hNewKey);
             hNewKey = NULL;
+        }
+        else if (!hNewKey)
+        {
+            TCHAR sz[256];
+            wsprintf(sz, TEXT("Cannot create new key!\n\nError Code: %d"), nResult);
+            MessageBox(hFrameWnd, sz, NULL, MB_ICONERROR);
+            goto done;
         }
     }
     while(!hNewKey);
@@ -578,7 +586,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     bSuccess = TRUE;
 
 done:
-    if (hKey)
+    if (hKey != hRootKey && hKey)
         RegCloseKey(hKey);
     if (hNewKey)
         RegCloseKey(hNewKey);

@@ -1230,6 +1230,8 @@ ExpInitializeExecutive(IN ULONG Cpu,
     SharedUserData->ImageNumberHigh = IMAGE_FILE_MACHINE_ARCHITECTURE;
 }
 
+extern BOOLEAN AllowPagedPool;
+
 VOID
 NTAPI
 Phase1InitializationDiscard(IN PVOID Context)
@@ -1860,7 +1862,6 @@ Phase1InitializationDiscard(IN PVOID Context)
     InbvEnableDisplayString(TRUE);
 
     /* Enough fun for now */
-    extern BOOLEAN AllowPagedPool;
     AllowPagedPool = FALSE;
 
     /* Wait 5 seconds for it to initialize */

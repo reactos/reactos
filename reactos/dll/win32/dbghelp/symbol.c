@@ -476,7 +476,7 @@ struct symt_data* symt_add_func_local(struct module* module,
     locsym->hash_elt.name = pool_strdup(&module->pool, name);
     locsym->hash_elt.next = NULL;
     locsym->kind          = dt;
-    locsym->container     = &block->symt;
+    locsym->container     = block ? &block->symt : &func->symt;
     locsym->type          = type;
     locsym->u.var         = *loc;
     if (block)
@@ -723,6 +723,10 @@ static void symt_fill_sym_info(struct module_pair* pair,
                         /* FIXME: it's i386 dependent !!! */
                         sym_info->Register = loc.reg ? loc.reg : CV_REG_EBP;
                         sym_info->Address = loc.offset;
+                        break;
+                    case loc_absolute:
+                        sym_info->Flags |= SYMFLAG_VALUEPRESENT;
+                        sym_info->Value = loc.offset;
                         break;
                     default:
                         FIXME("Shouldn't happen (kind=%d), debug reader backend is broken\n", loc.kind);
@@ -1016,7 +1020,7 @@ static BOOL symt_enum_locals(struct process* pcs, const char* mask,
 {
     struct module_pair  pair;
     struct symt_ht*     sym;
-    DWORD               pc = pcs->ctx_frame.InstructionOffset;
+    DWORD_PTR           pc = pcs->ctx_frame.InstructionOffset;
 
     se->sym_info->SizeOfStruct = sizeof(*se->sym_info);
     se->sym_info->MaxNameLen = sizeof(se->buffer) - sizeof(SYMBOL_INFO);
@@ -1037,9 +1041,8 @@ static BOOL symt_enum_locals(struct process* pcs, const char* mask,
                                       &((struct symt_function*)sym)->vchildren);
         regfree(&preg);
         return ret;
-        
     }
-    return send_symbol(se, &pair, NULL, &sym->symt);
+    return FALSE;
 }
 
 /******************************************************************
@@ -1791,24 +1794,6 @@ BOOL WINAPI SymGetLineNext(HANDLE hProcess, PIMAGEHLP_LINE Line)
     if (!SymGetLineNext64(hProcess, &line64)) return FALSE;
     copy_line_32_from_64(Line, &line64);
     return TRUE;
-}
-
-/***********************************************************************
- *		SymFunctionTableAccess (DBGHELP.@)
- */
-PVOID WINAPI SymFunctionTableAccess(HANDLE hProcess, DWORD AddrBase)
-{
-    WARN("(%p, 0x%08x): stub\n", hProcess, AddrBase);
-    return NULL;
-}
-
-/***********************************************************************
- *		SymFunctionTableAccess64 (DBGHELP.@)
- */
-PVOID WINAPI SymFunctionTableAccess64(HANDLE hProcess, DWORD64 AddrBase)
-{
-    WARN("(%p, %s): stub\n", hProcess, wine_dbgstr_longlong(AddrBase));
-    return NULL;
 }
 
 /***********************************************************************

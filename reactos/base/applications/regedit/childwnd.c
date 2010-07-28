@@ -587,8 +587,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             }
             else
                 pt.x = pt.y = 0;
+            ClientToScreen(pChildWnd->hListWnd, &pt);
         }
-        ClientToScreen(pChildWnd->hListWnd, &pt);
         if(i == -1)
         {
           TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);

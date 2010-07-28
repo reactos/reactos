@@ -14241,7 +14241,7 @@ WmiQueryTraceInformation(
 /* FIXME: Get va_list from where? */
 NTKERNELAPI
 NTSTATUS
-__cdecl
+NTAPI
 WmiTraceMessageVa(
   IN TRACEHANDLE LoggerHandle,
   IN ULONG MessageFlags,

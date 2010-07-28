@@ -3035,10 +3035,11 @@ NTAPI
 PpIrpQueryCapabilities(IN PDEVICE_OBJECT DeviceObject,
                        OUT PDEVICE_CAPABILITIES DeviceCaps)
 {
-    PAGED_CODE();
     PVOID Dummy;
     IO_STACK_LOCATION Stack;
-    
+
+    PAGED_CODE();
+
     /* Set up the Header */
     RtlZeroMemory(DeviceCaps, sizeof(DEVICE_CAPABILITIES));
     DeviceCaps->Size = sizeof(DEVICE_CAPABILITIES);

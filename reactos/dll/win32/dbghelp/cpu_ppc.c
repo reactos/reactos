@@ -48,10 +48,28 @@ static unsigned ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
     return FALSE;
 }
 
-static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame)
+static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
 {
     FIXME("not done\n");
     return FALSE;
+}
+
+static unsigned ppc_map_dwarf_register(unsigned regno)
+{
+    FIXME("not done\n");
+    return 0;
+}
+
+static void* ppc_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+{
+    FIXME("NIY\n");
+    return NULL;
+}
+
+static const char* ppc_fetch_regname(unsigned regno)
+{
+    FIXME("Unknown register %x\n", regno);
+    return NULL;
 }
 
 struct cpu cpu_ppc = {
@@ -59,4 +77,8 @@ struct cpu cpu_ppc = {
     4,
     ppc_get_addr,
     ppc_stack_walk,
+    NULL,
+    ppc_map_dwarf_register,
+    ppc_fetch_context_reg,
+    ppc_fetch_regname,
 };

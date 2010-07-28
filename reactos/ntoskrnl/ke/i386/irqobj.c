@@ -184,9 +184,8 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
 }
 
 typedef
-FASTCALL
 VOID
-(PKI_INTERRUPT_DISPATCH)(
+(FASTCALL *PKI_INTERRUPT_DISPATCH)(
     IN PKTRAP_FRAME TrapFrame,
     IN PKINTERRUPT Interrupt
 );
@@ -310,7 +309,7 @@ KiInterruptTemplateHandler(IN PKTRAP_FRAME TrapFrame,
     KiEnterInterruptTrap(TrapFrame);
 
     /* Call the correct dispatcher */
-    ((PKI_INTERRUPT_DISPATCH*)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
+    ((PKI_INTERRUPT_DISPATCH)Interrupt->DispatchAddress)(TrapFrame, Interrupt);
 }
 
 

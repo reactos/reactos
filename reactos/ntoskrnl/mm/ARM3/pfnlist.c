@@ -566,6 +566,8 @@ MiRemoveHeadList(IN PMMPFNLIST ListHead)
     return Pfn1;
 }
 
+extern KEVENT ZeroPageThreadEvent;
+
 VOID
 NTAPI
 MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
@@ -674,7 +676,6 @@ MiInsertPageInFreeList(IN PFN_NUMBER PageFrameIndex)
 #endif
     
     /* Notify zero page thread if enough pages are on the free list now */
-    extern KEVENT ZeroPageThreadEvent;
     if ((MmFreePageListHead.Total > 8) && !(KeReadStateEvent(&ZeroPageThreadEvent)))
     {
         /* This is ReactOS-specific */

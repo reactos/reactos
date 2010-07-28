@@ -142,6 +142,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
 
     pool_init(&module->pool, 65536);
 
+    module->process = pcs;
     module->module.SizeOfStruct = sizeof(module->module);
     module->module.BaseOfImage = mod_addr;
     module->module.ImageSize = size;
@@ -167,6 +168,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
     module->module.SourceIndexed = FALSE;
     module->module.Publics = FALSE;
 
+    module->reloc_delta       = 0;
     module->type              = type;
     module->is_virtual        = virtual ? TRUE : FALSE;
     for (i = 0; i < DFI_LAST; i++) module->format_info[i] = NULL;
@@ -1034,13 +1036,10 @@ BOOL  WINAPI SymGetModuleInfoW64(HANDLE hProcess, DWORD64 dwAddr,
  */
 DWORD WINAPI SymGetModuleBase(HANDLE hProcess, DWORD dwAddr)
 {
-    struct process*     pcs = process_find_by_handle(hProcess);
-    struct module*      module;
+    DWORD64     ret;
 
-    if (!pcs) return 0;
-    module = module_find_by_addr(pcs, dwAddr, DMT_UNKNOWN);
-    if (!module) return 0;
-    return module->module.BaseOfImage;
+    ret = SymGetModuleBase64(hProcess, dwAddr);
+    return validate_addr64(ret) ? ret : 0;
 }
 
 /***********************************************************************
@@ -1048,8 +1047,13 @@ DWORD WINAPI SymGetModuleBase(HANDLE hProcess, DWORD dwAddr)
  */
 DWORD64 WINAPI SymGetModuleBase64(HANDLE hProcess, DWORD64 dwAddr)
 {
-    if (!validate_addr64(dwAddr)) return 0;
-    return SymGetModuleBase(hProcess, (DWORD)dwAddr);
+    struct process*     pcs = process_find_by_handle(hProcess);
+    struct module*      module;
+
+    if (!pcs) return 0;
+    module = module_find_by_addr(pcs, dwAddr, DMT_UNKNOWN);
+    if (!module) return 0;
+    return module->module.BaseOfImage;
 }
 
 /******************************************************************
@@ -1086,4 +1090,27 @@ BOOL WINAPI SymRefreshModuleList(HANDLE hProcess)
     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
 
     return refresh_module_list(pcs);
+}
+
+/***********************************************************************
+ *		SymFunctionTableAccess (DBGHELP.@)
+ */
+PVOID WINAPI SymFunctionTableAccess(HANDLE hProcess, DWORD AddrBase)
+{
+    return SymFunctionTableAccess64(hProcess, AddrBase);
+}
+
+/***********************************************************************
+ *		SymFunctionTableAccess64 (DBGHELP.@)
+ */
+PVOID WINAPI SymFunctionTableAccess64(HANDLE hProcess, DWORD64 AddrBase)
+{
+    struct process*     pcs = process_find_by_handle(hProcess);
+    struct module*      module;
+
+    if (!pcs || !dbghelp_current_cpu->find_runtime_function) return NULL;
+    module = module_find_by_addr(pcs, AddrBase, DMT_UNKNOWN);
+    if (!module) return NULL;
+
+    return dbghelp_current_cpu->find_runtime_function(module, AddrBase);
 }
