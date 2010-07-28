@@ -3,8 +3,6 @@ include_directories(./include)
 
 add_definitions(-D__MINGW32__ -DLIBXML_STATIC -D_REENTRANT -DHAVE_WIN32_THREADS -D_MBCS -D_WINDOWS -DWIN32 -DHAVE_CONFIG_H)
 add_definitions(-D_DLL -D__USE_CRTIMP)
-# FIXME: workarounds until we have a proper oldnames library
-add_definitions(-Dgetcwd=_getcwd -Dclose=_close -Dwrite=_write -Dread=_read -Dopen=_open)
 
 file(GLOB_RECURSE SOURCE "*.c")
 LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runsuite.c)
@@ -35,3 +33,5 @@ LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/triostr.c)
 LIST(REMOVE_ITEM SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/xmlint.c)
 
 add_library(libxml2 ${SOURCE})
+target_link_libraries(libxml2 oldnames)
+add_dependencies(libxml2 psdk)
