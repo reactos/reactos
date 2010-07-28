@@ -16,7 +16,7 @@ include_directories(./include/reactos/wine)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl wmc nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild wmc nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
@@ -68,6 +68,7 @@ add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/mc)
 
+add_subdirectory(dll)
 add_subdirectory(lib)
 
 # nci generated intermediate files
@@ -103,6 +104,7 @@ SET_SOURCE_FILES_PROPERTIES(${nci_output} PROPERTIES GENERATED TRUE)
 
 ADD_CUSTOM_TARGET(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
 ADD_CUSTOM_TARGET(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
+ADD_CUSTOM_TARGET(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
 
 endif()
 
