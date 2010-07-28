@@ -1,0 +1,68 @@
+
+include_directories(${REACTOS_SOURCE_DIR}/include/reactos/mingw-w64)
+
+add_definitions(-D_CRTBLD -Wno-main)
+
+set(MINGW_COMMON_SOURCE
+  _newmode.c
+  atonexit.c
+  binmode.c
+  charmax.c
+  cinitexe.c
+  CRT_fp10.c
+  CRT_fp8.c
+  CRT_glob.c
+  crt_handler.c
+  dllentry.c
+  gccmain.c
+  gs_support.c
+  merr.c
+  mingw_helpers.c
+  natstart.c
+  pesect.c
+  pseudo-reloc.c
+  pseudo-reloc-list.c
+  tlsmcrt.c
+  tlssup.c
+  tlsthrd.c
+  txtmode.c
+  wildcard.c
+  xncommod.c
+  xthdloc.c
+  xtxtmode.c
+  ofmt_stub.c
+  cxa_pure_virtual.c
+)
+
+add_library(mingw_common ${MINGW_COMMON_SOURCE})
+target_link_libraries(mingw_common oldnames)
+
+set_property(TARGET mingw_common PROPERTY COMPILE_DEFINITIONS _M_CEE_PURE)
+
+add_dependencies(mingw_common psdk)
+
+
+add_library(mingw_main crt0_c.c crtexe.c dllargv.c)
+set_property(TARGET mingw_main PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_dependencies(mingw_main psdk)
+
+add_library(mingw_wmain crt0_c.c crtexe.c dllargv.c)
+set_property(TARGET mingw_wmain PROPERTY COMPILE_DEFINITIONS WPRFLAG UNICODE _UNICODE)
+add_dependencies(mingw_wmain psdk)
+
+add_library(mingw_dllmain crtdll.c dllargv.c)
+add_dependencies(mingw_dllmain psdk)
+
+ADD_CUSTOM_COMMAND(
+  OUTPUT ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
+  COMMAND ${MINGW_PREFIX}dlltool --def ${REACTOS_SOURCE_DIR}/lib/3rdparty/mingw/moldname-msvcrt.def --kill-at --output-lib ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
+  COMMAND ${MINGW_PREFIX}ar -rc ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a
+)
+
+SET_SOURCE_FILES_PROPERTIES(${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a PROPERTIES GENERATED TRUE)
+
+ADD_CUSTOM_TARGET(oldnames ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/3rdparty/mingw/oldnames.a)
+
+add_library(getopt getopt.c)
+set_property(TARGET getopt PROPERTY COMPILE_DEFINITIONS _DLL __USE_CRTIMP)
+add_dependencies(getopt psdk)

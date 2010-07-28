@@ -9,5 +9,5 @@ add_subdirectory(icu4ros)
 add_subdirectory(libsamplerate)
 add_subdirectory(libwine)
 add_subdirectory(libxml2)
-#add_subdirectory(mingw) # Multiple targets, watch out for isstartuplib="true" crt="..."
+add_subdirectory(mingw)
 add_subdirectory(zlib)
