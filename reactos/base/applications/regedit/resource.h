@@ -108,6 +108,11 @@
 #define ID_REGISTRY_PRINTSUBTREE        32832
 #define ID_REGISTRY_PRINTERSETUP        32833
 #define ID_REGISTRY_SAVESUBTREEAS       32834
+#define ID_HEXEDIT_CUT                  32835
+#define ID_HEXEDIT_COPY                 32836
+#define ID_HEXEDIT_PASTE                32837
+#define ID_HEXEDIT_DELETE               32838
+#define ID_HEXEDIT_SELECT_ALL           32839
 #define IDS_LICENSE                     32835
 #define IDS_ERROR                       32836
 #define IDS_BAD_VALUE			32837
@@ -203,11 +208,13 @@
 #define IDC_LOOKAT_DATA                 2016
 #define IDC_MATCHSTRING                 2017
 #define IDC_MATCHCASE                   2018
+
 #define IDS_FINISHEDFIND                2019
 
 #define ID_FAVORITES_MIN                2100
 #define ID_FAVORITES_MAX                2999
 
 #define ID_ACCEL                        3000
+
 
 #define IDC_STATIC                      -1

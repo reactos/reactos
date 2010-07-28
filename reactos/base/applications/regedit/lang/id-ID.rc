@@ -162,6 +162,15 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Copy Nama Kunci",            ID_EDIT_COPYKEYNAME
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "C&ut", ID_HEXEDIT_CUT
+        MENUITEM "&Copy", ID_HEXEDIT_COPY
+        MENUITEM "&Paste", ID_HEXEDIT_PASTE
+        MENUITEM "&Delete", ID_HEXEDIT_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "Select &All", ID_HEXEDIT_SELECT_ALL
+  END
 END
 
 

@@ -47,8 +47,10 @@ typedef struct
 
   INT SelStart;
   INT SelEnd;
-  BOOL SelOnField;
 } HEXEDIT_DATA, *PHEXEDIT_DATA;
+
+static const TCHAR ClipboardFormatName[] = TEXT("RegEdit_HexData");
+static UINT ClipboardFormatID = 0;
 
 /* hit test codes */
 #define HEHT_LEFTMARGIN	(0x1)
@@ -66,6 +68,8 @@ WINAPI
 RegisterHexEditorClass(HINSTANCE hInstance)
 {
   WNDCLASSEX WndClass;
+
+  ClipboardFormatID = RegisterClipboardFormat(ClipboardFormatName);
 
   ZeroMemory(&WndClass, sizeof(WNDCLASSEX));
   WndClass.cbSize = sizeof(WNDCLASSEX);
@@ -218,7 +222,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
     if(ScrollPos + First == 0)
     {
       /* draw address */
-      _stprintf(addr, _T("%04X"), 0);
+      wsprintf(addr, TEXT("%04X"), 0);
       TextOut(hDC, hed->LeftMargin, First * hed->LineHeight, addr, 4);
     }
   }
@@ -240,7 +244,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       dx = hed->LeftMargin;
 
       /* draw address */
-      _stprintf(addr, _T("%04lX"), linestart);
+      wsprintf(addr, TEXT("%04lX"), linestart);
       TextOut(hDC, dx, dy, addr, 4);
 
       dx += ((4 + hed->AddressSpacing) * hed->CharWidth);
@@ -260,7 +264,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
         rct.left += dh;
         rct.right += dh;
 
-	_stprintf(hex, _T("%02X"), *(current++));
+        wsprintf(hex, TEXT("%02X"), *(current++));
         if (i0 <= i && i < i1)
         {
           rct2.left = dx;
@@ -275,7 +279,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
         }
         else
           ExtTextOut(hDC, dx, dy, ETO_OPAQUE, &rct, hex, 2, NULL);
-	dx += dh;
+          dx += dh;
         i++;
       }
 
@@ -285,8 +289,8 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
       i = isave;
       for(x = 0; x < hed->ColumnsPerLine && current < end; x++)
       {
-	_stprintf(hex, _T("%C"), *(current++));
-	hex[0] = ((hex[0] & _T('\x007f')) >= _T(' ') ? hex[0] : _T('.'));
+        wsprintf(hex, _T("%C"), *(current++));
+        hex[0] = ((hex[0] & _T('\x007f')) >= _T(' ') ? hex[0] : _T('.'));
         if (i0 <= i && i < i1)
         {
           rct2.left = dx;
@@ -300,7 +304,7 @@ HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWO
         }
         else
           TextOut(hDC, dx, dy, hex, 1);
-	dx += hed->CharWidth;
+        dx += hed->CharWidth;
         i++;
       }
 
@@ -413,6 +417,149 @@ HEXEDIT_IndexFromPoint(PHEXEDIT_DATA hed, POINTS pt, DWORD Hit, POINT *EditPos, 
     EditPos->x = (tmp == 0 ? hed->ColumnsPerLine : tmp);
   }
   return Index;
+}
+
+static VOID
+HEXEDIT_Copy(PHEXEDIT_DATA hed)
+{
+  PBYTE pb, buf;
+  UINT cb;
+  INT i0, i1;
+  HGLOBAL hGlobal;
+
+  if (hed->SelStart < hed->SelEnd)
+  {
+    i0 = hed->SelStart;
+    i1 = hed->SelEnd;
+  }
+  else
+  {
+    i0 = hed->SelEnd;
+    i1 = hed->SelStart;
+  }
+
+  cb = i1 - i0;
+  if (cb == 0)
+    return;
+
+  hGlobal = GlobalAlloc(GHND | GMEM_SHARE, cb + sizeof(DWORD));
+  if (hGlobal == NULL)
+    return;
+
+  pb = GlobalLock(hGlobal);
+  if (pb)
+  {
+    *(PDWORD)pb = cb;
+    pb += sizeof(DWORD);
+    buf = (PBYTE) LocalLock(hed->hBuffer);
+    if (buf)
+    {
+      CopyMemory(pb, buf + i0, cb);
+      LocalUnlock(hed->hBuffer);
+    }
+    GlobalUnlock(hGlobal);
+
+    if (OpenClipboard(hed->hWndSelf))
+    {
+      EmptyClipboard();
+      SetClipboardData(ClipboardFormatID, hGlobal);
+      CloseClipboard();
+    }
+  }
+  else
+    GlobalFree(hGlobal);
+}
+
+static VOID
+HEXEDIT_Delete(PHEXEDIT_DATA hed)
+{
+  PBYTE buf;
+  INT i0, i1;
+  UINT bufsize;
+
+  if (hed->SelStart < hed->SelEnd)
+  {
+    i0 = hed->SelStart;
+    i1 = hed->SelEnd;
+  }
+  else
+  {
+    i0 = hed->SelEnd;
+    i1 = hed->SelStart;
+  }
+
+  if (i0 != i1)
+  {
+    bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+    buf = (PBYTE) LocalLock(hed->hBuffer);
+    if (buf)
+    {
+      MoveMemory(buf + i0, buf + i1, bufsize - i1);
+      LocalUnlock(hed->hBuffer);
+    }
+    HexEdit_SetMaxBufferSize(hed->hWndSelf, bufsize - (i1 - i0));
+    hed->InMid = FALSE;
+    hed->Index = hed->SelStart = hed->SelEnd = i0;
+    hed->CaretCol = hed->Index % hed->ColumnsPerLine;
+    hed->CaretLine = hed->Index / hed->ColumnsPerLine;
+    InvalidateRect(hed->hWndSelf, NULL, TRUE);
+    HEXEDIT_MoveCaret(hed, TRUE);
+  }
+}
+
+static VOID
+HEXEDIT_Paste(PHEXEDIT_DATA hed)
+{
+  HGLOBAL hGlobal;
+  UINT bufsize;
+  PBYTE pb, buf;
+  DWORD cb;
+
+  HEXEDIT_Delete(hed);
+  bufsize = (hed->hBuffer ? LocalSize(hed->hBuffer) : 0);
+
+  if (OpenClipboard(hed->hWndSelf))
+  {
+    hGlobal = GetClipboardData(ClipboardFormatID);
+    if (hGlobal != NULL)
+    {
+      pb = (PBYTE) GlobalLock(hGlobal);
+      cb = *(PDWORD) pb;
+      pb += sizeof(DWORD);
+      HexEdit_SetMaxBufferSize(hed->hWndSelf, bufsize + cb);
+      buf = (PBYTE) LocalLock(hed->hBuffer);
+      if (buf)
+      {
+        MoveMemory(buf + hed->Index + cb, buf + hed->Index,
+                   bufsize - hed->Index);
+        CopyMemory(buf + hed->Index, pb, cb);
+        LocalUnlock(hed->hBuffer);
+      }
+      GlobalUnlock(hGlobal);
+    }
+    CloseClipboard();
+  }
+  InvalidateRect(hed->hWndSelf, NULL, TRUE);
+  HEXEDIT_MoveCaret(hed, TRUE);
+}
+
+static VOID
+HEXEDIT_Cut(PHEXEDIT_DATA hed)
+{
+  HEXEDIT_Copy(hed);
+  HEXEDIT_Delete(hed);
+}
+
+static VOID
+HEXEDIT_SelectAll(PHEXEDIT_DATA hed)
+{
+  INT bufsize;
+
+  bufsize = (hed->hBuffer ? (INT) LocalSize(hed->hBuffer) : 0);
+  hed->Index = hed->SelStart = 0;
+  hed->SelEnd = bufsize;
+  InvalidateRect(hed->hWndSelf, NULL, TRUE);
+  HEXEDIT_MoveCaret(hed, TRUE);
 }
 
 /*** Control specific messages ************************************************/
@@ -808,19 +955,18 @@ HEXEDIT_WM_LBUTTONDOWN(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
 
   if (GetAsyncKeyState(VK_SHIFT) < 0)
   {
-    if (hed->SelOnField)
+    if (hed->EditingField)
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_HEXDUMP, &EditPos, &NewField);
     else
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_ASCIIDUMP, &EditPos, &NewField);
     hed->SelEnd = hed->Index;
-    hed->EditingField = hed->SelOnField;
   }
   else
   {
     Hit = HEXEDIT_HitRegionTest(hed, Pt);
     hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, Hit, &EditPos, &NewField);
     hed->SelStart = hed->SelEnd = hed->Index;
-    hed->SelOnField = hed->EditingField = NewField;
+    hed->EditingField = NewField;
     SetCapture(hed->hWndSelf);
   }
   hed->CaretCol = EditPos.x;
@@ -839,7 +985,7 @@ HEXEDIT_WM_LBUTTONUP(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
   POINT EditPos;
   if (GetCapture() == hed->hWndSelf)
   {
-    if (hed->SelOnField)
+    if (hed->EditingField)
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_HEXDUMP, &EditPos, &NewField);
     else
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_ASCIIDUMP, &EditPos, &NewField);
@@ -860,7 +1006,7 @@ HEXEDIT_WM_MOUSEMOVE(PHEXEDIT_DATA hed, INT Buttons, POINTS Pt)
   POINT EditPos;
   if (GetCapture() == hed->hWndSelf)
   {
-    if (hed->SelOnField)
+    if (hed->EditingField)
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_HEXDUMP, &EditPos, &NewField);
     else
       hed->Index = HEXEDIT_IndexFromPoint(hed, Pt, HEHT_ASCIIDUMP, &EditPos, &NewField);
@@ -900,8 +1046,51 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
 
   switch(VkCode)
   {
-    case VK_DELETE:
+    case 'X':
+      if (GetAsyncKeyState(VK_SHIFT) >= 0 && 
+          GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
+        HEXEDIT_Cut(hed);
+      else
+        return TRUE;
+      break;
+
+    case 'C':
+      if (GetAsyncKeyState(VK_SHIFT) >= 0 && 
+          GetAsyncKeyState(VK_CONTROL) < 0 && hed->SelStart != hed->SelEnd)
+        HEXEDIT_Copy(hed);
+      else
+        return TRUE;
+      break;
+
+    case 'V':
+      if (GetAsyncKeyState(VK_SHIFT) >= 0 && GetAsyncKeyState(VK_CONTROL) < 0)
+        HEXEDIT_Paste(hed);
+      else
+        return TRUE;
+      break;
+
+    case 'A':
+      if (GetAsyncKeyState(VK_SHIFT) >= 0 && GetAsyncKeyState(VK_CONTROL) < 0)
+        HEXEDIT_SelectAll(hed);
+      else
+        return TRUE;
+      break;
+
+    case VK_INSERT:
       if (hed->SelStart != hed->SelEnd)
+      {
+        if (GetAsyncKeyState(VK_SHIFT) >= 0 && GetAsyncKeyState(VK_CONTROL) < 0)
+          HEXEDIT_Copy(hed);
+      }
+      if (GetAsyncKeyState(VK_SHIFT) < 0 && GetAsyncKeyState(VK_CONTROL) >= 0)
+        HEXEDIT_Paste(hed);
+      break;
+
+    case VK_DELETE:
+      if (GetAsyncKeyState(VK_SHIFT) < 0 && GetAsyncKeyState(VK_CONTROL) >= 0 && 
+          hed->SelStart != hed->SelEnd)
+        HEXEDIT_Copy(hed);
+      if (i0 != i1)
       {
         buf = (PBYTE) LocalLock(hed->hBuffer);
         if (buf)
@@ -946,7 +1135,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       break;
 
     case VK_BACK:
-      if (hed->SelStart != hed->SelEnd)
+      if (i0 != i1)
       {
         buf = (PBYTE) LocalLock(hed->hBuffer);
         if (buf)
@@ -986,6 +1175,8 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
           hed->CaretCol = hed->Index % hed->ColumnsPerLine;
           hed->CaretLine = hed->Index / hed->ColumnsPerLine;
         }
+        else
+          return TRUE;
         HexEdit_SetMaxBufferSize(hed->hWndSelf, bufsize - 1);
         hed->InMid = FALSE;
       }
@@ -1056,6 +1247,9 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       InvalidateRect(hed->hWndSelf, NULL, TRUE);
       HEXEDIT_MoveCaret(hed, TRUE);
       break;
+
+    default:
+      return TRUE;
   }
 
   return FALSE;
@@ -1185,6 +1379,40 @@ HEXEDIT_WM_SIZE(PHEXEDIT_DATA hed, DWORD sType, WORD NewWidth, WORD NewHeight)
   return 0;
 }
 
+static VOID
+HEXEDIT_WM_CONTEXTMENU(PHEXEDIT_DATA hed, INT x, INT y)
+{
+  HMENU hMenu;
+  RECT rc;
+
+  if (x == -1 && y == -1)
+  {
+    GetWindowRect(hed->hWndSelf, &rc);
+    x = rc.left;
+    y = rc.top;
+  }
+
+  hMenu = GetSubMenu(hPopupMenus, PM_HEXEDIT);
+  if (hed->SelStart == hed->SelEnd)
+  {
+    EnableMenuItem(hMenu, ID_HEXEDIT_CUT, MF_GRAYED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_COPY, MF_GRAYED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_PASTE, MF_GRAYED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_DELETE, MF_GRAYED);
+  }
+  else
+  {
+    EnableMenuItem(hMenu, ID_HEXEDIT_CUT, MF_ENABLED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_COPY, MF_ENABLED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_PASTE, MF_ENABLED);
+    EnableMenuItem(hMenu, ID_HEXEDIT_DELETE, MF_ENABLED);
+  }
+
+  SetForegroundWindow(hed->hWndSelf);
+  TrackPopupMenu(hMenu, TPM_RIGHTBUTTON, x, y, 0, hed->hWndSelf, NULL);
+  PostMessage(hed->hWndSelf, WM_NULL, 0, 0);
+}
+
 INT_PTR CALLBACK
 HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1291,11 +1519,32 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       break;
 
     case WM_CONTEXTMENU:
-      /* FIXME: Implement Cut, Copy, Paste, Delete and Select All */
+      HEXEDIT_WM_CONTEXTMENU(hed, (short)LOWORD(lParam), (short)HIWORD(lParam));
       break;
 
     case WM_COMMAND:
-      /* FIXME: Implement Cut, Copy, Paste, Delete and Select All */
+      switch(LOWORD(wParam))
+      {
+        case ID_HEXEDIT_CUT:
+          HEXEDIT_Cut(hed);
+          break;
+
+        case ID_HEXEDIT_COPY:
+          HEXEDIT_Copy(hed);
+          break;
+
+        case ID_HEXEDIT_PASTE:
+          HEXEDIT_Paste(hed);
+          break;
+
+        case ID_HEXEDIT_DELETE:
+          HEXEDIT_Delete(hed);
+          break;
+
+        case ID_HEXEDIT_SELECT_ALL:
+          HEXEDIT_SelectAll(hed);
+          break;
+      }
       break;
   }
 
