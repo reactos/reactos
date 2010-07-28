@@ -151,9 +151,6 @@ NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    ULONG FreePages = 0;
     PFN_NUMBER PageFrameIndex;
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
@@ -211,122 +208,9 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     RtlZeroMemory(StartPde, (EndPde - StartPde) * sizeof(MMPTE));
     
     //
-    // Loop the memory descriptors
-    //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // Get the memory block
-        //
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
         
-        //
-        // Skip invisible memory
-        //
-        if ((MdBlock->MemoryType != LoaderFirmwarePermanent) &&
-            (MdBlock->MemoryType != LoaderSpecialMemory) &&
-            (MdBlock->MemoryType != LoaderHALCachedMemory) &&
-            (MdBlock->MemoryType != LoaderBBTMemory))
-        {
-            //
-            // Check if BURNMEM was used
-            //
-            if (MdBlock->MemoryType != LoaderBad)
-            {
-                //
-                // Count this in the total of pages
-                //
-                MmNumberOfPhysicalPages += MdBlock->PageCount;
-            }
-            
-            //
-            // Check if this is the new lowest page
-            //
-            if (MdBlock->BasePage < MmLowestPhysicalPage)
-            {
-                //
-                // Update the lowest page
-                //
-                MmLowestPhysicalPage = MdBlock->BasePage;
-            }
-            
-            //
-            // Check if this is the new highest page
-            //
-            PageFrameIndex = MdBlock->BasePage + MdBlock->PageCount;
-            if (PageFrameIndex > MmHighestPhysicalPage)
-            {
-                //
-                // Update the highest page
-                //
-                MmHighestPhysicalPage = PageFrameIndex - 1;
-            }
-            
-            //
-            // Check if this is free memory
-            //
-            if ((MdBlock->MemoryType == LoaderFree) ||
-                (MdBlock->MemoryType == LoaderLoadedProgram) ||
-                (MdBlock->MemoryType == LoaderFirmwareTemporary) ||
-                (MdBlock->MemoryType == LoaderOsloaderStack))
-            {
-                //
-                // Check if this is the largest memory descriptor
-                //
-                if (MdBlock->PageCount > FreePages)
-                {
-                    //
-                    // For now, it is
-                    //
-                    MxFreeDescriptor = MdBlock;
-                }
-                
-                //
-                // More free pages
-                //
-                FreePages += MdBlock->PageCount;
-            }
-        }
-        
-        //
-        // Keep going
-        //
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-    
-    //
-    // Save original values of the free descriptor, since it'll be
-    // altered by early allocations
-    //
-    MxOldFreeDescriptor = *MxFreeDescriptor;
-    
     /* Compute non paged pool limits and size */
-    MiComputeNonPagedPoolVa(FreePages);
-    
-    /* Compute color information (L2 cache-separated paging lists) */
-    MiComputeColorInformation();
-    
-    //
-    // Calculate the number of bytes for the PFN database, double it for ARM3,
-    // then add the color tables and convert to pages
-    //
-    MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
-    //MxPfnAllocation <<= 1;
-    MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
-    MxPfnAllocation >>= PAGE_SHIFT;
-    
-    //
-    // We have to add one to the count here, because in the process of
-    // shifting down to the page size, we actually ended up getting the
-    // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
-    // Later on, we'll shift this number back into bytes, which would cause
-    // us to end up with only 0x5F000 bytes -- when we actually want to have
-    // 0x60000 bytes.
-    //
-    MxPfnAllocation++;
+    MiComputeNonPagedPoolVa(MiNumberOfFreePages);
     
     //
     // Now calculate the nonpaged pool expansion VA region

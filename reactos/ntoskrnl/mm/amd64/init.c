@@ -69,7 +69,7 @@ ULONG64 MxPfnSizeInBytes;
 
 PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
-ULONG MiNumberDescriptors = 0;
+extern ULONG MiNumberDescriptors;
 PFN_NUMBER MiSystemPages = 0;
 BOOLEAN MiIncludeType[LoaderMaximum];
 

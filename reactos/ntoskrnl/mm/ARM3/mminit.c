@@ -353,6 +353,14 @@ SIZE_T MmAllocationFragment;
 SIZE_T MmTotalCommitLimit;
 SIZE_T MmTotalCommitLimitMaximum;
 
+SCHAR LocationByMemoryType[LoaderMaximum];
+#define MiIsMemoryTypeInDatabase(t) (LocationByMemoryType[t] != -1)
+#define MiIsMemoryTypeFree(t) (LocationByMemoryType[t] == FreePageList)
+
+PFN_NUMBER MiNumberOfFreePages = 0;
+PFN_NUMBER MiEarlyAllocCount = 0;
+ULONG MiNumberDescriptors = 0;
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 #ifndef _M_AMD64
@@ -379,6 +387,95 @@ MiSyncARM3WithROS(IN PVOID AddressStart,
     }
 }
 #endif
+
+VOID
+NTAPI
+MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PLIST_ENTRY NextEntry;
+    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
+
+    /* Setup memory locations */
+    LocationByMemoryType[LoaderExceptionBlock] = ActiveAndValid;
+    LocationByMemoryType[LoaderSystemBlock] = ActiveAndValid;
+    LocationByMemoryType[LoaderFree] = FreePageList;
+    LocationByMemoryType[LoaderBad] = BadPageList;
+    LocationByMemoryType[LoaderLoadedProgram] = FreePageList;
+    LocationByMemoryType[LoaderFirmwareTemporary] = FreePageList;
+    LocationByMemoryType[LoaderFirmwarePermanent] = -1;
+    LocationByMemoryType[LoaderOsloaderHeap] = ActiveAndValid;
+    LocationByMemoryType[LoaderOsloaderStack] = FreePageList;
+    LocationByMemoryType[LoaderSystemCode] = ActiveAndValid;
+    LocationByMemoryType[LoaderHalCode] = ActiveAndValid;
+    LocationByMemoryType[LoaderBootDriver] = ActiveAndValid;
+    LocationByMemoryType[LoaderConsoleInDriver] = ActiveAndValid;
+    LocationByMemoryType[LoaderConsoleOutDriver] = ActiveAndValid;
+    LocationByMemoryType[LoaderStartupDpcStack] = ActiveAndValid;
+    LocationByMemoryType[LoaderStartupKernelStack] = ActiveAndValid;
+    LocationByMemoryType[LoaderStartupPanicStack] = ActiveAndValid;
+    LocationByMemoryType[LoaderStartupPcrPage] = ActiveAndValid;
+    LocationByMemoryType[LoaderStartupPdrPage] = ActiveAndValid;
+    LocationByMemoryType[LoaderRegistryData] = ActiveAndValid;
+    LocationByMemoryType[LoaderMemoryData] = ActiveAndValid;
+    LocationByMemoryType[LoaderNlsData] = ActiveAndValid;
+    LocationByMemoryType[LoaderSpecialMemory] = -1;
+    LocationByMemoryType[LoaderBBTMemory] = -1;
+    LocationByMemoryType[LoaderReserve] = ActiveAndValid;
+    LocationByMemoryType[LoaderXIPRom] = ActiveAndValid;
+    LocationByMemoryType[LoaderHALCachedMemory] = ActiveAndValid;
+    LocationByMemoryType[LoaderLargePageFiller] = ActiveAndValid;
+    LocationByMemoryType[LoaderErrorLogMemory] = ActiveAndValid;
+
+    /* Loop the memory descriptors */
+    for (NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         NextEntry != &LoaderBlock->MemoryDescriptorListHead;
+         NextEntry = NextEntry->Flink)
+    {
+        /* Count descriptor */
+        MiNumberDescriptors++;
+
+        /* Get the descriptor */
+        MdBlock = CONTAINING_RECORD(NextEntry,
+                                    MEMORY_ALLOCATION_DESCRIPTOR,
+                                    ListEntry);
+        DPRINT("MD Type: %lx Base: %lx Count: %lx\n", 
+               MdBlock->MemoryType, MdBlock->BasePage, MdBlock->PageCount);
+
+        /* Skip memory that is not part of the database */
+        if (!MiIsMemoryTypeInDatabase(MdBlock->MemoryType)) continue;
+
+        /* Check if BURNMEM was used */
+        if (MdBlock->MemoryType != LoaderBad)
+        {
+            /* Count this in the total of pages */
+            MmNumberOfPhysicalPages += MdBlock->PageCount;
+        }
+
+        /* Update the lowest and highest page */
+        MmLowestPhysicalPage = min(MmLowestPhysicalPage, MdBlock->BasePage);
+        MmHighestPhysicalPage = max(MmHighestPhysicalPage, 
+                                    MdBlock->BasePage + MdBlock->PageCount - 1);
+
+        /* Check if this is free memory */
+        if (MiIsMemoryTypeFree(MdBlock->MemoryType))
+        {
+            /* Count it too free pages */
+            MiNumberOfFreePages += MdBlock->PageCount;
+
+            /* Check if this is the largest memory descriptor */
+            if (MdBlock->PageCount > MiEarlyAllocCount)
+            {
+                /* Use this one for early allocations */
+                MxFreeDescriptor = MdBlock;
+                MiEarlyAllocCount = MxFreeDescriptor->PageCount;
+            }
+        }
+    }
+
+    // Save original values of the free descriptor, since it'll be
+    // altered by early allocations
+    MxOldFreeDescriptor = *MxFreeDescriptor;
+}
 
 PFN_NUMBER
 NTAPI
@@ -1294,71 +1391,16 @@ MmDumpArmPfnDatabase(VOID)
     KeLowerIrql(OldIrql);
 }
 
-PFN_NUMBER
-NTAPI
-MiPagesInLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                     IN PBOOLEAN IncludeType)
-{
-    PLIST_ENTRY NextEntry;
-    PFN_NUMBER PageCount = 0;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    
-    //
-    // Now loop through the descriptors
-    //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // Grab each one, and check if it's one we should include
-        //
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-        if ((MdBlock->MemoryType < LoaderMaximum) &&
-            (IncludeType[MdBlock->MemoryType]))
-        {
-            //
-            // Add this to our running total
-            //
-            PageCount += MdBlock->PageCount;
-        }
-        
-        //
-        // Try the next descriptor
-        //
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-    
-    //
-    // Return the total
-    //
-    return PageCount;
-}
-
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
 MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          IN PBOOLEAN IncludeType)
 {
     PLIST_ENTRY NextEntry;
-    ULONG Run = 0, InitialRuns = 0;
+    ULONG Run = 0;
     PFN_NUMBER NextPage = -1, PageCount = 0;
     PPHYSICAL_MEMORY_DESCRIPTOR Buffer, NewBuffer;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-    
-    //
-    // Scan the memory descriptors
-    //
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        //
-        // For each one, increase the memory allocation estimate
-        //
-        InitialRuns++;
-        NextEntry = NextEntry->Flink;
-    }
     
     //
     // Allocate the maximum we'll ever need
@@ -1366,14 +1408,14 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                    sizeof(PHYSICAL_MEMORY_DESCRIPTOR) +
                                    sizeof(PHYSICAL_MEMORY_RUN) *
-                                   (InitialRuns - 1),
+                                   (MiNumberDescriptors - 1),
                                    'lMmM');
     if (!Buffer) return NULL;
 
     //
     // For now that's how many runs we have
     //
-    Buffer->NumberOfRuns = InitialRuns;
+    Buffer->NumberOfRuns = MiNumberDescriptors;
     
     //
     // Now loop through the descriptors again
@@ -1437,7 +1479,7 @@ MmInitializeMemoryLimits(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     //
     // Our guess was probably exaggerated...
     //
-    if (InitialRuns > Run)
+    if (MiNumberDescriptors > Run)
     {
         //
         // Allocate a more accurately sized buffer
@@ -1686,7 +1728,6 @@ MmArmInitSystem(IN ULONG Phase,
     BOOLEAN IncludeType[LoaderMaximum];
     PVOID Bitmap;
     PPHYSICAL_MEMORY_RUN Run;
-    PFN_NUMBER PageCount;
     
     //
     // Instantiate memory that we don't consider RAM/usable
@@ -1812,16 +1853,33 @@ MmArmInitSystem(IN ULONG Phase,
         
         /* Initialize the Loader Lock */
         KeInitializeMutant(&MmSystemLoadLock, FALSE);        
-                                    
+
+        /* Scan the boot loader memory descriptors */
+        MiScanMemoryDescriptors(LoaderBlock);
+
+        /* Compute color information (L2 cache-separated paging lists) */
+        MiComputeColorInformation();
+
+        // Calculate the number of bytes for the PFN database, double it for ARM3,
+        // then add the color tables and convert to pages
+        MxPfnAllocation = (MmHighestPhysicalPage + 1) * sizeof(MMPFN);
+        //MxPfnAllocation <<= 1;
+        MxPfnAllocation += (MmSecondaryColors * sizeof(MMCOLOR_TABLES) * 2);
+        MxPfnAllocation >>= PAGE_SHIFT;
+
+        // We have to add one to the count here, because in the process of
+        // shifting down to the page size, we actually ended up getting the
+        // lower aligned size (so say, 0x5FFFF bytes is now 0x5F pages).
+        // Later on, we'll shift this number back into bytes, which would cause
+        // us to end up with only 0x5F000 bytes -- when we actually want to have
+        // 0x60000 bytes.
         //
-        // Count physical pages on the system
-        //
-        PageCount = MiPagesInLoaderBlock(LoaderBlock, IncludeType);
-        
+        MxPfnAllocation++;
+
         //
         // Check if this is a machine with less than 19MB of RAM
         //
-        if (PageCount < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
+        if (MmNumberOfPhysicalPages < MI_MIN_PAGES_FOR_SYSPTE_TUNING)
         {
             //
             // Use the very minimum of system PTEs
@@ -1834,7 +1892,7 @@ MmArmInitSystem(IN ULONG Phase,
             // Use the default, but check if we have more than 32MB of RAM
             //
             MmNumberOfSystemPtes = 11000;
-            if (PageCount > MI_MIN_PAGES_FOR_SYSPTE_BOOST)
+            if (MmNumberOfPhysicalPages > MI_MIN_PAGES_FOR_SYSPTE_BOOST) //
             {
                 //
                 // Double the amount of system PTEs
@@ -1858,12 +1916,12 @@ MmArmInitSystem(IN ULONG Phase,
         {
             /* Use the default value */
             MmAllocationFragment = MI_ALLOCATION_FRAGMENT;
-            if (PageCount < ((256 * _1MB) / PAGE_SIZE))
+            if (MmNumberOfPhysicalPages < ((256 * _1MB) / PAGE_SIZE)) //
             {
                 /* On memory systems with less than 256MB, divide by 4 */
                 MmAllocationFragment = MI_ALLOCATION_FRAGMENT / 4;
             }
-            else if (PageCount < (_1GB / PAGE_SIZE))
+            else if (MmNumberOfPhysicalPages < (_1GB / PAGE_SIZE)) //
             {
                 /* On systems with less than 1GB, divide by 2 */
                 MmAllocationFragment = MI_ALLOCATION_FRAGMENT / 2;
