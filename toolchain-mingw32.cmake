@@ -4,10 +4,8 @@ SET(ARCH i386)
 # Choose the right MinGW prefix
 if (CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
 set(MINGW_PREFIX "")
-set(MKDIR_ARG "")
 else()
 set(MINGW_PREFIX "mingw32-")
-set(MKDIR_ARG "-p")
 endif()
 
 # the name of the target operating system

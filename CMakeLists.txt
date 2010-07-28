@@ -83,19 +83,15 @@ set(nci_output
 
 # stupid nci tool can't create folders itself, se we're gonna create them for it
 set(nci_folders
-  dll\\ntdll\\def
-  lib\\ntdllsys\\ntdll
-  lib\\win32ksys
-  ntoskrnl\\include\\internal
-  ntoskrnl\\ex
-  subsystems\\win32\\win32k\\include
+  ${CMAKE_CURRENT_BINARY_DIR}/dll/ntdll/def
+  ${CMAKE_CURRENT_BINARY_DIR}/lib/ntdllsys/ntdll
+  ${CMAKE_CURRENT_BINARY_DIR}/lib/win32ksys
+  ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/include/internal
+  ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl/ex
+  ${CMAKE_CURRENT_BINARY_DIR}/subsystems/win32/win32k/include
 )
 
-ADD_CUSTOM_COMMAND(
-  OUTPUT ${nci_folders}
-  COMMAND mkdir ${MKDIR_ARG} ${nci_folders}
-  WORKING_DIRECTORY ${REACTOS_BINARY_DIR}
-)
+file(MAKE_DIRECTORY ${nci_folders})
 
 ADD_CUSTOM_COMMAND(
   OUTPUT ${nci_output}
@@ -105,7 +101,8 @@ ADD_CUSTOM_COMMAND(
 
 SET_SOURCE_FILES_PROPERTIES(${nci_output} PROPERTIES GENERATED TRUE)
 
-ADD_CUSTOM_TARGET(nci_resources ALL DEPENDS ${nci_output})
+ADD_CUSTOM_TARGET(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
+ADD_CUSTOM_TARGET(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
 
 endif()
 
