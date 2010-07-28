@@ -5,7 +5,6 @@
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
- *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
 /* INCLUDES ******************************************************************/

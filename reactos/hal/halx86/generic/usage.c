@@ -512,13 +512,8 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     /* Register the vector */
     HalpRegisterVector(Flags, BusVector, SystemVector, Irql);
 
-// FIXME use an architecture specific inline function
-#ifdef _M_IX86
     /* Connect the interrupt */
     KeRegisterInterruptHandler(SystemVector, Handler);
-#else
-    // TODO
-#endif
 
     /* Enable the interrupt */
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
