@@ -44,6 +44,14 @@ SECTIONS
     *(SORT(.rdata$*))
     *(.eh_frame)
   }
+  .stab BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    [ .stab ]
+  }
+  .stabstr BLOCK(__section_alignment__) (NOLOAD) :
+  {
+    [ .stabstr ]
+  }
 
 }
 

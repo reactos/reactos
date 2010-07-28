@@ -16,4 +16,5 @@
 	<library>cmlib</library>
 	<library>rtl</library>
 	<library>libcntpr</library>
+	<linkerflag>-gstabs+</linkerflag>
 </module>
