@@ -68,6 +68,7 @@ add_subdirectory(include/psdk)
 add_subdirectory(include/dxsdk)
 add_subdirectory(include/reactos/mc)
 
+add_subdirectory(base)
 add_subdirectory(dll)
 add_subdirectory(lib)
 
@@ -105,6 +106,9 @@ SET_SOURCE_FILES_PROPERTIES(${nci_output} PROPERTIES GENERATED TRUE)
 ADD_CUSTOM_TARGET(ntdll_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/ntdllsys/ntdll.S)
 ADD_CUSTOM_TARGET(win32k_S ALL DEPENDS ${REACTOS_BINARY_DIR}/lib/win32ksys/win32k.S)
 ADD_CUSTOM_TARGET(ntsys_pspec ALL DEPENDS ${REACTOS_BINARY_DIR}/dll/ntdll/def/ntsys.pspec)
+ADD_CUSTOM_TARGET(kernel_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/include/internal/napi.h)
+ADD_CUSTOM_TARGET(subsystem_napi ALL DEPENDS ${REACTOS_BINARY_DIR}/subsystems/win32/win32k/include/napi.h)
+ADD_CUSTOM_TARGET(kernel_zw ALL DEPENDS ${REACTOS_BINARY_DIR}/ntoskrnl/ex/zw.S)
 
 endif()
 
