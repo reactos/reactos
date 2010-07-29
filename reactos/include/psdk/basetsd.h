@@ -126,6 +126,7 @@ typedef unsigned __int64 ULONG_PTR, *PULONG_PTR;
 typedef unsigned __int64 HANDLE_PTR;
 typedef unsigned int UHALF_PTR, *PUHALF_PTR;
 typedef int HALF_PTR, *PHALF_PTR;
+typedef __int64 SHANDLE_PTR;
 
 #if !defined(__midl) && !defined(__WIDL__)
 static inline unsigned long HandleToUlong(const void* h )
@@ -174,6 +175,7 @@ typedef unsigned long UINT_PTR, *PUINT_PTR;
 
 typedef unsigned short UHALF_PTR, *PUHALF_PTR;
 typedef short HALF_PTR, *PHALF_PTR;
+typedef long SHANDLE_PTR;
 
 #ifndef HANDLE_PTR_DEFINED
 #define HANDLE_PTR_DEFINED
