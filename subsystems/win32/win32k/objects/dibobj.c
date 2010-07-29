@@ -1907,23 +1907,6 @@ GetBMIColor(CONST BITMAPINFO* pbmi, INT i)
     return dwRet;
 }
 
-FORCEINLINE
-VOID
-SetBMIColor(CONST BITMAPINFO* pbmi, DWORD* color, INT i)
-{
-    PVOID pvColors = ((PBYTE)pbmi + pbmi->bmiHeader.biSize);
-    if(pbmi->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-    {
-        RGBTRIPLE *pColor = pvColors;
-        pColor[i] = *(RGBTRIPLE*)color;
-    }
-    else
-    {
-        RGBQUAD *pColor = pvColors;
-        pColor[i] = *(RGBQUAD*)color;
-    }
-}
-
 NTSTATUS
 FASTCALL
 ProbeAndConvertToBitmapV5Info(
@@ -2092,61 +2075,6 @@ ProbeAndConvertToBitmapV5Info(
     }
 
     return STATUS_SUCCESS;
-}
-
-VOID
-FASTCALL
-GetBMIFromBitmapV5Info(IN PBITMAPV5INFO pbmiSrc,
-                       OUT PBITMAPINFO pbmiDst,
-                       IN DWORD dwColorUse)
-{
-    if(pbmiDst->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
-    {
-        /* Manually set value */
-        BITMAPCOREHEADER* pbmhCore = (BITMAPCOREHEADER*)&pbmiDst->bmiHeader;
-        pbmhCore->bcWidth = pbmiSrc->bmiHeader.bV5Width;
-        pbmhCore->bcHeight = pbmiSrc->bmiHeader.bV5Height;
-        pbmhCore->bcPlanes = pbmiSrc->bmiHeader.bV5Planes;
-        pbmhCore->bcBitCount = pbmiSrc->bmiHeader.bV5BitCount;
-    }
-    else
-    {
-        /* Copy valid Fields, keep bmiHeader.biSize safe */
-        RtlCopyMemory(&pbmiDst->bmiHeader.biWidth,
-                      &pbmiSrc->bmiHeader.bV5Width,
-                      pbmiDst->bmiHeader.biSize - sizeof(DWORD));
-    }
-    if((pbmiDst->bmiHeader.biSize < sizeof(BITMAPV4HEADER)) &&
-        (pbmiSrc->bmiHeader.bV5Compression == BI_BITFIELDS))
-    {
-        /* Masks are already set in V4 and V5 headers */
-        SetBMIColor(pbmiDst, &pbmiSrc->bmiHeader.bV5RedMask, 0);
-        SetBMIColor(pbmiDst, &pbmiSrc->bmiHeader.bV5GreenMask, 1);
-        SetBMIColor(pbmiDst, &pbmiSrc->bmiHeader.bV5BlueMask, 2);
-    }
-    else
-    {
-        INT i;
-        ULONG cColorsUsed;
-
-        cColorsUsed = pbmiSrc->bmiHeader.bV5ClrUsed;
-        if (cColorsUsed == 0 && pbmiSrc->bmiHeader.bV5BitCount <= 8)
-            cColorsUsed = (1 << pbmiSrc->bmiHeader.bV5BitCount);
-
-        if(dwColorUse == DIB_PAL_COLORS)
-        {
-            RtlCopyMemory(pbmiDst->bmiColors,
-                          pbmiSrc->bmiColors,
-                          cColorsUsed * sizeof(WORD));
-        }
-        else
-        {
-            for(i = 0; i < cColorsUsed; i++)
-            {
-                SetBMIColor(pbmiDst, (DWORD*)pbmiSrc->bmiColors + i, i);
-            }
-        }
-    }
 }
 
 /* EOF */
