@@ -37,7 +37,7 @@ set(MINGW_COMMON_SOURCE
 add_library(mingw_common ${MINGW_COMMON_SOURCE})
 target_link_libraries(mingw_common oldnames)
 
-set_property(TARGET mingw_common PROPERTY COMPILE_DEFINITIONS _M_CEE_PURE)
+set_target_properties(mingw_common PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
 add_dependencies(mingw_common psdk)
 
