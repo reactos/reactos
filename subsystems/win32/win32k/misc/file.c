@@ -157,14 +157,12 @@ HBITMAP
 NTAPI
 UserLoadImage(PCWSTR pwszName)
 {
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     HANDLE hFile, hSection;
     BITMAPFILEHEADER *pbmfh;
     LPBITMAPINFO pbmi;
-    ULONG cjInfoSize;
     PVOID pvBits;
     HBITMAP hbmp = 0;
-    BITMAPV5INFO bmiLocal;
 
     DPRINT("Enter UserLoadImage(%ls)\n", pwszName);
 
@@ -194,40 +192,58 @@ UserLoadImage(PCWSTR pwszName)
     /* Get a pointer to the BITMAPINFO */
     pbmi = (LPBITMAPINFO)(pbmfh + 1);
 
-    /* Create a normalized local BITMAPINFO */
-    _SEH2_TRY
-    {
-        Status = ProbeAndConvertToBitmapV5Info(&bmiLocal,
-                                               pbmi,
-                                               DIB_RGB_COLORS,
-                                               0);
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        Status = _SEH2_GetExceptionCode();
-    }
-    _SEH2_END
+	_SEH2_TRY
+	{
+		ProbeForRead(&pbmfh->bfSize, sizeof(DWORD), 1);
+		ProbeForRead(pbmfh, pbmfh->bfSize, 1);
+	}
+	_SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+	{
+		Status = _SEH2_GetExceptionCode();
+	}
+	_SEH2_END
 
-    if (NT_SUCCESS(Status))
+	if(!NT_SUCCESS(Status))
+	{
+		DPRINT1("Bad File?\n");
+		goto leave;
+	}
+
+    if (pbmfh->bfType == 0x4D42 /* 'BM' */)
     {
-        cjInfoSize = bmiLocal.bmiHeader.bV5Size +
-                     bmiLocal.bmiHeader.bV5ClrUsed * sizeof(RGBQUAD);
-        pvBits = (PVOID)((PCHAR)pbmi + cjInfoSize);
+		/* Could be BITMAPCOREINFO */
+		BITMAPINFO* pConvertedInfo;
+
+		pvBits = (PVOID)((PCHAR)pbmi + pbmfh->bfOffBits);
+
+		pConvertedInfo = DIB_ConvertBitmapInfo(pbmi, DIB_RGB_COLORS);
+		if(!pConvertedInfo)
+		{
+			DPRINT1("Unable to convert the bitmap Info\n");
+			goto leave;
+		}
 
         // FIXME: use Gre... so that the BITMAPINFO doesn't get probed
         hbmp = NtGdiCreateDIBitmapInternal(NULL,
-                                           bmiLocal.bmiHeader.bV5Width,
-                                           bmiLocal.bmiHeader.bV5Height,
+                                           pConvertedInfo->bmiHeader.biWidth,
+                                           pConvertedInfo->bmiHeader.biHeight,
                                            CBM_INIT,
                                            pvBits,
                                            pbmi,
                                            DIB_RGB_COLORS,
-                                           bmiLocal.bmiHeader.bV5Size,
-                                           bmiLocal.bmiHeader.bV5SizeImage,
+                                           pConvertedInfo->bmiHeader.biSize,
+                                           pConvertedInfo->bmiHeader.biSizeImage,
                                            0,
                                            0);
-    }
 
+		DIB_FreeConvertedBitmapInfo(pConvertedInfo, pbmi);
+    }
+	else
+	{
+		DPRINT1("Unknown file type!\n");
+	}
+
+leave:
     /* Unmap our section, we don't need it anymore */
     ZwUnmapViewOfSection(NtCurrentProcess(), pbmfh);
 

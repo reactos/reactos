@@ -674,18 +674,12 @@ NtGdiGetDIBitsInternal(
 		/* We need a BITMAPINFO to create a DIB, but we have to fill
 		 * the BITMAPCOREINFO we're provided */
 		pbmci = (BITMAPCOREINFO*)Info;
-		Info = ExAllocatePoolWithTag(PagedPool, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD), TAG_DIB);
+		Info = DIB_ConvertBitmapInfo((BITMAPINFO*)pbmci, Usage);
 		if(Info == NULL)
 		{
-			DPRINT1("Error, could not allocate another BITMAPINFO!\n");
+			DPRINT1("Error, could not convert the BITMAPCOREINFO!\n");
 			return 0;
 		}
-		RtlZeroMemory(Info, sizeof(BITMAPINFOHEADER) + 256 * sizeof(RGBQUAD));
-		Info->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		Info->bmiHeader.biBitCount = pbmci->bmciHeader.bcBitCount;
-		Info->bmiHeader.biPlanes = pbmci->bmciHeader.bcPlanes;
-		Info->bmiHeader.biWidth = pbmci->bmciHeader.bcWidth;
-		Info->bmiHeader.biHeight = pbmci->bmciHeader.bcHeight;
 		rgbQuads = Info->bmiColors;
 	}
 
@@ -1050,7 +1044,7 @@ done:
 
 	if(pDC) DC_UnlockDc(pDC);
 	if(psurf) SURFACE_UnlockSurface(psurf);
-	if(pbmci) ExFreePoolWithTag(Info, TAG_DIB);
+	if(pbmci) DIB_FreeConvertedBitmapInfo(Info, (BITMAPINFO*)pbmci);
 
 	return ScanLines;
 }
@@ -2076,5 +2070,83 @@ ProbeAndConvertToBitmapV5Info(
 
     return STATUS_SUCCESS;
 }
+
+/* Converts a BITMAPCOREINFO to a BITMAPINFO structure,
+ * or does nothing if it's already a BITMAPINFO (or V4 or V5) */
+BITMAPINFO*
+FASTCALL
+DIB_ConvertBitmapInfo (CONST BITMAPINFO* pbmi, DWORD Usage)
+{
+	CONST BITMAPCOREINFO* pbmci = (BITMAPCOREINFO*)pbmi;
+	BITMAPINFO* pNewBmi ;
+	UINT numColors = 0, ColorsSize = 0;
+
+	if(pbmi->bmiHeader.biSize >= sizeof(BITMAPINFOHEADER)) return (BITMAPINFO*)pbmi;
+	if(pbmi->bmiHeader.biSize != sizeof(BITMAPCOREHEADER)) return NULL;
+
+	if(pbmci->bmciHeader.bcBitCount <= 8)
+	{
+		numColors = 1 << pbmci->bmciHeader.bcBitCount;
+		if(Usage == DIB_PAL_COLORS)
+		{
+			ColorsSize = numColors * sizeof(WORD);
+		}
+		else
+		{
+			ColorsSize = numColors * sizeof(RGBQUAD);
+		}
+	}
+	else if (Usage == DIB_PAL_COLORS)
+	{
+		/* Invalid at high Res */
+		return NULL;
+	}
+
+	pNewBmi = ExAllocatePoolWithTag(PagedPool, sizeof(BITMAPINFOHEADER) + ColorsSize, TAG_DIB);
+	if(!pNewBmi) return NULL;
+
+	RtlZeroMemory(pNewBmi, sizeof(BITMAPINFOHEADER) + ColorsSize);
+
+	pNewBmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	pNewBmi->bmiHeader.biBitCount = pbmci->bmciHeader.bcBitCount;
+	pNewBmi->bmiHeader.biWidth = pbmci->bmciHeader.bcWidth;
+	pNewBmi->bmiHeader.biHeight = pbmci->bmciHeader.bcHeight;
+	pNewBmi->bmiHeader.biPlanes = pbmci->bmciHeader.bcPlanes;
+	pNewBmi->bmiHeader.biCompression = BI_RGB ;
+	pNewBmi->bmiHeader.biSizeImage = DIB_GetDIBImageBytes(pNewBmi->bmiHeader.biWidth,
+												pNewBmi->bmiHeader.biHeight,
+												pNewBmi->bmiHeader.biBitCount);
+
+	if(Usage == DIB_PAL_COLORS)
+	{
+		RtlCopyMemory(pNewBmi->bmiColors, pbmci->bmciColors, ColorsSize);
+	}
+	else
+	{
+		UINT i;
+		for(i=0; i<numColors; i++)
+		{
+			pNewBmi->bmiColors[i].rgbRed = pbmci->bmciColors[i].rgbtRed;
+			pNewBmi->bmiColors[i].rgbGreen = pbmci->bmciColors[i].rgbtGreen;
+			pNewBmi->bmiColors[i].rgbBlue = pbmci->bmciColors[i].rgbtBlue;
+		}
+	}
+
+	return pNewBmi ;
+}
+
+/* Frees a BITMAPINFO created with DIB_ConvertBitmapInfo */
+VOID
+FASTCALL
+DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig)
+{
+	if(converted != orig)
+		ExFreePoolWithTag(converted, TAG_DIB);
+}
+
+
+
+
+
 
 /* EOF */

@@ -18,3 +18,6 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
 
 HPALETTE FASTCALL
 BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType);
+
+BITMAPINFO* FASTCALL DIB_ConvertBitmapInfo(CONST BITMAPINFO* bmi, DWORD Usage);
+VOID FASTCALL DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig);
