@@ -16,7 +16,7 @@ include_directories(./include/reactos/wine)
 add_subdirectory(tools)
 add_subdirectory(lib)
 
-export(TARGETS widl winebuild wmc nci FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
+export(TARGETS widl winebuild wmc wrc nci pefixup rsym FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
 
 else()
 
