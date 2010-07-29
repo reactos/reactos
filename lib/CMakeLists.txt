@@ -7,6 +7,7 @@ if(CMAKE_CROSSCOMPILING)
 
 add_subdirectory(3rdparty)
 add_subdirectory(atl)
+add_subdirectory(debugsup)
 add_subdirectory(dnslib)
 add_subdirectory(drivers)
 add_subdirectory(epsapi)
