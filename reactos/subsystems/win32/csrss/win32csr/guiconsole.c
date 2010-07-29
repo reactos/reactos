@@ -1500,11 +1500,13 @@ GuiConsoleGetMinMaxInfo(HWND hWnd, PMINMAXINFO minMaxInfo)
 {
     PCSRSS_CONSOLE Console;
     PGUI_CONSOLE_DATA GuiData;
+    DWORD windx, windy;
+
     GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
     if((Console == NULL)|| (GuiData == NULL)) return;
 
-    DWORD windx = CONGUI_MIN_WIDTH * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
-    DWORD windy = CONGUI_MIN_HEIGHT * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
+    windx = CONGUI_MIN_WIDTH * GuiData->CharWidth + 2 * (GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXEDGE));
+    windy = CONGUI_MIN_HEIGHT * GuiData->CharHeight + 2 * (GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CYEDGE)) + GetSystemMetrics(SM_CYCAPTION);
 
     minMaxInfo->ptMinTrackSize.x = windx;
     minMaxInfo->ptMinTrackSize.y = windy;
@@ -1529,18 +1531,19 @@ GuiConsoleResize(HWND hWnd, WPARAM wParam, LPARAM lParam)
     if ((GuiData->WindowSizeLock == FALSE) && (wParam == SIZE_RESTORED || wParam == SIZE_MAXIMIZED || wParam == SIZE_MINIMIZED))
     {
         PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+        DWORD windx, windy, charx, chary;
 
         GuiData->WindowSizeLock = TRUE;
 
-        DWORD windx = LOWORD(lParam);
-        DWORD windy = HIWORD(lParam);
+        windx = LOWORD(lParam);
+        windy = HIWORD(lParam);
 
         // Compensate for existing scroll bars (because lParam values do not accommodate scroll bar)
         if(Console->Size.X < Buff->MaxX) windy += GetSystemMetrics(SM_CYHSCROLL);    // window currently has a horizontal scrollbar
         if(Console->Size.Y < Buff->MaxY) windx += GetSystemMetrics(SM_CXVSCROLL);    // window currently has a vertical scrollbar
 
-        DWORD charx = windx / GuiData->CharWidth;
-        DWORD chary = windy / GuiData->CharHeight;
+        charx = windx / GuiData->CharWidth;
+        chary = windy / GuiData->CharHeight;
 
         // Character alignment (round size up or down)
         if((windx % GuiData->CharWidth) >= (GuiData->CharWidth / 2)) ++charx;
