@@ -136,29 +136,18 @@ extern "C" {
 #define _JMP_BUF_DEFINED
 #endif
 
-static inline __attribute__((always_inline)) void * mingw_getsp(void)
-{
-    void *value;
-#if defined(__x86_64)
 #ifdef _MSC_VER
-    __asm {mov value, rsp}
+int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
 #else
-    __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value) );
-#endif
-#elif defined(_X86_)
-#ifdef _MSC_VER
-    __asm {mov value, esp}
-#else
-    __asm__ __volatile__("movql %%esp, %[value]" : [value] "=r" (value) );
-#endif
-#else
-    #error mingw_getsp unimplemented
-#endif
-    return value;
-}
-
 #ifdef USE_MINGW_SETJMP_TWO_ARGS
 #ifndef _INC_SETJMPEX
+#if defined(__x86_64)
+# define mingw_getsp() \
+  ({ void* value; __asm__ __volatile__("movq %%rsp, %[value]" : [value] "=r" (value)); value; })
+#elif defined(_X86_)
+# define mingw_getsp() \
+  ({ void* value; __asm__ __volatile__("movl %%esp, %[value]" : [value] "=r" (value)); value; })
+#endif
 #define setjmp(BUF) _setjmp((BUF),mingw_getsp())
   int __cdecl __MINGW_NOTHROW _setjmp(jmp_buf _Buf,void *_Ctx);
 #else
@@ -172,6 +161,7 @@ static inline __attribute__((always_inline)) void * mingw_getsp(void)
 #define setjmp _setjmp
 #endif
   int __cdecl __MINGW_NOTHROW setjmp(jmp_buf _Buf);
+#endif
 #endif
 
   __declspec(noreturn) __MINGW_NOTHROW void __cdecl ms_longjmp(jmp_buf _Buf,int _Value)/* throw(...)*/;
