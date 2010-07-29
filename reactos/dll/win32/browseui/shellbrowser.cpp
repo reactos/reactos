@@ -124,6 +124,10 @@ TODO:
     "language='*'\"")
 #endif // __GNUC__
 
+#ifdef __GNUC__
+#define SHANDLE_PTR LONG
+#endif // __GNUC__
+
 struct categoryCacheHeader
 {
 	long				dwSize;			// size of header only
