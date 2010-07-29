@@ -45,67 +45,54 @@ BEGIN
 
         END
         MENUITEM SEPARATOR
-        MENUITEM "Iconos &Grandes",                ID_VIEW_LARGE
-        MENUITEM "Iconos &Pequeños",                ID_VIEW_SMALL
-        MENUITEM "&Detalles",                    ID_VIEW_DETAILS,
-CHECKED
-        MENUITEM "&Seleccionar Columnas...",
-ID_VIEW_SELECTCOLUMNS
+        MENUITEM "Iconos &Grandes",                  ID_VIEW_LARGE
+        MENUITEM "Iconos &Pequeños",                 ID_VIEW_SMALL
+        MENUITEM "&Detalles",                        ID_VIEW_DETAILS, CHECKED
+        MENUITEM "&Seleccionar Columnas...",         ID_VIEW_SELECTCOLUMNS
         POPUP "Historial de la &CPU"
         BEGIN
-            MENUITEM "&Una Gráfica, Todas las CPUs",
-ID_VIEW_CPUHISTORY_ONEGRAPHALL
+            MENUITEM "&Una Gráfica, Todas las CPUs", ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Una Gráfica, &Por CPU",
-ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
-            , CHECKED
+            MENUITEM "Una Gráfica, &Por CPU",        ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU, CHECKED
         END
-        MENUITEM "&Mostrar tiempos del Núcleo",
-ID_VIEW_SHOWKERNELTIMES
+        MENUITEM "&Mostrar tiempos del Núcleo",      ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Ventanas"
     BEGIN
-        MENUITEM "Mosaico &Horizontal",
-ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Mosaico &Vertical",
-ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimizar",                   ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximizar",                   ID_WINDOWS_MAXIMIZE
-        MENUITEM "&Cascada",                    ID_WINDOWS_CASCADE
-        MENUITEM "&Traer al Frente",
-ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "Mosaico &Horizontal",              ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Mosaico &Vertical",                ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimizar",                       ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizar",                       ID_WINDOWS_MAXIMIZE
+        MENUITEM "&Cascada",                         ID_WINDOWS_CASCADE
+        MENUITEM "&Traer al Frente",                 ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "A&yuda"
     BEGIN
-        MENUITEM "&Temas de Ayuda del Administrador de Tareas",
-ID_HELP_TOPICS
+        MENUITEM "&Temas de Ayuda del Administrador de Tareas", ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca del Administrador de Tareas",
-ID_HELP_ABOUT
+        MENUITEM "&Acerca del Administrador de Tareas",         ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Mosaico &Horizontal",
-ID_WINDOWS_TILEHORIZONTALLY
-    MENUITEM "Mosaico &Vertical",            ID_WINDOWS_TILEVERTICALLY
-    MENUITEM "&Minimizar",                   ID_WINDOWS_MINIMIZE
-    MENUITEM "Ma&ximizar",                   ID_WINDOWS_MAXIMIZE
+    MENUITEM "Mosaico &Horizontal",         ID_WINDOWS_TILEHORIZONTALLY
+    MENUITEM "Mosaico &Vertical",           ID_WINDOWS_TILEVERTICALLY
+    MENUITEM "&Minimizar",                  ID_WINDOWS_MINIMIZE
+    MENUITEM "Ma&ximizar",                  ID_WINDOWS_MAXIMIZE
     MENUITEM "&Cascada",                    ID_WINDOWS_CASCADE
-    MENUITEM "&Traer al Frente",             ID_WINDOWS_BRINGTOFRONT
+    MENUITEM "&Traer al Frente",            ID_WINDOWS_BRINGTOFRONT
 END
 
 IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Nueva Tarea (Ejecutar...)",          ID_FILE_NEW
+        MENUITEM "&Nueva Tarea (Ejecutar...)",  ID_FILE_NEW
         MENUITEM SEPARATOR
-        MENUITEM "Iconos &Grandes",                ID_VIEW_LARGE
-        MENUITEM "Iconos &Pequeños",                ID_VIEW_SMALL
-        MENUITEM "&Detalles",                    ID_VIEW_DETAILS,
-CHECKED
+        MENUITEM "Iconos &Grandes",             ID_VIEW_LARGE
+        MENUITEM "Iconos &Pequeños",            ID_VIEW_SMALL
+        MENUITEM "&Detalles",                   ID_VIEW_DETAILS, CHECKED
     END
 END
 
@@ -113,21 +100,17 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Cambiar A",
-ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&Traer al Frente",
-ID_WINDOWS_BRINGTOFRONT
+        MENUITEM "&Cambiar A",                  ID_APPLICATION_PAGE_SWITCHTO
+        MENUITEM "&Traer al Frente",            ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Mosaico &Horizontal",
-ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Mosaico &Vertical",
-ID_WINDOWS_TILEVERTICALLY
-        MENUITEM "&Minimizar",                 ID_WINDOWS_MINIMIZE
-        MENUITEM "Ma&ximizar",                 ID_WINDOWS_MAXIMIZE
-        MENUITEM "Ca&scada",                   ID_WINDOWS_CASCADE
+        MENUITEM "Mosaico &Horizontal",         ID_WINDOWS_TILEHORIZONTALLY
+        MENUITEM "Mosaico &Vertical",           ID_WINDOWS_TILEVERTICALLY
+        MENUITEM "&Minimizar",                  ID_WINDOWS_MINIMIZE
+        MENUITEM "Ma&ximizar",                  ID_WINDOWS_MAXIMIZE
+        MENUITEM "Ca&scada",                    ID_WINDOWS_CASCADE
         MENUITEM SEPARATOR
-        MENUITEM "&Finalizar Tarea",           ID_APPLICATION_PAGE_ENDTASK
-        MENUITEM "&Ir al Proceso",             ID_APPLICATION_PAGE_GOTOPROCESS
+        MENUITEM "&Finalizar Tarea",            ID_APPLICATION_PAGE_ENDTASK
+        MENUITEM "&Ir al Proceso",              ID_APPLICATION_PAGE_GOTOPROCESS
 
     END
 END
@@ -136,10 +119,10 @@ IDR_TRAY_POPUP MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Restaurar",                   ID_RESTORE
-        MENUITEM "&Cerrar",                      ID_FILE_EXIT
+        MENUITEM "&Restaurar",                  ID_RESTORE
+        MENUITEM "&Cerrar",                     ID_FILE_EXIT
         MENUITEM SEPARATOR
-        MENUITEM "&Siempre Visible",             ID_OPTIONS_ALWAYSONTOP
+        MENUITEM "&Siempre Visible",            ID_OPTIONS_ALWAYSONTOP
     END
 END
 
@@ -147,27 +130,27 @@ IDR_PROCESS_PAGE_CONTEXT MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Finalizar Proceso",                ID_PROCESS_PAGE_ENDPROCESS
-        MENUITEM "Finalizar &Árbol de Procesos",           ID_PROCESS_PAGE_ENDPROCESSTREE
+        MENUITEM "&Finalizar Proceso",              ID_PROCESS_PAGE_ENDPROCESS
+        MENUITEM "Finalizar &Árbol de Procesos",    ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Depurador",                      ID_PROCESS_PAGE_DEBUG
         MENUITEM SEPARATOR
         POPUP "Establecer &Prioridad"
         BEGIN
-            MENUITEM "Tiempo-&Real",                   ID_PROCESS_PAGE_SETPRIORITY_REALTIME
+            MENUITEM "Tiempo-&Real",                ID_PROCESS_PAGE_SETPRIORITY_REALTIME
 
             MENUITEM "&Alta",                       ID_PROCESS_PAGE_SETPRIORITY_HIGH
 
-            MENUITEM "Arr&iba de lo Normal",                ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
+            MENUITEM "Arr&iba de lo Normal",        ID_PROCESS_PAGE_SETPRIORITY_ABOVENORMAL
 
             MENUITEM "&Normal",                     ID_PROCESS_PAGE_SETPRIORITY_NORMAL
 
-            MENUITEM "&Debajo de lo Normal",                ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
+            MENUITEM "&Debajo de lo Normal",        ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
 
-            MENUITEM "&Baja",                        ID_PROCESS_PAGE_SETPRIORITY_LOW
+            MENUITEM "&Baja",                       ID_PROCESS_PAGE_SETPRIORITY_LOW
 
         END
-        MENUITEM "Establecer &Afinidad...",            ID_PROCESS_PAGE_SETAFFINITY
+        MENUITEM "Establecer &Afinidad...",         ID_PROCESS_PAGE_SETAFFINITY
 	MENUITEM "Editar &Canales de Depuración...",	ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
@@ -177,6 +160,7 @@ END
 //
 // Dialog
 //
+// TRANSLATORS: CAPTION must be the same as IDS_APP_TITLE to be brought back to focus when already opened
 
 IDD_TASKMGR_DIALOG DIALOGEX DISCARDABLE  0, 0, 264, 246
 STYLE DS_SHELLFONT | DS_CENTER | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP |
@@ -186,8 +170,7 @@ CAPTION "Administrador de Tareas"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL
-"Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
+    CONTROL         "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
 IDD_APPLICATION_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
@@ -195,8 +178,7 @@ STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_APPLIST,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP,7,7,233,177
+                    LVS_SHOWSELALWAYS | WS_BORDER |WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Nueva Tarea...",IDC_NEWTASK,187,189,53,14
     PUSHBUTTON      "&Cambiar A",IDC_SWITCHTO,131,189,53,14,WS_DISABLED
     PUSHBUTTON      "&Finalizar Tarea",IDC_ENDTASK,75,189,53,14,WS_DISABLED
@@ -206,8 +188,7 @@ IDD_PROCESS_PAGE DIALOGEX DISCARDABLE  0, 0, 247, 210
 STYLE DS_SHELLFONT | DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT
-|
+    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
     PUSHBUTTON      "&Finalizar Proceso",IDC_ENDPROCESS,171,189,69,14
@@ -251,8 +232,7 @@ BEGIN
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
-    EDITTEXT
-IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
+    EDITTEXT        IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT           "Total",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
     LTEXT           "Paginado",IDS_KERNEL_MEMORY_PAGED,137,184,30,8
@@ -265,10 +245,8 @@ IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER | NOT WS_TABSTOP
     GROUPBOX        "Historial de uso de la CPU",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
     GROUPBOX        "Historial de uso de la Memoria",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
-    PUSHBUTTON      "Display de uso de la CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,
-		    WS_EX_CLIENTEDGE
-    PUSHBUTTON      "Display de uso de la Memoria",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,
-                    WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Display de uso de la CPU",IDC_CPU_USAGE_GRAPH,12,17,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
+    PUSHBUTTON      "Display de uso de la Memoria",IDC_MEM_USAGE_GRAPH,12,75,47,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Historial de uso de la CPU",IDC_CPU_USAGE_HISTORY_GRAPH,81,17,
                     153,37,NOT WS_TABSTOP,WS_EX_CLIENTEDGE
     PUSHBUTTON      "Historial de uso de la Memoria",IDC_MEM_USAGE_HISTORY_GRAPH,81,75,
@@ -281,8 +259,7 @@ CAPTION "Canales de Depuración"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER |
-WS_TABSTOP |
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Cerrar",IDOK,171,189,69,14
 END
@@ -389,8 +366,7 @@ BEGIN
                     WS_TABSTOP,7,105,80,10 //53
     CONTROL         "O&bjetos de USUARIO",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,80,10 //62
-    CONTROL         "Lecturas E/S",IDC_IOREADS,"Button",BS_AUTOCHECKBOX
-|
+    CONTROL         "Lecturas E/S",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,60,10 //49
     CONTROL         "Bytes E/S Leidos",IDC_IOREADBYTES,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,138,65,10
@@ -610,7 +586,6 @@ BEGIN
     ID_PROCESS_PAGE_SETPRIORITY_BELOWNORMAL
                             "Establece el proceso en prioridad ABAJO DE LO NORMAL"
     ID_PROCESS_PAGE_SETPRIORITY_LOW "Establece el proceso en prioridad BAJA"
-
 END	// Spanish (SPAIN) resources by Carlos Garcia Gomez
 
 
