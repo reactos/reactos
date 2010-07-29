@@ -1887,7 +1887,36 @@ MmArmInitSystem(IN ULONG Phase,
 
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
+
+        /* Now go ahead and initialize the nonpaged pool */
+        MiInitializeNonPagedPool();
+        MiInitializeNonPagedPoolThresholds();
+
+        /* Build the PFN Database */
+        MiInitializePfnDatabase(LoaderBlock);
+        MmInitializeBalancer(MmAvailablePages, 0);
+
+        /* Initialize the nonpaged pool */
+        InitializePool(NonPagedPool, 0);
         
+        /* Create the system PTE space */
+        MiInitializeSystemPtes(MiAddressToPte(MmNonPagedSystemStart),
+                               MmNumberOfSystemPtes,
+                               SystemPteSpace);
+        
+        /* Setup the mapping PTEs */
+        MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
+        MmLastReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_END);
+        MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
+
+        /* Reserve system PTEs for zeroing PTEs and clear them */
+        MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
+                                                        SystemPteSpace);
+        RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
+        
+        /* Set the counter to maximum to boot with */
+        MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
+
         //
         // Sync us up with ReactOS Mm
         //

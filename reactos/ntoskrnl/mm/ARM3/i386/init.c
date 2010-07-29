@@ -150,8 +150,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PMMPTE StartPde, EndPde, PointerPte, LastPte;
     MMPTE TempPde, TempPte;
     PVOID NonPagedPoolExpansionVa;
-    ULONG OldCount;
-    KIRQL OldIrql;
 
     /* Check for global bit */
 #if 0
@@ -329,6 +327,12 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MmNonPagedPoolExpansionStart = NonPagedPoolExpansionVa;
 
     //
+    // Sanity check: make sure we have properly defined the system PTE space
+    //
+    ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
+           MiAddressToPte(MmNonPagedPoolExpansionStart));
+    
+    //
     // Last step is to actually map the nonpaged pool
     //
     PointerPte = MiAddressToPte(MmNonPagedPoolStart);
@@ -344,83 +348,30 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
     
     //
-    // Sanity check: make sure we have properly defined the system PTE space
-    //
-    ASSERT(MiAddressToPte(MmNonPagedSystemStart) <
-           MiAddressToPte(MmNonPagedPoolExpansionStart));
-    
-    /* Now go ahead and initialize the nonpaged pool */
-    MiInitializeNonPagedPool();
-    MiInitializeNonPagedPoolThresholds();
-
-    /* Build the PFN Database */
-    MiInitializePfnDatabase(LoaderBlock);
-    MmInitializeBalancer(MmAvailablePages, 0);
-
-    //
-    // Initialize the nonpaged pool
-    //
-    InitializePool(NonPagedPool, 0);
-    
-    //
     // We PDE-aligned the nonpaged system start VA, so haul some extra PTEs!
     //
     PointerPte = MiAddressToPte(MmNonPagedSystemStart);
-    OldCount = MmNumberOfSystemPtes;
     MmNumberOfSystemPtes = MiAddressToPte(MmNonPagedPoolExpansionStart) -
                            PointerPte;
     MmNumberOfSystemPtes--;
     DPRINT("Final System PTE count: %d (%d bytes)\n",
            MmNumberOfSystemPtes, MmNumberOfSystemPtes * PAGE_SIZE);
     
-    //
-    // Create the system PTE space
-    //
-    MiInitializeSystemPtes(PointerPte, MmNumberOfSystemPtes, SystemPteSpace);
-    
     /* Get the PDE For hyperspace */
     StartPde = MiAddressToPde(HYPER_SPACE);
     
-    /* Lock PFN database */
-    OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
-    
     /* Allocate a page for hyperspace and create it */
-    PageFrameIndex = MiRemoveAnyPage(0);
-    TempPde.u.Hard.PageFrameNumber = PageFrameIndex;
+    TempPde.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
     TempPde.u.Hard.Global = FALSE; // Hyperspace is local!
     MI_WRITE_VALID_PTE(StartPde, TempPde);
     
     /* Flush the TLB */
     KeFlushCurrentTb();
     
-    /* Release the lock */
-    KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
-    
-    //
-    // Zero out the page table now
-    //
+    /* Zero out the page table now */
     PointerPte = MiAddressToPte(HYPER_SPACE);
     RtlZeroMemory(PointerPte, PAGE_SIZE);
-    
-    //
-    // Setup the mapping PTEs
-    //
-    MmFirstReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_START);
-    MmLastReservedMappingPte = MiAddressToPte(MI_MAPPING_RANGE_END);
-    MmFirstReservedMappingPte->u.Hard.PageFrameNumber = MI_HYPERSPACE_PTES;
-
-    //
-    // Reserve system PTEs for zeroing PTEs and clear them
-    //
-    MiFirstReservedZeroingPte = MiReserveSystemPtes(MI_ZERO_PTES,
-                                                    SystemPteSpace);
-    RtlZeroMemory(MiFirstReservedZeroingPte, MI_ZERO_PTES * sizeof(MMPTE));
-    
-    //
-    // Set the counter to maximum to boot with
-    //
-    MiFirstReservedZeroingPte->u.Hard.PageFrameNumber = MI_ZERO_PTES - 1;
-    
+        
     return STATUS_SUCCESS;
 }
 
