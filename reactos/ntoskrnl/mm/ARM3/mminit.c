@@ -16,6 +16,8 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "miarm.h"
 
+extern KEVENT ZeroPageThreadEvent;
+
 /* GLOBALS ********************************************************************/
 
 //
@@ -1806,8 +1808,10 @@ MmArmInitSystem(IN ULONG Phase,
         MiSessionImagePteStart = MiAddressToPte(MiSessionImageStart);
         MiSessionImagePteEnd = MiAddressToPte(MiSessionImageEnd);
         MiSessionBasePte = MiAddressToPte(MmSessionBase);
-        MiSessionLastPte = MiAddressToPte(MiSessionSpaceEnd);
-                                    
+
+        /* ReactOS Stuff */
+        KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
+
         /* Initialize the user mode image list */
         InitializeListHead(&MmLoadedUserImageList);
         

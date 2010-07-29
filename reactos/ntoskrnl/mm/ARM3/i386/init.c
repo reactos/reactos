@@ -44,9 +44,6 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
         MmSizeOfNonPagedPoolInBytes = 2 * _1MB;
     }
     
-    /* Hyperspace ends here */
-    MmHyperSpaceEnd = (PVOID)((ULONG_PTR)MmSystemCacheWorkingSetList - 1);
-    
     /* Check if the user gave a ridicuously large nonpaged pool RAM size */
     if ((MmSizeOfNonPagedPoolInBytes >> PAGE_SHIFT) > (FreePages * 7 / 8))
     {
@@ -145,8 +142,6 @@ MiComputeNonPagedPoolVa(IN ULONG FreePages)
     }
 }
 
-extern KEVENT ZeroPageThreadEvent;
-
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -242,8 +237,12 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         // We need some recalculations here
         //
         DPRINT1("Paged pool is too big!\n");
+        ASSERT(FALSE);
     }
-    
+
+    /* Hyperspace ends here */
+    MmHyperSpaceEnd = (PVOID)((ULONG_PTR)MmSystemCacheWorkingSetList - 1);
+
     //
     // Normally, the PFN database should start after the loader images.
     // This is already the case in ReactOS, but for now we want to co-exist
@@ -354,9 +353,6 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     MiInitializeNonPagedPool();
     MiInitializeNonPagedPoolThresholds();
 
-    /* ReactOS Stuff */
-    KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
-    
     /* Build the PFN Database */
     MiInitializePfnDatabase(LoaderBlock);
     MmInitializeBalancer(MmAvailablePages, 0);
