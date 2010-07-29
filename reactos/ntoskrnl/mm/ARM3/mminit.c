@@ -872,24 +872,6 @@ MiBuildPfnDatabaseFromLoaderBlock(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         PageCount = MdBlock->PageCount;
         PageFrameIndex = MdBlock->BasePage;
 
-        /* Don't allow memory above what the PFN database is mapping */
-        if (PageFrameIndex > MmHighestPhysicalPage)
-        {
-            /* Since they are ordered, everything past here will be larger */
-            break;
-        }
-
-        /* On the other hand, the end page might be higher up... */
-        if ((PageFrameIndex + PageCount) > (MmHighestPhysicalPage + 1))
-        {
-            /* In which case we'll trim the descriptor to go as high as we can */
-            PageCount = MmHighestPhysicalPage + 1 - PageFrameIndex;
-            MdBlock->PageCount = PageCount;
-            
-            /* But if there's nothing left to trim, we got too high, so quit */
-            if (!PageCount) break;
-        }
-
         /* Now check the descriptor type */
         switch (MdBlock->MemoryType)
         {
@@ -1017,6 +999,16 @@ VOID
 NTAPI
 MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Map the PFN database pages */
+    MiMapPfnDatabase(LoaderBlock);
+    
+    /* Initialize the color tables */
+    MiInitializeColorTables();
+
+    /* Hide the pages, that we already used from the descriptor */
+    MxFreeDescriptor->BasePage = MiEarlyAllocBase;
+    MxFreeDescriptor->PageCount = MiEarlyAllocCount;
+
     /* Scan memory and start setting up PFN entries */
     MiBuildPfnDatabaseFromPages(LoaderBlock);
     
@@ -1025,7 +1017,10 @@ MiInitializePfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     
     /* Scan the loader block and build the rest of the PFN database */
     MiBuildPfnDatabaseFromLoaderBlock(LoaderBlock);
-    
+
+    /* Reset the descriptor back so we can create the correct memory blocks */
+    *MxFreeDescriptor = MxOldFreeDescriptor;
+
     /* Finally add the pages for the PFN database itself */ 
     MiBuildPfnDatabaseSelf();
 }
@@ -1909,7 +1904,29 @@ MmArmInitSystem(IN ULONG Phase,
             MmAllocationFragment = max(MmAllocationFragment,
                                        MI_MIN_ALLOCATION_FRAGMENT);
         }
-        
+
+        /* Check for kernel stack size that's too big */
+        if (MmLargeStackSize > (KERNEL_LARGE_STACK_SIZE / _1KB))
+        {
+            /* Sanitize to default value */
+            MmLargeStackSize = KERNEL_LARGE_STACK_SIZE;
+        }
+        else
+        {
+            /* Take the registry setting, and convert it into bytes */
+            MmLargeStackSize *= _1KB;
+            
+            /* Now align it to a page boundary */
+            MmLargeStackSize = PAGE_ROUND_UP(MmLargeStackSize);
+            
+            /* Sanity checks */
+            ASSERT(MmLargeStackSize <= KERNEL_LARGE_STACK_SIZE);
+            ASSERT((MmLargeStackSize & (PAGE_SIZE - 1)) == 0);
+            
+            /* Make sure it's not too low */
+            if (MmLargeStackSize < KERNEL_STACK_SIZE) MmLargeStackSize = KERNEL_STACK_SIZE;
+        }
+
         /* Initialize the platform-specific parts */       
         MiInitMachineDependent(LoaderBlock);
         
