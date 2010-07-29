@@ -359,6 +359,7 @@ SCHAR LocationByMemoryType[LoaderMaximum];
 
 PFN_NUMBER MiNumberOfFreePages = 0;
 PFN_NUMBER MiEarlyAllocCount = 0;
+PFN_NUMBER MiEarlyAllocBase;
 ULONG MiNumberDescriptors = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -475,29 +476,30 @@ MiScanMemoryDescriptors(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // Save original values of the free descriptor, since it'll be
     // altered by early allocations
     MxOldFreeDescriptor = *MxFreeDescriptor;
+    MiEarlyAllocBase = MxFreeDescriptor->BasePage;
 }
 
 PFN_NUMBER
 NTAPI
-MxGetNextPage(IN PFN_NUMBER PageCount)
+MiEarlyAllocPages(IN PFN_NUMBER PageCount)
 {
     PFN_NUMBER Pfn;
  
     /* Make sure we have enough pages */
-    if (PageCount > MxFreeDescriptor->PageCount)
+    if (PageCount > MiEarlyAllocCount)
     {
         /* Crash the system */
         KeBugCheckEx(INSTALL_MORE_MEMORY,
                      MmNumberOfPhysicalPages,
+                     MiEarlyAllocCount,
                      MxFreeDescriptor->PageCount,
-                     MxOldFreeDescriptor.PageCount,
                      PageCount);
     }
     
     /* Use our lowest usable free pages */
-    Pfn = MxFreeDescriptor->BasePage;
-    MxFreeDescriptor->BasePage += PageCount;
-    MxFreeDescriptor->PageCount -= PageCount;
+    Pfn = MiEarlyAllocBase;
+    MiEarlyAllocBase += PageCount;
+    MiEarlyAllocCount -= PageCount;
     return Pfn;
 }
 
@@ -576,7 +578,7 @@ MiInitializeColorTables(VOID)
         if (PointerPte->u.Hard.Valid == 0)
         {
             /* Get a page and map it */
-            TempPte.u.Hard.PageFrameNumber = MxGetNextPage(1);
+            TempPte.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
             MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
             /* Zero out the page */
@@ -665,16 +667,11 @@ VOID
 NTAPI
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    ULONG FreePage, FreePageCount, PagesLeft, BasePage, PageCount;
+    ULONG BasePage, PageCount;
     PLIST_ENTRY NextEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte = ValidKernelPte;
-    
-    /* Get current page data, since we won't be using MxGetNextPage as it would corrupt our state */
-    FreePage = MxFreeDescriptor->BasePage;
-    FreePageCount = MxFreeDescriptor->PageCount;
-    PagesLeft = 0;
     
     /* Loop the memory descriptors */
     NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
@@ -693,19 +690,9 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             continue;
         }
         
-        /* Next, check if this is our special free descriptor we've found */
-        if (MdBlock == MxFreeDescriptor)
-        {
-            /* Use the real numbers instead */
-            BasePage = MxOldFreeDescriptor.BasePage;
-            PageCount = MxOldFreeDescriptor.PageCount;
-        }
-        else
-        {
-            /* Use the descriptor's numbers */
-            BasePage = MdBlock->BasePage;
-            PageCount = MdBlock->PageCount;
-        }
+        /* Use the descriptor's numbers */
+        BasePage = MdBlock->BasePage;
+        PageCount = MdBlock->PageCount;
         
         /* Get the PTEs for this range */
         PointerPte = MiAddressToPte(&MmPfnDatabase[BasePage]);
@@ -719,24 +706,9 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
             if (PointerPte->u.Hard.Valid == 0)
             {
                 /* Use the next free page */
-                TempPte.u.Hard.PageFrameNumber = FreePage;
-                ASSERT(FreePageCount != 0);
-                
-                /* Consume free pages */
-                FreePage++;
-                FreePageCount--;
-                if (!FreePageCount)
-                {
-                    /* Out of memory */
-                    KeBugCheckEx(INSTALL_MORE_MEMORY,
-                                 MmNumberOfPhysicalPages,
-                                 FreePageCount,
-                                 MxOldFreeDescriptor.PageCount,
-                                 1);
-                }
+                TempPte.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
                 
                 /* Write out this PTE */
-                PagesLeft++;
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
                 
                 /* Zero this page */
@@ -750,10 +722,6 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Do the next address range */
         NextEntry = MdBlock->ListEntry.Flink;
     }
-    
-    /* Now update the free descriptors to consume the pages we used up during the PFN allocation loop */
-    MxFreeDescriptor->BasePage = FreePage;
-    MxFreeDescriptor->PageCount = FreePageCount;
 }
 
 VOID

@@ -285,7 +285,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     // Now we actually need to get these many physical pages. Nonpaged pool
     // is actually also physically contiguous (but not the expansion)
     //
-    PageFrameIndex = MxGetNextPage(MxPfnAllocation +
+    PageFrameIndex = MiEarlyAllocPages(MxPfnAllocation +
                                    (MmSizeOfNonPagedPoolInBytes >> PAGE_SHIFT));
     ASSERT(PageFrameIndex != 0);
     DPRINT("PFN DB PA PFN begins at: %lx\n", PageFrameIndex);
@@ -305,7 +305,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         // Get a page
         //
-        TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
+        TempPde.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
         MI_WRITE_VALID_PTE(StartPde, TempPde);
         
         //
@@ -331,7 +331,7 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         //
         // Get a page
         //
-        TempPde.u.Hard.PageFrameNumber = MxGetNextPage(1);
+        TempPde.u.Hard.PageFrameNumber = MiEarlyAllocPages(1);
         MI_WRITE_VALID_PTE(StartPde, TempPde);
 
         //
@@ -385,6 +385,10 @@ MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* ReactOS Stuff */
     KeInitializeEvent(&ZeroPageThreadEvent, NotificationEvent, TRUE);
     
+    /* Hide the pages, that we already used from the descriptor */
+    MxFreeDescriptor->BasePage = MiEarlyAllocBase;
+    MxFreeDescriptor->PageCount = MiEarlyAllocCount;
+
     /* Build the PFN Database */
     MiInitializePfnDatabase(LoaderBlock);
     MmInitializeBalancer(MmAvailablePages, 0);

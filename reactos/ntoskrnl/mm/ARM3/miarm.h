@@ -442,6 +442,8 @@ extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 extern PMMPTE MmSharedUserDataPte;
 extern LIST_ENTRY MmProcessList;
 extern PFN_NUMBER MiNumberOfFreePages;
+extern PFN_NUMBER MiEarlyAllocCount;
+extern PFN_NUMBER MiEarlyAllocBase;
 
 #define MI_PFN_TO_PFNENTRY(x)     (&MmPfnDatabase[1][x])
 #define MI_PFNENTRY_TO_PFN(x)     (x - MmPfnDatabase[1])
@@ -784,6 +786,12 @@ MiInitializeMemoryEvents(
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
+    IN PFN_NUMBER PageCount
+);
+
+PFN_NUMBER
+NTAPI
+MiEarlyAllocPages(
     IN PFN_NUMBER PageCount
 );
 
