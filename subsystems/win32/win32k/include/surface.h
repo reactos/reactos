@@ -39,8 +39,6 @@ typedef struct _SURFACE
     //UINT       unk_078;
 
   /* reactos specific */
-    DWORD dsBitfields[3]; // hack, should probably use palette instead
-    DWORD biClrUsed;
     DWORD biClrImportant;
 } SURFACE, *PSURFACE;
 

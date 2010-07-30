@@ -392,7 +392,15 @@ EngCreatePalette(
 {
     HPALETTE Palette;
 
-    Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
+	/* Low order three bytes are RGB -> RGBQUAD */
+	if(Mode == PAL_INDEXED)
+	{
+		Palette = PALETTE_AllocPaletteIndexedRGB(NumColors, (RGBQUAD*)Colors);
+	}
+	else
+	{
+		Palette = PALETTE_AllocPalette(Mode, NumColors, Colors, Red, Green, Blue);
+	}
     if (Palette != NULL)
     {
         GDIOBJ_SetOwnership(Palette, NULL);

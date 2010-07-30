@@ -705,7 +705,6 @@ NtGdiGetDIBitsInternal(
 		goto done;
 	}
 
-get_info:
 	/* Fill in the structure */
 	switch(bpp)
 	{
@@ -755,8 +754,7 @@ get_info:
         Info->bmiHeader.biClrImportant = 0;
 		ScanLines = psurf->SurfObj.sizlBitmap.cy;
 		/* Get Complete info now */
-		bpp = Info->bmiHeader.biBitCount ;
-		goto get_info;
+		goto done;
 
 	case 1:
 	case 4:
@@ -916,7 +914,12 @@ get_info:
     case 16:
         if (Info->bmiHeader.biCompression == BI_BITFIELDS)
         {
-            if (psurf->hSecure) RtlCopyMemory( Info->bmiColors, psurf->dsBitfields, 3 * sizeof(DWORD) );
+            if (psurf->hSecure)
+			{
+				((PDWORD)Info->bmiColors)[0] = psurf->ppal->RedMask;
+                ((PDWORD)Info->bmiColors)[1] = psurf->ppal->GreenMask;
+                ((PDWORD)Info->bmiColors)[2] = psurf->ppal->BlueMask;
+			}
             else
             {
                 ((PDWORD)Info->bmiColors)[0] = 0xf800;
@@ -930,7 +933,12 @@ get_info:
     case 32:
         if (Info->bmiHeader.biCompression == BI_BITFIELDS)
         {
-            if (psurf->hSecure) RtlCopyMemory( Info->bmiColors, psurf->dsBitfields, 3 * sizeof(DWORD) );
+            if (psurf->hSecure)
+			{
+				((PDWORD)Info->bmiColors)[0] = psurf->ppal->RedMask;
+                ((PDWORD)Info->bmiColors)[1] = psurf->ppal->GreenMask;
+                ((PDWORD)Info->bmiColors)[2] = psurf->ppal->BlueMask;
+			}
             else
             {
                 ((PDWORD)Info->bmiColors)[0] = 0xff0000;
@@ -1427,7 +1435,7 @@ DIB_CreateDIBSection(
     SURFACE *bmp = NULL;
     void *mapBits = NULL;
     HPALETTE hpal ;
-	ULONG palMode = PAL_INDEXED;
+	INT palMode = PAL_INDEXED;
 
     // Fill BITMAP32 structure with DIB data
     CONST BITMAPINFOHEADER *bi = &bmi->bmiHeader;
@@ -1435,10 +1443,7 @@ DIB_CreateDIBSection(
     ULONG totalSize;
     BITMAP bm;
     SIZEL Size;
-    CONST RGBQUAD *lpRGB = NULL;
     HANDLE hSecure;
-    DWORD dsBitfields[3] = {0};
-    ULONG ColorCount;
 
     DPRINT("format (%ld,%ld), planes %d, bpp %d, size %ld, colors %ld (%s)\n",
            bi->biWidth, bi->biHeight, bi->biPlanes, bi->biBitCount,
@@ -1520,54 +1525,27 @@ DIB_CreateDIBSection(
 
     if (usage == DIB_PAL_COLORS)
     {
-        lpRGB = DIB_MapPaletteColors(dc, bmi);
-        ColorCount = bi->biClrUsed;
-        if (ColorCount == 0)
-        {
-            ColorCount = max(1 << bi->biBitCount, 256);
-        }
+		PPALETTE pdcPal ;
+        pdcPal = PALETTE_LockPalette(dc->dclevel.hpal);
+		if(!pdcPal)
+		{
+			DPRINT1("Unable to lock DC palette?!\n");
+			goto cleanup;
+		}
+		if(pdcPal->Mode != PAL_INDEXED)
+		{
+			DPRINT1("Not indexed palette selected in the DC?!\n");
+			PALETTE_UnlockPalette(pdcPal);
+		}
+		hpal = PALETTE_AllocPalette(PAL_INDEXED,
+			pdcPal->NumColors,
+			(ULONG*)pdcPal->IndexedColors, 0, 0, 0);
+		PALETTE_UnlockPalette(pdcPal);
     }
-    else if(bi->biBitCount <= 8)
-    {
-        lpRGB = bmi->bmiColors;
-        ColorCount = 1 << bi->biBitCount;
-    }
-	else
+    else 
 	{
-		lpRGB = NULL;
-		ColorCount = 0;
+        hpal = BuildDIBPalette(bmi, &palMode);
 	}
-
-    /* Set dsBitfields values */
-    if (usage == DIB_PAL_COLORS || bi->biBitCount <= 8)
-    {
-        dsBitfields[0] = dsBitfields[1] = dsBitfields[2] = 0;
-		palMode = PAL_INDEXED;
-    }
-    else if (bi->biCompression == BI_RGB)
-    {
-		dsBitfields[0] = dsBitfields[1] = dsBitfields[2] = 0;
-        switch (bi->biBitCount)
-        {
-            case 15:
-                palMode = PAL_RGB16_555;
-				break;
-
-            case 16:
-                palMode = PAL_RGB16_565;
-                break;
-
-            case 24:
-            case 32:
-                palMode = PAL_RGB;
-                break;
-        }
-    }
-    else
-    {
-        RtlCopyMemory(dsBitfields, bmi->bmiColors, sizeof(dsBitfields));
-		palMode = PAL_BITFIELDS;
-    }
 
     // Create Device Dependent Bitmap and add DIB pointer
     Size.cx = bm.bmWidth;
@@ -1600,18 +1578,9 @@ DIB_CreateDIBSection(
     bmp->hSecure = hSecure;
     bmp->dwOffset = offset;
     bmp->flags = API_BITMAP;
-    bmp->dsBitfields[0] = dsBitfields[0];
-    bmp->dsBitfields[1] = dsBitfields[1];
-    bmp->dsBitfields[2] = dsBitfields[2];
-    bmp->biClrUsed = ColorCount;
     bmp->biClrImportant = bi->biClrImportant;
 
-    hpal = PALETTE_AllocPalette(palMode, ColorCount, (ULONG*)lpRGB,
-                                                dsBitfields[0],
-                                                dsBitfields[1],
-                                                dsBitfields[2]);
-
-    bmp->ppal = PALETTE_ShareLockPalette(hpal);
+	bmp->ppal = PALETTE_ShareLockPalette(hpal);
     /* Lazy delete hpal, it will be freed at surface release */
     GreDeleteObject(hpal);
 
@@ -1641,11 +1610,6 @@ cleanup:
             SURFACE_FreeSurfaceByHandle(res);
             res = 0;
         }
-    }
-
-    if (lpRGB != bmi->bmiColors && lpRGB)
-    {
-        ExFreePoolWithTag((PVOID)lpRGB, TAG_COLORMAP);
     }
 
     if (bmp)
@@ -1853,7 +1817,7 @@ BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
     }
     else
     {
-        *paletteType = PAL_BGR;
+        *paletteType = PAL_RGB;
         RedMask = 0xff0000;
         GreenMask = 0x00ff00;
         BlueMask = 0x0000ff;
@@ -1874,7 +1838,7 @@ BuildDIBPalette(CONST BITMAPINFO *bmi, PINT paletteType)
     }
     else
     {
-        hPal = PALETTE_AllocPalette(*paletteType, ColorCount,
+        hPal = PALETTE_AllocPalette(*paletteType, 0,
                                     NULL,
                                     RedMask, GreenMask, BlueMask);
     }
