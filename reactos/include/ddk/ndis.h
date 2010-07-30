@@ -2895,8 +2895,8 @@ NdisGetPoolFromPacket(
   IN PNDIS_PACKET Packet);
 
 NDISAPI
-NTAPI
 PNDIS_PACKET_STACK
+NTAPI
 NdisIMGetCurrentPacketStack(
   IN PNDIS_PACKET Packet,
   OUT BOOLEAN * StacksRemaining);
