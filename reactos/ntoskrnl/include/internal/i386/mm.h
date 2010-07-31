@@ -20,14 +20,18 @@ PULONG MmGetPageDirectory(VOID);
 #define PAGETABLE_MAP       (0xc0000000)
 #define PAGEDIRECTORY_MAP   (0xc0000000 + (PAGETABLE_MAP / (1024)))
 
+#define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0x80000000
+
 /* FIXME: These are different for PAE */
 #define PTE_BASE    0xC0000000
 #define PDE_BASE    0xC0300000
 #define PDE_TOP     0xC0300FFF
 #define PTE_TOP     0xC03FFFFF
-#define PTE_PER_PAGE 1024
 #define HYPER_SPACE 0xC0400000
 #define HYPER_SPACE_END 0xC07FFFFF
+
+#define PDE_PER_PAGE 1024
+#define PTE_PER_PAGE 1024
 
 /* Converting address to a corresponding PDE or PTE entry */
 #define MiAddressToPde(x) \
@@ -41,6 +45,7 @@ PULONG MmGetPageDirectory(VOID);
 // Convert a PTE into a corresponding address
 //
 #define MiPteToAddress(PTE) ((PVOID)((ULONG)(PTE) << 10))
+#define MiPdeToAddress(PDE) ((PVOID)((ULONG)(PDE) << 20))
 #define MiIsPdeForAddressValid(Pde) (MiAddressToPde(Address)->u.Hard.Valid)
 
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (1024 * PAGE_SIZE))
@@ -51,6 +56,7 @@ PULONG MmGetPageDirectory(VOID);
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PDE(v) ((v)->u.Hard.PageFrameNumber)
 
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)
 #define MI_MAKE_DIRTY_PAGE(x)      ((x)->u.Hard.Dirty = 1)

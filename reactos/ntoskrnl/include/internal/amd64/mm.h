@@ -11,6 +11,7 @@
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
 
 /* Memory layout base addresses */
+#define MI_DEFAULT_SYSTEM_RANGE_START   (PVOID)0xFFFF080000000000ULL
 #define HYPER_SPACE                            0xFFFFF70000000000ULL
 #define HYPER_SPACE_END                        0xFFFFF77FFFFFFFFFULL
 #define MI_SESSION_SPACE_MINIMUM        (PVOID)0xFFFFF90000000000ULL
@@ -24,7 +25,6 @@
 #define MI_DEBUG_MAPPING                (PVOID)0xFFFFFFFF80000000ULL // FIXME
 #define MI_HIGHEST_SYSTEM_ADDRESS       (PVOID)0xFFFFFFFFFFFFFFFFULL
 #define MI_SYSTEM_CACHE_WS_START        (PVOID)0xFFFFF78000001000ULL // CHECKME
-
 #define MI_LOWEST_VAD_ADDRESS           (PVOID)0x000000007FF00000ULL
 
 #define MI_SYSTEM_PTE_BASE              (PVOID)MiAddressToPte(KSEG0_BASE)
@@ -123,13 +123,34 @@ MiAddressToPxi(PVOID Address)
 /* Convert a PTE into a corresponding address */
 PVOID
 FORCEINLINE
-MiPteToAddress(PMMPTE Pte)
+MiPteToAddress(PMMPTE PointerPte)
 {
     /* Use signed math */
-    LONG64 Temp = (LONG64)Pte;
-    Temp <<= 25;
-    Temp >>= 16;
-    return (PVOID)Temp;
+    return (PVOID)(((LONG64)PointerPte << 25) >> 16);
+}
+
+PVOID
+FORCEINLINE
+MiPdeToAddress(PMMPTE PointerPde)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPde << 34) >> 16);
+}
+
+PVOID
+FORCEINLINE
+MiPpeToAddress(PMMPTE PointerPpe)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPpe << 43) >> 16);
+}
+
+PVOID
+FORCEINLINE
+MiPxeToAddress(PMMPTE PointerPxe)
+{
+    /* Use signed math */
+    return (PVOID)(((LONG64)PointerPxe << 52) >> 16);
 }
 
 BOOLEAN
@@ -172,6 +193,9 @@ MmInitGlobalKernelPageDirectory(VOID)
 
 /* Easy accessing PFN in PTE */
 #define PFN_FROM_PTE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PDE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PPE(v) ((v)->u.Hard.PageFrameNumber)
+#define PFN_FROM_PXE(v) ((v)->u.Hard.PageFrameNumber)
 
 // FIXME, only copied from x86
 #define MI_MAKE_LOCAL_PAGE(x)      ((x)->u.Hard.Global = 0)

@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#line 15 "ARM³::INIT"
+#line 16 "mminit.c"
 #define MODULE_INVOLVED_IN_ARM3
 #include "miarm.h"
 
@@ -607,70 +607,12 @@ MiInitializeColorTables(VOID)
     }
 }
 
-BOOLEAN
-NTAPI
-MiIsRegularMemory(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                  IN PFN_NUMBER Pfn)
-{
-    PLIST_ENTRY NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
-
-    /* Loop the memory descriptors */
-    NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-    while (NextEntry != &LoaderBlock->MemoryDescriptorListHead)
-    {
-        /* Get the memory descriptor */
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-
-        /* Check if this PFN could be part of the block */
-        if (Pfn >= (MdBlock->BasePage))
-        {
-            /* Check if it really is part of the block */
-            if (Pfn < (MdBlock->BasePage + MdBlock->PageCount))
-            {
-                /* Check if the block is actually memory we don't map */
-                if ((MdBlock->MemoryType == LoaderFirmwarePermanent) ||
-                    (MdBlock->MemoryType == LoaderBBTMemory) ||
-                    (MdBlock->MemoryType == LoaderSpecialMemory))
-                {
-                    /* We don't need PFN database entries for this memory */
-                    break;
-                }
-
-                /* This is memory we want to map */
-                return TRUE;
-            }
-        }
-        else
-        {
-            /* Blocks are ordered, so if it's not here, it doesn't exist */
-            break;
-        }
-
-        /* Get to the next descriptor */
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-
-    /* Check if this PFN is actually from our free memory descriptor */
-    if ((Pfn >= MxOldFreeDescriptor.BasePage) &&
-        (Pfn < MxOldFreeDescriptor.BasePage + MxOldFreeDescriptor.PageCount))
-    {
-        /* We use these pages for initial mappings, so we do want to count them */
-        return TRUE;
-    }
-
-    /* Otherwise this isn't memory that we describe or care about */
-    return FALSE;
-}
-
 VOID
 NTAPI
 MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG BasePage, PageCount, PageFrameIndex;
-    PLIST_ENTRY NextEntry;
+    PLIST_ENTRY ListEntry;
     PMEMORY_ALLOCATION_DESCRIPTOR MdBlock;
     PMMPTE PointerPte, LastPte;
     MMPTE TempPte = ValidKernelPte;
@@ -681,12 +623,12 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     OldIrql = KeAcquireQueuedSpinLock(LockQueuePfnLock);
 
     /* Loop the memory descriptors */
-    for (NextEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
-         NextEntry != &LoaderBlock->MemoryDescriptorListHead;
-         NextEntry = MdBlock->ListEntry.Flink)
+    for (ListEntry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         ListEntry != &LoaderBlock->MemoryDescriptorListHead;
+         ListEntry = ListEntry->Flink)
     {
         /* Get the descriptor */
-        MdBlock = CONTAINING_RECORD(NextEntry,
+        MdBlock = CONTAINING_RECORD(ListEntry,
                                     MEMORY_ALLOCATION_DESCRIPTOR,
                                     ListEntry);
         
@@ -788,9 +730,6 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                 Pfn1++;
             }
         }
-
-        /* Do the next address range */
-        NextEntry = MdBlock->ListEntry.Flink;
     }
 
     /* Now handle the remaininng pages from the free descriptor */
@@ -813,104 +752,121 @@ MiMapPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KeReleaseQueuedSpinLock(LockQueuePfnLock, OldIrql);
 }
 
+static
+VOID
+MiSetupPfnForPageTable(
+    PFN_NUMBER PageFrameIndex,
+    PMMPTE PointerPte)
+{
+    PMMPFN Pfn;
+    PMMPDE PointerPde;
+
+    /* Get the pfn entry for this page */
+    Pfn = MiGetPfnEntry(PageFrameIndex);
+
+    /* Check if it's valid memory */
+    if ((PageFrameIndex <= MmHighestPhysicalPage) &&
+        (MmIsAddressValid(Pfn)) &&
+        (MmIsAddressValid(Pfn + 1)))
+    {
+        /* Setup the PFN entry */
+        Pfn->u1.WsIndex = 0;
+        Pfn->u2.ShareCount++;
+        Pfn->PteAddress = PointerPte;
+        Pfn->OriginalPte = *PointerPte;
+        Pfn->u3.e1.PageLocation = ActiveAndValid;
+        Pfn->u3.e1.CacheAttribute = MiNonCached;
+        Pfn->u3.e2.ReferenceCount = 1;
+        Pfn->u4.PteFrame = PFN_FROM_PTE(MiAddressToPte(PointerPte));
+    }
+
+    /* Increase the shared count of the PFN entry for the PDE */
+    PointerPde = MiAddressToPde(MiPteToAddress(PointerPte));
+    Pfn = MiGetPfnEntry(PFN_FROM_PTE(PointerPde));
+    ASSERT(Pfn != NULL);
+    Pfn->u2.ShareCount++;
+}
+
 VOID
 NTAPI
 MiBuildPfnDatabaseFromPages(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PVOID Address = NULL;
+    PFN_NUMBER PageFrameIndex;
     PMMPDE PointerPde;
     PMMPTE PointerPte;
-    ULONG i, Count, j;
-    PFN_NUMBER PageFrameIndex, StartupPdIndex, PtePageIndex;
-    PMMPFN Pfn1, Pfn2;
-    ULONG_PTR BaseAddress = 0;
-    
-    /* PFN of the startup page directory */
-    StartupPdIndex = PFN_FROM_PTE(MiAddressToPde(PDE_BASE));
-    
-    /* Start with the first PDE and scan them all */
-    PointerPde = MiAddressToPde(NULL);
-    Count = PD_COUNT * PDE_COUNT;
-    for (i = 0; i < Count; i++)
+    ULONG k, l;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPDE PointerPpe;
+    ULONG j;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPDE PointerPxe;
+    ULONG i;
+#endif
+
+#if (_MI_PAGING_LEVELS == 4)
+    /* Loop all PXEs in the PML4 */
+    PointerPxe = MiAddressToPxe(Address);
+    for (i = 0; i < PXE_PER_PAGE; i++, PointerPxe++)
     {
-        /* Check for valid PDE */
-        if (PointerPde->u.Hard.Valid == 1)
-        {
-            /* Get the PFN from it */
-            PageFrameIndex = PFN_FROM_PTE(PointerPde);
-            
-            /* Do we want a PFN entry for this page? */
-            if (MiIsRegularMemory(LoaderBlock, PageFrameIndex))
-            {
-                /* Yes we do, set it up */
-                Pfn1 = MiGetPfnEntry(PageFrameIndex);
-                Pfn1->u4.PteFrame = StartupPdIndex;
-                Pfn1->PteAddress = PointerPde;
-                Pfn1->u2.ShareCount++;
-                Pfn1->u3.e2.ReferenceCount = 1;
-                Pfn1->u3.e1.PageLocation = ActiveAndValid;
-                Pfn1->u3.e1.CacheAttribute = MiNonCached;
-            }
-            else
-            {
-                /* No PFN entry */
-                Pfn1 = NULL;
-            }
-            
-            /* Now get the PTE and scan the pages */
-            PointerPte = MiAddressToPte(BaseAddress);
-            for (j = 0; j < PTE_COUNT; j++)
-            {
-                /* Check for a valid PTE */
-                if (PointerPte->u.Hard.Valid == 1)
-                {
-                    /* Increase the shared count of the PFN entry for the PDE */
-                    ASSERT(Pfn1 != NULL);
-                    Pfn1->u2.ShareCount++;
-                    
-                    /* Now check if the PTE is valid memory too */
-                    PtePageIndex = PFN_FROM_PTE(PointerPte);
-                    if (MiIsRegularMemory(LoaderBlock, PtePageIndex))
-                    {
-                        /*
-                         * Only add pages above the end of system code or pages
-                         * that are part of nonpaged pool
-                         */
-                        if ((BaseAddress >= 0xA0000000) ||
-                            ((BaseAddress >= (ULONG_PTR)MmNonPagedPoolStart) &&
-                             (BaseAddress < (ULONG_PTR)MmNonPagedPoolStart +
-                                            MmSizeOfNonPagedPoolInBytes)))
-                        {
-                            /* Get the PFN entry and make sure it too is valid */
-                            Pfn2 = MiGetPfnEntry(PtePageIndex);
-                            if ((MmIsAddressValid(Pfn2)) &&
-                                (MmIsAddressValid(Pfn2 + 1)))
-                            {
-                                /* Setup the PFN entry */
-                                Pfn2->u4.PteFrame = PageFrameIndex;
-                                Pfn2->PteAddress = PointerPte;
-                                Pfn2->u2.ShareCount++;
-                                Pfn2->u3.e2.ReferenceCount = 1;
-                                Pfn2->u3.e1.PageLocation = ActiveAndValid;
-                                Pfn2->u3.e1.CacheAttribute = MiNonCached;
-                            }
-                        }
-                    }
-                }
-                
-                /* Next PTE */
-                PointerPte++;
-                BaseAddress += PAGE_SIZE;
-            }
-        }
-        else
-        {
-            /* Next PDE mapped address */
-            BaseAddress += PDE_MAPPED_VA;
-        }
+        /* Skip invalid PXEs */
+        if (!PointerPxe->u.Hard.Valid) continue;
+
+        /* Handle the PFN */
+        PageFrameIndex = PFN_FROM_PXE(PointerPxe);
+        MiSetupPfnForPageTable(PageFrameIndex, PointerPxe);
         
-        /* Next PTE */
-        PointerPde++;
+        /* Get starting VA for this PXE */
+        Address = MiPxeToAddress(PointerPxe);
+#endif
+#if (_MI_PAGING_LEVELS >= 3)
+        /* Loop all PPEs in this PDP */
+        PointerPpe = MiAddressToPpe(Address);
+        for (j = 0; j < PPE_PER_PAGE; j++, PointerPpe++)
+        {
+            /* Skip invalid PPEs */
+            if (!PointerPpe->u.Hard.Valid) continue;
+
+            /* Handle the PFN */
+            PageFrameIndex = PFN_FROM_PPE(PointerPpe);
+            MiSetupPfnForPageTable(PageFrameIndex, PointerPpe);
+
+            /* Get starting VA for this PPE */
+            Address = MiPpeToAddress(PointerPpe);
+#endif
+            /* Loop all PDEs in this PD */
+            PointerPde = MiAddressToPde(Address);
+            for (k = 0; k < PDE_PER_PAGE; k++, PointerPde++)
+            {
+                /* Skip invalid PDEs */
+                if (!PointerPde->u.Hard.Valid) continue;
+
+                /* Handle the PFN */
+                PageFrameIndex = PFN_FROM_PDE(PointerPde);
+                MiSetupPfnForPageTable(PageFrameIndex, PointerPde);
+
+                /* Get starting VA for this PDE */
+                Address = MiPdeToAddress(PointerPde);
+
+                /* Loop all PTEs in this PT */
+                PointerPte = MiAddressToPte(Address);
+                for (l = 0; l < PTE_PER_PAGE; l++, PointerPte++)
+                {
+                    /* Skip invalid PTEs */
+                    if (!PointerPte->u.Hard.Valid) continue;
+                   
+                    /* Handle the PFN */
+                    PageFrameIndex = PFN_FROM_PTE(PointerPte);
+                    MiSetupPfnForPageTable(PageFrameIndex, PointerPte);
+                }
+            }
+#if (_MI_PAGING_LEVELS >= 3)
+        }
+#endif
+#if (_MI_PAGING_LEVELS == 4)
     }
+#endif
 }
 
 VOID
