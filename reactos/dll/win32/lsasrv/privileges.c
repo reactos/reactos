@@ -1,14 +1,13 @@
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ntsecapi.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         Local Security Authority (LSA) Server
+ * FILE:            reactos/dll/win32/lsasrv/privileges.c
+ * PURPOSE:         Privilege lookup functions
+ *
+ * PROGRAMMERS:     Eric Kohl
+ */
 
-#include <wchar.h>
-#include <string.h>
-
-
-#include <wine/debug.h>
+#include "lsasrv.h"
 
 
 typedef struct

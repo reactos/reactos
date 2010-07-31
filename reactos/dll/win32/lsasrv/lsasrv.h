@@ -7,6 +7,20 @@
  * PROGRAMMERS:     Eric Kohl
  */
 
+#define WIN32_NO_STATUS
+#include <windows.h>
+#include <ntsecapi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+#include <string.h>
+
+#include "lsass.h"
+#include "lsa_s.h"
+
+#include <wine/debug.h>
+
+
 /* authport.c */
 NTSTATUS StartAuthenticationPort(VOID);
 
@@ -21,3 +35,12 @@ LsarpLookupPrivilegeName(PLUID Value,
 NTSTATUS
 LsarpLookupPrivilegeValue(PUNICODE_STRING Name,
                           PLUID Value);
+
+/* sids.h */
+NTSTATUS
+LsapInitSids(VOID);
+
+NTSTATUS
+LsapLookupSids(PLSAPR_SID_ENUM_BUFFER SidEnumBuffer,
+               PLSAPR_TRANSLATED_NAME OutputNames);
+

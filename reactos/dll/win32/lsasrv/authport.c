@@ -8,15 +8,8 @@
 
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
 
-#include "lsass.h"
 #include "lsasrv.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 

@@ -8,14 +8,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
 #include "lsasrv.h"
-
-#include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(lsasrv);
 
@@ -29,6 +22,9 @@ LsapInitLsa(VOID)
     DWORD dwError;
 
     TRACE("LsapInitLsa() called\n");
+
+    /* Initialize the well known SIDs */
+    LsapInitSids();
 
     /* Start the RPC server */
     LsarStartRpcServer();
