@@ -58,6 +58,19 @@ extern ULONG gDiskReadBuffer, gFileSysBuffer;
 #define EXTERN(x)	.global x; x:
 
 
+// Flag Masks
+#define I386FLAG_CF		0x0001		// Carry Flag
+#define I386FLAG_RESV1	0x0002		// Reserved - Must be 1
+#define I386FLAG_PF		0x0004		// Parity Flag
+#define I386FLAG_RESV2	0x0008		// Reserved - Must be 0
+#define I386FLAG_AF		0x0010		// Auxiliary Flag
+#define I386FLAG_RESV3	0x0020		// Reserved - Must be 0
+#define I386FLAG_ZF		0x0040		// Zero Flag
+#define I386FLAG_SF		0x0080		// Sign Flag
+#define I386FLAG_TF		0x0100		// Trap Flag (Single Step)
+#define I386FLAG_IF		0x0200		// Interrupt Flag
+#define I386FLAG_DF		0x0400		// Direction Flag
+#define I386FLAG_OF		0x0800		// Overflow Flag
 
 
 #ifndef ASM
@@ -147,20 +160,6 @@ typedef union
 // not linear addresses, unless the interrupt handler
 // specifically handles linear addresses.
 int		Int386(int ivec, REGS* in, REGS* out);
-
-// Flag Masks
-#define I386FLAG_CF		0x0001		// Carry Flag
-#define I386FLAG_RESV1	0x0002		// Reserved - Must be 1
-#define I386FLAG_PF		0x0004		// Parity Flag
-#define I386FLAG_RESV2	0x0008		// Reserved - Must be 0
-#define I386FLAG_AF		0x0010		// Auxiliary Flag
-#define I386FLAG_RESV3	0x0020		// Reserved - Must be 0
-#define I386FLAG_ZF		0x0040		// Zero Flag
-#define I386FLAG_SF		0x0080		// Sign Flag
-#define I386FLAG_TF		0x0100		// Trap Flag (Single Step)
-#define I386FLAG_IF		0x0200		// Interrupt Flag
-#define I386FLAG_DF		0x0400		// Direction Flag
-#define I386FLAG_OF		0x0800		// Overflow Flag
 
 // This macro tests the Carry Flag
 // If CF is set then the call failed (usually)
