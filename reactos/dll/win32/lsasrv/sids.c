@@ -101,47 +101,47 @@ static const WCHAR This_Organization[] = { 'T','h','i','s',' ','O','r','g','a','
 static const WCHAR Users[] = { 'U','s','e','r','s',0 };
 
 static const AccountSid ACCOUNT_SIDS[] = {
-    { WinNullSid, NULL_SID, Blank, SidTypeWellKnownGroup },
-    { WinWorldSid, Everyone, Blank, SidTypeWellKnownGroup },
-    { WinLocalSid, LOCAL, Blank, SidTypeWellKnownGroup },
-    { WinCreatorOwnerSid, CREATOR_OWNER, Blank, SidTypeWellKnownGroup },
-    { WinCreatorGroupSid, CREATOR_GROUP, Blank, SidTypeWellKnownGroup },
-    { WinCreatorOwnerServerSid, CREATOR_OWNER_SERVER, Blank, SidTypeWellKnownGroup },
-    { WinCreatorGroupServerSid, CREATOR_GROUP_SERVER, Blank, SidTypeWellKnownGroup },
-    { WinNtAuthoritySid, NT_Pseudo_Domain, NT_Pseudo_Domain, SidTypeDomain },
-    { WinDialupSid, DIALUP, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinNetworkSid, NETWORK, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinBatchSid, BATCH, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinInteractiveSid, INTERACTIVE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinServiceSid, SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinAnonymousSid, ANONYMOUS_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinProxySid, PROXY, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinEnterpriseControllersSid, ENTERPRISE_DOMAIN_CONTROLLERS, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinSelfSid, SELF, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinAuthenticatedUserSid, Authenticated_Users, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinRestrictedCodeSid, RESTRICTED, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinTerminalServerSid, TERMINAL_SERVER_USER, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinRemoteLogonIdSid, REMOTE_INTERACTIVE_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinLocalSystemSid, SYSTEM, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinLocalServiceSid, LOCAL_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinNetworkServiceSid, NETWORK_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinBuiltinDomainSid, BUILTIN, BUILTIN, SidTypeDomain },
-    { WinBuiltinAdministratorsSid, Administrators, BUILTIN, SidTypeAlias },
-    { WinBuiltinUsersSid, Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinGuestsSid, Guests, BUILTIN, SidTypeAlias },
-    { WinBuiltinPowerUsersSid, Power_Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinAccountOperatorsSid, Account_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinSystemOperatorsSid, Server_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinPrintOperatorsSid, Print_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinBackupOperatorsSid, Backup_Operators, BUILTIN, SidTypeAlias },
-    { WinBuiltinReplicatorSid, Replicators, BUILTIN, SidTypeAlias },
-    { WinBuiltinPreWindows2000CompatibleAccessSid, Pre_Windows_2000_Compatible_Access, BUILTIN, SidTypeAlias },
-    { WinBuiltinRemoteDesktopUsersSid, Remote_Desktop_Users, BUILTIN, SidTypeAlias },
-    { WinBuiltinNetworkConfigurationOperatorsSid, Network_Configuration_Operators, BUILTIN, SidTypeAlias },
+//    { WinNullSid, NULL_SID, Blank, SidTypeWellKnownGroup },
+//    { WinWorldSid, Everyone, Blank, SidTypeWellKnownGroup },
+//    { WinLocalSid, LOCAL, Blank, SidTypeWellKnownGroup },
+//    { WinCreatorOwnerSid, CREATOR_OWNER, Blank, SidTypeWellKnownGroup },
+//    { WinCreatorGroupSid, CREATOR_GROUP, Blank, SidTypeWellKnownGroup },
+//    { WinCreatorOwnerServerSid, CREATOR_OWNER_SERVER, Blank, SidTypeWellKnownGroup },
+//    { WinCreatorGroupServerSid, CREATOR_GROUP_SERVER, Blank, SidTypeWellKnownGroup },
+//    { WinNtAuthoritySid, NT_Pseudo_Domain, NT_Pseudo_Domain, SidTypeDomain },
+//    { WinDialupSid, DIALUP, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinNetworkSid, NETWORK, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinBatchSid, BATCH, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinInteractiveSid, INTERACTIVE, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinServiceSid, SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinAnonymousSid, ANONYMOUS_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinProxySid, PROXY, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinEnterpriseControllersSid, ENTERPRISE_DOMAIN_CONTROLLERS, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinSelfSid, SELF, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinAuthenticatedUserSid, Authenticated_Users, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinRestrictedCodeSid, RESTRICTED, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinTerminalServerSid, TERMINAL_SERVER_USER, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinRemoteLogonIdSid, REMOTE_INTERACTIVE_LOGON, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinLocalSystemSid, SYSTEM, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinLocalServiceSid, LOCAL_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinNetworkServiceSid, NETWORK_SERVICE, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinBuiltinDomainSid, BUILTIN, BUILTIN, SidTypeDomain },
+//    { WinBuiltinAdministratorsSid, Administrators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinUsersSid, Users, BUILTIN, SidTypeAlias },
+//    { WinBuiltinGuestsSid, Guests, BUILTIN, SidTypeAlias },
+//    { WinBuiltinPowerUsersSid, Power_Users, BUILTIN, SidTypeAlias },
+//    { WinBuiltinAccountOperatorsSid, Account_Operators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinSystemOperatorsSid, Server_Operators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinPrintOperatorsSid, Print_Operators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinBackupOperatorsSid, Backup_Operators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinReplicatorSid, Replicators, BUILTIN, SidTypeAlias },
+//    { WinBuiltinPreWindows2000CompatibleAccessSid, Pre_Windows_2000_Compatible_Access, BUILTIN, SidTypeAlias },
+//    { WinBuiltinRemoteDesktopUsersSid, Remote_Desktop_Users, BUILTIN, SidTypeAlias },
+//    { WinBuiltinNetworkConfigurationOperatorsSid, Network_Configuration_Operators, BUILTIN, SidTypeAlias },
     { WinNTLMAuthenticationSid, NTML_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
     { WinDigestAuthenticationSid, Digest_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
     { WinSChannelAuthenticationSid, SChannel_Authentication, NT_AUTHORITY, SidTypeWellKnownGroup },
-    { WinThisOrganizationSid, This_Organization, NT_AUTHORITY, SidTypeWellKnownGroup },
+//    { WinThisOrganizationSid, This_Organization, NT_AUTHORITY, SidTypeWellKnownGroup },
     { WinOtherOrganizationSid, Other_Organization, NT_AUTHORITY, SidTypeWellKnownGroup },
     { WinBuiltinPerfMonitoringUsersSid, Performance_Monitor_Users, BUILTIN, SidTypeAlias },
     { WinBuiltinPerfLoggingUsersSid, Performance_Log_Users, BUILTIN, SidTypeAlias },
@@ -275,7 +275,7 @@ LsapInitSids(VOID)
     LsapCreateSid(&NtAuthority,
                   0,
                   NULL,
-                  L"",
+                  L"NT Pseudo Domain",
                   L"NT Pseudo Domain",
                   SidTypeDomain);
 
@@ -332,6 +332,246 @@ LsapInitSids(VOID)
                   L"ANONYMOUS LOGON",
                   L"NT AUTHORITY",
                   SidTypeWellKnownGroup);
+
+    /* Proxy Sid */
+    SubAuthorities[0] = SECURITY_PROXY_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"PROXY",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Enterprise Controllers Sid */
+    SubAuthorities[0] = SECURITY_ENTERPRISE_CONTROLLERS_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"ENTERPRISE DOMAIN CONTROLLERS",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Principal Self Sid */
+    SubAuthorities[0] = SECURITY_PRINCIPAL_SELF_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"SELF",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Authenticated Users Sid */
+    SubAuthorities[0] = SECURITY_AUTHENTICATED_USER_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"Authenticated Users",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Restricted Code Sid */
+    SubAuthorities[0] = SECURITY_RESTRICTED_CODE_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"RESTRICTED",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Terminal Server Sid */
+    SubAuthorities[0] = SECURITY_TERMINAL_SERVER_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"TERMINAL SERVER USER",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Remote Logon Sid */
+    SubAuthorities[0] = SECURITY_REMOTE_LOGON_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"REMOTE INTERACTIVE LOGON",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* This Organization Sid */
+    SubAuthorities[0] = SECURITY_THIS_ORGANIZATION_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"This Organization",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Local System Sid */
+    SubAuthorities[0] = SECURITY_LOCAL_SYSTEM_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"SYSTEM",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Local Service Sid */
+    SubAuthorities[0] = SECURITY_LOCAL_SERVICE_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"LOCAL SERVICE",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Network Service Sid */
+    SubAuthorities[0] = SECURITY_NETWORK_SERVICE_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"NETWORK SERVICE",
+                  L"NT AUTHORITY",
+                  SidTypeWellKnownGroup);
+
+    /* Builtin Domain Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    LsapCreateSid(&NtAuthority,
+                  1,
+                  SubAuthorities,
+                  L"BUILTIN",
+                  L"BUILTIN",
+                  SidTypeDomain);
+
+    /* Administrators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_ADMINS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Administrators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Users Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_USERS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Users",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Guests Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_GUESTS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Guests",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Power User Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_POWER_USERS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Power User",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Account Operators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_ACCOUNT_OPS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Account Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* System Operators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_SYSTEM_OPS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Server Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Print Operators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_PRINT_OPS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Print Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Backup Operators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_BACKUP_OPS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Backup Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Replicators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_REPLICATOR;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Replicators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+#if 0
+    /* RAS Servers Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_RAS_SERVERS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Backup Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
+#endif
+
+    /* Pre-Windows 2000 Compatible Access Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_PREW2KCOMPACCESS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Pre-Windows 2000 Compatible Access",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Remote Desktop Users Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Remote Desktop Users",
+                  L"BUILTIN",
+                  SidTypeAlias);
+
+    /* Network Configuration Operators Alias Sid */
+    SubAuthorities[0] = SECURITY_BUILTIN_DOMAIN_RID;
+    SubAuthorities[1] = DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS;
+    LsapCreateSid(&NtAuthority,
+                  2,
+                  SubAuthorities,
+                  L"Network Configuration Operators",
+                  L"BUILTIN",
+                  SidTypeAlias);
 
     /* FIXME: Add more well known sids */
 
