@@ -433,7 +433,7 @@ LONG WINAPI GetBitmapBits(
  */
 LONG WINAPI SetBitmapBits(
     HBITMAP hbitmap, /* [in] Handle to bitmap */
-    LONG count,        /* [in] Number of bytes in bitmap array */
+    DWORD count,       /* [in] Number of bytes in bitmap array */
     LPCVOID bits)      /* [in] Address of array with bitmap bits */
 {
     BITMAPOBJ *bmp;

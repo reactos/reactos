@@ -671,7 +671,7 @@ BOOL WINAPI Polygon( HDC hdc, const POINT* pt, INT count )
  *          PolyPolygon  (GDI32.@)
  */
 BOOL WINAPI PolyPolygon( HDC hdc, const POINT* pt, const INT* counts,
-                             UINT polygons )
+                             int polygons )
 {
     BOOL ret = FALSE;
     DC * dc = get_dc_ptr( hdc );
@@ -883,7 +883,7 @@ BOOL WINAPI AngleArc(HDC hdc, INT x, INT y, DWORD dwRadius, FLOAT eStartAngle, F
  *      PolyDraw (GDI32.@)
  */
 BOOL WINAPI PolyDraw(HDC hdc, const POINT *lppt, const BYTE *lpbTypes,
-                       DWORD cCount)
+                       int cCount)
 {
     DC *dc;
     BOOL result = FALSE;

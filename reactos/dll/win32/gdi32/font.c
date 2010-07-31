@@ -3218,7 +3218,7 @@ BOOL WINAPI RemoveFontResourceExW( LPCWSTR str, DWORD fl, PVOID pdv )
 /***********************************************************************
  *           GetTextCharset    (GDI32.@)
  */
-UINT WINAPI GetTextCharset(HDC hdc)
+int WINAPI GetTextCharset(HDC hdc)
 {
     /* MSDN docs say this is equivalent */
     return GetTextCharsetInfo(hdc, NULL, 0);
@@ -3227,7 +3227,7 @@ UINT WINAPI GetTextCharset(HDC hdc)
 /***********************************************************************
  *           GetTextCharsetInfo    (GDI32.@)
  */
-UINT WINAPI GetTextCharsetInfo(HDC hdc, LPFONTSIGNATURE fs, DWORD flags)
+int WINAPI GetTextCharsetInfo(HDC hdc, LPFONTSIGNATURE fs, DWORD flags)
 {
     UINT ret = DEFAULT_CHARSET;
     DC *dc = get_dc_ptr(hdc);
