@@ -84,7 +84,6 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 		BytesAvailable =
 		FCB->Recv.Content - FCB->Recv.BytesUsed;
     PAFD_MAPBUF Map;
-    NTSTATUS Status;
     *TotalBytesCopied = 0;
 
 
@@ -178,6 +177,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
             NextIrp->IoStatus.Information = 0;
             if( NextIrp == Irp ) RetStatus = Status;
             if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+			(void)IoSetCancelRoutine(NextIrp, NULL);
             IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
             FCB->Overread = TRUE;
         }
@@ -220,6 +220,7 @@ static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
 					RetBytesCopied = TotalBytesCopied;
 				}
 				if( NextIrp->MdlAddress ) UnlockRequest( NextIrp, IoGetCurrentIrpStackLocation( NextIrp ) );
+				(void)IoSetCancelRoutine(NextIrp, NULL);
 				IoCompleteRequest( NextIrp, IO_NETWORK_INCREMENT );
 			}
 		}
