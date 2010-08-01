@@ -24,7 +24,7 @@
 #include <winddi.h>
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
-#include "win32k/rosuser.h"
+#include "wine/rosuser.h"
 #include "winent.h"
 #include "wine/unicode.h"
 #include "wine/server.h"

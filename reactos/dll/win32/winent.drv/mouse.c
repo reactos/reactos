@@ -28,11 +28,10 @@
 #include "wingdi.h"
 #define NTOS_USER_MODE
 #include <ndk/ntndk.h>
-#include "winuser16.h"
 #include <winddi.h>
 #include <win32k/ntgdityp.h>
 #include "ntrosgdi.h"
-#include "win32k/rosuser.h"
+#include "wine/rosuser.h"
 #include "winent.h"
 #include "wine/server.h"
 #include "wine/debug.h"
