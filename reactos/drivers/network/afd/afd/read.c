@@ -80,7 +80,7 @@ static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 												   PAFD_RECV_INFO RecvReq,
 												   PUINT TotalBytesCopied ) {
-    UINT i, BytesToCopy = 0, FcbBytesCopied = FCB->Recv.BytesUsed;
+    UINT i, BytesToCopy = 0, FcbBytesCopied = FCB->Recv.BytesUsed,
 		BytesAvailable =
 		FCB->Recv.Content - FCB->Recv.BytesUsed;
     PAFD_MAPBUF Map;
