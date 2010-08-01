@@ -80,7 +80,7 @@ static VOID RefillSocketBuffer( PAFD_FCB FCB ) {
 static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 												   PAFD_RECV_INFO RecvReq,
 												   PUINT TotalBytesCopied ) {
-    UINT i, BytesToCopy = 0,
+    UINT i, BytesToCopy = 0, FcbBytesCopied = FCB->Recv.BytesUsed;
 		BytesAvailable =
 		FCB->Recv.Content - FCB->Recv.BytesUsed;
     PAFD_MAPBUF Map;
@@ -115,12 +115,13 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 									BytesToCopy));
 
 			RtlCopyMemory( Map[i].BufferAddress,
-						   FCB->Recv.Window + FCB->Recv.BytesUsed,
+						   FCB->Recv.Window + FcbBytesCopied,
 						   BytesToCopy );
 
 			MmUnmapLockedPages( Map[i].BufferAddress, Map[i].Mdl );
 
             *TotalBytesCopied += BytesToCopy;
+			FcbBytesCopied += BytesToCopy;
 
             if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK)) {
                 FCB->Recv.BytesUsed += BytesToCopy;
