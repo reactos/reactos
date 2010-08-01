@@ -119,9 +119,9 @@ static const IMAGE_RESOURCE_DIRECTORY *find_entry_by_id( const IMAGE_RESOURCE_DI
     while (min <= max)
     {
         pos = (min + max) / 2;
-        if (entry[pos].u1.s2.Id == id)
+        if (entry[pos].u1.Id == id)
             return (const IMAGE_RESOURCE_DIRECTORY *)((const char *)root + entry[pos].u2.s3.OffsetToDirectory);
-        if (entry[pos].u1.s2.Id > id) max = pos - 1;
+        if (entry[pos].u1.Id > id) max = pos - 1;
         else min = pos + 1;
     }
     return NULL;
@@ -488,7 +488,7 @@ static UINT ICO_ExtractIconExW(
 
 	    while(n<iconDirCount && xprdeTmp)
 	    {
-              if(xprdeTmp->u1.s2.Id ==  iId)
+              if(xprdeTmp->u1.Id ==  iId)
               {
                   nIconIndex = n;
                   break;

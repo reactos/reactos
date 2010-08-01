@@ -454,7 +454,7 @@ INT WINAPI MessageBoxExW( HWND hWnd, LPCWSTR text, LPCWSTR title,
 /**************************************************************************
  *		MessageBoxIndirectA (USER32.@)
  */
-INT WINAPI MessageBoxIndirectA( LPMSGBOXPARAMSA msgbox )
+INT WINAPI MessageBoxIndirectA( CONST MSGBOXPARAMSA *msgbox )
 {
     MSGBOXPARAMSW msgboxW;
     UNICODE_STRING textW, captionW, iconW;
@@ -501,7 +501,7 @@ INT WINAPI MessageBoxIndirectA( LPMSGBOXPARAMSA msgbox )
 /**************************************************************************
  *		MessageBoxIndirectW (USER32.@)
  */
-INT WINAPI MessageBoxIndirectW( LPMSGBOXPARAMSW msgbox )
+INT WINAPI MessageBoxIndirectW( CONST MSGBOXPARAMSW *msgbox )
 {
     LPVOID tmplate;
     HRSRC hRes;

@@ -384,7 +384,7 @@ UINT WINAPI GetRawInputDeviceList(PRAWINPUTDEVICELIST pRawInputDeviceList, PUINT
 /******************************************************************
 *		RegisterRawInputDevices (USER32.@)
 */
-BOOL WINAPI DECLSPEC_HOTPATCH RegisterRawInputDevices(PRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
+BOOL WINAPI DECLSPEC_HOTPATCH RegisterRawInputDevices(PCRAWINPUTDEVICE pRawInputDevices, UINT uiNumDevices, UINT cbSize)
 {
     FIXME("(pRawInputDevices=%p, uiNumDevices=%d, cbSize=%d) stub!\n", pRawInputDevices, uiNumDevices, cbSize);
 
@@ -582,7 +582,7 @@ SHORT WINAPI VkKeyScanW(WCHAR cChar)
 /**********************************************************************
  *		VkKeyScanExA (USER32.@)
  */
-WORD WINAPI VkKeyScanExA(CHAR cChar, HKL dwhkl)
+SHORT WINAPI VkKeyScanExA(CHAR cChar, HKL dwhkl)
 {
     WCHAR wChar;
 
@@ -595,7 +595,7 @@ WORD WINAPI VkKeyScanExA(CHAR cChar, HKL dwhkl)
 /******************************************************************************
  *		VkKeyScanExW (USER32.@)
  */
-WORD WINAPI VkKeyScanExW(WCHAR cChar, HKL dwhkl)
+SHORT WINAPI VkKeyScanExW(WCHAR cChar, HKL dwhkl)
 {
     return USER_Driver->pVkKeyScanEx(cChar, dwhkl);
 }

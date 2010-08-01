@@ -1496,8 +1496,8 @@ HICON WINAPI CreateIcon(
     INT       nHeight,    /* [in] the height of the provided bitmaps */
     BYTE      bPlanes,    /* [in] the number of planes in the provided bitmaps */
     BYTE      bBitsPixel, /* [in] the number of bits per pixel of the lpXORbits bitmap */
-    LPCVOID   lpANDbits,  /* [in] a monochrome bitmap representing the icon's mask */
-    LPCVOID   lpXORbits)  /* [in] the icon's 'color' bitmap */
+    CONST BYTE *lpANDbits,  /* [in] a monochrome bitmap representing the icon's mask */
+    CONST BYTE *lpXORbits)  /* [in] the icon's 'color' bitmap */
 {
     ICONINFO iinfo;
     HICON hIcon;

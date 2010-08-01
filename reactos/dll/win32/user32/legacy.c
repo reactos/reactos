@@ -7,7 +7,6 @@
 #include "wingdi.h"
 #include "winerror.h"
 #include "wine/winbase16.h"
-#include "wine/winuser16.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(userlegacy);

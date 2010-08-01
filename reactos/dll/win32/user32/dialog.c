@@ -1466,9 +1466,9 @@ BOOL WINAPI CheckRadioButton( HWND hwndDlg, int firstID,
  *		GetDialogBaseUnits (USER.243)
  *		GetDialogBaseUnits (USER32.@)
  */
-DWORD WINAPI GetDialogBaseUnits(void)
+LONG WINAPI GetDialogBaseUnits(void)
 {
-    static DWORD units;
+    static LONG units;
 
     if (!units)
     {
