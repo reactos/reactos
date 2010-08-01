@@ -25,7 +25,7 @@ typedef struct _GDI_OBJ_ATTR_ENTRY
   RGN_ATTR Attr[GDIOBJATTRFREE];
 } GDI_OBJ_ATTR_ENTRY, *PGDI_OBJ_ATTR_ENTRY;
 
-static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
+static const ULONG HatchBrushes[NB_HATCH_STYLES][8] =
 {
     {0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0xFF, 0xFF, 0xFF}, /* HS_HORIZONTAL */
     {0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7, 0xF7}, /* HS_VERTICAL   */
