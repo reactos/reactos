@@ -1,4 +1,4 @@
-/* $Id$
+ter/* $Id$
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -28,7 +28,7 @@
 
 static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, ULONG_PTR Information )
 {
-	if( ( Status == STATUS_SUCCESS && !FCB->ReceiveIrp.Iosb.Information ) ||
+	if( ( Status == STATUS_SUCCESS && !Information ) ||
 	   ( !NT_SUCCESS( Status ) ) )
 	{
 		/* The socket has been closed */
