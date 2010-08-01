@@ -122,11 +122,10 @@ static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 
             *TotalBytesCopied += BytesToCopy;
 			FcbBytesCopied += BytesToCopy;
+			BytesAvailable -= BytesToCopy;
 
-            if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK)) {
+            if (!(RecvReq->TdiFlags & TDI_RECEIVE_PEEK))
                 FCB->Recv.BytesUsed += BytesToCopy;
-                BytesAvailable -= BytesToCopy;
-            }
 		}
     }
 
