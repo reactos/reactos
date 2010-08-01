@@ -1741,16 +1741,7 @@ BuildDIBPalette(CONST BITMAPINFO *bmi)
     }
     else
     {
-		if((pdwColors[0] == 0x0000FF)     /* R */
-			&& (pdwColors[1] == 0x00FF00) /* G */
-			&& (pdwColors[2] == 0xFF0000))/* B */
-		{
-			paletteType = PAL_BGR;
-		}
-		else
-		{
-			paletteType == PAL_RGB;
-		}
+		paletteType = PAL_BGR;
     }
 
     if (bmi->bmiHeader.biClrUsed == 0)
