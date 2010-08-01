@@ -912,7 +912,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         return 0;
     }
 
-    Bitmap = GDIOBJ_LockObj(hBitmap, GDI_OBJECT_TYPE_BITMAP);
+    Bitmap = SURFACE_LockSurface(hBitmap);
     if (Bitmap == NULL)
     {
         return 0;
@@ -925,40 +925,22 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
 
     Size.cx = abs(bm.bmWidth);
     Size.cy = abs(bm.bmHeight);
-            res = GreCreateBitmap(abs(bm.bmWidth),
-                                  abs(bm.bmHeight),
-                                  1,
-                                  bm.bmBitsPixel,
-                                  NULL);
+    res = GreCreateBitmapEx(Size.cx,
+							Size.cy,
+							bm.bmWidthBytes,
+							Bitmap->SurfObj.iBitmapFormat,
+							Bitmap->SurfObj.fjBitmap,
+							Bitmap->SurfObj.cjBits,
+							NULL);
+
 
     if (res)
     {
-        PBYTE buf;
-
-        resBitmap = GDIOBJ_LockObj(res, GDI_OBJECT_TYPE_BITMAP);
+        resBitmap = SURFACE_LockSurface(res);
         if (resBitmap)
         {
-            buf = ExAllocatePoolWithTag(PagedPool,
-                                        bm.bmWidthBytes * abs(bm.bmHeight),
-                                        TAG_BITMAP);
-            if (buf == NULL)
-            {
-                GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
-                GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
-                GreDeleteObject(res);
-                return 0;
-            }
-            IntGetBitmapBits(Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
-            IntSetBitmapBits(resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
-            ExFreePoolWithTag(buf,TAG_BITMAP);
-            resBitmap->flags = Bitmap->flags;
-            /* Copy palette */
-            if (Bitmap->ppal)
-            {
-                resBitmap->ppal = Bitmap->ppal ;
-                GDIOBJ_IncrementShareCount(&Bitmap->ppal->BaseObject);
-            }
-            GDIOBJ_UnlockObjByPtr((POBJ)resBitmap);
+            IntSetBitmapBits(resBitmap, Bitmap->SurfObj.cjBits, Bitmap->SurfObj.pvBits);
+			SURFACE_UnlockSurface(resBitmap);
         }
         else
         {
@@ -967,7 +949,7 @@ BITMAP_CopyBitmap(HBITMAP hBitmap)
         }
     }
 
-    GDIOBJ_UnlockObjByPtr((POBJ)Bitmap);
+    SURFACE_UnlockSurface(Bitmap);
 
     return  res;
 }

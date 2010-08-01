@@ -1325,12 +1325,10 @@ UserDrawIconEx(
 	if(bAlpha && (diFlags & DI_IMAGE))
 	{
 		BLENDFUNCTION pixelblend = { AC_SRC_OVER, 0, 255, AC_SRC_ALPHA };
-        DWORD Pixel;
-        BYTE Red, Green, Blue, Alpha;
-        DWORD Count = 0;
+        BYTE Alpha;
         INT i, j;
         PSURFACE psurf;
-        PBYTE pBits ;
+        PBYTE pBits, ptr ;
         HBITMAP hMemBmp = NULL;
 
         pBits = ExAllocatePoolWithTag(PagedPool,
@@ -1363,20 +1361,15 @@ UserDrawIconEx(
         /* premultiply with the alpha channel value */
         for (i = 0; i < abs(bmpColor.bmHeight); i++)
         {
-			Count = i*bmpColor.bmWidthBytes;
+			ptr = pBits + i*bmpColor.bmWidthBytes;
             for (j = 0; j < bmpColor.bmWidth; j++)
             {
-                Pixel = *(DWORD *)(pBits + Count);
+                Alpha = ptr[3];
+                ptr[0] *= Alpha / 0xff;
+                ptr[1] *= Alpha / 0xff;
+                ptr[2] *= Alpha / 0xff;
 
-                Alpha = ((BYTE)(Pixel >> 24) & 0xff);
-
-                Red   = (((BYTE)(Pixel >>  0)) * Alpha) / 0xff;
-                Green = (((BYTE)(Pixel >>  8)) * Alpha) / 0xff;
-                Blue  = (((BYTE)(Pixel >> 16)) * Alpha) / 0xff;
-
-                *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
-
-                Count += sizeof(DWORD);
+				ptr += 4;
             }
         }
 

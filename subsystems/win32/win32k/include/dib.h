@@ -13,11 +13,11 @@ INT APIENTRY
 DIB_GetDIBImageBytes (INT  width, INT height, INT depth);
 INT FASTCALL
 DIB_GetDIBWidthBytes (INT width, INT depth);
-RGBQUAD * FASTCALL
-DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi);
+HPALETTE FASTCALL
+DIB_MapPaletteColors(PPALETTE ppal, CONST BITMAPINFO* lpbmi);
 
 HPALETTE FASTCALL
-BuildDIBPalette (CONST BITMAPINFO *bmi, PINT paletteType);
+BuildDIBPalette (CONST BITMAPINFO *bmi);
 
 BITMAPINFO* FASTCALL DIB_ConvertBitmapInfo(CONST BITMAPINFO* bmi, DWORD Usage);
 VOID FASTCALL DIB_FreeConvertedBitmapInfo(BITMAPINFO* converted, BITMAPINFO* orig);

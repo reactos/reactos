@@ -13,7 +13,6 @@ HBITMAP FASTCALL IntCreateBitmap(IN SIZEL Size, IN LONG Width, IN ULONG Format, 
 HBITMAP FASTCALL BITMAP_CopyBitmap (HBITMAP  hBitmap);
 UINT    FASTCALL BITMAP_GetRealBitsPixel(UINT nBitsPixel);
 INT     FASTCALL BITMAP_GetWidthBytes (INT bmWidth, INT bpp);
-NTSTATUS FASTCALL ProbeAndConvertToBitmapV5Info( OUT PBITMAPV5INFO pbmiDst, IN CONST BITMAPINFO* pbmiUnsafe, IN DWORD dwUse, UINT MaxSize);
 
 HBITMAP
 APIENTRY
@@ -43,7 +42,7 @@ GreCreateDIBitmapInternal(
     IN INT cy,
     IN DWORD fInit,
     IN OPTIONAL LPBYTE pjInit,
-    IN OPTIONAL PBITMAPV5INFO pbmi,
+    IN OPTIONAL PBITMAPINFO pbmi,
     IN DWORD iUsage,
     IN FLONG fl,
     IN HANDLE hcmXform);

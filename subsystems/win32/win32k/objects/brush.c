@@ -244,129 +244,6 @@ BRUSH_GetObject(PBRUSH pbrush, INT Count, LPLOGBRUSH Buffer)
     return sizeof(LOGBRUSH);
 }
 
-/**
- * @name CalculateColorTableSize
- *
- * Internal routine to calculate the number of color table entries.
- *
- * @param BitmapInfoHeader
- *        Input bitmap information header, can be any version of
- *        BITMAPINFOHEADER or BITMAPCOREHEADER.
- *
- * @param ColorSpec
- *        Pointer to variable which specifiing the color mode (DIB_RGB_COLORS
- *        or DIB_RGB_COLORS). On successful return this value is normalized
- *        according to the bitmap info.
- *
- * @param ColorTableSize
- *        On successful return this variable is filled with number of
- *        entries in color table for the image with specified parameters.
- *
- * @return
- *    TRUE if the input values together form a valid image, FALSE otherwise.
- */
-BOOL
-APIENTRY
-CalculateColorTableSize(
-    CONST BITMAPINFOHEADER *BitmapInfoHeader,
-    UINT *ColorSpec,
-    UINT *ColorTableSize)
-{
-    WORD BitCount;
-    DWORD ClrUsed;
-    DWORD Compression;
-
-    /*
-     * At first get some basic parameters from the passed BitmapInfoHeader
-     * structure. It can have one of the following formats:
-     * - BITMAPCOREHEADER (the oldest one with totally different layout
-     *                     from the others)
-     * - BITMAPINFOHEADER (the standard and most common header)
-     * - BITMAPV4HEADER (extension of BITMAPINFOHEADER)
-     * - BITMAPV5HEADER (extension of BITMAPV4HEADER)
-     */
-    if (BitmapInfoHeader->biSize == sizeof(BITMAPCOREHEADER))
-    {
-        BitCount = ((LPBITMAPCOREHEADER)BitmapInfoHeader)->bcBitCount;
-        ClrUsed = 0;
-        Compression = BI_RGB;
-    }
-    else
-    {
-        BitCount = BitmapInfoHeader->biBitCount;
-        ClrUsed = BitmapInfoHeader->biClrUsed;
-        Compression = BitmapInfoHeader->biCompression;
-    }
-
-    switch (Compression)
-    {
-        case BI_BITFIELDS:
-            if (*ColorSpec == DIB_PAL_COLORS)
-                *ColorSpec = DIB_RGB_COLORS;
-
-            if (BitCount != 16 && BitCount != 32)
-                return FALSE;
-
-            /* For BITMAPV4HEADER/BITMAPV5HEADER the masks are included in
-             * the structure itself (bV4RedMask, bV4GreenMask, and bV4BlueMask).
-             * For BITMAPINFOHEADER the color masks are stored in the palette. */
-            if (BitmapInfoHeader->biSize > sizeof(BITMAPINFOHEADER))
-                *ColorTableSize = 0;
-            else
-                *ColorTableSize = 3;
-
-            return TRUE;
-
-        case BI_RGB:
-            switch (BitCount)
-            {
-                case 1:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 2) : 2;
-                    return TRUE;
-
-                case 4:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
-                    return TRUE;
-
-                case 8:
-                    *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
-                    return TRUE;
-
-                default:
-                    if (*ColorSpec == DIB_PAL_COLORS)
-                        *ColorSpec = DIB_RGB_COLORS;
-                    if (BitCount != 16 && BitCount != 24 && BitCount != 32)
-                        return FALSE;
-                    *ColorTableSize = ClrUsed;
-                    return TRUE;
-            }
-
-        case BI_RLE4:
-            if (BitCount == 4)
-            {
-                *ColorTableSize = ClrUsed ? min(ClrUsed, 16) : 16;
-                return TRUE;
-            }
-            return FALSE;
-
-        case BI_RLE8:
-            if (BitCount == 8)
-            {
-                *ColorTableSize = ClrUsed ? min(ClrUsed, 256) : 256;
-                return TRUE;
-            }
-            return FALSE;
-
-        case BI_JPEG:
-        case BI_PNG:
-            *ColorTableSize = ClrUsed;
-            return TRUE;
-
-        default:
-            return FALSE;
-    }
-}
-
 HBRUSH
 APIENTRY
 IntGdiCreateDIBBrush(
@@ -379,9 +256,7 @@ IntGdiCreateDIBBrush(
     PBRUSH pbrush;
     HBITMAP hPattern;
     ULONG_PTR DataPtr;
-    UINT PaletteEntryCount;
     PSURFACE psurfPattern;
-    INT PaletteType;
     HPALETTE hpal ;
 
     if (BitmapInfo->bmiHeader.biSize < sizeof(BITMAPINFOHEADER))
@@ -390,20 +265,7 @@ IntGdiCreateDIBBrush(
         return NULL;
     }
 
-    if (!CalculateColorTableSize(&BitmapInfo->bmiHeader,
-                                 &ColorSpec,
-                                 &PaletteEntryCount))
-    {
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return NULL;
-    }
-
-    // FIXME: What about BI_BITFIELDS
-    DataPtr = (ULONG_PTR)BitmapInfo + BitmapInfo->bmiHeader.biSize;
-    if (ColorSpec == DIB_RGB_COLORS)
-        DataPtr += PaletteEntryCount * sizeof(RGBQUAD);
-    else
-        DataPtr += PaletteEntryCount * sizeof(USHORT);
+    DataPtr = (ULONG_PTR)BitmapInfo + DIB_BitmapInfoSize(BitmapInfo, ColorSpec);
 
     hPattern = GreCreateBitmap(BitmapInfo->bmiHeader.biWidth,
                                   BitmapInfo->bmiHeader.biHeight,
@@ -418,7 +280,8 @@ IntGdiCreateDIBBrush(
 
     psurfPattern = SURFACE_LockSurface(hPattern);
     ASSERT(psurfPattern != NULL);
-    hpal = BuildDIBPalette(BitmapInfo, &PaletteType);
+	if(ColorSpec == DIB_PAL_COLORS) DPRINT1("FIXME, unsupported color spec!\n");
+    hpal = BuildDIBPalette(BitmapInfo);
     psurfPattern->ppal = PALETTE_ShareLockPalette(hpal);
     /* Lazy delete palette, it will be freed when its shared reference is zeroed */
     GreDeleteObject(hpal);
