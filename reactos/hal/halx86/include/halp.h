@@ -4,6 +4,13 @@
 
 #pragma once
 
+
+#ifdef _MSC_VER
+#define REGISTERCALL FASTCALL
+#else
+#define REGISTERCALL __attribute__((regparm(3)))
+#endif
+
 typedef struct _HAL_BIOS_FRAME
 {
     ULONG SegSs;
@@ -408,15 +415,14 @@ typedef struct _PIC_MASK
 
 typedef
 BOOLEAN
-__attribute__((regparm(3)))
-(*PHAL_DISMISS_INTERRUPT)(
+( REGISTERCALL *PHAL_DISMISS_INTERRUPT)(
     IN KIRQL Irql,
     IN ULONG Irq,
     OUT PKIRQL OldIrql
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqGeneric(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -424,7 +430,7 @@ HalpDismissIrqGeneric(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -432,7 +438,7 @@ HalpDismissIrq15(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -440,7 +446,7 @@ HalpDismissIrq13(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -448,7 +454,7 @@ HalpDismissIrq07(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrqLevel(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -456,7 +462,7 @@ HalpDismissIrqLevel(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq15Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -464,7 +470,7 @@ HalpDismissIrq15Level(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq13Level(
     IN KIRQL Irql,
     IN ULONG Irq,
@@ -472,7 +478,7 @@ HalpDismissIrq13Level(
 );
 
 BOOLEAN
-__attribute__((regparm(3)))
+REGISTERCALL
 HalpDismissIrq07Level(
     IN KIRQL Irql,
     IN ULONG Irq,
