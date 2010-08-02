@@ -949,15 +949,17 @@ BITMAP_GetObject(SURFACE *psurf, INT Count, LPVOID buffer)
     pBitmap->bmType = 0;
     pBitmap->bmWidth = psurf->SurfObj.sizlBitmap.cx;
     pBitmap->bmHeight = psurf->SurfObj.sizlBitmap.cy;
-    pBitmap->bmWidthBytes = abs(psurf->SurfObj.lDelta);
     pBitmap->bmPlanes = 1;
     pBitmap->bmBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+	pBitmap->bmWidthBytes = BITMAP_GetWidthBytes(pBitmap->bmWidth, pBitmap->bmBitsPixel);
 
     /* Check for DIB section */
     if (psurf->hSecure)
     {
         /* Set bmBits in this case */
         pBitmap->bmBits = psurf->SurfObj.pvBits;
+		/* DIBs data are 32 bits aligned */
+		pBitmap->bmWidthBytes = DIB_GetDIBWidthBytes(pBitmap->bmWidth, pBitmap->bmBitsPixel);
 
         if (Count >= sizeof(DIBSECTION))
         {
