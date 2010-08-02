@@ -695,8 +695,7 @@ NtGdiGetDIBitsInternal(
         Info->bmiHeader.biYPelsPerMeter = 0;
         Info->bmiHeader.biClrUsed = 0;
         Info->bmiHeader.biClrImportant = 0;
-		ScanLines = 1;
-		/* Get Complete info now */
+		ScanLines = abs(Info->bmiHeader.biHeight);
 		goto done;
 
 	case 1:
@@ -723,7 +722,12 @@ NtGdiGetDIBitsInternal(
 					}
 				}
 				if(colors != 1 << bpp) Info->bmiHeader.biClrUsed = colors;
-				RtlCopyMemory(rgbQuads, psurf->ppal->IndexedColors, colors * sizeof(RGBQUAD));
+				for(i=0; i < colors; i++)
+				{
+					rgbQuads[i].rgbRed = psurf->ppal->IndexedColors[i].peRed;
+					rgbQuads[i].rgbGreen = psurf->ppal->IndexedColors[i].peGreen;
+					rgbQuads[i].rgbBlue = psurf->ppal->IndexedColors[i].peBlue;
+				}
 			}
 			else
 			{
@@ -977,6 +981,7 @@ NtGdiGetDIBitsInternal(
 		GreDeleteObject(hBmpDest);
 		EXLATEOBJ_vCleanup(&exlo);
 	}
+	else ScanLines = abs(height);
 
 done:
 
@@ -1037,6 +1042,7 @@ NtGdiStretchDIBitsInternal(
 		return 0;
 	}
 
+	/* Set bits */
 	_SEH2_TRY
 	{
 		ProbeForRead(Bits, cjMaxBits, 1);
