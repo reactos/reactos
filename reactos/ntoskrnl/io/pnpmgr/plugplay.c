@@ -98,7 +98,7 @@ IopRemovePlugPlayEvent(VOID)
     /* Remove a pnp event entry from the tail of the queue */
     if (!IsListEmpty(&IopPnpEventQueueHead))
     {
-        ExFreePool(RemoveTailList(&IopPnpEventQueueHead));
+        ExFreePool(CONTAINING_RECORD(RemoveTailList(&IopPnpEventQueueHead), PNP_EVENT_ENTRY, ListEntry)));
     }
 
     /* Signal the next pnp event in the queue */
