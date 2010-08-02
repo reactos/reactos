@@ -1459,6 +1459,63 @@ static BOOL REGION_CopyRegion(WINEREGION *dst, WINEREGION *src)
 }
 
 /***********************************************************************
+ *           REGION_MirrorRegion
+ */
+static BOOL REGION_MirrorRegion( WINEREGION *dst, WINEREGION *src, int width )
+{
+    int i, start, end;
+    RECT extents;
+    RECT *rects = HeapAlloc( GetProcessHeap(), 0, src->numRects * sizeof(RECT) );
+
+    if (!rects) return FALSE;
+
+    extents.left   = width - src->extents.right;
+    extents.right  = width - src->extents.left;
+    extents.top    = src->extents.top;
+    extents.bottom = src->extents.bottom;
+
+    for (start = 0; start < src->numRects; start = end)
+    {
+        /* find the end of the current band */
+        for (end = start + 1; end < src->numRects; end++)
+            if (src->rects[end].top != src->rects[end - 1].top) break;
+
+        for (i = 0; i < end - start; i++)
+        {
+            rects[start + i].left   = width - src->rects[end - i - 1].right;
+            rects[start + i].right  = width - src->rects[end - i - 1].left;
+            rects[start + i].top    = src->rects[end - i - 1].top;
+            rects[start + i].bottom = src->rects[end - i - 1].bottom;
+        }
+    }
+
+    HeapFree( GetProcessHeap(), 0, dst->rects );
+    dst->rects    = rects;
+    dst->size     = src->numRects;
+    dst->numRects = src->numRects;
+    dst->extents  = extents;
+    return TRUE;
+}
+
+/***********************************************************************
+ *           mirror_region
+ */
+INT mirror_region( HRGN dst, HRGN src, INT width )
+{
+    RGNOBJ *src_rgn, *dst_rgn;
+    INT ret = ERROR;
+
+    if (!(src_rgn = GDI_GetObjPtr( src, OBJ_REGION ))) return ERROR;
+    if ((dst_rgn = GDI_GetObjPtr( dst, OBJ_REGION )))
+    {
+        if (REGION_MirrorRegion( &dst_rgn->rgn, &src_rgn->rgn, width )) ret = get_region_type( dst_rgn );
+        GDI_ReleaseObj( dst_rgn );
+    }
+    GDI_ReleaseObj( src_rgn );
+    return ret;
+}
+
+/***********************************************************************
  *           REGION_Coalesce
  *
  *      Attempt to merge the rects in the current band with those in the

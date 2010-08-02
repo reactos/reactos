@@ -384,8 +384,6 @@ static const WORD wPattern55AA[] = { 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xa
 
 HBRUSH SYSCOLOR_55AABrush = 0;
 
-extern void CDECL __wine_make_gdi_object_system( HGDIOBJ handle, BOOL set );
-
 
 static void SYSPARAMS_LogFont16To32W( const LOGFONT16 *font16, LPLOGFONTW font32 )
 {

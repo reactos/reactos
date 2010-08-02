@@ -1520,8 +1520,16 @@ static BOOL SWP_DoWinPosChanging( WINDOWPOS* pWinpos, RECT* pNewWindowRect, RECT
 
     if (!(pWinpos->flags & SWP_NOSIZE))
     {
-        pNewWindowRect->right  = pNewWindowRect->left + pWinpos->cx;
-        pNewWindowRect->bottom = pNewWindowRect->top + pWinpos->cy;
+        if (wndPtr->dwStyle & WS_MINIMIZE)
+        {
+            pNewWindowRect->right  = pNewWindowRect->left + GetSystemMetrics(SM_CXICON);
+            pNewWindowRect->bottom = pNewWindowRect->top + GetSystemMetrics(SM_CYICON);
+        }
+        else
+        {
+            pNewWindowRect->right  = pNewWindowRect->left + pWinpos->cx;
+            pNewWindowRect->bottom = pNewWindowRect->top + pWinpos->cy;
+        }
     }
     if (!(pWinpos->flags & SWP_NOMOVE))
     {

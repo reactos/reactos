@@ -62,13 +62,9 @@ X11DRV_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
     if (pfo->lf.lfEscapement && pfo->lpX11Trans)
         rotated = TRUE;
 
-    TRACE("hdc=%p df=%04x %d,%d %s, %d  flags=%d lpDx=%p\n",
-	  physDev->hdc, (UINT16)(physDev->font), x, y,
+    TRACE("hdc=%p df=%04x %d,%d rc %s %s, %d  flags=%d lpDx=%p\n",
+          physDev->hdc, (UINT16)physDev->font, x, y, wine_dbgstr_rect(lprect),
 	  debugstr_wn (wstr, count), count, flags, lpDx);
-
-    if (lprect != NULL) TRACE("\trect=(%d,%d - %d,%d)\n",
-                                     lprect->left, lprect->top,
-                                     lprect->right, lprect->bottom );
 
       /* Draw the rectangle */
 
@@ -126,24 +122,26 @@ X11DRV_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
         }
         else
         {
-            XTextItem16 *items, *pitem;
+            XTextItem16 *items;
 
-            pitem = items = HeapAlloc( GetProcessHeap(), 0,
-                                       count * sizeof(XTextItem16) );
+            items = HeapAlloc( GetProcessHeap(), 0, count * sizeof(XTextItem16) );
             if(items == NULL) goto FAIL;
 
-            for(i = 0; i < count; i++)
+            items[0].chars = str2b;
+            items[0].delta = 0;
+            items[0].nchars = 1;
+            items[0].font = None;
+            for(i = 1; i < count; i++)
             {
-                pitem->chars  = str2b + i;
-                pitem->delta  = lpDx[i];
-                pitem->nchars = 1;
-                pitem->font   = None;
-                pitem++;
+                items[i].chars  = str2b + i;
+                items[i].delta  = (flags & ETO_PDY) ? lpDx[(i - 1) * 2] : lpDx[i - 1];
+                items[i].delta -= X11DRV_cptable[pfo->fi->cptable].pTextWidth( pfo, str2b + i - 1, 1 );
+                items[i].nchars = 1;
+                items[i].font   = None;
             }
-
             X11DRV_cptable[pfo->fi->cptable].pDrawText( pfo, gdi_display,
                                   physDev->drawable, physDev->gc,
-                                  physDev->dc_rect.left + x, physDev->dc_rect.top + y, items, pitem - items );
+                                  physDev->dc_rect.left + x, physDev->dc_rect.top + y, items, count );
             HeapFree( GetProcessHeap(), 0, items );
         }
     }
@@ -167,7 +165,7 @@ X11DRV_ExtTextOut( X11DRV_PDEVICE *physDev, INT x, INT y, UINT flags,
                                     x_i, y_i, &str2b[i], 1);
             if (lpDx)
             {
-                offset += lpDx[i];
+                offset += (flags & ETO_PDY) ? lpDx[i * 2] : lpDx[i];
             }
             else
             {

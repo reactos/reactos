@@ -119,7 +119,6 @@ BOOL APIENTRY RosGdiSetPixelFormat(HDC physDev,
                                    const PIXELFORMATDESCRIPTOR *ppfd);
 COLORREF APIENTRY RosGdiSetTextColor( HDC physDev, COLORREF color );
 VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport );
-VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport );
 VOID APIENTRY RosGdiGetDC( HDC physDev, HWND hwnd, BOOL clipChildren );
 VOID APIENTRY RosGdiReleaseDC( HDC physDev );
 

@@ -73,6 +73,37 @@ const int X11DRV_XROPfunction[16] =
 };
 
 
+/* get the rectangle in device coordinates, with optional mirroring */
+static RECT get_device_rect( HDC hdc, int left, int top, int right, int bottom )
+{
+    RECT rect;
+
+    rect.left   = left;
+    rect.top    = top;
+    rect.right  = right;
+    rect.bottom = bottom;
+    LPtoDP( hdc, (POINT *)&rect, 2 );
+    if (GetLayout( hdc ) & LAYOUT_RTL)
+    {
+        int tmp = rect.left;
+        rect.left = rect.right + 1;
+        rect.right = tmp + 1;
+    }
+    if (rect.left > rect.right)
+    {
+        int tmp = rect.left;
+        rect.left = rect.right;
+        rect.right = tmp;
+    }
+    if (rect.top > rect.bottom)
+    {
+        int tmp = rect.top;
+        rect.top = rect.bottom;
+        rect.bottom = tmp;
+    }
+    return rect;
+}
+
 /***********************************************************************
  *           X11DRV_GetRegionData
  *
@@ -483,19 +514,15 @@ X11DRV_DrawArc( X11DRV_PDEVICE *physDev, INT left, INT top, INT right,
     XPoint points[4];
     BOOL update = FALSE;
     POINT start, end;
-    RECT rc;
+    RECT rc = get_device_rect( physDev->hdc, left, top, right, bottom );
 
-    SetRect(&rc, left, top, right, bottom);
     start.x = xstart;
     start.y = ystart;
     end.x = xend;
     end.y = yend;
-    LPtoDP(physDev->hdc, (POINT*)&rc, 2);
     LPtoDP(physDev->hdc, &start, 1);
     LPtoDP(physDev->hdc, &end, 1);
 
-    if (rc.right < rc.left) { INT tmp = rc.right; rc.right = rc.left; rc.left = tmp; }
-    if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
     if ((rc.left == rc.right) || (rc.top == rc.bottom)
             ||(lines && ((rc.right-rc.left==1)||(rc.bottom-rc.top==1)))) return TRUE;
 
@@ -673,15 +700,9 @@ X11DRV_Ellipse( X11DRV_PDEVICE *physDev, INT left, INT top, INT right, INT botto
 {
     INT width, oldwidth;
     BOOL update = FALSE;
-    RECT rc;
-
-    SetRect(&rc, left, top, right, bottom);
-    LPtoDP(physDev->hdc, (POINT*)&rc, 2);
+    RECT rc = get_device_rect( physDev->hdc, left, top, right, bottom );
 
     if ((rc.left == rc.right) || (rc.top == rc.bottom)) return TRUE;
-
-    if (rc.right < rc.left) { INT tmp = rc.right; rc.right = rc.left; rc.left = tmp; }
-    if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
 
     oldwidth = width = physDev->pen.width;
     if (!width) width = 1;
@@ -737,17 +758,11 @@ X11DRV_Rectangle(X11DRV_PDEVICE *physDev, INT left, INT top, INT right, INT bott
 {
     INT width, oldwidth, oldjoinstyle;
     BOOL update = FALSE;
-    RECT rc;
+    RECT rc = get_device_rect( physDev->hdc, left, top, right, bottom );
 
     TRACE("(%d %d %d %d)\n", left, top, right, bottom);
 
-    SetRect(&rc, left, top, right, bottom);
-    LPtoDP(physDev->hdc, (POINT*)&rc, 2);
-
     if ((rc.left == rc.right) || (rc.top == rc.bottom)) return TRUE;
-
-    if (rc.right < rc.left) { INT tmp = rc.right; rc.right = rc.left; rc.left = tmp; }
-    if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
 
     oldwidth = width = physDev->pen.width;
     if (!width) width = 1;
@@ -811,14 +826,11 @@ X11DRV_RoundRect( X11DRV_PDEVICE *physDev, INT left, INT top, INT right,
 {
     INT width, oldwidth, oldendcap;
     BOOL update = FALSE;
-    RECT rc;
     POINT pts[2];
+    RECT rc = get_device_rect( physDev->hdc, left, top, right, bottom );
 
     TRACE("(%d %d %d %d  %d %d\n",
     	left, top, right, bottom, ell_width, ell_height);
-
-    SetRect(&rc, left, top, right, bottom);
-    LPtoDP(physDev->hdc, (POINT*)&rc, 2);
 
     if ((rc.left == rc.right) || (rc.top == rc.bottom))
 	return TRUE;
@@ -831,11 +843,6 @@ X11DRV_RoundRect( X11DRV_PDEVICE *physDev, INT left, INT top, INT right,
     LPtoDP(physDev->hdc, pts, 2);
     ell_width  = max(abs( pts[1].x - pts[0].x ), 1);
     ell_height = max(abs( pts[1].y - pts[0].y ), 1);
-
-    /* Fix the coordinates */
-
-    if (rc.right < rc.left) { INT tmp = rc.right; rc.right = rc.left; rc.left = tmp; }
-    if (rc.bottom < rc.top) { INT tmp = rc.bottom; rc.bottom = rc.top; rc.top = tmp; }
 
     oldwidth = width = physDev->pen.width;
     oldendcap = physDev->pen.endcap;
@@ -1464,16 +1471,6 @@ X11DRV_SetTextColor( X11DRV_PDEVICE *physDev, COLORREF color )
 {
     physDev->textPixel = X11DRV_PALETTE_ToPhysical( physDev, color );
     return color;
-}
-
-/***********************************************************************
- *           GetDCOrgEx   (X11DRV.@)
- */
-BOOL CDECL X11DRV_GetDCOrgEx( X11DRV_PDEVICE *physDev, LPPOINT lpp )
-{
-    lpp->x = physDev->dc_rect.left + physDev->drawable_rect.left;
-    lpp->y = physDev->dc_rect.top + physDev->drawable_rect.top;
-    return TRUE;
 }
 
 

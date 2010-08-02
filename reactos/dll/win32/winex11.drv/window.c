@@ -1863,6 +1863,7 @@ void CDECL X11DRV_DestroyWindow( HWND hwnd )
     }
 
     if (thread_data->last_focus == hwnd) thread_data->last_focus = 0;
+    if (thread_data->last_xic_hwnd == hwnd) thread_data->last_xic_hwnd = 0;
     if (data->hWMIconBitmap) DeleteObject( data->hWMIconBitmap );
     if (data->hWMIconMask) DeleteObject( data->hWMIconMask);
     wine_tsx11_lock();
@@ -2081,6 +2082,8 @@ XIC X11DRV_get_ic( HWND hwnd )
     XIM xim;
 
     if (!data) return 0;
+
+    x11drv_thread_data()->last_xic_hwnd = hwnd;
     if (data->xic) return data->xic;
     if (!(xim = x11drv_thread_data()->xim)) return 0;
     return X11DRV_CreateIC( xim, data );

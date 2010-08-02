@@ -227,6 +227,14 @@ INT WINAPI StretchDIBits(HDC hdc, INT xDst, INT yDst, INT widthDst,
             return 0;
         }
 
+        if (xSrc == 0 && ySrc == 0 && widthDst == widthSrc && heightDst == heightSrc &&
+            info->bmiHeader.biCompression == BI_RGB)
+        {
+            /* Windows appears to have a fast case optimization
+             * that uses the wrong origin for top-down DIBs */
+            if (height < 0 && heightSrc < abs(height)) ySrc = abs(height) - heightSrc;
+        }
+
         hBitmap = GetCurrentObject(hdc, OBJ_BITMAP);
 
         if (xDst == 0 && yDst == 0 && xSrc == 0 && ySrc == 0 &&
@@ -1261,11 +1269,10 @@ HBITMAP WINAPI CreateDIBSection(HDC hdc, CONST BITMAPINFO *bmi, UINT usage,
     case 8:
     case 24:
         if (compression == BI_RGB) break;
+        /* fall through */
+    default:
         WARN( "invalid %u bpp compression %u\n", bpp, compression );
         return 0;
-    default:
-        FIXME( "should fail %u bpp compression %u\n", bpp, compression );
-        break;
     }
 
     if (!(dib = HeapAlloc( GetProcessHeap(), 0, sizeof(*dib) ))) return 0;

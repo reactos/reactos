@@ -624,32 +624,6 @@ VOID APIENTRY RosGdiSetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
     DC_UnlockDc(pDC);
 }
 
-VOID APIENTRY RosGdiGetDcRects( HDC physDev, RECT *rcDcRect, RECT *rcVport )
-{
-    PDC pDC;
-
-    /* Get a pointer to the DC */
-    pDC = DC_LockDc(physDev);
-
-    _SEH2_TRY
-    {
-        /* Set DC rectangle */
-        if (rcDcRect)
-            *rcDcRect = pDC->rcDcRect;
-
-        /* Set viewport rectangle */
-        if (rcVport)
-            *rcVport = pDC->rcVport;
-    }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-    }
-    _SEH2_END;
-
-    /* Release the object */
-    DC_UnlockDc(pDC);
-}
-
 VOID APIENTRY RosGdiGetDC(HDC physDev, HWND hwnd, BOOL clipChildren)
 {
     PDC pDC;

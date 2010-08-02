@@ -113,7 +113,6 @@ typedef struct tagDC_FUNCS
     BOOL     (CDECL *pGdiComment)(PHYSDEV,UINT,CONST BYTE*);
     LONG     (CDECL *pGetBitmapBits)(HBITMAP,void*,LONG);
     BOOL     (CDECL *pGetCharWidth)(PHYSDEV,UINT,UINT,LPINT);
-    BOOL     (CDECL *pGetDCOrgEx)(PHYSDEV,LPPOINT);
     UINT     (CDECL *pGetDIBColorTable)(PHYSDEV,UINT,UINT,RGBQUAD*);
     INT      (CDECL *pGetDIBits)(PHYSDEV,HBITMAP,UINT,UINT,LPVOID,BITMAPINFO*,UINT);
     INT      (CDECL *pGetDeviceCaps)(PHYSDEV,INT);
@@ -261,6 +260,7 @@ typedef struct tagDC
     INT          vportExtY;
     SIZE         virtual_res;      /* Initially HORZRES,VERTRES. Changed by SetVirtualResolution */
     SIZE         virtual_size;     /* Initially HORZSIZE,VERTSIZE. Changed by SetVirtualResolution */
+    RECT         vis_rect;         /* visible rectangle in screen coords */
     FLOAT        miterLimit;
 
     int           flags;
@@ -490,6 +490,7 @@ extern UINT WINAPI GDIRealizePalette( HDC hdc );
 extern HPALETTE PALETTE_Init(void) DECLSPEC_HIDDEN;
 
 /* region.c */
+extern INT mirror_region( HRGN dst, HRGN src, INT width ) DECLSPEC_HIDDEN;
 extern BOOL REGION_FrameRgn( HRGN dest, HRGN src, INT x, INT y ) DECLSPEC_HIDDEN;
 
 /* Undocumented value for DIB's iUsage: Indicates a mono DIB w/o pal entries */

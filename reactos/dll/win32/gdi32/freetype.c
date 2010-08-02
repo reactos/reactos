@@ -3862,12 +3862,23 @@ found:
     if(!face->scalable) {
         /* Windows uses integer scaling factors for bitmap fonts */
         INT scale, scaled_height;
+        GdiFont *cachedfont;
 
         /* FIXME: rotation of bitmap fonts is ignored */
         height = abs(GDI_ROUND( (double)height * ret->font_desc.matrix.eM22 ));
         if (ret->aveWidth)
             ret->aveWidth = (double)ret->aveWidth * ret->font_desc.matrix.eM11;
         ret->font_desc.matrix.eM11 = ret->font_desc.matrix.eM22 = 1.0;
+        dcmat.eM11 = dcmat.eM22 = 1.0;
+        /* As we changed the matrix, we need to search the cache for the font again,
+         * otherwise we might explode the cache. */
+        if((cachedfont = find_in_cache(hfont, &lf, &dcmat, can_use_bitmap)) != NULL) {
+            TRACE("Found cached font after non-scalable matrix rescale!\n");
+            free_font( ret );
+            LeaveCriticalSection( &freetype_cs );
+            return cachedfont;
+        }
+        calc_hash(&ret->font_desc);
 
         if (height != 0) height = diff;
         height += face->size.height;
@@ -4775,14 +4786,11 @@ DWORD WineEngGetGlyphOutline(GdiFont *incoming_font, UINT glyph, UINT format,
         return GDI_ERROR;
     }
 
-    left = (INT)(ft_face->glyph->metrics.horiBearingX) & -64;
-    right = (INT)((ft_face->glyph->metrics.horiBearingX + ft_face->glyph->metrics.width) + 63) & -64;
-
-    adv = (INT)((ft_face->glyph->metrics.horiAdvance) + 63) >> 6;
-    lsb = left >> 6;
-    bbx = (right - left) >> 6;
-
     if(!needsTransform) {
+        left = (INT)(ft_face->glyph->metrics.horiBearingX) & -64;
+        right = (INT)((ft_face->glyph->metrics.horiBearingX + ft_face->glyph->metrics.width) + 63) & -64;
+        adv = (INT)(ft_face->glyph->metrics.horiAdvance + 63) >> 6;
+
 	top = (ft_face->glyph->metrics.horiBearingY + 63) & -64;
 	bottom = (ft_face->glyph->metrics.horiBearingY -
 		  ft_face->glyph->metrics.height) & -64;
@@ -4791,6 +4799,9 @@ DWORD WineEngGetGlyphOutline(GdiFont *incoming_font, UINT glyph, UINT format,
     } else {
         INT xc, yc;
 	FT_Vector vec;
+
+        left = right = 0;
+
 	for(xc = 0; xc < 2; xc++) {
 	    for(yc = 0; yc < 2; yc++) {
 	        vec.x = (ft_face->glyph->metrics.horiBearingX +
@@ -4827,6 +4838,9 @@ DWORD WineEngGetGlyphOutline(GdiFont *incoming_font, UINT glyph, UINT format,
         pFT_Vector_Transform(&vec, &transMatUnrotated);
         adv = (vec.x+63) >> 6;
     }
+
+    lsb = left >> 6;
+    bbx = (right - left) >> 6;
     lpgm->gmBlackBoxX = (right - left) >> 6;
     lpgm->gmBlackBoxY = (top - bottom) >> 6;
     lpgm->gmptGlyphOrigin.x = left >> 6;

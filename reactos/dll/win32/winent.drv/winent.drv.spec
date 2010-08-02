@@ -18,7 +18,6 @@
 @ cdecl ExtTextOut(ptr long long long ptr ptr long ptr) RosDrv_ExtTextOut
 @ cdecl GetBitmapBits(long ptr long) RosDrv_GetBitmapBits
 @ cdecl GetCharWidth(ptr long long ptr) RosDrv_GetCharWidth
-@ cdecl GetDCOrgEx(ptr ptr) RosDrv_GetDCOrgEx
 @ cdecl GetDIBits(ptr long long long ptr ptr long) RosDrv_GetDIBits
 @ cdecl GetDeviceCaps(ptr long) RosDrv_GetDeviceCaps
 @ cdecl GetDeviceGammaRamp(ptr ptr) RosDrv_GetDeviceGammaRamp

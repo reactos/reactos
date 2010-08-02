@@ -2329,13 +2329,10 @@ static void SPY_DumpStructure(const SPY_INSTANCE *sp_e, BOOL enter)
     switch (sp_e->msgnum)
         {
         case LVM_INSERTITEMW:
-        case LVM_INSERTITEMA:
         case LVM_SETITEMW:
-        case LVM_SETITEMA:
             if (!enter) break;
             /* fall through */
         case LVM_GETITEMW:
-        case LVM_GETITEMA:
             {
                 LPLVITEMA item = (LPLVITEMA) sp_e->lParam;
                 if (item) {
