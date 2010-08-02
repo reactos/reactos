@@ -581,6 +581,36 @@ IntGetBitmapBits(
     return ret;
 }
 
+VOID
+FASTCALL
+UnsafeGetBitmapBits(
+    PSURFACE psurf,
+	DWORD Bytes,
+	OUT PBYTE pvBits)
+{
+	PUCHAR pjDst, pjSrc;
+    LONG lDeltaDst, lDeltaSrc;
+    ULONG nWidth, nHeight, cBitsPixel;
+
+    nWidth = psurf->SurfObj.sizlBitmap.cx;
+    nHeight = psurf->SurfObj.sizlBitmap.cy;
+    cBitsPixel = BitsPerFormat(psurf->SurfObj.iBitmapFormat);
+
+    /* Get pointers */
+    pjSrc = psurf->SurfObj.pvScan0;
+    pjDst = pvBits;
+    lDeltaSrc = psurf->SurfObj.lDelta;
+    lDeltaDst = BITMAP_GetWidthBytes(nWidth, cBitsPixel);
+
+    while (nHeight--)
+    {
+        /* Copy one line */
+        RtlCopyMemory(pjDst, pjSrc, lDeltaDst);
+        pjSrc += lDeltaSrc;
+        pjDst += lDeltaDst;
+    }
+}
+
 LONG APIENTRY
 NtGdiGetBitmapBits(
     HBITMAP hBitmap,
@@ -620,7 +650,8 @@ NtGdiGetBitmapBits(
     _SEH2_TRY
     {
         ProbeForWrite(pUnsafeBits, Bytes, 1);
-        ret = IntGetBitmapBits(psurf, Bytes, pUnsafeBits);
+        UnsafeGetBitmapBits(psurf, Bytes, pUnsafeBits);
+		ret = Bytes;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {

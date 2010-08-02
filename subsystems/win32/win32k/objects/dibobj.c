@@ -695,7 +695,7 @@ NtGdiGetDIBitsInternal(
         Info->bmiHeader.biYPelsPerMeter = 0;
         Info->bmiHeader.biClrUsed = 0;
         Info->bmiHeader.biClrImportant = 0;
-		ScanLines = psurf->SurfObj.sizlBitmap.cy;
+		ScanLines = 1;
 		/* Get Complete info now */
 		goto done;
 
@@ -897,8 +897,11 @@ NtGdiGetDIBitsInternal(
 	{
 		/* Create a DIBSECTION, blt it, profit */
 		PVOID pDIBits ;
-		HBITMAP hBmpDest, hOldDest = NULL, hOldSrc = NULL;
-		HDC hdcDest = NULL, hdcSrc;
+		HBITMAP hBmpDest;
+		PSURFACE psurfDest;
+		EXLATEOBJ exlo;
+		RECT rcDest;
+		POINTL srcPoint;
 		BOOL ret ;
 
 		if (StartScan > psurf->SurfObj.sizlBitmap.cy)
@@ -911,7 +914,15 @@ NtGdiGetDIBitsInternal(
             ScanLines = min(ScanLines, psurf->SurfObj.sizlBitmap.cy - StartScan);
 		}
 
+		/* Fixup values */
+		Info->bmiHeader.biWidth = psurf->SurfObj.sizlBitmap.cx;
+		Info->bmiHeader.biHeight = height < 0 ?
+			-ScanLines : ScanLines;
+		/* Create the DIB */
 		hBmpDest = DIB_CreateDIBSection(pDC, Info, Usage, &pDIBits, NULL, 0, 0);
+		/* Restore them */
+		Info->bmiHeader.biWidth = width;
+		Info->bmiHeader.biHeight = height;
 		
 		if(!hBmpDest)
 		{
@@ -921,56 +932,25 @@ NtGdiGetDIBitsInternal(
 			goto done ;
 		}
 
-		if(psurf->hdc)
-			hdcSrc = psurf->hdc;
-		else
-		{
-			hdcSrc = NtGdiCreateCompatibleDC(0);
-			if(!hdcSrc)
-			{
-				DPRINT1("Error: could not create HDC!\n");
-				ScanLines = 0;
-				goto cleanup_blt;
-			}
-			hOldSrc = NtGdiSelectBitmap(hdcSrc, hBitmap);
-			if(!hOldSrc)
-			{
-				DPRINT1("Error : Could not Select bitmap\n");
-				ScanLines = 0;
-				goto cleanup_blt;
-			}
-		}
+		psurfDest = SURFACE_LockSurface(hBmpDest);
 
-		hdcDest = NtGdiCreateCompatibleDC(0);
-		if(!hdcDest)
-		{
-			DPRINT1("Error: could not create HDC!\n");
-			ScanLines = 0;
-			goto cleanup_blt;
-		}
-		hOldDest = NtGdiSelectBitmap(hdcDest, hBmpDest);
-		if(!hOldDest)
-		{
-			DPRINT1("Error : Could not Select bitmap\n");
-			ScanLines = 0;
-			goto cleanup_blt;
-		}
+		rcDest.left = 0;
+		rcDest.top = 0;
+		rcDest.bottom = ScanLines;
+		rcDest.right = psurf->SurfObj.sizlBitmap.cx;
 
-		ret = GreStretchBltMask(hdcDest,
-								0,
-								0,
-								width, 
-								height,
-								hdcSrc,
-								0,
-								StartScan,
-								psurf->SurfObj.sizlBitmap.cx,
-								ScanLines,
-								SRCCOPY,
-								0,
-								NULL,
-								0,
-								0);
+		srcPoint.x = 0;
+		srcPoint.y = height < 0 ?
+			psurf->SurfObj.sizlBitmap.cy - (StartScan + ScanLines) : StartScan;
+
+		EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0, 0, 0);
+
+		ret = IntEngCopyBits(&psurfDest->SurfObj,
+							 &psurf->SurfObj,
+							 NULL,
+							 &exlo.xlo,
+							 &rcDest,
+							 &srcPoint);
 
 		if(!ret)
 			ScanLines = 0;
@@ -994,18 +974,8 @@ NtGdiGetDIBitsInternal(
 			}
 		}
 
-	cleanup_blt:
-		if(hdcSrc && (hdcSrc != psurf->hdc))
-		{
-			if(hOldSrc) NtGdiSelectBitmap(hdcSrc, hOldSrc);
-			NtGdiDeleteObjectApp(hdcSrc);
-		}
-		if(hdcSrc)
-		{
-			if(hOldDest) NtGdiSelectBitmap(hdcDest, hOldDest);
-			NtGdiDeleteObjectApp(hdcDest);
-		}
 		GreDeleteObject(hBmpDest);
+		EXLATEOBJ_vCleanup(&exlo);
 	}
 
 done:
