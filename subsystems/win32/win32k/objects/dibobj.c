@@ -265,10 +265,13 @@ IntSetDIBits(
     CONST BITMAPINFO  *bmi,
     UINT  ColorUse)
 {
-    HBITMAP     SourceBitmap, hOldSrcBmp = NULL, hOldDstBmp = NULL;
-	HDC			hdcSrc, hdcDst;
+    HBITMAP     SourceBitmap;
+	PSURFACE    psurfDst, psurfSrc;
     INT         result = 0;
+	RECT		rcDst;
+	POINTL		ptSrc;
 	PVOID		pvBits;
+	EXLATEOBJ	exlo;
 
     SourceBitmap = DIB_CreateDIBSection(DC, bmi, ColorUse, &pvBits, NULL, 0, 0);
 	if (0 == SourceBitmap)
@@ -282,40 +285,45 @@ IntSetDIBits(
 													 bmi->bmiHeader.biHeight,
 													 bmi->bmiHeader.biBitCount));
 
-	hdcSrc = NtGdiCreateCompatibleDC(0);
-	hdcDst = NtGdiCreateCompatibleDC(0);
+	psurfDst = SURFACE_LockSurface(hBitmap);
+	psurfSrc = SURFACE_LockSurface(SourceBitmap);
 
-	if(!(hdcSrc && hdcDst))
+	if(!(psurfSrc && psurfDst))
 	{
-		DPRINT1("Error, could not create memory DCs.\n");
+		DPRINT1("Error, could not lock surfaces.\n");
 		goto cleanup;
 	}
 
-	hOldSrcBmp = NtGdiSelectBitmap(hdcSrc, SourceBitmap);
-	hOldDstBmp = NtGdiSelectBitmap(hdcDst, hBitmap);
+	rcDst.top = bmi->bmiHeader.biHeight < 0 ?
+		abs(bmi->bmiHeader.biHeight) - (ScanLines + StartScan) : StartScan;
+	rcDst.left = 0;
+	rcDst.bottom = rcDst.top + ScanLines;
+	rcDst.right = psurfDst->SurfObj.sizlBitmap.cx;
 
-	if(!(hOldSrcBmp && hOldDstBmp))
-	{
-		DPRINT1("Error : Could not select bitmaps into DCs\n");
-		goto cleanup;
-	}
+	ptSrc.x = 0;
+	ptSrc.y = 0;
 
-	result = NtGdiBitBlt(hdcDst, 0, 0, bmi->bmiHeader.biWidth, ScanLines, hdcSrc, 0, StartScan,
-							SRCCOPY, 0, 0);
+	EXLATEOBJ_vInitialize(&exlo, psurfSrc->ppal, psurfDst->ppal, 0, 0, 0);
 
+	result = IntEngCopyBits(&psurfDst->SurfObj,
+		                    &psurfSrc->SurfObj,
+							NULL,
+							&exlo.xlo,
+							&rcDst,
+							&ptSrc);
 	if(result)
 		result = ScanLines;
 
+	EXLATEOBJ_vCleanup(&exlo);
+
 cleanup:
-	if(hdcSrc)
+	if(psurfSrc)
 	{
-		if(hOldSrcBmp) NtGdiSelectBitmap(hdcSrc, hOldSrcBmp);
-		NtGdiDeleteObjectApp(hdcSrc);
+		SURFACE_UnlockSurface(psurfSrc);
 	}
-	if(hdcDst)
+	if(psurfDst)
 	{
-		if(hOldDstBmp) NtGdiSelectBitmap(hdcDst, hOldDstBmp);
-		NtGdiDeleteObjectApp(hdcDst);
+		SURFACE_UnlockSurface(psurfDst);
 	}
 	GreDeleteObject(SourceBitmap);
 
